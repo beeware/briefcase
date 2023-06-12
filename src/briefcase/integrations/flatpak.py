@@ -171,8 +171,7 @@ You must install both flatpak and flatpak-builder.
     ):
         """Verify that a specific Flatpak runtime and SDK are available.
 
-        :param repo_alias: The alias of the repo where the runtime and SDK are
-            stored.
+        :param repo_alias: The alias of the repo where the runtime and SDK are stored.
         :param runtime: The identifier of the Flatpak runtime
         :param runtime_version: The version of the Flatpak runtime
         :param sdk: The Flatpak SDK
@@ -201,15 +200,14 @@ You must install both flatpak and flatpak-builder.
     def build(self, bundle_identifier: str, app_name: str, path: Path):
         """Build a Flatpak manifest.
 
-        On success, the app is installed into the user's local Flatpak install,
-        and a shell script is created that can be used to start the app. The
-        shell file isn't really needed to start the app, but it serves as a
-        marker for a successful build that Briefcase can use.
+        On success, the app is installed into the user's local Flatpak install, and a
+        shell script is created that can be used to start the app. The shell file isn't
+        really needed to start the app, but it serves as a marker for a successful build
+        that Briefcase can use.
 
         :param bundle_identifier: The bundle identifier for the app being built.
         :param app_name: The app name.
-        :param path: The path to the folder containing the app's Flatpak
-            manifest file.
+        :param path: The path to the folder containing the app's Flatpak manifest file.
         """
         try:
             self.tools.subprocess.run(
@@ -256,8 +254,8 @@ flatpak run {bundle_identifier}
 
         :param bundle_identifier: The bundle identifier for the app being built.
         :param args: (Optional) The list of arguments to pass to the app
-        :param main_module: (Optional) The main module to run. Only required if you
-            want to override the default main module for the app.
+        :param main_module: (Optional) The main module to run. Only required if you want
+            to override the default main module for the app.
         :returns: A Popen object for the running app.
         """
         if main_module:
@@ -298,13 +296,13 @@ flatpak run {bundle_identifier}
         Generates a standalone .flatpak file that can be installed into another user's
         Flatpak repository.
 
-        :param repo_url: The URL of the repository that contains the runtime
-            used by the app.
+        :param repo_url: The URL of the repository that contains the runtime used by the
+            app.
         :param bundle_identifier: The bundle identifier for the app being built.
         :param app_name: The app name.
         :param version: The version of the app being built.
-        :param build_path: The path where the flatpak was built. This path will
-            contain the repo where the built flatpak was exported.
+        :param build_path: The path where the flatpak was built. This path will contain
+            the repo where the built flatpak was exported.
         :param output_path: The path of the output file to create as an export.
         """
         try:

@@ -137,8 +137,9 @@ class BaseCommand(ABC):
         :param apps: Dictionary of project's Apps keyed by app name.
         :param base_path: Base directory for Briefcase project.
         :param data_path: Base directory for Briefcase tools, support packages, etc.
-        :param is_clone: Flag that Command was triggered by the user's requested Command;
-            for instance, RunCommand can invoke UpdateCommand and/or BuildCommand.
+        :param is_clone: Flag that Command was triggered by the user's requested
+            Command; for instance, RunCommand can invoke UpdateCommand and/or
+            BuildCommand.
         """
         if base_path is None:
             self.base_path = Path.cwd()
@@ -312,11 +313,10 @@ a custom location for Briefcase's tools.
     def bundle_path(self, app) -> Path:
         """The path to the bundle for the app in the output format.
 
-        The bundle is the template-generated source form of the app.
-        The path will usually be a directory, the existence of which is
-        indicative that the template has been rolled out for an app.
-        The leaf of this path is the base of the content generated from
-        template.
+        The bundle is the template-generated source form of the app. The path will
+        usually be a directory, the existence of which is indicative that the template
+        has been rolled out for an app. The leaf of this path is the base of the content
+        generated from template.
 
         :param app: The app config
         """
@@ -326,11 +326,10 @@ a custom location for Briefcase's tools.
     def binary_path(self, app) -> Path:
         """The path to the executable artefact for the app in the output format.
 
-        This may be a binary file produced by compilation; however, if
-        the output format doesn't require compilation, it may be the same
-        as the bundle path (assuming the bundle path is inherently
-        "executable"), or a path that reasonably represents the thing that can
-        be executed.
+        This may be a binary file produced by compilation; however, if the output format
+        doesn't require compilation, it may be the same as the bundle path (assuming the
+        bundle path is inherently "executable"), or a path that reasonably represents
+        the thing that can be executed.
 
         :param app: The app config
         """
@@ -400,8 +399,8 @@ a custom location for Briefcase's tools.
         prior to release.
 
         :param app: The config object for the app
-        :return: The list of path globs inside the app template that should
-            be cleaned up.
+        :return: The list of path globs inside the app template that should be cleaned
+            up.
         """
         return self.path_index(app, "cleanup_paths")
 
@@ -495,15 +494,13 @@ a custom location for Briefcase's tools.
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
-        configurations that are deeper than other platforms, because they need
-        to include components that are dependent on command-line arguments. They
-        may also require the existence of system tools to complete
-        configuration.
+        configurations that are deeper than other platforms, because they need to
+        include components that are dependent on command-line arguments. They may also
+        require the existence of system tools to complete configuration.
 
         The final app configuration merges those "deep" properties into the app
-        configuration, and performs any other app-specific platform
-        configuration and verification that is required as a result of
-        command-line arguments.
+        configuration, and performs any other app-specific platform configuration and
+        verification that is required as a result of command-line arguments.
 
         :param app: The app configuration to finalize.
         """
@@ -538,9 +535,9 @@ a custom location for Briefcase's tools.
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
 
-        This is the last step of verification for a Command before running the
-        Command's business logic. It runs _after_ pre-requisite Commands have been
-        verified and run.
+        This is the last step of verification for a Command before running the Command's
+        business logic. It runs _after_ pre-requisite Commands have been verified and
+        run.
 
         :param app: app configuration
         """
@@ -584,11 +581,11 @@ any compatibility problems, and then add the compatibility declaration.
     def parse_options(self, extra):
         """Parse the command line arguments for the Command.
 
-        After the initial ArgumentParser runs to choose the Command for the
-        selected platform and format, a new ArgumentParser is created here to
-        parse the remaining command line arguments specific to the Command.
-        Additionally, the default options for disabling input, log verbosity,
-        and log saving are parsed out and saved to the Command.
+        After the initial ArgumentParser runs to choose the Command for the selected
+        platform and format, a new ArgumentParser is created here to parse the remaining
+        command line arguments specific to the Command. Additionally, the default
+        options for disabling input, log verbosity, and log saving are parsed out and
+        saved to the Command.
 
         :param extra: the remaining command line arguments after the initial
             ArgumentParser runs over the command line.
@@ -700,9 +697,8 @@ any compatibility problems, and then add the compatibility declaration.
         """Internal utility method for adding common update options.
 
         :param parser: The parser to which options should be added.
-        :param context_label: Label text that will be added to the end of the
-            help text to describe when the update will be applied (e.g., "before
-            building")
+        :param context_label: Label text that will be added to the end of the help text
+            to describe when the update will be applied (e.g., "before building")
         :param update: Should the --update and --no-update options be exposed?
         """
         if update:

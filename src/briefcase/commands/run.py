@@ -23,15 +23,14 @@ class LogFilter:
         """Create a filter for a log stream.
 
         :param log_popen: The Popen object for the stream producing the logs.
-        :param clean_filter: A function that will filter a line of logs,
-            returning a "clean" line without any log system preamble.
-        :param clean_output: Should the output displayed to the user be the
-            "clean" output? (Default: True).
-        :param exit_filter: A function that will operate on a string containing
-            the last 10 lines of "clean" (i.e., preamble filtered) logs,
-            returning the integer exit status of the process if an exit
-            condition has been detected, or None if the log stream should
-            continue.
+        :param clean_filter: A function that will filter a line of logs, returning a
+            "clean" line without any log system preamble.
+        :param clean_output: Should the output displayed to the user be the "clean"
+            output? (Default: True).
+        :param exit_filter: A function that will operate on a string containing the last
+            10 lines of "clean" (i.e., preamble filtered) logs, returning the integer
+            exit status of the process if an exit condition has been detected, or None
+            if the log stream should continue.
         """
         self.log_popen = log_popen
         self.returncode = None
@@ -89,10 +88,9 @@ class LogFilter:
     def test_filter(pattern):
         """A factory method for producing filter functions.
 
-        :param pattern: The multiline regex pattern that identifies content of
-            interest in a log (e.g., success/failure conditions)
-        :returns: A log filter function that returns True if the pattern was
-            found
+        :param pattern: The multiline regex pattern that identifies content of interest
+            in a log (e.g., success/failure conditions)
+        :returns: A log filter function that returns True if the pattern was found
         """
 
         def filter_func(recent):
@@ -213,8 +211,8 @@ class RunCommand(RunAppMixin, BaseCommand):
     def _prepare_app_env(self, app: AppConfig, test_mode: bool):
         """Prepare the environment for running an app as a log stream.
 
-        This won't be used by every backend; but it's a sufficiently common
-        default that it's been factored out.
+        This won't be used by every backend; but it's a sufficiently common default that
+        it's been factored out.
 
         :param app: The app to be launched
         :param test_mode: Are we launching in test mode?

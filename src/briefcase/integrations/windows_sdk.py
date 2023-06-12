@@ -45,7 +45,8 @@ class WindowsSDK(Tool):
         """Create a wrapper around the Windows SDK.
 
         :param tools: ToolCache of available tools
-        :param root_path: Base path for sdk, e.g. C:/Program Files (x86)/Windows Kits/10/
+        :param root_path: Base path for sdk, e.g. C:/Program Files (x86)/Windows
+            Kits/10/
         :param version: Full SDK version, e.g. 10.0.22621.0
         :param arch: Host architecture for SDK, e.g. x64, arm64, etc
         """

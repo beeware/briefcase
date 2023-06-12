@@ -138,13 +138,12 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def finalize_app_config(self, app: AppConfig):
         """Finalize app configuration.
 
-        Linux .deb app configurations are deeper than other platforms, because
-        they need to include components that are dependent on the target vendor
-        and codename. Those properties are extracted from command-line options.
+        Linux .deb app configurations are deeper than other platforms, because they need
+        to include components that are dependent on the target vendor and codename.
+        Those properties are extracted from command-line options.
 
-        The final app configuration merges the target-specific configuration
-        into the generic "linux.deb" app configuration, as well as setting the
-        Python version.
+        The final app configuration merges the target-specific configuration into the
+        generic "linux.deb" app configuration, as well as setting the Python version.
 
         :param app: The app configuration to finalize.
         """
@@ -490,8 +489,8 @@ to install the missing dependencies, and re-run Briefcase.
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
 
-        When Docker is used, create or update a Docker image for the App.
-        Without Docker, the host machine will be used as the App environment.
+        When Docker is used, create or update a Docker image for the App. Without
+        Docker, the host machine will be used as the App environment.
 
         :param app: The application being built
         """
@@ -735,9 +734,9 @@ class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
 def debian_multiline_description(description):
     """Generate a Debian multiline description string.
 
-    The long description in a Debian control file must
-    *not* contain any blank lines, and each line must start with a single space.
-    Convert a long description into Debian format.
+    The long description in a Debian control file must *not* contain any blank lines,
+    and each line must start with a single space. Convert a long description into Debian
+    format.
 
     :param description: A multi-line long description string.
     :returns: A string in Debian's multiline format

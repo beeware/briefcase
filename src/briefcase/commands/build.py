@@ -38,10 +38,10 @@ class BuildCommand(BaseCommand):
 
         :param app: The application to build
         :param update: Should the application be updated before building?
-        :param update_requirements: Should the application requirements be
-            updated before building?
-        :param update_resources: Should the application resources be updated
+        :param update_requirements: Should the application requirements be updated
             before building?
+        :param update_resources: Should the application resources be updated before
+            building?
         :param update_support: Should the application support be updated?
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
