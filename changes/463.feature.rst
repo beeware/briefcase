@@ -1,0 +1,1 @@
+An Android SDK specified in ``ANDROID_HOME`` is respected now and will take precedence over the setting of ``ANDROID_SDK_ROOT``.

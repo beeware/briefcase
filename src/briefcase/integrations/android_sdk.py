@@ -118,6 +118,7 @@ class AndroidSDK(ManagedTool):
     @property
     def env(self) -> dict[str, str]:
         return {
+            "ANDROID_HOME": os.fsdecode(self.root_path),
             "ANDROID_SDK_ROOT": os.fsdecode(self.root_path),
             "JAVA_HOME": str(self.tools.java.java_home),
         }
@@ -148,6 +149,57 @@ class AndroidSDK(ManagedTool):
         return f"system-images;android-31;default;{self.emulator_abi}"
 
     @classmethod
+    def sdk_path_from_env(cls, tools: ToolCache) -> tuple[str | None, str | None]:
+        """Determine the file path to an Android SDK from the environment.
+
+        Android has historically supported several env vars to set the location of an
+        Android SDK for build tools. The currently preferred source is ANDROID_HOME;
+        however, ANDROID_SDK_ROOT is also supported as a deprecated setting.
+
+        These values must be same if both set; otherwise, Gradle will error.
+
+        :param tools: ToolCache of available tools
+        :returns: Tuple of path to SDK and the env var name that provided that path
+        """
+        android_home = tools.os.environ.get("ANDROID_HOME")
+        android_sdk_root = tools.os.environ.get("ANDROID_SDK_ROOT")
+
+        if android_home:
+            if android_sdk_root and android_sdk_root != android_home:
+                tools.logger.warning(
+                    f"""
+*************************************************************************
+** WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
+*************************************************************************
+
+    The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set
+    to different paths:
+
+        ANDROID_HOME:     {android_home}
+        ANDROID_SDK_ROOT: {android_sdk_root}
+
+    Briefcase will ignore ANDROID_SDK_ROOT and only use the path
+    specified by ANDROID_HOME.
+
+    You should update your environment configuration to either not set
+    ANDROID_SDK_ROOT, or set both environment variables to the same
+    path.
+
+*************************************************************************
+"""
+                )
+            sdk_root = android_home
+            sdk_source = "ANDROID_HOME"
+        elif android_sdk_root:
+            sdk_root = android_sdk_root
+            sdk_source = "ANDROID_SDK_ROOT"
+        else:
+            sdk_root = None
+            sdk_source = None
+
+        return sdk_root, sdk_source
+
+    @classmethod
     def verify_install(
         cls,
         tools: ToolCache,
@@ -156,11 +208,11 @@ class AndroidSDK(ManagedTool):
     ) -> AndroidSDK:
         """Verify an Android SDK is available.
 
-        If the ANDROID_SDK_ROOT environment variable is set, that location will
+        The file paths in ANDROID_HOME and ANDROID_SDK_ROOT environment variables will
         be checked for a valid SDK.
 
-        If the location provided doesn't contain an SDK, or no location is provided,
-        an SDK is downloaded.
+        If those file paths do not contain an SDK, or no file path is provided, an SDK
+        is downloaded.
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
@@ -174,21 +226,41 @@ class AndroidSDK(ManagedTool):
         JDK.verify(tools=tools, install=install)
 
         sdk = None
-        sdk_root = tools.os.environ.get("ANDROID_SDK_ROOT")
+        sdk_root, sdk_env_source = cls.sdk_path_from_env(tools=tools)
+
         if sdk_root:
             sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root))
 
             if sdk.exists():
+                if sdk_env_source == "ANDROID_SDK_ROOT":
+                    tools.logger.warning(
+                        """
+*************************************************************************
+** WARNING: Using Android SDK from ANDROID_SDK_ROOT                    **
+*************************************************************************
+
+    Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
+    environment variable.
+
+    Android has deprecated ANDROID_SDK_ROOT in favor of the
+    ANDROID_HOME environment variable.
+
+    Update your environment configuration to set ANDROID_HOME instead of
+    ANDROID_SDK_ROOT to ensure future compatibility.
+
+*************************************************************************
+"""
+                    )
                 sdk.verify_license()
             else:
                 sdk = None
                 tools.logger.warning(
                     f"""
 *************************************************************************
-** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
+** {f"WARNING: {sdk_env_source} does not point to an Android SDK":67} **
 *************************************************************************
 
-    The location pointed to by the ANDROID_SDK_ROOT environment
+    The location pointed to by the {sdk_env_source} environment
     variable:
 
     {sdk_root}

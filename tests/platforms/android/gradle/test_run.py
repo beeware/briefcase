@@ -542,6 +542,7 @@ def test_log_file_extra(run_command, monkeypatch):
     run_command.tools.subprocess.check_output.assert_called_once_with(
         [normpath(sdk_manager), "--list_installed"],
         env={
+            "ANDROID_HOME": str(run_command.tools.android_sdk.root_path),
             "ANDROID_SDK_ROOT": str(run_command.tools.android_sdk.root_path),
             "JAVA_HOME": str(run_command.tools.java.java_home),
         },

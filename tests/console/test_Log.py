@@ -89,7 +89,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     stacktrace if one is not captured."""
     command.tools.os.environ = {
         "GITHUB_KEY": "super-secret-key",
-        "ANDROID_SDK_ROOT": "/androidsdk",
+        "ANDROID_HOME": "/androidsdk",
     }
 
     logger = Log(verbosity=2)
@@ -131,11 +131,11 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     assert "this is log output" in log_contents
     assert "this is console output" not in log_contents
     # Environment variables are in the output
-    assert "ANDROID_SDK_ROOT=/androidsdk" in log_contents
+    assert "ANDROID_HOME=/androidsdk" in log_contents
     assert "GITHUB_KEY=********************" in log_contents
     assert "GITHUB_KEY=super-secret-key" not in log_contents
     # Environment variables are sorted
-    assert log_contents.index("ANDROID_SDK_ROOT") < log_contents.index("GITHUB_KEY")
+    assert log_contents.index("ANDROID_HOME") < log_contents.index("GITHUB_KEY")
 
     assert TRACEBACK_HEADER not in log_contents
     assert EXTRA_HEADER not in log_contents
