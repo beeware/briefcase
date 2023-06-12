@@ -8,8 +8,8 @@ Gradle requires an install of the Android SDK and a Java 17 JDK.
 
 If you have an existing install of the Android SDK, it will be used by Briefcase
 if the ``ANDROID_HOME`` environment variable is set. If ``ANDROID_HOME`` is not
-present in the environment, Briefcase will honor the ``ANDROID_SDK_ROOT``
-environment variable (the use of variable has been deprecated by Android).
+present in the environment, Briefcase will honor the deprecated
+``ANDROID_SDK_ROOT`` environment variable.
 
 If you have an existing install of a Java 17 JDK, it will be used by Briefcase
 if the ``JAVA_HOME`` environment variable is set. On macOS, if ``JAVA_HOME`` is

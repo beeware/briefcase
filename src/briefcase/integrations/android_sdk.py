@@ -257,7 +257,7 @@ class AndroidSDK(ManagedTool):
                 tools.logger.warning(
                     f"""
 *************************************************************************
-** WARNING: {sdk_env_source} does not point to an Android SDK{" " * (26 - len(sdk_env_source))}**
+** {f"WARNING: {sdk_env_source} does not point to an Android SDK":67} **
 *************************************************************************
 
     The location pointed to by the {sdk_env_source} environment
