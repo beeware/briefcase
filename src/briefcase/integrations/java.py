@@ -52,6 +52,30 @@ class JDK(ManagedTool):
         )
 
     @classmethod
+    def version_from_path(cls, tools: ToolCache, java_path: str | Path) -> str:
+        """Return a JDK's version from a path by running ``<java_path>/bin/javac``.
+
+        This will fail if the path contains a JRE instead of a JDK.
+
+        Several exceptions can be raised for issues:
+         - OSError - the ``javac`` executable doesn't exist
+         - CalledProcessError - ``javac`` returned a non-zero value
+         - IndexError - unparsable version value from ``javac``
+
+        :param tools: ToolCache of available tools
+        :param java_path: File path to a candidate JDK install
+        :return: JDK release version; e.g. "17.0.7"
+        """
+        output = tools.subprocess.check_output(
+            [
+                os.fsdecode(Path(java_path) / "bin" / "javac"),
+                "-version",
+            ],
+        )
+        # javac's output should look like "javac 17.0.7\n"
+        return output.strip("\n").split(" ")[1]
+
+    @classmethod
     def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
         """Verify that a Java JDK exists.
 
@@ -74,38 +98,14 @@ class JDK(ManagedTool):
             return tools.java
 
         java = None
-        java_home = tools.os.environ.get("JAVA_HOME", "")
         install_message = None
 
-        # macOS has a helpful system utility to determine JAVA_HOME. Try it.
-        if not java_home and tools.host_os == "Darwin":
+        if java_home := tools.os.environ.get("JAVA_HOME", ""):
             try:
-                # If no JRE/JDK is installed, /usr/libexec/java_home
-                # raises an error.
-                java_home = tools.subprocess.check_output(
-                    ["/usr/libexec/java_home"],
-                ).strip("\n")
-            except subprocess.CalledProcessError:
-                # No java on this machine.
-                pass
-
-        if java_home:
-            try:
-                # If JAVA_HOME is defined, try to invoke javac.
-                # This verifies that we have a JDK, not a just a JRE.
-                output = tools.subprocess.check_output(
-                    [
-                        os.fsdecode(Path(java_home) / "bin" / "javac"),
-                        "-version",
-                    ],
-                )
-                # This should be a string of the form "javac 17.0.7\n"
-                version_str = output.strip("\n").split(" ")[1]
-                if version_str == cls.JDK_RELEASE:
-                    # It appears to be a Java JDK
+                version_str = cls.version_from_path(tools, java_home)
+                if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
                     java = JDK(tools, java_home=Path(java_home))
                 else:
-                    # It's not a Java JDK.
                     install_message = f"""
 *************************************************************************
 ** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK                  **
@@ -121,7 +121,6 @@ class JDK(ManagedTool):
     Briefcase will use its own JDK instance.
 
 *************************************************************************
-
 """
 
             except OSError:
@@ -139,7 +138,6 @@ class JDK(ManagedTool):
     Briefcase will use its own JDK instance.
 
 *************************************************************************
-
 """
 
             except subprocess.CalledProcessError:
@@ -166,7 +164,6 @@ class JDK(ManagedTool):
     from the command prompt.
 
 *************************************************************************
-
 """
 
             except IndexError:
@@ -193,12 +190,32 @@ class JDK(ManagedTool):
     from the command prompt.
 
 *************************************************************************
-
 """
 
+        # macOS has a helpful system utility to determine JAVA_HOME. Try it.
+        elif tools.host_os == "Darwin":
+            try:
+                # If /usr/libexec/java_home doesn't exist, OSError will be raised
+                # If no JRE/JDK is installed, /usr/libexec/java_home raises an error
+                java_home = tools.subprocess.check_output(
+                    ["/usr/libexec/java_home"],
+                ).strip("\n")
+            except (OSError, subprocess.CalledProcessError):
+                pass  # No java on this machine
+            else:
+                try:
+                    version_str = cls.version_from_path(tools, java_home)
+                    if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
+                        java = JDK(tools, java_home=Path(java_home))
+                except (OSError, subprocess.CalledProcessError, IndexError):
+                    pass  # do not alert user if macOS found an unqualified JDK
+
         if java is None:
-            # If we've reached this point, any user-provided JAVA_HOME is broken;
-            # use the Briefcase one.
+            # Inform the user if the user-specified JDK wasn't valid
+            if install_message:
+                tools.logger.warning(install_message)
+
+            # Use the Briefcase JDK install
             java_home = tools.base_path / cls.JDK_INSTALL_DIR_NAME
 
             # The macOS download has a weird layout (inherited from the official Oracle
@@ -210,10 +227,6 @@ class JDK(ManagedTool):
 
             if not java.exists():
                 if install:
-                    # We only display the warning messages on the pass where we actually
-                    # install the JDK.
-                    if install_message:
-                        tools.logger.warning(install_message)
                     tools.logger.info(
                         f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,

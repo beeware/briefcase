@@ -113,8 +113,49 @@ def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
     assert sdk.root_path == android_sdk_root_path
 
 
-def test_user_provided_sdk(mock_tools, tmp_path):
-    """If the user specifies a valid ANDROID_SDK_ROOT, it is used."""
+@pytest.mark.parametrize("env_var", ["ANDROID_HOME", "ANDROID_SDK_ROOT"])
+def test_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
+    """If the user environment specifies a valid Android SDK, it is used."""
+    # Increase the log level.
+    mock_tools.logger.verbosity = 2
+
+    # Create `sdkmanager` and the license file.
+    existing_android_sdk_root_path = tmp_path / "other_sdk"
+    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = tools_bin / "sdkmanager.bat"
+        sdk_manager.touch()
+    else:
+        sdk_manager = tools_bin / "sdkmanager"
+        sdk_manager.touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(existing_android_sdk_root_path)()
+
+    # Set the environment to specify ANDROID_SDK_ROOT
+    mock_tools.os.environ = {env_var: os.fsdecode(existing_android_sdk_root_path)}
+
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # No calls to download or unpack anything.
+    mock_tools.download.file.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == existing_android_sdk_root_path
+
+    # User is warned about using ANDROID_SDK_ROOT
+    if env_var == "ANDROID_SDK_ROOT":
+        assert "Using Android SDK from ANDROID_SDK_ROOT" in capsys.readouterr().out
+    else:
+        assert capsys.readouterr().out == ""
+
+
+def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
+    """If the user environment specifies a valid Android SDK in both ANDROID_HOME and
+    ANDROID_SDK_ROOT, it is used."""
     # Increase the log level.
     mock_tools.logger.verbosity = 2
 
@@ -134,7 +175,8 @@ def test_user_provided_sdk(mock_tools, tmp_path):
 
     # Set the environment to specify ANDROID_SDK_ROOT
     mock_tools.os.environ = {
-        "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path)
+        "ANDROID_HOME": os.fsdecode(existing_android_sdk_root_path),
+        "ANDROID_SDK_ROOT": os.fsdecode(existing_android_sdk_root_path),
     }
 
     # Expect verify() to succeed
@@ -147,9 +189,54 @@ def test_user_provided_sdk(mock_tools, tmp_path):
     # The returned SDK has the expected root path.
     assert sdk.root_path == existing_android_sdk_root_path
 
+    # User is not warned about configuration
+    assert capsys.readouterr().out == ""
 
-def test_invalid_user_provided_sdk(mock_tools, tmp_path):
-    """If the user specifies an invalid ANDROID_SDK_ROOT, it is ignored."""
+
+def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):
+    """A warning is logged if ANDROID_HOME and ANDROID_SDK_ROOT are not the same."""
+    # Increase the log level.
+    mock_tools.logger.verbosity = 2
+
+    # Create `sdkmanager` and the license file.
+    existing_android_sdk_root_path = tmp_path / "other_sdk"
+    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = tools_bin / "sdkmanager.bat"
+        sdk_manager.touch()
+    else:
+        sdk_manager = tools_bin / "sdkmanager"
+        sdk_manager.touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(existing_android_sdk_root_path)()
+
+    # Set the environment to specify ANDROID_HOME and ANDROID_SDK_ROOT
+    mock_tools.os.environ = {
+        "ANDROID_HOME": os.fsdecode(existing_android_sdk_root_path),
+        "ANDROID_SDK_ROOT": "/opt/sdk2",
+    }
+
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # No calls to download or unpack anything.
+    mock_tools.download.file.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == existing_android_sdk_root_path
+
+    # User is warned about using ANDROID_SDK_ROOT
+    assert (
+        "ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent" in capsys.readouterr().out
+    )
+
+
+@pytest.mark.parametrize("env_var", ["ANDROID_HOME", "ANDROID_SDK_ROOT"])
+def test_invalid_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
+    """If the user's environment specifies an invalid Android SDK, it is ignored."""
 
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
@@ -167,7 +254,7 @@ def test_invalid_user_provided_sdk(mock_tools, tmp_path):
     accept_license(android_sdk_root_path)()
 
     # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
-    mock_tools.os.environ = {"ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk")}
+    mock_tools.os.environ = {env_var: os.fsdecode(tmp_path / "other_sdk")}
 
     # Expect verify() to succeed
     sdk = AndroidSDK.verify(mock_tools)
@@ -179,6 +266,91 @@ def test_invalid_user_provided_sdk(mock_tools, tmp_path):
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
+
+    # User is informed about invalid env var setting
+    assert f"{env_var} does not point to an Android SDK" in capsys.readouterr().out
+
+
+def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
+    """If the user's environment specifies an invalid Android SDK in both ANDROID_HOME
+    and ANDROID_SDK_ROOT, they are ignored."""
+
+    # Create `sdkmanager` and the license file
+    # for the *briefcase* managed version of the SDK.
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = tools_bin / "sdkmanager.bat"
+        sdk_manager.touch()
+    else:
+        sdk_manager = tools_bin / "sdkmanager"
+        sdk_manager.touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
+
+    # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
+    mock_tools.os.environ = {
+        "ANDROID_HOME": os.fsdecode(tmp_path / "other_sdk"),
+        "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk"),
+    }
+
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # No calls to download, run or unpack anything.
+    mock_tools.download.file.assert_not_called()
+    mock_tools.subprocess.run.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == android_sdk_root_path
+
+    # User is informed about invalid env var setting
+    assert "ANDROID_HOME does not point to an Android SDK" in capsys.readouterr().out
+
+
+def test_inconsistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
+    """If the user's environment specifies an invalid Android SDK in both ANDROID_HOME
+    and ANDROID_SDK_ROOT...and they are both different, they are ignored."""
+
+    # Create `sdkmanager` and the license file
+    # for the *briefcase* managed version of the SDK.
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if platform.system() == "Windows":
+        sdk_manager = tools_bin / "sdkmanager.bat"
+        sdk_manager.touch()
+    else:
+        sdk_manager = tools_bin / "sdkmanager"
+        sdk_manager.touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
+
+    # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
+    mock_tools.os.environ = {
+        "ANDROID_HOME": os.fsdecode(tmp_path / "other_sdk1"),
+        "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "other_sdk2"),
+    }
+
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # No calls to download, run or unpack anything.
+    mock_tools.download.file.assert_not_called()
+    mock_tools.subprocess.run.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == android_sdk_root_path
+
+    # User is informed about invalid env var setting
+    output = capsys.readouterr().out
+    assert "ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent" in output
+    assert "ANDROID_HOME does not point to an Android SDK" in output
 
 
 def test_download_sdk(mock_tools, tmp_path):
