@@ -79,10 +79,10 @@ class LinuxDeployBase(ABC):
 
         :param tools: ToolCache of available tools
         :param install: Should the tool/plugin be installed if it is not found?
-        :param kwargs: Any additional keyword arguments that should be passed
-            to the tool at time of construction.
-        :returns: A valid tool wrapper. If the tool/plugin is not
-            available, and was not installed, raises MissingToolError.
+        :param kwargs: Any additional keyword arguments that should be passed to the
+            tool at time of construction.
+        :returns: A valid tool wrapper. If the tool/plugin is not available, and was not
+            installed, raises MissingToolError.
         """
         is_plugin = issubclass(cls, LinuxDeployPluginBase)
 

@@ -104,8 +104,8 @@ class CreateCommand(BaseCommand):
         """Obtain the dictionary of icon targets that the template requires.
 
         :param app: The config object for the app
-        :return: A dictionary of icons that the template supports. The keys
-            of the dictionary are the size of the icons.
+        :return: A dictionary of icons that the template supports. The keys of the
+            dictionary are the size of the icons.
         """
         # If the template specifies no icons, return an empty dictionary.
         # If the template specifies a single icon without a size specification,
@@ -125,8 +125,8 @@ class CreateCommand(BaseCommand):
         """Obtain the dictionary of splash image targets that the template requires.
 
         :param app: The config object for the app
-        :return: A dictionary of splash images that the template supports. The keys
-            of the dictionary are the size of the splash images.
+        :return: A dictionary of splash images that the template supports. The keys of
+            the dictionary are the size of the splash images.
         """
         # If the template specifies no splash images, return an empty dictionary.
         # If the template specifies a single splash image without a size specification,
@@ -276,8 +276,8 @@ class CreateCommand(BaseCommand):
     def _cleanup_app_support_package(self, support_path):
         """The internal implementation of the app support cleanup method.
 
-        Guaranteed to only be invoked if the backend uses a support package,
-        and the support path exists.
+        Guaranteed to only be invoked if the backend uses a support package, and the
+        support path exists.
 
         :param support_path: The support path to clean up.
         """
@@ -396,8 +396,8 @@ class CreateCommand(BaseCommand):
 
         :param app: The app configuration
         :param requires: The full list of requirements
-        :param requirements_path: The full path to a requirements.txt file that
-            will be written.
+        :param requirements_path: The full path to a requirements.txt file that will be
+            written.
         """
 
         with self.input.wait_bar("Writing requirements file..."):

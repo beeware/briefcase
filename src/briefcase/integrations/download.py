@@ -36,16 +36,16 @@ class Download(Tool):
         """Download a given URL, caching it. If it has already been downloaded, return
         the value that has been cached.
 
-        This is a utility method used to obtain assets used by the installation
-        process. The cached filename will be the filename portion of the URL,
-        appended to the download path.
+        This is a utility method used to obtain assets used by the installation process.
+        The cached filename will be the filename portion of the URL, appended to the
+        download path.
 
         :param url: The URL to download
-        :param download_path: The path to the download cache folder. This path
-            will be created if it doesn't exist.
-        :param role: A string describing the role played by the file being
-            downloaded; used to construct log and error messages. Should be
-            able to fit into the sentence "Error downloading {role}".
+        :param download_path: The path to the download cache folder. This path will be
+            created if it doesn't exist.
+        :param role: A string describing the role played by the file being downloaded;
+            used to construct log and error messages. Should be able to fit into the
+            sentence "Error downloading {role}".
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)

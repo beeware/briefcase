@@ -27,8 +27,8 @@ class RCEdit(ManagedTool):
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
-        :returns: A valid rcedit tool wrapper. If rcedit is not
-            available, and was not installed, raises MissingToolError.
+        :returns: A valid rcedit tool wrapper. If rcedit is not available, and was not
+            installed, raises MissingToolError.
         """
         # short circuit since already verified and available
         if hasattr(tools, "rcedit"):
