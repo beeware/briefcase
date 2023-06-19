@@ -198,7 +198,7 @@ AppImage.
 
 In addition, many of the commonly used ``manylinux`` base images predate the release of
 WebKit2. As a result, system packages providing WebKit2 are not available on these base
-images. ``manylinux2_28`` is the earliest supported ``manylinux`` image that provides
+images. ``manylinux_2_28`` is the earliest supported ``manylinux`` image that provides
 WebKit2 support.
 
 Runtime issues with AppImages
