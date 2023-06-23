@@ -150,6 +150,7 @@ class LinuxAppImageCreateCommand(
 
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
+
         # Add the manylinux tag to the template context.
         try:
             tag = getattr(app, "manylinux_image_tag", "latest")
@@ -164,6 +165,13 @@ class LinuxAppImageCreateCommand(
                 raise BriefcaseConfigError(
                     f"""Unknown manylinux tag {app.manylinux!r}"""
                 )
+        except AttributeError:
+            pass
+
+        # Use the non-root brutus user if Docker is mapping usernames
+        # (only relevant if Docker is being used for the target platform)
+        try:
+            context["use_non_root_user"] = not self.tools.docker.is_userns_remap
         except AttributeError:
             pass
 

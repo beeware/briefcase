@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import sys
+from contextlib import suppress
 from pathlib import Path
 from typing import List
 
@@ -271,16 +272,15 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
 
-            # Ensure that the Docker base image is available.
-            self.logger.info(f"Checking Docker target image {app.target_image}...")
-            self.tools.docker.prepare(app.target_image)
-
             # Extract release information from the image.
-            output = self.tools.docker.check_output(
-                ["cat", "/etc/os-release"],
-                image_tag=app.target_image,
-            )
-            freedesktop_info = parse_freedesktop_os_release(output)
+            with self.input.wait_bar(
+                f"Checking Docker target image {app.target_image}..."
+            ):
+                output = self.tools.docker.check_output(
+                    ["cat", "/etc/os-release"],
+                    image_tag=app.target_image,
+                )
+                freedesktop_info = parse_freedesktop_os_release(output)
         else:
             freedesktop_info = super().platform_freedesktop_info(app)
 
@@ -294,7 +294,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         """If we're using Docker, verify that it is available."""
         super().verify_tools()
         if self.use_docker:
-            Docker.verify(tools=self.tools)
+            Docker.verify(tools=self.tools, image_tag=self.target_image)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -558,6 +558,11 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
 
         # Add the vendor base
         context["vendor_base"] = app.target_vendor_base
+
+        # Use the non-root brutus user if Docker is mapping usernames
+        # (only relevant if Docker is being used for the target platform)
+        with suppress(AttributeError):
+            context["use_non_root_user"] = not self.tools.docker.is_userns_remap
 
         return context
 

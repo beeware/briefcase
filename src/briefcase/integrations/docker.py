@@ -112,8 +112,17 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
     }
 
     @classmethod
-    def verify_install(cls, tools: ToolCache, **kwargs) -> Docker:
-        """Verify Docker is installed and operational."""
+    def verify_install(
+        cls,
+        tools: ToolCache,
+        image_tag: str | None = None,
+        **kwargs,
+    ) -> Docker:
+        """Verify Docker is installed and operational.
+
+        :param tools: ToolCache of available tools
+        :param image_tag: Specific image to use to assess Docker's operating mode
+        """
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
             return tools.docker
@@ -123,6 +132,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         cls._buildx_installed(tools=tools)
 
         tools.docker = Docker(tools=tools)
+        tools.docker._determine_docker_mode(image_tag=image_tag)
+
         return tools.docker
 
     @classmethod
@@ -189,16 +200,131 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
+    def _determine_docker_mode(self, image_tag: str | None = None):
+        """Determine Docker's operating mode from how it interacts with bind mounts.
+
+        Docker can be installed in different ways on Linux that significantly impact how
+        containers interact with the host system. Of particular note is ownership of
+        files and directories in bind mounts (i.e. mounts using --volume).
+
+        Traditionally, Docker would pass through the UID/GID of the user used inside a
+        container as the owner of files created within the bind mount. And since the
+        default user inside containers is root, the files would be owned by root on the
+        host file system; this prevents later interaction with those files by the host.
+        To work around this, the Dockerfile can use a step-down user with a UID and GID
+        that matches the host user running Docker.
+
+        Other installation methods of Docker, though, are not compatible with using such
+        a step-down user. This includes Docker Desktop and rootless Docker. In these
+        modes, Docker maps the host user to the root user inside the container; this
+        mapping is transparent and would require changes to the host environment to
+        disable, if it can be disabled at all. This allows files created in bind mounts
+        inside the container to be owned on the host file system by the user running
+        Docker. Additionally, though, because the host user is mapped to root inside the
+        container, any files that were created by the host user in the bind mount
+        outside the container are owned by root inside the container; therefore, a step-
+        down user could not interact with such bind mount files inside the container.
+
+        To accommodate these different modes, this checks which user owns a file that is
+        created inside a bind mount in the container. If the owning user of that file on
+        the host file system is root, then a step-down user is necessary inside
+        containers. If the owning user is the host user, root should be used.
+        """
+        write_test_filename = "container_write_test"
+        host_write_test_dir_path = Path.cwd()
+        host_write_test_file_path = Path(host_write_test_dir_path, write_test_filename)
+        container_mount_host_dir = "/host_write_test"
+        container_write_test_file_path = PurePosixPath(
+            container_mount_host_dir, write_test_filename
+        )
+
+        docker_run_cmd = [
+            "docker",
+            "run",
+            "--rm",
+            "--volume",
+            f"{host_write_test_dir_path}:{container_mount_host_dir}:z",
+            "alpine" if image_tag is None else image_tag,
+        ]
+
+        try:
+            host_write_test_file_path.unlink(missing_ok=True)
+        except OSError as e:
+            raise BriefcaseCommandError(
+                f"""
+The file path used to determine Docker's operating mode already exists and
+cannot be automatically deleted.
+
+    {host_write_test_file_path}
+
+Delete this file and run Briefcase again.
+"""
+            ) from e
+
+        try:
+            self.tools.subprocess.run(
+                docker_run_cmd + ["touch", container_write_test_file_path],
+                check=True,
+                stream_output=False,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to determine Docker's operating mode"
+            ) from e
+
+        # if the file is not owned by `root`, then Docker is mapping usernames
+        self.is_userns_remap = 0 != self.tools.os.stat(host_write_test_file_path).st_uid
+
+        try:
+            self.tools.subprocess.run(
+                docker_run_cmd + ["rm", "-f", container_write_test_file_path],
+                check=True,
+                stream_output=False,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to clean up from determining Docker's operating mode"
+            ) from e
+
+    def cache_image(self, image_tag: str):
+        """Ensures an image is available and cached locally.
+
+        While many Docker commands for an image will pull that image in-line with the
+        command if it isn't already cached, this pollutes the console output with
+        details about pulling the image. This can be particularly troublesome when the
+        output from a command run inside a container using the image is desired.
+
+        Note: This will not update an already cached image if a newer version is
+        available in the registry.
+
+        :param image_tag: Image name/tag to pull if not locally cached
+        """
+        image_id = self.tools.subprocess.check_output(
+            ["docker", "images", "-q", image_tag]
+        ).strip()
+
+        if not image_id:
+            try:
+                self.tools.subprocess.run(["docker", "pull", image_tag])
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to obtain the Docker image for {image_tag}. "
+                    "Is the image name correct?"
+                ) from e
+
     def check_output(self, args: list[SubprocessArgT], image_tag: str) -> str:
         """Run a process inside a Docker container, capturing output.
 
-        This is a bare Docker invocation; it's really only useful for running simple
-        commands on an image, ensuring that the container is destroyed afterward. In
-        most cases, you'll want to use an app context, rather than this.
+        This ensures the image is locally cached and then runs a bare Docker invocation;
+        it's really only useful for running simple commands on an image, ensuring that
+        the container is destroyed afterward. In most cases, you'll want to use an app
+        context, rather than this.
 
         :param args: The list of arguments to pass to the Docker instance.
         :param image_tag: The Docker image to run
         """
+        self.cache_image(image_tag)
+
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
@@ -211,28 +337,6 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             ]
             + args,
         )
-
-    def prepare(self, image_tag: str):
-        """Ensure that the given image exists, and is cached locally.
-
-        This is achieved by trying to run a no-op command (echo) on the image; if it
-        succeeds, the image exists locally.
-
-        A pull is forced, so you can be certain that the image is up-to-date.
-
-        :param image_tag: The Docker image to prepare
-        """
-        try:
-            self.tools.subprocess.run(
-                ["docker", "run", "--rm", image_tag, "printf", ""],
-                check=True,
-                stream_output=False,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to obtain the Docker base image {image_tag}. "
-                "Is the image name correct?"
-            ) from e
 
 
 class DockerAppContext(Tool):
@@ -354,7 +458,7 @@ class DockerAppContext(Tool):
         filesystem.
 
         Converts:
-        * any reference to sys.executable into the python executable in the docker container
+        * any reference to `sys.executable` into the python executable in the docker container
         * any path in <build path> into the equivalent stemming from /app
         * any path in <data path> into the equivalent in ~/.cache/briefcase
 

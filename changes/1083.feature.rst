@@ -1,0 +1,1 @@
+On Linux, Docker Desktop and rootless Docker are now supported.
