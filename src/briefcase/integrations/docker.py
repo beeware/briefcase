@@ -111,6 +111,18 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         "Linux": "https://docs.docker.com/engine/install/#server",
     }
 
+    def __init__(self, tools: ToolCache, image_tag: str | None = None):
+        """A wrapper for the user-installed Docker.
+
+        :param tools: ToolCache of available tools
+        :param image_tag: An optional image used to access attributes of the Docker
+            environment, such as how user permissions are managed in bind mounts. A
+            lightweight image will be used if one is not specified but this image is not
+            at all bound to the instance.
+        """
+        super().__init__(tools=tools)
+        self.is_users_mapped = self._is_user_mapping_enabled(image_tag)
+
     @classmethod
     def verify_install(
         cls,
@@ -121,7 +133,9 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         """Verify Docker is installed and operational.
 
         :param tools: ToolCache of available tools
-        :param image_tag: Specific image to use to assess Docker's operating mode
+        :param image_tag: An optional image used during verification to access
+            attributes of the local Docker environment. This image is not bound to the
+            instance and only used during instantiation.
         """
         # short circuit since already verified and available
         if hasattr(tools, "docker"):
@@ -131,9 +145,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         cls._user_access(tools=tools)
         cls._buildx_installed(tools=tools)
 
-        tools.docker = Docker(tools=tools)
-        tools.docker._determine_docker_mode(image_tag=image_tag)
-
+        tools.docker = Docker(tools=tools, image_tag=image_tag)
         return tools.docker
 
     @classmethod
@@ -200,8 +212,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
-    def _determine_docker_mode(self, image_tag: str | None = None):
-        """Determine Docker's operating mode from how it interacts with bind mounts.
+    def _is_user_mapping_enabled(self, image_tag: str | None = None) -> bool:
+        """Determine whether Docker is mapping users between the container and the host.
 
         Docker can be installed in different ways on Linux that significantly impact how
         containers interact with the host system. Of particular note is ownership of
@@ -215,9 +227,10 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         that matches the host user running Docker.
 
         Other installation methods of Docker, though, are not compatible with using such
-        a step-down user. This includes Docker Desktop and rootless Docker. In these
-        modes, Docker maps the host user to the root user inside the container; this
-        mapping is transparent and would require changes to the host environment to
+        a step-down user. This includes Docker Desktop and rootless Docker (although,
+        even a traditional installation of Docker Engine can be configured similarly).
+        In these modes, Docker maps the host user to the root user inside the container;
+        this mapping is transparent and would require changes to the host environment to
         disable, if it can be disabled at all. This allows files created in bind mounts
         inside the container to be owned on the host file system by the user running
         Docker. Additionally, though, because the host user is mapped to root inside the
@@ -229,9 +242,28 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         created inside a bind mount in the container. If the owning user of that file on
         the host file system is root, then a step-down user is necessary inside
         containers. If the owning user is the host user, root should be used.
+
+        On macOS, Docker Desktop is the only option to use Docker and user mapping
+        happens differently such that any user in the container is mapped to the host
+        user. Instead of leveraging user namespaces as on Linux, this user mapping
+        manifests as a consequence of bind mounts being implemented as NFS shares
+        between macOS and the Linux VM that Docker Desktop runs containers in. So,
+        using a step-down user on macOS is effectively inconsequential.
+
+        On Windows WSL 2, Docker Desktop operates similarly to how it does on Linux.
+        However, user namespace mapping is not possible because the Docker Desktop VM
+        and the WSL distro are already running in different user namespaces...and
+        therefore, Docker cannot even see the users in the distro to map them in to the
+        container. So, a step-down user is always used.
+
+        ref: https://docs.docker.com/engine/security/userns-remap/
+
+        :param image_tag: The image:tag to use to create the container for the test; if
+            one is not specified, then `alpine:latest` will be used.
+        :returns: True if users are being mapped; False otherwise
         """
         write_test_filename = "container_write_test"
-        host_write_test_dir_path = Path.cwd()
+        host_write_test_dir_path = Path.cwd() / "build"
         host_write_test_file_path = Path(host_write_test_dir_path, write_test_filename)
         container_mount_host_dir = "/host_write_test"
         container_write_test_file_path = PurePosixPath(
@@ -247,13 +279,15 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             "alpine" if image_tag is None else image_tag,
         ]
 
+        host_write_test_dir_path.mkdir(exist_ok=True)
+
         try:
             host_write_test_file_path.unlink(missing_ok=True)
         except OSError as e:
             raise BriefcaseCommandError(
-                f"""
-The file path used to determine Docker's operating mode already exists and
-cannot be automatically deleted.
+                f"""\
+The file path used to determine how Docker is mapping users between the host
+and Docker containers already exists and cannot be automatically deleted.
 
     {host_write_test_file_path}
 
@@ -269,11 +303,11 @@ Delete this file and run Briefcase again.
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                "Unable to determine Docker's operating mode"
+                "Unable to determine if Docker is mapping users"
             ) from e
 
         # if the file is not owned by `root`, then Docker is mapping usernames
-        self.is_userns_remap = 0 != self.tools.os.stat(host_write_test_file_path).st_uid
+        is_users_mapped = 0 != self.tools.os.stat(host_write_test_file_path).st_uid
 
         try:
             self.tools.subprocess.run(
@@ -283,8 +317,10 @@ Delete this file and run Briefcase again.
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                "Unable to clean up from determining Docker's operating mode"
+                "Unable to clean up from determining if Docker is mapping users"
             ) from e
+
+        return is_users_mapped
 
     def cache_image(self, image_tag: str):
         """Ensures an image is available and cached locally.
@@ -305,7 +341,7 @@ Delete this file and run Briefcase again.
 
         if not image_id:
             try:
-                self.tools.subprocess.run(["docker", "pull", image_tag])
+                self.tools.subprocess.run(["docker", "pull", image_tag], check=True)
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to obtain the Docker image for {image_tag}. "

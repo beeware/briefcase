@@ -3,7 +3,6 @@ import os
 import re
 import subprocess
 import sys
-from contextlib import suppress
 from pathlib import Path
 from typing import List
 
@@ -559,10 +558,8 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
         # Add the vendor base
         context["vendor_base"] = app.target_vendor_base
 
-        # Use the non-root brutus user if Docker is mapping usernames
-        # (only relevant if Docker is being used for the target platform)
-        with suppress(AttributeError):
-            context["use_non_root_user"] = not self.tools.docker.is_userns_remap
+        # Use the non-root brutus user if Docker is not mapping usernames
+        context["use_non_root_user"] = not self.tools.docker.is_users_mapped
 
         return context
 

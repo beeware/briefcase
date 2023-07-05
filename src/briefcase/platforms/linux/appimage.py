@@ -168,12 +168,8 @@ class LinuxAppImageCreateCommand(
         except AttributeError:
             pass
 
-        # Use the non-root brutus user if Docker is mapping usernames
-        # (only relevant if Docker is being used for the target platform)
-        try:
-            context["use_non_root_user"] = not self.tools.docker.is_userns_remap
-        except AttributeError:
-            pass
+        # Use the non-root brutus user if Docker is not mapping usernames
+        context["use_non_root_user"] = not self.tools.docker.is_users_mapped
 
         return context
 
