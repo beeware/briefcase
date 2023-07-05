@@ -212,6 +212,10 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
+    def _write_test_path(self) -> Path:
+        """Host system filepath to perform write test from a container."""
+        return Path.cwd() / "build" / "container_write_test"
+
     def _is_user_mapping_enabled(self, image_tag: str | None = None) -> bool:
         """Determine whether Docker is mapping users between the container and the host.
 
@@ -262,12 +266,9 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             one is not specified, then `alpine:latest` will be used.
         :returns: True if users are being mapped; False otherwise
         """
-        write_test_filename = "container_write_test"
-        host_write_test_dir_path = Path.cwd() / "build"
-        host_write_test_file_path = Path(host_write_test_dir_path, write_test_filename)
-        container_mount_host_dir = "/host_write_test"
-        container_write_test_file_path = PurePosixPath(
-            container_mount_host_dir, write_test_filename
+        host_write_test_path = self._write_test_path()
+        container_write_test_path = PurePosixPath(
+            "/host_write_test", host_write_test_path.name
         )
 
         docker_run_cmd = [
@@ -275,21 +276,21 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             "run",
             "--rm",
             "--volume",
-            f"{host_write_test_dir_path}:{container_mount_host_dir}:z",
+            f"{host_write_test_path.parent}:{container_write_test_path.parent}:z",
             "alpine" if image_tag is None else image_tag,
         ]
 
-        host_write_test_dir_path.mkdir(exist_ok=True)
+        host_write_test_path.parent.mkdir(exist_ok=True)
 
         try:
-            host_write_test_file_path.unlink(missing_ok=True)
+            host_write_test_path.unlink(missing_ok=True)
         except OSError as e:
             raise BriefcaseCommandError(
                 f"""\
 The file path used to determine how Docker is mapping users between the host
 and Docker containers already exists and cannot be automatically deleted.
 
-    {host_write_test_file_path}
+    {host_write_test_path}
 
 Delete this file and run Briefcase again.
 """
@@ -297,7 +298,7 @@ Delete this file and run Briefcase again.
 
         try:
             self.tools.subprocess.run(
-                docker_run_cmd + ["touch", container_write_test_file_path],
+                docker_run_cmd + ["touch", container_write_test_path],
                 check=True,
                 stream_output=False,
             )
@@ -307,11 +308,11 @@ Delete this file and run Briefcase again.
             ) from e
 
         # if the file is not owned by `root`, then Docker is mapping usernames
-        is_users_mapped = 0 != self.tools.os.stat(host_write_test_file_path).st_uid
+        is_users_mapped = 0 != self.tools.os.stat(host_write_test_path).st_uid
 
         try:
             self.tools.subprocess.run(
-                docker_run_cmd + ["rm", "-f", container_write_test_file_path],
+                docker_run_cmd + ["rm", "-f", container_write_test_path],
                 check=True,
                 stream_output=False,
             )

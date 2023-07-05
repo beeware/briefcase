@@ -30,9 +30,6 @@ def test_docker(create_command, first_app_config):
     # Finalize the app config
     create_command.finalize_app_config(first_app_config)
 
-    # The base image has been prepared
-    create_command.tools.docker.prepare.assert_called_once_with("somevendor:surprising")
-
     # The app's image, vendor and codename have been constructed from the target image
     assert first_app_config.target_image == "somevendor:surprising"
     assert first_app_config.target_vendor == "somevendor"

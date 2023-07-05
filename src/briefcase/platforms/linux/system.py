@@ -558,8 +558,11 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
         # Add the vendor base
         context["vendor_base"] = app.target_vendor_base
 
-        # Use the non-root brutus user if Docker is not mapping usernames
-        context["use_non_root_user"] = not self.tools.docker.is_users_mapped
+        # Use the non-root user if Docker is not mapping usernames
+        try:
+            context["use_non_root_user"] = not self.tools.docker.is_users_mapped
+        except AttributeError:
+            pass  # ignore if not using Docker
 
         return context
 
