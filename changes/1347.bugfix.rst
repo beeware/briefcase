@@ -1,0 +1,1 @@
+An error no longer occurs when creating a new Briefcase project while ``cookiecutter>=2.2.0`` is installed.
