@@ -468,8 +468,8 @@ What GUI toolkit do you want to use for this project?""",
         # include the version of Briefcase as well as the source of the template.
         context.update(
             {
-                "template": template,
-                "branch": branch,
+                "template_source": template,
+                "template_branch": branch,
                 "briefcase_version": briefcase.__version__,
             }
         )
