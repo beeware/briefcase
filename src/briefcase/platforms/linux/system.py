@@ -163,6 +163,21 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
+        else:
+            if app.target_vendor_base == ARCH and self.tools.docker.is_users_mapped:
+                raise BriefcaseCommandError(
+                    """\
+Briefcase cannot use this Docker installation to target Arch Linux since the
+tools to build packages for Arch cannot be run as root.
+
+The Docker available to Briefcase requires the use of the root user in
+containers to maintain accurate file permissions of the build artefacts.
+
+This most likely means you're using Docker Desktop or rootless Docker.
+
+Install Docker Engine and try again or run Briefcase on an Arch host system.
+"""
+                )
 
         # Merge target-specific configuration items into the app config This
         # means:
