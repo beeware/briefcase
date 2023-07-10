@@ -417,4 +417,4 @@ def test_user_mapping_setting(
     # Docker user mapping inspection occurred
     mock_tools.subprocess.run.assert_has_calls(user_mapping_run_calls)
 
-    assert docker.is_users_mapped is expected
+    assert docker.is_user_mapped is expected

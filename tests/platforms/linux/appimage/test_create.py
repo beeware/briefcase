@@ -82,7 +82,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
 
 @pytest.mark.parametrize(
-    "manylinux, tag, host_arch, is_users_mapped, context",
+    "manylinux, tag, host_arch, is_user_mapped, context",
     [
         # Fallback.
         (None, None, "x86_64", False, {"use_non_root_user": True}),
@@ -165,13 +165,13 @@ def test_output_format_template_context(
     manylinux,
     tag,
     host_arch,
-    is_users_mapped,
+    is_user_mapped,
     context,
 ):
     """The template context reflects the manylinux name, tag and architecture."""
     # Mock Docker user mapping setting for `use_non_root_user`
     create_command.tools.docker = MagicMock()
-    create_command.tools.docker.is_users_mapped = is_users_mapped
+    create_command.tools.docker.is_user_mapped = is_user_mapped
 
     if manylinux:
         first_app_config.manylinux = manylinux

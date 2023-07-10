@@ -105,7 +105,7 @@ def test_docker_arch_with_user_mapping(create_command, first_app_config, tmp_pat
     # Build the app on a specific target
     create_command.target_image = "somearch:surprising"
     create_command.tools.docker = MagicMock()
-    create_command.tools.docker.is_users_mapped = True
+    create_command.tools.docker.is_user_mapped = True
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response for an Arch /etc/os-release
@@ -130,7 +130,7 @@ def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_
     # Build the app on a specific target
     create_command.target_image = "somearch:surprising"
     create_command.tools.docker = MagicMock()
-    create_command.tools.docker.is_users_mapped = False
+    create_command.tools.docker.is_user_mapped = False
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response for an Arch /etc/os-release

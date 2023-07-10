@@ -121,7 +121,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             at all bound to the instance.
         """
         super().__init__(tools=tools)
-        self.is_users_mapped = self._is_user_mapping_enabled(image_tag)
+        self.is_user_mapped = self._is_user_mapping_enabled(image_tag)
 
     @classmethod
     def verify_install(
@@ -308,7 +308,7 @@ Delete this file and run Briefcase again.
             ) from e
 
         # if the file is not owned by `root`, then Docker is mapping usernames
-        is_users_mapped = 0 != self.tools.os.stat(host_write_test_path).st_uid
+        is_user_mapped = 0 != self.tools.os.stat(host_write_test_path).st_uid
 
         try:
             self.tools.subprocess.run(
@@ -321,7 +321,7 @@ Delete this file and run Briefcase again.
                 "Unable to clean up from determining if Docker is mapping users"
             ) from e
 
-        return is_users_mapped
+        return is_user_mapped
 
     def cache_image(self, image_tag: str):
         """Ensures an image is available and cached locally.

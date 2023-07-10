@@ -164,7 +164,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
         else:
-            if app.target_vendor_base == ARCH and self.tools.docker.is_users_mapped:
+            if app.target_vendor_base == ARCH and self.tools.docker.is_user_mapped:
                 raise BriefcaseCommandError(
                     """\
 Briefcase cannot use this Docker installation to target Arch Linux since the
@@ -575,7 +575,7 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
 
         # Use the non-root user if Docker is not mapping usernames
         try:
-            context["use_non_root_user"] = not self.tools.docker.is_users_mapped
+            context["use_non_root_user"] = not self.tools.docker.is_user_mapped
         except AttributeError:
             pass  # ignore if not using Docker
 
