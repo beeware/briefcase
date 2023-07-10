@@ -27,7 +27,7 @@ class LinuxDeployBase(ABC):
     full_name: str
     install_msg: str
     tools: ToolCache
-    supported_host_os = {"Linux"}
+    supported_host_os = {"Darwin", "Linux"}
 
     @property
     @abstractmethod

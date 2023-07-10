@@ -10,7 +10,7 @@ from briefcase.integrations.linuxdeploy import LinuxDeployURLPlugin
 from .utils import side_effect_create_mock_appimage
 
 
-@pytest.mark.parametrize("host_os", ["Darwin", "Windows", "wonky"])
+@pytest.mark.parametrize("host_os", ["Windows", "wonky"])
 def test_unsupported_os(mock_tools, host_os):
     """When host OS is not supported, an error is raised."""
     mock_tools.host_os = host_os
