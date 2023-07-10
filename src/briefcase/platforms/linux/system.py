@@ -164,7 +164,15 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
         else:
-            if app.target_vendor_base == ARCH and self.tools.docker.is_user_mapped:
+            # If we're building for Arch, and Docker does user mapping, we can't build,
+            # because Arch won't let makepkg run as root. Docker on macOS *does* map the
+            # user, but introducing a step-down user doesn't alter behavior, so we can
+            # allow it.
+            if (
+                app.target_vendor_base == ARCH
+                and self.tools.docker.is_user_mapped
+                and self.tools.host_os != "Darwin"
+            ):
                 raise BriefcaseCommandError(
                     """\
 Briefcase cannot use this Docker installation to target Arch Linux since the
@@ -573,9 +581,13 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
         # Add the vendor base
         context["vendor_base"] = app.target_vendor_base
 
-        # Use the non-root user if Docker is not mapping usernames
+        # Use the non-root user if Docker is not mapping usernames. Also use a non-root
+        # user if we're on macOS; user mapping doesn't alter Docker operation, but some
+        # packaging tools (e.g., Arch's makepkg) don't like running as root.
         try:
-            context["use_non_root_user"] = not self.tools.docker.is_user_mapped
+            context["use_non_root_user"] = self.use_docker and (
+                self.tools.host_os == "Darwin" or not self.tools.docker.is_user_mapped
+            )
         except AttributeError:
             pass  # ignore if not using Docker
 

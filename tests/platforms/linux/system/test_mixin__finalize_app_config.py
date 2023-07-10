@@ -104,6 +104,7 @@ def test_docker_arch_with_user_mapping(create_command, first_app_config, tmp_pat
     """If Docker is mapping users and the host system is Arch, an error is raised."""
     # Build the app on a specific target
     create_command.target_image = "somearch:surprising"
+    create_command.tools.host_os = "Linux"
     create_command.tools.docker = MagicMock()
     create_command.tools.docker.is_user_mapped = True
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -124,11 +125,42 @@ def test_docker_arch_with_user_mapping(create_command, first_app_config, tmp_pat
         create_command.finalize_app_config(first_app_config)
 
 
+def test_docker_arch_with_user_mapping_macOS(
+    create_command, first_app_config, tmp_path
+):
+    """If we're on macOS, and the host system is Arch, we can finalize even though macOS
+    does user mapping."""
+    # Build the app on a specific target
+    create_command.target_image = "somearch:surprising"
+    create_command.tools.host_os = "Darwin"
+    create_command.tools.docker = MagicMock()
+    create_command.tools.docker.is_user_mapped = True
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response for an Arch /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=arch",
+            "VERSION_ID=20230625.0.160368",
+        ]
+    )
+
+    # Finalize the app config
+    create_command.finalize_app_config(first_app_config)
+
+    # The app's image, vendor and codename have been constructed from the target image
+    assert first_app_config.target_image == "somearch:surprising"
+    assert first_app_config.target_vendor == "arch"
+    assert first_app_config.target_codename == "20230625"
+    assert first_app_config.target_vendor_base == "arch"
+
+
 def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_path):
     """If Docker is *not* mapping users and the host system is Arch, an error is not
     raised."""
     # Build the app on a specific target
     create_command.target_image = "somearch:surprising"
+    create_command.tools.host_os = "Linux"
     create_command.tools.docker = MagicMock()
     create_command.tools.docker.is_user_mapped = False
     create_command.target_glibc_version = MagicMock(return_value="2.42")

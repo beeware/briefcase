@@ -67,11 +67,21 @@ def test_supported_host_os_without_docker(create_command):
     create_command.verify_host()
 
 
-@pytest.mark.parametrize("is_user_mapped", [True, False])
+@pytest.mark.parametrize(
+    "is_user_mapped, host_os, use_non_root",
+    [
+        (False, "Darwin", True),
+        (True, "Darwin", True),
+        (False, "Linux", True),
+        (True, "Linux", False),
+    ],
+)
 def test_output_format_template_context(
     create_command,
     first_app_config,
     is_user_mapped,
+    host_os,
+    use_non_root,
 ):
     """The template context contains additional deb-specific properties."""
     # Add some properties defined in config finalization
@@ -81,6 +91,12 @@ def test_output_format_template_context(
     first_app_config.target_codename = "surprising"
     first_app_config.target_vendor_base = "basevendor"
     first_app_config.glibc_version = "2.42"
+
+    # Mock the host OS
+    create_command.tools.host_os = host_os
+
+    # Mock a target Docker image
+    create_command.target_image = "somearch:surprising"
 
     # Mock Docker user mapping setting for `use_non_root_user`
     create_command.tools.docker = MagicMock()
@@ -98,7 +114,7 @@ def test_output_format_template_context(
         "python_version": "3.X",
         "docker_base_image": "somevendor:surprising",
         "vendor_base": "basevendor",
-        "use_non_root_user": not is_user_mapped,
+        "use_non_root_user": use_non_root,
     }
 
 
