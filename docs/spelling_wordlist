@@ -12,7 +12,9 @@ Bugfix
 Bugfixes
 checkmarks
 codebase
+Cookiecutter
 cryptographic
+customizations
 dev
 dialogs
 distributable
@@ -22,10 +24,12 @@ Dockerfile
 dr
 embeddable
 executables
+Freedesktop
 Flathub
 flatpak
 Flatpak
 Flatpaks
+Github
 gradle
 Gradle
 gradlew
