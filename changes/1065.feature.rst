@@ -1,1 +1,0 @@
-Android support was upgraded to use Java 17 for builds.

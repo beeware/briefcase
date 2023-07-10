@@ -1,1 +1,0 @@
-The ``Printer`` tests no longer fail on Windows when run in ``tox``.

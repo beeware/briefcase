@@ -1,1 +1,0 @@
-The limitations of using WebKit2 in AppImage were documented.

@@ -1,1 +1,0 @@
-The docstring linting tool ``docformatter`` was added back in to the ``pre-commit`` configuration.

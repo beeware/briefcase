@@ -1,1 +1,0 @@
-An warning is no longer logged if the Java identified by macOS is not usable by Briefcase.

@@ -1,1 +1,0 @@
-pip 23.1 was blocked from use due to pip bug #11982

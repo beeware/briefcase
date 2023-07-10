@@ -1,1 +1,0 @@
-Application/Bundle IDs are normalized to replace underscores with dashes when possible

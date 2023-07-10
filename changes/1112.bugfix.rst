@@ -1,1 +1,0 @@
-When the local Android keystore was generated with a recent version of java, Briefcase would raise an "Invalid Keystore format" error during app signing. This error will no longer occur.

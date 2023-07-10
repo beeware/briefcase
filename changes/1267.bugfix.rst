@@ -1,1 +1,0 @@
-Briefcase's Progress Bar and Wait Bar will no longer be rendered if the ``FORCE_COLOR`` environment variable is set.

@@ -1,1 +1,0 @@
-When creating a new Briefcase project, the header line in ``pyproject.toml`` now contains the version of Briefcase instead of "Unknown".

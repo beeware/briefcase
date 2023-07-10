@@ -1,1 +1,0 @@
-The ``--no-sign`` option for packaging was removed. Briefcase will now prompt for a signing identity during packging, falling back to adhoc/no signing as a default where possible.

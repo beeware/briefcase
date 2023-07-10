@@ -1,1 +1,0 @@
-An explicit check is now made during the automated release process to ensure ReadTheDocs docs were successfully built for the release.
