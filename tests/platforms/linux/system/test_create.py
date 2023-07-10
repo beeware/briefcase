@@ -120,6 +120,9 @@ def test_output_format_template_context(
 
 def test_output_format_template_context_no_docker(create_command, first_app_config):
     """If not using Docker, `use_non_root_user` default in template is used."""
+    # Mock the host to Linux to avoid flagging any "always use non-root user on macOS" logic.
+    create_command.tools.host_os = "Linux"
+
     # Add some properties defined in config finalization
     first_app_config.python_version_tag = "3.X"
     first_app_config.target_image = "somevendor:surprising"

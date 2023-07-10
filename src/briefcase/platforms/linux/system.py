@@ -583,9 +583,13 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
 
         # Use the non-root user if Docker is not mapping usernames. Also use a non-root
         # user if we're on macOS; user mapping doesn't alter Docker operation, but some
-        # packaging tools (e.g., Arch's makepkg) don't like running as root.
+        # packaging tools (e.g., Arch's makepkg) don't like running as root. If we're
+        # not using Docker, this will fall back to the template default, which should be
+        # enabling the root user. This might cause problems later, but it's part of a
+        # much bigger "does the project need to be updated in light of configuration
+        # changes" problem.
         try:
-            context["use_non_root_user"] = self.use_docker and (
+            context["use_non_root_user"] = (
                 self.tools.host_os == "Darwin" or not self.tools.docker.is_user_mapped
             )
         except AttributeError:
