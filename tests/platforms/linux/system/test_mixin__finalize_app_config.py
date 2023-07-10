@@ -12,7 +12,7 @@ from ....utils import create_file
 
 
 def test_docker(create_command, first_app_config):
-    "An app can be finalized inside docker"
+    """An app can be finalized inside docker."""
     # Build the app on a specific target
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
@@ -30,9 +30,6 @@ def test_docker(create_command, first_app_config):
     # Finalize the app config
     create_command.finalize_app_config(first_app_config)
 
-    # The base image has been prepared
-    create_command.tools.docker.prepare.assert_called_once_with("somevendor:surprising")
-
     # The app's image, vendor and codename have been constructed from the target image
     assert first_app_config.target_image == "somevendor:surprising"
     assert first_app_config.target_vendor == "somevendor"
@@ -44,7 +41,7 @@ def test_docker(create_command, first_app_config):
 
 
 def test_nodocker(create_command, first_app_config, tmp_path):
-    "An app can be finalized without docker"
+    """An app can be finalized without docker."""
     # Build the app without docker
     create_command.target_image = None
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -80,7 +77,7 @@ def test_nodocker(create_command, first_app_config, tmp_path):
 
 
 def test_nodocker_non_freedesktop(create_command, first_app_config, tmp_path):
-    "If the system isn't FreeDesktop compliant raise an error"
+    """If the system isn't FreeDesktop compliant raise an error."""
     # Build the app without docker
     create_command.target_image = None
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -101,6 +98,89 @@ def test_nodocker_non_freedesktop(create_command, first_app_config, tmp_path):
         match=r"Could not find the /etc/os-release file. Is this a FreeDesktop-compliant Linux distribution\?",
     ):
         create_command.finalize_app_config(first_app_config)
+
+
+def test_docker_arch_with_user_mapping(create_command, first_app_config, tmp_path):
+    """If Docker is mapping users and the host system is Arch, an error is raised."""
+    # Build the app on a specific target
+    create_command.target_image = "somearch:surprising"
+    create_command.tools.host_os = "Linux"
+    create_command.tools.docker = MagicMock()
+    create_command.tools.docker.is_user_mapped = True
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response for an Arch /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=arch",
+            "VERSION_ID=20230625.0.160368",
+        ]
+    )
+
+    # Finalize the app config
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Briefcase cannot use this Docker installation",
+    ):
+        create_command.finalize_app_config(first_app_config)
+
+
+def test_docker_arch_with_user_mapping_macOS(
+    create_command, first_app_config, tmp_path
+):
+    """If we're on macOS, and the host system is Arch, we can finalize even though macOS
+    does user mapping."""
+    # Build the app on a specific target
+    create_command.target_image = "somearch:surprising"
+    create_command.tools.host_os = "Darwin"
+    create_command.tools.docker = MagicMock()
+    create_command.tools.docker.is_user_mapped = True
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response for an Arch /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=arch",
+            "VERSION_ID=20230625.0.160368",
+        ]
+    )
+
+    # Finalize the app config
+    create_command.finalize_app_config(first_app_config)
+
+    # The app's image, vendor and codename have been constructed from the target image
+    assert first_app_config.target_image == "somearch:surprising"
+    assert first_app_config.target_vendor == "arch"
+    assert first_app_config.target_codename == "20230625"
+    assert first_app_config.target_vendor_base == "arch"
+
+
+def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_path):
+    """If Docker is *not* mapping users and the host system is Arch, an error is not
+    raised."""
+    # Build the app on a specific target
+    create_command.target_image = "somearch:surprising"
+    create_command.tools.host_os = "Linux"
+    create_command.tools.docker = MagicMock()
+    create_command.tools.docker.is_user_mapped = False
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response for an Arch /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=arch",
+            "VERSION_ID=20230625.0.160368",
+        ]
+    )
+
+    # Finalize the app config
+    create_command.finalize_app_config(first_app_config)
+
+    # The app's image, vendor and codename have been constructed from the target image
+    assert first_app_config.target_image == "somearch:surprising"
+    assert first_app_config.target_vendor == "arch"
+    assert first_app_config.target_codename == "20230625"
+    assert first_app_config.target_vendor_base == "arch"
 
 
 def test_properties(create_command, first_app_config):
@@ -417,7 +497,7 @@ def test_properties_no_version(create_command, first_app_config):
 
 
 def test_passive_mixin(first_app_config, tmp_path):
-    "An app using the PassiveMixin can be finalized"
+    """An app using the PassiveMixin can be finalized."""
     run_command = LinuxSystemRunCommand(
         logger=Log(),
         console=Console(),

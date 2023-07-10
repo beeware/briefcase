@@ -1,15 +1,17 @@
 import subprocess
-from unittest.mock import MagicMock
+from pathlib import PurePosixPath
+from unittest.mock import MagicMock, call
 
 import pytest
 
+import briefcase
 from briefcase.config import AppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import DockerAppContext
 
 
 @pytest.fixture
-def mock_tools(mock_tools) -> ToolCache:
+def mock_tools(mock_tools, tmp_path) -> ToolCache:
     # Mock stdlib subprocess module
     mock_tools.subprocess._subprocess = MagicMock(spec_set=subprocess)
 
@@ -66,3 +68,44 @@ def mock_docker_app_context(tmp_path, my_app, mock_tools) -> DockerAppContext:
     mock_docker_app_context.tools.subprocess._subprocess.Popen.reset_mock()
 
     return mock_docker_app_context
+
+
+@pytest.fixture
+def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
+    # Mock the container write test path in to pytest's tmp directory
+    monkeypatch.setattr(
+        briefcase.integrations.docker.Docker,
+        "_write_test_path",
+        MagicMock(return_value=tmp_path / "build" / "mock_write_test"),
+    )
+    return [
+        call(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--volume",
+                f"{tmp_path / 'build'}:/host_write_test:z",
+                "alpine",
+                "touch",
+                PurePosixPath("/host_write_test/mock_write_test"),
+            ],
+            check=True,
+            stream_output=False,
+        ),
+        call(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--volume",
+                f"{tmp_path / 'build'}:/host_write_test:z",
+                "alpine",
+                "rm",
+                "-f",
+                PurePosixPath("/host_write_test/mock_write_test"),
+            ],
+            check=True,
+            stream_output=False,
+        ),
+    ]

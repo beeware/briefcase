@@ -113,6 +113,7 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
     mock__version_compat = MagicMock(spec=Docker._version_compat)
     mock__user_access = MagicMock(spec=Docker._user_access)
     mock__buildx_installed = MagicMock(spec=Docker._buildx_installed)
+    mock__is_user_mapping_enabled = MagicMock(spec=Docker._is_user_mapping_enabled)
     monkeypatch.setattr(
         briefcase.platforms.linux.appimage.Docker,
         "_version_compat",
@@ -127,6 +128,11 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
         briefcase.platforms.linux.appimage.Docker,
         "_buildx_installed",
         mock__buildx_installed,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.appimage.Docker,
+        "_is_user_mapping_enabled",
+        mock__is_user_mapping_enabled,
     )
     mock_docker_app_context_verify = MagicMock(spec=DockerAppContext.verify)
     monkeypatch.setattr(
@@ -143,6 +149,7 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
     mock__version_compat.assert_called_with(tools=create_command.tools)
     mock__user_access.assert_called_with(tools=create_command.tools)
     mock__buildx_installed.assert_called_with(tools=create_command.tools)
+    mock__is_user_mapping_enabled.assert_called_with(None)
     assert isinstance(create_command.tools.docker, Docker)
     mock_docker_app_context_verify.assert_called_with(
         tools=create_command.tools,
@@ -181,6 +188,7 @@ def test_verify_non_linux_docker(
     mock__version_compat = MagicMock(spec=Docker._version_compat)
     mock__user_access = MagicMock(spec=Docker._user_access)
     mock__buildx_installed = MagicMock(spec=Docker._buildx_installed)
+    mock__is_user_mapping_enabled = MagicMock(spec=Docker._is_user_mapping_enabled)
     monkeypatch.setattr(
         briefcase.platforms.linux.appimage.Docker,
         "_version_compat",
@@ -195,6 +203,11 @@ def test_verify_non_linux_docker(
         briefcase.platforms.linux.appimage.Docker,
         "_buildx_installed",
         mock__buildx_installed,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.appimage.Docker,
+        "_is_user_mapping_enabled",
+        mock__is_user_mapping_enabled,
     )
     mock_docker_app_context_verify = MagicMock(spec=DockerAppContext.verify)
     monkeypatch.setattr(
@@ -211,6 +224,7 @@ def test_verify_non_linux_docker(
     mock__version_compat.assert_called_with(tools=create_command.tools)
     mock__user_access.assert_called_with(tools=create_command.tools)
     mock__buildx_installed.assert_called_with(tools=create_command.tools)
+    mock__is_user_mapping_enabled.assert_called_with(None)
     assert isinstance(create_command.tools.docker, Docker)
     mock_docker_app_context_verify.assert_called_with(
         tools=create_command.tools,
