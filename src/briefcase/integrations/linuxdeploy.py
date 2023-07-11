@@ -27,7 +27,11 @@ class LinuxDeployBase(ABC):
     full_name: str
     install_msg: str
     tools: ToolCache
-    supported_host_os = {"Linux"}
+    # Although Linuxdeploy can only *run* on Linux, it can be *verified* with macOS,
+    # because verification only requires downloading and permission checks, not
+    # execution. The commands where the LinuxDeploy tool is actually used do the
+    # additional check to ensure that if we're on macOS, we're also using Docker.
+    supported_host_os = {"Darwin", "Linux"}
 
     @property
     @abstractmethod
