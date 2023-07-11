@@ -11,7 +11,9 @@ def test_datetime_success(adb):
     """adb.datetime() returns `datetime` for device."""
     adb.run = Mock(return_value="1689098555\n")
 
-    expected_datetime = datetime(2023, 7, 11, 14, 2, 35)
+    # Cannot hardcode the actual datetime of 1689098555 since
+    # it is dependent on the timezone of the host system
+    expected_datetime = datetime.fromtimestamp(1689098555)
     assert adb.datetime() == expected_datetime
     adb.run.assert_called_once_with("shell", "date", "+%s")
 
