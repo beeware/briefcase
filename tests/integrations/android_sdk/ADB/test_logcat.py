@@ -2,14 +2,9 @@ import os
 import subprocess
 from unittest import mock
 
-from briefcase.integrations.android_sdk import ADB
 
-
-def test_logcat(mock_tools):
+def test_logcat(mock_tools, adb):
     """Invoking `logcat()` calls `Popen()` with the appropriate parameters."""
-    # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
-
     # Mock the result of calling Popen so we can compare against this return value
     popen = mock.MagicMock()
     mock_tools.subprocess.Popen.return_value = popen

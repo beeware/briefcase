@@ -4,13 +4,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
-from briefcase.integrations.android_sdk import ADB
 
 
-def test_install_apk(mock_tools, capsys):
+def test_install_apk(adb, capsys):
     """Invoking `install_apk()` calls `run()` with the appropriate parameters."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(return_value="example normal adb output")
 
     # Invoke install
@@ -24,10 +22,9 @@ def test_install_apk(mock_tools, capsys):
     assert "normal adb output" not in capsys.readouterr()
 
 
-def test_install_failure(mock_tools, capsys):
+def test_install_failure(adb, capsys):
     """If `install_apk()` fails, an error is raised."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=2, cmd="install")
     )
@@ -40,10 +37,9 @@ def test_install_failure(mock_tools, capsys):
     adb.run.assert_called_once_with("install", "-r", "example.apk")
 
 
-def test_invalid_device(mock_tools, capsys):
+def test_invalid_device(adb, capsys):
     """Invoking `install_apk()` on an invalid device raises an error."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     # Invoke install

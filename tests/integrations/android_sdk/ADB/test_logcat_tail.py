@@ -6,14 +6,10 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import ADB
 
 
-def test_logcat_tail(mock_tools):
+def test_logcat_tail(mock_tools, adb):
     """Invoking `logcat_tail()` calls `run()` with the appropriate parameters."""
-    # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
-
     # Invoke logcat_tail with a specific timestamp
     adb.logcat_tail(since=datetime(2022, 11, 10, 9, 8, 7))
 
@@ -38,10 +34,9 @@ def test_logcat_tail(mock_tools):
     )
 
 
-def test_adb_failure(mock_tools):
+def test_adb_failure(mock_tools, adb):
     """If adb logcat fails, the error is caught."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
     mock_tools.subprocess.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=1, cmd="adb logcat")
     )
