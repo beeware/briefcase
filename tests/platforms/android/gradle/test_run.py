@@ -356,14 +356,20 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     monkeypatch.setattr(time, "sleep", mock.MagicMock())
 
     # It's the eternal september...
-    start_datetime = datetime.datetime(2022, 9, 8, 7, 6, 42)
+    device_start_datetime = datetime.datetime(2022, 9, 9, 7, 6, 42)
+    pid_lookup_start_datetime = datetime.datetime(2022, 9, 8, 7, 6, 42)
+
+    # Mock time progression so PID lookup loops 5 times
     mock_datetime = mock.MagicMock(spec=datetime.datetime)
     # Mock datetime.now() at +0s, +0.5s, +1.5s,... +5.5s
     mock_datetime.now.side_effect = [
-        start_datetime + datetime.timedelta(seconds=delay)
+        pid_lookup_start_datetime + datetime.timedelta(seconds=delay)
         for delay in [0] + [x + 0.5 for x in range(0, 6)]
     ]
     monkeypatch.setattr(datetime, "datetime", mock_datetime)
+
+    # Mock the device start datetime
+    run_command.tools.mock_adb.datetime.return_value = device_start_datetime
 
     with pytest.raises(
         BriefcaseCommandError, match=r"Problem starting app 'first-app'"
@@ -386,7 +392,7 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
 
     # But we will get a log dump from logcat_tail
     run_command.tools.mock_adb.logcat_tail.assert_called_once_with(
-        since=start_datetime - datetime.timedelta(seconds=10)
+        since=device_start_datetime
     )
 
 

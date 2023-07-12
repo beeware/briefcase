@@ -1293,10 +1293,10 @@ class ADB:
                     f"Unable to interrogate AVD name of device {self.device}"
                 ) from e
 
-    def has_booted(self):
+    def has_booted(self) -> bool:
         """Determine if the device has completed booting.
 
-        :returns True if it has booted; False otherwise.
+        :returns: True if it has booted; False otherwise.
         """
         try:
             # When the sys.boot_completed property of the device
@@ -1326,8 +1326,6 @@ class ADB:
         # checking that they are valid, then parsing output to notice errors.
         # This keeps performance good in the success case.
         try:
-            # Capture `stderr` so that if the process exits with failure, the
-            # stderr data is in `e.output`.
             return self.tools.subprocess.check_output(
                 [
                     os.fsdecode(self.tools.android_sdk.adb_path),
@@ -1349,8 +1347,7 @@ class ADB:
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
-
-        Returns `None` on success; raises an exception on failure.
+        :returns: `None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
@@ -1363,8 +1360,7 @@ class ADB:
         """Force-stop an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
-
-        Returns `None` on success; raises an exception on failure.
+        :returns: `None` on success; raises an exception on failure.
         """
         # In my testing, `force-stop` exits with status code 0 (success) so long
         # as you pass a package name, even if the package does not exist, or the
@@ -1379,15 +1375,14 @@ class ADB:
     def start_app(self, package: str, activity: str, passthrough: list[str]):
         """Start an app, specified as a package name & activity name.
 
-        :param package: The name of the Android package, e.g., com.username.myapp.
-        :param activity: The activity of the APK to start.
-        :param passthrough: Arguments to pass to the app.
-
-        Returns `None` on success; raises an exception on failure.
-
         If you have an APK file, and you are not sure of the package or activity
         name, you can find it using `aapt dump badging filename.apk` and looking
         for "package" and "launchable-activity" in the output.
+
+        :param package: The name of the Android package, e.g., com.username.myapp.
+        :param activity: The activity of the APK to start.
+        :param passthrough: Arguments to pass to the app.
+        :returns: `None` on success; raises an exception on failure.
         """
         try:
             # `am start` also accepts string array extras, but we pass the arguments as a
@@ -1429,7 +1424,7 @@ Activity class not found while starting app.
                 f"Unable to start {package}/{activity} on {self.device}"
             ) from e
 
-    def logcat(self, pid: str):
+    def logcat(self, pid: str) -> subprocess.Popen:
         """Start following the adb log for the device.
 
         :param pid: The PID whose logs you want to display.
@@ -1519,4 +1514,18 @@ Activity class not found while starting app.
         try:
             self.run("emu", "kill")
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting ADB logcat.") from e
+            raise BriefcaseCommandError("Error stopping the Android emulator.") from e
+
+    def datetime(self) -> datetime:
+        """Obtain the device's current date/time.
+
+        This date/time is naive (i.e. not timezone aware) and in the device's "local"
+        time. Therefore, it may be quite different from the date/time for Briefcase and
+        caution should be used if comparing it to machine's "local" time.
+        """
+        datetime_format = "%Y-%m-%d %H:%M:%S"
+        try:
+            device_datetime = self.run("shell", "date", f"+'{datetime_format}'").strip()
+            return datetime.strptime(device_datetime, datetime_format)
+        except (ValueError, subprocess.CalledProcessError) as e:
+            raise BriefcaseCommandError("Error obtaining device date/time.") from e

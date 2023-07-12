@@ -5,14 +5,10 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import ADB
 
 
-def test_kill(mock_tools):
+def test_kill(mock_tools, adb):
     """An emulator can be killed."""
-    # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
-
     # Invoke kill
     adb.kill()
 
@@ -29,10 +25,9 @@ def test_kill(mock_tools):
     )
 
 
-def test_kill_failure(mock_tools):
+def test_kill_failure(adb):
     """If emu kill fails, the error is caught."""
     # Mock out the run command on an adb instance
-    adb = ADB(mock_tools, "exampleDevice")
     adb.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=1, cmd="adb emu kill")
     )

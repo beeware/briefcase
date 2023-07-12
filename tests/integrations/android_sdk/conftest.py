@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.java import JDK
@@ -30,3 +30,8 @@ def android_sdk(mock_tools, tmp_path) -> AndroidSDK:
     sdk_root.mkdir(parents=True)
 
     return AndroidSDK(mock_tools, root_path=sdk_root)
+
+
+@pytest.fixture
+def adb(mock_tools) -> ADB:
+    return ADB(mock_tools, "exampleDevice")

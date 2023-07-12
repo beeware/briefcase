@@ -277,19 +277,13 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 extra = f" (with {' '.join(extra_emulator_args)})"
             else:
                 extra = ""
-            self.logger.info(
-                f"Starting emulator {avd}{extra}...",
-                prefix=app.app_name,
-            )
+            self.logger.info(f"Starting emulator {avd}{extra}...", prefix=app.app_name)
             device, name = self.tools.android_sdk.start_emulator(
                 avd, extra_emulator_args
             )
 
         try:
-            if test_mode:
-                label = "test suite"
-            else:
-                label = "app"
+            label = "test suite" if test_mode else "app"
 
             self.logger.info(
                 f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
@@ -313,29 +307,27 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.input.wait_bar(f"Launching {label}..."):
-                # Any log after this point must be associated with the new instance
-                start_time = datetime.datetime.now()
+                # capture the earliest time for device logging in case PID not found
+                device_start_time = adb.datetime()
+
                 adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
-                pid = None
-                attempts = 0
-                delay = 0.01
 
                 # Try to get the PID for 5 seconds.
-                fail_time = start_time + datetime.timedelta(seconds=5)
+                pid = None
+                fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
                 while not pid and datetime.datetime.now() < fail_time:
                     # Try to get the PID; run in quiet mode because we may
                     # need to do this a lot in the next 5 seconds.
                     pid = adb.pidof(package, quiet=True)
                     if not pid:
-                        time.sleep(delay)
-                    attempts += 1
+                        time.sleep(0.01)
 
             if pid:
                 self.logger.info(
                     "Following device log output (type CTRL-C to stop log)...",
                     prefix=app.app_name,
                 )
-                # Start the app in a way that lets us stream the logs
+                # Start adb's logcat in a way that lets us stream the logs
                 log_popen = adb.logcat(pid=pid)
 
                 # Stream the app logs.
@@ -352,13 +344,11 @@ class GradleRunCommand(GradleMixin, RunCommand):
             else:
                 self.logger.error("Unable to find PID for app", prefix=app.app_name)
                 self.logger.error("Logs for launch attempt follow...")
-
-                # Show the log from the start time of the app
                 self.logger.error("=" * 75)
 
-                # Pad by a few seconds because the android emulator's clock and the
-                # local system clock may not be perfectly aligned.
-                adb.logcat_tail(since=start_time - datetime.timedelta(seconds=10))
+                # Show the log from the start time of the app
+                adb.logcat_tail(since=device_start_time)
+
                 raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
         finally:
             if shutdown_on_exit:
