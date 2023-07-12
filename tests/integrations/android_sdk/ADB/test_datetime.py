@@ -7,15 +7,21 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_datetime_success(adb):
+@pytest.mark.parametrize(
+    "device_output, expected_datetime",
+    [
+        ("2023-07-12 09:28:04", datetime(2023, 7, 12, 9, 28, 4)),
+        ("2023-07-12 09:28:04\n", datetime(2023, 7, 12, 9, 28, 4)),
+        ("2023-7-12 9:28:04", datetime(2023, 7, 12, 9, 28, 4)),
+        ("2023-12-2 14:28:04", datetime(2023, 12, 2, 14, 28, 4)),
+    ],
+)
+def test_datetime_success(adb, device_output, expected_datetime):
     """adb.datetime() returns `datetime` for device."""
-    adb.run = Mock(return_value="1689098555\n")
+    adb.run = Mock(return_value=device_output)
 
-    # Cannot hardcode the actual datetime of 1689098555 since
-    # it is dependent on the timezone of the host system
-    expected_datetime = datetime.fromtimestamp(1689098555)
     assert adb.datetime() == expected_datetime
-    adb.run.assert_called_once_with("shell", "date", "+%s")
+    adb.run.assert_called_once_with("shell", "date", "+'%Y-%m-%d %H:%M:%S'")
 
 
 def test_datetime_failure_call(adb):

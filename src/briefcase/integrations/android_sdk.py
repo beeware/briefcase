@@ -1517,9 +1517,15 @@ Activity class not found while starting app.
             raise BriefcaseCommandError("Error stopping the Android emulator.") from e
 
     def datetime(self) -> datetime:
-        """Obtain the device's current date/time."""
+        """Obtain the device's current date/time.
+
+        This date/time is naive (i.e. not timezone aware) and in the device's "local"
+        time. Therefore, it may be quite different from the date/time for Briefcase and
+        caution should be used if comparing it to machine's "local" time.
+        """
+        datetime_format = "%Y-%m-%d %H:%M:%S"
         try:
-            # request datetime in seconds since Unix epoch
-            return datetime.fromtimestamp(int(self.run("shell", "date", "+%s")))
+            device_datetime = self.run("shell", "date", f"+'{datetime_format}'").strip()
+            return datetime.strptime(device_datetime, datetime_format)
         except (ValueError, subprocess.CalledProcessError) as e:
             raise BriefcaseCommandError("Error obtaining device date/time.") from e
