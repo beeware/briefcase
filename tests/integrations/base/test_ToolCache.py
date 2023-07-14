@@ -165,3 +165,17 @@ def test_windows_home_path(home_path, expected_path, tmp_path):
         home_path=home_path,
     )
     assert tools.home_path == expected_path
+
+
+@pytest.mark.parametrize("maxsize, is_32bit", [(2**32, True), (2**64, False)])
+def test_is_32bit_python(maxsize, is_32bit, monkeypatch, tmp_path):
+    """Whether Python is 32bits is sensitive to `sys.maxsize`."""
+    monkeypatch.setattr(sys, "maxsize", maxsize)
+
+    tools = ToolCache(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path,
+    )
+
+    assert tools.is_32bit_python is is_32bit

@@ -56,7 +56,7 @@ def build_command(tmp_path, first_app_config):
         apps={"first": first_app_config},
     )
     command.tools.host_os = "Linux"
-    command.tools.host_arch = "wonky"
+    command.tools.host_arch = "x86_64"
     command.use_docker = False
     command._briefcase_toml[first_app_config] = {
         "paths": {
@@ -138,7 +138,7 @@ def test_verify_tools_download_failure(build_command):
 
     # The download was attempted
     build_command.tools.download.file.assert_called_with(
-        url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-wonky.AppImage",
+        url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage",
         download_path=build_command.tools.base_path,
         role="linuxdeploy",
     )
@@ -169,7 +169,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
             ),
             "--appdir",
             os.fsdecode(app_dir),
@@ -189,7 +189,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
             "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
-            "ARCH": "wonky",
+            "ARCH": "x86_64",
         },
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
@@ -204,7 +204,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
         / "first-app"
         / "linux"
         / "appimage"
-        / "First_App-0.0.1-wonky.AppImage",
+        / "First_App-0.0.1-x86_64.AppImage",
         0o755,
     )
 
@@ -254,7 +254,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
             ),
             "--appdir",
             os.fsdecode(app_dir),
@@ -279,7 +279,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
             "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
-            "ARCH": "wonky",
+            "ARCH": "x86_64",
         },
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
@@ -305,7 +305,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
         / "first-app"
         / "linux"
         / "appimage"
-        / "First_App-0.0.1-wonky.AppImage",
+        / "First_App-0.0.1-x86_64.AppImage",
         0o755,
     )
 
@@ -336,7 +336,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
             ),
             "--appdir",
             os.fsdecode(app_dir),
@@ -356,7 +356,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
             "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
-            "ARCH": "wonky",
+            "ARCH": "x86_64",
         },
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
@@ -422,11 +422,11 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
             "--env",
             "APPIMAGE_EXTRACT_AND_RUN=1",
             "--env",
-            "ARCH=wonky",
+            "ARCH=x86_64",
             "--workdir",
             "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/home/brutus/.cache/briefcase/tools/linuxdeploy-x86_64.AppImage",
             "--appdir",
             "/app/First App.AppDir",
             "--desktop-file",
@@ -450,7 +450,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
         / "first-app"
         / "linux"
         / "appimage"
-        / "First_App-0.0.1-wonky.AppImage",
+        / "First_App-0.0.1-x86_64.AppImage",
         0o755,
     )
 
@@ -546,11 +546,11 @@ def test_build_appimage_with_plugins_in_docker(
             "--env",
             "APPIMAGE_EXTRACT_AND_RUN=1",
             "--env",
-            "ARCH=wonky",
+            "ARCH=x86_64",
             "--workdir",
             "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/home/brutus/.cache/briefcase/tools/linuxdeploy-x86_64.AppImage",
             "--appdir",
             "/app/First App.AppDir",
             "--desktop-file",
@@ -589,7 +589,7 @@ def test_build_appimage_with_plugins_in_docker(
         / "first-app"
         / "linux"
         / "appimage"
-        / "First_App-0.0.1-wonky.AppImage",
+        / "First_App-0.0.1-x86_64.AppImage",
         0o755,
     )
 
@@ -654,7 +654,7 @@ def test_build_appimage_with_support_package_update(
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-wonky.AppImage"
+                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
             ),
             "--appdir",
             os.fsdecode(app_dir),
@@ -674,7 +674,7 @@ def test_build_appimage_with_support_package_update(
             "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
-            "ARCH": "wonky",
+            "ARCH": "x86_64",
         },
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
@@ -689,6 +689,6 @@ def test_build_appimage_with_support_package_update(
         / "first-app"
         / "linux"
         / "appimage"
-        / "First_App-0.0.1-wonky.AppImage",
+        / "First_App-0.0.1-x86_64.AppImage",
         0o755,
     )

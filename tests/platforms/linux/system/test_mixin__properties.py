@@ -1,22 +1,10 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand
-
-
-@pytest.mark.parametrize(
-    "host_arch, linux_arch",
-    [
-        ("x86_64", "amd64"),
-        ("aarch64", "arm64"),
-        ("armv6l", "armhf"),
-    ],
-)
-def test_linux_arch(create_command, host_arch, linux_arch):
-    """Host architectures are transformed to Linux-accepted values."""
-    create_command.tools.host_arch = host_arch
-    assert create_command.linux_arch == linux_arch
 
 
 @pytest.mark.parametrize(
@@ -93,14 +81,22 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 @pytest.mark.parametrize(
     "packaging_format, filename",
-    [("deb", "first-app_0.0.1-1~somevendor-surprising_amd64.deb")],
+    [
+        ("deb", "first-app_0.0.1-1~somevendor-surprising_wonky.deb"),
+        ("rpm", "first-app-0.0.1-1.elsurprising.wonky.rpm"),
+        ("pkg", "first-app-0.0.1-1-wonky.pkg.tar.zst"),
+    ],
 )
 def test_distribution_path(
-    create_command, first_app_config, packaging_format, filename, tmp_path
+    create_command,
+    first_app_config,
+    packaging_format,
+    filename,
+    tmp_path,
 ):
     """The distribution path contains vendor details."""
-    # Force the architecture to x86_64 for test purposes.
-    create_command.tools.host_arch = "x86_64"
+    # Mock return value for ABI from packaging system
+    create_command._build_env_abi = MagicMock(return_value="wonky")
 
     # Force a dummy vendor:codename for test purposes.
     first_app_config.target_vendor = "somevendor"

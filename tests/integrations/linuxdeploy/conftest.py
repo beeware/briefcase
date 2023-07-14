@@ -12,7 +12,7 @@ from briefcase.integrations.subprocess import Subprocess
 @pytest.fixture
 def mock_tools(tmp_path, mock_tools) -> ToolCache:
     mock_tools.host_os = "Linux"
-    mock_tools.host_arch = "wonky"
+    mock_tools.host_arch = "i686"
 
     # Mock default tools
     mock_tools.subprocess = MagicMock(spec_set=Subprocess)

@@ -5,7 +5,11 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    IncompatibleToolError,
+    MissingToolError,
+)
 from briefcase.integrations.base import ManagedTool, ToolCache
 
 
@@ -26,23 +30,30 @@ class JDK(ManagedTool):
 
     @property
     def OpenJDK_download_url(self):
-        arch = {
-            "x86_64": "x64",  # Linux\macOS x86-64
-            "aarch64": "aarch64",  # Linux arm64
-            "armv6l": "arm",  # Linux arm
-            "arm64": "aarch64",  # macOS arm64
-            "AMD64": "x64",  # Windows x86-64
-        }.get(self.tools.host_arch)
+        """The OpenJDK download URL appropriate for the current machine."""
+        system_arch = self.tools.host_arch
+        # use a 32bit JDK if using 32bit Python on 64bit hardware
+        if self.tools.is_32bit_python and self.tools.host_arch == "aarch64":
+            system_arch = "armv7l"
 
-        platform = {
-            "Darwin": "mac",
-            "Windows": "windows",
-            "Linux": "linux",
-        }.get(self.tools.host_os)
-
-        extension = {
-            "Windows": "zip",
-        }.get(self.tools.host_os, "tar.gz")
+        try:
+            platform, arch, extension = {
+                "Darwin": {
+                    "arm64": ("mac", "aarch64", "tar.gz"),
+                    "x86_64": ("mac", "x64", "tar.gz"),
+                },
+                "Linux": {
+                    "armv7l": ("linux", "arm", "tar.gz"),
+                    "armv8l": ("linux", "arm", "tar.gz"),
+                    "aarch64": ("linux", "aarch64", "tar.gz"),
+                    "x86_64": ("linux", "x64", "tar.gz"),
+                },
+                "Windows": {
+                    "AMD64": ("windows", "x64", "zip"),
+                },
+            }[self.tools.host_os][system_arch]
+        except KeyError as e:
+            raise IncompatibleToolError(tool=self.full_name, env_var="JAVA_HOME") from e
 
         return (
             f"https://github.com/adoptium/temurin{self.JDK_MAJOR_VER}-binaries/"

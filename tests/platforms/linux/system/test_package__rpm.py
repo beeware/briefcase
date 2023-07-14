@@ -25,8 +25,8 @@ def package_command(first_app, tmp_path):
     )
     command.tools.home_path = tmp_path / "home"
 
-    # Set the host architecture for test purposes.
-    command.tools.host_arch = "wonky"
+    # Mock ABI from packaging system
+    command._rpm_abi = "wonky"
 
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()

@@ -15,6 +15,7 @@ from briefcase.config import PEP508_NAME_RE
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    IncompatibleToolError,
     InvalidDeviceError,
     MissingToolError,
 )
@@ -57,15 +58,35 @@ class AndroidSDK(ManagedTool):
 
     @property
     def cmdline_tools_url(self) -> str:
-        """The Android SDK Command-Line Tools URL appropriate to the current operating
-        system."""
-        platform_name = self.tools.host_os.lower()
-        if self.tools.host_os.lower() == "darwin":
-            platform_name = "mac"
-        elif self.tools.host_os.lower() == "windows":  # pragma: no branch
-            platform_name = "win"
+        """The Android SDK Command-Line Tools URL appropriate for the current machine.
 
-        return f"https://dl.google.com/android/repository/commandlinetools-{platform_name}-{self.cmdline_tools_version}_latest.zip"  # noqa: E501
+        The SDK largely only supports typical development environments; if a machine is
+        using an unsupported architecture, `sdkmanager` will error while installing the
+        emulator as a dependency of the build-tools. However, for some of the platforms
+        that are unsupported by sdkmanager, users can set up their own SDK install.
+        """
+        try:
+            platform_name = {
+                "Darwin": {
+                    "arm64": "mac",
+                    "x86_64": "mac",
+                },
+                "Linux": {
+                    "x86_64": "linux",
+                },
+                "Windows": {
+                    "AMD64": "win",
+                },
+            }[self.tools.host_os][self.tools.host_arch]
+        except KeyError as e:
+            raise IncompatibleToolError(
+                tool=self.full_name, env_var="ANDROID_HOME"
+            ) from e
+
+        return (
+            f"https://dl.google.com/android/repository/commandlinetools-"
+            f"{platform_name}-{self.cmdline_tools_version}_latest.zip"
+        )
 
     @property
     def cmdline_tools_path(self) -> Path:
