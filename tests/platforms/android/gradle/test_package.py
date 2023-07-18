@@ -35,6 +35,26 @@ def package_command(tmp_path, first_app_config):
     return command
 
 
+def test_unsupported_template_version(package_command, first_app_generated):
+    """Error raised if template's target version is not supported."""
+    # Mock the build command previously called
+    create_file(package_command.binary_path(first_app_generated), content="")
+
+    package_command.verify_app = MagicMock(wraps=package_command.verify_app)
+
+    package_command._briefcase_toml.update(
+        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="The app template used to generate this app is not compatible",
+    ):
+        package_command(first_app_generated, packaging_format="aab")
+
+    package_command.verify_app.assert_called_once_with(first_app_generated)
+
+
 def test_packaging_formats(package_command):
     assert package_command.packaging_formats == ["aab"]
 
@@ -55,7 +75,11 @@ def test_distribution_path(package_command, first_app_config, tmp_path):
     [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
 )
 def test_execute_gradle(
-    package_command, first_app_config, host_os, gradlew_name, tmp_path
+    package_command,
+    first_app_config,
+    host_os,
+    gradlew_name,
+    tmp_path,
 ):
     """Validate that package_app() will launch `gradlew bundleRelease` with the
     appropriate environment & cwd, and that it will use `gradlew.bat` on Windows but
@@ -86,7 +110,9 @@ def test_execute_gradle(
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
+
     package_command.package_app(first_app_config)
+
     package_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     package_command.tools.subprocess.run.assert_called_once_with(
         [

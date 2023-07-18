@@ -206,20 +206,15 @@ class macOSSigningMixin:
         self.get_identities = get_identities
 
     def entitlements_path(self, app: BaseConfig):
-        # If the index file hasn't been loaded for this app, load it.
-        try:
-            path_index = self._path_index[app]
-        except KeyError:
-            path_index = self._load_path_index(app)
-        return self.bundle_path(app) / path_index["entitlements_path"]
+        return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
     def select_identity(self, identity=None):
         """Get the codesigning identity to use.
 
-        :param identity: A pre-specified identity (either the 40-digit
-            hex checksum, or the string name of the identity). If provided, it
-            will be validated against the list of available identities to
-            confirm that it is a valid codesigning identity.
+        :param identity: A pre-specified identity (either the 40-digit hex checksum, or
+            the string name of the identity). If provided, it will be validated against
+            the list of available identities to confirm that it is a valid codesigning
+            identity.
         :returns: The final identity to use
         """
         # Obtain the valid codesigning identities.
@@ -275,8 +270,8 @@ or
         """Code sign a file.
 
         :param path: The path to the file to sign.
-        :param identity: The code signing identity to use. Either the 40-digit
-            hex checksum, or the string name of the identity.
+        :param identity: The code signing identity to use. Either the 40-digit hex
+            checksum, or the string name of the identity.
         :param entitlements: The path to the entitlements file to use.
         """
         options = "runtime" if identity != "-" else None

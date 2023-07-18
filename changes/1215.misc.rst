@@ -1,1 +1,0 @@
-The indentation and formatting for the release steps numbered list was restored.

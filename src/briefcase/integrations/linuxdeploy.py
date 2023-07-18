@@ -27,7 +27,11 @@ class LinuxDeployBase(ABC):
     full_name: str
     install_msg: str
     tools: ToolCache
-    supported_host_os = {"Linux"}
+    # Although Linuxdeploy can only *run* on Linux, it can be *verified* with macOS,
+    # because verification only requires downloading and permission checks, not
+    # execution. The commands where the LinuxDeploy tool is actually used do the
+    # additional check to ensure that if we're on macOS, we're also using Docker.
+    supported_host_os = {"Darwin", "Linux"}
 
     @property
     @abstractmethod
@@ -79,10 +83,10 @@ class LinuxDeployBase(ABC):
 
         :param tools: ToolCache of available tools
         :param install: Should the tool/plugin be installed if it is not found?
-        :param kwargs: Any additional keyword arguments that should be passed
-            to the tool at time of construction.
-        :returns: A valid tool wrapper. If the tool/plugin is not
-            available, and was not installed, raises MissingToolError.
+        :param kwargs: Any additional keyword arguments that should be passed to the
+            tool at time of construction.
+        :returns: A valid tool wrapper. If the tool/plugin is not available, and was not
+            installed, raises MissingToolError.
         """
         is_plugin = issubclass(cls, LinuxDeployPluginBase)
 

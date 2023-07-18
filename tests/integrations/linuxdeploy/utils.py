@@ -11,11 +11,9 @@ def create_mock_appimage(appimage_path: Path, mock_appimage_kind: str = "origina
     """Create a mock AppImage for testing purposes.
 
     :param appimage_path: Path to the appimage to create.
-    :param mock_appimage_kind: The kind of mock appimage to create.
-            'original' creates an unpatched mock appimage.
-            'patched' creates a patched mock appimage.
-            'corrupt' creates a corrupted mock appimage.
-
+    :param mock_appimage_kind: The kind of mock appimage to create. 'original' creates
+        an unpatched mock appimage. 'patched' creates a patched mock appimage. 'corrupt'
+        creates a corrupted mock appimage.
     :returns: The bytes to be patched of the created AppImage.
     """
 

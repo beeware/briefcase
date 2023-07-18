@@ -1,6 +1,6 @@
-from typing import Optional
+from __future__ import annotations
 
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 
 from .base import full_options
 from .create import CreateCommand
@@ -11,21 +11,18 @@ class UpdateCommand(CreateCommand):
     description = "Update the source, dependencies, and resources for an app."
 
     def add_options(self, parser):
-        self._add_update_options(
-            parser,
-            update=False,
-        )
+        self._add_update_options(parser, update=False)
         self._add_test_options(parser, context_label="Update")
 
     def update_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         update_requirements: bool,
         update_resources: bool,
         update_support: bool,
         test_mode: bool,
         **options,
-    ):
+    ) -> dict | None:
         """Update an existing application bundle.
 
         :param app: The config object for the app
@@ -35,14 +32,13 @@ class UpdateCommand(CreateCommand):
         :param test_mode: Should the app be updated in test mode?
         """
 
-        bundle_path = self.bundle_path(app)
-        if not bundle_path.exists():
+        if not self.bundle_path(app).exists():
             self.logger.error(
                 "Application does not exist; call create first!", prefix=app.app_name
             )
             return
 
-        self.verify_app_tools(app)
+        self.verify_app(app)
 
         self.logger.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
@@ -67,13 +63,13 @@ class UpdateCommand(CreateCommand):
 
     def __call__(
         self,
-        app: Optional[BaseConfig] = None,
+        app: AppConfig | None = None,
         update_requirements: bool = False,
         update_resources: bool = False,
         update_support: bool = False,
         test_mode: bool = False,
         **options,
-    ):
+    ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)

@@ -1,1 +1,0 @@
-Added coverage command to tox.ini and updated docs to mention it.

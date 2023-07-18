@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from briefcase.console import Console, Log
@@ -47,10 +49,7 @@ def test_unsupported_host_os_with_docker(create_command, host_os):
 
 
 @pytest.mark.parametrize("host_os", ["Darwin", "Windows", "WeirdOS"])
-def test_unsupported_host_os_without_docker(
-    create_command,
-    host_os,
-):
+def test_unsupported_host_os_without_docker(create_command, host_os):
     """Error raised for an unsupported OS when not using Docker."""
     create_command.use_docker = False
     create_command.tools.host_os = host_os
@@ -83,19 +82,21 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
 
 @pytest.mark.parametrize(
-    "manylinux, tag, host_arch, context",
+    "manylinux, tag, host_arch, is_user_mapped, context",
     [
         # Fallback.
-        (None, None, "x86_64", {}),
+        (None, None, "x86_64", False, {"use_non_root_user": True}),
         # x86_64 architecture, all versions
         # Explicit tag
         (
             "manylinux1",
             "2023-03-05-271004f",
             "x86_64",
+            True,
             {
                 "manylinux_image": "manylinux1_x86_64:2023-03-05-271004f",
                 "vendor_base": "centos",
+                "use_non_root_user": False,
             },
         ),
         # Explicit latest
@@ -103,31 +104,45 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
             "manylinux2010",
             "latest",
             "x86_64",
-            {"manylinux_image": "manylinux2010_x86_64:latest", "vendor_base": "centos"},
+            False,
+            {
+                "manylinux_image": "manylinux2010_x86_64:latest",
+                "vendor_base": "centos",
+                "use_non_root_user": True,
+            },
         ),
         # Implicit latest
         (
             "manylinux2014",
             None,
             "x86_64",
-            {"manylinux_image": "manylinux2014_x86_64:latest", "vendor_base": "centos"},
+            True,
+            {
+                "manylinux_image": "manylinux2014_x86_64:latest",
+                "vendor_base": "centos",
+                "use_non_root_user": False,
+            },
         ),
         (
             "manylinux_2_24",
             None,
             "x86_64",
+            True,
             {
                 "manylinux_image": "manylinux_2_24_x86_64:latest",
                 "vendor_base": "debian",
+                "use_non_root_user": False,
             },
         ),
         (
             "manylinux_2_28",
             None,
             "x86_64",
+            False,
             {
                 "manylinux_image": "manylinux_2_28_x86_64:latest",
                 "vendor_base": "almalinux",
+                "use_non_root_user": True,
             },
         ),
         # non x86 architecture
@@ -135,17 +150,29 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
             "manylinux2014",
             None,
             "aarch64",
+            True,
             {
                 "manylinux_image": "manylinux2014_aarch64:latest",
                 "vendor_base": "centos",
+                "use_non_root_user": False,
             },
         ),
     ],
 )
 def test_output_format_template_context(
-    create_command, first_app_config, manylinux, tag, host_arch, context
+    create_command,
+    first_app_config,
+    manylinux,
+    tag,
+    host_arch,
+    is_user_mapped,
+    context,
 ):
     """The template context reflects the manylinux name, tag and architecture."""
+    # Mock Docker user mapping setting for `use_non_root_user`
+    create_command.tools.docker = MagicMock()
+    create_command.tools.docker.is_user_mapped = is_user_mapped
+
     if manylinux:
         first_app_config.manylinux = manylinux
     if tag:
@@ -161,3 +188,10 @@ def test_output_format_template_context_bad_tag(create_command, first_app_config
     first_app_config.manylinux = "unknown"
     with pytest.raises(BriefcaseConfigError, match=r"Unknown manylinux tag 'unknown'"):
         assert create_command.output_format_template_context(first_app_config)
+
+
+def test_output_format_no_docker(create_command, first_app_config):
+    """If not using Docker, `use_non_root_user` default in template is used."""
+    context = create_command.output_format_template_context(first_app_config)
+
+    assert "use_non_root_user" not in context

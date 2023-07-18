@@ -341,8 +341,8 @@ class AppConfig(BaseConfig):
 def merge_config(config, data):
     """Merge a new set of configuration requirements into a base configuration.
 
-    :param config: the base configuration to update. This configuration
-        is modified in-situ.
+    :param config: the base configuration to update. This configuration is modified in-
+        situ.
     :param data: The new configuration data to merge into the configuration.
     """
     for option in ["requires", "sources", "test_requires", "test_sources"]:

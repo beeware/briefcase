@@ -1,1 +1,0 @@
-The option to run Linux system packages through Docker was removed.

@@ -36,6 +36,7 @@ def test_create(tracking_create_command, tmp_path):
         # Create the first app
         ("generate", "first"),
         ("support", "first"),
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("requirements", "first", False),
@@ -44,6 +45,7 @@ def test_create(tracking_create_command, tmp_path):
         # Create the second app
         ("generate", "second"),
         ("support", "second"),
+        ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
         ("requirements", "second", False),
@@ -75,6 +77,7 @@ def test_create_single(tracking_create_command, tmp_path):
         # Create the first app
         ("generate", "first"),
         ("support", "first"),
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("requirements", "first", False),

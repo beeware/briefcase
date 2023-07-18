@@ -138,13 +138,12 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def finalize_app_config(self, app: AppConfig):
         """Finalize app configuration.
 
-        Linux .deb app configurations are deeper than other platforms, because
-        they need to include components that are dependent on the target vendor
-        and codename. Those properties are extracted from command-line options.
+        Linux .deb app configurations are deeper than other platforms, because they need
+        to include components that are dependent on the target vendor and codename.
+        Those properties are extracted from command-line options.
 
-        The final app configuration merges the target-specific configuration
-        into the generic "linux.deb" app configuration, as well as setting the
-        Python version.
+        The final app configuration merges the target-specific configuration into the
+        generic "linux.deb" app configuration, as well as setting the Python version.
 
         :param app: The app configuration to finalize.
         """
@@ -164,6 +163,29 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
+        else:
+            # If we're building for Arch, and Docker does user mapping, we can't build,
+            # because Arch won't let makepkg run as root. Docker on macOS *does* map the
+            # user, but introducing a step-down user doesn't alter behavior, so we can
+            # allow it.
+            if (
+                app.target_vendor_base == ARCH
+                and self.tools.docker.is_user_mapped
+                and self.tools.host_os != "Darwin"
+            ):
+                raise BriefcaseCommandError(
+                    """\
+Briefcase cannot use this Docker installation to target Arch Linux since the
+tools to build packages for Arch cannot be run as root.
+
+The Docker available to Briefcase requires the use of the root user in
+containers to maintain accurate file permissions of the build artefacts.
+
+This most likely means you're using Docker Desktop or rootless Docker.
+
+Install Docker Engine and try again or run Briefcase on an Arch host system.
+"""
+                )
 
         # Merge target-specific configuration items into the app config This
         # means:
@@ -272,16 +294,15 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
 
-            # Ensure that the Docker base image is available.
-            self.logger.info(f"Checking Docker target image {app.target_image}...")
-            self.tools.docker.prepare(app.target_image)
-
             # Extract release information from the image.
-            output = self.tools.docker.check_output(
-                ["cat", "/etc/os-release"],
-                image_tag=app.target_image,
-            )
-            freedesktop_info = parse_freedesktop_os_release(output)
+            with self.input.wait_bar(
+                f"Checking Docker target image {app.target_image}..."
+            ):
+                output = self.tools.docker.check_output(
+                    ["cat", "/etc/os-release"],
+                    image_tag=app.target_image,
+                )
+                freedesktop_info = parse_freedesktop_os_release(output)
         else:
             freedesktop_info = super().platform_freedesktop_info(app)
 
@@ -295,7 +316,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         """If we're using Docker, verify that it is available."""
         super().verify_tools()
         if self.use_docker:
-            Docker.verify(tools=self.tools)
+            Docker.verify(tools=self.tools, image_tag=self.target_image)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -490,8 +511,8 @@ to install the missing dependencies, and re-run Briefcase.
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
 
-        When Docker is used, create or update a Docker image for the App.
-        Without Docker, the host machine will be used as the App environment.
+        When Docker is used, create or update a Docker image for the App. Without
+        Docker, the host machine will be used as the App environment.
 
         :param app: The application being built
         """
@@ -559,6 +580,20 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
 
         # Add the vendor base
         context["vendor_base"] = app.target_vendor_base
+
+        # Use the non-root user if Docker is not mapping usernames. Also use a non-root
+        # user if we're on macOS; user mapping doesn't alter Docker operation, but some
+        # packaging tools (e.g., Arch's makepkg) don't like running as root. If we're
+        # not using Docker, this will fall back to the template default, which should be
+        # enabling the root user. This might cause problems later, but it's part of a
+        # much bigger "does the project need to be updated in light of configuration
+        # changes" problem.
+        try:
+            context["use_non_root_user"] = (
+                self.tools.host_os == "Darwin" or not self.tools.docker.is_user_mapped
+            )
+        except AttributeError:
+            pass  # ignore if not using Docker
 
         return context
 
@@ -735,9 +770,9 @@ class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
 def debian_multiline_description(description):
     """Generate a Debian multiline description string.
 
-    The long description in a Debian control file must
-    *not* contain any blank lines, and each line must start with a single space.
-    Convert a long description into Debian format.
+    The long description in a Debian control file must *not* contain any blank lines,
+    and each line must start with a single space. Convert a long description into Debian
+    format.
 
     :param description: A multi-line long description string.
     :returns: A string in Debian's multiline format

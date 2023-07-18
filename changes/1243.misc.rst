@@ -1,1 +1,0 @@
-The target image is populated correctly when a run command infers a build.

@@ -1,4 +1,6 @@
-from briefcase.config import BaseConfig
+from __future__ import annotations
+
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -28,7 +30,7 @@ class PublishCommand(BaseCommand):
             help="The channel to publish to",
         )
 
-    def publish_app(self, app: BaseConfig, channel: str, **options):
+    def publish_app(self, app: AppConfig, channel: str, **options):
         """Publish an application.
 
         :param app: The application to publish
@@ -38,7 +40,7 @@ class PublishCommand(BaseCommand):
             f"TODO: Publish {app.app_name} to {channel}"
         )  # pragma: no cover
 
-    def _publish_app(self, app: BaseConfig, channel: str, **options):
+    def _publish_app(self, app: AppConfig, channel: str, **options) -> dict | None:
         """Internal method to publish a single app. Ensures the app exists, and has been
         packaged before attempting to issue the actual publish command.
 
@@ -47,7 +49,7 @@ class PublishCommand(BaseCommand):
         """
         # TODO: Verify the app has been packaged
         state = None
-        self.verify_app_tools(app)
+        self.verify_app(app)
 
         state = self.publish_app(app, channel=channel, **full_options(state, options))
 

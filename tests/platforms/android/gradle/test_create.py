@@ -1,9 +1,10 @@
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.android.gradle import GradleCreateCommand
 
 
@@ -25,6 +26,30 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(UnsupportedHostError, match="This command is not supported on"):
         create_command()
+
+
+def test_unsupported_template_version(create_command, first_app_config):
+    """Error raised if template's target version is not supported."""
+    # Skip rolling out the template and support package
+    create_command.generate_app_template = MagicMock()
+    create_command.install_app_support_package = MagicMock()
+
+    # Skip tool verification
+    create_command.verify_tools = MagicMock()
+
+    create_command.verify_app = MagicMock(wraps=create_command.verify_app)
+
+    create_command._briefcase_toml.update(
+        {first_app_config: {"briefcase": {"target_epoch": "0.3.16"}}}
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="The app template used to generate this app is not compatible",
+    ):
+        create_command(first_app_config)
+
+    create_command.verify_app.assert_called_once_with(first_app_config)
 
 
 def test_support_package_filename(create_command):

@@ -17,6 +17,7 @@ from briefcase.integrations.java import JDK
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
     mock_tools.host_os = "Linux"
+    mock_tools.host_arch = "x86_64"
     return mock_tools
 
 
@@ -47,7 +48,7 @@ def test_non_existing_install(mock_tools, tmp_path):
 
 
 def test_existing_install(mock_tools, tmp_path):
-    """If there's an existing managed JDK install, it is deleted and redownloaded."""
+    """If there's an existing managed JDK install, it is deleted and re-downloaded."""
     # Create a mock of a previously installed Java version.
     java_home = tmp_path / "tools" / "java"
     (java_home / "bin").mkdir(parents=True)
@@ -66,7 +67,7 @@ def test_existing_install(mock_tools, tmp_path):
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
+    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -79,10 +80,10 @@ def test_existing_install(mock_tools, tmp_path):
 
     # A download was initiated
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
 
     # The archive was unpacked.
@@ -95,8 +96,8 @@ def test_existing_install(mock_tools, tmp_path):
 
 
 def test_macOS_existing_install(mock_tools, tmp_path):
-    """If there's an existing managed macOS JDK install, it is deleted and
-    redownloaded."""
+    """If there's an existing managed macOS JDK install, it is deleted and re-
+    downloaded."""
     # Force mocking on macOS
     mock_tools.host_os = "Darwin"
 
@@ -118,7 +119,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk8u242-b08").mkdir(parents=True)
+    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -131,23 +132,24 @@ def test_macOS_existing_install(mock_tools, tmp_path):
 
     # A download was initiated
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
 
     # The archive was unpacked.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
 
 
 def test_download_fail(mock_tools, tmp_path):
-    """If there's an existing managed JDK install, it is deleted and redownloaded."""
+    """If there's an existing managed JDK install, it is deleted and re-downloaded."""
     # Create a mock of a previously installed Java version.
     java_home = tmp_path / "tools" / "java"
     (java_home / "bin").mkdir(parents=True)
@@ -173,10 +175,10 @@ def test_download_fail(mock_tools, tmp_path):
 
     # A download was initiated
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
 
     # No attempt was made to unpack the archive
@@ -184,7 +186,7 @@ def test_download_fail(mock_tools, tmp_path):
 
 
 def test_unpack_fail(mock_tools, tmp_path):
-    """If there's an existing managed JDK install, it is deleted and redownloaded."""
+    """If there's an existing managed JDK install, it is deleted and re-downloaded."""
     # Create a mock of a previously installed Java version.
     java_home = tmp_path / "tools" / "java"
     (java_home / "bin").mkdir(parents=True)
@@ -217,16 +219,17 @@ def test_unpack_fail(mock_tools, tmp_path):
 
     # A download was initiated
     mock_tools.download.file.assert_called_with(
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/"
-        "jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz",
+        url="https://github.com/adoptium/temurin17-binaries/releases/download/"
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
-        role="Java 8 JDK",
+        role="Java 17 JDK",
     )
 
     # The archive was unpacked.
     # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
+        "/path/to/download.zip",
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0

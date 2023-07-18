@@ -10,6 +10,7 @@ def test_update_app(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("cleanup", "first"),
@@ -67,6 +68,7 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("requirements", "first", False),
@@ -102,6 +104,7 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("resources", "first"),
@@ -137,6 +140,7 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("cleanup-support", "first"),
@@ -177,6 +181,7 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
         ("cleanup", "first"),
@@ -212,6 +217,7 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
         ("requirements", "first", True),
@@ -248,6 +254,7 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
 
     # The right sequence of things will be done
     assert update_command.actions == [
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
         ("resources", "first"),

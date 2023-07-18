@@ -22,6 +22,8 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -64,6 +66,8 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -108,6 +112,8 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
         # App configs have been finalized
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -119,6 +125,8 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
                 "identity": None,
             },
         ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # package the second app
@@ -164,6 +172,8 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -206,6 +216,8 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -254,6 +266,8 @@ def test_adhoc_sign_args_package_two_app(
         # App configs have been finalized
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -265,6 +279,8 @@ def test_adhoc_sign_args_package_two_app(
                 "identity": None,
             },
         ),
+        # App template is verified
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # package the second app
@@ -314,6 +330,8 @@ def test_identity_sign_args_package_two_app(
         # App configs have been finalized
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -325,6 +343,8 @@ def test_identity_sign_args_package_two_app(
                 "identity": "test",
             },
         ),
+        # App template is verified
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # package the second app
@@ -369,6 +389,8 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -428,6 +450,8 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
                 "identity": None,
             },
         ),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -492,6 +516,8 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
                 "update_state": "first",
             },
         ),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -558,6 +584,8 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
                 "update_state": "first",
             },
         ),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -599,6 +627,8 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
                 "package_state": "first",
             },
         ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # package the second app
@@ -654,6 +684,8 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
                 "identity": None,
             },
         ),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -700,6 +732,8 @@ def test_already_packaged(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Package the first app
@@ -720,7 +754,7 @@ def test_already_packaged(package_command, first_app, tmp_path):
     assert tmp_path / "base_path" / "dist"
 
     # But the artefact has been deleted.
-    # NOTE: This is a testing quirk - beacuse we're mocking the
+    # NOTE: This is a testing quirk - because we're mocking the
     # package_app() call, no new artefact is created; the absence
     # of this file shows that the old one has been deleted.
     assert not artefact_path.exists()

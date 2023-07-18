@@ -15,7 +15,7 @@ def test_no_resources(create_command):
     )
 
     # Prime the path index with no targets
-    create_command._path_index = {myapp: {}}
+    create_command._briefcase_toml[myapp] = {"paths": {}}
 
     install_image = mock.MagicMock()
     create_command.install_image = install_image
@@ -40,8 +40,8 @@ def test_icon_target(create_command, tmp_path):
     )
 
     # Prime the path index with 2 icon targets
-    create_command._path_index = {
-        myapp: {
+    create_command._briefcase_toml[myapp] = {
+        "paths": {
             "icon": {
                 "10": "path/to/icon-10.png",
                 "20": "path/to/icon-20.png",
@@ -109,8 +109,8 @@ def test_icon_variant_target(create_command, tmp_path):
     )
 
     # Prime the path index with 2 icon targets
-    create_command._path_index = {
-        myapp: {
+    create_command._briefcase_toml[myapp] = {
+        "paths": {
             "icon": {
                 "round": "path/to/round.png",
                 "square": {
@@ -193,8 +193,8 @@ def test_splash_target(create_command, tmp_path):
     )
 
     # Prime the path index with 2 splash targets
-    create_command._path_index = {
-        myapp: {
+    create_command._briefcase_toml[myapp] = {
+        "paths": {
             "splash": {
                 "10x20": "path/to/splash-10x20.png",
                 "20x30": "path/to/splash-20x30.png",
@@ -262,8 +262,8 @@ def test_splash_variant_target(create_command, tmp_path):
     )
 
     # Prime the path index with 2 splash targets
-    create_command._path_index = {
-        myapp: {
+    create_command._briefcase_toml[myapp] = {
+        "paths": {
             "splash": {
                 "portrait": "path/to/portrait.png",
                 "landscape": {
@@ -353,8 +353,8 @@ def test_doctype_icon_target(create_command, tmp_path):
     # Prime the path index with 2 document types;
     # * mydoc, which has a single static image; and
     # * other, which has multiple size targets.
-    create_command._path_index = {
-        myapp: {
+    create_command._briefcase_toml[myapp] = {
+        "paths": {
             "document_type_icon": {
                 "mydoc": "path/to/mydoc-icon.png",
                 "other": {

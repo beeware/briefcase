@@ -118,6 +118,7 @@ class AndroidSDK(ManagedTool):
     @property
     def env(self) -> dict[str, str]:
         return {
+            "ANDROID_HOME": os.fsdecode(self.root_path),
             "ANDROID_SDK_ROOT": os.fsdecode(self.root_path),
             "JAVA_HOME": str(self.tools.java.java_home),
         }
@@ -148,6 +149,57 @@ class AndroidSDK(ManagedTool):
         return f"system-images;android-31;default;{self.emulator_abi}"
 
     @classmethod
+    def sdk_path_from_env(cls, tools: ToolCache) -> tuple[str | None, str | None]:
+        """Determine the file path to an Android SDK from the environment.
+
+        Android has historically supported several env vars to set the location of an
+        Android SDK for build tools. The currently preferred source is ANDROID_HOME;
+        however, ANDROID_SDK_ROOT is also supported as a deprecated setting.
+
+        These values must be same if both set; otherwise, Gradle will error.
+
+        :param tools: ToolCache of available tools
+        :returns: Tuple of path to SDK and the env var name that provided that path
+        """
+        android_home = tools.os.environ.get("ANDROID_HOME")
+        android_sdk_root = tools.os.environ.get("ANDROID_SDK_ROOT")
+
+        if android_home:
+            if android_sdk_root and android_sdk_root != android_home:
+                tools.logger.warning(
+                    f"""
+*************************************************************************
+** WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
+*************************************************************************
+
+    The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set
+    to different paths:
+
+        ANDROID_HOME:     {android_home}
+        ANDROID_SDK_ROOT: {android_sdk_root}
+
+    Briefcase will ignore ANDROID_SDK_ROOT and only use the path
+    specified by ANDROID_HOME.
+
+    You should update your environment configuration to either not set
+    ANDROID_SDK_ROOT, or set both environment variables to the same
+    path.
+
+*************************************************************************
+"""
+                )
+            sdk_root = android_home
+            sdk_source = "ANDROID_HOME"
+        elif android_sdk_root:
+            sdk_root = android_sdk_root
+            sdk_source = "ANDROID_SDK_ROOT"
+        else:
+            sdk_root = None
+            sdk_source = None
+
+        return sdk_root, sdk_source
+
+    @classmethod
     def verify_install(
         cls,
         tools: ToolCache,
@@ -156,16 +208,16 @@ class AndroidSDK(ManagedTool):
     ) -> AndroidSDK:
         """Verify an Android SDK is available.
 
-        If the ANDROID_SDK_ROOT environment variable is set, that location will
+        The file paths in ANDROID_HOME and ANDROID_SDK_ROOT environment variables will
         be checked for a valid SDK.
 
-        If the location provided doesn't contain an SDK, or no location is provided,
-        an SDK is downloaded.
+        If those file paths do not contain an SDK, or no file path is provided, an SDK
+        is downloaded.
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
-        :returns: A valid Android SDK wrapper. If Android SDK is not
-            available, and was not installed, raises MissingToolError.
+        :returns: A valid Android SDK wrapper. If Android SDK is not available, and was
+            not installed, raises MissingToolError.
         """
         # short circuit since already verified and available
         if hasattr(tools, "android_sdk"):
@@ -174,21 +226,41 @@ class AndroidSDK(ManagedTool):
         JDK.verify(tools=tools, install=install)
 
         sdk = None
-        sdk_root = tools.os.environ.get("ANDROID_SDK_ROOT")
+        sdk_root, sdk_env_source = cls.sdk_path_from_env(tools=tools)
+
         if sdk_root:
             sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root))
 
             if sdk.exists():
+                if sdk_env_source == "ANDROID_SDK_ROOT":
+                    tools.logger.warning(
+                        """
+*************************************************************************
+** WARNING: Using Android SDK from ANDROID_SDK_ROOT                    **
+*************************************************************************
+
+    Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
+    environment variable.
+
+    Android has deprecated ANDROID_SDK_ROOT in favor of the
+    ANDROID_HOME environment variable.
+
+    Update your environment configuration to set ANDROID_HOME instead of
+    ANDROID_SDK_ROOT to ensure future compatibility.
+
+*************************************************************************
+"""
+                    )
                 sdk.verify_license()
             else:
                 sdk = None
                 tools.logger.warning(
                     f"""
 *************************************************************************
-** WARNING: ANDROID_SDK_ROOT does not point to an Android SDK          **
+** {f"WARNING: {sdk_env_source} does not point to an Android SDK":67} **
 *************************************************************************
 
-    The location pointed to by the ANDROID_SDK_ROOT environment
+    The location pointed to by the {sdk_env_source} environment
     variable:
 
     {sdk_root}
@@ -525,8 +597,8 @@ connection.
     def verify_system_image(self, system_image: str):
         """Verify that the required system image is installed.
 
-        :param system_image: The SDKManager identifier for the system
-            image (e.g., ``"system-images;android-31;default;x86_64"``)
+        :param system_image: The SDKManager identifier for the system image (e.g.,
+            ``"system-images;android-31;default;x86_64"``)
         """
         # Look for the directory named as a system image.
         # If it exists, we already have the system image.
@@ -967,14 +1039,14 @@ In future, you can specify this device by running:
     ):
         """Internal method that does the actual work of creating the emulator.
 
-        AVD is the only required argument; all other arguments will assume
-        reasonable defaults.
+        AVD is the only required argument; all other arguments will assume reasonable
+        defaults.
 
         :param avd: The AVD for the new emulator
         :param device_type: The device type for the new emulator (e.g., "pixel")
         :param skin: The skin for the new emulator to use (e.g., "pixel_3a")
-        :param system_image: The system image to use on the new emulator.
-            (e.g., "system-images;android-31;default;arm64-v8a")
+        :param system_image: The system image to use on the new emulator. (e.g.,
+            "system-images;android-31;default;arm64-v8a")
         """
         if device_type is None:
             device_type = self.DEFAULT_DEVICE_TYPE
@@ -1052,8 +1124,8 @@ In future, you can specify this device by running:
         """Update the AVD configuration with specific values.
 
         :params avd: The AVD whose config will be updated
-        :params updates: A dictionary containing the new key-value to
-            add to the device configuration.
+        :params updates: A dictionary containing the new key-value to add to the device
+            configuration.
         """
         avd_config = self.avd_config(avd)
 
@@ -1075,8 +1147,8 @@ In future, you can specify this device by running:
         Returns when the emulator is booted and ready to accept apps.
 
         :param avd: The AVD of the device.
-        :param extra_args: Additional command line arguments to pass when
-            starting the emulator.
+        :param extra_args: Additional command line arguments to pass when starting the
+            emulator.
         """
         if avd not in set(self.emulators()):
             raise InvalidDeviceError("emulator AVD", avd)
@@ -1198,8 +1270,7 @@ class ADB:
         """An API integration for the Android Debug Bridge (ADB).
 
         :param tools: ToolCache of available tools
-        :param device: The ID of the device to target (in a format usable by
-            `adb -s`)
+        :param device: The ID of the device to target (in a format usable by `adb -s`)
         """
         self.tools = tools
         self.device = device
@@ -1222,10 +1293,10 @@ class ADB:
                     f"Unable to interrogate AVD name of device {self.device}"
                 ) from e
 
-    def has_booted(self):
+    def has_booted(self) -> bool:
         """Determine if the device has completed booting.
 
-        :returns True if it has booted; False otherwise.
+        :returns: True if it has booted; False otherwise.
         """
         try:
             # When the sys.boot_completed property of the device
@@ -1255,8 +1326,6 @@ class ADB:
         # checking that they are valid, then parsing output to notice errors.
         # This keeps performance good in the success case.
         try:
-            # Capture `stderr` so that if the process exits with failure, the
-            # stderr data is in `e.output`.
             return self.tools.subprocess.check_output(
                 [
                     os.fsdecode(self.tools.android_sdk.adb_path),
@@ -1278,8 +1347,7 @@ class ADB:
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
-
-        Returns `None` on success; raises an exception on failure.
+        :returns: `None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
@@ -1292,8 +1360,7 @@ class ADB:
         """Force-stop an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
-
-        Returns `None` on success; raises an exception on failure.
+        :returns: `None` on success; raises an exception on failure.
         """
         # In my testing, `force-stop` exits with status code 0 (success) so long
         # as you pass a package name, even if the package does not exist, or the
@@ -1308,15 +1375,14 @@ class ADB:
     def start_app(self, package: str, activity: str, passthrough: list[str]):
         """Start an app, specified as a package name & activity name.
 
-        :param package: The name of the Android package, e.g., com.username.myapp.
-        :param activity: The activity of the APK to start.
-        :param passthrough: Arguments to pass to the app.
-
-        Returns `None` on success; raises an exception on failure.
-
         If you have an APK file, and you are not sure of the package or activity
         name, you can find it using `aapt dump badging filename.apk` and looking
         for "package" and "launchable-activity" in the output.
+
+        :param package: The name of the Android package, e.g., com.username.myapp.
+        :param activity: The activity of the APK to start.
+        :param passthrough: Arguments to pass to the app.
+        :returns: `None` on success; raises an exception on failure.
         """
         try:
             # `am start` also accepts string array extras, but we pass the arguments as a
@@ -1358,7 +1424,7 @@ Activity class not found while starting app.
                 f"Unable to start {package}/{activity} on {self.device}"
             ) from e
 
-    def logcat(self, pid: str):
+    def logcat(self, pid: str) -> subprocess.Popen:
         """Start following the adb log for the device.
 
         :param pid: The PID whose logs you want to display.
@@ -1448,4 +1514,18 @@ Activity class not found while starting app.
         try:
             self.run("emu", "kill")
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting ADB logcat.") from e
+            raise BriefcaseCommandError("Error stopping the Android emulator.") from e
+
+    def datetime(self) -> datetime:
+        """Obtain the device's current date/time.
+
+        This date/time is naive (i.e. not timezone aware) and in the device's "local"
+        time. Therefore, it may be quite different from the date/time for Briefcase and
+        caution should be used if comparing it to machine's "local" time.
+        """
+        datetime_format = "%Y-%m-%d %H:%M:%S"
+        try:
+            device_datetime = self.run("shell", "date", f"+'{datetime_format}'").strip()
+            return datetime.strptime(device_datetime, datetime_format)
+        except (ValueError, subprocess.CalledProcessError) as e:
+            raise BriefcaseCommandError("Error obtaining device date/time.") from e

@@ -490,8 +490,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         :param host: The host on which to run the server
         :param port: The port on which to run the server
-        :param open_browser: Should a browser be opened on the newly started
-            server.
+        :param open_browser: Should a browser be opened on the newly started server.
         """
         self.logger.info("Starting web server...", prefix=app.app_name)
 

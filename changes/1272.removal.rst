@@ -1,1 +1,0 @@
-Flatpak apps no longer default to using the Freedesktop runtime and SDK version 21.08 when a runtime is not specified. Instead, the runtime now must be explicitly defined in the `application configuration <https://briefcase.readthedocs.io/en/latest/reference/platforms/linux/flatpak.html#application-configuration>`__.

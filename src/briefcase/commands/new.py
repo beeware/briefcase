@@ -113,8 +113,8 @@ class NewCommand(BaseCommand):
         """Determine if the app name is valid.
 
         :param candidate: The candidate name
-        :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+        :returns: True. If there are any validation problems, raises ValueError with a
+            diagnostic message.
         """
         if not is_valid_app_name(candidate):
             raise ValueError(
@@ -145,8 +145,8 @@ class NewCommand(BaseCommand):
         """Determine if the bundle identifier is valid.
 
         :param candidate: The candidate bundle identifier
-        :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+        :returns: True. If there are any validation problems, raises ValueError with a
+            diagnostic message.
         """
         if not is_valid_bundle_identifier(candidate):
             raise ValueError(
@@ -172,11 +172,11 @@ class NewCommand(BaseCommand):
         identifier.
 
         The candidate is based on the assumption that the author's name is in
-        "first/last" format, or it a corporate name; the "first" part is split
-        off, and prepended to the domain extracted from the bundle.
+        "first/last" format, or it a corporate name; the "first" part is split off, and
+        prepended to the domain extracted from the bundle.
 
-        It's not a perfect system, but it's better than putting up
-        "me@example.com" as a candidate default value.
+        It's not a perfect system, but it's better than putting up "me@example.com" as a
+        candidate default value.
 
         :param author: The authors name.
         :param bundle: The bundle identifier.
@@ -188,8 +188,8 @@ class NewCommand(BaseCommand):
         """Determine if the email address is valid.
 
         :param candidate: The candidate email address
-        :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+        :returns: True. If there are any validation problems, raises ValueError with a
+            diagnostic message.
         """
         if parseaddr(candidate)[1] != candidate:
             raise ValueError("Not a valid email address")
@@ -211,8 +211,8 @@ class NewCommand(BaseCommand):
         """Determine if the URL is valid.
 
         :param candidate: The candidate URL
-        :returns: True. If there are any validation problems, raises ValueError
-            with a diagnostic message.
+        :returns: True. If there are any validation problems, raises ValueError with a
+            diagnostic message.
         """
         result = urlparse(candidate)
         if not all([result.scheme, result.netloc]):
@@ -260,11 +260,9 @@ class NewCommand(BaseCommand):
 
         The first option is assumed to be the default.
 
-        :param intro: An introductory paragraph explaining the question being
-            asked.
+        :param intro: An introductory paragraph explaining the question being asked.
         :param variable: The variable to display to the user.
-        :param options: A list of text strings, describing the available
-            options.
+        :param options: A list of text strings, describing the available options.
         :returns: The string content of the selected option.
         """
         self.input.prompt(intro)
@@ -293,8 +291,7 @@ Select one of the following:
     def build_app_context(self):
         """Ask the user for details about the app to be created.
 
-        :returns: A context dictionary to be used in the cookiecutter project
-            template.
+        :returns: A context dictionary to be used in the cookiecutter project template.
         """
         formal_name = self.input_text(
             intro="""
@@ -471,8 +468,8 @@ What GUI toolkit do you want to use for this project?""",
         # include the version of Briefcase as well as the source of the template.
         context.update(
             {
-                "template": template,
-                "branch": branch,
+                "template_source": template,
+                "template_branch": branch,
                 "briefcase_version": briefcase.__version__,
             }
         )

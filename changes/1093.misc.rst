@@ -1,1 +1,0 @@
-The ``Tool`` and ``ManagedTool`` base classes were implemented to unify tool functionality.

@@ -1,1 +1,0 @@
-Tests that caused Briefcase to sleep were updated to short circuit the sleep.

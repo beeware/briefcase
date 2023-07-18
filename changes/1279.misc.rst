@@ -1,1 +1,0 @@
-The version of docformatter was updated to v1.7.0 and now uses a specific setting for compatibility with Black.

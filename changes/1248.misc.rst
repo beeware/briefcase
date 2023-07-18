@@ -1,1 +1,0 @@
-The ``tox`` configuration was updated to include the checks performed in GitHub CI.

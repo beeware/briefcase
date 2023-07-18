@@ -1,7 +1,8 @@
-from abc import abstractmethod
-from typing import Optional
+from __future__ import annotations
 
-from briefcase.config import BaseConfig
+from abc import abstractmethod
+
+from briefcase.config import AppConfig
 
 from .base import BaseCommand, full_options
 
@@ -25,19 +26,17 @@ class PackageCommand(BaseCommand):
     def distribution_path(self, app):
         """The path to the distributable artefact for the app.
 
-        Requires that the packaging format has been annotated onto
-        the application definition
+        Requires that the packaging format has been annotated onto the application
+        definition
 
-        This is the single file that should be uploaded for distribution.
-        This may be the binary (if the binary is a self-contained executable);
-        however, if the output format produces an installer, it will be the
-        path to the installer.
+        This is the single file that should be uploaded for distribution. This may be
+        the binary (if the binary is a self-contained executable); however, if the
+        output format produces an installer, it will be the path to the installer.
 
         :param app: The app config
         """
-        ...
 
-    def package_app(self, app: BaseConfig, **options):
+    def package_app(self, app: AppConfig, **options):
         """Package an application.
 
         :param app: The application to package
@@ -46,11 +45,11 @@ class PackageCommand(BaseCommand):
 
     def _package_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         update: bool,
         packaging_format: str,
         **options,
-    ):
+    ) -> dict | None:
         """Internal method to invoke packaging on a single app. Ensures the app exists,
         and has been updated (if requested) before attempting to issue the actual
         package command.
@@ -85,9 +84,9 @@ class PackageCommand(BaseCommand):
         # Annotate the packaging format onto the app
         app.packaging_format = packaging_format
 
-        # Verify the app tools, which will do final confirmation that we can
+        # Verify the app, which will do final confirmation that we can
         # package in the requested format.
-        self.verify_app_tools(app)
+        self.verify_app(app)
 
         # If the distribution artefact already exists, remove it.
         if self.distribution_path(app).exists():
@@ -135,8 +134,11 @@ class PackageCommand(BaseCommand):
         )
 
     def __call__(
-        self, app: Optional[BaseConfig] = None, update: bool = False, **options
-    ):
+        self,
+        app: AppConfig | None = None,
+        update: bool = False,
+        **options,
+    ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)

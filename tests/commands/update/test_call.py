@@ -36,10 +36,12 @@ def test_update(update_command, first_app, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # Update the first app
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("cleanup", "first"),
         # Update the second app
+        ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
         ("cleanup", "second"),
@@ -62,6 +64,7 @@ def test_update_single(update_command, first_app, second_app):
         # App config has been finalized
         ("finalize-app-config", "first"),
         # update the first app
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("cleanup", "first"),
@@ -85,11 +88,13 @@ def test_update_with_requirements(update_command, first_app, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # Update the first app
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("requirements", "first", False),
         ("cleanup", "first"),
         # Update the second app
+        ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
         ("requirements", "second", False),
@@ -114,11 +119,13 @@ def test_update_with_resources(update_command, first_app, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # Update the first app
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("resources", "first"),
         ("cleanup", "first"),
         # Update the second app
+        ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
         ("resources", "second"),
@@ -143,12 +150,14 @@ def test_update_with_support(update_command, first_app, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # Update the first app
+        ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
         ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
         # Update the second app
+        ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
         ("cleanup-support", "second"),

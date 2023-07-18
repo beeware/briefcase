@@ -1,1 +1,0 @@
-The possibility to run ``tox`` on single test files was added.

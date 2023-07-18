@@ -188,6 +188,19 @@ Briefcase will unpack the new support package without cleaning up existing
 support package content. This *should* work; however, ensure a reproducible
 release artefacts, it is advisable to perform a clean app build before release.
 
+Apps using WebKit2 are not supported
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+WebKit2, the library that provides web widget support, can't currently be deployed with
+AppImage. WebKit2 uses subprocesses to manage network and rendering requests, but the
+way it packages and launches these subprocesses isn't currently compatible with
+AppImage.
+
+In addition, many of the commonly used ``manylinux`` base images predate the release of
+WebKit2. As a result, system packages providing WebKit2 are not available on these base
+images. ``manylinux_2_28`` is the earliest supported ``manylinux`` image that provides
+WebKit2 support.
+
 Runtime issues with AppImages
 =============================
 

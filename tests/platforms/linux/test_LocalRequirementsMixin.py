@@ -50,8 +50,8 @@ def no_docker_create_command(first_app_config, tmp_path):
     # Mock shutil.copy to do the copy, but be observable
     command.tools.shutil.copy = MagicMock(side_effect=shutil.copy)
 
-    command._path_index = {
-        first_app_config: {"app_packages_path": "path/to/app_packages"}
+    command._briefcase_toml[first_app_config] = {
+        "paths": {"app_packages_path": "path/to/app_packages"}
     }
 
     # At the time app requirements are installed, the project folder will exist.

@@ -76,8 +76,8 @@ def test_new_app(
             # The expected app context
             # should now also contain the
             # default template and branch
-            "template": "https://github.com/beeware/briefcase-template",
-            "branch": expected_branch,
+            "template_source": "https://github.com/beeware/briefcase-template",
+            "template_branch": expected_branch,
             "briefcase_version": briefcase_version,
         },
     )
@@ -129,8 +129,8 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # default template and branch
-            "template": "https://github.com/beeware/briefcase-template",
-            "branch": "v37.42.7",
+            "template_source": "https://github.com/beeware/briefcase-template",
+            "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
         },
     )
@@ -196,8 +196,8 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     # The expected app context
                     # should now also contain the
                     # default template and branch
-                    "template": "https://github.com/beeware/briefcase-template",
-                    "branch": "v37.42.7",
+                    "template_source": "https://github.com/beeware/briefcase-template",
+                    "template_branch": "v37.42.7",
                     "briefcase_version": briefcase_version,
                 },
             ),
@@ -213,8 +213,8 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     # The expected app context
                     # should now also contain the
                     # default template and branch
-                    "template": "https://github.com/beeware/briefcase-template",
-                    "branch": "v37.42.7",
+                    "template_source": "https://github.com/beeware/briefcase-template",
+                    "template_branch": "v37.42.7",
                     "briefcase_version": briefcase_version,
                 },
             ),
@@ -261,8 +261,8 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://example.com/other.git",
-            "branch": "v37.42.7",
+            "template_source": "https://example.com/other.git",
+            "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
         },
     )
@@ -313,8 +313,8 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://example.com/other.git",
-            "branch": "v37.42.7",
+            "template_source": "https://example.com/other.git",
+            "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
         },
     )
@@ -368,8 +368,8 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://example.com/other.git",
-            "branch": "v37.42.7",
+            "template_source": "https://example.com/other.git",
+            "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
         },
     )
@@ -414,8 +414,8 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://github.com/beeware/briefcase-template",
-            "branch": "experimental",
+            "template_source": "https://github.com/beeware/briefcase-template",
+            "template_branch": "experimental",
             "briefcase_version": "37.42.7",
         },
     )

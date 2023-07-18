@@ -1,1 +1,0 @@
-Non ascii characters input for the app name during 'briefcase new' are quoted before being put into pyproject.toml.

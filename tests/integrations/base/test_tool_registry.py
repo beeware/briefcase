@@ -20,8 +20,8 @@ def integrations_modules() -> Set[str]:
 
 
 def tools_for_module(tool_module_name: str) -> Dict[str, Type[Tool]]:
-    """Return classes that subclass Tool in a module in
-    ``briefcase.integrations``, e.g. {"android_sdk": AndroidSDK}."""
+    """Return classes that subclass Tool in a module in ``briefcase.integrations``, e.g.
+    {"android_sdk": AndroidSDK}."""
     return dict(
         inspect.getmembers(
             sys.modules[f"briefcase.integrations.{tool_module_name}"],

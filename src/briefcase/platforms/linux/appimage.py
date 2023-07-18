@@ -110,8 +110,8 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
 
-        When Docker is used, create or update a Docker image for the App.
-        Without Docker, the host machine will be used as the App environment.
+        When Docker is used, create or update a Docker image for the App. Without
+        Docker, the host machine will be used as the App environment.
 
         :param app: The application being built
         """
@@ -150,6 +150,7 @@ class LinuxAppImageCreateCommand(
 
     def output_format_template_context(self, app: AppConfig):
         context = super().output_format_template_context(app)
+
         # Add the manylinux tag to the template context.
         try:
             tag = getattr(app, "manylinux_image_tag", "latest")
@@ -166,6 +167,12 @@ class LinuxAppImageCreateCommand(
                 )
         except AttributeError:
             pass
+
+        # Use the non-root user if Docker is not mapping usernames
+        try:
+            context["use_non_root_user"] = not self.tools.docker.is_user_mapped
+        except AttributeError:
+            pass  # ignore if not using Docker
 
         return context
 
