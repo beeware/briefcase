@@ -861,6 +861,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 self.tools.shutil.rmtree(DEBIAN_path)
 
             DEBIAN_path.mkdir()
+            # dpkg-dep requires "DEBIAN" directory is >=0755 and <=0775
+            DEBIAN_path.chmod(0o755)
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
