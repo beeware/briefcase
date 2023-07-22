@@ -31,6 +31,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
+from briefcase.commands.create import _is_local_requirement
 from briefcase.commands.run import LogFilter
 from briefcase.config import AppConfig
 from briefcase.console import Log
@@ -45,6 +46,9 @@ from briefcase.integrations.subprocess import StopStreaming
 class StaticWebMixin:
     output_format = "static"
     platform = "web"
+
+    def local_requirements_path(self, app):
+        return self.bundle_path(app) / "_requirements"
 
     def project_path(self, app):
         return self.bundle_path(app) / "www"
@@ -70,6 +74,53 @@ class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
         return {
             "style_framework": getattr(app, "style_framework", "None"),
         }
+
+    def _write_requirements_file(
+        self,
+        app: AppConfig,
+        requires: list[str],
+        requirements_path: Path,
+    ):
+        if self.local_requirements_path(app).exists():
+            with self.input.wait_bar("Removing old local wheels..."):
+                self.tools.shutil.rmtree(self.local_requirements_path(app))
+
+        self.local_requirements_path(app).mkdir(parents=True)
+
+        with self.input.wait_bar("Writing requirements file..."):
+            with requirements_path.open("w", encoding="utf-8") as f:
+                if requires:
+                    for requirement in requires:
+                        if _is_local_requirement(requirement):
+                            # If the requirement is a local path, build a wheel for the requirement,
+                            # and update the requirements file to reference that wheel.
+                            try:
+                                self.tools.subprocess.run(
+                                    [
+                                        sys.executable,
+                                        "-u",
+                                        "-m",
+                                        "pip",
+                                        "wheel",
+                                        "--no-deps",
+                                        "-w",
+                                        self.local_requirements_path(app),
+                                        requirement,
+                                    ],
+                                    check=True,
+                                )
+                            except subprocess.CalledProcessError as e:
+                                raise BriefcaseCommandError(
+                                    f"Unable to install requirements for app {app.app_name!r}"
+                                ) from e
+
+                        else:
+                            # Otherwise, just use the requirement as defined.
+                            f.write(f"{requirement}\n")
+
+                    # Append all the local wheels to the requirements file.
+                    for filename in self.local_requirements_path(app).glob("*.whl"):
+                        f.write(f"{filename.relative_to(self.bundle_path(app))}\n")
 
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):
@@ -170,15 +221,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             # Write the final configuration.
             tomli_w.dump(config, f)
 
-    def _base_inserts(self, app: AppConfig, test_mode: bool):
-        """Construct the initial runtime inserts for the app.
-
-        This adds:
-        * A bootstrap script for  ``index.html`` to start the app
+    def _write_bootstrap(self, app: AppConfig, test_mode: bool):
+        """Write the bootstrap code for the app.
 
         :param app: The app whose base inserts we need.
         :param test_mode: Boolean; Is the app running in test mode?
-        :returns: A dictionary containing the initial inserts
         """
         # Construct the bootstrap script.
         bootstrap = [
@@ -196,13 +243,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ]
             )
 
-        return {
-            "index.html": {
-                "bootstrap": {
-                    "Briefcase": "\n".join(bootstrap),
-                }
-            }
-        }
+        with (self.project_path(app) / "main.py").open("w") as f:
+            f.write("\n".join(bootstrap))
 
     def _merge_insert_content(self, inserts, key, path):
         """Merge multi-file insert content into a single insert.
@@ -353,13 +395,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         "-u",
                         "-m",
                         "pip",
-                        "wheel",
-                        "--wheel-dir",
+                        "download",
+                        "--platform",
+                        "emscripten_3_1_32_wasm32",
+                        "--only-binary=:all:",
+                        "--extra-index-url",
+                        "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                        "-d",
                         self.wheel_path(app),
                         "-r",
                         self.bundle_path(app) / "requirements.txt",
                     ],
                     check=True,
+                    cwd=self.bundle_path(app),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -369,7 +417,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with self.input.wait_bar("Writing Pyscript configuration file..."):
             self._write_pyscript_toml(app)
 
-        inserts = self._base_inserts(app, test_mode=test_mode)
+        inserts = {}
 
         self.logger.info("Compile contributed content from wheels")
         with self.input.wait_bar("Compiling contributed content from wheels..."):
@@ -385,6 +433,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Reorganize CSS content so that there's a single content insert
         # for all contributed packages
         self._merge_insert_content(inserts, "CSS", "static/css/briefcase.css")
+
+        self._write_bootstrap(app, test_mode=test_mode)
 
         # Add content inserts to the site content.
         self.logger.info("Add content inserts")
