@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 
@@ -138,10 +137,9 @@ does not point to an install of the WiX Toolset.
 
         try:
             with self.tools.input.wait_bar("Installing WiX..."):
-                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.tools.shutil.unpack_archive(
-                    os.fsdecode(wix_zip_path),
-                    extract_dir=os.fsdecode(self.wix_home),
+                    str(wix_zip_path),
+                    extract_dir=str(self.wix_home),
                 )
         except (shutil.ReadError, EOFError) as e:
             raise BriefcaseCommandError(
