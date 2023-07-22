@@ -88,7 +88,9 @@ class GradleMixin:
         )
 
     def distribution_path(self, app):
-        return self.dist_path / f"{app.formal_name}-{app.version}.aab"
+        return (
+            self.dist_path / f"{app.formal_name}-{app.version}.{app.packaging_format}"
+        )
 
     def run_gradle(self, app, args):
         # Gradle may install the emulator via the dependency chain build-tools > tools >

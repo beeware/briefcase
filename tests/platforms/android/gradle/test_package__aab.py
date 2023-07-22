@@ -8,6 +8,12 @@ from briefcase.exceptions import BriefcaseCommandError
 from ....utils import create_file
 
 
+@pytest.fixture
+def first_app_aab(first_app_config):
+    first_app_config.packaging_format = "aab"
+    return first_app_config
+
+
 def test_unsupported_template_version(package_command, first_app_generated):
     """Error raised if template's target version is not supported."""
     # Mock the build command previously called
@@ -32,9 +38,9 @@ def test_default_packaging_format(package_command):
     assert package_command.default_packaging_format == "aab"
 
 
-def test_distribution_path(package_command, first_app_config, tmp_path):
+def test_distribution_path(package_command, first_app_aab, tmp_path):
     assert (
-        package_command.distribution_path(first_app_config)
+        package_command.distribution_path(first_app_aab)
         == tmp_path / "base_path" / "dist" / "First App-0.0.1.aab"
     )
 
@@ -45,7 +51,7 @@ def test_distribution_path(package_command, first_app_config, tmp_path):
 )
 def test_execute_gradle(
     package_command,
-    first_app_config,
+    first_app_aab,
     host_os,
     gradlew_name,
     tmp_path,
@@ -80,17 +86,17 @@ def test_execute_gradle(
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
 
-    package_command.package_app(first_app_config)
+    package_command.package_app(first_app_aab)
 
     package_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     package_command.tools.subprocess.run.assert_called_once_with(
         [
-            package_command.bundle_path(first_app_config) / gradlew_name,
+            package_command.bundle_path(first_app_aab) / gradlew_name,
             "bundleRelease",
             "--console",
             "plain",
         ],
-        cwd=package_command.bundle_path(first_app_config),
+        cwd=package_command.bundle_path(first_app_aab),
         env=package_command.tools.android_sdk.env,
         check=True,
     )

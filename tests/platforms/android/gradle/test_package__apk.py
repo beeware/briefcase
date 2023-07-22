@@ -35,6 +35,12 @@ def package_command(tmp_path, first_app_config):
     return command
 
 
+@pytest.fixture
+def first_app_apk(first_app_config):
+    first_app_config.packaging_format = "apk"
+    return first_app_config
+
+
 def test_unsupported_template_version(package_command, first_app_generated):
     """Error raised if template's target version is not supported."""
     # Mock the build command previously called
@@ -55,10 +61,10 @@ def test_unsupported_template_version(package_command, first_app_generated):
     package_command.verify_app.assert_called_once_with(first_app_generated)
 
 
-def test_distribution_path(package_command, first_app_config, tmp_path):
+def test_distribution_path(package_command, first_app_apk, tmp_path):
     print(package_command.packaging_formats)
     assert (
-        package_command.distribution_path(first_app_config)
+        package_command.distribution_path(first_app_apk)
         == tmp_path / "base_path" / "dist" / "First App-0.0.1.apk"
     )
 
@@ -69,7 +75,7 @@ def test_distribution_path(package_command, first_app_config, tmp_path):
 )
 def test_execute_gradle(
     package_command,
-    first_app_config,
+    first_app_apk,
     host_os,
     gradlew_name,
     tmp_path,
@@ -104,17 +110,17 @@ def test_execute_gradle(
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
 
-    package_command.package_app(first_app_config)
+    package_command.package_app(first_app_apk)
 
     package_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     package_command.tools.subprocess.run.assert_called_once_with(
         [
-            package_command.bundle_path(first_app_config) / gradlew_name,
+            package_command.bundle_path(first_app_apk) / gradlew_name,
             "bundleRelease",
             "--console",
             "plain",
         ],
-        cwd=package_command.bundle_path(first_app_config),
+        cwd=package_command.bundle_path(first_app_apk),
         env=package_command.tools.android_sdk.env,
         check=True,
     )
@@ -123,7 +129,7 @@ def test_execute_gradle(
     assert (tmp_path / "base_path" / "dist" / "First App-0.0.1.apk").exists()
 
 
-def test_print_gradle_errors(package_command, first_app_config):
+def test_print_gradle_errors(package_command, first_app_apk):
     """Validate that package_app() will convert stderr/stdout from the process into
     exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
@@ -132,4 +138,4 @@ def test_print_gradle_errors(package_command, first_app_config):
         cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
-        package_command.package_app(first_app_config)
+        package_command.package_app(first_app_apk)
