@@ -1,4 +1,1 @@
-Appimages builds now use ``LINUXDEPLOY_OUTPUT_VERSION`` rather than ``VERSION`` to inject the version number. 
-
-
-
+Appimages builds now use ``LINUXDEPLOY_OUTPUT_VERSION`` rather than ``VERSION`` to inject the version number.
