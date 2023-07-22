@@ -64,7 +64,7 @@ class GradleMixin:
 
     @property
     def packaging_formats(self):
-        return ["aab"]
+        return ["aab", "apk"]
 
     @property
     def default_packaging_format(self):
