@@ -1,0 +1,1 @@
+Update documentation about the iOS splash images sizes to reflect the changes in the template
