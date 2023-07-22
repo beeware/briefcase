@@ -186,7 +186,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
         ],
         env={
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
-            "VERSION": "0.0.1",
+            "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
@@ -276,7 +276,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
         env={
             "PATH": f"{gtk_plugin_path.parent}:{app_dir.parent}:/usr/local/bin:/usr/bin:/path/to/somewhere",
             "DEPLOY_GTK_VERSION": "3",
-            "VERSION": "0.0.1",
+            "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
@@ -353,7 +353,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
         ],
         env={
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
-            "VERSION": "0.0.1",
+            "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
@@ -416,7 +416,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
             "--volume",
             f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
             "--env",
-            "VERSION=0.0.1",
+            "LINUXDEPLOY_OUTPUT_VERSION=0.0.1",
             "--env",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT=1",
             "--env",
@@ -540,7 +540,7 @@ def test_build_appimage_with_plugins_in_docker(
                 ":/app:/docker/bin:/docker/sbin"
             ),
             "--env",
-            "VERSION=0.0.1",
+            "LINUXDEPLOY_OUTPUT_VERSION=0.0.1",
             "--env",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT=1",
             "--env",
@@ -671,7 +671,7 @@ def test_build_appimage_with_support_package_update(
         ],
         env={
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
-            "VERSION": "0.0.1",
+            "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "wonky",
