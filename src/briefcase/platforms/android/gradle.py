@@ -76,6 +76,22 @@ class GradleMixin:
     def project_path(self, app):
         return self.bundle_path(app)
 
+    def package_name(self, app) -> Path:
+        package_name_dict = {
+            "aab": Path("bundle") / "release" / "app-release.aab",
+            "apk": Path("apk") / "release" / "app-release-unsigned.apk",
+            "debug-apk": Path("apk") / "debug" / "app-debug.apk",
+        }
+        return package_name_dict[app.packaging_format]
+
+    def build_command(self, app):
+        command_dict = {
+            "aab": "bundleRelease",
+            "apk": "assembleRelease",
+            "debug-apk": "assembleDebug",
+        }
+        return command_dict[app.packaging_format]
+
     def binary_path(self, app):
         return (
             self.bundle_path(app)
@@ -374,7 +390,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         )
         with self.input.wait_bar("Bundling..."):
             try:
-                self.run_gradle(app, ["bundleRelease"])
+                self.run_gradle(app, [self.build_command(app)])
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Error while building project.") from e
 
@@ -384,9 +400,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
             / "app"
             / "build"
             / "outputs"
-            / "bundle"
-            / "release"
-            / "app-release.aab",
+            / f"{self.package_name(app)}",
             self.distribution_path(app),
         )
 
