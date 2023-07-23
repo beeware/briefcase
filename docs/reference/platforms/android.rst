@@ -19,6 +19,13 @@ existing JDK install.
 If the above methods fail to find an Android SDK or Java JDK, Briefcase will
 download and install an isolated copy in its data directory.
 
+Briefcase supports three packaging formats for an Android app:
+
+1. An AAB bundle (the default output of ``briefcase package android``, or by using
+   ``briefcase package android -p aab``); or
+2. A Release APK (by using ``briefcase package android -p apk``); or
+3. A Debug APK (by using ``briefcase package android -p debug-apk``).
+
 Icon format
 ===========
 
