@@ -76,22 +76,6 @@ class GradleMixin:
     def project_path(self, app):
         return self.bundle_path(app)
 
-    def package_name(self, app) -> Path:
-        package_name_dict = {
-            "aab": Path("bundle") / "release" / "app-release.aab",
-            "apk": Path("apk") / "release" / "app-release-unsigned.apk",
-            "debug-apk": Path("apk") / "debug" / "app-debug.apk",
-        }
-        return package_name_dict[app.packaging_format]
-
-    def build_command(self, app):
-        command_dict = {
-            "aab": "bundleRelease",
-            "apk": "assembleRelease",
-            "debug-apk": "assembleDebug",
-        }
-        return command_dict[app.packaging_format]
-
     def binary_path(self, app):
         return (
             self.bundle_path(app)
@@ -396,17 +380,28 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         )
         with self.input.wait_bar("Bundling..."):
             try:
-                self.run_gradle(app, [self.build_command(app)])
+                self.run_gradle(
+                    app,
+                    [
+                        {
+                            "aab": "bundleRelease",
+                            "apk": "assembleRelease",
+                            "debug-apk": "assembleDebug",
+                        }[app.packaging_format]
+                    ],
+                )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Error while building project.") from e
 
         # Move artefact to final location.
+        build_artefact_path = {
+            "aab": Path("bundle") / "release" / "app-release.aab",
+            "apk": Path("apk") / "release" / "app-release-unsigned.apk",
+            "debug-apk": Path("apk") / "debug" / "app-debug.apk",
+        }[app.packaging_format]
+
         self.tools.shutil.move(
-            self.bundle_path(app)
-            / "app"
-            / "build"
-            / "outputs"
-            / f"{self.package_name(app)}",
+            self.bundle_path(app) / "app" / "build" / "outputs" / build_artefact_path,
             self.distribution_path(app),
         )
 
