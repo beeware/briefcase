@@ -1,0 +1,1 @@
+briefcase package android now has a -p apk option, which will (a) compile a release APK, and (b) copy that release APK to the dist folder.
