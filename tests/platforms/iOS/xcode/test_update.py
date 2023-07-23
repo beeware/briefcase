@@ -35,6 +35,8 @@ def test_extra_pip_args(update_command, first_app_generated, tmp_path):
             "-m",
             "pip",
             "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
             "--upgrade",
             "--no-user",
             f"--target={tmp_path / 'base_path' / 'build' / 'first-app' / 'ios' / 'xcode' / 'app_packages'}",
