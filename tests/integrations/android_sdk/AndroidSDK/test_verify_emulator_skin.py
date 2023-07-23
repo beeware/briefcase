@@ -20,8 +20,6 @@ def test_existing_skin(mock_tools, android_sdk):
 
 def test_new_skin(mock_tools, android_sdk):
     """If the skin doesn't exist, an attempt is made to download it."""
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    # Remove if block when we drop py3.7 support.
     skin_tgz_path = MagicMock(spec_set=Path)
     skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
     mock_tools.download.file.return_value = skin_tgz_path
@@ -50,8 +48,6 @@ def test_new_skin(mock_tools, android_sdk):
 
 def test_skin_download_failure(mock_tools, android_sdk, tmp_path):
     """If the skin download fails, an error is raised."""
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
-    # Remove if block when we drop py3.7 support.
     skin_tgz_path = MagicMock(spec_set=Path)
     skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
     mock_tools.download.file.return_value = skin_tgz_path
@@ -79,8 +75,6 @@ def test_skin_download_failure(mock_tools, android_sdk, tmp_path):
 def test_unpack_failure(mock_tools, android_sdk, tmp_path):
     """If the download is corrupted and unpacking fails, an error is raised."""
     # Mock the result of the download of a skin
-    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     skin_tgz_path = MagicMock(spec_set=Path)
     skin_tgz_path.__fspath__.return_value = "/path/to/skin.tgz"
     mock_tools.download.file.return_value = skin_tgz_path

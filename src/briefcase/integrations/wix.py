@@ -138,7 +138,6 @@ does not point to an install of the WiX Toolset.
 
         try:
             with self.tools.input.wait_bar("Installing WiX..."):
-                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.tools.shutil.unpack_archive(
                     os.fsdecode(wix_zip_path),
                     extract_dir=os.fsdecode(self.wix_home),

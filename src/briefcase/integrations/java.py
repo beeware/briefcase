@@ -262,7 +262,6 @@ class JDK(ManagedTool):
 
         with self.tools.input.wait_bar("Installing OpenJDK..."):
             try:
-                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.tools.shutil.unpack_archive(
                     os.fsdecode(jdk_zip_path),
                     extract_dir=os.fsdecode(self.tools.base_path),
