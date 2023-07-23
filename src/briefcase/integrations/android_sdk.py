@@ -706,7 +706,6 @@ connection.
             output = self.tools.subprocess.check_output(
                 [os.fsdecode(self.emulator_path), "-list-avds"]
             ).strip()
-
             # AVD names are returned one per line.
             if len(output) == 0:
                 return []
@@ -720,7 +719,6 @@ connection.
             output = self.tools.subprocess.check_output(
                 [os.fsdecode(self.adb_path), "devices", "-l"]
             ).strip()
-
             # Process the output of `adb devices -l`.
             # The first line is header information.
             # Each subsequent line is a single device descriptor.
@@ -1326,7 +1324,7 @@ class ADB:
         # checking that they are valid, then parsing output to notice errors.
         # This keeps performance good in the success case.
         try:
-            return self.tools.subprocess.check_output(
+            output = self.tools.subprocess.check_output(
                 [
                     os.fsdecode(self.tools.android_sdk.adb_path),
                     "-s",
@@ -1338,6 +1336,14 @@ class ADB:
                 ],
                 quiet=quiet,
             )
+            # add returns status code 0 in the case of failure. The only tangible evidence
+            # of failure is the message "Failure [INSTALL_FAILED_OLDER_SDK]" in the,
+            # console output; so if that message exists in the output, raise an exception.
+            if "Failure [INSTALL_FAILED_OLDER_SDK]" in output:
+                raise BriefcaseCommandError(
+                    "Your device doesn't meet the minimum SDK requirements of this app."
+                )
+            return output
         except subprocess.CalledProcessError as e:
             if any(DEVICE_NOT_FOUND.match(line) for line in e.output.split("\n")):
                 raise InvalidDeviceError("device id", self.device) from e
