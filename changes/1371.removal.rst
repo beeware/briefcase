@@ -1,0 +1,1 @@
+The size of iOS splash images have changed. iOS apps should now provide 800px, 1600px and 2400px images (previously, this as 1024px, 2048px and 3072px). This is because iOS 14 added a hard limit on the size of image resources.
