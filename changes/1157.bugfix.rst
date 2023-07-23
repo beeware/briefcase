@@ -1,0 +1,1 @@
+Briefcase will now detect, if you try to launch an version on an android that is too old.
