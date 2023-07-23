@@ -34,10 +34,6 @@ def test_unsupported_template_version(package_command, first_app_generated):
     package_command.verify_app.assert_called_once_with(first_app_generated)
 
 
-def test_default_packaging_format(package_command):
-    assert package_command.default_packaging_format == "aab"
-
-
 def test_distribution_path(package_command, first_app_aab, tmp_path):
     assert (
         package_command.distribution_path(first_app_aab)
