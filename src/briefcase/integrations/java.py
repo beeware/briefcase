@@ -263,8 +263,8 @@ class JDK(ManagedTool):
         with self.tools.input.wait_bar("Installing OpenJDK..."):
             try:
                 self.tools.shutil.unpack_archive(
-                    str(jdk_zip_path),
-                    extract_dir=str(self.tools.base_path),
+                    os.fsdecode(jdk_zip_path),
+                    extract_dir=os.fsdecode(self.tools.base_path),
                 )
             except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(

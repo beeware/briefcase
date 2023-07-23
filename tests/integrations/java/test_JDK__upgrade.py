@@ -1,3 +1,4 @@
+import os
 import shutil
 from unittest.mock import MagicMock
 
@@ -61,7 +62,6 @@ def test_existing_install(mock_tools, tmp_path):
     # Mock the cached download path.
     archive = MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
-    archive.__str__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -86,7 +86,7 @@ def test_existing_install(mock_tools, tmp_path):
 
     # The archive was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
@@ -111,7 +111,6 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     # Mock the cached download path.
     archive = MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
-    archive.__str__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -137,7 +136,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     # The archive was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
         "/path/to/download.zip",
-        extract_dir=str(tmp_path / "tools"),
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
@@ -195,7 +194,6 @@ def test_unpack_fail(mock_tools, tmp_path):
     # Mock the cached download path
     archive = MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
-    archive.__str__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
@@ -222,7 +220,7 @@ def test_unpack_fail(mock_tools, tmp_path):
     # The archive was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
         "/path/to/download.zip",
-        extract_dir=str(tmp_path / "tools"),
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0

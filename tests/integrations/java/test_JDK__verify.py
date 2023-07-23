@@ -453,7 +453,6 @@ def test_successful_jdk_download(
     # Mock the cached download path
     archive = mock.MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
-    archive.__str__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
@@ -477,7 +476,7 @@ def test_successful_jdk_download(
     )
     # The archive was unpacked
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=str(tmp_path / "tools")
+        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
@@ -529,7 +528,6 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
     # Mock the cached download path
     archive = mock.MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
-    archive.__str__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Mock an unpack failure due to an invalid archive
@@ -548,7 +546,7 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
     # An attempt was made to unpack the archive.
     mock_tools.shutil.unpack_archive.assert_called_with(
         "/path/to/download.zip",
-        extract_dir=str(tmp_path / "tools"),
+        extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
     assert archive.unlink.call_count == 0
