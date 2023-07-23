@@ -1,6 +1,36 @@
+import os
+import sys
+from unittest.mock import MagicMock
+
 import pytest
+import requests
+
+from briefcase.console import Console, Log
+from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.subprocess import Subprocess
+from briefcase.platforms.android.gradle import GradlePackageCommand
 
 from ....utils import create_file
+
+
+@pytest.fixture
+def package_command(tmp_path, first_app_config):
+    command = GradlePackageCommand(
+        logger=Log(),
+        console=Console(),
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+    command.tools.android_sdk = MagicMock(spec_set=AndroidSDK)
+    command.tools.os = MagicMock(spec_set=os)
+    command.tools.os.environ = {}
+    command.tools.sys = MagicMock(spec_set=sys)
+    command.tools.requests = MagicMock(spec_set=requests)
+    command.tools.subprocess = MagicMock(spec_set=Subprocess)
+
+    # Make sure the dist folder exists
+    (tmp_path / "base_path" / "dist").mkdir(parents=True)
+    return command
 
 
 @pytest.fixture

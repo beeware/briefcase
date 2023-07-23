@@ -8,9 +8,14 @@ command or directly from Xcode.
 
 By default, apps will be both signed and notarized when they are packaged.
 
-The Xcode project will produce a ``.app`` bundle is a distributable artefact.
-Alternatively, this ``.app`` bundle can be packaged as a ``.dmg`` that contains
-the ``.app`` bundle. The default packaging format is ``.dmg``.
+Packaging format
+================
+
+Briefcase supports two packaging formats for a macOS Xcode project:
+
+1. A DMG that contains the ``.app`` bundle (the default output of ``briefcase package
+   macOS Xcode``, or by using ``briefcase package macOS Xcode -p dmg``); or
+2. A zipped ``.app`` folder (using ``briefcase package macOS Xcode -p app``).
 
 Icon format
 ===========

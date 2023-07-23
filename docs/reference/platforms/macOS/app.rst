@@ -11,9 +11,14 @@ also be compressed to reduce their size for transport.
 
 By default, apps will be both signed and notarized when they are packaged.
 
-The ``.app`` bundle is a distributable artefact. Alternatively, the ``.app``
-bundle can be packaged as a ``.dmg`` that contains the ``.app`` bundle. The
-default packaging format is ``.dmg``.
+Packaging format
+================
+
+Briefcase supports two packaging formats for a macOS ``.app`` bundle:
+
+1. A DMG that contains the ``.app`` bundle (the default output of ``briefcase package
+   macOS``, or by using ``briefcase package macOS -p dmg``); or
+2. A zipped ``.app`` folder (using ``briefcase package macOS -p app``).
 
 Icon format
 ===========
