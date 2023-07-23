@@ -98,9 +98,9 @@ def test_execute_gradle(
             / "app"
             / "build"
             / "outputs"
-            / "bundle"
+            / "apk"
             / "release"
-            / "app-release.apk",
+            / "app-release-unsigned.apk",
             "Android release",
         )
 
@@ -116,7 +116,7 @@ def test_execute_gradle(
     package_command.tools.subprocess.run.assert_called_once_with(
         [
             package_command.bundle_path(first_app_apk) / gradlew_name,
-            "bundleRelease",
+            "assembleRelease",
             "--console",
             "plain",
         ],

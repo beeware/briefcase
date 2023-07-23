@@ -105,7 +105,7 @@ def test_execute_gradle(
     assert (tmp_path / "base_path" / "dist" / "First App-0.0.1.aab").exists()
 
 
-def test_print_gradle_errors(package_command, first_app_config):
+def test_print_gradle_errors(package_command, first_app_aab):
     """Validate that package_app() will convert stderr/stdout from the process into
     exception text."""
     # Create a mock subprocess that crashes, printing text partly in non-ASCII.
@@ -114,4 +114,4 @@ def test_print_gradle_errors(package_command, first_app_config):
         cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
-        package_command.package_app(first_app_config)
+        package_command.package_app(first_app_aab)
