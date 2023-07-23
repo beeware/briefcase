@@ -64,7 +64,7 @@ class GradleMixin:
 
     @property
     def packaging_formats(self):
-        return ["aab", "apk"]
+        return ["aab", "apk", "debug-apk"]
 
     @property
     def default_packaging_format(self):
@@ -104,8 +104,14 @@ class GradleMixin:
         )
 
     def distribution_path(self, app):
+        packaging_format_extension = {
+            "aab": "aab",
+            "apk": "apk",
+            "debug-apk": "apk",
+        }
         return (
-            self.dist_path / f"{app.formal_name}-{app.version}.{app.packaging_format}"
+            self.dist_path
+            / f"{app.formal_name}-{app.version}.{packaging_format_extension[app.packaging_format]}"
         )
 
     def run_gradle(self, app, args):

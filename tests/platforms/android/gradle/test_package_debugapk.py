@@ -10,7 +10,7 @@ from ....utils import create_file
 
 @pytest.fixture
 def first_app_apk(first_app_config):
-    first_app_config.packaging_format = "apk"
+    first_app_config.packaging_format = "debug-apk"
     return first_app_config
 
 
@@ -29,7 +29,7 @@ def test_unsupported_template_version(package_command, first_app_generated):
         BriefcaseCommandError,
         match="The app template used to generate this app is not compatible",
     ):
-        package_command(first_app_generated, packaging_format="apk")
+        package_command(first_app_generated, packaging_format="debug-apk")
 
     package_command.verify_app.assert_called_once_with(first_app_generated)
 
@@ -72,8 +72,8 @@ def test_execute_gradle(
             / "build"
             / "outputs"
             / "apk"
-            / "release"
-            / "app-release-unsigned.apk",
+            / "debug"
+            / "app-debug.apk",
             "Android release",
         )
 
@@ -89,7 +89,7 @@ def test_execute_gradle(
     package_command.tools.subprocess.run.assert_called_once_with(
         [
             package_command.bundle_path(first_app_apk) / gradlew_name,
-            "assembleRelease",
+            "assembleDebug",
             "--console",
             "plain",
         ],
