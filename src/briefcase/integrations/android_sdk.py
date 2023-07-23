@@ -1336,10 +1336,13 @@ class ADB:
                 ],
                 quiet=quiet,
             )
-            # Manually raise error if "Failure [INSTALL_FAILED_OLDER_SDK]" occurs,
-            # because this failer results in return code 0
+            # add returns status code 0 in the case of failure. The only tangible evidence
+            # of failure is the message "Failure [INSTALL_FAILED_OLDER_SDK]" in the,
+            # console output; so if that message exists in the output, raise an exception.
             if "Failure [INSTALL_FAILED_OLDER_SDK]" in output:
-                raise BriefcaseCommandError("Failed to install older SDK")
+                raise BriefcaseCommandError(
+                    "Your device doesn't meet the minimum SDK requirements of this app."
+                )
             return output
         except subprocess.CalledProcessError as e:
             if any(DEVICE_NOT_FOUND.match(line) for line in e.output.split("\n")):

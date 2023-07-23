@@ -1,1 +1,1 @@
-Briefcase will now detect, if you try to launch an version on an android that is too old.
+Briefcase will detect if you attempt to launch an Android app on a device whose OS doesn't meet minimum version requirements.

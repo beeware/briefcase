@@ -111,5 +111,8 @@ def test_older_sdk_error(mock_tools, adb):
             "Failure [INSTALL_FAILED_OLDER_SDK]",
         ]
     )
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        r"Your device doesn't meet the minimum SDK requirements of this app.",
+    ):
         adb.run("example", "command")
