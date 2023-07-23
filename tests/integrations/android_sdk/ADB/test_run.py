@@ -113,6 +113,6 @@ def test_older_sdk_error(mock_tools, adb):
     )
     with pytest.raises(
         BriefcaseCommandError,
-        r"Your device doesn't meet the minimum SDK requirements of this app.",
+        match=r"Your device doesn't meet the minimum SDK requirements of this app",
     ):
         adb.run("example", "command")
