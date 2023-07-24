@@ -76,8 +76,9 @@ class WiX(ManagedTool):
             return tools.wix
 
         # Look for the WIX environment variable
-        wix_env = tools.os.environ.get("WIX")
-        if wix_env:
+        if wix_env := tools.os.environ.get("WIX"):
+            tools.logger.debug("Evaluating WIX...", prefix=cls.full_name)
+            tools.logger.debug(f"WIX={wix_env}")
             wix_home = Path(wix_env)
 
             # Set up the paths for the WiX executables we will use.
@@ -107,6 +108,7 @@ does not point to an install of the WiX Toolset.
                 else:
                     raise MissingToolError("WiX")
 
+        tools.logger.debug(f"Using WiX at {wix.wix_home}")
         tools.wix = wix
         return wix
 

@@ -150,7 +150,11 @@ def test_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     if env_var == "ANDROID_SDK_ROOT":
         assert "Using Android SDK from ANDROID_SDK_ROOT" in capsys.readouterr().out
     else:
-        assert capsys.readouterr().out == ""
+        assert capsys.readouterr().out == (
+            "\n>>> [Android SDK] Evaluating ANDROID_HOME...\n"
+            f">>> ANDROID_HOME={tmp_path / 'other_sdk'}\n"
+            f">>> Using Android SDK at {tmp_path / 'other_sdk'}\n"
+        )
 
 
 def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
@@ -190,7 +194,11 @@ def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     assert sdk.root_path == existing_android_sdk_root_path
 
     # User is not warned about configuration
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == (
+        "\n>>> [Android SDK] Evaluating ANDROID_HOME...\n"
+        f">>> ANDROID_HOME={tmp_path / 'other_sdk'}\n"
+        f">>> Using Android SDK at {tmp_path / 'other_sdk'}\n"
+    )
 
 
 def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):

@@ -229,6 +229,8 @@ class AndroidSDK(ManagedTool):
         sdk_root, sdk_env_source = cls.sdk_path_from_env(tools=tools)
 
         if sdk_root:
+            tools.logger.debug("Evaluating ANDROID_HOME...", prefix=cls.full_name)
+            tools.logger.debug(f"{sdk_env_source}={sdk_root}")
             sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root))
 
             if sdk.exists():
@@ -267,7 +269,14 @@ class AndroidSDK(ManagedTool):
 
     doesn't appear to contain an Android SDK.
 
-    Briefcase will use its own SDK instance.
+    If {sdk_env_source} is an Android SDK, ensure it is the root directory
+    of the Android SDK instance such that
+
+    ${sdk_env_source}/cmdline-tools/latest/bin/sdkmanager
+
+    is a valid filepath.
+
+    Briefcase will proceed using its own SDK instance.
 
 *************************************************************************
 """
@@ -311,10 +320,16 @@ class AndroidSDK(ManagedTool):
                         "The Android SDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
+                    tools.logger.info(
+                        "To use an existing Android SDK instance, "
+                        "specify its root directory path in the ANDROID_HOME environment variable."
+                    )
+                    tools.logger.info()
                     sdk.install()
                 else:
                     raise MissingToolError("Android SDK")
 
+        tools.logger.debug(f"Using Android SDK at {sdk.root_path}")
         tools.android_sdk = sdk
         return sdk
 
