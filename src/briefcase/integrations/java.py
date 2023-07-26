@@ -101,6 +101,8 @@ class JDK(ManagedTool):
         install_message = None
 
         if java_home := tools.os.environ.get("JAVA_HOME", ""):
+            tools.logger.debug("Evaluating JAVA_HOME...", prefix=cls.full_name)
+            tools.logger.debug(f"JAVA_HOME={java_home}")
             try:
                 version_str = cls.version_from_path(tools, java_home)
                 if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
@@ -118,7 +120,7 @@ class JDK(ManagedTool):
 
     isn't a Java {cls.JDK_MAJOR_VER} JDK (it appears to be Java {version_str}).
 
-    Briefcase will use its own JDK instance.
+    Briefcase will proceed using its own JDK instance.
 
 *************************************************************************
 """
@@ -135,7 +137,10 @@ class JDK(ManagedTool):
 
     does not appear to be a JDK. It may be a Java Runtime Environment.
 
-    Briefcase will use its own JDK instance.
+    If JAVA_HOME is a JDK, ensure it is the root directory of the JDK
+    instance such that $JAVA_HOME/bin/javac is a valid filepath.
+
+    Briefcase will proceed using its own JDK instance.
 
 *************************************************************************
 """
@@ -194,6 +199,9 @@ class JDK(ManagedTool):
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         elif tools.host_os == "Darwin":
+            tools.logger.debug(
+                "Evaluating /usr/libexec/java_home...", prefix=cls.full_name
+            )
             try:
                 # If /usr/libexec/java_home doesn't exist, OSError will be raised
                 # If no JRE/JDK is installed, /usr/libexec/java_home raises an error
@@ -201,7 +209,7 @@ class JDK(ManagedTool):
                     ["/usr/libexec/java_home"],
                 ).strip("\n")
             except (OSError, subprocess.CalledProcessError):
-                pass  # No java on this machine
+                tools.logger.debug("An existing JDK/JRE was not returned")
             else:
                 try:
                     version_str = cls.version_from_path(tools, java_home)
@@ -231,10 +239,16 @@ class JDK(ManagedTool):
                         f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
+                    tools.logger.info(
+                        f"To use an existing JDK {cls.JDK_MAJOR_VER} instance, "
+                        f"specify its root directory path in the JAVA_HOME environment variable."
+                    )
+                    tools.logger.info()
                     java.install()
                 else:
                     raise MissingToolError("Java")
 
+        tools.logger.debug(f"Using JDK at {java.java_home}")
         tools.java = java
         return java
 
