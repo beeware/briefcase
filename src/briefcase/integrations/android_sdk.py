@@ -95,11 +95,11 @@ class AndroidSDK(ManagedTool):
     @property
     def cmdline_tools_version(self) -> str:
         # This is the version of the Android SDK Command-line tools that
-        # are current as of May 2022. These tools can generally self-update,
+        # are current as of July 2023. These tools can generally self-update,
         # so using a fixed download URL isn't a problem.
         # However, if/when this version number is changed, ensure that the
         # checks done during verification include any required upgrade steps.
-        return "8092744"
+        return "9477386"
 
     @property
     def cmdline_tools_version_path(self) -> Path:
