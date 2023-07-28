@@ -667,7 +667,7 @@ any compatibility problems, and then add the compatibility declaration.
             "--verbosity",
             action="count",
             default=1,
-            help="set the verbosity of output",
+            help="Set the verbosity of output. Use twice to include verbose logging from third-party tools.",
         )
         parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(

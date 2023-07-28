@@ -230,6 +230,14 @@ class Log:
         """Log message at error level; always included in output."""
         self._log(prefix=prefix, message=message, markup=markup, style="bold red")
 
+    @property
+    def is_deep_debug(self):
+        """Is extra verbosity enabled via -vv?
+
+        Enables verbose output from third-party tools.
+        """
+        return self.verbosity >= 3
+
     def capture_stacktrace(self, label="Main thread"):
         """Preserve Rich stacktrace from exception while in except block.
 

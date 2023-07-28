@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import datetime
 import re
 import subprocess
 import time
 from pathlib import Path
-from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -17,6 +18,7 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.subprocess import SubprocessArgT
 
 
 def safe_formal_name(name):
@@ -88,17 +90,14 @@ class GradleMixin:
         )
 
     def distribution_path(self, app):
-        packaging_format_extension = {
+        extension = {
             "aab": "aab",
             "apk": "apk",
-            "debug-apk": "apk",
-        }
-        return (
-            self.dist_path
-            / f"{app.formal_name}-{app.version}.{packaging_format_extension[app.packaging_format]}"
-        )
+            "debug-apk": "debug.apk",
+        }[app.packaging_format]
+        return self.dist_path / f"{app.formal_name}-{app.version}.{extension}"
 
-    def run_gradle(self, app, args):
+    def run_gradle(self, app, args: list[SubprocessArgT]):
         # Gradle may install the emulator via the dependency chain build-tools > tools >
         # emulator. (The `tools` package only shows up in sdkmanager if you pass
         # `--include_obsolete`.) However, the old sdkmanager built into Android Gradle
@@ -115,7 +114,13 @@ class GradleMixin:
             # Windows needs the full path to `gradlew`; macOS & Linux can find it
             # via `./gradlew`. For simplicity of implementation, we always provide
             # the full path.
-            [self.bundle_path(app) / gradlew] + args + ["--console", "plain"],
+            [
+                self.bundle_path(app) / gradlew,
+                "--console",
+                "plain",
+            ]
+            + (["--debug"] if self.tools.logger.is_deep_debug else [])
+            + args,
             env=self.tools.android_sdk.env,
             # Set working directory so gradle can use the app bundle path as its
             # project root, i.e., to avoid 'Task assembleDebug not found'.
@@ -250,7 +255,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: BaseConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
@@ -379,27 +384,18 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
             prefix=app.app_name,
         )
         with self.input.wait_bar("Bundling..."):
+            build_type, build_artefact_path = {
+                "aab": ("bundleRelease", "bundle/release/app-release.aab"),
+                "apk": ("assembleRelease", "apk/release/app-release-unsigned.apk"),
+                "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
+            }[app.packaging_format]
+
             try:
-                self.run_gradle(
-                    app,
-                    [
-                        {
-                            "aab": "bundleRelease",
-                            "apk": "assembleRelease",
-                            "debug-apk": "assembleDebug",
-                        }[app.packaging_format]
-                    ],
-                )
+                self.run_gradle(app, [build_type])
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Error while building project.") from e
 
         # Move artefact to final location.
-        build_artefact_path = {
-            "aab": Path("bundle") / "release" / "app-release.aab",
-            "apk": Path("apk") / "release" / "app-release-unsigned.apk",
-            "debug-apk": Path("apk") / "debug" / "app-debug.apk",
-        }[app.packaging_format]
-
         self.tools.shutil.move(
             self.bundle_path(app) / "app" / "build" / "outputs" / build_artefact_path,
             self.distribution_path(app),

@@ -38,6 +38,20 @@ def command(mock_now, tmp_path) -> DevCommand:
     return command
 
 
+@pytest.mark.parametrize(
+    "verbosity, enabled",
+    [
+        (1, False),
+        (2, False),
+        (3, True),
+        (4, True),
+    ],
+)
+def test_is_deep_debug(verbosity, enabled):
+    """Deep debug is enabled at =>3 verbosity."""
+    assert Log(verbosity=verbosity).is_deep_debug is enabled
+
+
 def test_capture_stacktrace():
     """capture_stacktrace sets Log.stacktrace."""
     logger = Log()

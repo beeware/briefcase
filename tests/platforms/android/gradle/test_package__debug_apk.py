@@ -38,19 +38,25 @@ def test_distribution_path(package_command, first_app_apk, tmp_path):
     print(package_command.packaging_formats)
     assert (
         package_command.distribution_path(first_app_apk)
-        == tmp_path / "base_path" / "dist" / "First App-0.0.1.apk"
+        == tmp_path / "base_path" / "dist" / "First App-0.0.1.debug.apk"
     )
 
 
 @pytest.mark.parametrize(
-    "host_os,gradlew_name",
-    [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
+    "host_os, gradlew_name, tool_debug_mode",
+    [
+        ("Windows", "gradlew.bat", True),
+        ("Windows", "gradlew.bat", False),
+        ("NonWindows", "gradlew", True),
+        ("NonWindows", "gradlew", False),
+    ],
 )
 def test_execute_gradle(
     package_command,
     first_app_apk,
     host_os,
     gradlew_name,
+    tool_debug_mode,
     tmp_path,
 ):
     """Validate that package_app() will launch `gradlew bundleRelease` with the
@@ -58,6 +64,10 @@ def test_execute_gradle(
     `gradlew` elsewhere."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     package_command.tools.host_os = host_os
+
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        package_command.tools.logger.verbosity = 3
 
     # Set up a side effect of invoking gradle to create a bundle
     def create_bundle(*args, **kwargs):
@@ -89,17 +99,18 @@ def test_execute_gradle(
     package_command.tools.subprocess.run.assert_called_once_with(
         [
             package_command.bundle_path(first_app_apk) / gradlew_name,
-            "assembleDebug",
             "--console",
             "plain",
-        ],
+        ]
+        + (["--debug"] if tool_debug_mode else [])
+        + ["assembleDebug"],
         cwd=package_command.bundle_path(first_app_apk),
         env=package_command.tools.android_sdk.env,
         check=True,
     )
 
     # The release asset has been moved into the dist folder
-    assert (tmp_path / "base_path" / "dist" / "First App-0.0.1.apk").exists()
+    assert (tmp_path / "base_path" / "dist" / "First App-0.0.1.debug.apk").exists()
 
 
 def test_print_gradle_errors(package_command, first_app_apk):

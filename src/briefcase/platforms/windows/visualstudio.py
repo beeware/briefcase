@@ -57,6 +57,11 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
                         "-property:RestorePackagesConfig=true",
                         f"-target:{app.formal_name}",
                         "-property:Configuration=Release",
+                        (
+                            "-verbosity:detailed"
+                            if self.logger.is_deep_debug
+                            else "-verbosity:normal"
+                        ),
                     ],
                     check=True,
                     cwd=self.bundle_path(app),
