@@ -154,7 +154,7 @@ def mock_tgz_download(filename, content, role=None):
 def create_wheel(path, package="dummy", version="1.2.3", extra_content=None):
     """Create a sample wheel file.
 
-    :param path: The folder where the wheel should be writter.
+    :param path: The folder where the wheel should be written.
     :param package: The name of the package in the wheel. Defaults to ``dummy``
     :param version: The version number of the package. Defaults to ``1.2.3``
     :param extra_content: Optional. A list of tuples of ``(path, content)`` that
