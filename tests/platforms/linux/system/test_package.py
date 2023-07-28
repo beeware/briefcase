@@ -93,7 +93,7 @@ def test_distribution_path(
         ("debian", "deb", "deb"),
         ("redhat", "rpm", "rpm"),
         ("arch", "pkg", "pkg"),
-        # This is technically posssible, but probably ill-advised
+        # This is technically possible, but probably ill-advised
         ("debian", "rpm", "rpm"),
         # Unknown base vendor, but explicit packaging format
         (None, "deb", "deb"),
@@ -104,7 +104,7 @@ def test_distribution_path(
 def test_adjust_packaging_format(
     package_command, first_app, base_vendor, input_format, output_format
 ):
-    "The packaging format can be ajusted based on host system knowledge"
+    "The packaging format can be adjusted based on host system knowledge"
     first_app.target_vendor_base = base_vendor
     first_app.packaging_format = input_format
 
