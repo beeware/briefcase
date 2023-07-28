@@ -271,13 +271,18 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             "/host_write_test", host_write_test_path.name
         )
 
+        image_tag = "alpine" if image_tag is None else image_tag
+        # Cache the image first so the attempts below to run the image don't
+        # log irrelevant errors when the image may just have a simple typo
+        self.cache_image(image_tag)
+
         docker_run_cmd = [
             "docker",
             "run",
             "--rm",
             "--volume",
             f"{host_write_test_path.parent}:{container_write_test_path.parent}:z",
-            "alpine" if image_tag is None else image_tag,
+            image_tag,
         ]
 
         host_write_test_path.parent.mkdir(exist_ok=True)
@@ -300,7 +305,6 @@ Delete this file and run Briefcase again.
             self.tools.subprocess.run(
                 docker_run_cmd + ["touch", container_write_test_path],
                 check=True,
-                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -314,7 +318,6 @@ Delete this file and run Briefcase again.
             self.tools.subprocess.run(
                 docker_run_cmd + ["rm", "-f", container_write_test_path],
                 check=True,
-                stream_output=False,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -342,7 +345,12 @@ Delete this file and run Briefcase again.
 
         if not image_id:
             try:
-                self.tools.subprocess.run(["docker", "pull", image_tag], check=True)
+                # disable streaming so image download progress bar is shown
+                self.tools.subprocess.run(
+                    ["docker", "pull", image_tag],
+                    check=True,
+                    stream_output=False,
+                )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to obtain the Docker image for {image_tag}. "
@@ -366,13 +374,7 @@ Delete this file and run Briefcase again.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            [
-                "docker",
-                "run",
-                "--rm",
-                image_tag,
-            ]
-            + args,
+            ["docker", "run", "--rm", image_tag] + args
         )
 
 

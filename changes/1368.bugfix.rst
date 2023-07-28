@@ -1,0 +1,1 @@
+When the target Docker image name is not valid when building Linux System packages, the error message now mentions the invalid image name instead of an error for Docker user mapping.
