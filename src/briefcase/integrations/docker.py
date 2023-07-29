@@ -111,7 +111,12 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         "Linux": "https://docs.docker.com/engine/install/#server",
     }
 
-    def __init__(self, tools: ToolCache, image_tag: str | None = None):
+    def __init__(
+        self,
+        tools: ToolCache,
+        platform: str | None = None,
+        image_tag: str | None = None,
+    ):
         """A wrapper for the user-installed Docker.
 
         :param tools: ToolCache of available tools
@@ -121,18 +126,21 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             at all bound to the instance.
         """
         super().__init__(tools=tools)
+        self.platform = platform
         self.is_user_mapped = self._is_user_mapping_enabled(image_tag)
 
     @classmethod
     def verify_install(
         cls,
         tools: ToolCache,
+        platform: str | None = None,
         image_tag: str | None = None,
         **kwargs,
     ) -> Docker:
         """Verify Docker is installed and operational.
 
         :param tools: ToolCache of available tools
+        :param platform: The platform to use to run images, e.g. linux/aarch64
         :param image_tag: An optional image used during verification to access
             attributes of the local Docker environment. This image is not bound to the
             instance and only used during instantiation.
@@ -145,7 +153,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         cls._user_access(tools=tools)
         cls._buildx_installed(tools=tools)
 
-        tools.docker = Docker(tools=tools, image_tag=image_tag)
+        tools.docker = Docker(tools=tools, platform=platform, image_tag=image_tag)
         return tools.docker
 
     @classmethod
@@ -212,6 +220,13 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
+    @property
+    def _base_run_cmd(self):
+        cmd = ["docker", "run", "--rm"]
+        if self.platform:
+            cmd.extend(["--platform", self.platform])
+        return cmd
+
     def _write_test_path(self) -> Path:
         """Host system filepath to perform write test from a container."""
         return Path.cwd() / "build" / "container_write_test"
@@ -276,10 +291,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         # log irrelevant errors when the image may just have a simple typo
         self.cache_image(image_tag)
 
-        docker_run_cmd = [
-            "docker",
-            "run",
-            "--rm",
+        docker_run_cmd = self._base_run_cmd + [
             "--volume",
             f"{host_write_test_path.parent}:{container_write_test_path.parent}:z",
             image_tag,
@@ -339,6 +351,7 @@ Delete this file and run Briefcase again.
 
         :param image_tag: Image name/tag to pull if not locally cached
         """
+        # TODO:PR: ensure this check validates the platform for the image
         image_id = self.tools.subprocess.check_output(
             ["docker", "images", "-q", image_tag]
         ).strip()
@@ -378,7 +391,7 @@ Delete this file and run Briefcase again.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            ["docker", "run", "--rm", image_tag] + args
+            self._base_run_cmd + [image_tag] + args
         )
 
 
@@ -394,6 +407,7 @@ class DockerAppContext(Tool):
         self.host_data_path: Path
         self.image_tag: str
         self.python_version: str
+        self.platform: str | None
 
     @property
     def docker_briefcase_path(self) -> PurePosixPath:
@@ -411,6 +425,7 @@ class DockerAppContext(Tool):
         host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
+        platform: str | None = None,
         **kwargs,
     ) -> DockerAppContext:
         """Verify that docker is available as an app-bound tool.
@@ -442,6 +457,7 @@ class DockerAppContext(Tool):
             host_bundle_path=host_bundle_path,
             host_data_path=host_data_path,
             python_version=python_version,
+            platform=platform,
         )
         return tools[app].app_context
 
@@ -453,6 +469,7 @@ class DockerAppContext(Tool):
         host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
+        platform: str | None,
     ):
         """Create/update the Docker image from the app's Dockerfile."""
         self.app_base_path = app_base_path
@@ -460,6 +477,7 @@ class DockerAppContext(Tool):
         self.host_data_path = host_data_path
         self.image_tag = image_tag
         self.python_version = python_version
+        self.platform = platform
 
         self.tools.logger.info(
             "Building Docker container image...",
@@ -467,13 +485,13 @@ class DockerAppContext(Tool):
         )
         with self.tools.input.wait_bar("Building Docker image..."):
             with self.tools.logger.context("Docker"):
+                build_cmd = ["docker", "buildx", "build", "--progress", "plain"]
+                if self.platform:
+                    build_cmd.extend(["--platform", self.platform])
                 try:
                     self.tools.subprocess.run(
-                        [
-                            "docker",
-                            "build",
-                            "--progress",
-                            "plain",
+                        build_cmd
+                        + [
                             "--tag",
                             self.image_tag,
                             "--file",
@@ -541,6 +559,9 @@ class DockerAppContext(Tool):
             inside a docker container.
         """
         docker_args = ["docker", "run", "--rm"]
+
+        if self.platform:
+            docker_args.extend(["--platform", self.platform])
 
         # Add "-it" if in interactive mode
         if interactive:

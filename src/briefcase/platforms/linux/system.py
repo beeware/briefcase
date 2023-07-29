@@ -352,7 +352,11 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         """If we're using Docker, verify that it is available."""
         super().verify_tools()
         if self.use_docker:
-            Docker.verify(tools=self.tools, image_tag=self.target_image)
+            Docker.verify(
+                tools=self.tools,
+                image_tag=self.target_image,
+                platform=self.target_arch,
+            )
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -362,11 +366,18 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             help="Docker base image tag for the distribution to target for the build (e.g., `ubuntu:jammy`)",
             required=False,
         )
+        parser.add_argument(
+            "--target-arch",
+            dest="target_arch",
+            help="Docker platform name for target architecture for app (e.g. linux/aarch64)",
+            required=False,
+        )
 
     def parse_options(self, extra):
         """Extract the target_image option."""
         options = super().parse_options(extra)
         self.target_image = options.pop("target")
+        self.target_arch = options.pop("target_arch")
 
         return options
 
@@ -374,6 +385,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         """Clone the target_image option."""
         super().clone_options(command)
         self.target_image = command.target_image
+        self.target_arch = command.target_arch
 
     def verify_python(self, app: AppConfig):
         """Verify that the version of Python being used to build the app in Docker is
@@ -574,6 +586,7 @@ to install the missing dependencies, and re-run Briefcase.
                 host_bundle_path=self.bundle_path(app),
                 host_data_path=self.data_path,
                 python_version=app.python_version_tag,
+                platform=self.target_arch,
             )
 
             # Check the system Python on the target system to see if it is
@@ -771,7 +784,7 @@ with details about the release.
                     path.chmod(new_perms)
 
         with self.input.wait_bar("Stripping binary..."):
-            self.tools.subprocess.check_output(["strip", self.binary_path(app)])
+            self.tools[app].app_context.check_output(["strip", self.binary_path(app)])
 
 
 class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
