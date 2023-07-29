@@ -1,0 +1,1 @@
+Codespell was enabled as a pre-commit check.
