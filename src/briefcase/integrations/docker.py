@@ -390,9 +390,9 @@ class DockerAppContext(Tool):
         self.python_version: str
 
     @property
-    def docker_data_path(self) -> PurePosixPath:
+    def docker_briefcase_path(self) -> PurePosixPath:
         """The briefcase data directory used inside container."""
-        return PurePosixPath("/home/brutus/.cache/briefcase")
+        return PurePosixPath("/briefcase")
 
     @classmethod
     def verify_install(
@@ -505,7 +505,9 @@ class DockerAppContext(Tool):
         if arg == sys.executable:
             return f"python{self.python_version}"
         arg = arg.replace(os.fsdecode(self.host_bundle_path), "/app")
-        arg = arg.replace(os.fsdecode(self.host_data_path), str(self.docker_data_path))
+        arg = arg.replace(
+            os.fsdecode(self.host_data_path), os.fsdecode(self.docker_briefcase_path)
+        )
 
         return arg
 
@@ -548,7 +550,7 @@ class DockerAppContext(Tool):
                 "--volume",
                 f"{self.host_bundle_path}:/app:z",
                 "--volume",
-                f"{self.host_data_path}:{self.docker_data_path}:z",
+                f"{self.host_data_path}:{self.docker_briefcase_path}:z",
             ]
         )
 

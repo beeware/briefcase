@@ -414,7 +414,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
             "--volume",
             f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
-            f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
+            f"{build_command.data_path}:/briefcase:z",
             "--env",
             "LINUXDEPLOY_OUTPUT_VERSION=0.0.1",
             "--env",
@@ -426,7 +426,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
             "--workdir",
             "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appdir",
             "/app/First App.AppDir",
             "--desktop-file",
@@ -531,12 +531,12 @@ def test_build_appimage_with_plugins_in_docker(
             "--volume",
             f"{tmp_path / 'base_path' / 'build' / 'first-app' / 'linux' / 'appimage'}:/app:z",
             "--volume",
-            f"{build_command.data_path}:/home/brutus/.cache/briefcase:z",
+            f"{build_command.data_path}:/briefcase:z",
             "--env",
             "DEPLOY_GTK_VERSION=3",
             "--env",
             (
-                "PATH=/home/brutus/.cache/briefcase/tools/linuxdeploy_plugins/gtk"
+                "PATH=/briefcase/tools/linuxdeploy_plugins/gtk"
                 ":/app:/docker/bin:/docker/sbin"
             ),
             "--env",
@@ -550,7 +550,7 @@ def test_build_appimage_with_plugins_in_docker(
             "--workdir",
             "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/home/brutus/.cache/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/briefcase/tools/linuxdeploy-wonky.AppImage",
             "--appdir",
             "/app/First App.AppDir",
             "--desktop-file",

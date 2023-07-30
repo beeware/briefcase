@@ -87,7 +87,7 @@ def test_open_docker(open_command, first_app_config, tmp_path):
             "--volume",
             f"{open_command.base_path}/build/first-app/linux/appimage:/app:z",
             "--volume",
-            f"{open_command.data_path}:/home/brutus/.cache/briefcase:z",
+            f"{open_command.data_path}:/briefcase:z",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         ],
         stream_output=False,
