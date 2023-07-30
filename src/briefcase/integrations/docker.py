@@ -344,6 +344,10 @@ Delete this file and run Briefcase again.
         ).strip()
 
         if not image_id:
+            self.tools.logger.info(
+                f"Downloading Docker base image for {image_tag}...",
+                prefix="Docker",
+            )
             try:
                 # disable streaming so image download progress bar is shown
                 self.tools.subprocess.run(
