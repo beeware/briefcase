@@ -13,6 +13,7 @@ from briefcase.integrations.subprocess import Subprocess
 VALID_DOCKER_VERSION = "Docker version 19.03.8, build afacb8b\n"
 VALID_DOCKER_INFO = "docker info printout"
 VALID_BUILDX_VERSION = "github.com/docker/buildx v0.10.2 00ed17d\n"
+VALID_USER_MAPPING_IMAGE_CACHE = "1ed313b0551f"
 DOCKER_VERIFICATION_CALLS = [
     call(["docker", "--version"]),
     call(["docker", "info"]),
@@ -70,6 +71,7 @@ def test_docker_exists(mock_tools, user_mapping_run_calls, capsys, tmp_path):
         VALID_DOCKER_VERSION,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     # Invoke docker verify
@@ -114,6 +116,7 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
         ),
         "Success!",
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     # Invoke Docker verify
@@ -280,6 +283,7 @@ def test_docker_image_hint(mock_tools):
         VALID_DOCKER_VERSION,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     Docker.verify(mock_tools, image_tag="myimage:tagtorulethemall")
@@ -298,7 +302,6 @@ def test_docker_image_hint(mock_tools):
                     PurePosixPath("/host_write_test/container_write_test"),
                 ],
                 check=True,
-                stream_output=False,
             ),
             call(
                 [
@@ -313,7 +316,6 @@ def test_docker_image_hint(mock_tools):
                     PurePosixPath("/host_write_test/container_write_test"),
                 ],
                 check=True,
-                stream_output=False,
             ),
         ]
     )
@@ -333,6 +335,7 @@ def test_user_mapping_write_file_exists(mock_tools, mock_write_test_path):
         VALID_DOCKER_VERSION,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     # Mock failure for deleting an existing write test file
@@ -353,6 +356,7 @@ def test_user_mapping_write_test_file_creation_fails(mock_tools, mock_write_test
         VALID_DOCKER_VERSION,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     # Mock failure for deleting an existing write test file
@@ -376,6 +380,7 @@ def test_user_mapping_write_test_file_cleanup_fails(mock_tools, mock_write_test_
         VALID_DOCKER_VERSION,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     # Mock failure for deleting an existing write test file
@@ -406,6 +411,7 @@ def test_user_mapping_setting(
         VALID_DOCKER_VERSION,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
     ]
 
     stat_result = namedtuple("stat_result", "st_uid")

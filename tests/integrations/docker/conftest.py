@@ -91,7 +91,6 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
                 PurePosixPath("/host_write_test/mock_write_test"),
             ],
             check=True,
-            stream_output=False,
         ),
         call(
             [
@@ -106,6 +105,5 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
                 PurePosixPath("/host_write_test/mock_write_test"),
             ],
             check=True,
-            stream_output=False,
         ),
     ]

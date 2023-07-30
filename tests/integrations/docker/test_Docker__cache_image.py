@@ -25,13 +25,14 @@ def test_cache_image(mock_tools, user_mapping_run_calls):
     mock_tools.docker.cache_image("ubuntu:jammy")
 
     # Confirms that image is not available
-    mock_tools.subprocess.check_output.assert_called_once_with(
+    mock_tools.subprocess.check_output.assert_called_with(
         ["docker", "images", "-q", "ubuntu:jammy"]
     )
 
     # Image is pulled and cached
     mock_tools.subprocess.run.assert_has_calls(
-        user_mapping_run_calls + [call(["docker", "pull", "ubuntu:jammy"], check=True)]
+        user_mapping_run_calls
+        + [call(["docker", "pull", "ubuntu:jammy"], check=True, stream_output=False)]
     )
 
 
@@ -44,7 +45,7 @@ def test_cache_image_already_cached(mock_tools, user_mapping_run_calls):
     mock_tools.docker.cache_image("ubuntu:jammy")
 
     # Confirms that image is not available
-    mock_tools.subprocess.check_output.assert_called_once_with(
+    mock_tools.subprocess.check_output.assert_called_with(
         ["docker", "images", "-q", "ubuntu:jammy"]
     )
 
