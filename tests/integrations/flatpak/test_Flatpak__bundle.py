@@ -10,7 +10,7 @@ def test_bundle(flatpak, tool_debug_mode, tmp_path):
     """A Flatpak project can be bundled."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = 3
+        flatpak.tools.logger.verbosity = 2
 
     flatpak.bundle(
         repo_url="https://example.com/flatpak",

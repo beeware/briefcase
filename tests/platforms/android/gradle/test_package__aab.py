@@ -66,7 +66,7 @@ def test_execute_gradle(
 
     # Enable verbose tool logging
     if tool_debug_mode:
-        package_command.tools.logger.verbosity = 3
+        package_command.tools.logger.verbosity = 2
 
     # Set up a side effect of invoking gradle to create a bundle
     def create_bundle(*args, **kwargs):

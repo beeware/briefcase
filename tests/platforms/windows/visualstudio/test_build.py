@@ -51,7 +51,7 @@ def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
     """The solution will be compiled when the project is built."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = 3
+        build_command.tools.logger.verbosity = 2
 
     build_command.build_app(first_app_config)
 

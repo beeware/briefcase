@@ -30,7 +30,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
 
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = 3
+        build_command.tools.logger.verbosity = 2
 
     build_command.build_app(first_app_generated)
 

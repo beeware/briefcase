@@ -69,7 +69,7 @@ def test_build_app(
     build_command.tools.host_os = host_os
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = 3
+        build_command.tools.logger.verbosity = 2
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
@@ -135,7 +135,7 @@ def test_build_app_test_mode(
     build_command.tools.host_os = host_os
     # Enable verbose tool logging
     if debug_mode:
-        build_command.tools.logger.verbosity = 3
+        build_command.tools.logger.verbosity = 2
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}

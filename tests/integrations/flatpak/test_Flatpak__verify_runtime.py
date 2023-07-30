@@ -10,7 +10,7 @@ def test_verify_runtime(flatpak, tool_debug_mode):
     """A Flatpak runtime and SDK can be verified."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = 3
+        flatpak.tools.logger.verbosity = 2
 
     flatpak.verify_runtime(
         repo_alias="test-alias",

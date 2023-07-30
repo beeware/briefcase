@@ -101,7 +101,7 @@ def test_new_command(logger, console):
     assert cmd.platform == "all"
     assert cmd.output_format is None
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {"template": None, "template_branch": None}
@@ -150,7 +150,7 @@ def test_dev_command(monkeypatch, logger, console, cmdline, expected_options):
     assert cmd.platform == "macOS"
     assert cmd.output_format is None
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {
@@ -185,7 +185,7 @@ def test_run_command(monkeypatch, logger, console, cmdline, expected_options):
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {
@@ -212,7 +212,7 @@ def test_upgrade_command(monkeypatch, logger, console):
     assert cmd.platform == "macOS"
     assert cmd.output_format is None
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {
@@ -232,7 +232,7 @@ def test_bare_command(monkeypatch, logger, console):
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -248,7 +248,7 @@ def test_linux_default(logger, console):
     assert cmd.platform == "linux"
     assert cmd.output_format == "system"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -264,7 +264,7 @@ def test_macOS_default(logger, console):
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -280,7 +280,7 @@ def test_windows_default(logger, console):
     assert cmd.platform == "windows"
     assert cmd.output_format == "app"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -343,7 +343,7 @@ def test_command_explicit_platform(monkeypatch, logger, console):
     assert cmd.platform == "linux"
     assert cmd.output_format == "system"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -361,7 +361,7 @@ def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -397,7 +397,7 @@ def test_command_explicit_format(monkeypatch, logger, console):
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -463,7 +463,7 @@ def test_command_disable_input(monkeypatch, logger, console):
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
     assert not cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {}
@@ -480,7 +480,7 @@ def test_command_options(monkeypatch, capsys, logger, console):
 
     assert isinstance(cmd, macOSAppPublishCommand)
     assert cmd.input.enabled
-    assert cmd.logger.verbosity == 1
+    assert cmd.logger.verbosity == 0
     assert cmd.logger is logger
     assert cmd.input is console
     assert options == {"channel": "s3"}
