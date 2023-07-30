@@ -102,7 +102,7 @@ def test_error_handling(mock_tools, adb, name, exception, tmp_path):
 
 
 def test_older_sdk_error(mock_tools, adb):
-    """Failure [INSTALL_FAILED_OLDER_SDK] needs to be catched manually."""
+    """Failure [INSTALL_FAILED_OLDER_SDK] needs to be caught manually."""
     mock_tools.subprocess.check_output.return_value = "\n".join(
         [
             "Performing Push Install",

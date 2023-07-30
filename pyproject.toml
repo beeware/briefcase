@@ -74,3 +74,10 @@ type = [
     { directory = "doc", name = "Documentation", showcontent = true },
     { directory = "misc", name = "Misc", showcontent = false },
  ]
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg'
+# the way to make case sensitive skips of words etc
+ignore-regex = '\bNd\b'
+# case insensitive
+# ignore-words-list = ''

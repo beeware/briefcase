@@ -350,7 +350,7 @@ or
             # Sign all embedded frameworks
             sign_targets.extend(folder.rglob("*.framework"))
 
-            # Sign all embedded app objets
+            # Sign all embedded app objects
             sign_targets.extend(folder.rglob("*.app"))
 
         # Sign the bundle path itself
@@ -360,7 +360,7 @@ or
         # However, we need to ensure that objects are signed from the inside out
         # (i.e., a folder must be signed *after* all it's contents has been
         # signed). To do this, we sort the list of signing targets in reverse
-        # lexigraphic order, and then group all the signing targets by parent.
+        # lexicographic order, and then group all the signing targets by parent.
         # This sorts all the signable files into folders; and sign all files in
         # a folder before sorting the next group. This ensures that longer paths
         # are signed first, and all files in a folder are signed before the
