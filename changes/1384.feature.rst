@@ -1,0 +1,1 @@
+An super verbose logging mode was added (enabled using ``-vv``). This turns on all Briefcase internal logging, but also enables verbose logging for all the third-party tools that Briefcase invokes.

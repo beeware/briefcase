@@ -5,8 +5,12 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_bundle(flatpak, tmp_path):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_bundle(flatpak, tool_debug_mode, tmp_path):
     """A Flatpak project can be bundled."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        flatpak.tools.logger.verbosity = 2
 
     flatpak.bundle(
         repo_url="https://example.com/flatpak",
@@ -28,7 +32,8 @@ def test_bundle(flatpak, tmp_path):
             tmp_path / "output" / "MyApp.flatpak",
             "com.example.my-app",
             "1.2.3",
-        ],
+        ]
+        + (["--verbose"] if tool_debug_mode else []),
         check=True,
         cwd=tmp_path / "build",
     )

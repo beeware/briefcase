@@ -20,12 +20,17 @@ def build_command(tmp_path):
     )
 
 
-def test_build_app(build_command, first_app_generated, tmp_path):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path):
     """An iOS App can be built."""
     build_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     # Mock the host's CPU architecture to ensure it's reflected in the Xcode call
     build_command.tools.host_arch = "weird"
+
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        build_command.tools.logger.verbosity = 2
 
     build_command.build_app(first_app_generated)
 
@@ -49,7 +54,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             "weird",
             "-sdk",
             "iphonesimulator",
-            "-quiet",
+            "-verbose" if tool_debug_mode else "-quiet",
         ],
         check=True,
     )

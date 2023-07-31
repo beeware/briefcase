@@ -17,7 +17,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, sub_check_output_kw, cap
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -48,7 +48,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, sub_check_output_kw, ca
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--volume",
             "/path/to/first:/container/first:z",
             "--volume",
@@ -83,7 +83,7 @@ def test_cwd(mock_docker_app_context, tmp_path, sub_check_output_kw, capsys):
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--workdir",
             "/app/foobar",
             "briefcase/com.example.myapp:py3.X",
@@ -122,7 +122,7 @@ def test_call_with_arg_and_env(
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--env",
             "MAGIC=True",
             "--env",
@@ -167,11 +167,11 @@ def test_call_with_path_arg_and_env(
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--env",
             "MAGIC=True",
             "--env",
-            "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "PATH=/somewhere/safe:/briefcase/tools:/app/location",
             "--workdir",
             f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
@@ -205,7 +205,7 @@ def test_simple_verbose_call(
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -218,7 +218,7 @@ def test_simple_verbose_call(
         ">>>     docker run "
         "--rm "
         f"--volume {tmp_path / 'bundle'}:/app:z "
-        f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
+        f"--volume {tmp_path / 'briefcase'}:/briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
         ">>> Working Directory:\n"

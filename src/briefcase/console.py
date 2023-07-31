@@ -117,15 +117,15 @@ class Log:
     """Manage logging output driven by verbosity flags."""
 
     # level of verbosity when debug output is shown in the console
-    DEBUG = 2
+    DEBUG = 1
     # printed at the beginning of all debug output
     DEBUG_PREFACE = ">>> "
     # subdirectory of command.base_path to store log files
     LOG_DIR = "logs"
 
-    def __init__(self, printer=Printer(), verbosity=1):
+    def __init__(self, printer=Printer(), verbosity=0):
         self.print = printer
-        # --verbosity flag: 1 for info, 2 for debug
+        # --verbosity flag: 0 for info, 1 for debug, 2 for super-verbose
         self.verbosity = verbosity
         # --log flag to force logfile creation
         self.save_log = False
@@ -229,6 +229,14 @@ class Log:
     def error(self, message="", *, prefix="", markup=False):
         """Log message at error level; always included in output."""
         self._log(prefix=prefix, message=message, markup=markup, style="bold red")
+
+    @property
+    def is_deep_debug(self):
+        """Is extra verbosity enabled via -vv?
+
+        Enables verbose output from third-party tools.
+        """
+        return self.verbosity >= 2
 
     def capture_stacktrace(self, label="Main thread"):
         """Preserve Rich stacktrace from exception while in except block.

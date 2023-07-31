@@ -24,12 +24,12 @@ import pytest
         # data path is replaced with ~brutus/.cache/briefcase
         (
             "{tmp_path}/briefcase/path/to/file",
-            "/home/brutus/.cache/briefcase/path/to/file",
+            "/briefcase/path/to/file",
         ),
         # Multiple references in a single path are converted
         (
             "/unmodified/path:{tmp_path}/bundle/path/to/file:{tmp_path}/briefcase/path/to/other/file",
-            "/unmodified/path:/app/path/to/file:/home/brutus/.cache/briefcase/path/to/other/file",
+            "/unmodified/path:/app/path/to/file:/briefcase/path/to/other/file",
         ),
     ],
 )

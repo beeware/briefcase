@@ -279,6 +279,10 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # This can be used by some linuxdeploy plugins.
                 env["ARCH"] = self.tools.host_arch
 
+                # Enable debug logging for linuxdeploy GTK and Qt plugins
+                if self.logger.is_deep_debug:
+                    env["DEBUG"] = "1"
+
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
                 # requirements added to the AppImage. Looks for any .so file
@@ -307,6 +311,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         ),
                         "--output",
                         "appimage",
+                        "-v0" if self.logger.is_deep_debug else "-v1",
                     ]
                     + additional_args,
                     env=env,

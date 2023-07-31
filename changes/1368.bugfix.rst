@@ -1,0 +1,1 @@
+Error reporting has been improved when the target Docker image name is invalid.

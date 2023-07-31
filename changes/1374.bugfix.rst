@@ -1,0 +1,1 @@
+Inside of Docker containers, the Briefcase data directory is now mounted at ``/briefcase`` instead of ``/home/brutus/.cache/briefcase``.
