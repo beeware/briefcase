@@ -175,7 +175,7 @@ def test_build_appimage(build_command, first_app, debug_mode, tmp_path, sub_stre
         "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
         "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
         "APPIMAGE_EXTRACT_AND_RUN": "1",
-        "ARCH": "wonky",
+        "ARCH": "x86_64",
     }
     if debug_mode:
         expected_env["DEBUG"] = "1"
@@ -436,7 +436,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
             "--workdir",
             "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/briefcase/tools/linuxdeploy-x86_64.AppImage",
             "--appdir",
             "/app/First App.AppDir",
             "--desktop-file",
@@ -561,7 +561,7 @@ def test_build_appimage_with_plugins_in_docker(
             "--workdir",
             "/app",
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
-            "/briefcase/tools/linuxdeploy-wonky.AppImage",
+            "/briefcase/tools/linuxdeploy-x86_64.AppImage",
             "--appdir",
             "/app/First App.AppDir",
             "--desktop-file",
