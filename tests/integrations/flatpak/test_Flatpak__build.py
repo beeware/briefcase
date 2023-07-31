@@ -5,8 +5,13 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_build(flatpak, tmp_path):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_build(flatpak, tool_debug_mode, tmp_path):
     """A Flatpak project can be built."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        flatpak.tools.logger.verbosity = 2
+
     flatpak.build(
         bundle_identifier="com.example.my-app",
         app_name="my-app",
@@ -24,7 +29,8 @@ def test_build(flatpak, tmp_path):
             "--user",
             "build",
             "manifest.yml",
-        ],
+        ]
+        + (["--verbose"] if tool_debug_mode else []),
         check=True,
         cwd=tmp_path,
     )

@@ -48,19 +48,28 @@ def test_unsupported_template_version(build_command, first_app_generated):
 
 
 @pytest.mark.parametrize(
-    "host_os, gradlew_name",
-    [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
+    "host_os, gradlew_name, tool_debug_mode",
+    [
+        ("Windows", "gradlew.bat", True),
+        ("Windows", "gradlew.bat", False),
+        ("NonWindows", "gradlew", True),
+        ("NonWindows", "gradlew", False),
+    ],
 )
 def test_build_app(
     build_command,
     first_app_generated,
     host_os,
     gradlew_name,
+    tool_debug_mode,
     tmp_path,
 ):
     """The app can be built, invoking gradle."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     build_command.tools.host_os = host_os
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        build_command.tools.logger.verbosity = 2
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
@@ -69,10 +78,11 @@ def test_build_app(
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             build_command.bundle_path(first_app_generated) / gradlew_name,
-            "assembleDebug",
             "--console",
             "plain",
-        ],
+        ]
+        + (["--debug"] if tool_debug_mode else [])
+        + ["assembleDebug"],
         cwd=build_command.bundle_path(first_app_generated),
         env=build_command.tools.android_sdk.env,
         check=True,
@@ -104,19 +114,28 @@ def test_build_app(
 
 
 @pytest.mark.parametrize(
-    "host_os, gradlew_name",
-    [("Windows", "gradlew.bat"), ("NonWindows", "gradlew")],
+    "host_os, gradlew_name, debug_mode",
+    [
+        ("Windows", "gradlew.bat", True),
+        ("Windows", "gradlew.bat", False),
+        ("NonWindows", "gradlew", True),
+        ("NonWindows", "gradlew", False),
+    ],
 )
 def test_build_app_test_mode(
     build_command,
     first_app_generated,
     host_os,
     gradlew_name,
+    debug_mode,
     tmp_path,
 ):
     """The app can be built in test mode, invoking gradle and rewriting app metadata."""
     # Mock out `host_os` so we can validate which name is used for gradlew.
     build_command.tools.host_os = host_os
+    # Enable verbose tool logging
+    if debug_mode:
+        build_command.tools.logger.verbosity = 2
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
@@ -125,10 +144,11 @@ def test_build_app_test_mode(
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             build_command.bundle_path(first_app_generated) / gradlew_name,
-            "assembleDebug",
             "--console",
             "plain",
-        ],
+        ]
+        + (["--debug"] if debug_mode else [])
+        + ["assembleDebug"],
         cwd=build_command.bundle_path(first_app_generated),
         env=build_command.tools.android_sdk.env,
         check=True,

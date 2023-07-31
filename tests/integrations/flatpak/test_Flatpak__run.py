@@ -1,9 +1,16 @@
 import subprocess
 from unittest import mock
 
+import pytest
 
-def test_run(flatpak):
+
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_run(flatpak, tool_debug_mode):
     """A Flatpak project can be executed."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        flatpak.tools.logger.verbosity = 2
+
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
     flatpak.tools.subprocess.Popen.return_value = log_popen
@@ -16,8 +23,9 @@ def test_run(flatpak):
         [
             "flatpak",
             "run",
-            "com.example.my-app",
-        ],
+        ]
+        + (["--verbose"] if tool_debug_mode else [])
+        + ["com.example.my-app"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
@@ -27,8 +35,13 @@ def test_run(flatpak):
     assert result == log_popen
 
 
-def test_run_with_args(flatpak):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_run_with_args(flatpak, tool_debug_mode):
     """A Flatpak project can be executed with additional arguments."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        flatpak.tools.logger.verbosity = 2
+
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
     flatpak.tools.subprocess.Popen.return_value = log_popen
@@ -44,10 +57,10 @@ def test_run_with_args(flatpak):
         [
             "flatpak",
             "run",
-            "com.example.my-app",
-            "foo",
-            "bar",
-        ],
+        ]
+        + (["--verbose"] if tool_debug_mode else [])
+        + ["com.example.my-app"]
+        + ["foo", "bar"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,

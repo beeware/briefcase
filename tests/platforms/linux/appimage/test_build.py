@@ -150,8 +150,12 @@ def test_verify_tools_download_failure(build_command):
     assert build_command.build_app.call_count == 0
 
 
-def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
+@pytest.mark.parametrize("debug_mode", (True, False))
+def test_build_appimage(build_command, first_app, debug_mode, tmp_path, sub_stream_kw):
     """A Linux app can be packaged as an AppImage."""
+    # Enable verbose tool logging
+    if debug_mode:
+        build_command.tools.logger.verbosity = 2
 
     build_command.verify_app_tools(first_app)
     build_command.build_app(first_app)
@@ -166,6 +170,15 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
         / "appimage"
         / "First App.AppDir"
     )
+    expected_env = {
+        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
+        "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
+        "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
+        "APPIMAGE_EXTRACT_AND_RUN": "1",
+        "ARCH": "wonky",
+    }
+    if debug_mode:
+        expected_env["DEBUG"] = "1"
     build_command._subprocess.Popen.assert_called_with(
         [
             os.fsdecode(
@@ -177,6 +190,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "--output",
             "appimage",
+            "-v0" if debug_mode else "-v1",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
             "--deploy-deps-only",
@@ -184,13 +198,7 @@ def test_build_appimage(build_command, first_app, tmp_path, sub_stream_kw):
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
         ],
-        env={
-            "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
-            "LINUXDEPLOY_OUTPUT_VERSION": "0.0.1",
-            "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
-            "APPIMAGE_EXTRACT_AND_RUN": "1",
-            "ARCH": "wonky",
-        },
+        env=expected_env,
         cwd=os.fsdecode(
             tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
         ),
@@ -262,6 +270,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "--output",
             "appimage",
+            "-v1",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
             "--deploy-deps-only",
@@ -344,6 +353,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "--output",
             "appimage",
+            "-v1",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
             "--deploy-deps-only",
@@ -433,6 +443,7 @@ def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream
             "/app/First App.AppDir/com.example.first-app.desktop",
             "--output",
             "appimage",
+            "-v1",
             "--deploy-deps-only",
             "/app/First App.AppDir/usr/app/support",
             "--deploy-deps-only",
@@ -557,6 +568,7 @@ def test_build_appimage_with_plugins_in_docker(
             "/app/First App.AppDir/com.example.first-app.desktop",
             "--output",
             "appimage",
+            "-v1",
             "--deploy-deps-only",
             "/app/First App.AppDir/usr/app/support",
             "--deploy-deps-only",
@@ -662,6 +674,7 @@ def test_build_appimage_with_support_package_update(
             os.fsdecode(app_dir / "com.example.first-app.desktop"),
             "--output",
             "appimage",
+            "-v1",
             "--deploy-deps-only",
             os.fsdecode(app_dir / "usr" / "app" / "support"),
             "--deploy-deps-only",

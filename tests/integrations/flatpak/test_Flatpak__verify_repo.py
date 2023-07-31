@@ -5,8 +5,12 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_verify_repo(flatpak):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_verify_repo(flatpak, tool_debug_mode):
     """A Flatpak repo can be verified."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        flatpak.tools.logger.verbosity = 2
 
     flatpak.verify_repo(
         repo_alias="test-alias",
@@ -22,7 +26,8 @@ def test_verify_repo(flatpak):
             "--if-not-exists",
             "test-alias",
             "https://example.com/flatpak",
-        ],
+        ]
+        + (["--verbose"] if tool_debug_mode else []),
         check=True,
     )
 

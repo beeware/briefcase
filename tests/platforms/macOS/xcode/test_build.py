@@ -19,8 +19,13 @@ def build_command(tmp_path):
     )
 
 
-def test_build_app(build_command, first_app_generated, tmp_path):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path):
     """An macOS App can be built."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        build_command.tools.logger.verbosity = 2
+
     build_command.tools.subprocess = MagicMock(spec_set=Subprocess)
     build_command.build_app(first_app_generated, test_mode=False)
 
@@ -35,7 +40,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             / "macos"
             / "xcode"
             / "First App.xcodeproj",
-            "-quiet",
+            "-verbose" if tool_debug_mode else "-quiet",
             "-configuration",
             "Release",
             "build",

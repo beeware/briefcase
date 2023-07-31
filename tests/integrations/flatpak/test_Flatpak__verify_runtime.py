@@ -5,8 +5,12 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_verify_runtime(flatpak):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_verify_runtime(flatpak, tool_debug_mode):
     """A Flatpak runtime and SDK can be verified."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        flatpak.tools.logger.verbosity = 2
 
     flatpak.verify_runtime(
         repo_alias="test-alias",
@@ -25,7 +29,8 @@ def test_verify_runtime(flatpak):
             "test-alias",
             "org.beeware.flatpak.Platform/gothic/37.42",
             "org.beeware.flatpak.SDK/gothic/37.42",
-        ],
+        ]
+        + (["--verbose"] if tool_debug_mode else []),
         check=True,
         stream_output=False,
     )

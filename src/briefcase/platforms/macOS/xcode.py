@@ -64,7 +64,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                         "xcodebuild",
                         "-project",
                         self.project_path(app),
-                        "-quiet",
+                        "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
                         "-configuration",
                         "Release",
                         "build",

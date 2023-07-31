@@ -324,7 +324,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         self.tools.host_arch,
                         "-sdk",
                         "iphonesimulator",
-                        "-quiet",
+                        "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
                     ],
                     check=True,
                 )
