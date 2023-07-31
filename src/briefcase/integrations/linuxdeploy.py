@@ -50,15 +50,13 @@ class LinuxDeployBase(ABC):
         """The folder on the local filesystem that contains the file_name."""
 
     @classmethod
-    def arch(cls, host_os: str, host_arch: str) -> str:
-        # always use the x86-64 arch on macOS since the
-        # manylinux image will always be x86-64 for macOS
-        arch = "x86_64" if host_os == "Darwin" else host_arch
+    def arch(cls, host_arch: str) -> str:
+        """The architecture defined (and supported) by linuxdeploy for AppImages."""
         try:
             return {
                 "x86_64": "x86_64",
                 "i686": "i386",
-            }[arch]
+            }[host_arch]
         except KeyError as e:
             raise UnsupportedHostError(
                 f"Linux AppImages cannot be built on {host_arch}."
@@ -224,7 +222,7 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
 
     @property
     def file_name(self) -> str:
-        return f"linuxdeploy-plugin-qt-{self.arch(self.tools.host_os, self.tools.host_arch)}.AppImage"
+        return f"linuxdeploy-plugin-qt-{self.arch(self.tools.host_arch)}.AppImage"
 
     @property
     def download_url(self) -> str:
@@ -335,7 +333,7 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
 
     @property
     def file_name(self) -> str:
-        return f"linuxdeploy-{self.arch(self.tools.host_os, self.tools.host_arch)}.AppImage"
+        return f"linuxdeploy-{self.arch(self.tools.host_arch)}.AppImage"
 
     @property
     def download_url(self) -> str:

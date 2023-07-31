@@ -24,7 +24,6 @@ def test_file_path(linuxdeploy, mock_tools):
         ("Linux", "x86_64", "x86_64"),
         ("Linux", "i686", "i386"),
         ("Darwin", "x86_64", "x86_64"),
-        ("Darwin", "arm64", "x86_64"),
     ],
 )
 def test_file_name(mock_tools, host_os, host_arch, linuxdeploy_arch):
@@ -54,7 +53,6 @@ def test_file_name_unsupported_arch(mock_tools):
         ("Linux", "x86_64", "x86_64"),
         ("Linux", "i686", "i386"),
         ("Darwin", "x86_64", "x86_64"),
-        ("Darwin", "arm64", "x86_64"),
     ],
 )
 def test_download_url(mock_tools, host_os, host_arch, linuxdeploy_arch):

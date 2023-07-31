@@ -44,7 +44,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
     def binary_name(self, app):
         safe_name = app.formal_name.replace(" ", "_")
-        arch = LinuxDeploy.arch(self.tools.host_os, self.tools.host_arch)
+        arch = LinuxDeploy.arch(self.tools.host_arch)
         return f"{safe_name}-{app.version}-{arch}.AppImage"
 
     def binary_path(self, app):
@@ -163,7 +163,7 @@ class LinuxAppImageCreateCommand(
             manylinux_arch = {
                 "x86_64": "x86_64",
                 "i386": "i686",
-            }[LinuxDeploy.arch(self.tools.host_os, self.tools.host_arch)]
+            }[LinuxDeploy.arch(self.tools.host_arch)]
             context["manylinux_image"] = f"{app.manylinux}_{manylinux_arch}:{tag}"
             if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
                 context["vendor_base"] = "centos"

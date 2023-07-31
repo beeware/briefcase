@@ -178,19 +178,6 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
                 "use_non_root_user": False,
             },
         ),
-        # macOS on Apple Silicon
-        (
-            "manylinux2014",
-            None,
-            "Darwin",
-            "arm64",
-            True,
-            {
-                "manylinux_image": "manylinux2014_x86_64:latest",
-                "vendor_base": "centos",
-                "use_non_root_user": False,
-            },
-        ),
     ],
 )
 def test_output_format_template_context(
