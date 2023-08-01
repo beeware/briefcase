@@ -6,6 +6,8 @@ from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 
+JDK_RELEASE = "17.0.8"
+
 
 @pytest.fixture
 def mock_tools(mock_tools, tmp_path) -> ToolCache:
