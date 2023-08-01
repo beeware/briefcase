@@ -16,6 +16,10 @@ from briefcase.integrations.base import ToolCache
 
 from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
 
+SDKMANAGER_FILENAME = (
+    "sdkmanager.bat" if platform.system() == "Windows" else "sdkmanager"
+)
+
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
@@ -24,6 +28,7 @@ def mock_tools(mock_tools) -> ToolCache:
     mock_tools.os.fsdecode = os.fsdecode
     mock_tools.os.access = os.access
     mock_tools.os.X_OK = os.X_OK
+    mock_tools.os.unlink = os.unlink
 
     # Identify the host platform
     mock_tools._test_download_tag = {
@@ -86,19 +91,11 @@ def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
     # exists, verify() should succeed, create no subprocesses, make no requests, and
     # return an SDK wrapper.
 
-    # On Windows, this requires `sdkmanager.bat`; on non-Windows, it requires
-    # `sdkmanager`.
-
     # Create `sdkmanager` and the license file.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
@@ -125,12 +122,7 @@ def test_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(existing_android_sdk_root_path)()
@@ -169,12 +161,7 @@ def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(existing_android_sdk_root_path)()
@@ -212,12 +199,7 @@ def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     existing_android_sdk_root_path = tmp_path / "other_sdk"
     tools_bin = existing_android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(existing_android_sdk_root_path)()
@@ -247,18 +229,12 @@ def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):
 @pytest.mark.parametrize("env_var", ["ANDROID_HOME", "ANDROID_SDK_ROOT"])
 def test_invalid_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     """If the user's environment specifies an invalid Android SDK, it is ignored."""
-
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
@@ -282,28 +258,26 @@ def test_invalid_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("env_var", ["ANDROID_HOME", "ANDROID_SDK_ROOT"])
-def test_invalid_user_provided_sdk_wrong_cmdline_tools_ver(
-    mock_tools, env_var, tmp_path, capsys
+def test_user_provided_sdk_wrong_cmdline_tools_ver(
+    mock_tools,
+    env_var,
+    tmp_path,
+    capsys,
 ):
     """If the user's environment specifies an Android SDK without the expected cmdline
-    tools, it is ignored."""
+    tools and the cmdline-tools install fails, the Briefcase SDK is used."""
     # Create `sdkmanager` and the license file for the *user's* version of the SDK
     user_sdk_path = tmp_path / "other_sdk"
-    users_tools_bin = user_sdk_path / "cmdline-tools" / "latest" / "bin"
-    users_tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        (users_tools_bin / "sdkmanager.bat").touch()
-    else:
-        (users_tools_bin / "sdkmanager").touch(mode=0o755)
+    user_tools_bin = user_sdk_path / "cmdline-tools" / "6.0" / "bin"
+    user_tools_bin.mkdir(parents=True, mode=0o755)
+    (user_tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
-    # Create `sdkmanager` and the license file for the *briefcase* managed version of the SDK
+    # Create `sdkmanager` and the license file
+    # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        (tools_bin / "sdkmanager.bat").touch()
-    else:
-        (tools_bin / "sdkmanager").touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
@@ -311,19 +285,85 @@ def test_invalid_user_provided_sdk_wrong_cmdline_tools_ver(
     # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
     mock_tools.os.environ = {env_var: os.fsdecode(user_sdk_path)}
 
+    # Mock `cmdline-tools/latest` directory not existing
+    mock_tools.subprocess.run.side_effect = OSError
+
     # Expect verify() to succeed
     sdk = AndroidSDK.verify(mock_tools)
 
-    # No calls to download, run or unpack anything.
+    # No calls to download and nothing unpacked
     mock_tools.download.file.assert_not_called()
-    mock_tools.subprocess.run.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # Required Command-line Tools installed
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            tmp_path
+            / "other_sdk"
+            / "cmdline-tools"
+            / "latest"
+            / "bin"
+            / SDKMANAGER_FILENAME,
+            f"cmdline-tools;{SDK_MGR_VER}",
+        ],
+        check=True,
+        stream_output=False,
+    )
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
 
-    # User is informed about invalid env var setting
-    assert "Incompatible Command-Line Tools Version" in capsys.readouterr().out
+    # User is informed about failed install and invalid SDK
+    output = capsys.readouterr().out
+    assert f"Failed to install cmdline-tools;{SDK_MGR_VER}" in output
+    assert "Incompatible Command-Line Tools Version" in output
+
+
+@pytest.mark.parametrize("env_var", ["ANDROID_HOME", "ANDROID_SDK_ROOT"])
+def test_user_provided_sdk_with_latest_cmdline_tools(
+    mock_tools,
+    env_var,
+    tmp_path,
+    capsys,
+):
+    """If the user's environment specifies an Android SDK without the expected cmdline
+    tools, the required cmdline-tools is installed in to it."""
+    # Create `sdkmanager` and the license file for the *user's* version of the SDK
+    user_sdk_path = tmp_path / "other_sdk"
+    user_tools_bin = user_sdk_path / "cmdline-tools" / "latest" / "bin"
+    user_tools_bin.mkdir(parents=True, mode=0o755)
+    (user_tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(user_sdk_path)()
+
+    # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
+    mock_tools.os.environ = {env_var: os.fsdecode(user_sdk_path)}
+
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # No calls to download and nothing unpacked
+    mock_tools.download.file.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # Required Command-line Tools installed
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            tmp_path
+            / "other_sdk"
+            / "cmdline-tools"
+            / "latest"
+            / "bin"
+            / SDKMANAGER_FILENAME,
+            f"cmdline-tools;{SDK_MGR_VER}",
+        ],
+        check=True,
+        stream_output=False,
+    )
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == user_sdk_path
 
 
 def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
@@ -335,12 +375,7 @@ def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
@@ -375,12 +410,7 @@ def test_inconsistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
-    if platform.system() == "Windows":
-        sdk_manager = tools_bin / "sdkmanager.bat"
-        sdk_manager.touch()
-    else:
-        sdk_manager = tools_bin / "sdkmanager"
-        sdk_manager.touch(mode=0o755)
+    (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
     # Pre-accept the license
     accept_license(android_sdk_root_path)()
@@ -408,7 +438,7 @@ def test_inconsistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     assert "ANDROID_HOME does not point to an Android SDK" in output
 
 
-def test_download_sdk(mock_tools, tmp_path):
+def test_download_sdk(mock_tools, tmp_path, capsys):
     """If an SDK is not available, one will be downloaded."""
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
@@ -459,6 +489,72 @@ def test_download_sdk(mock_tools, tmp_path):
 
     # The returned SDK has the expected root path.
     assert sdk.root_path == android_sdk_root_path
+
+    assert "The Android SDK was not found" in capsys.readouterr().out
+
+
+def test_upgrade_existing_sdk(mock_tools, tmp_path, capsys):
+    """An existing SDK is upgraded if the required version of cmdline-tools isn't
+    installed."""
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
+    cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
+
+    # Mock an existing cmdline-tools install
+    (cmdline_tools_base_path / "latest").mkdir(parents=True)
+    (cmdline_tools_base_path / "8092744").touch()
+
+    # The download will produce a cached file.
+    cache_file = MagicMock()
+    mock_tools.download.file.return_value = cache_file
+
+    # Calling unpack will create files
+    mock_tools.shutil.unpack_archive.side_effect = mock_unpack
+
+    # Set up a side effect for accepting the license
+    mock_tools.subprocess.run.side_effect = accept_license(android_sdk_root_path)
+
+    # Call `verify()`
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # Validate that the SDK was downloaded and unpacked
+    url = (
+        "https://dl.google.com/android/repository/"
+        f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
+    )
+    mock_tools.download.file.assert_called_once_with(
+        url=url,
+        download_path=mock_tools.base_path,
+        role="Android SDK Command-Line Tools",
+    )
+
+    mock_tools.shutil.unpack_archive.assert_called_once_with(
+        cache_file, extract_dir=cmdline_tools_base_path
+    )
+
+    # The cached file will be deleted
+    cache_file.unlink.assert_called_once_with()
+
+    # The commandline tools path exists
+    assert sdk.cmdline_tools_path.is_dir()
+
+    if platform.system() != "Windows":
+        # On non-Windows, ensure the unpacked binary was made executable
+        assert os.access(
+            cmdline_tools_base_path / SDK_MGR_VER / "bin" / "sdkmanager",
+            os.X_OK,
+        )
+
+    # The license has been accepted
+    assert (android_sdk_root_path / "licenses" / "android-sdk-license").exists()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == android_sdk_root_path
+
+    # Ensure old cmdline-tools installs are cleaned up
+    assert not (cmdline_tools_base_path / "latest").exists()
+    assert not (cmdline_tools_base_path / "8092744").exists()
+
+    assert "Upgrading Android SDK..." in capsys.readouterr().out
 
 
 def test_download_sdk_legacy_install(mock_tools, tmp_path):

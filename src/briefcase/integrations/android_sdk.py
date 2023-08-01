@@ -79,11 +79,12 @@ class AndroidSDK(ManagedTool):
         return self.root_path / "cmdline-tools" / self.SDK_MANAGER_VER
 
     @property
+    def sdkmanager_filename(self) -> str:
+        return "sdkmanager.bat" if self.tools.host_os == "Windows" else "sdkmanager"
+
+    @property
     def sdkmanager_path(self) -> Path:
-        sdkmanager = (
-            "sdkmanager.bat" if self.tools.host_os == "Windows" else "sdkmanager"
-        )
-        return self.cmdline_tools_path / "bin" / sdkmanager
+        return self.cmdline_tools_path / "bin" / self.sdkmanager_filename
 
     @property
     def adb_path(self) -> Path:
@@ -220,15 +221,16 @@ class AndroidSDK(ManagedTool):
         JDK.verify(tools=tools, install=install)
 
         sdk = None
-        sdk_root, sdk_env_source = cls.sdk_path_from_env(tools=tools)
 
-        if sdk_root:
+        # Verify externally-managed Android SDK
+        sdk_root_env, sdk_source_env = cls.sdk_path_from_env(tools=tools)
+        if sdk_root_env:
             tools.logger.debug("Evaluating ANDROID_HOME...", prefix=cls.full_name)
-            tools.logger.debug(f"{sdk_env_source}={sdk_root}")
-            sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root))
+            tools.logger.debug(f"{sdk_source_env}={sdk_root_env}")
+            sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root_env))
 
             if sdk.exists():
-                if sdk_env_source == "ANDROID_SDK_ROOT":
+                if sdk_source_env == "ANDROID_SDK_ROOT":
                     tools.logger.warning(
                         """
 *************************************************************************
@@ -247,20 +249,20 @@ class AndroidSDK(ManagedTool):
 *************************************************************************
 """
                     )
-                sdk.verify_license()
             elif sdk.cmdline_tools_path.parent.exists():
-                # a cmdline-tools directory exists but doesn't provide the expected
-                # version of Command-Line Tools
-                sdk = None
-                tools.logger.warning(
-                    f"""
+                # a cmdline-tools directory exists but the required version isn't installed.
+                # try to install the required version using the 'latest' version.
+                if not sdk.install_cmdline_tools():
+                    sdk = None
+                    tools.logger.warning(
+                        f"""
 *************************************************************************
 ** WARNING: Incompatible Command-Line Tools Version                    **
 *************************************************************************
 
-    The Android SDK specified by {sdk_env_source} at:
+    The Android SDK specified by {sdk_source_env} at:
 
-    {sdk_root}
+    {sdk_root_env}
 
     does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. Briefcase requires
     this version to be installed to use an external Android SDK.
@@ -271,26 +273,26 @@ class AndroidSDK(ManagedTool):
 
 *************************************************************************
 """
-                )
+                    )
             else:
                 sdk = None
                 tools.logger.warning(
                     f"""
 *************************************************************************
-** {f"WARNING: {sdk_env_source} does not point to an Android SDK":67} **
+** {f"WARNING: {sdk_source_env} does not point to an Android SDK":67} **
 *************************************************************************
 
-    The location pointed to by the {sdk_env_source} environment
+    The location pointed to by the {sdk_source_env} environment
     variable:
 
-    {sdk_root}
+    {sdk_root_env}
 
     doesn't appear to contain an Android SDK.
 
-    If {sdk_env_source} is an Android SDK, ensure it is the root directory
+    If {sdk_source_env} is an Android SDK, ensure it is the root directory
     of the Android SDK instance such that
 
-    ${sdk_env_source}/cmdline-tools/latest/bin/sdkmanager
+    ${sdk_source_env}/cmdline-tools/{cls.SDK_MANAGER_VER}/bin/sdkmanager
 
     is a valid filepath.
 
@@ -300,56 +302,32 @@ class AndroidSDK(ManagedTool):
 """
                 )
 
+        # Verify Briefcase-managed Android SDK
         if sdk is None:
-            # Build an SDK wrapper for the Briefcase SDK instance.
             sdk_root_path = tools.base_path / "android_sdk"
             sdk = AndroidSDK(tools=tools, root_path=sdk_root_path)
 
-            if sdk.exists():
-                sdk.verify_license()
-            else:
-                # If no versions of the Command-Line Tools are installed but the
-                # 'tools' directory exists, the legacy SDK Tools are probably
-                # installed. Since they have been deprecated by more recent releases
-                # of SDK Manager, delete them and perform a fresh installation.
-                if (
-                    not sdk.cmdline_tools_path.parent.exists()
-                    and (sdk_root_path / "tools").exists()
-                ):
-                    tools.logger.warning(
-                        f"""
-*************************************************************************
-** WARNING: Upgrading Android SDK tools                                **
-*************************************************************************
-
-    Briefcase needs to replace the older Android SDK Tools with the
-    newer Android SDK Command-Line Tools. This will involve some large
-    downloads, as well as re-accepting the licenses for the Android
-    SDKs.
-
-    Any emulators created with the older Android SDK Tools will not be
-    compatible with the new tools. You will need to create new
-    emulators. Old emulators can be removed by deleting the files
-    in {sdk.avd_path} matching the emulator name.
-
-*************************************************************************
-"""
-                    )
-                    tools.shutil.rmtree(sdk_root_path)
-
-                if install:
-                    tools.logger.info(
-                        "The Android SDK was not found; downloading and installing...",
-                        prefix=cls.name,
-                    )
-                    tools.logger.info(
-                        "To use an existing Android SDK instance, "
-                        "specify its root directory path in the ANDROID_HOME environment variable."
-                    )
-                    tools.logger.info()
-                    sdk.install()
-                else:
+            if not sdk.exists():
+                if not install:
                     raise MissingToolError("Android SDK")
+
+                sdk.delete_legacy_sdk_tools()
+
+                tools.logger.info(
+                    "Upgrading Android SDK..."
+                    if sdk.cmdline_tools_path.parent.exists()
+                    else "The Android SDK was not found; downloading and installing...",
+                    prefix=cls.name,
+                )
+                tools.logger.info(
+                    "To use an existing Android SDK instance, specify its root "
+                    "directory path in the ANDROID_HOME environment variable."
+                )
+                tools.logger.info()
+                sdk.install()
+
+        # Licences must be accepted to use the SDK
+        sdk.verify_license()
 
         tools.logger.debug(f"Using Android SDK at {sdk.root_path}")
         tools.android_sdk = sdk
@@ -394,7 +372,9 @@ class AndroidSDK(ManagedTool):
         #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
         #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<cmdline-tools version>
 
-        with self.tools.input.wait_bar("Installing Android SDK Command-Line Tools..."):
+        with self.tools.input.wait_bar(
+            f"Installing Android SDK Command-Line Tools {self.SDK_MANAGER_VER}..."
+        ):
             self.cmdline_tools_path.parent.mkdir(parents=True, exist_ok=True)
             try:
                 self.tools.shutil.unpack_archive(
@@ -431,8 +411,8 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                     if not self.tools.os.access(binpath, self.tools.os.X_OK):
                         binpath.chmod(0o755)
 
-        # Licences must be accepted.
-        self.verify_license()
+        with self.tools.input.wait_bar("Removing Older Android SDK Packages..."):
+            self.cleanup_old_installs()
 
     def upgrade(self):
         """Upgrade the Android SDK."""
@@ -454,6 +434,92 @@ its output for errors.
     $ {self.sdkmanager_path} --update
 """
             ) from e
+
+    def install_cmdline_tools(self) -> bool:
+        """Attempt to use 'latest' cmdline-tools to install the currently required
+        version of the Command-Line Tools.
+
+        The Briefcase-managed SDK should always have the required version of cmdline-
+        tools installed; however, user-provided SDKs may not have it.
+
+        :returns: True if successfully installed; False otherwise
+        """
+        self.tools.logger.info(
+            f"Installing Android Command-Line Tools {self.SDK_MANAGER_VER}...",
+            prefix=self.full_name,
+        )
+        self.tools.logger.info(f"Using Android SDK at {self.root_path}")
+        latest_sdkmanager_path = (
+            self.root_path
+            / "cmdline-tools"
+            / "latest"
+            / "bin"
+            / self.sdkmanager_filename
+        )
+        try:
+            self.tools.subprocess.run(
+                [
+                    latest_sdkmanager_path,
+                    f"cmdline-tools;{self.SDK_MANAGER_VER}",
+                ],
+                check=True,
+                stream_output=False,
+            )
+        except (OSError, subprocess.CalledProcessError) as e:
+            self.tools.logger.debug(str(e))
+            self.tools.logger.warning(
+                f"Failed to install cmdline-tools;{self.SDK_MANAGER_VER}"
+            )
+            return False
+        return True
+
+    def delete_legacy_sdk_tools(self):
+        """Delete any legacy Android SDK tools that are installed.
+
+        If no versions of the Command-Line Tools are installed but the 'tools' directory
+        exists, the legacy SDK Tools are probably installed. Since they have been
+        deprecated by more recent releases of SDK Manager, delete them and perform a
+        fresh install.
+
+        The Android SDK Tools were deprecated in Sept 2017.
+        """
+        if (
+            not self.cmdline_tools_path.parent.exists()
+            and (self.root_path / "tools").exists()
+        ):
+            self.tools.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Upgrading Android SDK tools                                **
+*************************************************************************
+
+    Briefcase needs to replace the older Android SDK Tools with the
+    newer Android SDK Command-Line Tools. This will involve some large
+    downloads, as well as re-accepting the licenses for the Android
+    SDKs.
+
+    Any emulators created with the older Android SDK Tools will not be
+    compatible with the new tools. You will need to create new
+    emulators. Old emulators can be removed by deleting the files
+    in {self.avd_path} matching the emulator name.
+
+*************************************************************************
+"""
+            )
+            self.tools.shutil.rmtree(self.root_path)
+
+    def cleanup_old_installs(self):
+        """Remove old versions of Android SDK packages and version markers.
+
+        When the Android SDK is upgraded, old versions of packages should be removed to
+        keep the SDK tidy. This is namely the Command-line Tools that are used to manage
+        the SDK and AVDs. Additionally, previous version of Briefcase created a version
+        marker file that needs to be deleted.
+        """
+        if (ver_file := self.cmdline_tools_path.parent / "8092744").is_file():
+            self.tools.os.unlink(ver_file)
+        if (latest := self.cmdline_tools_path.parent / "latest").is_dir():
+            self.tools.shutil.rmtree(latest)
 
     def list_packages(self):
         """In debug output, list the packages currently managed by the SDK."""
