@@ -65,7 +65,7 @@ def test_existing_install(mock_tools, tmp_path):
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk-17.0.8+7").mkdir(parents=True)
+    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -79,7 +79,7 @@ def test_existing_install(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.8+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8_7.tar.gz",
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
@@ -114,7 +114,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk-17.0.8+7").mkdir(parents=True)
+    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -128,7 +128,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.8+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.8_7.tar.gz",
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
@@ -170,7 +170,7 @@ def test_download_fail(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.8+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8_7.tar.gz",
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
@@ -212,7 +212,7 @@ def test_unpack_fail(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.8+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.8_7.tar.gz",
+        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
