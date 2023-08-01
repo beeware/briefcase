@@ -425,7 +425,7 @@ def test_download_sdk(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-9477386_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -495,7 +495,7 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-9477386_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -554,7 +554,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
     # Create pre-existing non-executable `sdkmanager`.
     (cmdline_tools_base_path / "latest" / "bin").mkdir(parents=True)
     (cmdline_tools_base_path / "latest" / "bin" / "sdkmanager").touch(mode=0o644)
-    (cmdline_tools_base_path / "9477386").touch()
+    (cmdline_tools_base_path / "8092744").touch()
 
     # The download will produce a cached file
     cache_file = MagicMock()
@@ -572,7 +572,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-9477386_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -605,7 +605,7 @@ def test_raises_networkfailure_on_connectionerror(mock_tools):
     # The download was attempted
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-9477386_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -632,7 +632,7 @@ def test_detects_bad_zipfile(mock_tools, tmp_path):
     # The download attempt was made.
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-9477386_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,

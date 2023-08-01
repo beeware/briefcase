@@ -21,7 +21,7 @@ def test_cmdline_tools_url(mock_tools, android_sdk, host_os, host_arch, name):
     mock_tools.host_arch = host_arch
 
     assert android_sdk.cmdline_tools_url == (
-        f"https://dl.google.com/android/repository/commandlinetools-{name}-9477386_latest.zip"
+        f"https://dl.google.com/android/repository/commandlinetools-{name}-8092744_latest.zip"
     )
 
 
