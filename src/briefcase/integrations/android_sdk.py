@@ -47,6 +47,10 @@ class AndroidSDK(ManagedTool):
     name = "android_sdk"
     full_name = "Android SDK"
 
+    # Latest version for Command-Line Tools download as of August 2023
+    SDK_MANAGER_DOWNLOAD_VER = "9477386"
+    SDK_MANAGER_VER = "9.0"
+
     def __init__(self, tools: ToolCache, root_path: Path):
         super().__init__(tools=tools)
         self.dot_android_path = self.tools.home_path / ".android"
@@ -57,32 +61,22 @@ class AndroidSDK(ManagedTool):
 
     @property
     def cmdline_tools_url(self) -> str:
-        """The Android SDK Command-Line Tools URL appropriate to the current operating
-        system."""
+        """The Android SDK Command-Line Tools URL appropriate to the current OS."""
         platform_name = self.tools.host_os.lower()
         if self.tools.host_os.lower() == "darwin":
             platform_name = "mac"
         elif self.tools.host_os.lower() == "windows":  # pragma: no branch
             platform_name = "win"
 
-        return f"https://dl.google.com/android/repository/commandlinetools-{platform_name}-{self.cmdline_tools_version}_latest.zip"  # noqa: E501
+        return (
+            f"https://dl.google.com/android/repository/"
+            f"commandlinetools-{platform_name}-{self.SDK_MANAGER_DOWNLOAD_VER}_latest.zip"
+        )
 
     @property
     def cmdline_tools_path(self) -> Path:
-        return self.root_path / "cmdline-tools" / "latest"
-
-    @property
-    def cmdline_tools_version(self) -> str:
-        # This is the version of the Android SDK Command-line tools that
-        # are current as of May 2022. These tools can generally self-update,
-        # so using a fixed download URL isn't a problem.
-        # However, if/when this version number is changed, ensure that the
-        # checks done during verification include any required upgrade steps.
-        return "8092744"
-
-    @property
-    def cmdline_tools_version_path(self) -> Path:
-        return self.root_path / "cmdline-tools" / self.cmdline_tools_version
+        """Version-specific Command-line tools install root directory."""
+        return self.root_path / "cmdline-tools" / self.SDK_MANAGER_VER
 
     @property
     def sdkmanager_path(self) -> Path:
@@ -254,6 +248,30 @@ class AndroidSDK(ManagedTool):
 """
                     )
                 sdk.verify_license()
+            elif sdk.cmdline_tools_path.parent.exists():
+                # a cmdline-tools directory exists but doesn't provide the expected
+                # version of Command-Line Tools
+                sdk = None
+                tools.logger.warning(
+                    f"""
+*************************************************************************
+** WARNING: Incompatible Command-Line Tools Version                    **
+*************************************************************************
+
+    The Android SDK specified by {sdk_env_source} at:
+
+    {sdk_root}
+
+    does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. Briefcase requires
+    this version to be installed to use an external Android SDK.
+
+    Use Android Studio's SDK Manager to install Command-Line Tools {cls.SDK_MANAGER_VER}.
+
+    Briefcase will proceed using its own SDK instance.
+
+*************************************************************************
+"""
+                )
             else:
                 sdk = None
                 tools.logger.warning(
@@ -288,12 +306,16 @@ class AndroidSDK(ManagedTool):
             sdk = AndroidSDK(tools=tools, root_path=sdk_root_path)
 
             if sdk.exists():
-                # NOTE: For now, all known versions of the cmdline-tools are compatible.
-                # If/when that ever changes, do a verification check here.
                 sdk.verify_license()
             else:
-                # The legacy SDK Tools exist. Delete them.
-                if (sdk_root_path / "tools").exists():
+                # If no versions of the Command-Line Tools are installed but the
+                # 'tools' directory exists, the legacy SDK Tools are probably
+                # installed. Since they have been deprecated by more recent releases
+                # of SDK Manager, delete them and perform a fresh installation.
+                if (
+                    not sdk.cmdline_tools_path.parent.exists()
+                    and (sdk_root_path / "tools").exists()
+                ):
                     tools.logger.warning(
                         f"""
 *************************************************************************
@@ -353,7 +375,6 @@ class AndroidSDK(ManagedTool):
 
     def uninstall(self):
         """The Android SDK is upgraded in-place instead of being reinstalled."""
-        pass
 
     def install(self):
         """Download and install the Android SDK."""
@@ -364,16 +385,14 @@ class AndroidSDK(ManagedTool):
         )
 
         # The cmdline-tools package *must* be installed as:
-        #     <sdk_path>/cmdline-tools/latest
+        #     <sdk_path>/cmdline-tools/<cmdline-tools version>
         #
         # However, the zip file unpacks a top-level folder named `cmdline-tools`.
         # So, the unpacking process is:
         #
         #  1. Make a <sdk_path>/cmdline-tools folder
         #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
-        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/latest
-        #  4. Drop a marker file named <sdk_path>/cmdline-tools/<version> so we can track
-        #     the version that was installed.
+        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<cmdline-tools version>
 
         with self.tools.input.wait_bar("Installing Android SDK Command-Line Tools..."):
             self.cmdline_tools_path.parent.mkdir(parents=True, exist_ok=True)
@@ -391,18 +410,14 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
 """
                 ) from e
 
-            # If there's an existing version of the cmdline tools (or the version marker), delete them.
+            # If there's an existing version of the cmdline tools, delete them.
             if self.cmdline_tools_path.exists():
                 self.tools.shutil.rmtree(self.cmdline_tools_path)
-            if self.cmdline_tools_version_path.exists():
-                self.tools.os.unlink(self.cmdline_tools_version_path)
 
             # Rename the top level zip content to the final name
             (self.cmdline_tools_path.parent / "cmdline-tools").rename(
                 self.cmdline_tools_path
             )
-            # Touch a file with the version that was installed.
-            self.cmdline_tools_version_path.touch()
 
             # Zip file no longer needed once unpacked.
             cmdline_tools_zip_path.unlink()

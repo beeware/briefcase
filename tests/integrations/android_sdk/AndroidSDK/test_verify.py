@@ -14,6 +14,8 @@ from briefcase.exceptions import (
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
 
+from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
+
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
@@ -89,7 +91,7 @@ def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
 
     # Create `sdkmanager` and the license file.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
-    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -121,7 +123,7 @@ def test_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
-    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -165,7 +167,7 @@ def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
-    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -208,7 +210,7 @@ def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
-    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = existing_android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -249,7 +251,7 @@ def test_invalid_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
-    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -279,6 +281,51 @@ def test_invalid_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     assert f"{env_var} does not point to an Android SDK" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize("env_var", ["ANDROID_HOME", "ANDROID_SDK_ROOT"])
+def test_invalid_user_provided_sdk_wrong_cmdline_tools_ver(
+    mock_tools, env_var, tmp_path, capsys
+):
+    """If the user's environment specifies an Android SDK without the expected cmdline
+    tools, it is ignored."""
+    # Create `sdkmanager` and the license file for the *user's* version of the SDK
+    user_sdk_path = tmp_path / "other_sdk"
+    users_tools_bin = user_sdk_path / "cmdline-tools" / "latest" / "bin"
+    users_tools_bin.mkdir(parents=True, mode=0o755)
+    if platform.system() == "Windows":
+        (users_tools_bin / "sdkmanager.bat").touch()
+    else:
+        (users_tools_bin / "sdkmanager").touch(mode=0o755)
+
+    # Create `sdkmanager` and the license file for the *briefcase* managed version of the SDK
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if platform.system() == "Windows":
+        (tools_bin / "sdkmanager.bat").touch()
+    else:
+        (tools_bin / "sdkmanager").touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
+
+    # Set the environment to specify an ANDROID_SDK_ROOT that doesn't exist
+    mock_tools.os.environ = {env_var: os.fsdecode(user_sdk_path)}
+
+    # Expect verify() to succeed
+    sdk = AndroidSDK.verify(mock_tools)
+
+    # No calls to download, run or unpack anything.
+    mock_tools.download.file.assert_not_called()
+    mock_tools.subprocess.run.assert_not_called()
+    mock_tools.shutil.unpack_archive.assert_not_called()
+
+    # The returned SDK has the expected root path.
+    assert sdk.root_path == android_sdk_root_path
+
+    # User is informed about invalid env var setting
+    assert "Incompatible Command-Line Tools Version" in capsys.readouterr().out
+
+
 def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     """If the user's environment specifies an invalid Android SDK in both ANDROID_HOME
     and ANDROID_SDK_ROOT, they are ignored."""
@@ -286,7 +333,7 @@ def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
-    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -326,7 +373,7 @@ def test_inconsistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools" / "android_sdk"
-    tools_bin = android_sdk_root_path / "cmdline-tools" / "latest" / "bin"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if platform.system() == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"
@@ -382,7 +429,7 @@ def test_download_sdk(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -397,18 +444,13 @@ def test_download_sdk(mock_tools, tmp_path):
     # The cached file will be deleted
     cache_file.unlink.assert_called_once_with()
 
-    # The commandline tools path exists, in both "latest" and versioned form
-    assert sdk.cmdline_tools_path.exists()
-    assert sdk.cmdline_tools_version_path.exists()
-
-    # The versioned form is a marker file; the tools path is a live directory
+    # The commandline tools path exists
     assert sdk.cmdline_tools_path.is_dir()
-    assert sdk.cmdline_tools_version_path.is_file()
 
     if platform.system() != "Windows":
         # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(
-            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager",
+            cmdline_tools_base_path / SDK_MGR_VER / "bin" / "sdkmanager",
             os.X_OK,
         )
 
@@ -452,7 +494,7 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -468,17 +510,12 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
     cache_file.unlink.assert_called_once_with()
 
     # The commandline tools path exists, in both "latest" and versioned form
-    assert sdk.cmdline_tools_path.exists()
-    assert sdk.cmdline_tools_version_path.exists()
-
-    # The versioned form is a marker file; the tools path is a live directory
     assert sdk.cmdline_tools_path.is_dir()
-    assert sdk.cmdline_tools_version_path.is_file()
 
     if platform.system() != "Windows":
         # On non-Windows, ensure the unpacked binary was made executable
         assert os.access(
-            cmdline_tools_base_path / "latest" / "bin" / "sdkmanager", os.X_OK
+            cmdline_tools_base_path / SDK_MGR_VER / "bin" / "sdkmanager", os.X_OK
         )
 
     # The legacy SDK tools have been removed
@@ -509,9 +546,9 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
     cmdline_tools_base_path = android_sdk_root_path / "cmdline-tools"
 
     # Create pre-existing non-executable `sdkmanager`.
-    (cmdline_tools_base_path / "latest" / "bin").mkdir(parents=True)
-    (cmdline_tools_base_path / "latest" / "bin" / "sdkmanager").touch(mode=0o644)
-    (cmdline_tools_base_path / "8092744").touch()
+    (cmdline_tools_base_path / SDK_MGR_VER / "bin").mkdir(parents=True)
+    (cmdline_tools_base_path / SDK_MGR_VER / "bin" / "sdkmanager").touch(mode=0o644)
+    (cmdline_tools_base_path / SDK_MGR_DL_VER).touch()
 
     # The download will produce a cached file
     cache_file = MagicMock()
@@ -529,7 +566,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
     # Validate that the SDK was downloaded and unpacked
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -562,7 +599,7 @@ def test_raises_networkfailure_on_connectionerror(mock_tools):
     # The download was attempted
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,
@@ -589,7 +626,7 @@ def test_detects_bad_zipfile(mock_tools, tmp_path):
     # The download attempt was made.
     url = (
         "https://dl.google.com/android/repository/"
-        f"commandlinetools-{mock_tools._test_download_tag}-8092744_latest.zip"
+        f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
     mock_tools.download.file.assert_called_once_with(
         url=url,

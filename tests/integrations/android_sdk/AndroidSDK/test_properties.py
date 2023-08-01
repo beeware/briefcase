@@ -5,6 +5,8 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
+
 
 @pytest.mark.parametrize(
     "host_os, name",
@@ -20,7 +22,7 @@ def test_cmdline_tools_url(mock_tools, android_sdk, host_os, name):
     mock_tools.host_os = host_os
 
     assert android_sdk.cmdline_tools_url == (
-        f"https://dl.google.com/android/repository/commandlinetools-{name}-8092744_latest.zip"
+        f"https://dl.google.com/android/repository/commandlinetools-{name}-{SDK_MGR_DL_VER}_latest.zip"
     )
 
 
@@ -35,7 +37,7 @@ def test_sdkmanager_path(mock_tools, android_sdk, host_os, sdkmanager_name):
     mock_tools.host_os = host_os
 
     assert android_sdk.sdkmanager_path == (
-        android_sdk.root_path / "cmdline-tools" / "latest" / "bin" / sdkmanager_name
+        android_sdk.root_path / "cmdline-tools" / SDK_MGR_VER / "bin" / sdkmanager_name
     )
 
 
@@ -62,7 +64,7 @@ def test_avdmanager_path(mock_tools, android_sdk, host_os, avdmanager_name):
     mock_tools.host_os = host_os
 
     assert android_sdk.avdmanager_path == (
-        android_sdk.root_path / "cmdline-tools" / "latest" / "bin" / avdmanager_name
+        android_sdk.root_path / "cmdline-tools" / SDK_MGR_VER / "bin" / avdmanager_name
     )
 
 
