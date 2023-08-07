@@ -48,6 +48,7 @@ class AndroidSDK(ManagedTool):
     full_name = "Android SDK"
 
     # Latest version for Command-Line Tools download as of August 2023
+    # **Be sure the android.rst docs stay in sync with version updates here**
     SDK_MANAGER_DOWNLOAD_VER = "9477386"
     SDK_MANAGER_VER = "9.0"
 
@@ -275,7 +276,6 @@ class AndroidSDK(ManagedTool):
 """
                     )
             else:
-                sdk = None
                 tools.logger.warning(
                     f"""
 *************************************************************************
@@ -292,7 +292,7 @@ class AndroidSDK(ManagedTool):
     If {sdk_source_env} is an Android SDK, ensure it is the root directory
     of the Android SDK instance such that
 
-    ${sdk_source_env}/cmdline-tools/{cls.SDK_MANAGER_VER}/bin/sdkmanager
+    ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
 
     is a valid filepath.
 
@@ -301,6 +301,7 @@ class AndroidSDK(ManagedTool):
 *************************************************************************
 """
                 )
+                sdk = None
 
         # Verify Briefcase-managed Android SDK
         if sdk is None:
@@ -313,17 +314,18 @@ class AndroidSDK(ManagedTool):
 
                 sdk.delete_legacy_sdk_tools()
 
-                tools.logger.info(
-                    "Upgrading Android SDK..."
-                    if sdk.cmdline_tools_path.parent.exists()
-                    else "The Android SDK was not found; downloading and installing...",
-                    prefix=cls.name,
-                )
-                tools.logger.info(
-                    "To use an existing Android SDK instance, specify its root "
-                    "directory path in the ANDROID_HOME environment variable."
-                )
-                tools.logger.info()
+                if sdk.cmdline_tools_path.parent.exists():
+                    tools.logger.info("Upgrading Android SDK...", prefix=cls.name)
+                else:
+                    tools.logger.info(
+                        "The Android SDK was not found; downloading and installing...",
+                        prefix=cls.name,
+                    )
+                    tools.logger.info(
+                        "To use an existing Android SDK instance, specify its root "
+                        "directory path in the ANDROID_HOME environment variable."
+                    )
+                    tools.logger.info()
                 sdk.install()
 
         # Licences must be accepted to use the SDK
