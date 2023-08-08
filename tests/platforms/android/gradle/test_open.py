@@ -7,6 +7,7 @@ import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradleOpenCommand
@@ -21,7 +22,7 @@ def create_sdk_manager(tmp_path, extension=""):
         / "tools"
         / "android_sdk"
         / "cmdline-tools"
-        / "latest"
+        / AndroidSDK.SDK_MANAGER_VER
         / "bin"
         / f"sdkmanager{extension}",
         "Android SDK manager",

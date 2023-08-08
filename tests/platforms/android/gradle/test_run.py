@@ -542,7 +542,7 @@ def test_log_file_extra(run_command, monkeypatch):
     run_command.tools.logger.save_log = True
     run_command.tools.logger.save_log_to_file(run_command)
 
-    sdk_manager = "/path/to/android_sdk/cmdline-tools/latest/bin/sdkmanager"
+    sdk_manager = f"/path/to/android_sdk/cmdline-tools/{AndroidSDK.SDK_MANAGER_VER}/bin/sdkmanager"
     if platform.system() == "Windows":
         sdk_manager += ".bat"
     run_command.tools.subprocess.check_output.assert_called_once_with(

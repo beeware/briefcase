@@ -17,10 +17,9 @@ class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
-    # As of 12 May 2023, 17.0.7+7 is the current OpenJDK
-    # https://adoptium.net/temurin/releases/
+    # Latest OpenJDK as of August 2023: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.7"
+    JDK_RELEASE = "17.0.8"
     JDK_BUILD = "7"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
@@ -75,7 +74,7 @@ class JDK(ManagedTool):
 
         :param tools: ToolCache of available tools
         :param java_path: File path to a candidate JDK install
-        :return: JDK release version; e.g. "17.0.7"
+        :return: JDK release version; e.g. "17.0.X"
         """
         output = tools.subprocess.check_output(
             [
@@ -83,7 +82,7 @@ class JDK(ManagedTool):
                 "-version",
             ],
         )
-        # javac's output should look like "javac 17.0.7\n"
+        # javac's output should look like "javac 17.0.X\n"
         return output.strip("\n").split(" ")[1]
 
     @classmethod
@@ -303,7 +302,7 @@ Delete {jdk_zip_path} and run briefcase again.
 
             jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
-            # The tarball will unpack into <briefcase data dir>/tools/jdk-17.0.7+7
+            # The tarball will unpack into <briefcase data dir>/tools/jdk-17.0.X+7
             # (or whatever name matches the current release).
             # We turn this into <briefcase data dir>/tools/java so we have a consistent name.
             java_unpack_path = (

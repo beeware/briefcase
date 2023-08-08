@@ -9,6 +9,10 @@ from briefcase.integrations.download import Download
 from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
 
+# current versions of Android SDK Manager
+SDK_MGR_VER = "9.0"
+SDK_MGR_DL_VER = "9477386"
+
 
 @pytest.fixture
 def mock_tools(mock_tools, tmp_path) -> ToolCache:
