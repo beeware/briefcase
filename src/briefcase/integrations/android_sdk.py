@@ -413,7 +413,7 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                     if not self.tools.os.access(binpath, self.tools.os.X_OK):
                         binpath.chmod(0o755)
 
-        with self.tools.input.wait_bar("Removing Older Android SDK Packages..."):
+        with self.tools.input.wait_bar("Removing older Android SDK packages..."):
             self.cleanup_old_installs()
 
     def upgrade(self):
