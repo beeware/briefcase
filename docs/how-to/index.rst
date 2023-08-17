@@ -21,3 +21,4 @@ stand alone.
    See errors on iOS <see_errors_on_ios>
    internal/index
    publishing/index
+   tooling-settings-pycharm
