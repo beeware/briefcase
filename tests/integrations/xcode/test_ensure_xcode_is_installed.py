@@ -293,7 +293,7 @@ def test_installed_with_minimum_version_success(
     xcode,
     mock_tools,
 ):
-    """Check XCode can meet a minimum version requirement."""
+    """Check Xcode can meet a minimum version requirement."""
 
     def check_output_mock(cmd_list, *args, **kwargs):
         if cmd_list == ["xcode-select", "-p"]:
@@ -343,7 +343,7 @@ def test_installed_with_minimum_version_failure(
     xcode,
     mock_tools,
 ):
-    """Check XCode fail to meet a minimum version requirement."""
+    """Check Xcode fail to meet a minimum version requirement."""
     mock_tools.subprocess.check_output.side_effect = [
         xcode + "\n",  # xcode-select -p
         f"Xcode {version}\nBuild version 11B500\n",  # xcodebuild -version

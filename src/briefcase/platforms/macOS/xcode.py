@@ -56,7 +56,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info("Building XCode project...", prefix=app.app_name)
+        self.logger.info("Building Xcode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
                 self.tools.subprocess.run(
