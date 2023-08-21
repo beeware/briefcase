@@ -15,14 +15,13 @@ def test_dev_run(dev_command, first_app, tmp_path):
         test_mode=False,
         passthrough=[],
     )
+
+    expected_env = {"a": 1, "b": 2, "c": 3}
+    expected_env.update(dev_command.DEV_ENVIRONMENT)
+
     dev_command.tools.subprocess.Popen.assert_called_once_with(
         [
             sys.executable,
-            "-u",
-            "-X",
-            "dev",
-            "-X",
-            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -31,7 +30,7 @@ def test_dev_run(dev_command, first_app, tmp_path):
                 'runpy.run_module("first", run_name="__main__", alter_sys=True)'
             ),
         ],
-        env={"a": 1, "b": 2, "c": 3},
+        env=expected_env,
         cwd=dev_command.tools.home_path,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -57,14 +56,13 @@ def test_dev_run_with_args(dev_command, first_app, tmp_path):
         test_mode=False,
         passthrough=["foo", "bar", "--whiz"],
     )
+
+    expected_env = {"a": 1, "b": 2, "c": 3}
+    expected_env.update(dev_command.DEV_ENVIRONMENT)
+
     dev_command.tools.subprocess.Popen.assert_called_once_with(
         [
             sys.executable,
-            "-u",
-            "-X",
-            "dev",
-            "-X",
-            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -73,7 +71,7 @@ def test_dev_run_with_args(dev_command, first_app, tmp_path):
                 'runpy.run_module("first", run_name="__main__", alter_sys=True)'
             ),
         ],
-        env={"a": 1, "b": 2, "c": 3},
+        env=expected_env,
         cwd=dev_command.tools.home_path,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -99,14 +97,13 @@ def test_dev_test_mode(dev_command, first_app, tmp_path):
         test_mode=True,
         passthrough=[],
     )
+
+    expected_env = {"a": 1, "b": 2, "c": 3}
+    expected_env.update(dev_command.DEV_ENVIRONMENT)
+
     dev_command.tools.subprocess.Popen.assert_called_once_with(
         [
             sys.executable,
-            "-u",
-            "-X",
-            "dev",
-            "-X",
-            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -115,7 +112,7 @@ def test_dev_test_mode(dev_command, first_app, tmp_path):
                 'runpy.run_module("tests.first", run_name="__main__", alter_sys=True)'
             ),
         ],
-        env={"a": 1, "b": 2, "c": 3},
+        env=expected_env,
         cwd=dev_command.tools.home_path,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -141,14 +138,13 @@ def test_dev_test_mode_with_args(dev_command, first_app, tmp_path):
         test_mode=True,
         passthrough=["foo", "bar", "--whiz"],
     )
+
+    expected_env = {"a": 1, "b": 2, "c": 3}
+    expected_env.update(dev_command.DEV_ENVIRONMENT)
+
     dev_command.tools.subprocess.Popen.assert_called_once_with(
         [
             sys.executable,
-            "-u",
-            "-X",
-            "dev",
-            "-X",
-            "utf8",
             "-c",
             (
                 "import runpy, sys;"
@@ -157,7 +153,7 @@ def test_dev_test_mode_with_args(dev_command, first_app, tmp_path):
                 'runpy.run_module("tests.first", run_name="__main__", alter_sys=True)'
             ),
         ],
-        env={"a": 1, "b": 2, "c": 3},
+        env=expected_env,
         cwd=dev_command.tools.home_path,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
