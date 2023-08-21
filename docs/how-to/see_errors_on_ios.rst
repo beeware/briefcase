@@ -13,4 +13,4 @@ the stack trace. Here's how to do it -
    screen. If you can't see that area, you may have to activate it with
    ``View`` > ``Debug Area`` > ``Show Debug Area``
 
- .. image:: PyStackTraceOnXCode.png
+ .. image:: PyStackTraceOnXcode.png
