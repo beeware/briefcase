@@ -433,7 +433,7 @@ class macOSPackageMixin(macOSSigningMixin):
         )
 
     def verify_tools(self):
-        # Require the XCode command line tools.
+        # Require the Xcode command line tools.
         XcodeCliTools.verify(tools=self.tools)
 
         # Verify superclass tools *after* xcode. This ensures we get the

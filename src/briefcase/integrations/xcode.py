@@ -68,7 +68,7 @@ class Xcode(Tool):
         """Determine if Xcode is installed; and if so, that it meets minimum version
         requirements.
 
-        Raises an exception if XCode isn't installed, or if the version of Xcode
+        Raises an exception if Xcode isn't installed, or if the version of Xcode
         that is installed doesn't meet the minimum requirement.
 
         :param tools: ToolCache of available tools
@@ -290,7 +290,7 @@ to continue, and re-run Briefcase once that installation is complete.
 
         :param tools: ToolCache of available tools
         """
-        # Lastly, check if the XCode license has been accepted. The command line
+        # Lastly, check if the Xcode license has been accepted. The command line
         # tools return a status code of 69 (nice...) if the license has not been
         # accepted. In this case, we can prompt the user to accept the license.
         try:

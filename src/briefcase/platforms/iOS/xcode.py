@@ -307,7 +307,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         self.logger.info("Updating app metadata...", prefix=app.app_name)
         self.update_app_metadata(app=app, test_mode=test_mode)
 
-        self.logger.info("Building XCode project...", prefix=app.app_name)
+        self.logger.info("Building Xcode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
                 self.tools.subprocess.run(

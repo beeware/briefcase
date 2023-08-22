@@ -10,7 +10,7 @@ from tests.utils import DummyConsole
 
 
 class DummyCommand(iOSXcodeMixin, BaseCommand):
-    """A dummy command that includes the iOS XCode mixin."""
+    """A dummy command that includes the iOS Xcode mixin."""
 
     command = "dummy"
 

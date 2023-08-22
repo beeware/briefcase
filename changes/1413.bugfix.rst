@@ -1,0 +1,1 @@
+The command line arguments used to configure the Python environment for ``briefcase dev`` no longer leak into the runtime environment on macOS.
