@@ -11,6 +11,8 @@ from briefcase.integrations.subprocess import Subprocess
 @pytest.fixture
 def dev_command(tmp_path):
     command = DevCommand(logger=Log(), console=Console(), base_path=tmp_path)
+    command.DEV_ENVIRONMENT.clear()
+    command.DEV_ENVIRONMENT["PYTHONSTUBSETTING"] = "23"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     return command
 
