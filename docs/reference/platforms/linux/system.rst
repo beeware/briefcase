@@ -2,6 +2,16 @@
 Native System Packages
 ======================
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86-64 | arm64 | x86 | x86-64 | arm64 | x86 | x86-64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |y|    | |y|   |     |        |       | |v| | |f|    | |v| | |v|   |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 All modern Linux distributions have a native format for distributing packages
 that are integrated into their overall operating system:
 

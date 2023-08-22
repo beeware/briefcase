@@ -2,6 +2,17 @@
 Android
 =======
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86-64 | arm64 | x86 | x86-64 | arm64 | x86 | x86-64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |f|    | |y|   |     | |f|    |       | |v| | |f|    | |v| | |v|   |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
+
 When generating an Android project, Briefcase produces a Gradle project.
 
 Gradle requires an install of the Android SDK and a Java 17 JDK.

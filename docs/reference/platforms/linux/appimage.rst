@@ -2,6 +2,16 @@
 AppImage
 ========
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86-64 | arm64 | x86 | x86-64 | arm64 | x86 | x86-64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |f|    |       |     |        |       | |v| | |f|    |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 `AppImage <https://appimage.org>`__ provides a way for developers to provide
 "native" binaries for Linux users. It allow packaging applications for any
 common Linux based operating system, including Ubuntu, Debian, Fedora, and more.

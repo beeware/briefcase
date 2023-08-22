@@ -97,6 +97,16 @@ pygments_style = "sphinx"
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
+# API status indicators.
+rst_prolog = """
+.. role:: full
+.. role:: yes
+.. role:: ymmv
+.. |f| replace:: :full:`●`
+.. |y| replace:: :yes:`○`
+.. |v| replace:: :ymmv:`▲`
+"""
+
 # -- Options for link checking -------------------------------------------------
 
 linkcheck_anchors_ignore = [
