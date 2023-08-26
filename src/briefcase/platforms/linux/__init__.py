@@ -15,6 +15,7 @@ DEFAULT_OUTPUT_FORMAT = "system"
 DEBIAN = "debian"
 RHEL = "rhel"
 ARCH = "arch"
+SUSE = "suse"
 
 
 def parse_freedesktop_os_release(content):
@@ -106,6 +107,8 @@ class LinuxMixin:
             vendor_base = RHEL
         elif vendor == ARCH or ARCH in id_like:
             vendor_base = ARCH
+        elif vendor == SUSE or SUSE in id_like:
+            vendor_base = SUSE
         else:
             vendor_base = None
 

@@ -53,6 +53,18 @@ def test_rpm_requirements(build_command, first_app_config):
     ]
 
 
+def test_suse_requirements(build_command, first_app_config):
+    """SUSE requirements can be verified."""
+    first_app_config.target_vendor_base = "suse"
+
+    build_command.verify_system_packages(first_app_config)
+
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["rpm", "-q", "--whatprovides", "python3-devel"]),
+        call(["rpm", "-q", "--whatprovides", "patterns-devel-base-devel_basis"]),
+    ]
+
+
 def test_arch_requirements(build_command, first_app_config, capsys):
     """Arch requirements can be verified."""
     first_app_config.target_vendor_base = "arch"
