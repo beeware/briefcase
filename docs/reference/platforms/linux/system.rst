@@ -115,6 +115,7 @@ The following Linux vendors are known to work as Docker targets:
   * Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
   * Arch Linux (e.g., ``archlinux:latest``)
   * Manjaro Linux (e.g., ``manjarolinux/base:latest``)
+  * OpenSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
 
 Application configuration
 =========================
@@ -128,10 +129,10 @@ If you need to override these settings for a specific target vendor, or for a
 specific distribution version, you can provide increasingly specific sections for
 vendor and version information. Each distribution is identified by:
 
-* Vendor base (e.g., ``debian``, ``rhel``, ``arch``)
-* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``). The vendor
-  identifier *may* be the same as the vendor base (e.g, in the case of Debian or
-  Red Hat)
+* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``) * Vendor (e.g,
+  ``debian``, ``ubuntu``, ``rhel``, ``fedora``, ``opensuse-tumbleweed``). The
+  vendor identifier *may* be the same as the vendor base (e.g, in the case of
+  Debian or Red Hat)
 * Code name (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)
