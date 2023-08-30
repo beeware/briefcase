@@ -1,1 +1,1 @@
-Added support for OpenSuSE Linux distributions
+Support for OpenSuSE Linux distributions was added.
