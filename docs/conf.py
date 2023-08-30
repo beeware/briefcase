@@ -320,6 +320,17 @@ spelling_lang = "en_US"
 # Location of word list.
 spelling_word_list_filename = "spelling_wordlist"
 
+# -- Options for link check -------------------------------------------
+
+linkcheck_ignore = [
+    r"./android.html",
+    r"./iOS.html",
+    r"./linux/system.html",
+    r"./macOS/app.html",
+    r"./web.html",
+    r"./windows/app.html",
+]
+
 # -- Options for Todos -------------------------------------------
 
 # If this is True, todo and todolist produce output, else they produce nothing. The default is False.
