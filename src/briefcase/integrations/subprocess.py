@@ -214,31 +214,33 @@ class Subprocess(Tool):
         except KeyError:
             pass
 
-        # if `text` or backwards-compatible `universal_newlines` are
-        # not provided, then default `text` to True so all output is
-        # returned as strings instead of bytes.
-        if "text" not in kwargs and "universal_newlines" not in kwargs:
-            kwargs["text"] = True
+        # Default to running subprocess in "text" mode so all output is returned as
+        # strings instead of bytes. The legacy setting of `universal_newlines` is
+        # converted to `text` for calling subprocess.
+        kwargs["text"] = kwargs.pop("universal_newlines", kwargs.get("text", True))
 
-        # If we're in text/universal_newlines mode, ensure that there is
-        # an encoding specified. If encoding isn't specified, default to
-        # the system's stdout encoding.
-        # This is for the benefit of Windows, which uses cp437 for console
-        # output when the system encoding is cp1252.
-        # `__stdout__` is used because rich captures and redirects `sys.stdout`.
-        # The fallback to "UTF-8" is needed to catch the case where stdout
-        # is redirected to a non-tty (e.g. during pytest conditions)
-        if kwargs.get("text") or kwargs.get("universal_newlines", False):
+        # Enable text mode if an `encoding` or `errors` is specified; this aligns with
+        # the default behavior of subprocess.
+        kwargs["text"] |= any(kwargs.get(kw) for kw in ["encoding", "errors"])
+
+        # Configure subprocess for text mode
+        if kwargs["text"]:
+            # Ensure an appropriate encoding is specified.
+            # If an encoding isn't provided, default to the encoding that Python is
+            # using for stdout. This is for the benefit of Windows which uses cp437 for
+            # console output when the system encoding is cp1252.
+            # `sys.__stdout__` is used because Rich captures and redirects `sys.stdout`.
+            # The fallback to "UTF-8" is needed to catch the case where stdout is
+            # redirected to a non-tty (e.g. during pytest conditions).
             kwargs.setdefault(
                 "encoding", os.device_encoding(sys.__stdout__.fileno()) or "UTF-8"
             )
 
-        # When text mode is enabled, subprocess defaults to "strict"
-        # handling for errors arising from decoding output to Unicode.
-        # To avoid Unicode exceptions from misbehaving commands, set
-        # `errors` so output that cannot be decoded for the specified
-        # encoding are replaced with hex of the raw bytes.
-        if any(kwargs.get(kw) for kw in ["text", "encoding", "universal_encoding"]):
+            # Use relaxed output decoding by default.
+            # subprocess defaults to "strict" handling for errors arising from decoding
+            # output to Unicode. To avoid Unicode exceptions from misbehaving commands,
+            # set `errors` so output that cannot be decoded for the specified encoding
+            # are replaced with hex of the raw bytes.
             kwargs.setdefault("errors", "backslashreplace")
 
         # For Windows, convert start_new_session=True to creation flags
