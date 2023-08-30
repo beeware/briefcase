@@ -97,6 +97,16 @@ pygments_style = "sphinx"
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
+# API status indicators.
+rst_prolog = """
+.. role:: full
+.. role:: yes
+.. role:: ymmv
+.. |f| replace:: :full:`●`
+.. |y| replace:: :yes:`○`
+.. |v| replace:: :ymmv:`△`
+"""
+
 # -- Options for link checking -------------------------------------------------
 
 linkcheck_anchors_ignore = [
@@ -309,6 +319,17 @@ spelling_lang = "en_US"
 
 # Location of word list.
 spelling_word_list_filename = "spelling_wordlist"
+
+# -- Options for link check -------------------------------------------
+
+linkcheck_ignore = [
+    r"./android.html",
+    r"./iOS.html",
+    r"./linux/system.html",
+    r"./macOS/app.html",
+    r"./web.html",
+    r"./windows/app.html",
+]
 
 # -- Options for Todos -------------------------------------------
 

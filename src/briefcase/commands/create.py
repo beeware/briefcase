@@ -344,6 +344,7 @@ class CreateCommand(BaseCommand):
                             python_version_tag=self.python_version_tag,
                             platform=self.platform,
                             host_arch=self.tools.host_arch,
+                            is_32bit=self.tools.is_32bit_python,
                         )
 
                 support_package_url = self.support_package_url(support_revision)
@@ -384,6 +385,7 @@ class CreateCommand(BaseCommand):
                     python_version_tag=self.python_version_tag,
                     platform=self.platform,
                     host_arch=self.tools.host_arch,
+                    is_32bit=self.tools.is_32bit_python,
                 ) from e
 
     def _write_requirements_file(

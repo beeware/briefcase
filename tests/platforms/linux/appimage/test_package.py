@@ -15,7 +15,7 @@ def package_command(tmp_path, first_app_config):
         data_path=tmp_path / "briefcase",
     )
     # Mock the host architecture to something repeatable
-    command.tools.host_arch = "wonky"
+    command.tools.host_arch = "x86_64"
 
     # Ensure the dist folder exists
     (tmp_path / "base_path" / "dist").mkdir(parents=True)
@@ -34,7 +34,7 @@ def test_package_app(package_command, first_app_config, tmp_path):
         / "first-app"
         / "linux"
         / "appimage"
-        / "First_App-0.0.1-wonky.AppImage",
+        / "First_App-0.0.1-x86_64.AppImage",
         "AppImage",
     )
 
@@ -42,4 +42,6 @@ def test_package_app(package_command, first_app_config, tmp_path):
     package_command.package_app(first_app_config)
 
     # The binary has been copied to the dist folder
-    assert (tmp_path / "base_path" / "dist" / "First_App-0.0.1-wonky.AppImage").exists()
+    assert (
+        tmp_path / "base_path" / "dist" / "First_App-0.0.1-x86_64.AppImage"
+    ).exists()

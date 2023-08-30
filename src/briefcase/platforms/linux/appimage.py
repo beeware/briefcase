@@ -44,13 +44,19 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
     def binary_name(self, app):
         safe_name = app.formal_name.replace(" ", "_")
-        return f"{safe_name}-{app.version}-{self.tools.host_arch}.AppImage"
+        arch = LinuxDeploy.arch(self.tools.host_arch)
+        return f"{safe_name}-{app.version}-{arch}.AppImage"
 
     def binary_path(self, app):
         return self.bundle_path(app) / self.binary_name(app)
 
     def distribution_path(self, app):
         return self.dist_path / self.binary_name(app)
+
+    def verify_tools(self):
+        """Verify the AppImage LinuxDeploy tool and its plugins exist."""
+        super().verify_tools()
+        LinuxDeploy.verify(tools=self.tools)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -154,7 +160,11 @@ class LinuxAppImageCreateCommand(
         # Add the manylinux tag to the template context.
         try:
             tag = getattr(app, "manylinux_image_tag", "latest")
-            context["manylinux_image"] = f"{app.manylinux}_{self.tools.host_arch}:{tag}"
+            manylinux_arch = {
+                "x86_64": "x86_64",
+                "i386": "i686",
+            }[LinuxDeploy.arch(self.tools.host_arch)]
+            context["manylinux_image"] = f"{app.manylinux}_{manylinux_arch}:{tag}"
             if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
                 context["vendor_base"] = "centos"
             elif app.manylinux == "manylinux_2_24":
@@ -212,11 +222,6 @@ class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, DockerOpenComman
 
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
-
-    def verify_tools(self):
-        """Verify the AppImage linuxdeploy tool and plugins exist."""
-        super().verify_tools()
-        LinuxDeploy.verify(tools=self.tools)
 
     def build_app(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
         """Build an application.

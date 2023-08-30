@@ -2,6 +2,16 @@
 Windows App
 ===========
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+|        |       |     | |f|    |       |     |        |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 A Windows app is a stub binary, allow with a collection of folders that contain
 the Python code for the app and the Python runtime libraries.
 

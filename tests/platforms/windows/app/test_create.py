@@ -29,6 +29,40 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
+@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+def test_unsupported_arch(create_command, host_arch):
+    """Windows commands can only run on x86-64."""
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = host_arch
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=f"Windows applications cannot be built on an {host_arch} machine.",
+    ):
+        create_command()
+
+
+def test_supported_arch(create_command):
+    """Windows command are allowed to run on x86-64."""
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = "AMD64"
+
+    create_command()
+
+
+def test_unsupported_32bit_python(create_command):
+    """Windows commands cannot run with 32bit Python."""
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = "AMD64"
+    create_command.tools.is_32bit_python = True
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match="Windows applications cannot be built using a 32bit version of Python",
+    ):
+        create_command()
+
+
 @pytest.mark.parametrize(
     "version, version_triple",
     [

@@ -9,12 +9,14 @@ from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 @pytest.fixture
 def create_command(first_app_config, tmp_path):
-    return LinuxAppImageCreateCommand(
+    command = LinuxAppImageCreateCommand(
         logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.tools.host_arch = "x86_64"
+    return command
 
 
 def test_default_options(create_command):
@@ -82,15 +84,16 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
 
 @pytest.mark.parametrize(
-    "manylinux, tag, host_arch, is_user_mapped, context",
+    "manylinux, tag, host_os, host_arch, is_user_mapped, context",
     [
         # Fallback.
-        (None, None, "x86_64", False, {"use_non_root_user": True}),
-        # x86_64 architecture, all versions
+        (None, None, "Linux", "x86_64", False, {"use_non_root_user": True}),
+        # Linux on x86_64 architecture, all versions
         # Explicit tag
         (
             "manylinux1",
             "2023-03-05-271004f",
+            "Linux",
             "x86_64",
             True,
             {
@@ -103,6 +106,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
         (
             "manylinux2010",
             "latest",
+            "Linux",
             "x86_64",
             False,
             {
@@ -115,6 +119,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
         (
             "manylinux2014",
             None,
+            "Linux",
             "x86_64",
             True,
             {
@@ -126,6 +131,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
         (
             "manylinux_2_24",
             None,
+            "Linux",
             "x86_64",
             True,
             {
@@ -137,6 +143,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
         (
             "manylinux_2_28",
             None,
+            "Linux",
             "x86_64",
             False,
             {
@@ -145,14 +152,28 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
                 "use_non_root_user": True,
             },
         ),
-        # non x86 architecture
+        # Linux on i686 hardware
+        (
+            "manylinux_2_28",
+            None,
+            "Linux",
+            "i686",
+            False,
+            {
+                "manylinux_image": "manylinux_2_28_i686:latest",
+                "vendor_base": "almalinux",
+                "use_non_root_user": True,
+            },
+        ),
+        # macOS on x86_64
         (
             "manylinux2014",
             None,
-            "aarch64",
+            "Darwin",
+            "x86_64",
             True,
             {
-                "manylinux_image": "manylinux2014_aarch64:latest",
+                "manylinux_image": "manylinux2014_x86_64:latest",
                 "vendor_base": "centos",
                 "use_non_root_user": False,
             },
@@ -164,6 +185,7 @@ def test_output_format_template_context(
     first_app_config,
     manylinux,
     tag,
+    host_os,
     host_arch,
     is_user_mapped,
     context,
@@ -178,6 +200,7 @@ def test_output_format_template_context(
     if tag:
         first_app_config.manylinux_image_tag = tag
 
+    create_command.tools.host_os = host_os
     create_command.tools.host_arch = host_arch
 
     assert create_command.output_format_template_context(first_app_config) == context

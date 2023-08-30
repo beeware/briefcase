@@ -25,8 +25,8 @@ def package_command(first_app, tmp_path):
     )
     command.tools.home_path = tmp_path / "home"
 
-    # Set the host architecture for test purposes.
-    command.tools.host_arch = "wonky"
+    # Mock ABI from packaging system
+    command._pkg_abi = "wonky"
 
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()
@@ -220,6 +220,7 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path):
         ],
         check=True,
         cwd=(bundle_path / "pkgbuild"),
+        env={"PKGEXT": ".pkg.tar.zst"},
     )
 
     # The pkg was moved into the final location
@@ -317,6 +318,7 @@ def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
         ],
         check=True,
         cwd=(bundle_path / "pkgbuild"),
+        env={"PKGEXT": ".pkg.tar.zst"},
     )
 
     # The pkg was moved into the final location
@@ -405,6 +407,7 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
         ],
         check=True,
         cwd=(bundle_path / "pkgbuild"),
+        env={"PKGEXT": ".pkg.tar.zst"},
     )
 
     # The pkg was moved into the final location
@@ -454,6 +457,7 @@ def test_pkg_package_failure(package_command, first_app_pkg, tmp_path):
         ],
         check=True,
         cwd=(bundle_path / "pkgbuild"),
+        env={"PKGEXT": ".pkg.tar.zst"},
     )
 
     # The pkg wasn't built, so it wasn't moved.
@@ -462,7 +466,7 @@ def test_pkg_package_failure(package_command, first_app_pkg, tmp_path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
 def test_no_changelog(package_command, first_app_pkg, tmp_path):
-    """If an packaging doesn't succeed, an error is raised."""
+    """If a packaging doesn't succeed, an error is raised."""
     bundle_path = (
         tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )

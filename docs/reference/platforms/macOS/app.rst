@@ -2,6 +2,16 @@
 .app bundle
 ===========
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |f|    | |y|   |     |        |       |     |        |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 A macOS ``.app`` bundle is a collection of directory with a specific layout,
 and with some key metadata. If this structure and metadata exists, macOS treats
 the folder as an executable file, giving it an icon.

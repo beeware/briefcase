@@ -7,6 +7,7 @@ import pytest
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    IncompatibleToolError,
     MissingToolError,
     NetworkFailure,
     UnsupportedHostError,
@@ -83,6 +84,48 @@ def test_unsupported_os(mock_tools):
         match=f"{AndroidSDK.name} is not supported on wonky",
     ):
         AndroidSDK.verify(mock_tools)
+
+
+def test_unsupported_arch(mock_tools):
+    """When the architecture is not supported, an error is raised."""
+    mock_tools.host_arch = "IA-64"
+
+    with pytest.raises(
+        IncompatibleToolError,
+        match="Briefcase cannot install Android SDK on this machine.",
+    ):
+        AndroidSDK.verify(mock_tools)
+
+
+@pytest.mark.parametrize(
+    "host_os, host_arch",
+    [
+        ("Darwin", "arm64"),
+        ("Darwin", "x86_64"),
+        ("Linux", "x86_64"),
+        ("Windows", "AMD64"),
+    ],
+)
+def test_supported_os_arch(mock_tools, host_os, host_arch, tmp_path):
+    """The supported OS/arch combinations do not error."""
+    mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
+
+    # Create `sdkmanager` and the license file.
+    android_sdk_root_path = tmp_path / "tools" / "android_sdk"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / "9.0" / "bin"
+    tools_bin.mkdir(parents=True, mode=0o755)
+    if host_os == "Windows":
+        sdk_manager = tools_bin / "sdkmanager.bat"
+        sdk_manager.touch()
+    else:
+        sdk_manager = tools_bin / "sdkmanager"
+        sdk_manager.touch(mode=0o755)
+
+    # Pre-accept the license
+    accept_license(android_sdk_root_path)()
+
+    assert isinstance(AndroidSDK.verify(mock_tools), AndroidSDK)
 
 
 def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
