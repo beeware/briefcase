@@ -129,10 +129,10 @@ If you need to override these settings for a specific target vendor, or for a
 specific distribution version, you can provide increasingly specific sections for
 vendor and version information. Each distribution is identified by:
 
-* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``) * Vendor (e.g,
-  ``debian``, ``ubuntu``, ``rhel``, ``fedora``, ``opensuse-tumbleweed``). The
-  vendor identifier *may* be the same as the vendor base (e.g, in the case of
-  Debian or Red Hat)
+* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``) 
+* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``, ``opensuse-tumbleweed``,
+  ``arch``, ``manjaro``). The vendor identifier *may* be the same as the vendor base
+  (e.g, in the case of Debian, Red Hat, or Arch)
 * Code name (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)
