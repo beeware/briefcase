@@ -104,7 +104,7 @@ rst_prolog = """
 .. role:: ymmv
 .. |f| replace:: :full:`●`
 .. |y| replace:: :yes:`○`
-.. |v| replace:: :ymmv:`▲`
+.. |v| replace:: :ymmv:`△`
 """
 
 # -- Options for link checking -------------------------------------------------
