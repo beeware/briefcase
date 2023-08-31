@@ -29,10 +29,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # Equivalent of passing "-u"
         "PYTHONUNBUFFERED": "1",
         # Equivalent of passing "-X dev"
-        "PYTHONMALLOC": "debug",
-        "PYTHONASYNCIODEBUG": "1",
-        "PYTHONFAULTHANDLER": "1",
-        "PYTHONWARNINGS": "default",
+        "PYTHONDEVMODE": "1",
         # Equivalent of passing "-X utf8"
         "PYTHONUTF8": "1",
     }
