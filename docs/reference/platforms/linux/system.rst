@@ -116,7 +116,7 @@ The following Linux vendors are known to work as Docker targets:
 * Fedora (e.g, ``fedora:37``)
 * AlmaLinux (e.g., ``almalinux:9``)
 * Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
-* OpenSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
+* openSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
 * Arch Linux (e.g., ``archlinux:latest``)
 * Manjaro Linux (e.g., ``manjarolinux/base:latest``)
 
@@ -132,7 +132,7 @@ If you need to override these settings for a specific target vendor, or for a
 specific distribution version, you can provide increasingly specific sections for
 vendor and version information. Each distribution is identified by:
 
-* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``) 
+* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``)
 * Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``, ``opensuse-tumbleweed``,
   ``arch``, ``manjaro``). The vendor identifier *may* be the same as the vendor base
   (e.g, in the case of Debian, Red Hat, or Arch)
