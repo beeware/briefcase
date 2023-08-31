@@ -1,6 +1,6 @@
 import os
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 import requests
@@ -14,7 +14,7 @@ from ....utils import create_file
 
 
 @pytest.fixture
-def package_command(tmp_path, first_app_config):
+def package_command(tmp_path, first_app_config, monkeypatch):
     command = GradlePackageCommand(
         logger=Log(),
         console=Console(),
@@ -27,6 +27,9 @@ def package_command(tmp_path, first_app_config):
     command.tools.sys = MagicMock(spec_set=sys)
     command.tools.requests = MagicMock(spec_set=requests)
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    monkeypatch.setattr(
+        type(command.tools), "system_encoding", PropertyMock(return_value="ISO-42")
+    )
 
     # Make sure the dist folder exists
     (tmp_path / "base_path" / "dist").mkdir(parents=True)

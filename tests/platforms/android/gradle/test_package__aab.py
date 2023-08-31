@@ -106,6 +106,7 @@ def test_execute_gradle(
         cwd=package_command.bundle_path(first_app_aab),
         env=package_command.tools.android_sdk.env,
         check=True,
+        encoding="ISO-42",
     )
 
     # The release asset has been moved into the dist folder
