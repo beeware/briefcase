@@ -16,7 +16,7 @@ All modern Linux distributions have a native format for distributing packages
 that are integrated into their overall operating system:
 
 * ``.deb``, used by Debian, Ubuntu, Mint (and others)
-* ``.rpm``, used by Red Hat, Fedora, CentOS, AlmaLinux (and others)
+* ``.rpm``, used by Red Hat, Fedora, CentOS, AlmaLinux, openSUSE (and others)
 * ``.pkg.tar.zst``, used by Arch Linux and Manjaro Linux
 
 The Briefcase ``system`` backend provides a way to build your app in these
@@ -116,6 +116,7 @@ The following Linux vendors are known to work as Docker targets:
 * Fedora (e.g, ``fedora:37``)
 * AlmaLinux (e.g., ``almalinux:9``)
 * Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
+* openSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
 * Arch Linux (e.g., ``archlinux:latest``)
 * Manjaro Linux (e.g., ``manjarolinux/base:latest``)
 
@@ -131,10 +132,10 @@ If you need to override these settings for a specific target vendor, or for a
 specific distribution version, you can provide increasingly specific sections for
 vendor and version information. Each distribution is identified by:
 
-* Vendor base (e.g., ``debian``, ``rhel``, ``arch``)
-* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``). The vendor
-  identifier *may* be the same as the vendor base (e.g, in the case of Debian or
-  Red Hat)
+* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``)
+* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``, ``opensuse-tumbleweed``,
+  ``arch``, ``manjaro``). The vendor identifier *may* be the same as the vendor base
+  (e.g, in the case of Debian, Red Hat, or Arch)
 * Code name (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)

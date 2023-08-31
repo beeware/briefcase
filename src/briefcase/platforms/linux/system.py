@@ -22,6 +22,7 @@ from briefcase.platforms.linux import (
     ARCH,
     DEBIAN,
     RHEL,
+    SUSE,
     DockerOpenCommand,
     LinuxMixin,
     LocalRequirementsMixin,
@@ -476,6 +477,13 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             ]
             system_verify = ["rpm", "-q"]
             system_installer = ["dnf", "install"]
+        elif app.target_vendor_base == SUSE:
+            base_system_packages = [
+                "python3-devel",
+                "patterns-devel-base-devel_basis",
+            ]
+            system_verify = ["rpm", "-q", "--whatprovides"]
+            system_installer = ["zypper", "install"]
         elif app.target_vendor_base == ARCH:
             base_system_packages = [
                 "python3",
@@ -852,6 +860,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 DEBIAN: "deb",
                 RHEL: "rpm",
                 ARCH: "pkg",
+                SUSE: "rpm",
             }.get(app.target_vendor_base, None)
 
         if app.packaging_format is None:
