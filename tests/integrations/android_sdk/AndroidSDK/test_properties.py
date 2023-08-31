@@ -9,17 +9,18 @@ from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
 
 
 @pytest.mark.parametrize(
-    "host_os, name",
+    "host_os, host_arch, name",
     [
-        ("windows", "win"),
-        ("Windows", "win"),
-        ("darwin", "mac"),
-        ("Darwin", "mac"),
+        ("Darwin", "arm64", "mac"),
+        ("Darwin", "x86_64", "mac"),
+        ("Linux", "x86_64", "linux"),
+        ("Windows", "AMD64", "win"),
     ],
 )
-def test_cmdline_tools_url(mock_tools, android_sdk, host_os, name):
+def test_cmdline_tools_url(mock_tools, android_sdk, host_os, host_arch, name):
     """Validate that the SDK URL is computed using `host_os`."""
     mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
 
     assert android_sdk.cmdline_tools_url == (
         f"https://dl.google.com/android/repository/commandlinetools-{name}-{SDK_MGR_DL_VER}_latest.zip"

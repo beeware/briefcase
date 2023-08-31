@@ -21,7 +21,7 @@ def run_command(tmp_path):
     command.tools.home_path = tmp_path / "home"
 
     # Set the host architecture for test purposes.
-    command.tools.host_arch = "wonky"
+    command.tools.host_arch = "x86_64"
 
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
@@ -63,7 +63,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
                 / "first-app"
                 / "linux"
                 / "appimage"
-                / "First_App-0.0.1-wonky.AppImage"
+                / "First_App-0.0.1-x86_64.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -104,7 +104,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                 / "first-app"
                 / "linux"
                 / "appimage"
-                / "First_App-0.0.1-wonky.AppImage"
+                / "First_App-0.0.1-x86_64.AppImage"
             ),
             "foo",
             "--bar",
@@ -141,7 +141,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
                 / "first-app"
                 / "linux"
                 / "appimage"
-                / "First_App-0.0.1-wonky.AppImage"
+                / "First_App-0.0.1-x86_64.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -173,7 +173,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                 / "first-app"
                 / "linux"
                 / "appimage"
-                / "First_App-0.0.1-wonky.AppImage"
+                / "First_App-0.0.1-x86_64.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -215,7 +215,7 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
                 / "first-app"
                 / "linux"
                 / "appimage"
-                / "First_App-0.0.1-wonky.AppImage"
+                / "First_App-0.0.1-x86_64.AppImage"
             ),
             "foo",
             "--bar",

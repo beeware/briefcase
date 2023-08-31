@@ -1,6 +1,16 @@
-=============
-Xcode project
-=============
+===================
+macOS Xcode project
+===================
+
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |f|    | |y|   |     |        |       |     |        |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
 Briefcase supports creating a full Xcode project for a macOS app. This project
 can then be used to build an actual app bundle, with the ``briefcase build``

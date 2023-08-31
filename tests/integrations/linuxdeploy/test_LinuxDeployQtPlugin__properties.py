@@ -16,9 +16,24 @@ def test_file_path(mock_tools, linuxdeploy_qt_plugin):
     )
 
 
-def test_file_name(linuxdeploy_qt_plugin):
+@pytest.mark.parametrize(
+    "host_os, host_arch, linuxdeploy_arch",
+    [
+        ("Linux", "x86_64", "x86_64"),
+        ("Linux", "i686", "i386"),
+        ("Darwin", "x86_64", "x86_64"),
+    ],
+)
+def test_file_name(mock_tools, host_os, host_arch, linuxdeploy_arch):
     """Linuxdeploy Qt plugin filename is architecture dependent."""
-    assert linuxdeploy_qt_plugin.file_name == "linuxdeploy-plugin-qt-wonky.AppImage"
+    mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
+
+    linuxdeploy_qt_plugin = LinuxDeployQtPlugin(mock_tools)
+    assert (
+        linuxdeploy_qt_plugin.file_name
+        == f"linuxdeploy-plugin-qt-{linuxdeploy_arch}.AppImage"
+    )
 
 
 def test_plugin_id(linuxdeploy_qt_plugin):
@@ -26,9 +41,22 @@ def test_plugin_id(linuxdeploy_qt_plugin):
     assert linuxdeploy_qt_plugin.plugin_id == "qt"
 
 
-def test_download_url(linuxdeploy_qt_plugin):
+@pytest.mark.parametrize(
+    "host_os, host_arch, linuxdeploy_arch",
+    [
+        ("Linux", "x86_64", "x86_64"),
+        ("Linux", "i686", "i386"),
+        ("Darwin", "x86_64", "x86_64"),
+    ],
+)
+def test_download_url(mock_tools, host_os, host_arch, linuxdeploy_arch):
     """Linuxdeploy Qt plugin download URL is architecture dependent."""
+    mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
+
+    linuxdeploy_qt_plugin = LinuxDeployQtPlugin(mock_tools)
+
     assert linuxdeploy_qt_plugin.download_url == (
         "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
-        "releases/download/continuous/linuxdeploy-plugin-qt-wonky.AppImage"
+        f"releases/download/continuous/linuxdeploy-plugin-qt-{linuxdeploy_arch}.AppImage"
     )

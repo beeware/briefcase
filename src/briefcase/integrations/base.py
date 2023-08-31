@@ -195,6 +195,8 @@ class ToolCache(Mapping):
 
         self.host_arch = self.platform.machine()
         self.host_os = self.platform.system()
+        # Python is 32bit if its pointers can only address with 32 bits or fewer
+        self.is_32bit_python = self.sys.maxsize <= 2**32
 
         self.app_tools: DefaultDict[AppConfig, ToolCache] = defaultdict(
             lambda: ToolCache(

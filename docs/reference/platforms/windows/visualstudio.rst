@@ -2,6 +2,16 @@
 Visual Studio project
 =====================
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+|        |       |     | |f|    |       |     |        |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 Briefcase supports creating a full Visual Studio project for a Windows App. This
 project can then be used to build the stub app binary with the ``briefcase
 build`` command, or directly from Visual Studio.

@@ -57,7 +57,7 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
         / "tools"
         / "linuxdeploy_plugins"
         / "qt"
-        / "linuxdeploy-plugin-qt-wonky.AppImage"
+        / "linuxdeploy-plugin-qt-i386.AppImage"
     )
 
     plugins = linuxdeploy.verify_plugins(["qt"], bundle_path=tmp_path / "bundle")
@@ -68,7 +68,7 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
     mock_tools.download.file.assert_called_with(
         url=(
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
-            "releases/download/continuous/linuxdeploy-plugin-qt-wonky.AppImage"
+            "releases/download/continuous/linuxdeploy-plugin-qt-i386.AppImage"
         ),
         download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "qt",
         role="linuxdeploy Qt plugin",
@@ -84,12 +84,12 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
         / "tools"
         / "linuxdeploy_plugins"
         / "sometool"
-        / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f"
-        / "linuxdeploy-plugin-sometool-wonky.AppImage"
+        / "bbf1b5dc4c3d2069dc5b916f73e9d6f5ad24603576298509367878e393c6f8f5"
+        / "linuxdeploy-plugin-sometool-i386.AppImage"
     )
 
     plugins = linuxdeploy.verify_plugins(
-        ["https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage"],
+        ["https://example.com/path/to/linuxdeploy-plugin-sometool-i386.AppImage"],
         bundle_path=tmp_path / "bundle",
     )
 
@@ -97,12 +97,12 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
     assert isinstance(plugins["sometool"], LinuxDeployURLPlugin)
 
     mock_tools.download.file.assert_called_with(
-        url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
+        url="https://example.com/path/to/linuxdeploy-plugin-sometool-i386.AppImage",
         download_path=tmp_path
         / "tools"
         / "linuxdeploy_plugins"
         / "sometool"
-        / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
+        / "bbf1b5dc4c3d2069dc5b916f73e9d6f5ad24603576298509367878e393c6f8f5",
         role="user-provided linuxdeploy plugin from URL",
     )
 
@@ -115,9 +115,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom local file plugin can be verified."""
 
     # Create a local file
-    plugin_path = (
-        tmp_path / "path" / "to" / "linuxdeploy-plugin-sometool-wonky.AppImage"
-    )
+    plugin_path = tmp_path / "path" / "to" / "linuxdeploy-plugin-sometool-i386.AppImage"
     create_mock_appimage(plugin_path)
 
     plugins = linuxdeploy.verify_plugins(
@@ -131,7 +129,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     # No download happened
     mock_tools.download.file.assert_not_called()
     # But a copy happened
-    assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-wonky.AppImage").exists()
+    assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-i386.AppImage").exists()
 
 
 @pytest.mark.parametrize(
@@ -214,7 +212,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
                 / "tools"
                 / "linuxdeploy_plugins"
                 / "qt"
-                / "linuxdeploy-plugin-qt-wonky.AppImage"
+                / "linuxdeploy-plugin-qt-i386.AppImage"
             )(url, download_path, role)
         elif "linuxdeploy_plugins/network" in str(download_path):
             return side_effect_create_mock_tool(
@@ -232,7 +230,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
 
     # Local file tool is a local file.
     local_plugin_path = (
-        tmp_path / "path" / "to" / "linuxdeploy-plugin-sometool-wonky.AppImage"
+        tmp_path / "path" / "to" / "linuxdeploy-plugin-sometool-i386.AppImage"
     )
     create_mock_appimage(local_plugin_path)
 
@@ -260,7 +258,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
     # Local file plugin is as expected
     assert isinstance(plugins["sometool"], LinuxDeployLocalFilePlugin)
     assert plugins["sometool"].env == {"QUALITY": "really nice"}
-    assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-wonky.AppImage").exists()
+    assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-i386.AppImage").exists()
 
     # URL plugin is as expected
     assert isinstance(plugins["network"], LinuxDeployURLPlugin)

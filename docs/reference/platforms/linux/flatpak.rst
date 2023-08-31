@@ -2,6 +2,16 @@
 Flatpak
 =======
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+|        |       |     |        |       | |v| | |f|    | |v| | |v|   |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 `Flatpak <https://flatpak.org>`__ provides a way for developers to distribute
 apps to Linux users in a format that is independent of the specific distribution
 used by the end-user. It allow packaging applications for use on any common

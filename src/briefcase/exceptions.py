@@ -103,6 +103,18 @@ class MissingToolError(BriefcaseCommandError):
         super().__init__(msg=f"Unable to locate {tool!r}. Has it been installed?")
 
 
+class IncompatibleToolError(BriefcaseCommandError):
+    def __init__(self, tool: str, env_var: str):
+        self.tool = tool
+        super().__init__(
+            msg=f"""\
+Briefcase cannot install {tool} on this machine.
+
+Install {tool} manually and specify the installation directory in the {env_var} environment variable.
+            """
+        )
+
+
 class NonManagedToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool
@@ -153,16 +165,18 @@ class MissingAppMetadata(BriefcaseCommandError):
 
 
 class MissingSupportPackage(BriefcaseCommandError):
-    def __init__(self, python_version_tag, platform, host_arch):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
         self.python_version_tag = python_version_tag
         self.platform = platform
         self.host_arch = host_arch
+        self.is_32bit = is_32bit
+        platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
             f"""\
-Unable to download {self.platform} support package for Python {self.python_version_tag} on {self.host_arch}.
+Unable to download {platform_name} support package for Python {self.python_version_tag} on {self.host_arch}.
 
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch}
-is not yet supported on {self.platform}. You will need to:
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
+supported on {platform_name}. You will need to:
     * Use an older version of Python; or
     * Compile your own custom support package.
 """

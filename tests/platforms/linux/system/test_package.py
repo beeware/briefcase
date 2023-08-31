@@ -1,9 +1,11 @@
+import subprocess
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.system import LinuxSystemPackageCommand
 
 
@@ -16,9 +18,6 @@ def package_command(monkeypatch, first_app, tmp_path):
         data_path=tmp_path / "briefcase",
     )
     command.tools.home_path = tmp_path / "home"
-
-    # Set the host architecture for test purposes.
-    command.tools.host_arch = "wonky"
 
     # Run outside docker for these tests.
     command.target_image = None
@@ -36,7 +35,7 @@ def package_command(monkeypatch, first_app, tmp_path):
 
 
 def test_formats(package_command):
-    "The supported packaging formats are as expected."
+    """The supported packaging formats are as expected."""
     assert package_command.packaging_formats == ["deb", "rpm", "pkg", "system"]
 
 
@@ -67,11 +66,24 @@ def test_formats(package_command):
     ],
 )
 def test_distribution_path(
-    package_command, first_app, format, vendor, codename, revision, filename, tmp_path
+    package_command,
+    first_app,
+    format,
+    vendor,
+    codename,
+    revision,
+    filename,
+    tmp_path,
 ):
     first_app.packaging_format = format
     first_app.target_vendor = vendor
     first_app.target_codename = codename
+
+    # Mock return value for ABI from packaging system
+    package_command.tools[first_app].app_context = mock.MagicMock(spec_set=Subprocess)
+    package_command.tools[first_app].app_context.check_output = mock.MagicMock(
+        return_value="wonky"
+    )
 
     if revision:
         first_app.revision = revision
@@ -80,6 +92,33 @@ def test_distribution_path(
         package_command.distribution_path(first_app)
         == tmp_path / "base_path" / "dist" / filename
     )
+
+    # Confirm ABI was requested from build env
+    package_command.tools[first_app].app_context.check_output.assert_called_with(
+        {
+            "deb": ["dpkg", "--print-architecture"],
+            "rpm": ["rpm", "--eval", "%_target_cpu"],
+            "pkg": ["pacman-conf", "Architecture"],
+        }[format]
+    )
+
+
+@pytest.mark.parametrize("format", ["rpm", "deb", "pkg"])
+def test_build_env_abi_failure(package_command, first_app, format):
+    """If the subprocess to get the build ABI fails, an error is raised."""
+    first_app.packaging_format = format
+
+    # Mock return value for ABI from packaging system
+    package_command.tools[first_app].app_context = mock.MagicMock(spec_set=Subprocess)
+    package_command.tools[first_app].app_context.check_output = mock.MagicMock(
+        side_effect=subprocess.CalledProcessError(returncode=1, cmd="pkg -arch")
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Failed to determine build environment's ABI for packaging.",
+    ):
+        getattr(package_command, f"{format}_abi")(first_app)
 
 
 @pytest.mark.parametrize(
@@ -102,9 +141,13 @@ def test_distribution_path(
     ],
 )
 def test_adjust_packaging_format(
-    package_command, first_app, base_vendor, input_format, output_format
+    package_command,
+    first_app,
+    base_vendor,
+    input_format,
+    output_format,
 ):
-    "The packaging format can be adjusted based on host system knowledge"
+    """The packaging format can be adjusted based on host system knowledge."""
     first_app.target_vendor_base = base_vendor
     first_app.packaging_format = input_format
 
@@ -171,7 +214,7 @@ def test_package_pkg_app(package_command, first_app):
 
 
 def test_package_unknown_format(package_command, first_app):
-    "Unknown/unsupported packaging formats raise an error"
+    """Unknown/unsupported packaging formats raise an error."""
     # Set the packaging format
     first_app.packaging_format = "unknown"
 

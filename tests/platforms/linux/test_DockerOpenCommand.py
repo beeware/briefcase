@@ -22,9 +22,18 @@ def open_command(tmp_path):
     )
     command.tools.os = MagicMock(spec_set=os)
 
+    # Mock x86_64 for linuxdeploy verification
+    command.tools.host_arch = "x86_64"
+
     # Store the underlying subprocess instance
     command._subprocess = MagicMock(spec_set=Subprocess)
     command.tools.subprocess = command._subprocess
+
+    # Mock existence of linuxdeploy in tools
+    create_file(
+        command.tools.base_path / "linuxdeploy-x86_64.AppImage",
+        content="",
+    )
 
     return command
 
@@ -121,7 +130,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS specific test")
 def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
-    """On macOS, Open runs `open` on the project folder if we specify --no- docker."""
+    """On macOS, Open runs `open` on the project folder if we specify --no-docker."""
     # Create the desktop file that would be in the project folder.
     create_file(
         open_command.project_path(first_app_config)
