@@ -263,12 +263,22 @@ class CreateCommand(BaseCommand):
         :param support_file_path: The path to the support file to be unpacked.
         :param support_path: The path where support files should be unpacked.
         """
+        # Additional protections for unpacking tar files were introduced in Python 3.12.
+        # This enables the behavior that will be the default in Python 3.14.
+        # However, the protections can only be enabled for tar files...not zip files.
+        is_zip = support_file_path.name.endswith("zip")
+        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
+            tarfile_kwargs = {"filter": "data"}
+        else:
+            tarfile_kwargs = {}
+
         try:
             with self.input.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
                 self.tools.shutil.unpack_archive(
                     support_file_path,
                     extract_dir=support_path,
+                    **tarfile_kwargs,
                 )
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e

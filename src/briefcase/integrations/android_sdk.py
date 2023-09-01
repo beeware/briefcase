@@ -6,6 +6,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import time
 from contextlib import suppress
 from datetime import datetime
@@ -806,7 +807,11 @@ connection.
         # Unpack skin archive
         with self.tools.input.wait_bar("Installing device skin..."):
             try:
-                self.tools.shutil.unpack_archive(skin_tgz_path, extract_dir=skin_path)
+                self.tools.shutil.unpack_archive(
+                    skin_tgz_path,
+                    extract_dir=skin_path,
+                    **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
+                )
             except (shutil.ReadError, EOFError) as err:
                 raise BriefcaseCommandError(
                     f"Unable to unpack {skin} device skin."
