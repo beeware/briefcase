@@ -35,7 +35,6 @@ with Briefcase by testing for the existence of the ``Briefcase-Version`` tag::
 
     in_briefcase = 'Briefcase-Version' in metadata
 
-
 Can I use third-party Python packages in my app?
 ------------------------------------------------
 
@@ -54,10 +53,9 @@ are hosted on the `Chaquopy package index <https://chaquo.com/pypi-7.0/>`__; iOS
 binary wheels are available on the `BeeWare repository on anaconda.org
 <https://anaconda.org/beeware/repo>`__.
 
-The Android and iOS repositories do not have binary wheels for *every* package
-that is on PyPI. If you experience problems when building or running an app on a
-mobile platform that appear to be related to a missing dependency, check the
-build logs for your app. If you see:
+However, the Android and iOS repositories do not have binary wheels for *every* package
+that needs them. If you see any of the following messages when building an app for a
+mobile platform, then the package (or this version of it) probably isn't supported yet:
 
 * On Android: the error `"Chaquopy cannot compile native code"
   <https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code>`__
@@ -65,7 +63,7 @@ build logs for your app. If you see:
 * A reference to downloading a ``.tar.gz`` version of the package
 * A reference to ``Building wheels for collected packages: <package>``
 
-The binary dependency isn't supported on mobile. Binary mobile packages are
-currently maintained by the BeeWare team; if you have a particular third-party
-package that you'd like us to support, `open a ticket
-<https://github.com/beeware/briefcase>`__ providing details.
+Binary mobile packages are currently maintained by the BeeWare team. If you have a
+particular package that you'd like us to support, please visit the issue tracker for
+`Android <https://github.com/chaquo/chaquopy/issues>`__ or `iOS
+<https://github.com/freakboy3742/chaquopy/issues>`__.
