@@ -1,0 +1,1 @@
+Updated pre-commit from 3.3.3 to 3.4.0.
