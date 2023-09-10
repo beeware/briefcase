@@ -9,3 +9,4 @@ covers how to publish your app to the appropriate distribution system.
    :maxdepth: 1
 
    android
+   iOS
