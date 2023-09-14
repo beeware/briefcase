@@ -224,9 +224,9 @@ class ToolCache(Mapping):
 
         :returns: a character encoding (upper-cased), e.g. UTF-8. Defaults to UTF-8.
         """
-        if sys.version_info < (3, 11):  # pragma: no-cover-if-lt-py311
+        if sys.version_info < (3, 11):  # pragma: no-cover-if-gte-py311
             encoding = locale.getdefaultlocale()[1]  # deprecated in Python 3.11
-        else:
+        else:  # pragma: no-cover-if-lt-py311
             encoding = locale.getencoding()
 
         if not encoding:
