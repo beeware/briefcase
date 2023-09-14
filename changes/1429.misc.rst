@@ -1,0 +1,1 @@
+The coverage exclusion for a finally block exit was removed after the issue was fixed upstream.

@@ -575,8 +575,7 @@ password:
         finally:
             # Clean up house; we don't need the archive anymore.
             if archive_filename != filename:
-                # coverage exclusion required for https://github.com/python/cpython/issues/105658
-                self.tools.os.unlink(archive_filename)  # no-cover-if-is-py312
+                self.tools.os.unlink(archive_filename)
 
         try:
             self.logger.info()
