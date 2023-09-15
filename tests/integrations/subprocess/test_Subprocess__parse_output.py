@@ -44,12 +44,14 @@ def test_call_with_arg(mock_sub, capsys, sub_check_output_kw):
     """Any extra keyword arguments are passed through as-is to check_output."""
 
     output = mock_sub.parse_output(
-        splitlines_parser, ["hello", "world"], extra_arg="asdf"
+        splitlines_parser,
+        ["hello", "world"],
+        extra_kw="extra",
     )
 
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
-        extra_arg="asdf",
+        extra_kw="extra",
         **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
@@ -102,16 +104,16 @@ def test_call_with_parser_error(mock_sub, capsys, sub_check_output_kw):
         ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": False}, {"text": False}),
-        ({"universal_newlines": False}, {"universal_newlines": False}),
+        ({"universal_newlines": False}, {"text": False}),
         (
             {"universal_newlines": True},
-            {"universal_newlines": True, "encoding": ANY, "errors": "backslashreplace"},
+            {"text": True, "encoding": ANY, "errors": "backslashreplace"},
         ),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """If text or universal_newlines is explicitly provided, those should override
-    text=true default."""
+    text=true default and universal_newlines should be converted to text."""
 
     mock_sub.parse_output(splitlines_parser, ["hello", "world"], **in_kwargs)
 

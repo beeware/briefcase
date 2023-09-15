@@ -16,6 +16,8 @@ def test_install_requirements_no_error(dev_command, first_app):
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -25,6 +27,7 @@ def test_install_requirements_no_error(dev_command, first_app):
             "packagethree",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
 
@@ -46,6 +49,8 @@ def test_install_requirements_error(dev_command, first_app):
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -55,6 +60,7 @@ def test_install_requirements_error(dev_command, first_app):
             "packagethree",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
 
@@ -78,6 +84,8 @@ def test_install_requirements_test_mode(dev_command, first_app):
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -89,6 +97,7 @@ def test_install_requirements_test_mode(dev_command, first_app):
             "test_two",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
 
@@ -103,6 +112,8 @@ def test_only_test_requirements(dev_command, first_app):
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -111,4 +122,5 @@ def test_only_test_requirements(dev_command, first_app):
             "test_two",
         ],
         check=True,
+        encoding="UTF-8",
     )

@@ -159,10 +159,9 @@ def test_call_with_arg_and_env(
             "MAGIC": "True",
             "IMPORTANCE": "super high",
         },
-        universal_newlines=True,
+        extra_kw="extra",
     )
 
-    sub_stream_kw.pop("text")
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_once_with(
         [
             "docker",
@@ -180,7 +179,7 @@ def test_call_with_arg_and_env(
             "hello",
             "world",
         ],
-        universal_newlines=True,
+        extra_kw="extra",
         **sub_stream_kw,
     )
     assert capsys.readouterr().out == (

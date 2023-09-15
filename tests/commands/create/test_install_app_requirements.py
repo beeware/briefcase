@@ -120,6 +120,8 @@ def test_app_packages_valid_requires(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -133,6 +135,7 @@ def test_app_packages_valid_requires(
             "third>=3.2.1",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -171,6 +174,8 @@ def test_app_packages_valid_requires_no_support_package(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -184,6 +189,7 @@ def test_app_packages_valid_requires_no_support_package(
             "third>=3.2.1",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
     # Original app definitions haven't changed
@@ -217,6 +223,8 @@ def test_app_packages_invalid_requires(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -228,6 +236,7 @@ def test_app_packages_invalid_requires(
             "does-not-exist",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -270,6 +279,8 @@ def test_app_packages_offline(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -283,6 +294,7 @@ def test_app_packages_offline(
             "third",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -325,6 +337,8 @@ def test_app_packages_install_requirements(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -338,6 +352,7 @@ def test_app_packages_install_requirements(
             "third",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -390,6 +405,8 @@ def test_app_packages_replace_existing_requirements(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -403,6 +420,7 @@ def test_app_packages_replace_existing_requirements(
             "third",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -680,6 +698,8 @@ def test_app_packages_test_requires(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -693,6 +713,7 @@ def test_app_packages_test_requires(
             "third>=3.2.1",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -726,6 +747,8 @@ def test_app_packages_test_requires_test_mode(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -741,6 +764,7 @@ def test_app_packages_test_requires_test_mode(
             "pytest-tldr",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)
@@ -775,6 +799,8 @@ def test_app_packages_only_test_requires_test_mode(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -787,6 +813,7 @@ def test_app_packages_only_test_requires_test_mode(
             "pytest-tldr",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 create_command.bundle_path(myapp)

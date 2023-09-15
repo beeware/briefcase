@@ -25,6 +25,7 @@ def test_logcat(mock_tools, adb):
             "EGL_emulation:S",
         ],
         env=mock_tools.android_sdk.env,
+        encoding="UTF-8",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,

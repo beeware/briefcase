@@ -1,7 +1,7 @@
 import os
 import sys
 from subprocess import CalledProcessError
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 import requests
@@ -14,7 +14,7 @@ from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path, first_app_generated):
+def build_command(tmp_path, first_app_generated, monkeypatch):
     command = GradleBuildCommand(
         logger=Log(),
         console=Console(),
@@ -27,6 +27,9 @@ def build_command(tmp_path, first_app_generated):
     command.tools.sys = MagicMock(spec_set=sys)
     command.tools.requests = MagicMock(spec_set=requests)
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    monkeypatch.setattr(
+        type(command.tools), "system_encoding", PropertyMock(return_value="ISO-42")
+    )
     return command
 
 
@@ -86,6 +89,7 @@ def test_build_app(
         cwd=build_command.bundle_path(first_app_generated),
         env=build_command.tools.android_sdk.env,
         check=True,
+        encoding="ISO-42",
     )
 
     # The app metadata contains the app module
@@ -152,6 +156,7 @@ def test_build_app_test_mode(
         cwd=build_command.bundle_path(first_app_generated),
         env=build_command.tools.android_sdk.env,
         check=True,
+        encoding="ISO-42",
     )
 
     # The app metadata contains the app module

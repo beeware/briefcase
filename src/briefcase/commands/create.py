@@ -488,6 +488,8 @@ class CreateCommand(BaseCommand):
                         [
                             sys.executable,
                             "-u",
+                            "-X",
+                            "utf8",
                             "-m",
                             "pip",
                             "install",
@@ -500,6 +502,7 @@ class CreateCommand(BaseCommand):
                         + self._extra_pip_args(app)
                         + self._pip_requires(app, requires),
                         check=True,
+                        encoding="UTF-8",
                         **self._pip_kwargs(app),
                     )
                 except subprocess.CalledProcessError as e:

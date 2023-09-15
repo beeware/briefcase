@@ -91,6 +91,8 @@ class DevCommand(RunAppMixin, BaseCommand):
                         [
                             sys.executable,
                             "-u",
+                            "-X",
+                            "utf8",
                             "-m",
                             "pip",
                             "install",
@@ -98,6 +100,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                         ]
                         + requires,
                         check=True,
+                        encoding="UTF-8",
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
@@ -126,6 +129,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         app_popen = self.tools.subprocess.Popen(
             [
+                # Do not add additional switches for sys.executable; see DEV_ENVIRONMENT
                 sys.executable,
                 "-c",
                 (
@@ -136,6 +140,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 ),
             ],
             env=env,
+            encoding="UTF-8",
             cwd=self.tools.home_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

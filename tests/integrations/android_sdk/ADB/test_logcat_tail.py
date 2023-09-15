@@ -31,6 +31,7 @@ def test_logcat_tail(mock_tools, adb):
         ],
         env=mock_tools.android_sdk.env,
         check=True,
+        encoding="UTF-8",
     )
 
 

@@ -45,6 +45,8 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -60,6 +62,7 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             "other>=2.3.4",
         ],
         check=True,
+        encoding="UTF-8",
         env={
             "PYTHONPATH": str(
                 tmp_path

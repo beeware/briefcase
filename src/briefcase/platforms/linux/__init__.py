@@ -165,6 +165,8 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                             self.tools.subprocess.check_output(
                                 [
                                     sys.executable,
+                                    "-X",
+                                    "utf8",
                                     "-m",
                                     "build",
                                     "--sdist",
@@ -172,6 +174,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                                     local_requirements_path,
                                     requirement,
                                 ],
+                                encoding="UTF-8",
                             )
                         except subprocess.CalledProcessError as e:
                             raise BriefcaseCommandError(
