@@ -1557,6 +1557,8 @@ Activity class not found while starting app.
         :param pid: The PID whose logs you want to display.
         :returns: A Popen object for the logcat call
         """
+        # As best as we can make out, adb logcat returns UTF-8 output.
+        # See #1425 for details.
         return self.tools.subprocess.Popen(
             [
                 os.fsdecode(self.tools.android_sdk.adb_path),
@@ -1583,6 +1585,8 @@ Activity class not found while starting app.
         :param since: The start time from which logs should be displayed
         """
         try:
+            # As best as we can make out, adb logcat returns UTF-8 output.
+            # See #1425 for details.
             self.tools.subprocess.run(
                 [
                     os.fsdecode(self.tools.android_sdk.adb_path),

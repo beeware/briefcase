@@ -130,6 +130,7 @@ class GradleMixin:
             # here to avoid defaulting to the console encoding for the subprocess call.
             # This is mostly for the benefit of Windows where the system encoding may
             # not be the same as the console encoding and typically neither are UTF-8.
+            # See #1425 for details.
             encoding=self.tools.system_encoding,
         )
 
