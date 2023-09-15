@@ -67,7 +67,7 @@ def test_create_emulator(
         tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
     )
     avd_config_path.parent.mkdir(parents=True)
-    with avd_config_path.open("w") as f:
+    with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator
@@ -106,7 +106,7 @@ def test_create_emulator(
     )
 
     # Emulator configuration file has been appended.
-    with avd_config_path.open() as f:
+    with avd_config_path.open(encoding="utf-8") as f:
         config = f.read().split("\n")
     assert "hw.keyboard=yes" in config
     assert "skin.name=slab_skin" in config
@@ -146,7 +146,7 @@ def test_create_emulator_with_defaults(
         tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
     )
     avd_config_path.parent.mkdir(parents=True)
-    with avd_config_path.open("w") as f:
+    with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator using defaults
@@ -180,7 +180,7 @@ def test_create_emulator_with_defaults(
     )
 
     # Emulator configuration file has been appended.
-    with avd_config_path.open() as f:
+    with avd_config_path.open(encoding="utf-8") as f:
         config = f.read().split("\n")
     assert "hw.keyboard=yes" in config
     assert "skin.name=pixel_3a" in config
@@ -240,7 +240,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
         tmp_path / "home" / ".android" / "avd" / "beePhone.avd" / "config.ini"
     )
     avd_config_path.parent.mkdir(parents=True)
-    with avd_config_path.open("w") as f:
+    with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator
@@ -271,7 +271,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
         tmp_path / "home" / ".android" / "avd" / "beePhone3.avd" / "config.ini"
     )
     avd_config_path.parent.mkdir(parents=True)
-    with avd_config_path.open("w") as f:
+    with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
     # Create the emulator

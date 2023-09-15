@@ -35,7 +35,7 @@ def create_file(filepath, content, mode="w", chmod=None):
     :returns: The path to the file that was created.
     """
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    with filepath.open(mode) as f:
+    with filepath.open(mode, encoding="utf-8") as f:
         f.write(content)
 
     if chmod:

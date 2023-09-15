@@ -54,7 +54,7 @@ def side_effect_create_mock_tool(tool_path):
 
     def _side_effect(*args, **kwargs):
         tool_path.parent.mkdir(parents=True)
-        with tool_path.open("w") as f:
+        with tool_path.open("w", encoding="utf-8") as f:
             f.write("I am a complete tool")
         return "new-downloaded-file"
 

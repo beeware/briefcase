@@ -708,7 +708,7 @@ with your app's licensing terms.
         with self.input.wait_bar("Installing changelog..."):
             changelog = self.base_path / "CHANGELOG"
             if changelog.is_file():
-                with changelog.open() as infile:
+                with changelog.open(encoding="utf-8") as infile:
                     outfile = gzip.GzipFile(
                         doc_folder / "changelog.gz", mode="wb", mtime=0
                     )
@@ -738,7 +738,7 @@ with details about the release.
         with self.input.wait_bar("Installing man page..."):
             manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
             if manpage_source.is_file():
-                with manpage_source.open() as infile:
+                with manpage_source.open(encoding="utf-8") as infile:
                     outfile = gzip.GzipFile(
                         man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
                     )

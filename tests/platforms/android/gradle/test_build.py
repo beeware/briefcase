@@ -103,7 +103,7 @@ def test_build_app(
         / "gradle"
         / "res"
         / "briefcase.xml"
-    ).open() as f:
+    ).open(encoding="utf-8") as f:
         assert (
             f.read()
             == "\n".join(
@@ -170,7 +170,7 @@ def test_build_app_test_mode(
         / "gradle"
         / "res"
         / "briefcase.xml"
-    ).open() as f:
+    ).open(encoding="utf-8") as f:
         assert (
             f.read()
             == "\n".join(
