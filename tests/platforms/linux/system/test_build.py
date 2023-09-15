@@ -51,7 +51,7 @@ def test_build_app(build_command, first_app, tmp_path):
     # The license file has been installed
     doc_path = bundle_path / "first-app-0.0.1" / "usr" / "share" / "doc" / "first-app"
     assert (doc_path / "copyright").exists()
-    with (doc_path / "copyright").open() as f:
+    with (doc_path / "copyright").open(encoding="utf-8") as f:
         assert f.read() == "First App License"
 
     # The Changelog has been compressed and installed
@@ -163,7 +163,7 @@ def test_missing_changelog(build_command, first_app, tmp_path):
     # The license file has been installed
     doc_path = bundle_path / "first-app-0.0.1" / "usr" / "share" / "doc" / "first-app"
     assert (doc_path / "copyright").exists()
-    with (doc_path / "copyright").open() as f:
+    with (doc_path / "copyright").open(encoding="utf-8") as f:
         assert f.read() == "First App License"
 
 
@@ -193,7 +193,7 @@ def test_missing_manpage(build_command, first_app, tmp_path):
     # The license file has been installed
     doc_path = bundle_path / "first-app-0.0.1" / "usr" / "share" / "doc" / "first-app"
     assert (doc_path / "copyright").exists()
-    with (doc_path / "copyright").open() as f:
+    with (doc_path / "copyright").open(encoding="utf-8") as f:
         assert f.read() == "First App License"
 
     # The Changelog has been compressed and installed

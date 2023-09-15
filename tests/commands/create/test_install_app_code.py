@@ -237,17 +237,17 @@ def test_no_existing_app_folder(
 
     # All the new sources exist, and contain the new content.
     assert (app_path / "demo.py").exists()
-    with (app_path / "demo.py").open() as f:
+    with (app_path / "demo.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello first')\n"
 
     assert (app_path / "second").exists()
     assert (app_path / "second" / "shallow.py").exists()
-    with (app_path / "second" / "shallow.py").open() as f:
+    with (app_path / "second" / "shallow.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello shallow second')\n"
 
     assert (app_path / "second" / "submodule").exists()
     assert (app_path / "second" / "submodule" / "deeper.py").exists()
-    with (app_path / "second" / "submodule" / "deeper.py").open() as f:
+    with (app_path / "second" / "submodule" / "deeper.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello deep second')\n"
 
     # The stale/broken modules have been removed.
@@ -340,17 +340,17 @@ def test_replace_sources(
 
     # All the new sources exist, and contain the new content.
     assert (app_path / "demo.py").exists()
-    with (app_path / "demo.py").open() as f:
+    with (app_path / "demo.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello first')\n"
 
     assert (app_path / "second").exists()
     assert (app_path / "second" / "shallow.py").exists()
-    with (app_path / "second" / "shallow.py").open() as f:
+    with (app_path / "second" / "shallow.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello shallow second')\n"
 
     assert (app_path / "second" / "submodule").exists()
     assert (app_path / "second" / "submodule" / "deeper.py").exists()
-    with (app_path / "second" / "submodule" / "deeper.py").open() as f:
+    with (app_path / "second" / "submodule" / "deeper.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello deep second')\n"
 
     # The stale/broken modules have been removed.

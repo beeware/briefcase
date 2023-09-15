@@ -8,7 +8,7 @@ def test_avd_config(mock_tools, android_sdk, tmp_path):
     # Write a default config. It contains:
     # * blank lines
     # * a key whose value explicitly contains an equals sign.
-    with config_file.open("w") as f:
+    with config_file.open("w", encoding="utf-8") as f:
         f.write(
             """
 avd.ini.encoding=UTF-8
@@ -46,7 +46,7 @@ def test_avd_config_with_space(mock_tools, android_sdk, tmp_path):
     # * blank lines
     # * a key whose value explicitly contains an equals sign.
     # * spaces either side of the key/value separator
-    with config_file.open("w") as f:
+    with config_file.open("w", encoding="utf-8") as f:
         f.write(
             """
 avd.ini.encoding = UTF-8

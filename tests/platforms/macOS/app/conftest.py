@@ -94,9 +94,9 @@ entitlements_path="Entitlements.plist"
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # Make sure there are some files in the bundle that *don't* need to be signed...
-    with (lib_path / "first.other").open("w") as f:
+    with (lib_path / "first.other").open("w", encoding="utf-8") as f:
         f.write("other")
-    with (lib_path / "second.other").open("w") as f:
+    with (lib_path / "second.other").open("w", encoding="utf-8") as f:
         f.write("other")
 
     # A file that has a Mach-O header, but isn't executable

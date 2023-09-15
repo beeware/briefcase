@@ -10,7 +10,7 @@ from briefcase.integrations.xcode import get_identities
 def security_result(name):
     """Load a security result file from the sample directory, and return the content."""
     filename = Path(__file__).parent / "security" / f"{name}.out"
-    with filename.open() as f:
+    with filename.open(encoding="utf-8") as f:
         return f.read()
 
 

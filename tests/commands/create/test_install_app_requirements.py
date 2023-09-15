@@ -31,10 +31,11 @@ def create_installation_artefacts(app_packages_path, packages):
 
     def _create_installation_artefacts(*args, **kwargs):
         for package in packages:
-            (app_packages_path / package).mkdir(parents=True)
-            with (app_packages_path / package / "__init__.py").open("w") as f:
+            package_path = app_packages_path / package
+            package_path.mkdir(parents=True)
+            with (package_path / "__init__.py").open("w", encoding="utf-8") as f:
                 f.write("")
-            with (app_packages_path / package / "__main__.py").open("w") as f:
+            with (package_path / "__main__.py").open("w", encoding="utf-8") as f:
                 f.write('print("I am {package}")')
 
     return _create_installation_artefacts
@@ -418,7 +419,7 @@ def test_app_requirements_no_requires(
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
-    with app_requirements_path.open() as f:
+    with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == ""
 
     # Original app definitions haven't changed
@@ -441,7 +442,7 @@ def test_app_requirements_empty_requires(
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
-    with app_requirements_path.open() as f:
+    with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == ""
 
     # Original app definitions haven't changed
@@ -464,7 +465,7 @@ def test_app_requirements_requires(
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
-    with app_requirements_path.open() as f:
+    with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == "first\nsecond==1.2.3\nthird>=3.2.1\n"
 
     # Original app definitions haven't changed
@@ -510,7 +511,7 @@ def _test_app_requirements_paths(
     myapp.requires = ["first", requirement, "third"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
-    with app_requirements_path.open() as f:
+    with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == (
             "\n".join(
                 [

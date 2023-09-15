@@ -21,7 +21,7 @@ def custom_msbuild_path(tmp_path):
     """Create a dummy MSBuild executable at a custom location."""
     msbuild_path = tmp_path / "custom" / "MSBuild.exe"
     msbuild_path.parent.mkdir(parents=True)
-    with msbuild_path.open("w") as f:
+    with msbuild_path.open("w", encoding="utf-8") as f:
         f.write("Dummy MSBuild")
 
     return msbuild_path
@@ -39,7 +39,7 @@ def vswhere_path(tmp_path):
     )
 
     vswhere_path.parent.mkdir(parents=True)
-    with vswhere_path.open("w") as f:
+    with vswhere_path.open("w", encoding="utf-8") as f:
         f.write("Dummy vswhere")
 
     return vswhere_path
@@ -52,7 +52,7 @@ def msbuild_path(tmp_path):
         tmp_path / "Visual Studio" / "MSBuild" / "Current" / "Bin" / "MSBuild.exe"
     )
     msbuild_path.parent.mkdir(parents=True)
-    with msbuild_path.open("w") as f:
+    with msbuild_path.open("w", encoding="utf-8") as f:
         f.write("Dummy MSBuild")
 
     return msbuild_path

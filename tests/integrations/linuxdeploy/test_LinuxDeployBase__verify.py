@@ -142,7 +142,7 @@ def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
     mock_tools.os.chmod.assert_called_with(tool_path, 0o755)
 
     # The tool content hasn't been altered
-    with tool_path.open("r") as f:
+    with tool_path.open("r", encoding="utf-8") as f:
         assert f.read() == "I am a complete tool"
 
     # The build command retains the path to the downloaded file.
