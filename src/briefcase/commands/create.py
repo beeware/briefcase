@@ -442,31 +442,13 @@ class CreateCommand(BaseCommand):
         """
         return []
 
-    def _pip_kwargs(self, app: AppConfig):
-        """Generate the kwargs to pass when invoking pip.
-
-        :param app: The app configuration
-        :returns: The kwargs to pass to the pip call
-        """
-        # If there is a support package provided, add the cross-platform
-        # folder of the support package to the PYTHONPATH. This allows
-        # a support package to specify a sitecustomize.py that will make
-        # pip behave as if it was being run on the target platform.
-        pip_kwargs = {}
-        try:
-            pip_kwargs["env"] = {
-                "PYTHONPATH": str(self.support_path(app) / "platform-site"),
-            }
-        except KeyError:
-            pass
-
-        return pip_kwargs
-
     def _install_app_requirements(
         self,
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        progress_message: str = "Installing app requirements...",
+        pip_kwargs: dict[str, str] | None = None,
     ):
         """Install requirements for the app with pip.
 
@@ -474,6 +456,9 @@ class CreateCommand(BaseCommand):
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
+        :param progress_message: The waitbar progress message to display to the user.
+        :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
+            when invoking pip.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
@@ -482,7 +467,7 @@ class CreateCommand(BaseCommand):
 
         # Install requirements
         if requires:
-            with self.input.wait_bar("Installing app requirements..."):
+            with self.input.wait_bar(progress_message):
                 try:
                     self.tools[app].app_context.run(
                         [
@@ -500,7 +485,7 @@ class CreateCommand(BaseCommand):
                         + self._extra_pip_args(app)
                         + self._pip_requires(app, requires),
                         check=True,
-                        **self._pip_kwargs(app),
+                        **(pip_kwargs if pip_kwargs else {}),
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
