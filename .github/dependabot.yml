@@ -1,5 +1,5 @@
-
 version: 2
+
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -8,6 +8,10 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -16,3 +20,7 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+      groups:
+        pip:
+          patterns:
+            - "*"
