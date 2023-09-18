@@ -26,12 +26,11 @@ def test_call(mock_sub, capsys, platform, sub_check_output_kw):
 def test_call_with_arg(mock_sub, capsys, sub_check_output_kw):
     """Any extra keyword arguments are passed through as-is."""
 
-    mock_sub.check_output(["hello", "world"], universal_newlines=True)
+    mock_sub.check_output(["hello", "world"], extra_kw="extra")
 
-    sub_check_output_kw.pop("text")
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
-        universal_newlines=True,
+        extra_kw="extra",
         **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
@@ -353,12 +352,12 @@ def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
         ({"text": False}, {"text": False, "stderr": subprocess.STDOUT}),
         (
             {"universal_newlines": False},
-            {"universal_newlines": False, "stderr": subprocess.STDOUT},
+            {"text": False, "stderr": subprocess.STDOUT},
         ),
         (
             {"universal_newlines": True},
             {
-                "universal_newlines": True,
+                "text": True,
                 "encoding": ANY,
                 "stderr": subprocess.STDOUT,
                 "errors": "backslashreplace",
@@ -368,7 +367,7 @@ def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """If text or universal_newlines is explicitly provided, those should override
-    text=true default."""
+    text=true default and universal_newlines should be converted to text."""
     mock_sub.check_output(["hello", "world"], stderr=subprocess.STDOUT, **in_kwargs)
 
     mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], **kwargs)

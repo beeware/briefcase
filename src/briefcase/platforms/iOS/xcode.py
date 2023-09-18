@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import plistlib
 import subprocess
 import time
 from pathlib import Path
-from typing import List
 from uuid import UUID
 
 from briefcase.commands import (
@@ -389,7 +390,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         udid=None,
         **kwargs,
     ):

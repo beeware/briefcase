@@ -174,6 +174,8 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
             "briefcase/com.example.first-app:py3.X",
             "python3.X",
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -186,6 +188,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
             "bar>=4.5",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
     # The local requirements path exists, but is empty
@@ -229,6 +232,8 @@ def test_install_app_requirements_no_docker(
         [
             sys.executable,
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -241,6 +246,7 @@ def test_install_app_requirements_no_docker(
             "bar>=4.5",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
     # The local requirements path exists, but is empty
@@ -290,6 +296,8 @@ def test_install_app_requirements_with_locals(
     create_command.tools.subprocess.check_output.assert_called_once_with(
         [
             sys.executable,
+            "-X",
+            "utf8",
             "-m",
             "build",
             "--sdist",
@@ -302,7 +310,8 @@ def test_install_app_requirements_with_locals(
             / "dummy"
             / "_requirements",
             str(tmp_path / "local" / "first"),
-        ]
+        ],
+        encoding="UTF-8",
     )
 
     # An attempt was made to copy the prebuilt packages
@@ -342,6 +351,8 @@ def test_install_app_requirements_with_locals(
             "briefcase/com.example.first-app:py3.X",
             "python3.X",
             "-u",
+            "-X",
+            "utf8",
             "-m",
             "pip",
             "install",
@@ -357,6 +368,7 @@ def test_install_app_requirements_with_locals(
             "/app/_requirements/third-3.4.5-py3-none-any.whl",
         ],
         check=True,
+        encoding="UTF-8",
     )
 
     # The local requirements path exists, and contains the compiled sdist, the
@@ -403,6 +415,8 @@ def test_install_app_requirements_with_bad_local(
     create_command.tools.subprocess.check_output.assert_called_once_with(
         [
             sys.executable,
+            "-X",
+            "utf8",
             "-m",
             "build",
             "--sdist",
@@ -415,7 +429,8 @@ def test_install_app_requirements_with_bad_local(
             / "dummy"
             / "_requirements",
             str(tmp_path / "local" / "first"),
-        ]
+        ],
+        encoding="UTF-8",
     )
 
     # pip was *not* invoked inside docker.

@@ -38,7 +38,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
-        if args[0][3] == "wheel":
+        if args[0][5] == "wheel":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
@@ -46,7 +46,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
                 ],
             ),
-        elif args[0][3] == "pip":
+        elif args[0][5] == "pip":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "dependency",
@@ -85,6 +85,8 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -93,11 +95,14 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
                 "wheel",
@@ -107,6 +112,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            encoding="UTF-8",
         ),
     ]
 
@@ -249,6 +255,8 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -257,11 +265,14 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
                 "wheel",
@@ -271,6 +282,7 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            encoding="UTF-8",
         ),
     ]
 
@@ -291,7 +303,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
-        if args[0][3] == "wheel":
+        if args[0][5] == "wheel":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
@@ -299,7 +311,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
                 ],
             ),
-        elif args[0][3] == "pip":
+        elif args[0][5] == "pip":
             pass
         else:
             raise ValueError("Unknown command")
@@ -325,6 +337,8 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -333,11 +347,14 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
                 "wheel",
@@ -347,6 +364,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            encoding="UTF-8",
         ),
     ]
 
@@ -422,6 +440,8 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -430,6 +450,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
     ]
 
@@ -474,6 +495,8 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -482,11 +505,14 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
                 "wheel",
@@ -496,6 +522,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            encoding="UTF-8",
         ),
     ]
 

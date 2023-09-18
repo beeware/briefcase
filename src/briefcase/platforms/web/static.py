@@ -137,6 +137,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     [
                         sys.executable,
                         "-u",
+                        "-X",
+                        "utf8",
                         "-m",
                         "wheel",
                         "pack",
@@ -145,6 +147,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         self.wheel_path(app),
                     ],
                     check=True,
+                    encoding="UTF-8",
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -157,6 +160,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     [
                         sys.executable,
                         "-u",
+                        "-X",
+                        "utf8",
                         "-m",
                         "pip",
                         "wheel",
@@ -166,6 +171,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         self.bundle_path(app) / "requirements.txt",
                     ],
                     check=True,
+                    encoding="UTF-8",
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(

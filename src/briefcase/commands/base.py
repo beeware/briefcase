@@ -159,6 +159,9 @@ class BaseCommand(ABC):
         Subprocess.verify(tools=self.tools)
         Download.verify(tools=self.tools)
 
+        if not is_clone:
+            self.validate_locale()
+
         self.global_config = None
         self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
 
@@ -249,6 +252,28 @@ a custom location for Briefcase's tools.
                 )
 
         return Path(data_path)
+
+    def validate_locale(self):
+        """Validate the system's locale is compatible."""
+        if self.tools.host_os == "Linux" and self.tools.system_encoding != "UTF-8":
+            self.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Default system encoding is not supported                   **
+*************************************************************************
+
+    Briefcase and the third-party tools it uses only support UTF-8.
+
+    The detected default system encoding is {self.tools.system_encoding}.
+
+    Briefcase will proceed but some console output could be corrupted and
+    created files or artefacts may contain corrupted text.
+
+    Update your system's encoding to UTF-8 to avoid issues.
+
+*************************************************************************
+"""
+            )
 
     def _command_factory(self, command_name: str):
         """Command factory for the current platform and format.
@@ -833,9 +858,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 ** WARNING: Unable to update template                                  **
 *************************************************************************
 
-   Briefcase is unable the update the application template. This
-   may be because your computer is currently offline. Briefcase will
-   use existing template without updating.
+    Briefcase is unable the update the application template. This
+    may be because your computer is currently offline. Briefcase will
+    use existing template without updating.
 
 *************************************************************************
 """

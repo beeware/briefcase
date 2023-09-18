@@ -1,9 +1,11 @@
 import importlib
+import locale
 import os
 import platform
 import shutil
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 import requests
@@ -179,3 +181,27 @@ def test_is_32bit_python(maxsize, is_32bit, monkeypatch, tmp_path):
     )
 
     assert tools.is_32bit_python is is_32bit
+
+
+@pytest.mark.parametrize(
+    "mock_encoding, expected_encoding",
+    [
+        ("iso-123", "ISO-123"),
+        ("", "ISO-4242"),
+        (None, "ISO-4242"),
+    ],
+)
+def test_system_encoding(simple_tools, mock_encoding, expected_encoding, monkeypatch):
+    """The expected system encoding is returned."""
+    if sys.version_info < (3, 11):
+        monkeypatch.setattr(
+            locale, "getdefaultlocale", MagicMock(return_value=("aa_BB", mock_encoding))
+        )
+    else:
+        monkeypatch.setattr(
+            locale, "getencoding", MagicMock(return_value=mock_encoding)
+        )
+    monkeypatch.setattr(
+        briefcase.integrations.base, "DEFAULT_SYSTEM_ENCODING", "ISO-4242"
+    )
+    assert simple_tools.system_encoding == expected_encoding

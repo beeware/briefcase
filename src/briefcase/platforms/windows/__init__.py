@@ -143,6 +143,7 @@ class WindowsRunCommand(RunCommand):
         app_popen = self.tools.subprocess.Popen(
             [os.fsdecode(self.binary_path(app))] + passthrough,
             cwd=self.tools.home_path,
+            encoding="UTF-8",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,

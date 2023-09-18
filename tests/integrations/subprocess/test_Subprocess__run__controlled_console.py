@@ -28,12 +28,11 @@ def test_call_with_arg(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """Any extra keyword arguments are passed through as-is."""
 
     with mock_sub.tools.input.wait_bar():
-        mock_sub.run(["hello", "world"], universal_newlines=True)
+        mock_sub.run(["hello", "world"], extra_kw="extra")
 
-    sub_stream_kw.pop("text")
     mock_sub._subprocess.Popen.assert_called_with(
         ["hello", "world"],
-        universal_newlines=True,
+        extra_kw="extra",
         **sub_stream_kw,
     )
     # fmt: off
@@ -121,21 +120,16 @@ def test_debug_call_with_env(mock_sub, sub_stream_kw, sleep_zero, capsys, tmp_pa
         ),
         ({"text": False}, {"text": False, "bufsize": 1}),
         ({"text": False, "bufsize": 42}, {"text": False, "bufsize": 42}),
-        ({"universal_newlines": False}, {"universal_newlines": False, "bufsize": 1}),
+        ({"universal_newlines": False}, {"text": False, "bufsize": 1}),
         (
             {"universal_newlines": True},
-            {
-                "universal_newlines": True,
-                "encoding": ANY,
-                "bufsize": 1,
-                "errors": "backslashreplace",
-            },
+            {"text": True, "encoding": ANY, "bufsize": 1, "errors": "backslashreplace"},
         ),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs, sleep_zero):
     """If text or universal_newlines is explicitly provided, those should override
-    text=true default."""
+    text=true default and universal_newlines should be converted to text."""
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"], **in_kwargs)
 

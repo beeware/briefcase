@@ -85,14 +85,10 @@ def test_non_str_cwd_provided(mock_sub):
             {"text": True, "encoding": CONSOLE_ENCODING, "errors": "backslashreplace"},
         ),
         ({"text": False}, {"text": False}),
-        ({"universal_newlines": False}, {"universal_newlines": False}),
+        ({"universal_newlines": False}, {"text": False}),
         (
             {"universal_newlines": True},
-            {
-                "universal_newlines": True,
-                "encoding": CONSOLE_ENCODING,
-                "errors": "backslashreplace",
-            },
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "backslashreplace"},
         ),
         # Explicit encoding provided
         (
@@ -105,23 +101,15 @@ def test_non_str_cwd_provided(mock_sub):
         ),
         (
             {"text": False, "encoding": "ibm850"},
-            {"text": False, "encoding": "ibm850", "errors": "backslashreplace"},
+            {"text": True, "encoding": "ibm850", "errors": "backslashreplace"},
         ),
         (
             {"universal_newlines": False, "encoding": "ibm850"},
-            {
-                "universal_newlines": False,
-                "encoding": "ibm850",
-                "errors": "backslashreplace",
-            },
+            {"text": True, "encoding": "ibm850", "errors": "backslashreplace"},
         ),
         (
             {"universal_newlines": True, "encoding": "ibm850"},
-            {
-                "universal_newlines": True,
-                "encoding": "ibm850",
-                "errors": "backslashreplace",
-            },
+            {"text": True, "encoding": "ibm850", "errors": "backslashreplace"},
         ),
         # Explicit errors provided
         (
@@ -138,19 +126,15 @@ def test_non_str_cwd_provided(mock_sub):
         ),
         (
             {"text": False, "errors": "emojireplace"},
-            {"text": False, "errors": "emojireplace"},
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "emojireplace"},
         ),
         (
             {"universal_newlines": True, "errors": "emojireplace"},
-            {
-                "universal_newlines": True,
-                "encoding": CONSOLE_ENCODING,
-                "errors": "emojireplace",
-            },
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "emojireplace"},
         ),
         (
             {"universal_newlines": False, "errors": "emojireplace"},
-            {"universal_newlines": False, "errors": "emojireplace"},
+            {"text": True, "encoding": CONSOLE_ENCODING, "errors": "emojireplace"},
         ),
     ],
 )
