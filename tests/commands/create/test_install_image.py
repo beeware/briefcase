@@ -46,7 +46,7 @@ def test_no_requested_size(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -100,7 +100,7 @@ def test_requested_size(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -154,7 +154,7 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -190,7 +190,7 @@ def test_variant_without_variant_source_and_no_requested_size(
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -218,7 +218,7 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -248,7 +248,7 @@ def test_variant_with_size(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -284,7 +284,7 @@ def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -313,7 +313,7 @@ def test_unknown_variant_with_size(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image
@@ -343,7 +343,7 @@ def test_unsized_variant(create_command, tmp_path, capsys):
     # Create the source image
     source_file = tmp_path / "base_path" / "input" / "original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
-    with source_file.open("w") as f:
+    with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
 
     # Try to install the image

@@ -31,7 +31,7 @@ def package_command(tmp_path):
 def first_app_dmg(tmp_path):
     dmg_path = tmp_path / "base_path" / "dist" / "First App.dmg"
     dmg_path.parent.mkdir(parents=True)
-    with dmg_path.open("w") as f:
+    with dmg_path.open("w", encoding="utf-8") as f:
         f.write("DMG content here")
 
     return dmg_path

@@ -1225,7 +1225,7 @@ In future, you can specify this device by running:
         # Parse the existing config into key-value pairs
         avd_config = {}
         try:
-            with self.avd_config_filename(avd).open("r") as f:
+            with self.avd_config_filename(avd).open("r", encoding="utf-8") as f:
                 for line in f:
                     try:
                         key, value = line.rstrip().split("=", 1)
@@ -1252,7 +1252,7 @@ In future, you can specify this device by running:
         avd_config.update(updates)
 
         # Write the update configuration.
-        with self.avd_config_filename(avd).open("w") as f:
+        with self.avd_config_filename(avd).open("w", encoding="utf-8") as f:
             for key, value in avd_config.items():
                 f.write(f"{key}={value}\n")
 

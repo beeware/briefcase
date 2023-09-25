@@ -68,7 +68,7 @@ def test_create_emulator(
         tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
     )
     avd_config_path.parent.mkdir(parents=True)
-    with avd_config_path.open("w") as f:
+    with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
     # Mock the internal emulator creation method

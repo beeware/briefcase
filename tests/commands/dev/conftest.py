@@ -19,7 +19,7 @@ def dev_command(tmp_path):
 def first_app_uninstalled(tmp_path):
     # Make sure the source code exists
     (tmp_path / "src" / "first").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "src" / "first" / "__init__.py").open("w") as f:
+    with (tmp_path / "src" / "first" / "__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
     return AppConfig(
@@ -43,7 +43,7 @@ def first_app(tmp_path, first_app_uninstalled):
 def second_app(tmp_path):
     # Make sure the source code exists
     (tmp_path / "src" / "second").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "src" / "second" / "__init__.py").open("w") as f:
+    with (tmp_path / "src" / "second" / "__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
     # Create the dist-info folder
@@ -62,7 +62,7 @@ def second_app(tmp_path):
 def third_app(tmp_path):
     # Make sure the source code exists
     (tmp_path / "src" / "third").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "src" / "third" / "__init__.py").open("w") as f:
+    with (tmp_path / "src" / "third" / "__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
     # Create the dist-info folder
