@@ -257,3 +257,35 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs, sleep_zero
         bufsize=1,
         **kwargs,
     )
+
+
+@pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
+def test_filtered_output(mock_sub, capsys, platform, sub_stream_kw, sleep_zero):
+    """Streamed output can be filtered."""
+
+    # Add an output filter that replaces all spaces with newlines.
+    def space_filter(line):
+        yield from line.split(" ")
+
+    mock_sub.tools.sys.platform = platform
+    mock_sub.run(
+        ["hello", "world"],
+        filter_func=space_filter,
+    )
+
+    mock_sub._subprocess.Popen.assert_called_with(
+        ["hello", "world"],
+        **sub_stream_kw,
+    )
+    # fmt: off
+    expected_output = (
+        "output\n"
+        "line\n"
+        "1\n"
+        "\n"
+        "output\n"
+        "line\n"
+        "3\n"
+    )
+    # fmt: on
+    assert capsys.readouterr().out == expected_output
