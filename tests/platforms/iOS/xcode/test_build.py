@@ -57,7 +57,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
             "-verbose" if tool_debug_mode else "-quiet",
         ],
         check=True,
-        filter_func=mock.ANY,
+        filter_func=None if tool_debug_mode else mock.ANY,
     )
 
     # The app metadata references the app module

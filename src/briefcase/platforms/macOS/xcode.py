@@ -13,6 +13,7 @@ from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import Xcode
 from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMixin
+from briefcase.platforms.macOS.filters import XcodeBuildFilter
 
 
 class macOSXcodeMixin(macOSMixin):
@@ -70,6 +71,9 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
                         "build",
                     ],
                     check=True,
+                    filter_func=(
+                        None if self.tools.logger.is_deep_debug else XcodeBuildFilter()
+                    ),
                 )
                 self.logger.info("Build succeeded.")
             except subprocess.CalledProcessError as e:

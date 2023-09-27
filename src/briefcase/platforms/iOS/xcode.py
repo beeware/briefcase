@@ -1,5 +1,4 @@
 import plistlib
-import re
 import subprocess
 import time
 from typing import List
@@ -24,7 +23,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
-from briefcase.platforms.macOS import macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -274,48 +273,6 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
     description = "Open an existing iOS Xcode project."
 
 
-class XcodeBuildFilter:
-    # XCode 15 generates dozens of copies of the following message:
-    # ---------------------------------------------------------------------
-    # 2023-09-26 14:35:45.775 xcodebuild[75877:23947967] [MT] DVTAssertions:
-    #   Warning in /System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot11
-    #   /ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/IDEFrameworks
-    #   /IDEFrameworks-22267/IDEFoundation/Provisioning/Capabilities Infrastructure
-    #   /IDECapabilityQuerySelection.swift:103
-    # Details:  createItemModels creation requirements should not create capability
-    #   item model for a capability item model that already exists.
-    # Function: createItemModels(for:itemModelSource:)
-    # Thread:   <_NSMainThread: 0x11d60beb0>{number = 1, name = main}
-    # Please file a bug at https://feedbackassistant.apple.com with this warning
-    #   message and any useful information you can provide.
-    # ---------------------------------------------------------------------
-    # As best as I can make out, this is a bug in Xcode; but it's overwhelming and
-    # confusing, so filter it out.
-    DVT_ASSERTIONS_RE = re.compile(
-        r"\d{4}-\d{2}-\d{2} +\d+:\d{2}:\d{2}\.\d{3} xcodebuild\[\d+:\d+\] \[MT\] DVTAssertions: "
-        r"Warning in /System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot11/"
-        r"ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/IDEFrameworks/"
-        r"IDEFrameworks-22267/IDEFoundation/Provisioning"
-        r"/Capabilities Infrastructure/IDECapabilityQuerySelection.swift:\d+"
-    )
-
-    def __init__(self):
-        self.dvt_ignore_count = 0
-
-    def __call__(self, line):
-        """Filter a single line of a log.
-
-        :param line: A single line of raw system log content, including the newline.
-        """
-        if self.dvt_ignore_count:
-            self.dvt_ignore_count -= 1
-        elif self.DVT_ASSERTIONS_RE.match(line):
-            # Ignore the 4 lines after the DVTAssertions message
-            self.dvt_ignore_count = 4
-        else:
-            yield line
-
-
 class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
@@ -370,7 +327,9 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
                     ],
                     check=True,
-                    filter_func=XcodeBuildFilter(),
+                    filter_func=(
+                        None if self.tools.logger.is_deep_debug else XcodeBuildFilter()
+                    ),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
