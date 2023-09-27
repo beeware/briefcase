@@ -14,6 +14,7 @@ from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
+from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 
 try:
     import dmgbuild
@@ -25,46 +26,9 @@ except ImportError:  # pragma: no-cover-if-is-macos
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
-
-MACOS_LOG_PREFIX_REGEX = re.compile(
-    r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*?\]"
-    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-.*?\.(so|dylib)\)))? (?P<content>.*)"
-)
-
 ADHOC_IDENTITY_NAME = (
     "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
 )
-
-
-def macOS_log_clean_filter(line):
-    """Filter a macOS system log to extract the Python-generated message content.
-
-    Any system or stub messages are ignored; all logging prefixes are stripped.
-
-    :param line: The raw line from the system log
-    :returns: A tuple, containing (a) the log line, stripped of any system
-        logging context, and (b) a boolean indicating if the message should be
-        included for analysis purposes (i.e., it's Python content, not a system
-        message). Returns a single ``None`` if the line should be dumped.
-    """
-    if any(
-        [
-            # Log stream outputs the filter when it starts
-            line.startswith("Filtering the log data using "),
-            # Log stream outputs barely useful column headers on startup
-            line.startswith("Timestamp          "),
-            # iOS reports an ignorable error on startup
-            line.startswith("Error from getpwuid_r:"),
-        ]
-    ):
-        return None
-
-    match = MACOS_LOG_PREFIX_REGEX.match(line)
-    if match:
-        groups = match.groupdict()
-        return groups["content"], bool(groups["subsystem"])
-
-    return line, False
 
 
 class macOSMixin:

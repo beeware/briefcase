@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.platforms.macOS import macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 
 
 @pytest.mark.parametrize(
