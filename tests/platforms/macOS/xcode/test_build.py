@@ -1,5 +1,5 @@
 import subprocess
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -46,6 +46,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
             "build",
         ],
         check=True,
+        filter_func=None if tool_debug_mode else ANY,
     )
 
 
@@ -78,4 +79,5 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
             "build",
         ],
         check=True,
+        filter_func=ANY,
     )

@@ -23,7 +23,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
-from briefcase.platforms.macOS import macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -327,6 +327,9 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
                     ],
                     check=True,
+                    filter_func=(
+                        None if self.tools.logger.is_deep_debug else XcodeBuildFilter()
+                    ),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(

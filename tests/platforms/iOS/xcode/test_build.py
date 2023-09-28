@@ -57,6 +57,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
             "-verbose" if tool_debug_mode else "-quiet",
         ],
         check=True,
+        filter_func=None if tool_debug_mode else mock.ANY,
     )
 
     # The app metadata references the app module
@@ -99,6 +100,7 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
             "-quiet",
         ],
         check=True,
+        filter_func=mock.ANY,
     )
 
     # The app metadata has been rewritten to reference the test module
@@ -146,4 +148,5 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
             "-quiet",
         ],
         check=True,
+        filter_func=mock.ANY,
     )

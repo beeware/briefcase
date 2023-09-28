@@ -26,7 +26,10 @@ def test_run_windows_batch_script(mock_sub, batch_script):
     with mock_sub.tools.input.wait_bar("Testing..."):
         mock_sub.run([batch_script, "World"])
 
-    mock_sub._run_and_stream_output.assert_called_with([batch_script, "World"])
+    mock_sub._run_and_stream_output.assert_called_with(
+        [batch_script, "World"],
+        filter_func=None,
+    )
     mock_sub.tools.input.release_console_control.assert_called_once()
 
 
@@ -52,7 +55,10 @@ def test_run_stream_output_true(mock_sub, sub_kwargs):
     with mock_sub.tools.input.wait_bar("Testing..."):
         mock_sub.run(["Hello", "World"], **sub_kwargs)
 
-    mock_sub._run_and_stream_output.assert_called_with(["Hello", "World"])
+    mock_sub._run_and_stream_output.assert_called_with(
+        ["Hello", "World"],
+        filter_func=None,
+    )
     mock_sub.tools.input.release_console_control.assert_not_called()
 
 
@@ -82,7 +88,11 @@ def test_negative_condition_not_controlled(
     """Passthrough to Subprocess if conditions to release console control are not met
     while the console is not controlled."""
     mock_sub.run(cmdline, **kwargs)
-    mock_sub._run_and_stream_output.assert_called_with(cmdline, **kwargs)
+    mock_sub._run_and_stream_output.assert_called_with(
+        cmdline,
+        filter_func=None,
+        **kwargs,
+    )
 
     mock_sub.check_output(cmdline, **kwargs)
 
@@ -106,7 +116,11 @@ def test_negative_condition_controlled(mock_sub, cmdline, kwargs, sub_check_outp
         mock_sub.run(cmdline, **kwargs)
         mock_sub.check_output(cmdline, **kwargs)
 
-    mock_sub._run_and_stream_output.assert_called_with(cmdline, **kwargs)
+    mock_sub._run_and_stream_output.assert_called_with(
+        cmdline,
+        filter_func=None,
+        **kwargs,
+    )
     final_kwargs = {**sub_check_output_kw, **kwargs}
     mock_sub._subprocess.check_output.assert_called_with(cmdline, **final_kwargs)
     mock_sub.tools.input.release_console_control.assert_not_called()

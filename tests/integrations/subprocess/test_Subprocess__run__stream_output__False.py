@@ -224,3 +224,17 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     mock_sub.run(["hello", "world"], stream_output=False, **in_kwargs)
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], **kwargs)
+
+
+def test_call_with_filter_func(mock_sub, capsys, sub_kw):
+    """Providing a filter function when not streaming raises an exception."""
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cannot apply a filter to non-streamed output",
+    ):
+        mock_sub.run(
+            ["hello", "world"],
+            filter_func=lambda line: line,
+            stream_output=False,
+        )
