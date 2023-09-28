@@ -242,9 +242,9 @@ build tools that don't support Android, such as a compiler that can't target And
 a PEP517 build system that doesn't support cross-compilation, it may not be possible to
 build an Android wheel.
 
-The `Chaquopy repository <https://github.com/chaquo/chaquopy>`__ contains tools to
-assist with cross-compiling Android binary wheels. This repository contains recipes for
-building the packages that are stored in the `secondary package repository
+The `Chaquopy repository <https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__ 
+contains tools to assist with cross-compiling Android binary wheels. This repository contains 
+recipes for building the packages that are stored in the `secondary package repository
 <https://chaquo.com/pypi-7.0/>`__. Contributions of new package recipes are welcome, and
 can be submitted as pull requests. Or, if you have a particular package that you'd like
 us to support, please visit the `issue tracker
