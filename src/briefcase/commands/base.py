@@ -13,6 +13,7 @@ from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.log import configure_logger as configure_cookiecutter_logger
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
@@ -910,6 +911,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         cached_template = self.update_cookiecutter_cache(
             template=template, branch=branch
         )
+
+        configure_cookiecutter_logger("DEBUG" if self.logger.is_deep_debug else "INFO")
 
         try:
             # Unroll the template
