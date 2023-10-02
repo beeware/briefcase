@@ -1,0 +1,1 @@
+The error for using a default character encoding was disabled for ``tox -e py-fast``.
