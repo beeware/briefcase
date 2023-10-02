@@ -1,0 +1,1 @@
+Add explanation on certificate identity retrieval for macOS and Windows
