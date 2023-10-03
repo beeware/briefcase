@@ -47,23 +47,11 @@ If the package is pure-Python (i.e., it does not contain a binary library), that
 all you need to do.
 
 If the package contains a binary component, you'll need to ensure that a binary
-wheel is available for the platform you're targeting. For desktop platforms,
-binary wheels are hosted on `PyPI <https://pypi.org>`__; Android binary wheels
-are hosted on the `Chaquopy package index <https://chaquo.com/pypi-7.0/>`__; iOS
-binary wheels are available on the `BeeWare repository on anaconda.org
-<https://anaconda.org/beeware/repo>`__.
+wheel is available for the platform you're targeting:
 
-However, the Android and iOS repositories do not have binary wheels for *every* package
-that needs them. If you see any of the following messages when building an app for a
-mobile platform, then the package (or this version of it) probably isn't supported yet:
-
-* On Android: the error `"Chaquopy cannot compile native code"
-  <https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code>`__
-* On iOS: the error "Cannot compile native modules"
-* A reference to downloading a ``.tar.gz`` version of the package
-* A reference to ``Building wheels for collected packages: <package>``
-
-Binary mobile packages are currently maintained by the BeeWare team. If you have a
-particular package that you'd like us to support, please visit the issue tracker for
-`Android <https://github.com/chaquo/chaquopy/issues>`__ or `iOS
-<https://github.com/freakboy3742/chaquopy/issues>`__.
+* **macOS, Linux, Windows**: Binary wheels are hosted on `PyPI <https://pypi.org>`__.
+* **Android**: See the :ref:`Android platform documentation
+  <android-third-party-packages>`.
+* **iOS**: See the :ref:`iOS platform documentation <ios-third-party-packages>`.
+* **Web**: Binary wheel support is currently limited to `those provided by the Pyodide
+  project <https://pyodide.org/en/stable/usage/packages-in-pyodide.html>`__.

@@ -28,30 +28,35 @@ be guided through in this tutorial:
 
 5. Anticipating potential issues with the identity in the future
 
+.. _apple-dev-enroll:
 
 Enrolling in the Apple Developer program
 ----------------------------------------
 
 You can enroll in the Apple Developer program either as an individual, or as an
-organization. In both cases, you'll have to follow the instructions on the
-`Apple Developer website <https://developer.apple.com/programs/enroll/>`__.
+organization. In both cases, you'll have to follow the instructions on the `Apple
+Developer website <https://developer.apple.com/programs/enroll/>`__.
 
-Once you click "Start Enrollment Now" at the bottom of the page, you can either
-sign in with your existing Apple ID or alternatively, create a new one:
+Once you click "Start Enrollment Now" at the bottom of the page, you can either sign in
+with your existing Apple ID or alternatively, create a new one:
 
 .. image:: images/AppleID.png
    :width: 300
 
-As part of the registration procedure, you'll have to pay a **$99 fee**, which
-will be charged on an annual basis.
+There are two types of Apple Developer account - a *personal* account, and a *business*
+account. If you use your personal Apple ID to create an Apple Developer account,
+converting it to a business account later can be painful. If you use your personal Apple
+ID to create a business account, extracting your personal credentials later can also be
+painful.
+
+As part of the registration procedure, you'll have to pay a **$99 fee**, which will be
+charged on an annual basis.
 
 .. admonition:: Fee waivers
 
-  If you're registering as a non-profit organization, an educational institution
-  or a government entity, you may be eligible for a fee waiver, which you can
-  read more about `here
-  <https://developer.apple.com/support/membership-fee-waiver/>`__.
-
+  If you're registering as a non-profit organization, an educational institution or a
+  government entity, you may be eligible for a fee waiver, which you can read more about
+  `here <https://developer.apple.com/support/membership-fee-waiver/>`__.
 
 Generating a certificate request on Keychain Access
 ---------------------------------------------------

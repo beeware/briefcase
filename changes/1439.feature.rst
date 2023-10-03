@@ -1,0 +1,1 @@
+iOS apps are no longer rejected by the iOS App Store for packaging reasons.

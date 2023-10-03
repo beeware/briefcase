@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -20,6 +20,10 @@ def update_command(tmp_path):
 
 def test_extra_pip_args(update_command, first_app_generated, tmp_path):
     """Extra iOS-specific args are included in calls to pip during update."""
+    # Hard code the current architecture for testing. We only install simulator
+    # requirements for the current platform.
+    update_command.tools.host_arch = "wonky"
+
     first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
 
     update_command.tools[first_app_generated].app_context = MagicMock(
@@ -28,38 +32,78 @@ def test_extra_pip_args(update_command, first_app_generated, tmp_path):
 
     update_command.install_app_requirements(first_app_generated, test_mode=False)
 
-    update_command.tools[first_app_generated].app_context.run.assert_called_once_with(
-        [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--no-python-version-warning",
-            "--upgrade",
-            "--no-user",
-            f"--target={tmp_path / 'base_path' / 'build' / 'first-app' / 'ios' / 'xcode' / 'app_packages'}",
-            "--prefer-binary",
-            "--extra-index-url",
-            "https://pypi.anaconda.org/beeware/simple",
-            "something==1.2.3",
-            "other>=2.3.4",
-        ],
-        check=True,
-        encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "ios"
-                / "xcode"
-                / "support"
-                / "platform-site"
-            )
-        },
-    )
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "ios" / "xcode"
+    assert update_command.tools[first_app_generated].app_context.run.mock_calls == [
+        call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--no-python-version-warning",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.iphoneos'}",
+                "--prefer-binary",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+                "something==1.2.3",
+                "other>=2.3.4",
+            ],
+            check=True,
+            encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
+                    / "support"
+                    / "platform-site"
+                    / "iphoneos.arm64"
+                )
+            },
+        ),
+        call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--no-python-version-warning",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.iphonesimulator'}",
+                "--prefer-binary",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+                "something==1.2.3",
+                "other>=2.3.4",
+            ],
+            check=True,
+            encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
+                    / "support"
+                    / "platform-site"
+                    / "iphonesimulator.wonky"
+                )
+            },
+        ),
+    ]

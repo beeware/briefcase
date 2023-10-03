@@ -197,3 +197,55 @@ file:
 
 A string providing additional Gradle settings to use when building your app.
 This will be added verbatim to the end of your ``app/build.gradle`` file.
+
+Platform quirks
+===============
+
+.. _android-third-party-packages:
+
+Availability of third-party packages
+------------------------------------
+
+Briefcase is able to use third-party packages in Android apps. As long as the package is
+available on PyPI, or you can provide a wheel file for the package, it can be added to
+the ``requires`` declaration in your ``pyproject.toml`` file and used by your app at
+runtime.
+
+If the package is pure Python (i.e., it does not contain a binary library), that's all
+you need to do. To check whether a package is pure Python, look at the PyPI downloads
+page for the project; if the wheels provided are have a ``-py3-none-any.whl`` suffix,
+then they are pure Python wheels. If the wheels have version and platform-specific
+extensions (e.g., ``-cp311-cp311-macosx_11_0_universal2.whl``), then the wheel contains
+a binary component.
+
+If the package contains a binary component, that wheel needs to be compiled for Android.
+PyPI does not currently support uploading Android-compatible wheels, so you can't rely
+on PyPI to provide those wheels. Briefcase uses a `secondary repository
+<https://chaquo.com/pypi-7.0/>`__ to provide pre-compiled Android wheels.
+
+This repository is maintained by the BeeWare project, and as a result, it does not have
+binary wheels for *every* package that is available on PyPI, or even every *version* of
+every package that is on PyPI. If you see any of the following messages when building an
+app for a mobile platform, then the package (or this version of it) probably isn't
+supported yet:
+
+* The error `"Chaquopy cannot compile native code"
+  <https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code>`__
+* A reference to downloading a ``.tar.gz`` version of the package
+* A reference to ``Building wheels for collected packages: <package>``
+
+It is *usually* possible to compile any binary package wheels for Android, depending on
+the requirements of the package itself. If the package has a dependency on other binary
+libraries (e.g., something like ``libjpeg`` that isn't written in Python), those
+libraries will need to be compiled for Android as well. However, if the library requires
+build tools that don't support Android, such as a compiler that can't target Android, or
+a PEP517 build system that doesn't support cross-compilation, it may not be possible to
+build an Android wheel.
+
+The `Chaquopy repository <https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__
+contains tools to assist with cross-compiling Android binary wheels. This repository contains
+recipes for building the packages that are stored in the `secondary package repository
+<https://chaquo.com/pypi-7.0/>`__. Contributions of new package recipes are welcome, and
+can be submitted as pull requests. Or, if you have a particular package that you'd like
+us to support, please visit the `issue tracker
+<https://github.com/chaquo/chaquopy/issues>`__ and provide details about that package.

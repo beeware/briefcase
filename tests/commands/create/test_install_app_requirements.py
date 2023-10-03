@@ -137,15 +137,6 @@ def test_app_packages_valid_requires(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # Original app definitions haven't changed
@@ -238,15 +229,6 @@ def test_app_packages_invalid_requires(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # Original app definitions haven't changed
@@ -296,15 +278,6 @@ def test_app_packages_offline(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # Original app definitions haven't changed
@@ -354,15 +327,6 @@ def test_app_packages_install_requirements(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # The new app packages have installation artefacts created
@@ -422,15 +386,6 @@ def test_app_packages_replace_existing_requirements(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # The new app packages have installation artefacts created
@@ -715,15 +670,6 @@ def test_app_packages_test_requires(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # Original app definitions haven't changed
@@ -766,15 +712,6 @@ def test_app_packages_test_requires_test_mode(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # Original app definitions haven't changed
@@ -815,15 +752,6 @@ def test_app_packages_only_test_requires_test_mode(
         ],
         check=True,
         encoding="UTF-8",
-        env={
-            "PYTHONPATH": str(
-                create_command.bundle_path(myapp)
-                / "path"
-                / "to"
-                / "support"
-                / "platform-site"
-            )
-        },
     )
 
     # Original app definitions haven't changed
