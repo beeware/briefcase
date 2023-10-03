@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -7,8 +9,9 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.platforms.macOS import (
+    macOSInstallMixin,
     macOSMixin,
     macOSPackageMixin,
     macOSRunMixin,
@@ -26,8 +29,33 @@ class macOSAppMixin(macOSMixin):
         return self.bundle_path(app) / f"{app.formal_name}.app"
 
 
-class macOSAppCreateCommand(macOSAppMixin, CreateCommand):
+class macOSAppCreateCommand(macOSAppMixin, macOSInstallMixin, CreateCommand):
     description = "Create and populate a macOS app."
+
+    def support_path(self, app: AppConfig, runtime=False) -> Path:
+        if runtime:
+            return super().support_path(app)
+        else:
+            return self.bundle_path(app) / "support"
+
+    def install_app_support_package(self, app: AppConfig):
+        """Install the application support package.
+
+        :param app: The config object for the app
+        """
+        super().install_app_support_package(app)
+
+        # Copy the stdlib into its final location
+        with self.input.wait_bar("Copying standard library into app bundle..."):
+            runtime_support_path = self.support_path(app, runtime=True)
+            if runtime_support_path.is_dir():
+                self.tools.shutil.rmtree(runtime_support_path)
+            runtime_support_path.mkdir()
+
+            self.tools.shutil.copytree(
+                self.support_path(app) / "python-stdlib",
+                runtime_support_path / "python-stdlib",
+            )
 
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
@@ -41,7 +69,7 @@ class macOSAppOpenCommand(macOSAppMixin, OpenCommand):
 class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
     description = "Build a macOS app."
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build the macOS app.
 
         :param app: The application to build

@@ -12,7 +12,12 @@ from briefcase.commands import (
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import Xcode
-from briefcase.platforms.macOS import macOSMixin, macOSPackageMixin, macOSRunMixin
+from briefcase.platforms.macOS import (
+    macOSInstallMixin,
+    macOSMixin,
+    macOSPackageMixin,
+    macOSRunMixin,
+)
 from briefcase.platforms.macOS.filters import XcodeBuildFilter
 
 
@@ -37,7 +42,7 @@ class macOSXcodeMixin(macOSMixin):
         return self.bundle_path(app) / "build" / "Release" / f"{app.formal_name}.app"
 
 
-class macOSXcodeCreateCommand(macOSXcodeMixin, CreateCommand):
+class macOSXcodeCreateCommand(macOSXcodeMixin, macOSInstallMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."
 
 
