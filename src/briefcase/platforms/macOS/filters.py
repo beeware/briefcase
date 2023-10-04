@@ -43,6 +43,16 @@ class XcodeBuildFilter:
         r"\d{4}-\d{2}-\d{2} +\d+:\d{2}:\d{2}\.\d{3} xcodebuild\[\d+:\d+\] +"
     )
 
+    # Xcode 14 generates the following warning on x86_64 hardware
+    # 2023-10-04 08:05:21.757 xcodebuild[46899:11335453] DVTCoreDeviceEnabledState:
+    #   DVTCoreDeviceEnabledState_Disabled set via user default
+    #   (DVTEnableCoreDevice=disabled)
+    DEVICE_ENABLED_STATE_RE = re.compile(
+        XCODEBUILD_PREFIX
+        + r"DVTCoreDeviceEnabledState: DVTCoreDeviceEnabledState_Disabled "
+        r"set via user default \(DVTEnableCoreDevice=disabled\)"
+    )
+
     # Xcode 14 generates the following warning when there is a passcode protected device
     # attached to your computer, even if you're not doing anything to target that device:
     # ---------------------------------------------------------------------
@@ -125,6 +135,9 @@ class XcodeBuildFilter:
             self.locked_device = True
         elif self.LOCKED_DEVICE_ADDITIONAL_RE.match(line):
             # Ignore the additional 1-line warning about failing to start the service.
+            pass
+        elif self.DEVICE_ENABLED_STATE_RE.match(line):
+            # Ignore the DVTCoreDeviceEnabledState warning
             pass
         elif self.DVT_ASSERTIONS_RE.match(line):
             # Ignore the 4 lines after the DVTAssertions message
