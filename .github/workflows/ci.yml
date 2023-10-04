@@ -52,7 +52,7 @@ jobs:
         #  experimental: true
         # Run tests against the latest Windows Store Python
         - platform: "windows"
-          python-version: "winstore3.11"
+          python-version: "winstore3.12"
           experimental: false
     steps:
     - name: Checkout
@@ -70,7 +70,7 @@ jobs:
       if: startswith(matrix.python-version, 'winstore')
       uses: beeware/.github/.github/actions/install-win-store-python@main
       with:
-        python-version: "3.11"
+        python-version: "3.12"
 
     - name: Get Packages
       uses: actions/download-artifact@v3.0.2
