@@ -29,8 +29,15 @@ class AppPackageMergeMixin:
         :param target_path: The root location where the fat library will be written
         :param sources: A list of root locations providing single platform libraries.
         """
-        self.logger.info(f"Creating fat library {relative_path}")
+        if self.logger.verbosity >= 1:
+            self.logger.info(f"Creating fat library {relative_path}")
+
         try:
+            # Add all the constructed source paths. If the original binary is universal,
+            # or the binary is only needed on *some* platforms (e.g., libjpeg isn't
+            # included in the x86_64 Pillow wheel), the source won't exist, so only
+            # merge sources that actually exist. lipo allows creating a "fat"
+            # single-platform binary; it's effectively a copy.
             self.tools.subprocess.run(
                 [
                     "lipo",
@@ -38,11 +45,6 @@ class AppPackageMergeMixin:
                     "-output",
                     target_path / relative_path,
                 ]
-                # Add all the constructed source paths. If the original binary is
-                # universal, or the binary is only needed on *some* platforms (e.g.,
-                # libjpeg isn't included in the x86_64 Pillow wheel), the source won't
-                # exist, so only merge sources that actually exist. lipo allows
-                # creating a "fat" single-platform binary; it's effectively a copy.
                 + [
                     source_path / relative_path
                     for source_path in sources
@@ -104,7 +106,8 @@ class AppPackageMergeMixin:
 
         # Call lipo on each dylib to create the fat version.
         progress_bar = self.input.progress_bar()
-        task_id = progress_bar.add_task("Creating fat libraries...", total=len(dylibs))
+        self.logger.info("Merging libraries...")
+        task_id = progress_bar.add_task("Create fat libraries", total=len(dylibs))
         with progress_bar:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = []

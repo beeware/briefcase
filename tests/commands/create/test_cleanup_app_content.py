@@ -18,9 +18,12 @@ def myapp_unrolled(myapp, support_path, app_packages_path_index):
     return myapp
 
 
-def test_no_cleanup(create_command, myapp_unrolled, support_path):
+@pytest.mark.parametrize("debug", [True, False])
+def test_no_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """If there are no cleanup directives, bundle content isn't touched; but __pycache__
     is cleaned."""
+    if debug:
+        create_command.logger.verbosity = 1
 
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
@@ -33,9 +36,19 @@ def test_no_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (4 if debug else 3)
 
-def test_dir_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_dir_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A directory can be cleaned up."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1"]
 
     # Cleanup app content
@@ -46,9 +59,19 @@ def test_dir_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (4 if debug else 3)
 
-def test_file_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_file_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A single file can be cleaned up."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1/a_file1.txt"]
 
     # Cleanup app content
@@ -62,9 +85,21 @@ def test_file_cleanup(create_command, myapp_unrolled, support_path):
     assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (5 if debug else 3)
 
-def test_all_files_in_dir_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_all_files_in_dir_cleanup(
+    create_command, myapp_unrolled, support_path, debug, capsys
+):
     """All files in a directory can be cleaned up."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1/*"]
 
     # Cleanup app content
@@ -80,9 +115,19 @@ def test_all_files_in_dir_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (7 if debug else 3)
 
-def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A glob of directories can be cleaned up."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = ["path/to/support/dir*"]
 
     # Cleanup app content
@@ -93,9 +138,19 @@ def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert not (support_path / "dir2").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (5 if debug else 3)
 
-def test_file_glob_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_file_glob_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A glob of files can be cleaned up."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1/*.txt"]
 
     # Cleanup app content
@@ -109,9 +164,19 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (6 if debug else 3)
 
-def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A glob that matches all directories will be added to the cleanup list."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = ["path/to/support/**/b_file.*"]
 
     # Cleanup app content
@@ -126,9 +191,21 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert not (support_path / "other" / "deep" / "b_file.doc").exists()
     assert (support_path / "other" / "deep" / "other.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (7 if debug else 3)
 
-def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_template_glob_cleanup(
+    create_command, myapp_unrolled, support_path, debug, capsys
+):
     """A glob of files specified in the template will be added to the cleanup list."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     # Define a cleanup_paths in the template *and* on the app
     create_command._briefcase_toml[myapp_unrolled] = {
         "paths": {
@@ -149,9 +226,25 @@ def test_template_glob_cleanup(create_command, myapp_unrolled, support_path):
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert not (support_path / "other" / "deep" / "b_file.doc").exists()
 
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (7 if debug else 3)
 
-def test_non_existent_cleanup(create_command, myapp_unrolled, support_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_non_existent_cleanup(
+    create_command,
+    myapp_unrolled,
+    support_path,
+    debug,
+    capsys,
+):
     """Referencing a specific file that doesn't exist doesn't cause a problem."""
+    if debug:
+        create_command.logger.verbosity = 1
+
     myapp_unrolled.cleanup_paths = [
         # This file exists
         "path/to/support/dir1/a_file1.txt",
@@ -172,3 +265,9 @@ def test_non_existent_cleanup(create_command, myapp_unrolled, support_path):
     assert not (support_path / "dir1" / "__pycache__").exists()
     assert (support_path / "dir2" / "b_file.txt").exists()
     assert (support_path / "other" / "deep" / "b_file.doc").exists()
+
+    # Console output ends with the done message; the number of other messages depends on
+    # whether debug is enabled.
+    output = capsys.readouterr().out.split("\n")
+    assert output[-3] == "Removing unneeded app bundle content... done"
+    assert len(output) == (5 if debug else 3)

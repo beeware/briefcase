@@ -731,10 +731,12 @@ class CreateCommand(BaseCommand):
                 for path in self.bundle_path(app).glob(glob):
                     relative_path = path.relative_to(self.bundle_path(app))
                     if path.is_dir():
-                        self.logger.info(f"Removing directory {relative_path}")
+                        if self.logger.verbosity >= 1:
+                            self.logger.info(f"Removing directory {relative_path}")
                         self.tools.shutil.rmtree(path)
                     else:
-                        self.logger.info(f"Removing {relative_path}")
+                        if self.logger.verbosity >= 1:
+                            self.logger.info(f"Removing {relative_path}")
                         path.unlink()
 
     def create_app(self, app: AppConfig, test_mode: bool = False, **options):
