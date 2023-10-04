@@ -71,6 +71,18 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter
                 "Did gyre and gimble in the wabe;",
             ],
         ),
+        # XCode 14: x86_64 "device enabled state" warning.
+        (
+            [
+                "'Twas brillig, and the slithy toves",
+                "2023-10-04 08:05:21.757 xcodebuild[46899:11335453] DVTCoreDeviceEnabledState: DVTCoreDeviceEnabledState_Disabled set via user default (DVTEnableCoreDevice=disabled)",
+                "Did gyre and gimble in the wabe;",
+            ],
+            [
+                "'Twas brillig, and the slithy toves",
+                "Did gyre and gimble in the wabe;",
+            ],
+        ),
         # Xcode 15: DVTAssertions warning about createItemModels
         (
             [
