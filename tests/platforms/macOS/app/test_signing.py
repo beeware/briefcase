@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -12,6 +13,14 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOSSigningMixin
 from briefcase.platforms.macOS.app import macOSAppMixin
 from tests.utils import DummyConsole
+
+if sys.platform != "darwin":
+    # Signing tests require checks of executable file permissions,
+    # which don't work reliably on Windows.
+    pytest.skip(
+        "macOS app signing can only be tested on macOS",
+        allow_module_level=True,
+    )
 
 
 class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
@@ -257,9 +266,9 @@ def test_sign_file_adhoc_identity(dummy_command, tmp_path, debug, capsys):
         any_order=False,
     )
 
-    # Output only happens if in debug mode
-    output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    # No console output
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == 1
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -289,9 +298,9 @@ def test_sign_file_entitlements(dummy_command, tmp_path, debug, capsys):
         any_order=False,
     )
 
-    # Output only happens if in debug mode
-    output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    # No console output
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == 1
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -334,7 +343,7 @@ def test_sign_file_deep_sign(dummy_command, tmp_path, debug, capsys):
         assert "... random.file requires a deep sign; retrying\n" in output
 
     # Output only happens if in debug mode
-    assert len(output.split("\n")) == (3 if debug else 1)
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -376,7 +385,7 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, debug, capsys):
         assert "... random.file requires a deep sign; retrying\n" in output
 
     # Output only happens if in debug mode
-    assert len(output.split("\n")) == (3 if debug else 1)
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -415,7 +424,7 @@ def test_sign_file_unsupported_format(dummy_command, tmp_path, debug, capsys):
         assert "... random.file does not require a signature\n" in output
 
     # Output only happens if in debug mode
-    assert len(output.split("\n")) == (3 if debug else 1)
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -454,7 +463,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, debug, capsys)
         assert "... random.file does not require a signature\n" in output
 
     # Output only happens if in debug mode
-    assert len(output.split("\n")) == (3 if debug else 1)
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -484,9 +493,9 @@ def test_sign_file_unknown_error(dummy_command, tmp_path, debug, capsys):
         any_order=False,
     )
 
-    # Output only happens if in debug mode
-    output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    # No console output
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == 1
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -555,9 +564,9 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path, debug, capsy
         assert path.parent not in parents
         parents.add(path)
 
-    # Output only happens if in debug mode. Sign app adds an additional line.
-    output = capsys.readouterr().out.split("\n")
-    assert len(output) == (13 if debug else 2)
+    # Output only happens if in debug mode.
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == (11 if debug else 1)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -594,6 +603,6 @@ def test_sign_app_with_failure(
     # actually signed, as threads are involved.
     dummy_command.tools.subprocess.run.call_count > 0
 
-    # Output only happens if in debug mode. Sign app adds an additional line.
-    output = capsys.readouterr().out.split("\n")
-    assert len(output) == (8 if debug else 2)
+    # Output only happens if in debug mode.
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == (6 if debug else 1)

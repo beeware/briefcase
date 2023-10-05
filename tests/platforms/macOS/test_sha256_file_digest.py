@@ -6,7 +6,7 @@ from ...utils import create_file
 def test_sha256_file_digest(tmp_path):
     """A sha256 digest can be computed for a file."""
     # Create a file
-    create_file(tmp_path / "content.txt", "Hello world\nGoodbye world.\n")
+    create_file(tmp_path / "content.txt", b"Hello world\nGoodbye world.\n", mode="wb")
 
     # A sha256 digest is returned.
     assert sha256_file_digest(tmp_path / "content.txt") == (

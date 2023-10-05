@@ -106,7 +106,7 @@ def test_lipo_dylib_merge_error(dummy_command, tmp_path, debug, capsys):
     # Merge the libraries. This raises an exception:
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to create fat library for path/to/file.dylib",
+        match=r"Unable to create fat library for path[/\\]to[/\\]file\.dylib",
     ):
         dummy_command.lipo_dylib(
             Path("path") / "to" / "file.dylib",
