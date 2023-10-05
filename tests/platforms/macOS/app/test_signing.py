@@ -14,14 +14,6 @@ from briefcase.platforms.macOS import macOSSigningMixin
 from briefcase.platforms.macOS.app import macOSAppMixin
 from tests.utils import DummyConsole
 
-if sys.platform != "darwin":
-    # Signing tests require checks of executable file permissions,
-    # which don't work reliably on Windows.
-    pytest.skip(
-        "macOS app signing can only be tested on macOS",
-        allow_module_level=True,
-    )
-
 
 class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
     """A dummy command to expose code signing capabilities."""
@@ -566,17 +558,18 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path, debug, capsy
 
     # Output only happens if in debug mode.
     output = capsys.readouterr().out
-    assert len(output.strip("\n").split("\n")) == (11 if debug else 1)
+    if sys.platform == "win32":
+        # In practice, we won't ever actually run signing on win32; but to ensure test
+        # coverage we need to. However, win32 doesn't handle executable permissions
+        # the same as linux/unix, `unknown.binary` is identified as a signing target.
+        # We ignore this discrepancy for testing purposes.
+        assert len(output.strip("\n").split("\n")) == (12 if debug else 1)
+    else:
+        assert len(output.strip("\n").split("\n")) == (11 if debug else 1)
 
 
 @pytest.mark.parametrize("debug", [True, False])
-def test_sign_app_with_failure(
-    dummy_command,
-    first_app_with_binaries,
-    tmp_path,
-    debug,
-    capsys,
-):
+def test_sign_app_with_failure(dummy_command, first_app_with_binaries, debug, capsys):
     """If signing a single file in the app fails, the error is surfaced."""
     if debug:
         dummy_command.logger.verbosity = 1
@@ -605,4 +598,11 @@ def test_sign_app_with_failure(
 
     # Output only happens if in debug mode.
     output = capsys.readouterr().out
-    assert len(output.strip("\n").split("\n")) == (6 if debug else 1)
+    if sys.platform == "win32":
+        # In practice, we won't ever actually run signing on win32; but to ensure test
+        # coverage we need to. However, win32 doesn't handle executable permissions
+        # the same as linux/unix, `unknown.binary` is identified as a signing target.
+        # We ignore this discrepancy for testing purposes.
+        assert len(output.strip("\n").split("\n")) == (7 if debug else 1)
+    else:
+        assert len(output.strip("\n").split("\n")) == (6 if debug else 1)
