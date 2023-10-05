@@ -84,6 +84,8 @@ class macOSInstallMixin(AppPackagesMergeMixin):
                         [
                             sys.executable,
                             "-u",
+                            "-X",
+                            "utf8",
                             "-m",
                             "pip",
                             "install",
@@ -100,6 +102,7 @@ class macOSInstallMixin(AppPackagesMergeMixin):
                             for package, version in binary_packages
                         ],
                         check=True,
+                        encoding="UTF-8",
                         env={
                             "PYTHONPATH": str(
                                 self.support_path(app)

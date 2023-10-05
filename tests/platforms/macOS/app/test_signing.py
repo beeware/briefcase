@@ -517,7 +517,7 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path, debug, capsy
         / "app"
         / "First App.app"
     )
-    lib_path = app_path / "Contents" / "Resources"
+    lib_path = app_path / "Contents" / "Resources" / "app_packages"
     frameworks_path = app_path / "Contents" / "Frameworks"
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
