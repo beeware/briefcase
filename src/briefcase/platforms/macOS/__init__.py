@@ -16,7 +16,7 @@ from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
-from briefcase.platforms.macOS.utils import AppPackageMergeMixin, find_binary_packages
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
 
 try:
     import dmgbuild
@@ -39,7 +39,7 @@ class macOSMixin:
     supported_host_os_reason = "macOS applications can only be built on macOS."
 
 
-class macOSInstallMixin(AppPackageMergeMixin):
+class macOSInstallMixin(AppPackagesMergeMixin):
     def _install_app_requirements(
         self,
         app: AppConfig,
@@ -58,7 +58,7 @@ class macOSInstallMixin(AppPackageMergeMixin):
 
         # Find all the packages with binary components.
         # We can ignore any -universal2 packages; they're already fat.
-        binary_packages = find_binary_packages(
+        binary_packages = self.find_binary_packages(
             host_app_packages_path,
             universal_suffix="_universal2",
         )
