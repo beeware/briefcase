@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import concurrent.futures
 import itertools
 import os
@@ -8,7 +10,6 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
-from typing import List
 
 from briefcase.config import AppConfig
 from briefcase.console import select_option
@@ -128,7 +129,7 @@ class macOSRunMixin:
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
