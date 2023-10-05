@@ -78,6 +78,9 @@ class AppPackagesMergeMixin:
             self.logger.info(f"Creating fat library {relative_path}")
 
         try:
+            # Ensure the directory where the library will be written exists.
+            (target_path / relative_path).parent.mkdir(exist_ok=True, parents=True)
+
             # Add all the constructed source paths. If the original binary is universal,
             # or the binary is only needed on *some* platforms (e.g., libjpeg isn't
             # included in the x86_64 Pillow wheel), the source won't exist, so only
