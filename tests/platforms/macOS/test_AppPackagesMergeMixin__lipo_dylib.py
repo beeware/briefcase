@@ -44,6 +44,9 @@ def test_lipo_dylib(dummy_command, tmp_path, debug, capsys):
         check=True,
     )
 
+    # The target directory exists.
+    assert (tmp_path / "target" / "path" / "to").is_dir()
+
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
     assert len(output) == (2 if debug else 1)
@@ -81,6 +84,9 @@ def test_lipo_dylib_partial(dummy_command, tmp_path, debug, capsys):
         ],
         check=True,
     )
+
+    # The target directory exists.
+    assert (tmp_path / "target" / "path" / "to").is_dir()
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
@@ -131,6 +137,9 @@ def test_lipo_dylib_merge_error(dummy_command, tmp_path, debug, capsys):
         ],
         check=True,
     )
+
+    # The target directory exists.
+    assert (tmp_path / "target" / "path" / "to").is_dir()
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
