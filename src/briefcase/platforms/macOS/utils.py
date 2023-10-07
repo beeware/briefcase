@@ -47,7 +47,7 @@ class AppPackagesMergeMixin:
             # for the wheel.
             with (distinfo / "WHEEL").open("r", encoding="utf-8") as f:
                 wheel_data = email.message_from_string(f.read())
-                is_purelib = wheel_data["Root-Is-Purelib"] == "true"
+                is_purelib = wheel_data.get("Root-Is-Purelib", "false") == "true"
                 tag = wheel_data["Tag"]
 
             # If the wheel is pure, it's not a binary package

@@ -70,7 +70,7 @@ class macOSInstallMixin(AppPackagesMergeMixin):
             "x86_64": "arm64",
         }[self.tools.host_arch]
 
-        # Create a temporary folder to hold wheels for other targets
+        # Create a temporary folder targeting the other platform
         other_app_packages_path = self.bundle_path(app) / f"app_packages.{other_arch}"
         if other_app_packages_path.is_dir():
             self.tools.shutil.rmtree(other_app_packages_path)
