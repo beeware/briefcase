@@ -116,9 +116,9 @@ class Printer:
 class Log:
     """Manage logging output driven by verbosity flags."""
 
-    # level of verbosity when debug output is shown in the console
-    DEBUG = 1
-    # printed at the beginning of all debug output
+    # Level of verbosity when debug output is shown in the console
+    DEBUG = 2
+    # Printed at the beginning of all debug output
     DEBUG_PREFACE = ">>> "
     # subdirectory of command.base_path to store log files
     LOG_DIR = "logs"

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -234,8 +235,12 @@ def test_selected_identity(dummy_command):
     assert dummy_command.input.prompts == ["> "]
 
 
-def test_sign_file_adhoc_identity(dummy_command, tmp_path):
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_adhoc_identity(dummy_command, tmp_path, debug, capsys):
     """If an ad-hoc identity is used, the runtime option isn't used."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(tmp_path / "base_path" / "random.file", identity="-")
 
@@ -253,9 +258,17 @@ def test_sign_file_adhoc_identity(dummy_command, tmp_path):
         any_order=False,
     )
 
+    # No console output
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == 1
 
-def test_sign_file_entitlements(dummy_command, tmp_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_entitlements(dummy_command, tmp_path, debug, capsys):
     """Entitlements can be included in a signing call."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
         tmp_path / "base_path" / "random.file",
@@ -277,9 +290,17 @@ def test_sign_file_entitlements(dummy_command, tmp_path):
         any_order=False,
     )
 
+    # No console output
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == 1
 
-def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_deep_sign(dummy_command, tmp_path, debug, capsys):
     """A file can be identified as needing a deep sign."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # First call raises the deep sign warning; second call succeeds
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         [" code object is not signed at all", None]
@@ -308,12 +329,21 @@ def test_sign_file_deep_sign(dummy_command, tmp_path, capsys):
         any_order=False,
     )
 
-    # The console includes a warning about the attempt to deep sign
-    assert "... file requires a deep sign; retrying\n" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    if debug:
+        # The console includes a warning about the attempt to deep sign
+        assert "... random.file requires a deep sign; retrying\n" in output
+
+    # Output only happens if in debug mode
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
-def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_deep_sign_failure(dummy_command, tmp_path, debug, capsys):
     """If deep signing fails, an error is raised."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # First invocation raises the deep sign error; second invocation raises some other error
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         [
@@ -341,13 +371,22 @@ def test_sign_file_deep_sign_failure(dummy_command, tmp_path, capsys):
         any_order=False,
     )
 
-    # The console includes a warning about the attempt to deep sign
-    assert "... file requires a deep sign; retrying\n" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    if debug:
+        # The console includes a warning about the attempt to deep sign
+        assert "... random.file requires a deep sign; retrying\n" in output
+
+    # Output only happens if in debug mode
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
-def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_unsupported_format(dummy_command, tmp_path, debug, capsys):
     """If codesign reports an unsupported format, the signing attempt is ignored with a
     warning."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # FIXME: I'm not sure how to manufacture this in practice.
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         "unsupported format for signature"
@@ -371,13 +410,22 @@ def test_sign_file_unsupported_format(dummy_command, tmp_path, capsys):
         any_order=False,
     )
 
-    # The console includes a warning about not needing a signature.
-    assert "... no signature required\n" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    if debug:
+        # The console includes a warning about not needing a signature.
+        assert "... random.file does not require a signature\n" in output
+
+    # Output only happens if in debug mode
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
-def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, debug, capsys):
     """If a folder happens to have a .framework extension, the signing attempt is
     ignored with a warning."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # Raise an error caused by an unknown bundle format during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
         "bundle format unrecognized, invalid, or unsuitable"
@@ -401,12 +449,21 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, capsys):
         any_order=False,
     )
 
-    # The console includes a warning about not needing a signature.
-    assert "... no signature required\n" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    if debug:
+        # The console includes a warning about not needing a signature.
+        assert "... random.file does not require a signature\n" in output
+
+    # Output only happens if in debug mode
+    assert len(output.strip("\n").split("\n")) == (2 if debug else 1)
 
 
-def test_sign_file_unknown_error(dummy_command, tmp_path):
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_file_unknown_error(dummy_command, tmp_path, debug, capsys):
     """Any other codesigning error raises an error."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # Raise an unknown error during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign("Unknown error")
 
@@ -428,9 +485,17 @@ def test_sign_file_unknown_error(dummy_command, tmp_path):
         any_order=False,
     )
 
+    # No console output
+    output = capsys.readouterr().out
+    assert len(output.strip("\n").split("\n")) == 1
 
-def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_app(dummy_command, first_app_with_binaries, tmp_path, debug, capsys):
     """An app bundle can be signed."""
+    if debug:
+        dummy_command.logger.verbosity = 1
+
     # Sign the app
     dummy_command.sign_app(
         first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
@@ -453,7 +518,7 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
         / "app"
         / "First App.app"
     )
-    lib_path = app_path / "Contents" / "Resources"
+    lib_path = app_path / "Contents" / "Resources" / "app_packages"
     frameworks_path = app_path / "Contents" / "Frameworks"
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
@@ -491,9 +556,23 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path):
         assert path.parent not in parents
         parents.add(path)
 
+    # Output only happens if in debug mode.
+    output = capsys.readouterr().out
+    if sys.platform == "win32":
+        # In practice, we won't ever actually run signing on win32; but to ensure test
+        # coverage we need to. However, win32 doesn't handle executable permissions
+        # the same as linux/unix, `unknown.binary` is identified as a signing target.
+        # We ignore this discrepancy for testing purposes.
+        assert len(output.strip("\n").split("\n")) == (12 if debug else 1)
+    else:
+        assert len(output.strip("\n").split("\n")) == (11 if debug else 1)
 
-def test_sign_app_with_failure(dummy_command, first_app_with_binaries, tmp_path):
+
+@pytest.mark.parametrize("debug", [True, False])
+def test_sign_app_with_failure(dummy_command, first_app_with_binaries, debug, capsys):
     """If signing a single file in the app fails, the error is surfaced."""
+    if debug:
+        dummy_command.logger.verbosity = 1
 
     # Sign the app. Signing first_dylib.dylib will fail.
     def _codesign(args, **kwargs):
@@ -516,3 +595,14 @@ def test_sign_app_with_failure(dummy_command, first_app_with_binaries, tmp_path)
     # There has been at least 1 call to sign files. We can't know how many are
     # actually signed, as threads are involved.
     dummy_command.tools.subprocess.run.call_count > 0
+
+    # Output only happens if in debug mode.
+    output = capsys.readouterr().out
+    if sys.platform == "win32":
+        # In practice, we won't ever actually run signing on win32; but to ensure test
+        # coverage we need to. However, win32 doesn't handle executable permissions
+        # the same as linux/unix, `unknown.binary` is identified as a signing target.
+        # We ignore this discrepancy for testing purposes.
+        assert len(output.strip("\n").split("\n")) == (7 if debug else 1)
+    else:
+        assert len(output.strip("\n").split("\n")) == (6 if debug else 1)

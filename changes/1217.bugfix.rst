@@ -1,0 +1,1 @@
+macOS apps are now guaranteed to be universal binaries, even when dependencies only provide single-architecture binary wheels.

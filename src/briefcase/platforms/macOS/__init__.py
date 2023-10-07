@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import concurrent.futures
 import itertools
 import os
@@ -7,14 +9,14 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
-from typing import List
 
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
 
 try:
     import dmgbuild
@@ -37,12 +39,77 @@ class macOSMixin:
     supported_host_os_reason = "macOS applications can only be built on macOS."
 
 
+class macOSInstallMixin(AppPackagesMergeMixin):
+    def _install_app_requirements(
+        self,
+        app: AppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+    ):
+        # Perform the initial install targeting the current platform
+        host_app_packages_path = (
+            self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
+        )
+        super()._install_app_requirements(
+            app,
+            requires=requires,
+            app_packages_path=host_app_packages_path,
+        )
+
+        # Find all the packages with binary components.
+        # We can ignore any -universal2 packages; they're already fat.
+        binary_packages = self.find_binary_packages(
+            host_app_packages_path,
+            universal_suffix="_universal2",
+        )
+
+        # Now install dependencies for the architecture that isn't the host architecture.
+        other_arch = {
+            "arm64": "x86_64",
+            "x86_64": "arm64",
+        }[self.tools.host_arch]
+
+        # Create a temporary folder targeting the other platform
+        other_app_packages_path = self.bundle_path(app) / f"app_packages.{other_arch}"
+        if other_app_packages_path.is_dir():
+            self.tools.shutil.rmtree(other_app_packages_path)
+        self.tools.os.mkdir(other_app_packages_path)
+
+        if binary_packages:
+            with self.input.wait_bar(
+                f"Installing binary app requirements for {other_arch}..."
+            ):
+                self._pip_install(
+                    app,
+                    requires=[
+                        f"{package}=={version}" for package, version in binary_packages
+                    ],
+                    app_packages_path=other_app_packages_path,
+                    include_deps=False,
+                    env={
+                        "PYTHONPATH": str(
+                            self.support_path(app)
+                            / "platform-site"
+                            / f"macosx.{other_arch}"
+                        )
+                    },
+                )
+        else:
+            self.logger.info("All packages are pure python or universal.")
+
+        # Merge the binaries
+        self.merge_app_packages(
+            target_app_packages=app_packages_path,
+            sources=[host_app_packages_path, other_app_packages_path],
+        )
+
+
 class macOSRunMixin:
     def run_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
@@ -169,7 +236,7 @@ class macOSSigningMixin:
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
 
-    def entitlements_path(self, app: BaseConfig):
+    def entitlements_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
     def select_identity(self, identity=None):
@@ -253,7 +320,9 @@ or
             process_command.append("--options")
             process_command.append(options)
 
-        self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
+        if self.logger.verbosity >= 1:
+            self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
+
         try:
             self.tools.subprocess.run(
                 process_command,
@@ -263,7 +332,10 @@ or
         except subprocess.CalledProcessError as e:
             errors = e.stderr
             if "code object is not signed at all" in errors:
-                self.logger.info("... file requires a deep sign; retrying")
+                if self.logger.verbosity >= 1:
+                    self.logger.info(
+                        f"... {Path(path).relative_to(self.base_path)} requires a deep sign; retrying"
+                    )
                 try:
                     self.tools.subprocess.run(
                         process_command + ["--deep"],
@@ -286,7 +358,10 @@ or
                 ]
             ):
                 # We should not be signing this in the first place
-                self.logger.info("... no signature required")
+                if self.logger.verbosity >= 1:
+                    self.logger.info(
+                        f"... {Path(path).relative_to(self.base_path)} does not require a signature"
+                    )
                 return
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
@@ -562,7 +637,7 @@ password:
 
     def package_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
