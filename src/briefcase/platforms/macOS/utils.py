@@ -127,7 +127,7 @@ class AppPackagesMergeMixin:
         # different, but they'll be purged later anyway. Don't warn for anything in a
         # .dist-info folder either; these are going to be different because of platform
         # difference, but core package metadata should be consistent.
-        dylibs = []
+        dylibs = set()
         digests = {}
         for source_app_packages in sources:
             with self.input.wait_bar(f"Merging {source_app_packages.name}..."):
@@ -139,7 +139,7 @@ class AppPackagesMergeMixin:
                     else:
                         if source_path.suffix in {".so", ".dylib"}:
                             # Dynamic libraries need to be merged; do this in a second pass.
-                            dylibs.append(relative_path)
+                            dylibs.add(relative_path)
                         elif target_path.exists():
                             # The file already exists. Check for differences; if there are any
                             # differences outside `dist-info` or `__pycache__` folders, warn
