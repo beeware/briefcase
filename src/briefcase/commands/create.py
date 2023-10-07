@@ -442,6 +442,56 @@ class CreateCommand(BaseCommand):
         """
         return []
 
+    def _pip_install(
+        self,
+        app: AppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+        include_deps: bool = True,
+        **pip_kwargs: dict[str, str],
+    ):
+        """Invoke pip to install a set of requirements.
+
+        :param app: The app configuration
+        :param requires: The list of requirements to install
+        :param app_packages_path: The full path of the app_packages folder into which
+            requirements should be installed.
+        :param progress_message: The waitbar progress message to display to the user.
+        :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
+            when invoking pip.
+        """
+        try:
+            self.tools[app].app_context.run(
+                [
+                    sys.executable,
+                    "-u",
+                    "-X",
+                    "utf8",
+                    "-m",
+                    "pip",
+                    "install",
+                    "--disable-pip-version-check",
+                    "--no-python-version-warning",
+                    "--upgrade",
+                    "--no-user",
+                    f"--target={app_packages_path}",
+                ]
+                + (
+                    [
+                        "--no-deps",
+                    ]
+                    if not include_deps
+                    else []
+                )
+                + self._extra_pip_args(app)
+                + requires,
+                check=True,
+                encoding="UTF-8",
+                **pip_kwargs,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RequirementsInstallError() from e
+
     def _install_app_requirements(
         self,
         app: AppConfig,
@@ -468,30 +518,12 @@ class CreateCommand(BaseCommand):
         # Install requirements
         if requires:
             with self.input.wait_bar(progress_message):
-                try:
-                    self.tools[app].app_context.run(
-                        [
-                            sys.executable,
-                            "-u",
-                            "-X",
-                            "utf8",
-                            "-m",
-                            "pip",
-                            "install",
-                            "--disable-pip-version-check",
-                            "--no-python-version-warning",
-                            "--upgrade",
-                            "--no-user",
-                            f"--target={app_packages_path}",
-                        ]
-                        + self._extra_pip_args(app)
-                        + self._pip_requires(app, requires),
-                        check=True,
-                        encoding="UTF-8",
-                        **(pip_kwargs if pip_kwargs else {}),
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise RequirementsInstallError() from e
+                self._pip_install(
+                    app,
+                    requires=self._pip_requires(app, requires),
+                    app_packages_path=app_packages_path,
+                    **(pip_kwargs if pip_kwargs else {}),
+                )
         else:
             self.logger.info("No application requirements.")
 

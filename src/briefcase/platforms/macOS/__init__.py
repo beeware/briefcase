@@ -5,7 +5,6 @@ import itertools
 import os
 import re
 import subprocess
-import sys
 import time
 from contextlib import suppress
 from pathlib import Path
@@ -13,7 +12,7 @@ from signal import SIGTERM
 
 from briefcase.config import AppConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
@@ -80,40 +79,21 @@ class macOSInstallMixin(AppPackagesMergeMixin):
             with self.input.wait_bar(
                 f"Installing binary app requirements for {other_arch}..."
             ):
-                try:
-                    self.tools[app].app_context.run(
-                        [
-                            sys.executable,
-                            "-u",
-                            "-X",
-                            "utf8",
-                            "-m",
-                            "pip",
-                            "install",
-                            "--no-deps",  # only install the binary requirements
-                            "--disable-pip-version-check",
-                            "--no-python-version-warning",
-                            "--upgrade",
-                            "--no-user",
-                            f"--target={other_app_packages_path}",
-                        ]
-                        + self._extra_pip_args(app)
-                        + [
-                            f"{package}=={version}"
-                            for package, version in binary_packages
-                        ],
-                        check=True,
-                        encoding="UTF-8",
-                        env={
-                            "PYTHONPATH": str(
-                                self.support_path(app)
-                                / "platform-site"
-                                / f"macosx.{other_arch}"
-                            )
-                        },
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise RequirementsInstallError() from e
+                self._pip_install(
+                    app,
+                    requires=[
+                        f"{package}=={version}" for package, version in binary_packages
+                    ],
+                    app_packages_path=other_app_packages_path,
+                    include_deps=False,
+                    env={
+                        "PYTHONPATH": str(
+                            self.support_path(app)
+                            / "platform-site"
+                            / f"macosx.{other_arch}"
+                        )
+                    },
+                )
         else:
             self.logger.info("All packages are pure python or universal.")
 
