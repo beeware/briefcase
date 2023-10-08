@@ -1,0 +1,1 @@
+macOS dynamic libraries are now inspected to ensure that they are single platform before merging, and they are only merged once.
