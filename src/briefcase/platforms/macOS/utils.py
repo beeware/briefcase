@@ -67,6 +67,61 @@ class AppPackagesMergeMixin:
 
         return binary_packages
 
+    def ensure_thin_dylib(self, path: Path, arch: str):
+        """Ensure that a library is thin, targeting a given architecture.
+
+        If the library is already thin, it is left as-is.
+
+        :param path: The library file to process.
+        :param arch: The architecture that should be preserved.
+        """
+        try:
+            output = self.tools.subprocess.check_output(
+                ["lipo", "-info", path],
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to inspect architectures in {path}"
+            ) from e
+        else:
+            if output.startswith("Non-fat file: "):
+                if self.logger.verbosity >= 1:
+                    self.logger.info(f"{path} is already thin.")
+            elif output.startswith("Architectures in the fat file: "):
+                architectures = set(output.strip().split(":")[-1].strip().split(" "))
+                if arch in architectures:
+                    if self.logger.verbosity >= 1:
+                        self.logger.info(f"Thinning {path}")
+                    try:
+                        thin_lib_path = path.parent / f"{path.name}.{arch}"
+                        self.tools.subprocess.run(
+                            [
+                                "lipo",
+                                "-thin",
+                                arch,
+                                "-output",
+                                thin_lib_path,
+                                path,
+                            ],
+                            check=True,
+                        )
+                    except subprocess.CalledProcessError as e:
+                        raise BriefcaseCommandError(
+                            f"Unable to create thin library from {path}"
+                        ) from e
+                    else:
+                        # Having extracted the single architecture into a temporary
+                        # file, replace the original with the thin version.
+                        self.tools.shutil.move(thin_lib_path, path)
+                else:
+                    raise BriefcaseCommandError(
+                        f"{path} does not contain a {arch} slice."
+                    )
+            else:
+                raise BriefcaseCommandError(
+                    f"Unable to determine architectures in {path}"
+                )
+
     def lipo_dylib(self, relative_path: Path, target_path: Path, sources: list[Path]):
         """Create a fat library by invoking lipo on multiple source libraries.
 
@@ -104,6 +159,40 @@ class AppPackagesMergeMixin:
             raise BriefcaseCommandError(
                 f"Unable to create fat library for {relative_path}"
             ) from e
+
+    def thin_app_packages(
+        self,
+        app_packages: Path,
+        arch: str,
+    ):
+        """Ensure that all the dylibs in a given app_packages folder are thin."""
+        dylibs = []
+        for source_path in app_packages.glob("**/*"):
+            if source_path.suffix in {".so", ".dylib"}:
+                dylibs.append(source_path)
+
+        # Call lipo on each dylib that was found to ensure it is thin.
+        if dylibs:
+            # Do this in a threadpool to make it run faster.
+            progress_bar = self.input.progress_bar()
+            self.logger.info(f"Thinning libraries in {app_packages.name}...")
+            task_id = progress_bar.add_task("Create fat libraries", total=len(dylibs))
+            with progress_bar:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = []
+                    for path in dylibs:
+                        future = executor.submit(
+                            self.ensure_thin_dylib,
+                            path=path,
+                            arch=arch,
+                        )
+                        futures.append(future)
+                    for future in concurrent.futures.as_completed(futures):
+                        progress_bar.update(task_id, advance=1)
+                        if future.exception():
+                            raise future.exception()
+        else:
+            self.logger.info("No libraries require thinning.")
 
     def merge_app_packages(
         self,
