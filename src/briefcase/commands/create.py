@@ -445,23 +445,20 @@ class CreateCommand(BaseCommand):
     def _pip_install(
         self,
         app: AppConfig,
-        requires: list[str],
         app_packages_path: Path,
-        include_deps: bool = True,
-        only_binary: bool = False,
-        **pip_kwargs: dict[str, str],
+        pip_args: list[str],
+        **pip_kwargs,
     ):
         """Invoke pip to install a set of requirements.
 
         :param app: The app configuration
-        :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
-        :param include_deps: Should dependencies of the named requirements also be
-            installed?
-        :param only_binary: Should non-binary packages be installed?
-        :param progress_message: The waitbar progress message to display to the user.
-        :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
+        :param pip_args: The list of arguments (including the list of requirements to
+            install) to pass to pip. This is in addition to the default arguments that
+            disable pip version checks, forces upgrades, and installs into the nominated
+            ``app_packages`` path.
+        :param pip_kwargs: Any additional keyword arguments to pass to ``subprocess.run``
             when invoking pip.
         """
         try:
@@ -480,10 +477,8 @@ class CreateCommand(BaseCommand):
                     "--no-user",
                     f"--target={app_packages_path}",
                 ]
-                + (["--no-deps"] if not include_deps else [])
-                + (["--only-binary", ":all:"] if only_binary else [])
                 + self._extra_pip_args(app)
-                + requires,
+                + pip_args,
                 check=True,
                 encoding="UTF-8",
                 **pip_kwargs,
@@ -519,8 +514,8 @@ class CreateCommand(BaseCommand):
             with self.input.wait_bar(progress_message):
                 self._pip_install(
                     app,
-                    requires=self._pip_requires(app, requires),
                     app_packages_path=app_packages_path,
+                    pip_args=self._pip_requires(app, requires),
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:

@@ -81,12 +81,13 @@ class macOSInstallMixin(AppPackagesMergeMixin):
             ):
                 self._pip_install(
                     app,
-                    requires=[
-                        f"{package}=={version}" for package, version in binary_packages
-                    ],
                     app_packages_path=other_app_packages_path,
-                    include_deps=False,
-                    only_binary=True,
+                    pip_args=[
+                        "--no-deps",
+                        "--only-binary",
+                        ":all:",
+                    ]
+                    + [f"{package}=={version}" for package, version in binary_packages],
                     env={
                         "PYTHONPATH": str(
                             self.support_path(app)
