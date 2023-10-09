@@ -67,10 +67,9 @@ Refer to your Certificate Authority's documentation for specific instructions.
 Certificate's SHA-1 Thumbprint
 ------------------------------
 
-Unfortunately, on Windows, :doc:`briefcase package
-</reference/commands/package>` cannot retrieve the code-signing
-certificate's identity automatically so you will need to get it
-manually.
+On Windows, :doc:`briefcase package </reference/commands/package>` cannot retrieve the
+list of installed code signing certificates automatically. You need to retrieve the
+identity manually, and provide the certificates identity as a command line argument.
 
 The certificates installed on the machine are available in the Certificate
 Manager. Search for "User Certificates" in the Start Menu to access certificates
