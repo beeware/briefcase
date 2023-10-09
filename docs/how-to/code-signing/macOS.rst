@@ -189,3 +189,8 @@ Next steps
 
 Now you can use the certificate to sign and notarize your application with the
 :doc:`briefcase package </reference/commands/package>` command.
+
+When you invoke :doc:`briefcase package </reference/commands/package>`, you will be
+prompted to select the code signing certificate you want to use from the certificates
+that are installed. Once you select a certificate, Briefcase will output the command
+line invocation to select that certificate for unattended installation.
