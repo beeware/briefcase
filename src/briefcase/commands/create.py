@@ -448,6 +448,7 @@ class CreateCommand(BaseCommand):
         requires: list[str],
         app_packages_path: Path,
         include_deps: bool = True,
+        only_binary: bool = False,
         **pip_kwargs: dict[str, str],
     ):
         """Invoke pip to install a set of requirements.
@@ -456,6 +457,9 @@ class CreateCommand(BaseCommand):
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
+        :param include_deps: Should dependencies of the named requirements also be
+            installed?
+        :param only_binary: Should non-binary packages be installed?
         :param progress_message: The waitbar progress message to display to the user.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
@@ -476,13 +480,8 @@ class CreateCommand(BaseCommand):
                     "--no-user",
                     f"--target={app_packages_path}",
                 ]
-                + (
-                    [
-                        "--no-deps",
-                    ]
-                    if not include_deps
-                    else []
-                )
+                + (["--no-deps"] if not include_deps else [])
+                + (["--only-binary", ":all:"] if only_binary else [])
                 + self._extra_pip_args(app)
                 + requires,
                 check=True,

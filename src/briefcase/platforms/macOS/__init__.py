@@ -86,6 +86,7 @@ class macOSInstallMixin(AppPackagesMergeMixin):
                     ],
                     app_packages_path=other_app_packages_path,
                     include_deps=False,
+                    only_binary=True,
                     env={
                         "PYTHONPATH": str(
                             self.support_path(app)
