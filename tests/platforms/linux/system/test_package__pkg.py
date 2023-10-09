@@ -31,8 +31,15 @@ def package_command(first_app, tmp_path):
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()
 
-    # Mock shutil move and rmtree
-    command.tools.shutil.move = mock.MagicMock()
+    # Mock shutil
+    command.tools.shutil = mock.MagicMock()
+
+    # Make the mock copy still copy
+    command.tools.shutil.copy = mock.MagicMock(side_effect=shutil.copy)
+
+    # Make the mock make_archive still package tarballs
+    command.tools.shutil.make_archive = mock.MagicMock(side_effect=shutil.make_archive)
+
     # Make the mock rmtree still remove content
     command.tools.shutil.rmtree = mock.MagicMock(side_effect=shutil.rmtree)
 

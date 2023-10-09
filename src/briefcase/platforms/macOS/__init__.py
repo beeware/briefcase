@@ -95,7 +95,22 @@ class macOSInstallMixin(AppPackagesMergeMixin):
                     },
                 )
         else:
-            self.logger.info("All packages are pure python or universal.")
+            self.logger.info("All packages are pure Python, or universal.")
+
+        # If given the option of a single architecture binary or a universal2 binary,
+        # pip will install the single platform binary. However, a common situation on
+        # macOS is for there to be an x86_64 binary and a universal2 binary. This means
+        # you only get a universal2 binary in the "other" install pass. This then causes
+        # problems with merging, because the "other" binary contains a copy of the
+        # architecture that the "host" platform provides.
+        #
+        # To avoid this - ensure that the libraries in the app packages for the "other"
+        # arch are all thin.
+        #
+        # This doesn't matter if it happens the other way around - if the "host" arch
+        # installs a universal binary, then the "other" arch won't be asked to install
+        # a binary at all.
+        self.thin_app_packages(other_app_packages_path, arch=other_arch)
 
         # Merge the binaries
         self.merge_app_packages(
