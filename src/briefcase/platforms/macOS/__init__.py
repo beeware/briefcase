@@ -94,6 +94,15 @@ class macOSInstallMixin(AppPackagesMergeMixin):
                             f"{package}=={version}"
                             for package, version in binary_packages
                         ],
+                        install_hint=f"""
+
+If an {other_arch} wheel has not been published for one or more of your requirements,
+you must compile those wheels yourself, or build a non-universal app by setting:
+
+    universal_build = False
+
+in the macOS configuration section of your pyproject.toml.
+""",
                         env={
                             "PYTHONPATH": str(
                                 self.support_path(app)

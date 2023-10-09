@@ -447,6 +447,7 @@ class CreateCommand(BaseCommand):
         app: AppConfig,
         app_packages_path: Path,
         pip_args: list[str],
+        install_hint: str = "",
         **pip_kwargs,
     ):
         """Invoke pip to install a set of requirements.
@@ -458,6 +459,8 @@ class CreateCommand(BaseCommand):
             install) to pass to pip. This is in addition to the default arguments that
             disable pip version checks, forces upgrades, and installs into the nominated
             ``app_packages`` path.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
         :param pip_kwargs: Any additional keyword arguments to pass to ``subprocess.run``
             when invoking pip.
         """
@@ -484,7 +487,7 @@ class CreateCommand(BaseCommand):
                 **pip_kwargs,
             )
         except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError() from e
+            raise RequirementsInstallError(install_hint=install_hint) from e
 
     def _install_app_requirements(
         self,

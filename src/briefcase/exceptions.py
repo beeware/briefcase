@@ -184,12 +184,12 @@ supported on {platform_name}. You will need to:
 
 
 class RequirementsInstallError(BriefcaseCommandError):
-    def __init__(self):
+    def __init__(self, install_hint=""):
         super().__init__(
-            """\
+            f"""\
 Unable to install requirements. This may be because one of your
 requirements is invalid, or because pip was unable to connect
-to the PyPI server.
+to the PyPI server.{install_hint}
 """
         )
 
