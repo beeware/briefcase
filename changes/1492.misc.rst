@@ -1,0 +1,1 @@
+The second binary wheel installation pass (for the other architecture) on macOS now requires binary wheels, disabling source compilation.

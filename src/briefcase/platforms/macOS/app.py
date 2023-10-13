@@ -59,6 +59,15 @@ class macOSAppCreateCommand(macOSAppMixin, macOSInstallMixin, CreateCommand):
                 runtime_support_path / "python-stdlib",
             )
 
+        if not getattr(app, "universal_build", True):
+            with self.input.wait_bar("Ensuring stub binary is thin..."):
+                # The stub binary is universal by default. If we're building a non-universal app,
+                # we can strip the binary to remove the unused slice.
+                self.ensure_thin_binary(
+                    self.binary_path(app) / "Contents" / "MacOS" / app.formal_name,
+                    arch=self.tools.host_arch,
+                )
+
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
     description = "Update an existing macOS app."

@@ -46,77 +46,106 @@ class macOSInstallMixin(AppPackagesMergeMixin):
         requires: list[str],
         app_packages_path: Path,
     ):
-        # Perform the initial install targeting the current platform
-        host_app_packages_path = (
-            self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
-        )
-        super()._install_app_requirements(
-            app,
-            requires=requires,
-            app_packages_path=host_app_packages_path,
-        )
+        if getattr(app, "universal_build", True):
+            # Perform the initial install targeting the current platform
+            host_app_packages_path = (
+                self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
+            )
+            super()._install_app_requirements(
+                app,
+                requires=requires,
+                app_packages_path=host_app_packages_path,
+            )
 
-        # Find all the packages with binary components.
-        # We can ignore any -universal2 packages; they're already fat.
-        binary_packages = self.find_binary_packages(
-            host_app_packages_path,
-            universal_suffix="_universal2",
-        )
+            # Find all the packages with binary components.
+            # We can ignore any -universal2 packages; they're already fat.
+            binary_packages = self.find_binary_packages(
+                host_app_packages_path,
+                universal_suffix="_universal2",
+            )
 
-        # Now install dependencies for the architecture that isn't the host architecture.
-        other_arch = {
-            "arm64": "x86_64",
-            "x86_64": "arm64",
-        }[self.tools.host_arch]
+            # Now install dependencies for the architecture that isn't the host architecture.
+            other_arch = {
+                "arm64": "x86_64",
+                "x86_64": "arm64",
+            }[self.tools.host_arch]
 
-        # Create a temporary folder targeting the other platform
-        other_app_packages_path = self.bundle_path(app) / f"app_packages.{other_arch}"
-        if other_app_packages_path.is_dir():
-            self.tools.shutil.rmtree(other_app_packages_path)
-        self.tools.os.mkdir(other_app_packages_path)
+            # Create a temporary folder targeting the other platform
+            other_app_packages_path = (
+                self.bundle_path(app) / f"app_packages.{other_arch}"
+            )
+            if other_app_packages_path.is_dir():
+                self.tools.shutil.rmtree(other_app_packages_path)
+            self.tools.os.mkdir(other_app_packages_path)
 
-        if binary_packages:
-            with self.input.wait_bar(
-                f"Installing binary app requirements for {other_arch}..."
-            ):
-                self._pip_install(
-                    app,
-                    requires=[
-                        f"{package}=={version}" for package, version in binary_packages
-                    ],
-                    app_packages_path=other_app_packages_path,
-                    include_deps=False,
-                    env={
-                        "PYTHONPATH": str(
-                            self.support_path(app)
-                            / "platform-site"
-                            / f"macosx.{other_arch}"
-                        )
-                    },
-                )
+            if binary_packages:
+                with self.input.wait_bar(
+                    f"Installing binary app requirements for {other_arch}..."
+                ):
+                    self._pip_install(
+                        app,
+                        app_packages_path=other_app_packages_path,
+                        pip_args=[
+                            "--no-deps",
+                            "--only-binary",
+                            ":all:",
+                        ]
+                        + [
+                            f"{package}=={version}"
+                            for package, version in binary_packages
+                        ],
+                        install_hint=f"""
+
+If an {other_arch} wheel has not been published for one or more of your requirements,
+you must compile those wheels yourself, or build a non-universal app by setting:
+
+    universal_build = False
+
+in the macOS configuration section of your pyproject.toml.
+""",
+                        env={
+                            "PYTHONPATH": str(
+                                self.support_path(app)
+                                / "platform-site"
+                                / f"macosx.{other_arch}"
+                            )
+                        },
+                    )
+            else:
+                self.logger.info("All packages are pure Python, or universal.")
+
+            # If given the option of a single architecture binary or a universal2 binary,
+            # pip will install the single platform binary. However, a common situation on
+            # macOS is for there to be an x86_64 binary and a universal2 binary. This means
+            # you only get a universal2 binary in the "other" install pass. This then causes
+            # problems with merging, because the "other" binary contains a copy of the
+            # architecture that the "host" platform provides.
+            #
+            # To avoid this - ensure that the libraries in the app packages for the "other"
+            # arch are all thin.
+            #
+            # This doesn't matter if it happens the other way around - if the "host" arch
+            # installs a universal binary, then the "other" arch won't be asked to install
+            # a binary at all.
+            self.thin_app_packages(other_app_packages_path, arch=other_arch)
+
+            # Merge the binaries
+            self.merge_app_packages(
+                target_app_packages=app_packages_path,
+                sources=[host_app_packages_path, other_app_packages_path],
+            )
         else:
-            self.logger.info("All packages are pure Python, or universal.")
+            # If we're not building a universal binary, we can do a single install pass
+            # directly into the app_packages folder.
+            super()._install_app_requirements(
+                app,
+                requires=requires,
+                app_packages_path=app_packages_path,
+            )
 
-        # If given the option of a single architecture binary or a universal2 binary,
-        # pip will install the single platform binary. However, a common situation on
-        # macOS is for there to be an x86_64 binary and a universal2 binary. This means
-        # you only get a universal2 binary in the "other" install pass. This then causes
-        # problems with merging, because the "other" binary contains a copy of the
-        # architecture that the "host" platform provides.
-        #
-        # To avoid this - ensure that the libraries in the app packages for the "other"
-        # arch are all thin.
-        #
-        # This doesn't matter if it happens the other way around - if the "host" arch
-        # installs a universal binary, then the "other" arch won't be asked to install
-        # a binary at all.
-        self.thin_app_packages(other_app_packages_path, arch=other_arch)
-
-        # Merge the binaries
-        self.merge_app_packages(
-            target_app_packages=app_packages_path,
-            sources=[host_app_packages_path, other_app_packages_path],
-        )
+            # Since we're only targeting 1 architecture, we can strip any universal
+            # libraries down to just the host architecture.
+            self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
 
 
 class macOSRunMixin:

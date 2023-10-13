@@ -67,8 +67,8 @@ class AppPackagesMergeMixin:
 
         return binary_packages
 
-    def ensure_thin_dylib(self, path: Path, arch: str):
-        """Ensure that a library is thin, targeting a given architecture.
+    def ensure_thin_binary(self, path: Path, arch: str):
+        """Ensure that a binary is thin, targeting a given architecture.
 
         If the library is already thin, it is left as-is.
 
@@ -107,7 +107,7 @@ class AppPackagesMergeMixin:
                         )
                     except subprocess.CalledProcessError as e:
                         raise BriefcaseCommandError(
-                            f"Unable to create thin library from {path}"
+                            f"Unable to create thin binary from {path}"
                         ) from e
                     else:
                         # Having extracted the single architecture into a temporary
@@ -182,7 +182,7 @@ class AppPackagesMergeMixin:
                     futures = []
                     for path in dylibs:
                         future = executor.submit(
-                            self.ensure_thin_dylib,
+                            self.ensure_thin_binary,
                             path=path,
                             arch=arch,
                         )

@@ -208,6 +208,8 @@ class CreateCommand(BaseCommand):
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
+                # The host architecture
+                "host_arch": self.tools.host_arch,
                 # The Briefcase version
                 "briefcase_version": briefcase.__version__,
                 # Transformations of explicit properties into useful forms
@@ -445,19 +447,23 @@ class CreateCommand(BaseCommand):
     def _pip_install(
         self,
         app: AppConfig,
-        requires: list[str],
         app_packages_path: Path,
-        include_deps: bool = True,
-        **pip_kwargs: dict[str, str],
+        pip_args: list[str],
+        install_hint: str = "",
+        **pip_kwargs,
     ):
         """Invoke pip to install a set of requirements.
 
         :param app: The app configuration
-        :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
-        :param progress_message: The waitbar progress message to display to the user.
-        :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
+        :param pip_args: The list of arguments (including the list of requirements to
+            install) to pass to pip. This is in addition to the default arguments that
+            disable pip version checks, forces upgrades, and installs into the nominated
+            ``app_packages`` path.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
+        :param pip_kwargs: Any additional keyword arguments to pass to ``subprocess.run``
             when invoking pip.
         """
         try:
@@ -476,21 +482,14 @@ class CreateCommand(BaseCommand):
                     "--no-user",
                     f"--target={app_packages_path}",
                 ]
-                + (
-                    [
-                        "--no-deps",
-                    ]
-                    if not include_deps
-                    else []
-                )
                 + self._extra_pip_args(app)
-                + requires,
+                + pip_args,
                 check=True,
                 encoding="UTF-8",
                 **pip_kwargs,
             )
         except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError() from e
+            raise RequirementsInstallError(install_hint=install_hint) from e
 
     def _install_app_requirements(
         self,
@@ -520,8 +519,8 @@ class CreateCommand(BaseCommand):
             with self.input.wait_bar(progress_message):
                 self._pip_install(
                     app,
-                    requires=self._pip_requires(app, requires),
                     app_packages_path=app_packages_path,
+                    pip_args=self._pip_requires(app, requires),
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:

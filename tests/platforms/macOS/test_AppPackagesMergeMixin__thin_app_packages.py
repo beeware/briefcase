@@ -79,7 +79,7 @@ def test_thin_app_packages_problem(dummy_command, tmp_path):
     # Thin the app_packages folder to gothic dylibs. This raises an error:
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to create thin library from .*module2\.so",
+        match=r"Unable to create thin binary from .*module2\.so",
     ):
         dummy_command.thin_app_packages(app_packages, arch="gothic")
 

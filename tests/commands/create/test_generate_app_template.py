@@ -41,6 +41,7 @@ def full_context():
         "document_types": {},
         # Properties of the generating environment
         "python_version": platform.python_version(),
+        "host_arch": "gothic",
         "briefcase_version": briefcase.__version__,
         # Fields generated from other properties
         "module_name": "my_app",

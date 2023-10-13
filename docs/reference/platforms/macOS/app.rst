@@ -53,6 +53,21 @@ Do not submit the application for notarization. By default, apps will be
 submitted for notarization unless they have been signed with an ad-hoc
 signing identity.
 
+Application configuration
+=========================
+
+The following options can be added to the ``tool.briefcase.app.<appname>.macOS.app``
+section of your ``pyproject.toml`` file.
+
+``universal_build``
+~~~~~~~~~~~~~~~~~~~
+
+A Boolean, indicating whether Briefcase should build a universal app (i.e, an app that
+can target both x86_64 and ARM64). Defaults to ``true``; if ``false``, the binary will
+only be executable on the host platform on which it was built - i.e., if you build on
+an x86_64 machine, you will produce an x86_65 binary; if you build on an ARM64 machine,
+you will produce an ARM64 binary.
+
 Platform quirks
 ===============
 

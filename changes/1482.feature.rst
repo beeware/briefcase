@@ -1,0 +1,1 @@
+macOS apps can now be configured to produce single platform binaries, or binaries that will work on both x86_64 and ARM64.

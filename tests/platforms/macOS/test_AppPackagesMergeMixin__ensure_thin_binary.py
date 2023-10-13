@@ -8,8 +8,8 @@ from ...utils import create_file, file_content
 
 
 @pytest.mark.parametrize("debug", [True, False])
-def test_thin_dylib(dummy_command, tmp_path, debug, capsys):
-    """A thin binary library is left as-is."""
+def test_thin_binary(dummy_command, tmp_path, debug, capsys):
+    """A thin binary is left as-is."""
     if debug:
         dummy_command.logger.verbosity = 1
 
@@ -21,8 +21,8 @@ def test_thin_dylib(dummy_command, tmp_path, debug, capsys):
         "Non-fat file: path/to/file.dylib is architecture: gothic\n"
     )
 
-    # Thin the library; this is effectively a no-op
-    dummy_command.ensure_thin_dylib(
+    # Thin the binary; this is effectively a no-op
+    dummy_command.ensure_thin_binary(
         tmp_path / "path" / "to" / "file.dylib",
         arch="gothic",
     )
@@ -67,8 +67,8 @@ def test_fat_dylib(dummy_command, tmp_path, debug, capsys):
 
     dummy_command.tools.subprocess.run.side_effect = thin_dylib
 
-    # Thin the library to the "gothic" architecture
-    dummy_command.ensure_thin_dylib(
+    # Thin the binary to the "gothic" architecture
+    dummy_command.ensure_thin_binary(
         tmp_path / "path" / "to" / "file.dylib",
         arch="gothic",
     )
@@ -117,12 +117,12 @@ def test_fat_dylib_arch_mismatch(dummy_command, tmp_path, debug, capsys):
         "Architectures in the fat file: path/to/file.dylib are: modern artdeco\n"
     )
 
-    # Thin the library to the "gothic" architecture. This will raise an exception
+    # Thin the binary to the "gothic" architecture. This will raise an exception
     with pytest.raises(
         BriefcaseCommandError,
         match=r"file\.dylib does not contain a gothic slice",
     ):
-        dummy_command.ensure_thin_dylib(
+        dummy_command.ensure_thin_binary(
             tmp_path / "path" / "to" / "file.dylib",
             arch="gothic",
         )
@@ -155,12 +155,12 @@ def test_fat_dylib_unknown_info(dummy_command, tmp_path, debug, capsys):
         "This is unexpected output...\n"
     )
 
-    # Thin the library to the "gothic" architecture. This will raise an exception
+    # Thin the binary to the "gothic" architecture. This will raise an exception
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Unable to determine architectures in .*file\.dylib",
     ):
-        dummy_command.ensure_thin_dylib(
+        dummy_command.ensure_thin_binary(
             tmp_path / "path" / "to" / "file.dylib",
             arch="gothic",
         )
@@ -188,11 +188,11 @@ def test_lipo_info_fail(dummy_command, tmp_path):
         subprocess.CalledProcessError(cmd="lipo -info", returncode=-1)
     )
 
-    # Thin the library to the "gothic" architecture. This will raise an exception
+    # Thin the binary to the "gothic" architecture. This will raise an exception
     with pytest.raises(
         BriefcaseCommandError, match=r"Unable to inspect architectures in .*file\.dylib"
     ):
-        dummy_command.ensure_thin_dylib(
+        dummy_command.ensure_thin_binary(
             tmp_path / "path" / "to" / "file.dylib",
             arch="gothic",
         )
@@ -229,12 +229,12 @@ def test_lipo_thin_fail(dummy_command, tmp_path, debug, capsys):
         cmd="lipo -thin", returncode=-1
     )
 
-    # Thin the library to the "gothic" architecture. This will raise an exception
+    # Thin the binary to the "gothic" architecture. This will raise an exception
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to create thin library from .*file.dylib",
+        match=r"Unable to create thin binary from .*file.dylib",
     ):
-        dummy_command.ensure_thin_dylib(
+        dummy_command.ensure_thin_binary(
             tmp_path / "path" / "to" / "file.dylib",
             arch="gothic",
         )
