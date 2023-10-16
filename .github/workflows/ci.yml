@@ -46,12 +46,12 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "macos", "ubuntu", "windows" ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12", "3.13-dev" ]
         include:
         - experimental: false
         # Allow dev Python to fail without failing entire job
-        #- python-version: "3.13-dev"
-        #  experimental: true
+        - python-version: "3.13-dev"
+          experimental: true
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
