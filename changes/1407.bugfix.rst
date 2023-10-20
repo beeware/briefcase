@@ -1,1 +1,0 @@
-The console output from invoking Python via a subprocess call is now properly decoded as UTF-8.

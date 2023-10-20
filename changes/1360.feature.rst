@@ -1,1 +1,0 @@
-Support for less common environments, such as Linux on ARM, is improved and error messages for unsupported platforms are more accurate.

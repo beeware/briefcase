@@ -1,1 +1,0 @@
-To avoid spurious warnings, pip's version check warnings were disabled while installing an app's requirements.

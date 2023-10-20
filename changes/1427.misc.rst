@@ -1,1 +1,0 @@
-The mechanism of invoking dev mode with environment variables was simplified.

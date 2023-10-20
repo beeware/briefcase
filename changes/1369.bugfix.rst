@@ -1,1 +1,0 @@
-Creating Debian packages no longer fails due to a permission error for certain umask values such as ``0077``.

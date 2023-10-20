@@ -1,1 +1,0 @@
-The run command now ensures Android logging is shown when the datetime on the device is different from the host machine.

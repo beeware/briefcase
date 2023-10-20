@@ -1,1 +1,0 @@
-Updated furo from 2023.8.19 to 2023.9.10.

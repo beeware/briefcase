@@ -1,1 +1,0 @@
-With the release of Python 3.12.0, CI is now required to succeed for Python 3.12.

@@ -1,1 +1,0 @@
-The Java JDK version was upgraded to 17.0.8.1+1.

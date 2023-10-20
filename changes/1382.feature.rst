@@ -1,1 +1,0 @@
-Tool verification for Java, Android SDK, and WiX were improved to provide more informative errors and debug logging.

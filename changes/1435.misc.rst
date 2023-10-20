@@ -1,1 +1,0 @@
-Updated pytest from 7.4.0 to 7.4.1.

@@ -1,1 +1,0 @@
-The test suite in CI now runs using Windows Store Python 3.12 instead of Python 3.11.

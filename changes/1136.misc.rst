@@ -1,1 +1,0 @@
-Briefcase can now package Android APKs as a packaging artefact.

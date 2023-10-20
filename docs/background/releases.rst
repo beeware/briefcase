@@ -4,6 +4,57 @@ Release History
 
 .. towncrier release notes start
 
+0.3.16 (2023-10-20)
+===================
+
+Features
+--------
+
+* Support for less common environments, such as Linux on ARM, has been improved. Error messages for unsupported platforms are now more accurate. (`#1360 <https://github.com/beeware/briefcase/pull/1360>`__)
+* Tool verification for Java, Android SDK, and WiX have been improved to provide more informative errors and debug logging. (`#1382 <https://github.com/beeware/briefcase/pull/1382>`__)
+* A super verbose logging mode was added (enabled using ``-vv``). This turns on all Briefcase internal logging, but also enables verbose logging for all the third-party tools that Briefcase invokes. (`#1384 <https://github.com/beeware/briefcase/issues/1384>`__)
+* Briefcase now uses Android SDK Command-Line Tools v9.0. If an externally-managed Android SDK is being used, it must provide this version of Command-Line Tools. Use the SDK Manager in Android Studio to ensure it is installed. (`#1397 <https://github.com/beeware/briefcase/pull/1397>`__)
+* Support for OpenSuSE Linux distributions was added. (`#1416 <https://github.com/beeware/briefcase/issues/1416>`__)
+* iOS apps are no longer rejected by the iOS App Store for packaging reasons. (`#1439 <https://github.com/beeware/briefcase/pull/1439>`__)
+* The Java JDK version was upgraded to 17.0.8.1+1. (`#1462 <https://github.com/beeware/briefcase/pull/1462>`__)
+* macOS apps can now be configured to produce single platform binaries, or binaries that will work on both x86_64 and ARM64. (`#1482 <https://github.com/beeware/briefcase/issues/1482>`__)
+
+
+Bugfixes
+--------
+
+* Build warnings caused by bugs in Xcode that can be safely ignored are now filtered out of visible output. (`#377 <https://github.com/beeware/briefcase/issues/377>`__)
+* The run command now ensures Android logging is shown when the datetime on the device is different from the host machine. (`#1146 <https://github.com/beeware/briefcase/issues/1146>`__)
+* Briefcase will detect if you attempt to launch an Android app on a device whose OS doesn't meet minimum version requirements. (`#1157 <https://github.com/beeware/briefcase/issues/1157>`__)
+* macOS apps are now guaranteed to be universal binaries, even when dependencies only provide single-architecture binary wheels. (`#1217 <https://github.com/beeware/briefcase/issues/1217>`__)
+* The ability to build AppImages in Docker on macOS was restored. (`#1352 <https://github.com/beeware/briefcase/issues/1352>`__)
+* Error reporting has been improved when the target Docker image name is invalid. (`#1368 <https://github.com/beeware/briefcase/issues/1368>`__)
+* Creating Debian packages no longer fails due to a permission error for certain ``umask`` values (such as ``0077``). (`#1369 <https://github.com/beeware/briefcase/issues/1369>`__)
+* Inside of Docker containers, the Briefcase data directory is now mounted at ``/briefcase`` instead of ``/home/brutus/.cache/briefcase``. (`#1374 <https://github.com/beeware/briefcase/issues/1374>`__)
+* The console output from invoking Python via a subprocess call is now properly decoded as UTF-8. (`#1407 <https://github.com/beeware/briefcase/issues/1407>`__)
+* The command line arguments used to configure the Python environment for ``briefcase dev`` no longer leak into the runtime environment on macOS. (`#1413 <https://github.com/beeware/briefcase/pull/1413>`__)
+
+
+Backward Incompatible Changes
+-----------------------------
+
+* AppImage packaging requires a recent release of LinuxDeploy to continue creating AppImages. Run ``briefcase upgrade linuxdeploy`` to install the latest version. (`#1361 <https://github.com/beeware/briefcase/issues/1361>`__)
+* The size of iOS splash images have changed. iOS apps should now provide 800px, 1600px and 2400px images (previously, this as 1024px, 2048px and 3072px). This is because iOS 14 added a hard limit on the size of image resources. (`#1371 <https://github.com/beeware/briefcase/pull/1371>`__)
+* Support for AppImage has been reduced to "best effort". We will maintain unit test coverage for the AppImage backend, but we no longer build AppImages as part of our release process. We will accept bug reports related to AppImage support, and we will merge PRs that address AppImage support, but the core team no longer considers addressing AppImage bugs a priority, and discourages the use of AppImage for new projects. (`#1449 <https://github.com/beeware/briefcase/pull/1449>`__)
+
+
+Documentation
+-------------
+
+* Documentation on the process of retrieving certificate identities on macOS and Windows was improved. (`#1473 <https://github.com/beeware/briefcase/pull/1473>`__)
+
+
+Misc
+----
+
+* `#1136 <https://github.com/beeware/briefcase/issues/1136>`__, `#1290 <https://github.com/beeware/briefcase/pull/1290>`__, `#1363 <https://github.com/beeware/briefcase/pull/1363>`__, `#1364 <https://github.com/beeware/briefcase/pull/1364>`__, `#1365 <https://github.com/beeware/briefcase/pull/1365>`__, `#1372 <https://github.com/beeware/briefcase/pull/1372>`__, `#1375 <https://github.com/beeware/briefcase/pull/1375>`__, `#1376 <https://github.com/beeware/briefcase/pull/1376>`__, `#1379 <https://github.com/beeware/briefcase/issues/1379>`__, `#1388 <https://github.com/beeware/briefcase/pull/1388>`__, `#1394 <https://github.com/beeware/briefcase/pull/1394>`__, `#1395 <https://github.com/beeware/briefcase/pull/1395>`__, `#1396 <https://github.com/beeware/briefcase/pull/1396>`__, `#1398 <https://github.com/beeware/briefcase/pull/1398>`__, `#1400 <https://github.com/beeware/briefcase/pull/1400>`__, `#1401 <https://github.com/beeware/briefcase/pull/1401>`__, `#1402 <https://github.com/beeware/briefcase/pull/1402>`__, `#1403 <https://github.com/beeware/briefcase/pull/1403>`__, `#1408 <https://github.com/beeware/briefcase/pull/1408>`__, `#1409 <https://github.com/beeware/briefcase/pull/1409>`__, `#1410 <https://github.com/beeware/briefcase/pull/1410>`__, `#1411 <https://github.com/beeware/briefcase/issues/1411>`__, `#1412 <https://github.com/beeware/briefcase/pull/1412>`__, `#1418 <https://github.com/beeware/briefcase/pull/1418>`__, `#1419 <https://github.com/beeware/briefcase/pull/1419>`__, `#1420 <https://github.com/beeware/briefcase/pull/1420>`__, `#1421 <https://github.com/beeware/briefcase/pull/1421>`__, `#1427 <https://github.com/beeware/briefcase/pull/1427>`__, `#1429 <https://github.com/beeware/briefcase/issues/1429>`__, `#1431 <https://github.com/beeware/briefcase/issues/1431>`__, `#1433 <https://github.com/beeware/briefcase/pull/1433>`__, `#1435 <https://github.com/beeware/briefcase/pull/1435>`__, `#1436 <https://github.com/beeware/briefcase/pull/1436>`__, `#1437 <https://github.com/beeware/briefcase/pull/1437>`__, `#1438 <https://github.com/beeware/briefcase/pull/1438>`__, `#1442 <https://github.com/beeware/briefcase/pull/1442>`__, `#1443 <https://github.com/beeware/briefcase/pull/1443>`__, `#1444 <https://github.com/beeware/briefcase/pull/1444>`__, `#1445 <https://github.com/beeware/briefcase/pull/1445>`__, `#1446 <https://github.com/beeware/briefcase/pull/1446>`__, `#1447 <https://github.com/beeware/briefcase/pull/1447>`__, `#1448 <https://github.com/beeware/briefcase/pull/1448>`__, `#1454 <https://github.com/beeware/briefcase/pull/1454>`__, `#1455 <https://github.com/beeware/briefcase/pull/1455>`__, `#1456 <https://github.com/beeware/briefcase/pull/1456>`__, `#1457 <https://github.com/beeware/briefcase/pull/1457>`__, `#1464 <https://github.com/beeware/briefcase/pull/1464>`__, `#1465 <https://github.com/beeware/briefcase/pull/1465>`__, `#1466 <https://github.com/beeware/briefcase/pull/1466>`__, `#1470 <https://github.com/beeware/briefcase/pull/1470>`__, `#1474 <https://github.com/beeware/briefcase/pull/1474>`__, `#1476 <https://github.com/beeware/briefcase/pull/1476>`__, `#1477 <https://github.com/beeware/briefcase/pull/1477>`__, `#1478 <https://github.com/beeware/briefcase/pull/1478>`__, `#1481 <https://github.com/beeware/briefcase/issues/1481>`__, `#1485 <https://github.com/beeware/briefcase/pull/1485>`__, `#1486 <https://github.com/beeware/briefcase/pull/1486>`__, `#1487 <https://github.com/beeware/briefcase/pull/1487>`__, `#1488 <https://github.com/beeware/briefcase/pull/1488>`__, `#1489 <https://github.com/beeware/briefcase/pull/1489>`__, `#1490 <https://github.com/beeware/briefcase/pull/1490>`__, `#1492 <https://github.com/beeware/briefcase/pull/1492>`__, `#1494 <https://github.com/beeware/briefcase/pull/1494>`__
+
+
 0.3.15 (2023-07-10)
 ===================
 

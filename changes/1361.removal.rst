@@ -1,1 +1,0 @@
-AppImage packaging requires a recent release of LinuxDeploy to continue creating AppImages. Run ``briefcase upgrade linuxdeploy`` to install the latest version.

@@ -1,1 +1,0 @@
-When running tests or building docs in tox, Briefcase is now installed as a wheel instead of an sdist.

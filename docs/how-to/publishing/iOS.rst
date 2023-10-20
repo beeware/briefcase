@@ -76,7 +76,7 @@ processed.
 Create an App Store entry
 =========================
 
-Log into `App Store Connect <http://appstoreconnect.apple.com>`__, click on "My Apps",
+Log into `App Store Connect <https://appstoreconnect.apple.com>`__, click on "My Apps",
 then on + to add an app.
 
 Fill out the form for a new app. If you've run the app in Xcode, the Bundle ID for your
