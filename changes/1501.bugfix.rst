@@ -1,0 +1,1 @@
+Debug logging was restored when the ``-v`` flag is used.

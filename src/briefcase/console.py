@@ -117,7 +117,7 @@ class Log:
     """Manage logging output driven by verbosity flags."""
 
     # Level of verbosity when debug output is shown in the console
-    DEBUG = 2
+    DEBUG = 1
     # Printed at the beginning of all debug output
     DEBUG_PREFACE = ">>> "
     # subdirectory of command.base_path to store log files
@@ -208,7 +208,7 @@ class Log:
                 )
 
     def debug(self, message="", *, prefix="", markup=False):
-        """Log messages at debug level; included if verbosity>=2."""
+        """Log messages at debug level; included if verbosity >= 1."""
         self._log(
             preface=self.DEBUG_PREFACE,
             prefix=prefix,
