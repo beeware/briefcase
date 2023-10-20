@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 import tomli_w
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import (
     BriefcaseCommandError,
     NetworkFailure,
@@ -155,7 +155,7 @@ def test_build_appimage(build_command, first_app, debug_mode, tmp_path, sub_stre
     """A Linux app can be packaged as an AppImage."""
     # Enable verbose tool logging
     if debug_mode:
-        build_command.tools.logger.verbosity = 2
+        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.verify_app_tools(first_app)
     build_command.build_app(first_app)

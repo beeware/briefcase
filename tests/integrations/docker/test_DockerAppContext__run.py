@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.console import LogLevel
+
 
 def test_simple_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """A simple call will be invoked."""
@@ -310,7 +312,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
 )
 def test_simple_verbose_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """If verbosity is turned out, there is output."""
-    mock_docker_app_context.tools.logger.verbosity = 2
+    mock_docker_app_context.tools.logger.verbosity = LogLevel.DEBUG
 
     mock_docker_app_context.run(["hello", "world"])
 

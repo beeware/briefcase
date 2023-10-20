@@ -693,7 +693,7 @@ any compatibility problems, and then add the compatibility declaration.
             "--verbosity",
             action="count",
             default=0,
-            help="Enable verbose logging. -vv enables super verbose mode.",
+            help="Enable verbose logging. Use -vv and -vvv to increase logging verbosity.",
         )
         parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(

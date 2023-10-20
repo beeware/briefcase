@@ -5,6 +5,8 @@ from unittest.mock import ANY
 
 import pytest
 
+from briefcase.console import LogLevel
+
 
 def test_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """A simple call will be invoked."""
@@ -48,7 +50,7 @@ def test_call_with_arg(mock_sub, sub_stream_kw, sleep_zero, capsys):
 
 def test_debug_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """If verbosity is turned up, there is debug output."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     with mock_sub.tools.input.wait_bar():
         mock_sub.run(["hello", "world"])
@@ -71,7 +73,7 @@ def test_debug_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
 
 def test_debug_call_with_env(mock_sub, sub_stream_kw, sleep_zero, capsys, tmp_path):
     """If verbosity is turned up, injected env vars are included in debug output."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     env = {"NewVar": "NewVarValue"}
     with mock_sub.tools.input.wait_bar():

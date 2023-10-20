@@ -2,6 +2,7 @@ import subprocess
 
 import pytest
 
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 
 from ...utils import create_file, file_content
@@ -11,7 +12,7 @@ from ...utils import create_file, file_content
 def test_thin_binary(dummy_command, tmp_path, debug, capsys):
     """A thin binary is left as-is."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-original")
@@ -51,7 +52,7 @@ def test_thin_binary(dummy_command, tmp_path, debug, capsys):
 def test_fat_dylib(dummy_command, tmp_path, debug, capsys):
     """A fat binary library can be thinned."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -107,7 +108,7 @@ def test_fat_dylib(dummy_command, tmp_path, debug, capsys):
 def test_fat_dylib_arch_mismatch(dummy_command, tmp_path, debug, capsys):
     """If a fat binary doesn't contain the target architecture, an error is raised."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -145,7 +146,7 @@ def test_fat_dylib_unknown_info(dummy_command, tmp_path, debug, capsys):
     """If the lipo info call succeeds, but generates unknown output, an error is
     raised."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -214,7 +215,7 @@ def test_lipo_info_fail(dummy_command, tmp_path):
 def test_lipo_thin_fail(dummy_command, tmp_path, debug, capsys):
     """If lipo fails thinning the binary, an error is raised."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")

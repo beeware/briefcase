@@ -2,6 +2,8 @@ import logging
 
 import pytest
 
+from briefcase.console import LogLevel
+
 cookiecutter_logger = logging.getLogger("cookiecutter")
 
 
@@ -16,9 +18,9 @@ def base_command(base_command):
 @pytest.mark.parametrize(
     "verbosity, log_level",
     [
-        (0, logging.INFO),
-        (1, logging.INFO),
-        (2, logging.DEBUG),
+        (LogLevel.INFO, logging.INFO),
+        (LogLevel.DEBUG, logging.INFO),
+        (LogLevel.DEEP_DEBUG, logging.DEBUG),
     ],
 )
 def test_cookiecutter_logging_config(base_command, verbosity, log_level):

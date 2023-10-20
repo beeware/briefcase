@@ -105,10 +105,10 @@ def parse_cmdline(args):
 
     # argparse handles `--` specially, so make the passthrough args bypass the parser.
     def parse_known_args(args):
-        args, passthough = split_passthrough(args)
+        args, passthrough = split_passthrough(args)
         options, extra = parser.parse_known_args(args)
-        if passthough:
-            extra += ["--"] + passthough
+        if passthrough:
+            extra += ["--"] + passthrough
         return options, extra
 
     # Use parse_known_args to ensure any extra arguments can be ignored,

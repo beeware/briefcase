@@ -7,7 +7,7 @@ from rich.traceback import Trace
 
 import briefcase
 from briefcase.commands.dev import DevCommand
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
@@ -39,18 +39,71 @@ def command(mock_now, tmp_path) -> DevCommand:
 
 
 @pytest.mark.parametrize(
-    "verbosity, enabled",
+    "verbosity, verbose_enabled, debug_enabled, deep_debug_enabled",
     [
-        (0, False),
-        (1, False),
-        (2, True),
-        (3, True),
-        (4, True),
+        (-1, False, False, False),
+        (0, False, False, False),
+        (LogLevel.INFO, False, False, False),
+        (1, True, False, False),
+        (LogLevel.VERBOSE, True, False, False),
+        (2, True, True, False),
+        (LogLevel.DEBUG, True, True, False),
+        (3, True, True, True),
+        (LogLevel.DEEP_DEBUG, True, True, True),
+        (4, True, True, True),
+        (5, True, True, True),
     ],
 )
-def test_is_deep_debug(verbosity, enabled):
-    """Deep debug is enabled at =>2 verbosity."""
-    assert Log(verbosity=verbosity).is_deep_debug is enabled
+def test_log_level(verbosity, verbose_enabled, debug_enabled, deep_debug_enabled):
+    """Logging level is correct."""
+    assert Log(verbosity=verbosity).is_verbose is verbose_enabled
+    assert Log(verbosity=verbosity).is_debug is debug_enabled
+    assert Log(verbosity=verbosity).is_deep_debug is deep_debug_enabled
+
+
+def test_info_logging(capsys):
+    """The info level logging only includes info logs."""
+    logger = Log()
+
+    logger.info("info")
+    logger.verbose("verbose")
+    logger.debug("debug")
+
+    output = capsys.readouterr().out.splitlines()
+
+    assert "info" in output
+    assert "verbose" not in output
+    assert ">>> debug" not in output
+
+
+def test_verbose_logging(capsys):
+    """The verbose level logging includes info and verbose logs."""
+    logger = Log(verbosity=LogLevel.VERBOSE)
+
+    logger.info("info")
+    logger.verbose("verbose")
+    logger.debug("debug")
+
+    output = capsys.readouterr().out.splitlines()
+
+    assert "info" in output
+    assert "verbose" in output
+    assert ">>> debug" not in output
+
+
+def test_debug_logging(capsys):
+    """The debug level logging includes info, verbose and debug logs."""
+    logger = Log(verbosity=LogLevel.DEBUG)
+
+    logger.info("info")
+    logger.verbose("verbose")
+    logger.debug("debug")
+
+    output = capsys.readouterr().out.splitlines()
+
+    assert "info" in output
+    assert "verbose" in output
+    assert ">>> debug" in output
 
 
 def test_capture_stacktrace():
@@ -107,7 +160,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
         "ANDROID_HOME": "/androidsdk",
     }
 
-    logger = Log(verbosity=2)
+    logger = Log(verbosity=LogLevel.DEBUG)
     logger.save_log = True
     logger.debug("this is debug output")
     logger.info("this is info output")
@@ -323,7 +376,7 @@ def test_save_log_to_file_fail_to_write_file(
 
 def test_log_with_context(capsys):
     """Log file can be given a persistent context."""
-    logger = Log(verbosity=2)
+    logger = Log(verbosity=LogLevel.DEBUG)
     logger.save_log = False
 
     logger.info("this is info output")
@@ -374,7 +427,7 @@ def test_log_with_context(capsys):
 
 def test_log_error_with_context(capsys):
     """If an exception is raised in a logging context, the context is cleared."""
-    logger = Log(verbosity=2)
+    logger = Log(verbosity=LogLevel.DEBUG)
     logger.save_log = False
 
     logger.info("this is info output")

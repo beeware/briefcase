@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOSSigningMixin
@@ -239,7 +239,7 @@ def test_selected_identity(dummy_command):
 def test_sign_file_adhoc_identity(dummy_command, tmp_path, debug, capsys):
     """If an ad-hoc identity is used, the runtime option isn't used."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(tmp_path / "base_path" / "random.file", identity="-")
@@ -267,7 +267,7 @@ def test_sign_file_adhoc_identity(dummy_command, tmp_path, debug, capsys):
 def test_sign_file_entitlements(dummy_command, tmp_path, debug, capsys):
     """Entitlements can be included in a signing call."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
@@ -299,7 +299,7 @@ def test_sign_file_entitlements(dummy_command, tmp_path, debug, capsys):
 def test_sign_file_deep_sign(dummy_command, tmp_path, debug, capsys):
     """A file can be identified as needing a deep sign."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # First call raises the deep sign warning; second call succeeds
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
@@ -342,7 +342,7 @@ def test_sign_file_deep_sign(dummy_command, tmp_path, debug, capsys):
 def test_sign_file_deep_sign_failure(dummy_command, tmp_path, debug, capsys):
     """If deep signing fails, an error is raised."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # First invocation raises the deep sign error; second invocation raises some other error
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
@@ -385,7 +385,7 @@ def test_sign_file_unsupported_format(dummy_command, tmp_path, debug, capsys):
     """If codesign reports an unsupported format, the signing attempt is ignored with a
     warning."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # FIXME: I'm not sure how to manufacture this in practice.
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
@@ -424,7 +424,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, debug, capsys)
     """If a folder happens to have a .framework extension, the signing attempt is
     ignored with a warning."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Raise an error caused by an unknown bundle format during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
@@ -462,7 +462,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, tmp_path, debug, capsys)
 def test_sign_file_unknown_error(dummy_command, tmp_path, debug, capsys):
     """Any other codesigning error raises an error."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Raise an unknown error during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign("Unknown error")
@@ -494,7 +494,7 @@ def test_sign_file_unknown_error(dummy_command, tmp_path, debug, capsys):
 def test_sign_app(dummy_command, first_app_with_binaries, tmp_path, debug, capsys):
     """An app bundle can be signed."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Sign the app
     dummy_command.sign_app(
@@ -572,7 +572,7 @@ def test_sign_app(dummy_command, first_app_with_binaries, tmp_path, debug, capsy
 def test_sign_app_with_failure(dummy_command, first_app_with_binaries, debug, capsys):
     """If signing a single file in the app fails, the error is surfaced."""
     if debug:
-        dummy_command.logger.verbosity = 1
+        dummy_command.logger.verbosity = LogLevel.DEBUG
 
     # Sign the app. Signing first_dylib.dylib will fail.
     def _codesign(args, **kwargs):

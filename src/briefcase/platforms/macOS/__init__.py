@@ -364,8 +364,7 @@ or
             process_command.append("--options")
             process_command.append(options)
 
-        if self.logger.verbosity >= 1:
-            self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
+        self.logger.verbose(f"Signing {Path(path).relative_to(self.base_path)}")
 
         try:
             self.tools.subprocess.run(
@@ -376,10 +375,9 @@ or
         except subprocess.CalledProcessError as e:
             errors = e.stderr
             if "code object is not signed at all" in errors:
-                if self.logger.verbosity >= 1:
-                    self.logger.info(
-                        f"... {Path(path).relative_to(self.base_path)} requires a deep sign; retrying"
-                    )
+                self.logger.verbose(
+                    f"... {Path(path).relative_to(self.base_path)} requires a deep sign; retrying"
+                )
                 try:
                     self.tools.subprocess.run(
                         process_command + ["--deep"],
@@ -402,10 +400,9 @@ or
                 ]
             ):
                 # We should not be signing this in the first place
-                if self.logger.verbosity >= 1:
-                    self.logger.info(
-                        f"... {Path(path).relative_to(self.base_path)} does not require a signature"
-                    )
+                self.logger.verbose(
+                    f"... {Path(path).relative_to(self.base_path)} does not require a signature"
+                )
                 return
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")

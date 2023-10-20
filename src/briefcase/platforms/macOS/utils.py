@@ -85,13 +85,11 @@ class AppPackagesMergeMixin:
             ) from e
         else:
             if output.startswith("Non-fat file: "):
-                if self.logger.verbosity >= 1:
-                    self.logger.info(f"{path} is already thin.")
+                self.logger.verbose(f"{path} is already thin.")
             elif output.startswith("Architectures in the fat file: "):
                 architectures = set(output.strip().split(":")[-1].strip().split(" "))
                 if arch in architectures:
-                    if self.logger.verbosity >= 1:
-                        self.logger.info(f"Thinning {path}")
+                    self.logger.verbose(f"Thinning {path}")
                     try:
                         thin_lib_path = path.parent / f"{path.name}.{arch}"
                         self.tools.subprocess.run(
@@ -129,8 +127,7 @@ class AppPackagesMergeMixin:
         :param target_path: The root location where the fat library will be written
         :param sources: A list of root locations providing single platform libraries.
         """
-        if self.logger.verbosity >= 1:
-            self.logger.info(f"Creating fat library {relative_path}")
+        self.logger.verbose(f"Creating fat library {relative_path}")
 
         try:
             # Ensure the directory where the library will be written exists.
