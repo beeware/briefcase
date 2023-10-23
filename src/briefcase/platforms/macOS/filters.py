@@ -112,7 +112,7 @@ class XcodeBuildFilter:
         XCODEBUILD_PREFIX + r"\[MT\] DVTAssertions: "
         r"Warning in /System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot11/"
         r"ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/IDEFrameworks/"
-        r"IDEFrameworks-22267/IDEFoundation/Provisioning"
+        r"IDEFrameworks-\d+/IDEFoundation/Provisioning"
         r"/Capabilities Infrastructure/IDECapabilityQuerySelection.swift:\d+"
     )
 
