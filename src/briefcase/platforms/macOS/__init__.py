@@ -708,16 +708,10 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.logger.info(
-                "Signing app with ad-hoc identity...",
-                prefix=app.app_name,
-            )
+            self.logger.info("Signing app with ad-hoc identity...", prefix=app.app_name)
             self.logger.warning(
-                (
-                    "Because you are signing with the ad-hoc identity, this "
-                    "app will run, but cannot be re-distributed."
-                ),
-                prefix=app.app_name,
+                "Because you are signing with the ad-hoc identity, this "
+                "app will run, but cannot be re-distributed."
             )
         else:
             # If we're signing, and notarization isn't explicitly disabled,
@@ -726,13 +720,16 @@ password:
                 notarize_app = True
 
             self.logger.info(
-                f"Signing app with identity {identity_name}...", prefix=app.app_name
+                f"Signing app with identity {identity_name}...",
+                prefix=app.app_name,
             )
 
             if notarize_app:
                 team_id = self.team_id_from_identity(identity_name)
 
         self.sign_app(app=app, identity=identity)
+
+        dist_path: Path = self.distribution_path(app)
 
         if app.packaging_format == "app":
             if notarize_app:
@@ -742,11 +739,9 @@ password:
                 )
                 self.notarize(self.binary_path(app), team_id=team_id)
 
-            with self.input.wait_bar(
-                f"Archiving {self.distribution_path(app).name}..."
-            ):
+            with self.input.wait_bar(f"Archiving {dist_path.name}..."):
                 self.tools.shutil.make_archive(
-                    self.distribution_path(app).with_suffix(""),
+                    dist_path.with_suffix(""),
                     format="zip",
                     root_dir=self.binary_path(app).parent,
                     base_dir=self.binary_path(app).name,
@@ -755,68 +750,65 @@ password:
         else:  # Default packaging format is DMG
             self.logger.info("Building DMG...", prefix=app.app_name)
 
-            dmg_settings = {
-                "files": [os.fsdecode(self.binary_path(app))],
-                "symlinks": {"Applications": "/Applications"},
-                "icon_locations": {
-                    f"{app.formal_name}.app": (75, 75),
-                    "Applications": (225, 75),
-                },
-                "window_rect": ((600, 600), (350, 150)),
-                "icon_size": 64,
-                "text_size": 12,
-            }
+            with self.input.wait_bar(f"Building {dist_path.name}..."):
+                dmg_settings = {
+                    "files": [os.fsdecode(self.binary_path(app))],
+                    "symlinks": {"Applications": "/Applications"},
+                    "icon_locations": {
+                        f"{app.formal_name}.app": (75, 75),
+                        "Applications": (225, 75),
+                    },
+                    "window_rect": ((600, 600), (350, 150)),
+                    "icon_size": 64,
+                    "text_size": 12,
+                }
 
-            try:
-                icon_filename = self.base_path / f"{app.installer_icon}.icns"
-                if not icon_filename.exists():
-                    self.logger.warning(
-                        f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
-                    )
-                    raise AttributeError()
-            except AttributeError:
-                # No installer icon specified. Fall back to the app icon
-                if app.icon:
-                    icon_filename = self.base_path / f"{app.icon}.icns"
+                try:
+                    icon_filename = self.base_path / f"{app.installer_icon}.icns"
                     if not icon_filename.exists():
                         self.logger.warning(
-                            f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
+                            f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
                         )
+                        raise AttributeError()
+                except AttributeError:
+                    # No installer icon specified. Fall back to the app icon
+                    if app.icon:
+                        icon_filename = self.base_path / f"{app.icon}.icns"
+                        if not icon_filename.exists():
+                            self.logger.warning(
+                                f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
+                            )
+                            icon_filename = None
+                    else:
+                        # No app icon specified either
                         icon_filename = None
-                else:
-                    # No app icon specified either
-                    icon_filename = None
 
-            if icon_filename:
-                dmg_settings["icon"] = os.fsdecode(icon_filename)
+                if icon_filename:
+                    dmg_settings["icon"] = os.fsdecode(icon_filename)
 
-            try:
-                image_filename = self.base_path / f"{app.installer_background}.png"
-                if image_filename.exists():
-                    dmg_settings["background"] = os.fsdecode(image_filename)
-                else:
-                    self.logger.warning(
-                        f"Can't find {app.installer_background}.png to use as DMG background"
-                    )
-            except AttributeError:
-                # No installer background image provided
-                pass
+                try:
+                    image_filename = self.base_path / f"{app.installer_background}.png"
+                    if image_filename.exists():
+                        dmg_settings["background"] = os.fsdecode(image_filename)
+                    else:
+                        self.logger.warning(
+                            f"Can't find {app.installer_background}.png to use as DMG background"
+                        )
+                except AttributeError:
+                    # No installer background image provided
+                    pass
 
-            dmg_path = self.distribution_path(app)
-            self.dmgbuild.build_dmg(
-                filename=os.fsdecode(dmg_path),
-                volume_name=f"{app.formal_name} {app.version}",
-                settings=dmg_settings,
-            )
+                self.dmgbuild.build_dmg(
+                    filename=os.fsdecode(dist_path),
+                    volume_name=f"{app.formal_name} {app.version}",
+                    settings=dmg_settings,
+                )
 
-            self.sign_file(
-                dmg_path,
-                identity=identity,
-            )
+            self.sign_file(dist_path, identity=identity)
 
             if notarize_app:
                 self.logger.info(
                     f"Notarizing DMG with team ID {team_id}...",
                     prefix=app.app_name,
                 )
-                self.notarize(dmg_path, team_id=team_id)
+                self.notarize(dist_path, team_id=team_id)
