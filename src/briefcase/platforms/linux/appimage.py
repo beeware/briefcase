@@ -96,6 +96,24 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 """
             )
 
+        self.logger.warning(
+            """\
+*************************************************************************
+** WARNING: Use of AppImage is not recommended!                        **
+*************************************************************************
+
+    Briefcase supports AppImage in a best-effort capacity. It has proven
+    to be highly unreliable as a distribution platform. AppImages cannot
+    use pre-compiled binary wheels, and has significant problems with
+    most commonly used GUI toolkits (including GTK and PySide).
+
+    Consider using system packages or Flatpak for Linux app
+    distribution.
+
+*************************************************************************
+"""
+        )
+
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     # The Mostly Passive mixin verifies that Docker exists and can be run, but

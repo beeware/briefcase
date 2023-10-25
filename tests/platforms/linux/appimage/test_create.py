@@ -69,8 +69,12 @@ def test_finalize_docker(create_command, first_app_config, capsys):
 
     create_command.finalize_app_config(first_app_config)
 
+    stdout = capsys.readouterr().out
     # Warning message was not recorded
-    assert "WARNING: Building a Local AppImage!" not in capsys.readouterr().out
+    assert "WARNING: Building a Local AppImage!" not in stdout
+
+    # Generic appimage warning *was* recorded
+    assert "WARNING: Use of AppImage is not recommended!" in stdout
 
 
 def test_finalize_nodocker(create_command, first_app_config, capsys):
@@ -79,8 +83,12 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
     create_command.finalize_app_config(first_app_config)
 
-    # Warning message was not recorded
-    assert "WARNING: Building a Local AppImage!" in capsys.readouterr().out
+    stdout = capsys.readouterr().out
+    # Warning message was recorded
+    assert "WARNING: Building a Local AppImage!" in stdout
+
+    # Generic appimage warning *was* recorded
+    assert "WARNING: Use of AppImage is not recommended!" in stdout
 
 
 @pytest.mark.parametrize(
