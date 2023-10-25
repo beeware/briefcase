@@ -235,16 +235,22 @@ def create_installed_package(
     :param package: The name of the package in the wheel. Defaults to ``dummy``
     :param version: The version number of the package. Defaults to ``1.2.3``
     :param tag: The installation tag for the package. Defaults to a pure python wheel.
-    :param extra_content: Optional. A list of tuples of ``(path, content)`` that will be
-        added to the wheel.
+    :param extra_content: Optional. A list of tuples of ``(path, content)`` or
+        ``(path, content, chmod)`` that will be added to the wheel. If ``chmod`` is
+        not specified, default filesystem permissions will be used.
     """
-    for filename, content in installed_package_content(
+    for entry in installed_package_content(
         package=package,
         version=version,
         tag=tag,
         extra_content=extra_content,
     ):
-        create_file(path / filename, content=content)
+        try:
+            filename, content, chmod = entry
+        except ValueError:
+            filename, content = entry
+            chmod = None
+        create_file(path / filename, content=content, chmod=chmod)
 
 
 def create_wheel(
@@ -260,8 +266,9 @@ def create_wheel(
     :param package: The name of the package in the wheel. Defaults to ``dummy``
     :param version: The version number of the package. Defaults to ``1.2.3``
     :param tag: The installation tag for the package. Defaults to a pure python wheel.
-    :param extra_content: Optional. A list of tuples of ``(path, content)`` that
-        will be added to the wheel.
+    :param extra_content: Optional. A list of tuples of ``(path, content)`` or
+        ``(path, content, chmod)`` that will be added to the wheel. If ``chmod`` is
+        not specified, default filesystem permissions will be used.
     """
     wheel_filename = path / f"{package}-{version}-{tag}.whl"
 
