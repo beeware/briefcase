@@ -243,11 +243,9 @@ class AppPackagesMergeMixin:
                                     f"between sources; ignoring {source_app_packages.suffix[1:]} version."
                                 )
                         else:
-                            # The file doesn't exist yet; copy it as is, and store the
-                            # digest for later comparison
-                            self.tools.shutil.copyfile(source_path, target_path)
-                            # Ensure permissions as well.
-                            self.tools.shutil.copymode(source_path, target_path)
+                            # The file doesn't exist yet; copy it as is (including
+                            # permissions), and store the digest for later comparison
+                            self.tools.shutil.copy(source_path, target_path)
                             digests[relative_path] = sha256_file_digest(source_path)
 
         # Call lipo on each dylib that was found to create the fat version.
