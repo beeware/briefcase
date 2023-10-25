@@ -237,10 +237,10 @@ def test_winsdk_nonlatest_install_from_reg(
     # Confirm invalid SDK was evaluated
     expected_output = (
         "\n"
-        ">>> [Windows SDK] Finding Suitable Installation...\n"
-        f">>> Evaluating Registry SDK version '85.0.9.0' at {tmp_path / 'invalid' / 'win_sdk'}\n"
-        f">>> Evaluating Registry SDK version '85.0.8.0' at {tmp_path / 'win_sdk'}\n"
-        f">>> Using Windows SDK v85.0.8.0 at {tmp_path / 'win_sdk'}\n"
+        "[Windows SDK] Finding Suitable Installation...\n"
+        f"Evaluating Registry SDK version '85.0.9.0' at {tmp_path / 'invalid' / 'win_sdk'}\n"
+        f"Evaluating Registry SDK version '85.0.8.0' at {tmp_path / 'win_sdk'}\n"
+        f"Using Windows SDK v85.0.8.0 at {tmp_path / 'win_sdk'}\n"
     )
     assert capsys.readouterr().out == expected_output
 
@@ -334,17 +334,17 @@ def test_winsdk_invalid_install_from_reg(
         WindowsSDK.verify(mock_tools)
 
     # Confirm invalid SDK was evaluated
-    expected_output = "\n>>> [Windows SDK] Finding Suitable Installation...\n"
+    expected_output = "\n[Windows SDK] Finding Suitable Installation...\n"
     for subdir, version in [t for t in reg_installs if FileNotFoundError not in t]:
         if subdir and version:
             sdk_path = tmp_path / subdir / "win_sdk"
             expected_output += (
-                f">>> Evaluating Registry SDK version '{version}.0' at {sdk_path}\n"
+                f"Evaluating Registry SDK version '{version}.0' at {sdk_path}\n"
             )
     for subdir, version in additional_installs:
         sdk_path = tmp_path / subdir / "win_sdk"
         expected_output += (
-            f">>> Evaluating Registry SDK Bin version '{version}.0' at {sdk_path}\n"
+            f"Evaluating Registry SDK Bin version '{version}.0' at {sdk_path}\n"
         )
     assert capsys.readouterr().out == expected_output
 
@@ -380,10 +380,10 @@ def test_winsdk_valid_install_from_default_dir(
     # Confirm invalid SDK was evaluated
     expected_output = (
         "\n"
-        ">>> [Windows SDK] Finding Suitable Installation...\n"
-        f">>> Evaluating Default Bin SDK version '86.0.7.0' at {tmp_path / 'invalid' / 'win_sdk'}\n"
-        f">>> Evaluating Default Bin SDK version '86.0.8.0' at {tmp_path / 'win_sdk'}\n"
-        f">>> Using Windows SDK v86.0.8.0 at {tmp_path / 'win_sdk'}\n"
+        "[Windows SDK] Finding Suitable Installation...\n"
+        f"Evaluating Default Bin SDK version '86.0.7.0' at {tmp_path / 'invalid' / 'win_sdk'}\n"
+        f"Evaluating Default Bin SDK version '86.0.8.0' at {tmp_path / 'win_sdk'}\n"
+        f"Using Windows SDK v86.0.8.0 at {tmp_path / 'win_sdk'}\n"
     )
     assert capsys.readouterr().out == expected_output
 
@@ -433,8 +433,8 @@ def test_winsdk_invalid_install_from_default_dir(
     # Confirm invalid SDK was evaluated
     expected_output = (
         "\n"
-        ">>> [Windows SDK] Finding Suitable Installation...\n"
-        f">>> Evaluating Default Bin SDK version '87.0.7.0' at {tmp_path / 'invalid_1' / 'win_sdk'}\n"
-        f">>> Evaluating Default Bin SDK version '87.0.8.0' at {tmp_path / 'invalid_2' / 'win_sdk'}\n"
+        "[Windows SDK] Finding Suitable Installation...\n"
+        f"Evaluating Default Bin SDK version '87.0.7.0' at {tmp_path / 'invalid_1' / 'win_sdk'}\n"
+        f"Evaluating Default Bin SDK version '87.0.8.0' at {tmp_path / 'invalid_2' / 'win_sdk'}\n"
     )
     assert capsys.readouterr().out == expected_output

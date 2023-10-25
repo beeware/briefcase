@@ -126,8 +126,6 @@ class LogLevel(IntEnum):
 class Log:
     """Manage logging output driven by verbosity flags."""
 
-    # Printed at the beginning of all debug output
-    DEBUG_PREFACE = ">>> "
     # subdirectory of command.base_path to store log files
     LOG_DIR = "logs"
 
@@ -215,10 +213,10 @@ class Log:
                     style=style,
                 )
 
-    def debug(self, message="", *, prefix="", markup=False):
+    def debug(self, message="", *, preface="", prefix="", markup=False):
         """Log messages at debug level; included if verbosity >= 2."""
         self._log(
-            preface=self.DEBUG_PREFACE,
+            preface=preface,
             prefix=prefix,
             message=message,
             show=self.is_debug,
@@ -617,7 +615,7 @@ class Console:
         try:
             input_value = self.input(prompt, markup=markup)
             self.print.to_log(prompt)
-            self.print.to_log(f"{Log.DEBUG_PREFACE}User input: {input_value}")
+            self.print.to_log(f"User input: {input_value}")
             return input_value
         except EOFError:
             raise KeyboardInterrupt

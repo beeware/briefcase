@@ -73,7 +73,7 @@ def test_info_logging(capsys):
 
     assert "info" in output
     assert "verbose" not in output
-    assert ">>> debug" not in output
+    assert "debug" not in output
 
 
 def test_verbose_logging(capsys):
@@ -88,7 +88,7 @@ def test_verbose_logging(capsys):
 
     assert "info" in output
     assert "verbose" in output
-    assert ">>> debug" not in output
+    assert "debug" not in output
 
 
 def test_debug_logging(capsys):
@@ -103,7 +103,7 @@ def test_debug_logging(capsys):
 
     assert "info" in output
     assert "verbose" in output
-    assert ">>> debug" in output
+    assert "debug" in output
 
 
 def test_capture_stacktrace():
@@ -189,7 +189,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
         log_contents = log.read()
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
-    assert ">>> this is debug output" in log_contents
+    assert "this is debug output" in log_contents
     assert "this is info output" in log_contents
     assert "this is [bold]info output with markup[/bold]" in log_contents
     assert "this is info output with escaped markup" in log_contents
@@ -403,7 +403,7 @@ def test_log_with_context(capsys):
             "Deep| ",
             "Deep| [prefix] prefixed deep context",
             "Deep| ",
-            "Deep| >>> this is deep debug",
+            "Deep| this is deep debug",
             "Deep| ",
             "Deep| Entering Really Deep context...",
             "Really Deep| -------------------------------------------------------------",
@@ -411,7 +411,7 @@ def test_log_with_context(capsys):
             "Really Deep| ",
             "Really Deep| [prefix2] prefixed really deep context",
             "Really Deep| ",
-            "Really Deep| >>> this is really deep debug",
+            "Really Deep| this is really deep debug",
             "Really Deep| -------------------------------------------------------------",
             "Deep| Leaving Really Deep context.",
             "Deep| ",

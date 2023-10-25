@@ -706,19 +706,21 @@ class Subprocess(Tool):
             self.tools.logger.warning(f"Forcibly killing {label}...")
             popen_process.kill()
 
+    def _log(self, msg: str = ""):
+        """Funnel for all subprocess details logging."""
+        self.tools.logger.debug(msg, preface=">>> " if msg else "")
+
     def _log_command(self, args: SubprocessArgsT):
         """Log the entire console command being executed."""
-        self.tools.logger.debug()
-        self.tools.logger.debug("Running Command:")
-        self.tools.logger.debug(
-            f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
-        )
+        self._log()
+        self._log("Running Command:")
+        self._log(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
 
     def _log_cwd(self, cwd: str | Path | None):
-        """Log the working directory for the  command being executed."""
+        """Log the working directory for the command being executed."""
         effective_cwd = Path.cwd() if cwd is None else cwd
-        self.tools.logger.debug("Working Directory:")
-        self.tools.logger.debug(f"    {effective_cwd}")
+        self._log("Working Directory:")
+        self._log(f"    {effective_cwd}")
 
     def _log_environment(self, overrides: dict[str, str] | None):
         """Log the environment variables overrides prior to command execution.
@@ -727,22 +729,22 @@ class Subprocess(Tool):
             can be `None` if there are no explicit environment changes.
         """
         if overrides:
-            self.tools.logger.debug("Environment Overrides:")
+            self._log("Environment Overrides:")
             for env_var, value in overrides.items():
-                self.tools.logger.debug(f"    {env_var}={value}")
+                self._log(f"    {env_var}={value}")
 
     def _log_output(self, output: str, stderr: str | None = None):
         """Log the output of the executed command."""
         if output:
-            self.tools.logger.debug("Command Output:")
+            self._log("Command Output:")
             for line in ensure_str(output).splitlines():
-                self.tools.logger.debug(f"    {line}")
+                self._log(f"    {line}")
 
         if stderr:
-            self.tools.logger.debug("Command Error Output (stderr):")
+            self._log("Command Error Output (stderr):")
             for line in ensure_str(stderr).splitlines():
-                self.tools.logger.debug(f"    {line}")
+                self._log(f"    {line}")
 
     def _log_return_code(self, return_code: int | str):
         """Log the output value of the executed command."""
-        self.tools.logger.debug(f"Return code: {return_code}")
+        self._log(f"Return code: {return_code}")
