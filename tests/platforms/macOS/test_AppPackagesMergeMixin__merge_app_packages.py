@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -26,11 +27,13 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         extra_content=[
             ("second/other.py", "# other python"),
             ("second/different.py", "# different python"),
+            ("second/some-binary", "# A file with executable permissions", 0o755),
             ("second/sub1/module1.dylib", "dylib-gothic"),
             ("second/sub1/module2.so", "dylib-gothic"),
             ("second/sub1/module3.dylib", "dylib-gothic"),
         ],
     )
+
     # Create 2 packages in the "modern" architecture app package sources
     # The first package is pure, so it won't exist in the second app_packages.
     # The "second" package:
@@ -110,6 +113,7 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         (Path("second/__init__.py"), ""),
         (Path("second/app.py"), "# This is the app"),
         (Path("second/different.py"), "# different python"),
+        (Path("second/some-binary"), "# A file with executable permissions"),
         (Path("second/other.py"), "# other python"),
         (Path("second/sub1"), None),
         (Path("second/sub1/module1.dylib"), "dylib-merged"),
@@ -148,6 +152,9 @@ def test_merge(dummy_command, pre_existing, tmp_path):
             ),
         ),
     }
+
+    # Check that the embedded binary has executable permissions
+    assert os.access(merged_path / "second" / "some-binary", os.X_OK)
 
 
 def test_merge_problem(dummy_command, tmp_path):
