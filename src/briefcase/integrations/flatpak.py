@@ -85,7 +85,10 @@ You must install both flatpak and flatpak-builder.
                 ["flatpak-builder", "--version"]
             ).strip("\n")
 
-            parts = output.split(" ")
+            # flatpak-builder 1.3 changed the output of --version
+            # from "flatpak-builder 1.2.X" to "flatpak-build-1.3.X".
+            # Converge on the new-style format.
+            parts = output.replace(" ", "-").rsplit("-", 1)
             try:
                 if parts[0] == "flatpak-builder":
                     version = parts[1].split(".")
