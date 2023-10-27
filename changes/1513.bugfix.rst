@@ -1,0 +1,1 @@
+``flatpak-builder`` 1.3+ can now be correctly identified.
