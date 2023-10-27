@@ -157,11 +157,20 @@ def test_flatpak_builder_old(mock_tools):
     )
 
 
-def test_installed(mock_tools):
+@pytest.mark.parametrize(
+    "flatpak_builder_version",
+    [
+        # Ubuntu 22.04; flatpak-builder < 1.3
+        "flatpak-builder 1.2.2",
+        # Fedora 38; flatpak-builder >= 1.3
+        "flatpak-builder-1.3.3",
+    ],
+)
+def test_installed(mock_tools, flatpak_builder_version, capsys):
     """If flatpak is installed, it can be verified."""
     mock_tools.subprocess.check_output.side_effect = [
         "Flatpak 1.12.7",
-        "flatpak-builder 1.2.2",
+        flatpak_builder_version,
     ]
 
     Flatpak.verify(mock_tools)
@@ -173,6 +182,14 @@ def test_installed(mock_tools):
         ],
         any_order=False,
     )
+
+    # We shouldn't get any warnings about unknown versions.
+    output = capsys.readouterr()
+    assert (
+        "** WARNING: Unable to determine the version of flatpak-builder"
+        not in output.out
+    )
+    assert output.err == ""
 
 
 @pytest.mark.parametrize(

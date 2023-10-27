@@ -927,7 +927,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             f"Package: {app.app_name}",
                             f"Version: {app.version}",
                             f"Architecture: {self.deb_abi(app)}",
-                            f"Maintainer: {app.author } <{app.author_email}>",
+                            f"Maintainer: {app.author} <{app.author_email}>",
                             f"Homepage: {app.url}",
                             f"Description: {app.description}",
                             f" {debian_multiline_description(app.long_description)}",
