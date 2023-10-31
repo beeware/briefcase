@@ -323,11 +323,11 @@ spelling_word_list_filename = "spelling_wordlist"
 # -- Options for link check -------------------------------------------
 
 linkcheck_ignore = [
-    r"./android.html",
-    r"./iOS.html",
+    r"./android/gradle.html",
+    r"./iOS/xcode.html",
     r"./linux/system.html",
     r"./macOS/app.html",
-    r"./web.html",
+    r"./web/static.html",
     r"./windows/app.html",
 ]
 
