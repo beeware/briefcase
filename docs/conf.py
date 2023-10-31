@@ -115,6 +115,21 @@ linkcheck_anchors_ignore = [
     "^/dev[0-9a-f]{9}$"
 ]
 
+linkcheck_ignore = [
+    r"^./android/gradle.html$",
+    r"^./iOS/xcode.html$",
+    r"^./linux/appimage.html$",
+    r"^./linux/flatpak.html$",
+    r"^./linux/system.html$",
+    r"^./macOS/app.html$",
+    r"^./macOS/xcode.html$",
+    r"^./web/static.html$",
+    r"^./windows/app.html$",
+    r"^./windows/visualstudio.html$",
+    r"^https://github.com/beeware/briefcase/issues/\d+$",
+    r"^https://github.com/beeware/briefcase/pull/\d+$",
+]
+
 # -- Options for copy button ---------------------------------------------------
 
 # virtual env prefix: (venv), (beeware-venv), (testenv)
@@ -319,17 +334,6 @@ spelling_lang = "en_US"
 
 # Location of word list.
 spelling_word_list_filename = "spelling_wordlist"
-
-# -- Options for link check -------------------------------------------
-
-linkcheck_ignore = [
-    r"./android/gradle.html",
-    r"./iOS/xcode.html",
-    r"./linux/system.html",
-    r"./macOS/app.html",
-    r"./web/static.html",
-    r"./windows/app.html",
-]
 
 # -- Options for Todos -------------------------------------------
 
