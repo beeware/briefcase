@@ -29,10 +29,10 @@ Platform support
 .. |iOS| replace:: **Xcode project**
 .. _iOS: ./iOS/xcode.html
 
-.. |AppImage| replace:: **AppImage**
+.. |AppImage| replace:: AppImage
 .. _AppImage: ./linux/appimage.html
 
-.. |Flatpak| replace:: **Flatpak**
+.. |Flatpak| replace:: Flatpak
 .. _Flatpak: ./linux/flatpak.html
 
 .. |System| replace:: **System package**
@@ -41,7 +41,7 @@ Platform support
 .. |macOSApp| replace:: **.app bundle**
 .. _macOSApp: ./macOS/app.html
 
-.. |Xcode| replace:: **Xcode project**
+.. |Xcode| replace:: Xcode project
 .. _Xcode: ./macOS/xcode.html
 
 .. |Web| replace:: **Static**
@@ -50,7 +50,7 @@ Platform support
 .. |WindowsApp| replace:: **Windows app**
 .. _WindowsApp: ./windows/app.html
 
-.. |VisualStudio| replace:: **Visual Studio project**
+.. |VisualStudio| replace:: Visual Studio project
 .. _VisualStudio: ./windows/visualstudio.html
 
 +---------+-----------------+--------+-------+---------+--------+---+-----+--------+-----+-------+
