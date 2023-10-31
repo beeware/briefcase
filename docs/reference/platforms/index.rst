@@ -1,3 +1,5 @@
+.. _platform-support-key:
+
 ================
 Platform support
 ================
@@ -8,14 +10,9 @@ Platform support
    macOS/index
    windows/index
    linux/index
-   iOS
-   android
-   web
-
-.. _platform-support-key:
-
-Key
----
+   iOS/index
+   android/index
+   web/index
 
 +-----+-------------------------------------+
 | |f| | Supported and tested in CI          |
@@ -27,10 +24,10 @@ Key
 
 
 .. |Gradle| replace:: **Gradle**
-.. _Gradle: ./android.html
+.. _Gradle: ./android/gradle.html
 
 .. |iOS| replace:: **Xcode**
-.. _iOS: ./iOS.html
+.. _iOS: ./iOS/xcode.html
 
 .. |System| replace:: **Native System Packages**
 .. _System: ./linux/system.html
@@ -42,7 +39,7 @@ Key
 .. _windowsApp: ./windows/app.html
 
 .. |Web| replace:: **Static**
-.. _Web: ./web.html
+.. _Web: ./web/static.html
 
 +---------+--------------------------------------+--------+-------+---------+--------+---+-----+--------+-----+-------+
 | Target App Format                              | Host System                                                        |
