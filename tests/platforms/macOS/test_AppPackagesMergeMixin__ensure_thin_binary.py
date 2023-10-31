@@ -2,16 +2,17 @@ import subprocess
 
 import pytest
 
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 
 from ...utils import create_file, file_content
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_thin_binary(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
     """A thin binary is left as-is."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-original")
@@ -44,14 +45,14 @@ def test_thin_binary(dummy_command, tmp_path, debug, capsys):
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    assert len(output) == (2 if verbose else 1)
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_fat_dylib(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
     """A fat binary library can be thinned."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -100,14 +101,14 @@ def test_fat_dylib(dummy_command, tmp_path, debug, capsys):
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    assert len(output) == (2 if verbose else 1)
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_fat_dylib_arch_mismatch(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_fat_dylib_arch_mismatch(dummy_command, verbose, tmp_path, capsys):
     """If a fat binary doesn't contain the target architecture, an error is raised."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -140,12 +141,12 @@ def test_fat_dylib_arch_mismatch(dummy_command, tmp_path, debug, capsys):
     dummy_command.tools.subprocess.run.assert_not_called()
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_fat_dylib_unknown_info(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_fat_dylib_unknown_info(dummy_command, verbose, tmp_path, capsys):
     """If the lipo info call succeeds, but generates unknown output, an error is
     raised."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -210,11 +211,11 @@ def test_lipo_info_fail(dummy_command, tmp_path):
     dummy_command.tools.subprocess.run.assert_not_called()
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_lipo_thin_fail(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_lipo_thin_fail(dummy_command, verbose, tmp_path, capsys):
     """If lipo fails thinning the binary, an error is raised."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
@@ -266,4 +267,4 @@ def test_lipo_thin_fail(dummy_command, tmp_path, debug, capsys):
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    assert len(output) == (2 if verbose else 1)

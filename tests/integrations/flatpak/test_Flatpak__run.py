@@ -3,13 +3,15 @@ from unittest import mock
 
 import pytest
 
+from briefcase.console import LogLevel
+
 
 @pytest.mark.parametrize("tool_debug_mode", (True, False))
 def test_run(flatpak, tool_debug_mode):
     """A Flatpak project can be executed."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = 2
+        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -40,7 +42,7 @@ def test_run_with_args(flatpak, tool_debug_mode):
     """A Flatpak project can be executed with additional arguments."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = 2
+        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()

@@ -3,7 +3,7 @@ from unittest.mock import ANY, MagicMock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.xcode import macOSXcodeBuildCommand
@@ -24,7 +24,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
     """An macOS App can be built."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = 2
+        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.tools.subprocess = MagicMock(spec_set=Subprocess)
     build_command.build_app(first_app_generated, test_mode=False)

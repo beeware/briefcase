@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeBuildCommand
@@ -30,7 +30,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
 
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = 2
+        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.build_app(first_app_generated)
 

@@ -3,16 +3,17 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 
 from ...utils import create_file
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_lipo_dylib(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_lipo_dylib(dummy_command, verbose, tmp_path, capsys):
     """A binary library can be merged with lipo."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create 3 source binaries.
     create_file(tmp_path / "source-1" / "path" / "to" / "file.dylib", "dylib-1")
@@ -49,14 +50,14 @@ def test_lipo_dylib(dummy_command, tmp_path, debug, capsys):
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    assert len(output) == (2 if verbose else 1)
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_lipo_dylib_partial(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_lipo_dylib_partial(dummy_command, verbose, tmp_path, capsys):
     """If a source doesn't have the library, it isn't included in the merge."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create 2 source binaries. Source-2 doesn't have the binary.
     create_file(tmp_path / "source-1" / "path" / "to" / "file.dylib", "dylib-1")
@@ -90,14 +91,14 @@ def test_lipo_dylib_partial(dummy_command, tmp_path, debug, capsys):
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    assert len(output) == (2 if verbose else 1)
 
 
-@pytest.mark.parametrize("debug", [True, False])
-def test_lipo_dylib_merge_error(dummy_command, tmp_path, debug, capsys):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_lipo_dylib_merge_error(dummy_command, verbose, tmp_path, capsys):
     """If the merge process fails, an exception is raised."""
-    if debug:
-        dummy_command.logger.verbosity = 1
+    if verbose:
+        dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create 3 source binaries.
     create_file(tmp_path / "source-1" / "path" / "to" / "file.dylib", "dylib-1")
@@ -143,4 +144,4 @@ def test_lipo_dylib_merge_error(dummy_command, tmp_path, debug, capsys):
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
-    assert len(output) == (2 if debug else 1)
+    assert len(output) == (2 if verbose else 1)

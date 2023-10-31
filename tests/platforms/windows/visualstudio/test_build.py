@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 import briefcase.platforms.windows.visualstudio
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.visualstudio import VisualStudio
@@ -51,7 +51,7 @@ def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
     """The solution will be compiled when the project is built."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = 2
+        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.build_app(first_app_config)
 
