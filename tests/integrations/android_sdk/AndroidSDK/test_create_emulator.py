@@ -35,8 +35,9 @@ def android_sdk(android_sdk) -> AndroidSDK:
     [
         ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "x86_64", "x86_64"),
+        ("Windows", "AMD64", "x86_64"),
         ("Linux", "x86_64", "x86_64"),
+        ("Linux", "aarch64", "arm64-v8a"),
     ],
 )
 def test_create_emulator(

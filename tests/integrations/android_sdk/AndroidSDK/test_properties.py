@@ -107,9 +107,9 @@ def test_managed_install(mock_tools, android_sdk):
     [
         ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "x86_64", "x86_64"),
         ("Windows", "AMD64", "x86_64"),
         ("Linux", "x86_64", "x86_64"),
+        ("Linux", "aarch64", "arm64-v8a"),
     ],
 )
 def test_emulator_abi(mock_tools, android_sdk, host_os, host_arch, emulator_abi):
