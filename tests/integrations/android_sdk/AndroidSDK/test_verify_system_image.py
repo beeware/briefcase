@@ -1,4 +1,5 @@
 import os
+import platform
 from subprocess import CalledProcessError
 
 import pytest
@@ -10,7 +11,7 @@ from briefcase.exceptions import BriefcaseCommandError
     "host_os, host_arch",
     [
         ("Windows", "arm64"),
-        ("Linux", "arm64"),
+        ("Linux", "armv7l"),
     ],
 )
 def test_unsupported_abi(mock_tools, android_sdk, host_os, host_arch):
@@ -56,7 +57,7 @@ def test_incompatible_abi(mock_tools, android_sdk, capsys):
     """If the system image doesn't match the emulator ABI, warn the user, but
     continue."""
     # Mock the host arch
-    mock_tools.host_arch = "x86_64"
+    mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
     # Verify a system image that doesn't match the host architecture
     android_sdk.verify_system_image("system-images;android-31;default;anything")
@@ -79,7 +80,7 @@ def test_incompatible_abi(mock_tools, android_sdk, capsys):
 def test_existing_system_image(mock_tools, android_sdk):
     """If the system image already exists, don't attempt to download it again."""
     # Mock the host arch
-    mock_tools.host_arch = "x86_64"
+    mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
     # Mock the existence of a system image
     (
@@ -96,7 +97,7 @@ def test_existing_system_image(mock_tools, android_sdk):
 def test_new_system_image(mock_tools, android_sdk):
     """If the system image doesn't exist locally, it will be installed."""
     # Mock the host arch
-    mock_tools.host_arch = "x86_64"
+    mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
     # Verify the system image, triggering a download
     android_sdk.verify_system_image("system-images;android-31;default;x86_64")
@@ -116,7 +117,7 @@ def test_new_system_image(mock_tools, android_sdk):
 def test_problem_downloading_system_image(mock_tools, android_sdk):
     """If there is a failure downloading the system image, an error is raised."""
     # Mock the host arch
-    mock_tools.host_arch = "x86_64"
+    mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
     # Mock a failure condition on subprocess.run
     mock_tools.subprocess.run.side_effect = CalledProcessError(

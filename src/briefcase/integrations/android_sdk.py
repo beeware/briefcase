@@ -142,15 +142,25 @@ class AndroidSDK(ManagedTool):
     @property
     def emulator_abi(self) -> str:
         """The ABI to use for the Android emulator."""
-        if self.tools.host_arch == "arm64" and self.tools.host_os == "Darwin":
-            return "arm64-v8a"
-        if self.tools.host_arch in ("x86_64", "AMD64"):
-            return "x86_64"
-
-        raise BriefcaseCommandError(
-            "The Android emulator does not currently support "
-            f"{self.tools.host_os} {self.tools.host_arch} hardware."
-        )
+        try:
+            return {
+                "Linux": {
+                    "x86_64": "x86_64",
+                    "aarch64": "arm64-v8a",
+                },
+                "Darwin": {
+                    "x86_64": "x86_64",
+                    "arm64": "arm64-v8a",
+                },
+                "Windows": {
+                    "AMD64": "x86_64",
+                },
+            }[self.tools.host_os][self.tools.host_arch]
+        except KeyError:
+            raise BriefcaseCommandError(
+                "The Android emulator does not currently support "
+                f"{self.tools.host_os} {self.tools.host_arch} hardware."
+            )
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
