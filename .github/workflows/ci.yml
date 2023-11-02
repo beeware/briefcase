@@ -29,7 +29,7 @@ jobs:
 
   towncrier:
     name: Check towncrier
-    uses: beeware/.github/.github/workflows/towncrier-run.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/towncrier-run.yml@towncrier-instructions
 
   package:
     name: Python package
