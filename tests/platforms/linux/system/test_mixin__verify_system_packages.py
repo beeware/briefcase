@@ -53,6 +53,18 @@ def test_rpm_requirements(build_command, first_app_config):
     ]
 
 
+def test_suse_requirements(build_command, first_app_config):
+    """SUSE requirements can be verified."""
+    first_app_config.target_vendor_base = "suse"
+
+    build_command.verify_system_packages(first_app_config)
+
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["rpm", "-q", "--whatprovides", "python3-devel"]),
+        call(["rpm", "-q", "--whatprovides", "patterns-devel-base-devel_basis"]),
+    ]
+
+
 def test_arch_requirements(build_command, first_app_config, capsys):
     """Arch requirements can be verified."""
     first_app_config.target_vendor_base = "arch"
@@ -83,7 +95,7 @@ def test_missing_packages(build_command, first_app_config, capsys):
     """If there are missing system packages, an error is raised."""
     # Mock the system requirement tools; there's a base requirement of
     # a packaged called "compiler", verified using "check <pkg>", and
-    # isntalled using "system <pkg>"
+    # installed using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
         return_value=(
             ["compiler"],
@@ -116,7 +128,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
     """If all required packages are installed, no error is raised."""
     # Mock the system requirement tools; there's a base requirement of
     # a packaged called "compiler", verified using "check <pkg>", and
-    # isntalled using "system <pkg>"
+    # installed using "system <pkg>"
     build_command._system_requirement_tools = MagicMock(
         return_value=(
             ["compiler"],

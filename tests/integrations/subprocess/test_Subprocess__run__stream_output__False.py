@@ -5,6 +5,8 @@ from unittest.mock import ANY
 
 import pytest
 
+from briefcase.console import LogLevel
+
 from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 
@@ -22,12 +24,11 @@ def test_call(mock_sub, capsys, platform, sub_kw):
 def test_call_with_arg(mock_sub, capsys, sub_kw):
     """Any extra keyword arguments are passed through as-is."""
 
-    mock_sub.run(["hello", "world"], universal_newlines=True, stream_output=False)
+    mock_sub.run(["hello", "world"], extra_kw="extra", stream_output=False)
 
-    sub_kw.pop("text")
     mock_sub._subprocess.run.assert_called_with(
         ["hello", "world"],
-        universal_newlines=True,
+        extra_kw="extra",
         **sub_kw,
     )
     assert capsys.readouterr().out == ""
@@ -132,7 +133,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
 
 def test_debug_call(mock_sub, capsys, sub_kw):
     """If verbosity is turned up, there is output."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     mock_sub.run(["hello", "world"], stream_output=False)
 
@@ -153,7 +154,7 @@ def test_debug_call(mock_sub, capsys, sub_kw):
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
     """If verbosity is turned up, injected env vars are included output."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     env = {"NewVar": "NewVarValue"}
     mock_sub.run(["hello", "world"], env=env, cwd=tmp_path / "cwd", stream_output=False)
@@ -181,7 +182,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
 
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     mock_sub._subprocess.run.side_effect = CalledProcessError(
         returncode=-1,
@@ -212,16 +213,30 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": False}, {"text": False}),
-        ({"universal_newlines": False}, {"universal_newlines": False}),
+        ({"universal_newlines": False}, {"text": False}),
         (
             {"universal_newlines": True},
-            {"universal_newlines": True, "encoding": ANY, "errors": "backslashreplace"},
+            {"text": True, "encoding": ANY, "errors": "backslashreplace"},
         ),
     ],
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """If text or universal_newlines is explicitly provided, those should override
-    text=true default."""
+    text=true default and universal_newlines should be converted to text."""
     mock_sub.run(["hello", "world"], stream_output=False, **in_kwargs)
 
     mock_sub._subprocess.run.assert_called_with(["hello", "world"], **kwargs)
+
+
+def test_call_with_filter_func(mock_sub, capsys, sub_kw):
+    """Providing a filter function when not streaming raises an exception."""
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cannot apply a filter to non-streamed output",
+    ):
+        mock_sub.run(
+            ["hello", "world"],
+            filter_func=lambda line: line,
+            stream_output=False,
+        )

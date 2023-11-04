@@ -15,6 +15,7 @@ DEFAULT_OUTPUT_FORMAT = "system"
 DEBIAN = "debian"
 RHEL = "rhel"
 ARCH = "arch"
+SUSE = "suse"
 
 
 def parse_freedesktop_os_release(content):
@@ -66,10 +67,17 @@ class LinuxMixin:
         System packages don't use a support package; this is defined by
         the template, so this method won't be invoked
         """
+        python_download_arch = self.tools.host_arch
+        # use a 32bit Python if using 32bit Python on 64bit hardware
+        if self.tools.is_32bit_python and self.tools.host_arch == "aarch64":
+            python_download_arch = "armv7"
+        elif self.tools.is_32bit_python and self.tools.host_arch == "x86_64":
+            python_download_arch = "i686"
+
         version, datestamp = support_revision.split("+")
         return (
             "https://github.com/indygreg/python-build-standalone/releases/download/"
-            f"{datestamp}/cpython-{support_revision}-{self.tools.host_arch}-unknown-linux-gnu-install_only.tar.gz"
+            f"{datestamp}/cpython-{support_revision}-{python_download_arch}-unknown-linux-gnu-install_only.tar.gz"
         )
 
     def vendor_details(self, freedesktop_info):
@@ -106,6 +114,8 @@ class LinuxMixin:
             vendor_base = RHEL
         elif vendor == ARCH or ARCH in id_like:
             vendor_base = ARCH
+        elif vendor == SUSE or SUSE in id_like:
+            vendor_base = SUSE
         else:
             vendor_base = None
 
@@ -155,6 +165,8 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                             self.tools.subprocess.check_output(
                                 [
                                     sys.executable,
+                                    "-X",
+                                    "utf8",
                                     "-m",
                                     "build",
                                     "--sdist",
@@ -162,6 +174,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                                     local_requirements_path,
                                     requirement,
                                 ],
+                                encoding="UTF-8",
                             )
                         except subprocess.CalledProcessError as e:
                             raise BriefcaseCommandError(

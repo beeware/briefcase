@@ -6,6 +6,8 @@ from unittest.mock import ANY
 
 import pytest
 
+from briefcase.console import LogLevel
+
 from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 
 
@@ -26,12 +28,11 @@ def test_call(mock_sub, capsys, platform, sub_check_output_kw):
 def test_call_with_arg(mock_sub, capsys, sub_check_output_kw):
     """Any extra keyword arguments are passed through as-is."""
 
-    mock_sub.check_output(["hello", "world"], universal_newlines=True)
+    mock_sub.check_output(["hello", "world"], extra_kw="extra")
 
-    sub_check_output_kw.pop("text")
     mock_sub._subprocess.check_output.assert_called_with(
         ["hello", "world"],
-        universal_newlines=True,
+        extra_kw="extra",
         **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
@@ -130,7 +131,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
 
 def test_debug_call(mock_sub, capsys, sub_check_output_kw):
     """If verbosity is turned up, there is output."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     mock_sub.check_output(["hello", "world"])
 
@@ -156,7 +157,7 @@ def test_debug_call(mock_sub, capsys, sub_check_output_kw):
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_check_output_kw):
     """If verbosity is turned up, injected env vars are included in output."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     env = {"NewVar": "NewVarValue"}
     mock_sub.check_output(["hello", "world"], env=env, cwd=tmp_path / "cwd")
@@ -190,7 +191,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_check_output_kw):
 
 def test_debug_call_with_quiet(mock_sub, capsys, tmp_path, sub_check_output_kw):
     """If quiet mode is on, calls aren't logged, even if verbosity is turned up."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     env = {"NewVar": "NewVarValue"}
     mock_sub.check_output(
@@ -216,7 +217,7 @@ def test_debug_call_with_quiet(mock_sub, capsys, tmp_path, sub_check_output_kw):
 
 def test_debug_call_with_stderr(mock_sub, capsys, tmp_path, sub_check_output_kw):
     """If stderr is specified, it is not defaulted to stdout."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     mock_sub.check_output(
         ["hello", "world"],
@@ -249,7 +250,7 @@ def test_debug_call_with_stderr(mock_sub, capsys, tmp_path, sub_check_output_kw)
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
     """If command errors, ensure command output is printed."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     called_process_error = CalledProcessError(
         returncode=-1,
@@ -282,7 +283,7 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
 
 def test_calledprocesserror_exception_quiet(mock_sub, capsys):
     """If command errors in quiet mode, no command output is printed."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     called_process_error = CalledProcessError(
         returncode=-1,
@@ -301,7 +302,7 @@ def test_calledprocesserror_exception_quiet(mock_sub, capsys):
 
 def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
     """If command errors, and there is no command output, errors are still printed."""
-    mock_sub.tools.logger.verbosity = 2
+    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
 
     called_process_error = CalledProcessError(
         returncode=-1,
@@ -353,12 +354,12 @@ def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
         ({"text": False}, {"text": False, "stderr": subprocess.STDOUT}),
         (
             {"universal_newlines": False},
-            {"universal_newlines": False, "stderr": subprocess.STDOUT},
+            {"text": False, "stderr": subprocess.STDOUT},
         ),
         (
             {"universal_newlines": True},
             {
-                "universal_newlines": True,
+                "text": True,
                 "encoding": ANY,
                 "stderr": subprocess.STDOUT,
                 "errors": "backslashreplace",
@@ -368,7 +369,7 @@ def test_calledprocesserror_exception_logging_no_cmd_output(mock_sub, capsys):
 )
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """If text or universal_newlines is explicitly provided, those should override
-    text=true default."""
+    text=true default and universal_newlines should be converted to text."""
     mock_sub.check_output(["hello", "world"], stderr=subprocess.STDOUT, **in_kwargs)
 
     mock_sub._subprocess.check_output.assert_called_with(["hello", "world"], **kwargs)

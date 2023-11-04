@@ -373,7 +373,7 @@ def merge_pep621_config(global_config, pep621_config):
         else:
             global_config[field] = datum
 
-    # Keys that map direclty
+    # Keys that map directly
     maybe_update("description", "description")
     maybe_update("license", "license", "text")
     maybe_update("url", "urls", "Homepage")

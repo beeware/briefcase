@@ -6,6 +6,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import time
 from contextlib import suppress
 from datetime import datetime
@@ -15,6 +16,7 @@ from briefcase.config import PEP508_NAME_RE
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    IncompatibleToolError,
     InvalidDeviceError,
     MissingToolError,
 )
@@ -47,6 +49,11 @@ class AndroidSDK(ManagedTool):
     name = "android_sdk"
     full_name = "Android SDK"
 
+    # Latest version for Command-Line Tools download as of August 2023
+    # **Be sure the android.rst docs stay in sync with version updates here**
+    SDK_MANAGER_DOWNLOAD_VER = "9477386"
+    SDK_MANAGER_VER = "9.0"
+
     def __init__(self, tools: ToolCache, root_path: Path):
         super().__init__(tools=tools)
         self.dot_android_path = self.tools.home_path / ".android"
@@ -57,39 +64,48 @@ class AndroidSDK(ManagedTool):
 
     @property
     def cmdline_tools_url(self) -> str:
-        """The Android SDK Command-Line Tools URL appropriate to the current operating
-        system."""
-        platform_name = self.tools.host_os.lower()
-        if self.tools.host_os.lower() == "darwin":
-            platform_name = "mac"
-        elif self.tools.host_os.lower() == "windows":  # pragma: no branch
-            platform_name = "win"
+        """The Android SDK Command-Line Tools URL appropriate for the current machine.
 
-        return f"https://dl.google.com/android/repository/commandlinetools-{platform_name}-{self.cmdline_tools_version}_latest.zip"  # noqa: E501
+        The SDK largely only supports typical development environments; if a machine is
+        using an unsupported architecture, `sdkmanager` will error while installing the
+        emulator as a dependency of the build-tools. However, for some of the platforms
+        that are unsupported by sdkmanager, users can set up their own SDK install.
+        """
+        try:
+            platform_name = {
+                "Darwin": {
+                    "arm64": "mac",
+                    "x86_64": "mac",
+                },
+                "Linux": {
+                    "x86_64": "linux",
+                },
+                "Windows": {
+                    "AMD64": "win",
+                },
+            }[self.tools.host_os][self.tools.host_arch]
+        except KeyError as e:
+            raise IncompatibleToolError(
+                tool=self.full_name, env_var="ANDROID_HOME"
+            ) from e
+
+        return (
+            f"https://dl.google.com/android/repository/"
+            f"commandlinetools-{platform_name}-{self.SDK_MANAGER_DOWNLOAD_VER}_latest.zip"
+        )
 
     @property
     def cmdline_tools_path(self) -> Path:
-        return self.root_path / "cmdline-tools" / "latest"
+        """Version-specific Command-line tools install root directory."""
+        return self.root_path / "cmdline-tools" / self.SDK_MANAGER_VER
 
     @property
-    def cmdline_tools_version(self) -> str:
-        # This is the version of the Android SDK Command-line tools that
-        # are current as of May 2022. These tools can generally self-update,
-        # so using a fixed download URL isn't a problem.
-        # However, if/when this version number is changed, ensure that the
-        # checks done during verification include any required upgrade steps.
-        return "8092744"
-
-    @property
-    def cmdline_tools_version_path(self) -> Path:
-        return self.root_path / "cmdline-tools" / self.cmdline_tools_version
+    def sdkmanager_filename(self) -> str:
+        return "sdkmanager.bat" if self.tools.host_os == "Windows" else "sdkmanager"
 
     @property
     def sdkmanager_path(self) -> Path:
-        sdkmanager = (
-            "sdkmanager.bat" if self.tools.host_os == "Windows" else "sdkmanager"
-        )
-        return self.cmdline_tools_path / "bin" / sdkmanager
+        return self.cmdline_tools_path / "bin" / self.sdkmanager_filename
 
     @property
     def adb_path(self) -> Path:
@@ -126,15 +142,25 @@ class AndroidSDK(ManagedTool):
     @property
     def emulator_abi(self) -> str:
         """The ABI to use for the Android emulator."""
-        if self.tools.host_arch == "arm64" and self.tools.host_os == "Darwin":
-            return "arm64-v8a"
-        if self.tools.host_arch in ("x86_64", "AMD64"):
-            return "x86_64"
-
-        raise BriefcaseCommandError(
-            "The Android emulator does not currently support "
-            f"{self.tools.host_os} {self.tools.host_arch} hardware."
-        )
+        try:
+            return {
+                "Linux": {
+                    "x86_64": "x86_64",
+                    "aarch64": "arm64-v8a",
+                },
+                "Darwin": {
+                    "x86_64": "x86_64",
+                    "arm64": "arm64-v8a",
+                },
+                "Windows": {
+                    "AMD64": "x86_64",
+                },
+            }[self.tools.host_os][self.tools.host_arch]
+        except KeyError:
+            raise BriefcaseCommandError(
+                "The Android emulator does not currently support "
+                f"{self.tools.host_os} {self.tools.host_arch} hardware."
+            )
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
@@ -226,13 +252,16 @@ class AndroidSDK(ManagedTool):
         JDK.verify(tools=tools, install=install)
 
         sdk = None
-        sdk_root, sdk_env_source = cls.sdk_path_from_env(tools=tools)
 
-        if sdk_root:
-            sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root))
+        # Verify externally-managed Android SDK
+        sdk_root_env, sdk_source_env = cls.sdk_path_from_env(tools=tools)
+        if sdk_root_env:
+            tools.logger.debug("Evaluating ANDROID_HOME...", prefix=cls.full_name)
+            tools.logger.debug(f"{sdk_source_env}={sdk_root_env}")
+            sdk = AndroidSDK(tools=tools, root_path=Path(sdk_root_env))
 
             if sdk.exists():
-                if sdk_env_source == "ANDROID_SDK_ROOT":
+                if sdk_source_env == "ANDROID_SDK_ROOT":
                     tools.logger.warning(
                         """
 *************************************************************************
@@ -251,70 +280,88 @@ class AndroidSDK(ManagedTool):
 *************************************************************************
 """
                     )
-                sdk.verify_license()
+            elif sdk.cmdline_tools_path.parent.exists():
+                # a cmdline-tools directory exists but the required version isn't installed.
+                # try to install the required version using the 'latest' version.
+                if not sdk.install_cmdline_tools():
+                    sdk = None
+                    tools.logger.warning(
+                        f"""
+*************************************************************************
+** WARNING: Incompatible Command-Line Tools Version                    **
+*************************************************************************
+
+    The Android SDK specified by {sdk_source_env} at:
+
+    {sdk_root_env}
+
+    does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. Briefcase requires
+    this version to be installed to use an external Android SDK.
+
+    Use Android Studio's SDK Manager to install Command-Line Tools {cls.SDK_MANAGER_VER}.
+
+    Briefcase will proceed using its own SDK instance.
+
+*************************************************************************
+"""
+                    )
             else:
-                sdk = None
                 tools.logger.warning(
                     f"""
 *************************************************************************
-** {f"WARNING: {sdk_env_source} does not point to an Android SDK":67} **
+** {f"WARNING: {sdk_source_env} does not point to an Android SDK":67} **
 *************************************************************************
 
-    The location pointed to by the {sdk_env_source} environment
+    The location pointed to by the {sdk_source_env} environment
     variable:
 
-    {sdk_root}
+    {sdk_root_env}
 
     doesn't appear to contain an Android SDK.
 
-    Briefcase will use its own SDK instance.
+    If {sdk_source_env} is an Android SDK, ensure it is the root directory
+    of the Android SDK instance such that
+
+    ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
+
+    is a valid filepath.
+
+    Briefcase will proceed using its own SDK instance.
 
 *************************************************************************
 """
                 )
+                sdk = None
 
+        # Verify Briefcase-managed Android SDK
         if sdk is None:
-            # Build an SDK wrapper for the Briefcase SDK instance.
             sdk_root_path = tools.base_path / "android_sdk"
             sdk = AndroidSDK(tools=tools, root_path=sdk_root_path)
 
-            if sdk.exists():
-                # NOTE: For now, all known versions of the cmdline-tools are compatible.
-                # If/when that ever changes, do a verification check here.
-                sdk.verify_license()
-            else:
-                # The legacy SDK Tools exist. Delete them.
-                if (sdk_root_path / "tools").exists():
-                    tools.logger.warning(
-                        f"""
-*************************************************************************
-** WARNING: Upgrading Android SDK tools                                **
-*************************************************************************
+            if not sdk.exists():
+                if not install:
+                    raise MissingToolError("Android SDK")
 
-    Briefcase needs to replace the older Android SDK Tools with the
-    newer Android SDK Command-Line Tools. This will involve some large
-    downloads, as well as re-accepting the licenses for the Android
-    SDKs.
+                sdk.delete_legacy_sdk_tools()
 
-    Any emulators created with the older Android SDK Tools will not be
-    compatible with the new tools. You will need to create new
-    emulators. Old emulators can be removed by deleting the files
-    in {sdk.avd_path} matching the emulator name.
-
-*************************************************************************
-"""
-                    )
-                    tools.shutil.rmtree(sdk_root_path)
-
-                if install:
+                if sdk.cmdline_tools_path.parent.exists():
+                    tools.logger.info("Upgrading Android SDK...", prefix=cls.name)
+                else:
                     tools.logger.info(
                         "The Android SDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
-                    sdk.install()
-                else:
-                    raise MissingToolError("Android SDK")
+                    tools.logger.info(
+                        "To use an existing Android SDK instance, specify its root "
+                        "directory path in the ANDROID_HOME environment variable."
+                    )
+                    tools.logger.info()
+                sdk.install()
 
+        # Licences must be accepted to use the SDK
+        sdk.verify_license()
+
+        tools.logger.debug(f"Using Android SDK at {sdk.root_path}")
         tools.android_sdk = sdk
         return sdk
 
@@ -338,7 +385,6 @@ class AndroidSDK(ManagedTool):
 
     def uninstall(self):
         """The Android SDK is upgraded in-place instead of being reinstalled."""
-        pass
 
     def install(self):
         """Download and install the Android SDK."""
@@ -349,18 +395,18 @@ class AndroidSDK(ManagedTool):
         )
 
         # The cmdline-tools package *must* be installed as:
-        #     <sdk_path>/cmdline-tools/latest
+        #     <sdk_path>/cmdline-tools/<cmdline-tools version>
         #
         # However, the zip file unpacks a top-level folder named `cmdline-tools`.
         # So, the unpacking process is:
         #
         #  1. Make a <sdk_path>/cmdline-tools folder
         #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
-        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/latest
-        #  4. Drop a marker file named <sdk_path>/cmdline-tools/<version> so we can track
-        #     the version that was installed.
+        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<cmdline-tools version>
 
-        with self.tools.input.wait_bar("Installing Android SDK Command-Line Tools..."):
+        with self.tools.input.wait_bar(
+            f"Installing Android SDK Command-Line Tools {self.SDK_MANAGER_VER}..."
+        ):
             self.cmdline_tools_path.parent.mkdir(parents=True, exist_ok=True)
             try:
                 self.tools.shutil.unpack_archive(
@@ -376,18 +422,14 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
 """
                 ) from e
 
-            # If there's an existing version of the cmdline tools (or the version marker), delete them.
+            # If there's an existing version of the cmdline tools, delete them.
             if self.cmdline_tools_path.exists():
                 self.tools.shutil.rmtree(self.cmdline_tools_path)
-            if self.cmdline_tools_version_path.exists():
-                self.tools.os.unlink(self.cmdline_tools_version_path)
 
             # Rename the top level zip content to the final name
             (self.cmdline_tools_path.parent / "cmdline-tools").rename(
                 self.cmdline_tools_path
             )
-            # Touch a file with the version that was installed.
-            self.cmdline_tools_version_path.touch()
 
             # Zip file no longer needed once unpacked.
             cmdline_tools_zip_path.unlink()
@@ -401,8 +443,8 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                     if not self.tools.os.access(binpath, self.tools.os.X_OK):
                         binpath.chmod(0o755)
 
-        # Licences must be accepted.
-        self.verify_license()
+        with self.tools.input.wait_bar("Removing older Android SDK packages..."):
+            self.cleanup_old_installs()
 
     def upgrade(self):
         """Upgrade the Android SDK."""
@@ -424,6 +466,92 @@ its output for errors.
     $ {self.sdkmanager_path} --update
 """
             ) from e
+
+    def install_cmdline_tools(self) -> bool:
+        """Attempt to use 'latest' cmdline-tools to install the currently required
+        version of the Command-Line Tools.
+
+        The Briefcase-managed SDK should always have the required version of cmdline-
+        tools installed; however, user-provided SDKs may not have it.
+
+        :returns: True if successfully installed; False otherwise
+        """
+        self.tools.logger.info(
+            f"Installing Android Command-Line Tools {self.SDK_MANAGER_VER}...",
+            prefix=self.full_name,
+        )
+        self.tools.logger.info(f"Using Android SDK at {self.root_path}")
+        latest_sdkmanager_path = (
+            self.root_path
+            / "cmdline-tools"
+            / "latest"
+            / "bin"
+            / self.sdkmanager_filename
+        )
+        try:
+            self.tools.subprocess.run(
+                [
+                    latest_sdkmanager_path,
+                    f"cmdline-tools;{self.SDK_MANAGER_VER}",
+                ],
+                check=True,
+                stream_output=False,
+            )
+        except (OSError, subprocess.CalledProcessError) as e:
+            self.tools.logger.debug(str(e))
+            self.tools.logger.warning(
+                f"Failed to install cmdline-tools;{self.SDK_MANAGER_VER}"
+            )
+            return False
+        return True
+
+    def delete_legacy_sdk_tools(self):
+        """Delete any legacy Android SDK tools that are installed.
+
+        If no versions of the Command-Line Tools are installed but the 'tools' directory
+        exists, the legacy SDK Tools are probably installed. Since they have been
+        deprecated by more recent releases of SDK Manager, delete them and perform a
+        fresh install.
+
+        The Android SDK Tools were deprecated in Sept 2017.
+        """
+        if (
+            not self.cmdline_tools_path.parent.exists()
+            and (self.root_path / "tools").exists()
+        ):
+            self.tools.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Upgrading Android SDK tools                                **
+*************************************************************************
+
+    Briefcase needs to replace the older Android SDK Tools with the
+    newer Android SDK Command-Line Tools. This will involve some large
+    downloads, as well as re-accepting the licenses for the Android
+    SDKs.
+
+    Any emulators created with the older Android SDK Tools will not be
+    compatible with the new tools. You will need to create new
+    emulators. Old emulators can be removed by deleting the files
+    in {self.avd_path} matching the emulator name.
+
+*************************************************************************
+"""
+            )
+            self.tools.shutil.rmtree(self.root_path)
+
+    def cleanup_old_installs(self):
+        """Remove old versions of Android SDK packages and version markers.
+
+        When the Android SDK is upgraded, old versions of packages should be removed to
+        keep the SDK tidy. This is namely the Command-line Tools that are used to manage
+        the SDK and AVDs. Additionally, previous version of Briefcase created a version
+        marker file that needs to be deleted.
+        """
+        if (ver_file := self.cmdline_tools_path.parent / "8092744").is_file():
+            self.tools.os.unlink(ver_file)
+        if (latest := self.cmdline_tools_path.parent / "latest").is_dir():
+            self.tools.shutil.rmtree(latest)
 
     def list_packages(self):
         """In debug output, list the packages currently managed by the SDK."""
@@ -689,7 +817,11 @@ connection.
         # Unpack skin archive
         with self.tools.input.wait_bar("Installing device skin..."):
             try:
-                self.tools.shutil.unpack_archive(skin_tgz_path, extract_dir=skin_path)
+                self.tools.shutil.unpack_archive(
+                    skin_tgz_path,
+                    extract_dir=skin_path,
+                    **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
+                )
             except (shutil.ReadError, EOFError) as err:
                 raise BriefcaseCommandError(
                     f"Unable to unpack {skin} device skin."
@@ -706,7 +838,6 @@ connection.
             output = self.tools.subprocess.check_output(
                 [os.fsdecode(self.emulator_path), "-list-avds"]
             ).strip()
-
             # AVD names are returned one per line.
             if len(output) == 0:
                 return []
@@ -720,7 +851,6 @@ connection.
             output = self.tools.subprocess.check_output(
                 [os.fsdecode(self.adb_path), "devices", "-l"]
             ).strip()
-
             # Process the output of `adb devices -l`.
             # The first line is header information.
             # Each subsequent line is a single device descriptor.
@@ -1000,7 +1130,6 @@ An emulator named '{avd}' already exists.
 
 """
                 )
-                self.tools.logger.info()
             else:
                 avd_is_invalid = False
 
@@ -1106,7 +1235,7 @@ In future, you can specify this device by running:
         # Parse the existing config into key-value pairs
         avd_config = {}
         try:
-            with self.avd_config_filename(avd).open("r") as f:
+            with self.avd_config_filename(avd).open("r", encoding="utf-8") as f:
                 for line in f:
                     try:
                         key, value = line.rstrip().split("=", 1)
@@ -1133,7 +1262,7 @@ In future, you can specify this device by running:
         avd_config.update(updates)
 
         # Write the update configuration.
-        with self.avd_config_filename(avd).open("w") as f:
+        with self.avd_config_filename(avd).open("w", encoding="utf-8") as f:
             for key, value in avd_config.items():
                 f.write(f"{key}={value}\n")
 
@@ -1326,7 +1455,7 @@ class ADB:
         # checking that they are valid, then parsing output to notice errors.
         # This keeps performance good in the success case.
         try:
-            return self.tools.subprocess.check_output(
+            output = self.tools.subprocess.check_output(
                 [
                     os.fsdecode(self.tools.android_sdk.adb_path),
                     "-s",
@@ -1338,6 +1467,14 @@ class ADB:
                 ],
                 quiet=quiet,
             )
+            # add returns status code 0 in the case of failure. The only tangible evidence
+            # of failure is the message "Failure [INSTALL_FAILED_OLDER_SDK]" in the,
+            # console output; so if that message exists in the output, raise an exception.
+            if "Failure [INSTALL_FAILED_OLDER_SDK]" in output:
+                raise BriefcaseCommandError(
+                    "Your device doesn't meet the minimum SDK requirements of this app."
+                )
+            return output
         except subprocess.CalledProcessError as e:
             if any(DEVICE_NOT_FOUND.match(line) for line in e.output.split("\n")):
                 raise InvalidDeviceError("device id", self.device) from e
@@ -1430,6 +1567,8 @@ Activity class not found while starting app.
         :param pid: The PID whose logs you want to display.
         :returns: A Popen object for the logcat call
         """
+        # As best as we can make out, adb logcat returns UTF-8 output.
+        # See #1425 for details.
         return self.tools.subprocess.Popen(
             [
                 os.fsdecode(self.tools.android_sdk.adb_path),
@@ -1443,6 +1582,7 @@ Activity class not found while starting app.
             # Filter out some noisy and useless tags.
             + [f"{tag}:S" for tag in ["EGL_emulation"]],
             env=self.tools.android_sdk.env,
+            encoding="UTF-8",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
@@ -1455,6 +1595,8 @@ Activity class not found while starting app.
         :param since: The start time from which logs should be displayed
         """
         try:
+            # As best as we can make out, adb logcat returns UTF-8 output.
+            # See #1425 for details.
             self.tools.subprocess.run(
                 [
                     os.fsdecode(self.tools.android_sdk.adb_path),
@@ -1474,6 +1616,7 @@ Activity class not found while starting app.
                 ],
                 env=self.tools.android_sdk.env,
                 check=True,
+                encoding="UTF-8",
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting ADB logcat.") from e

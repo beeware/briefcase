@@ -8,7 +8,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 
@@ -27,6 +27,23 @@ class WindowsMixin:
         suffix = "zip" if app.packaging_format == "zip" else "msi"
         return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
+    def verify_host(self):
+        super().verify_host()
+        # the stub app only supports x86-64 right now
+        if self.tools.host_arch != "AMD64":
+            raise UnsupportedHostError(
+                f"Windows applications cannot be built on an {self.tools.host_arch} machine."
+            )
+        # 64bit Python is required to ensure 64bit wheels are installed/created for the app
+        if self.tools.is_32bit_python:
+            raise UnsupportedHostError(
+                """\
+Windows applications cannot be built using a 32bit version of Python.
+
+Install a 64bit version of Python and run Briefcase again.
+"""
+            )
+
 
 class WindowsCreateCommand(CreateCommand):
     def support_package_filename(self, support_revision):
@@ -34,8 +51,9 @@ class WindowsCreateCommand(CreateCommand):
 
     def support_package_url(self, support_revision):
         return (
-            f"https://www.python.org/ftp/python/{self.python_version_tag}.{support_revision}/"
-            + self.support_package_filename(support_revision)
+            f"https://www.python.org/ftp/python/"
+            f"{self.python_version_tag}.{support_revision}/"
+            f"{self.support_package_filename(support_revision)}"
         )
 
     def output_format_template_context(self, app: AppConfig):
@@ -125,6 +143,7 @@ class WindowsRunCommand(RunCommand):
         app_popen = self.tools.subprocess.Popen(
             [os.fsdecode(self.binary_path(app))] + passthrough,
             cwd=self.tools.home_path,
+            encoding="UTF-8",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,

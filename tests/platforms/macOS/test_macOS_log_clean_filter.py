@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.platforms.macOS import macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 
 
 @pytest.mark.parametrize(
@@ -26,7 +26,8 @@ from briefcase.platforms.macOS import macOS_log_clean_filter
         (
             'Filtering the log data using "senderImagePath ENDSWITH "/Toga Test!" '
             'OR (processImagePath ENDSWITH "/Toga Test!" '
-            'AND senderImagePath ENDSWITH "-iphonesimulator.so")"',
+            'AND (senderImagePath ENDSWITH "-iphonesimulator.so" '
+            'OR senderImagePath ENDSWITH "-iphonesimulator.dylib"))"',
             None,
         ),
         # Startup log
@@ -49,7 +50,7 @@ from briefcase.platforms.macOS import macOS_log_clean_filter
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) ",
             ("", True),
         ),
-        # macOS App log
+        # iOS App log (old style .so libraries)
         (
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) Hello World!",
             ("Hello World!", True),
@@ -58,13 +59,31 @@ from briefcase.platforms.macOS import macOS_log_clean_filter
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.so) Hello World!",
             ("Hello World!", True),
         ),
-        # Empty macOS App log
+        # iOS App log
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) Hello World!",
+            ("Hello World!", True),
+        ),
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.dylib) Hello World!",
+            ("Hello World!", True),
+        ),
+        # Empty iOS App log (old style .so binaries)
         (
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) ",
             ("", True),
         ),
         (
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.so) ",
+            ("", True),
+        ),
+        # Empty iOS App log
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) ",
+            ("", True),
+        ),
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.dylib) ",
             ("", True),
         ),
         # Unknown content
@@ -82,6 +101,12 @@ from briefcase.platforms.macOS import macOS_log_clean_filter
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) "
             "A problem (foo.so) try to avoid it",
             ("A problem (foo.so) try to avoid it", True),
+        ),
+        # Log content that contains `.dylib`
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) "
+            "A problem (foo.dylib) try to avoid it",
+            ("A problem (foo.dylib) try to avoid it", True),
         ),
     ],
 )

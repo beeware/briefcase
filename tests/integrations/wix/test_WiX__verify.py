@@ -104,8 +104,6 @@ def test_download_wix(mock_tools, tmp_path):
     wix_path = tmp_path / "tools" / "wix"
 
     wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
-    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     wix_zip = MagicMock()
     wix_zip.__fspath__.return_value = wix_zip_path
 
@@ -125,7 +123,6 @@ def test_download_wix(mock_tools, tmp_path):
     )
 
     # The download was unpacked.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
         os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
@@ -191,8 +188,6 @@ def test_unpack_fail(mock_tools, tmp_path):
     wix_path = tmp_path / "tools" / "wix"
 
     wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
-    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     wix_zip = MagicMock()
     wix_zip.__fspath__.return_value = wix_zip_path
 
@@ -217,7 +212,6 @@ def test_unpack_fail(mock_tools, tmp_path):
     )
 
     # The download was unpacked.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
         os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )

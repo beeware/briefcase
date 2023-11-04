@@ -5,7 +5,11 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from briefcase.exceptions import BriefcaseCommandError, MissingToolError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    IncompatibleToolError,
+    MissingToolError,
+)
 from briefcase.integrations.base import ManagedTool, ToolCache
 
 
@@ -13,11 +17,10 @@ class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
-    # As of 12 May 2023, 17.0.7+7 is the current OpenJDK
-    # https://adoptium.net/temurin/releases/
+    # Latest OpenJDK as of September 2023: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.7"
-    JDK_BUILD = "7"
+    JDK_RELEASE = "17.0.8.1"
+    JDK_BUILD = "1"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
@@ -26,23 +29,30 @@ class JDK(ManagedTool):
 
     @property
     def OpenJDK_download_url(self):
-        arch = {
-            "x86_64": "x64",  # Linux\macOS x86-64
-            "aarch64": "aarch64",  # Linux arm64
-            "armv6l": "arm",  # Linux arm
-            "arm64": "aarch64",  # macOS arm64
-            "AMD64": "x64",  # Windows x86-64
-        }.get(self.tools.host_arch)
+        """The OpenJDK download URL appropriate for the current machine."""
+        system_arch = self.tools.host_arch
+        # use a 32bit JDK if using 32bit Python on 64bit hardware
+        if self.tools.is_32bit_python and self.tools.host_arch == "aarch64":
+            system_arch = "armv7l"
 
-        platform = {
-            "Darwin": "mac",
-            "Windows": "windows",
-            "Linux": "linux",
-        }.get(self.tools.host_os)
-
-        extension = {
-            "Windows": "zip",
-        }.get(self.tools.host_os, "tar.gz")
+        try:
+            platform, arch, extension = {
+                "Darwin": {
+                    "arm64": ("mac", "aarch64", "tar.gz"),
+                    "x86_64": ("mac", "x64", "tar.gz"),
+                },
+                "Linux": {
+                    "armv7l": ("linux", "arm", "tar.gz"),
+                    "armv8l": ("linux", "arm", "tar.gz"),
+                    "aarch64": ("linux", "aarch64", "tar.gz"),
+                    "x86_64": ("linux", "x64", "tar.gz"),
+                },
+                "Windows": {
+                    "AMD64": ("windows", "x64", "zip"),
+                },
+            }[self.tools.host_os][system_arch]
+        except KeyError as e:
+            raise IncompatibleToolError(tool=self.full_name, env_var="JAVA_HOME") from e
 
         return (
             f"https://github.com/adoptium/temurin{self.JDK_MAJOR_VER}-binaries/"
@@ -64,7 +74,7 @@ class JDK(ManagedTool):
 
         :param tools: ToolCache of available tools
         :param java_path: File path to a candidate JDK install
-        :return: JDK release version; e.g. "17.0.7"
+        :return: JDK release version; e.g. "17.0.X"
         """
         output = tools.subprocess.check_output(
             [
@@ -72,7 +82,7 @@ class JDK(ManagedTool):
                 "-version",
             ],
         )
-        # javac's output should look like "javac 17.0.7\n"
+        # javac's output should look like "javac 17.0.X\n"
         return output.strip("\n").split(" ")[1]
 
     @classmethod
@@ -101,6 +111,8 @@ class JDK(ManagedTool):
         install_message = None
 
         if java_home := tools.os.environ.get("JAVA_HOME", ""):
+            tools.logger.debug("Evaluating JAVA_HOME...", prefix=cls.full_name)
+            tools.logger.debug(f"JAVA_HOME={java_home}")
             try:
                 version_str = cls.version_from_path(tools, java_home)
                 if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
@@ -118,7 +130,7 @@ class JDK(ManagedTool):
 
     isn't a Java {cls.JDK_MAJOR_VER} JDK (it appears to be Java {version_str}).
 
-    Briefcase will use its own JDK instance.
+    Briefcase will proceed using its own JDK instance.
 
 *************************************************************************
 """
@@ -135,7 +147,10 @@ class JDK(ManagedTool):
 
     does not appear to be a JDK. It may be a Java Runtime Environment.
 
-    Briefcase will use its own JDK instance.
+    If JAVA_HOME is a JDK, ensure it is the root directory of the JDK
+    instance such that $JAVA_HOME/bin/javac is a valid filepath.
+
+    Briefcase will proceed using its own JDK instance.
 
 *************************************************************************
 """
@@ -194,6 +209,9 @@ class JDK(ManagedTool):
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         elif tools.host_os == "Darwin":
+            tools.logger.debug(
+                "Evaluating /usr/libexec/java_home...", prefix=cls.full_name
+            )
             try:
                 # If /usr/libexec/java_home doesn't exist, OSError will be raised
                 # If no JRE/JDK is installed, /usr/libexec/java_home raises an error
@@ -201,7 +219,7 @@ class JDK(ManagedTool):
                     ["/usr/libexec/java_home"],
                 ).strip("\n")
             except (OSError, subprocess.CalledProcessError):
-                pass  # No java on this machine
+                tools.logger.debug("An existing JDK/JRE was not returned")
             else:
                 try:
                     version_str = cls.version_from_path(tools, java_home)
@@ -231,10 +249,16 @@ class JDK(ManagedTool):
                         f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
+                    tools.logger.info(
+                        f"To use an existing JDK {cls.JDK_MAJOR_VER} instance, "
+                        f"specify its root directory path in the JAVA_HOME environment variable."
+                    )
+                    tools.logger.info()
                     java.install()
                 else:
                     raise MissingToolError("Java")
 
+        tools.logger.debug(f"Using JDK at {java.java_home}")
         tools.java = java
         return java
 
@@ -262,7 +286,6 @@ class JDK(ManagedTool):
 
         with self.tools.input.wait_bar("Installing OpenJDK..."):
             try:
-                # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
                 self.tools.shutil.unpack_archive(
                     os.fsdecode(jdk_zip_path),
                     extract_dir=os.fsdecode(self.tools.base_path),
@@ -279,7 +302,7 @@ Delete {jdk_zip_path} and run briefcase again.
 
             jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
-            # The tarball will unpack into <briefcase data dir>/tools/jdk-17.0.7+7
+            # The tarball will unpack into <briefcase data dir>/tools/jdk-17.0.X+7
             # (or whatever name matches the current release).
             # We turn this into <briefcase data dir>/tools/java so we have a consistent name.
             java_unpack_path = (

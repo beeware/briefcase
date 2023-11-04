@@ -27,8 +27,8 @@ def package_command(first_app, tmp_path):
     )
     command.tools.home_path = tmp_path / "home"
 
-    # Set the host architecture for test purposes.
-    command.tools.host_arch = "wonky"
+    # Mock ABI from packaging system
+    command._deb_abi = "wonky"
 
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()
@@ -121,7 +121,7 @@ def test_verify_docker(monkeypatch, package_command, first_app_deb):
     dpkg_deb.exists.assert_not_called()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
 def test_deb_package(package_command, first_app_deb, tmp_path):
     """A deb app can be packaged."""
     bundle_path = (
@@ -340,7 +340,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
 
 
 def test_deb_package_failure(package_command, first_app_deb, tmp_path):
-    """If an packaging doesn't succeed, an error is raised."""
+    """If a packaging doesn't succeed, an error is raised."""
     bundle_path = (
         tmp_path / "base_path" / "build" / "first-app" / "somevendor" / "surprising"
     )

@@ -13,6 +13,8 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.java import JDK
 
+from .conftest import JDK_BUILD, JDK_RELEASE
+
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
@@ -60,14 +62,12 @@ def test_existing_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path.
-    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     archive = MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
+    (tmp_path / "tools" / f"jdk-{JDK_RELEASE}+{JDK_BUILD}").mkdir(parents=True)
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -81,13 +81,12 @@ def test_existing_install(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
+        f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
 
     # The archive was unpacked.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
         "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
     )
@@ -112,14 +111,12 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path.
-    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     archive = MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
 
     # Create a directory to make it look like Java was downloaded and unpacked.
-    (tmp_path / "tools" / "jdk-17.0.7+7").mkdir(parents=True)
+    (tmp_path / "tools" / f"jdk-{JDK_RELEASE}+{JDK_BUILD}").mkdir(parents=True)
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -133,13 +130,12 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.7_7.tar.gz",
+        f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
 
     # The archive was unpacked.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
         "/path/to/download.zip",
         extract_dir=os.fsdecode(tmp_path / "tools"),
@@ -176,7 +172,7 @@ def test_download_fail(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
+        f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
@@ -198,8 +194,6 @@ def test_unpack_fail(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
-    # Consider to remove if block when we drop py3.7 support, only keep statements from else.
-    # MagicMock below py3.8 doesn't have __fspath__ attribute.
     archive = MagicMock()
     archive.__fspath__.return_value = "/path/to/download.zip"
     mock_tools.download.file.return_value = archive
@@ -220,13 +214,12 @@ def test_unpack_fail(mock_tools, tmp_path):
     # A download was initiated
     mock_tools.download.file.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
-        "jdk-17.0.7+7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz",
+        f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
 
     # The archive was unpacked.
-    # TODO: Py3.6 compatibility; os.fsdecode not required in Py3.7
     mock_tools.shutil.unpack_archive.assert_called_with(
         "/path/to/download.zip",
         extract_dir=os.fsdecode(tmp_path / "tools"),

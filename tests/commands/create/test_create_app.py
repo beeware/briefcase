@@ -37,7 +37,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     # Generate an app in the location.
     bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
-    with (bundle_path / "original").open("w") as f:
+    with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
 
     tracking_create_command.create_app(tracking_create_command.apps["first"])
@@ -73,7 +73,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
 
     bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
-    with (bundle_path / "original").open("w") as f:
+    with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
@@ -99,7 +99,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
 
     bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
-    with (bundle_path / "original").open("w") as f:
+    with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
 
     tracking_create_command.create_app(tracking_create_command.apps["first"])
@@ -126,7 +126,7 @@ def test_create_existing_app_input_disabled(tracking_create_command, tmp_path):
 
     bundle_path = tmp_path / "base_path" / "build" / "first" / "tester" / "dummy"
     bundle_path.mkdir(parents=True)
-    with (bundle_path / "original").open("w") as f:
+    with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
 
     tracking_create_command.create_app(tracking_create_command.apps["first"])

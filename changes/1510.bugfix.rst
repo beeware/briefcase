@@ -1,0 +1,1 @@
+When merging dependencies on macOS, file permissions are now preserved.

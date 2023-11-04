@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from briefcase.exceptions import InvalidDeviceError
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 
 
 def test_simple_command(mock_tools, adb, tmp_path):
@@ -67,7 +67,7 @@ def test_error_handling(mock_tools, adb, name, exception, tmp_path):
     """ADB.run() can parse errors returned by adb."""
     # Set up a mock command with a subprocess module that has with sample data loaded.
     adb_samples = Path(__file__).parent / "adb_errors"
-    with (adb_samples / (name + ".out")).open("r") as adb_output_file:
+    with (adb_samples / (name + ".out")).open("r", encoding="utf-8") as adb_output_file:
         with (adb_samples / (name + ".returncode")).open(
             encoding="utf-8"
         ) as returncode_file:
@@ -99,3 +99,20 @@ def test_error_handling(mock_tools, adb, name, exception, tmp_path):
         ],
         quiet=False,
     )
+
+
+def test_older_sdk_error(mock_tools, adb):
+    """Failure [INSTALL_FAILED_OLDER_SDK] needs to be caught manually."""
+    mock_tools.subprocess.check_output.return_value = "\n".join(
+        [
+            "Performing Push Install",
+            "C:/.../app-debug.apk: 1 file pushed, 0 skipped. 5.5 MB/s (33125287 bytes in 5.768s)",
+            "         pkg: /data/local/tmp/app-debug.apk",
+            "Failure [INSTALL_FAILED_OLDER_SDK]",
+        ]
+    )
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Your device doesn't meet the minimum SDK requirements of this app",
+    ):
+        adb.run("example", "command")

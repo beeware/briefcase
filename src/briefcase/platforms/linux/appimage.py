@@ -44,13 +44,19 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
     def binary_name(self, app):
         safe_name = app.formal_name.replace(" ", "_")
-        return f"{safe_name}-{app.version}-{self.tools.host_arch}.AppImage"
+        arch = LinuxDeploy.arch(self.tools.host_arch)
+        return f"{safe_name}-{app.version}-{arch}.AppImage"
 
     def binary_path(self, app):
         return self.bundle_path(app) / self.binary_name(app)
 
     def distribution_path(self, app):
         return self.dist_path / self.binary_name(app)
+
+    def verify_tools(self):
+        """Verify the AppImage LinuxDeploy tool and its plugins exist."""
+        super().verify_tools()
+        LinuxDeploy.verify(tools=self.tools)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -89,6 +95,24 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 *************************************************************************
 """
             )
+
+        self.logger.warning(
+            """\
+*************************************************************************
+** WARNING: Use of AppImage is not recommended!                        **
+*************************************************************************
+
+    Briefcase supports AppImage in a best-effort capacity. It has proven
+    to be highly unreliable as a distribution platform. AppImages cannot
+    use pre-compiled binary wheels, and has significant problems with
+    most commonly used GUI toolkits (including GTK and PySide).
+
+    Consider using system packages or Flatpak for Linux app
+    distribution.
+
+*************************************************************************
+"""
+        )
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
@@ -154,7 +178,11 @@ class LinuxAppImageCreateCommand(
         # Add the manylinux tag to the template context.
         try:
             tag = getattr(app, "manylinux_image_tag", "latest")
-            context["manylinux_image"] = f"{app.manylinux}_{self.tools.host_arch}:{tag}"
+            manylinux_arch = {
+                "x86_64": "x86_64",
+                "i386": "i686",
+            }[LinuxDeploy.arch(self.tools.host_arch)]
+            context["manylinux_image"] = f"{app.manylinux}_{manylinux_arch}:{tag}"
             if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
                 context["vendor_base"] = "centos"
             elif app.manylinux == "manylinux_2_24":
@@ -213,11 +241,6 @@ class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, DockerOpenComman
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    def verify_tools(self):
-        """Verify the AppImage linuxdeploy tool and plugins exist."""
-        super().verify_tools()
-        LinuxDeploy.verify(tools=self.tools)
-
     def build_app(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
         """Build an application.
 
@@ -258,7 +281,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             try:
                 # For some reason, the version has to be passed in as an
                 # environment variable, *not* in the configuration.
-                env["VERSION"] = app.version
+                env["LINUXDEPLOY_OUTPUT_VERSION"] = app.version
                 # The internals of the binary aren't inherently visible, so
                 # there's no need to package copyright files. These files
                 # appear to be missing by default in the OS dev packages anyway,
@@ -273,6 +296,10 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                 # Explicitly declare target architecture as the current architecture.
                 # This can be used by some linuxdeploy plugins.
                 env["ARCH"] = self.tools.host_arch
+
+                # Enable debug logging for linuxdeploy GTK and Qt plugins
+                if self.logger.is_deep_debug:
+                    env["DEBUG"] = "1"
 
                 # Find all the .so files in app and app_packages,
                 # so they can be passed in to linuxdeploy to have their
@@ -302,6 +329,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         ),
                         "--output",
                         "appimage",
+                        "-v0" if self.logger.is_deep_debug else "-v1",
                     ]
                     + additional_args,
                     env=env,

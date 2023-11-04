@@ -11,6 +11,7 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     CorruptToolError,
     MissingToolError,
+    UnsupportedHostError,
 )
 from briefcase.integrations.base import ManagedTool, Tool, ToolCache
 
@@ -47,6 +48,19 @@ class LinuxDeployBase(ABC):
     @abstractmethod
     def file_path(self) -> Path:
         """The folder on the local filesystem that contains the file_name."""
+
+    @classmethod
+    def arch(cls, host_arch: str) -> str:
+        """The architecture defined (and supported) by linuxdeploy for AppImages."""
+        try:
+            return {
+                "x86_64": "x86_64",
+                "i686": "i386",
+            }[host_arch]
+        except KeyError as e:
+            raise UnsupportedHostError(
+                f"Linux AppImages cannot be built on {host_arch}."
+            ) from e
 
     def exists(self) -> bool:
         return (self.file_path / self.file_name).is_file()
@@ -208,7 +222,7 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
 
     @property
     def file_name(self) -> str:
-        return f"linuxdeploy-plugin-qt-{self.tools.host_arch}.AppImage"
+        return f"linuxdeploy-plugin-qt-{self.arch(self.tools.host_arch)}.AppImage"
 
     @property
     def download_url(self) -> str:
@@ -319,7 +333,7 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
 
     @property
     def file_name(self) -> str:
-        return f"linuxdeploy-{self.tools.host_arch}.AppImage"
+        return f"linuxdeploy-{self.arch(self.tools.host_arch)}.AppImage"
 
     @property
     def download_url(self) -> str:

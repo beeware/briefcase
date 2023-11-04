@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from unittest import mock
 
 import pytest
@@ -55,6 +56,7 @@ def test_install_app_support_package(
     create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path / "data" / "support" / "Python-3.X-tester-support.b37.tar.gz",
         extract_dir=support_path,
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file
@@ -100,6 +102,7 @@ def test_install_pinned_app_support_package(
     create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path / "data" / "support" / "Python-3.X-Tester-support.b42.tar.gz",
         extract_dir=support_path,
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file

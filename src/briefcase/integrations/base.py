@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import locale
 import os
 import platform
 import shutil
@@ -7,6 +8,7 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, DefaultDict, TypeVar
 
@@ -44,6 +46,8 @@ ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
 
 # Registry of all defined Tools
 tool_registry: dict[str, type[Tool | ManagedTool]] = dict()
+
+DEFAULT_SYSTEM_ENCODING = "UTF-8"
 
 
 class Tool(ABC):
@@ -195,6 +199,8 @@ class ToolCache(Mapping):
 
         self.host_arch = self.platform.machine()
         self.host_os = self.platform.system()
+        # Python is 32bit if its pointers can only address with 32 bits or fewer
+        self.is_32bit_python = self.sys.maxsize <= 2**32
 
         self.app_tools: DefaultDict[AppConfig, ToolCache] = defaultdict(
             lambda: ToolCache(
@@ -204,6 +210,29 @@ class ToolCache(Mapping):
                 home_path=self.home_path,
             )
         )
+
+    @cached_property
+    def system_encoding(self) -> str:
+        """The character encoding for the system's locale.
+
+        This locale API tries to determine the system's default encoding and generally
+        works on typically configured systems; although, there are potential pitfalls
+        in certain situations...so, this is best-effort.
+
+        This API is used over getpreferredencoding() to avoid respecting Python's UTF-8
+        mode; the system may not be using UTF-8 even if Python is configured to use it.
+
+        :returns: a character encoding (upper-cased), e.g. UTF-8. Defaults to UTF-8.
+        """
+        if sys.version_info < (3, 11):  # pragma: no-cover-if-gte-py311
+            encoding = locale.getdefaultlocale()[1]  # deprecated in Python 3.11
+        else:  # pragma: no-cover-if-lt-py311
+            encoding = locale.getencoding()
+
+        if not encoding:
+            encoding = DEFAULT_SYSTEM_ENCODING
+
+        return encoding.upper()
 
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]

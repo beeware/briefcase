@@ -1,6 +1,16 @@
-===
-Web
-===
+==========
+Static Web
+==========
+
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |f|    | |y|   | |v| | |f|    | |v|   | |v| | |f|    | |v| | |v|   |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
 When generating a web project, Briefcase produces a static folder of HTML, CSS
 and JavaScript resources that can be deployed as a web site. The static web site

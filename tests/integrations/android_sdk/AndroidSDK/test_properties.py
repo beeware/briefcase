@@ -5,22 +5,25 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
+
 
 @pytest.mark.parametrize(
-    "host_os, name",
+    "host_os, host_arch, name",
     [
-        ("windows", "win"),
-        ("Windows", "win"),
-        ("darwin", "mac"),
-        ("Darwin", "mac"),
+        ("Darwin", "arm64", "mac"),
+        ("Darwin", "x86_64", "mac"),
+        ("Linux", "x86_64", "linux"),
+        ("Windows", "AMD64", "win"),
     ],
 )
-def test_cmdline_tools_url(mock_tools, android_sdk, host_os, name):
+def test_cmdline_tools_url(mock_tools, android_sdk, host_os, host_arch, name):
     """Validate that the SDK URL is computed using `host_os`."""
     mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
 
     assert android_sdk.cmdline_tools_url == (
-        f"https://dl.google.com/android/repository/commandlinetools-{name}-8092744_latest.zip"
+        f"https://dl.google.com/android/repository/commandlinetools-{name}-{SDK_MGR_DL_VER}_latest.zip"
     )
 
 
@@ -35,7 +38,7 @@ def test_sdkmanager_path(mock_tools, android_sdk, host_os, sdkmanager_name):
     mock_tools.host_os = host_os
 
     assert android_sdk.sdkmanager_path == (
-        android_sdk.root_path / "cmdline-tools" / "latest" / "bin" / sdkmanager_name
+        android_sdk.root_path / "cmdline-tools" / SDK_MGR_VER / "bin" / sdkmanager_name
     )
 
 
@@ -62,7 +65,7 @@ def test_avdmanager_path(mock_tools, android_sdk, host_os, avdmanager_name):
     mock_tools.host_os = host_os
 
     assert android_sdk.avdmanager_path == (
-        android_sdk.root_path / "cmdline-tools" / "latest" / "bin" / avdmanager_name
+        android_sdk.root_path / "cmdline-tools" / SDK_MGR_VER / "bin" / avdmanager_name
     )
 
 
@@ -104,9 +107,9 @@ def test_managed_install(mock_tools, android_sdk):
     [
         ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "x86_64", "x86_64"),
         ("Windows", "AMD64", "x86_64"),
         ("Linux", "x86_64", "x86_64"),
+        ("Linux", "aarch64", "arm64-v8a"),
     ],
 )
 def test_emulator_abi(mock_tools, android_sdk, host_os, host_arch, emulator_abi):

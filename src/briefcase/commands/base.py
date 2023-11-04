@@ -13,6 +13,7 @@ from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
 from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.log import configure_logger as configure_cookiecutter_logger
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
@@ -159,6 +160,9 @@ class BaseCommand(ABC):
         Subprocess.verify(tools=self.tools)
         Download.verify(tools=self.tools)
 
+        if not is_clone:
+            self.validate_locale()
+
         self.global_config = None
         self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
 
@@ -249,6 +253,28 @@ a custom location for Briefcase's tools.
                 )
 
         return Path(data_path)
+
+    def validate_locale(self):
+        """Validate the system's locale is compatible."""
+        if self.tools.host_os == "Linux" and self.tools.system_encoding != "UTF-8":
+            self.logger.warning(
+                f"""
+*************************************************************************
+** WARNING: Default system encoding is not supported                   **
+*************************************************************************
+
+    Briefcase and the third-party tools it uses only support UTF-8.
+
+    The detected default system encoding is {self.tools.system_encoding}.
+
+    Briefcase will proceed but some console output could be corrupted and
+    created files or artefacts may contain corrupted text.
+
+    Update your system's encoding to UTF-8 to avoid issues.
+
+*************************************************************************
+"""
+            )
 
     def _command_factory(self, command_name: str):
         """Command factory for the current platform and format.
@@ -666,8 +692,8 @@ any compatibility problems, and then add the compatibility declaration.
             "-v",
             "--verbosity",
             action="count",
-            default=1,
-            help="set the verbosity of output",
+            default=0,
+            help="Enable verbose logging. Use -vv and -vvv to increase logging verbosity.",
         )
         parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(
@@ -833,9 +859,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 ** WARNING: Unable to update template                                  **
 *************************************************************************
 
-   Briefcase is unable the update the application template. This
-   may be because your computer is currently offline. Briefcase will
-   use existing template without updating.
+    Briefcase is unable the update the application template. This
+    may be because your computer is currently offline. Briefcase will
+    use existing template without updating.
 
 *************************************************************************
 """
@@ -885,6 +911,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         cached_template = self.update_cookiecutter_cache(
             template=template, branch=branch
         )
+
+        configure_cookiecutter_logger("DEBUG" if self.logger.is_deep_debug else "INFO")
 
         try:
             # Unroll the template

@@ -48,7 +48,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Briefcase"
-copyright = "2019, Russell Keith-Magee"
+copyright = "Russell Keith-Magee"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -97,12 +97,37 @@ pygments_style = "sphinx"
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
+# API status indicators.
+rst_prolog = """
+.. role:: full
+.. role:: yes
+.. role:: ymmv
+.. |f| replace:: :full:`●`
+.. |y| replace:: :yes:`○`
+.. |v| replace:: :ymmv:`△`
+"""
+
 # -- Options for link checking -------------------------------------------------
 
 linkcheck_anchors_ignore = [
     # Ignore anchor detection/verification for Apple help links
     # e.g.: https://help.apple.com/xcode/mac/current/#/dev97211aeac
     "^/dev[0-9a-f]{9}$"
+]
+
+linkcheck_ignore = [
+    r"^./android/gradle.html$",
+    r"^./iOS/xcode.html$",
+    r"^./linux/appimage.html$",
+    r"^./linux/flatpak.html$",
+    r"^./linux/system.html$",
+    r"^./macOS/app.html$",
+    r"^./macOS/xcode.html$",
+    r"^./web/static.html$",
+    r"^./windows/app.html$",
+    r"^./windows/visualstudio.html$",
+    r"^https://github.com/beeware/briefcase/issues/\d+$",
+    r"^https://github.com/beeware/briefcase/pull/\d+$",
 ]
 
 # -- Options for copy button ---------------------------------------------------

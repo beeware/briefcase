@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import operator
 import os
 import platform
@@ -6,6 +8,7 @@ import sys
 import traceback
 from contextlib import contextmanager
 from datetime import datetime
+from enum import IntEnum
 from pathlib import Path
 
 from rich.console import Console as RichConsole
@@ -113,19 +116,22 @@ class Printer:
         return cls.log.export_text()
 
 
+class LogLevel(IntEnum):
+    INFO = 0
+    VERBOSE = 1
+    DEBUG = 2
+    DEEP_DEBUG = 3
+
+
 class Log:
     """Manage logging output driven by verbosity flags."""
 
-    # level of verbosity when debug output is shown in the console
-    DEBUG = 2
-    # printed at the beginning of all debug output
-    DEBUG_PREFACE = ">>> "
     # subdirectory of command.base_path to store log files
     LOG_DIR = "logs"
 
-    def __init__(self, printer=Printer(), verbosity=1):
+    def __init__(self, printer=Printer(), verbosity: LogLevel = LogLevel.INFO):
         self.print = printer
-        # --verbosity flag: 1 for info, 2 for debug
+        # --verbosity flag: 0 for info, 1 for debug, 2 for deep debug
         self.verbosity = verbosity
         # --log flag to force logfile creation
         self.save_log = False
@@ -150,12 +156,12 @@ class Log:
         :param context: The name of the context to enter. This *must* be simple text,
             with no markup or other special characters.
         """
+        self.info()
+        self.info(f"Entering {context} context...")
+        old_context = self._context
+        self._context = f"{context}| "
+        self.info("-" * (72 - len(context)))
         try:
-            self.info()
-            self.info(f"Entering {context} context...")
-            old_context = self._context
-            self._context = f"{context}| "
-            self.info("-" * (72 - len(context)))
             yield
         finally:
             self.info("-" * (72 - len(context)))
@@ -207,16 +213,20 @@ class Log:
                     style=style,
                 )
 
-    def debug(self, message="", *, prefix="", markup=False):
-        """Log messages at debug level; included if verbosity>=2."""
+    def debug(self, message="", *, preface="", prefix="", markup=False):
+        """Log messages at debug level; included if verbosity >= 2."""
         self._log(
-            preface=self.DEBUG_PREFACE,
+            preface=preface,
             prefix=prefix,
             message=message,
-            show=self.verbosity >= self.DEBUG,
+            show=self.is_debug,
             markup=markup,
             style="dim",
         )
+
+    def verbose(self, message="", *, prefix="", markup=False):
+        """Log message at verbose level if debug enabled; included if verbosity >= 1."""
+        self._log(prefix=prefix, message=message, show=self.is_verbose, markup=markup)
 
     def info(self, message="", *, prefix="", markup=False):
         """Log message at info level; always included in output."""
@@ -229,6 +239,39 @@ class Log:
     def error(self, message="", *, prefix="", markup=False):
         """Log message at error level; always included in output."""
         self._log(prefix=prefix, message=message, markup=markup, style="bold red")
+
+    @property
+    def verbosity(self) -> LogLevel:
+        return self._verbosity
+
+    @verbosity.setter
+    def verbosity(self, value: int | LogLevel):
+        """Clamp verbosity between valid log levels."""
+        self._verbosity = LogLevel(max(min(LogLevel), min(value, max(LogLevel))))
+
+    @property
+    def is_verbose(self):
+        """Is verbose logging enabled via the -v flag?
+
+        This includes Briefcase logging that isn't relevant during normal operation.
+        """
+        return self.verbosity >= LogLevel.VERBOSE
+
+    @property
+    def is_debug(self):
+        """Is debug logging enabled via the -vv flag?
+
+        This includes debug logging from third party tools.
+        """
+        return self.verbosity >= LogLevel.DEBUG
+
+    @property
+    def is_deep_debug(self):
+        """Is deep debug logging enabled via the -vvv flag?
+
+        This includes debug logging from third party tools.
+        """
+        return self.verbosity >= LogLevel.DEEP_DEBUG
 
     def capture_stacktrace(self, label="Main thread"):
         """Preserve Rich stacktrace from exception while in except block.
@@ -572,7 +615,7 @@ class Console:
         try:
             input_value = self.input(prompt, markup=markup)
             self.print.to_log(prompt)
-            self.print.to_log(f"{Log.DEBUG_PREFACE}User input: {input_value}")
+            self.print.to_log(f"User input: {input_value}")
             return input_value
         except EOFError:
             raise KeyboardInterrupt

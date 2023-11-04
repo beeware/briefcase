@@ -31,7 +31,7 @@ def package_command(tmp_path):
 def first_app_dmg(tmp_path):
     dmg_path = tmp_path / "base_path" / "dist" / "First App.dmg"
     dmg_path.parent.mkdir(parents=True)
-    with dmg_path.open("w") as f:
+    with dmg_path.open("w", encoding="utf-8") as f:
         f.write("DMG content here")
 
     return dmg_path
@@ -69,20 +69,21 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
             "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
             "First App.app/Contents/Info.plist",
             "First App.app/Contents/Resources/",
-            "First App.app/Contents/Resources/Extras.app/",
-            "First App.app/Contents/Resources/Extras.app/Contents/",
-            "First App.app/Contents/Resources/Extras.app/Contents/MacOS/",
-            "First App.app/Contents/Resources/Extras.app/Contents/MacOS/Extras",
-            "First App.app/Contents/Resources/first.other",
-            "First App.app/Contents/Resources/first_dylib.dylib",
-            "First App.app/Contents/Resources/first_so.so",
-            "First App.app/Contents/Resources/other_binary",
-            "First App.app/Contents/Resources/second.other",
-            "First App.app/Contents/Resources/special.binary",
-            "First App.app/Contents/Resources/subfolder/",
-            "First App.app/Contents/Resources/subfolder/second_dylib.dylib",
-            "First App.app/Contents/Resources/subfolder/second_so.so",
-            "First App.app/Contents/Resources/unknown.binary",
+            "First App.app/Contents/Resources/app_packages/",
+            "First App.app/Contents/Resources/app_packages/Extras.app/",
+            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/",
+            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/",
+            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/Extras",
+            "First App.app/Contents/Resources/app_packages/first.other",
+            "First App.app/Contents/Resources/app_packages/first_dylib.dylib",
+            "First App.app/Contents/Resources/app_packages/first_so.so",
+            "First App.app/Contents/Resources/app_packages/other_binary",
+            "First App.app/Contents/Resources/app_packages/second.other",
+            "First App.app/Contents/Resources/app_packages/special.binary",
+            "First App.app/Contents/Resources/app_packages/subfolder/",
+            "First App.app/Contents/Resources/app_packages/subfolder/second_dylib.dylib",
+            "First App.app/Contents/Resources/app_packages/subfolder/second_so.so",
+            "First App.app/Contents/Resources/app_packages/unknown.binary",
         ]
 
     # The calls to notarize were made

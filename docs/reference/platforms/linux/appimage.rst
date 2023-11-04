@@ -2,6 +2,35 @@
 AppImage
 ========
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |v|    |       |     |        |       | |v| | |v|    |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
+.. admonition:: Best effort support
+
+    AppImage has a number of significant issues building images for GUI apps. It is
+    incompatible with the use of binary wheels, and the use of an older Linux base image
+    for compatibility purposes is incompatible with using modern GUI frameworks. Even
+    when a GUI toolkit *can* be installed, the AppImage packaging process frequently
+    introduces bugs related to DBus integration or libraries like WebKit2 that use
+    subprocesses.
+
+    Briefcase provides an AppImage backend for historical reasons, but we strongly
+    discourage the use of AppImages for distribution. We maintain unit test coverage for
+    the AppImage backend, but we do not build AppImages as part of our release process.
+    We will accept bug reports related to AppImage support, and we will merge PRs that
+    address AppImage support, but the core team does not consider addressing AppImage
+    bugs a priority.
+
+    If you need to distribute a Linux app, :doc:`System packages <./system>` or
+    :doc:`Flatpaks <./flatpak>` are much more reliable options.
+
 `AppImage <https://appimage.org>`__ provides a way for developers to provide
 "native" binaries for Linux users. It allow packaging applications for any
 common Linux based operating system, including Ubuntu, Debian, Fedora, and more.
@@ -42,7 +71,7 @@ portable as they could otherwise be.
 Icon format
 ===========
 
-AppImages uses ``.png`` format icons. An application must provide icons in
+AppImages use ``.png`` format icons. An application must provide icons in
 the following sizes:
 
 * 16px

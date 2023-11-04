@@ -2,27 +2,30 @@
 Native System Packages
 ======================
 
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+| |y|    | |y|   |     |        |       | |v| | |f|    | |v| | |v|   |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+
 All modern Linux distributions have a native format for distributing packages
 that are integrated into their overall operating system:
 
 * ``.deb``, used by Debian, Ubuntu, Mint (and others)
-* ``.rpm``, used by Red Hat, Fedora, CentOS, AlmaLinux (and others)
+* ``.rpm``, used by Red Hat, Fedora, CentOS, AlmaLinux, openSUSE (and others)
 * ``.pkg.tar.zst``, used by Arch Linux and Manjaro Linux
 
 The Briefcase ``system`` backend provides a way to build your app in these
 system package formats.
 
-.. note:: Not all Linux distributions are currently supported!
+.. admonition:: Not all Linux distributions are supported!
 
-    At present, Briefcase only has full support for Debian-based distributions.
-    It should be possible to build and run an application on other Linux
-    distributions; however, it won't be possible to package the app for
-    distribution on those platforms. We intend to add support for other
-    packaging formats - patches are welcome.
-
-    In addition, Briefcase cannot reliably identify *every* Linux vendor. If
-    your Linux distribution isn't being identified (or isn't being identified
-    correctly), please `open a ticket
+    Briefcase cannot reliably identify *every* Linux vendor. If your Linux distribution
+    isn't being identified (or isn't being identified correctly), please `open a ticket
     <https://github.com/beeware/briefcase/issues>`__ with the contents of your
     ``/etc/os-release`` file.
 
@@ -108,13 +111,14 @@ supported by the vendor, and system Python is Python 3.8 or later.
 
 The following Linux vendors are known to work as Docker targets:
 
-  * Debian (e.g., ``debian:bullseye`` or ``debian:11``)
-  * Ubuntu (e.g., ``ubuntu:jammy`` or ``ubuntu:22.04``)
-  * Fedora (e.g, ``fedora:37``)
-  * AlmaLinux (e.g., ``almalinux:9``)
-  * Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
-  * Arch Linux (e.g., ``archlinux:latest``)
-  * Manjaro Linux (e.g., ``manjarolinux/base:latest``)
+* Debian (e.g., ``debian:bullseye`` or ``debian:11``)
+* Ubuntu (e.g., ``ubuntu:jammy`` or ``ubuntu:22.04``)
+* Fedora (e.g, ``fedora:37``)
+* AlmaLinux (e.g., ``almalinux:9``)
+* Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
+* openSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
+* Arch Linux (e.g., ``archlinux:latest``)
+* Manjaro Linux (e.g., ``manjarolinux/base:latest``)
 
 Application configuration
 =========================
@@ -128,10 +132,10 @@ If you need to override these settings for a specific target vendor, or for a
 specific distribution version, you can provide increasingly specific sections for
 vendor and version information. Each distribution is identified by:
 
-* Vendor base (e.g., ``debian``, ``rhel``, ``arch``)
-* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``). The vendor
-  identifier *may* be the same as the vendor base (e.g, in the case of Debian or
-  Red Hat)
+* Vendor base (e.g., ``debian``, ``rhel``, ``arch``, ``suse``)
+* Vendor (e.g, ``debian``, ``ubuntu``, ``rhel``, ``fedora``, ``opensuse-tumbleweed``,
+  ``arch``, ``manjaro``). The vendor identifier *may* be the same as the vendor base
+  (e.g, in the case of Debian, Red Hat, or Arch)
 * Code name (e.g., a version number, or ``jammy``).
 
 For example, a full configuration for ``myapp`` running on Ubuntu 22.04 (jammy)

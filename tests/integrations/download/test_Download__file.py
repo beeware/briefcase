@@ -128,7 +128,9 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     mock_tools.os.remove.assert_called_with(str(temp_filename))
 
     # File content is as expected
-    with (mock_tools.base_path / "downloads" / "something.zip").open() as f:
+    with (mock_tools.base_path / "downloads" / "something.zip").open(
+        encoding="utf-8"
+    ) as f:
         assert f.read() == "all content"
 
 
@@ -179,14 +181,14 @@ def test_new_download_chunked(mock_tools, file_perms):
 
     # The downloaded file exists, and content is as expected
     assert filename.exists()
-    with (mock_tools.base_path / "something.zip").open() as f:
+    with (mock_tools.base_path / "something.zip").open(encoding="utf-8") as f:
         assert f.read() == "chunk-1;chunk-2;chunk-3;"
 
 
 def test_already_downloaded(mock_tools):
     # Create an existing file
     existing_file = mock_tools.base_path / "something.zip"
-    with existing_file.open("w") as f:
+    with existing_file.open("w", encoding="utf-8") as f:
         f.write("existing content")
 
     response = mock.MagicMock()

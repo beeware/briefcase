@@ -7,7 +7,7 @@ from ....utils import create_file, create_plist_file
 
 
 @pytest.fixture
-def first_app_with_binaries(first_app_config, tmp_path):
+def first_app_templated(first_app_config, tmp_path):
     app_path = (
         tmp_path
         / "base_path"
@@ -59,8 +59,30 @@ entitlements_path="Entitlements.plist"
         },
     )
 
+    # Create some folders that need to exist.
+    (app_path / "Contents" / "Resources" / "app_packages").mkdir(parents=True)
+    (app_path / "Contents" / "Frameworks").mkdir(parents=True)
+
+    # Select dmg packaging by default
+    first_app_config.packaging_format = "dmg"
+
+    return first_app_config
+
+
+@pytest.fixture
+def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
+    app_path = (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "macos"
+        / "app"
+        / "First App.app"
+    )
+
     # Create some libraries that need to be signed.
-    lib_path = app_path / "Contents" / "Resources"
+    lib_path = app_path / "Contents" / "Resources" / "app_packages"
     frameworks_path = app_path / "Contents" / "Frameworks"
 
     for lib in [
@@ -94,16 +116,13 @@ entitlements_path="Entitlements.plist"
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # Make sure there are some files in the bundle that *don't* need to be signed...
-    with (lib_path / "first.other").open("w") as f:
+    with (lib_path / "first.other").open("w", encoding="utf-8") as f:
         f.write("other")
-    with (lib_path / "second.other").open("w") as f:
+    with (lib_path / "second.other").open("w", encoding="utf-8") as f:
         f.write("other")
 
     # A file that has a Mach-O header, but isn't executable
     with (lib_path / "unknown.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEother")
-
-    # Select dmg packaging by default
-    first_app_config.packaging_format = "dmg"
 
     return first_app_config

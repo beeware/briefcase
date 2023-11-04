@@ -286,7 +286,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         This looks for start and end markers in the named file, and replaces the
         content inside those markers with the inserted content.
 
-        Multiple formats of insert marker are inspected, to accomodate HTML,
+        Multiple formats of insert marker are inspected, to accommodate HTML,
         Python and CSS/JS comment conventions:
         * HTML: ``<!-----@ insert:start @----->`` and ``<!-----@ insert:end @----->``
         * Python: ``#####@ insert:start @#####\n`` and ``######@ insert:end @#####\n``
@@ -373,6 +373,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     [
                         sys.executable,
                         "-u",
+                        "-X",
+                        "utf8",
                         "-m",
                         "wheel",
                         "pack",
@@ -381,6 +383,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         self.wheel_path(app),
                     ],
                     check=True,
+                    encoding="UTF-8",
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -393,6 +396,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     [
                         sys.executable,
                         "-u",
+                        "-X",
+                        "utf8",
                         "-m",
                         "pip",
                         "download",
@@ -408,6 +413,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     ],
                     check=True,
                     cwd=self.bundle_path(app),
+                    encoding="UTF-8",
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(

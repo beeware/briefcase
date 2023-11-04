@@ -35,8 +35,9 @@ def android_sdk(android_sdk) -> AndroidSDK:
     [
         ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "x86_64", "x86_64"),
+        ("Windows", "AMD64", "x86_64"),
         ("Linux", "x86_64", "x86_64"),
+        ("Linux", "aarch64", "arm64-v8a"),
     ],
 )
 def test_create_emulator(
@@ -68,7 +69,7 @@ def test_create_emulator(
         tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
     )
     avd_config_path.parent.mkdir(parents=True)
-    with avd_config_path.open("w") as f:
+    with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
     # Mock the internal emulator creation method

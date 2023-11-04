@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.console import LogLevel
+
 
 def test_simple_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """A simple call will be invoked."""
@@ -18,7 +20,7 @@ def test_simple_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -49,7 +51,7 @@ def test_interactive(mock_docker_app_context, tmp_path, sub_kw, capsys):
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -85,7 +87,7 @@ def test_extra_mounts(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--volume",
             "/path/to/first:/container/first:z",
             "--volume",
@@ -125,7 +127,7 @@ def test_cwd(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--workdir",
             "/app/foobar",
             "briefcase/com.example.myapp:py3.X",
@@ -159,10 +161,9 @@ def test_call_with_arg_and_env(
             "MAGIC": "True",
             "IMPORTANCE": "super high",
         },
-        universal_newlines=True,
+        extra_kw="extra",
     )
 
-    sub_stream_kw.pop("text")
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_once_with(
         [
             "docker",
@@ -171,7 +172,7 @@ def test_call_with_arg_and_env(
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--env",
             "MAGIC=True",
             "--env",
@@ -180,7 +181,7 @@ def test_call_with_arg_and_env(
             "hello",
             "world",
         ],
-        universal_newlines=True,
+        extra_kw="extra",
         **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
@@ -222,11 +223,11 @@ def test_call_with_path_arg_and_env(
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--env",
             "MAGIC=True",
             "--env",
-            "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "PATH=/somewhere/safe:/briefcase/tools:/app/location",
             "--workdir",
             f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
@@ -279,7 +280,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "--volume",
             "/path/to/first:/container/first:z",
             "--volume",
@@ -287,7 +288,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
             "--env",
             "MAGIC=True",
             "--env",
-            "PATH=/somewhere/safe:/home/brutus/.cache/briefcase/tools:/app/location",
+            "PATH=/somewhere/safe:/briefcase/tools:/app/location",
             "--workdir",
             f"{tmp_path / 'cwd'}",
             "briefcase/com.example.myapp:py3.X",
@@ -311,7 +312,7 @@ def test_interactive_with_path_arg_and_env_and_mounts(
 )
 def test_simple_verbose_call(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
     """If verbosity is turned out, there is output."""
-    mock_docker_app_context.tools.logger.verbosity = 2
+    mock_docker_app_context.tools.logger.verbosity = LogLevel.DEBUG
 
     mock_docker_app_context.run(["hello", "world"])
 
@@ -323,7 +324,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, sub_stream_kw, c
             "--volume",
             f"{tmp_path / 'bundle'}:/app:z",
             "--volume",
-            f"{tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z",
+            f"{tmp_path / 'briefcase'}:/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
             "hello",
             "world",
@@ -339,7 +340,7 @@ def test_simple_verbose_call(mock_docker_app_context, tmp_path, sub_stream_kw, c
         "Docker| >>>     docker run "
         "--rm "
         f"--volume {tmp_path / 'bundle'}:/app:z "
-        f"--volume {tmp_path / 'briefcase'}:/home/brutus/.cache/briefcase:z "
+        f"--volume {tmp_path / 'briefcase'}:/briefcase:z "
         "briefcase/com.example.myapp:py3.X "
         "hello world\n"
         "Docker| >>> Working Directory:\n"

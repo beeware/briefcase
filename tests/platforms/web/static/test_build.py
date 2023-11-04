@@ -38,7 +38,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
-        if args[0][3] == "wheel":
+        if args[0][5] == "wheel":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
@@ -51,7 +51,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     ),
                 ],
             ),
-        elif args[0][3] == "pip":
+        elif args[0][5] == "pip":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "dependency",
@@ -90,6 +90,8 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -98,20 +100,30 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
+            encoding="UTF-8",
         ),
     ]
 
@@ -189,13 +201,6 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 "    <body>",
                 "        <py-script>",
                 "#####@ bootstrap:start @#####",
-                "##################################################",
-                "# Briefcase",
-                "##################################################",
-                "import runpy",
-                "",
-                "# Run First App's main module",
-                'runpy.run_module("first_app", run_name="__main__", alter_sys=True)',
                 "#####@ bootstrap:end @#####",
                 "        </py-script>",
                 "",
@@ -212,7 +217,7 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
-        if args[0][3] == "wheel":
+        if args[0][5] == "wheel":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
@@ -225,7 +230,7 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
                     ),
                 ],
             ),
-        elif args[0][3] == "pip":
+        elif args[0][5] == "pip":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "dependency",
@@ -264,6 +269,8 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -272,20 +279,30 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
+            encoding="UTF-8",
         ),
     ]
 
@@ -363,16 +380,6 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
                 "    <body>",
                 "        <py-script>",
                 "#####@ bootstrap:start @#####",
-                "##################################################",
-                "# Briefcase",
-                "##################################################",
-                "import runpy",
-                "",
-                "# Run First App's main module",
-                'runpy.run_module("first_app", run_name="__main__", alter_sys=True)',
-                "",
-                "# Run First App's test module",
-                'runpy.run_module("tests.first_app", run_name="__main__", alter_sys=True)',
                 "#####@ bootstrap:end @#####",
                 "        </py-script>",
                 "",
@@ -469,6 +476,8 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -477,20 +486,30 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
+            encoding="UTF-8",
         ),
     ]
 
@@ -511,7 +530,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
-        if args[0][3] == "wheel":
+        if args[0][5] == "wheel":
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
@@ -519,7 +538,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
                 ],
             ),
-        elif args[0][3] == "pip":
+        elif args[0][5] == "pip":
             pass
         else:
             raise ValueError("Unknown command")
@@ -545,6 +564,8 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -553,20 +574,30 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
+            encoding="UTF-8",
         ),
     ]
 
@@ -642,6 +673,8 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -650,6 +683,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
     ]
 
@@ -694,6 +728,8 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "wheel",
                 "pack",
@@ -702,20 +738,30 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
             ],
             check=True,
+            encoding="UTF-8",
         ),
         mock.call(
             [
                 sys.executable,
                 "-u",
+                "-X",
+                "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
+            encoding="UTF-8",
         ),
     ]
 

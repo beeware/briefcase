@@ -2,12 +2,28 @@
 Windows App
 ===========
 
-A Windows app is a stub binary, allow with a collection of folders that contain
-the Python code for the app and the Python runtime libraries. Briefcase supports
-two packaging formats for a Windows app:
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| Host Platform Support (:ref:`platform-support-key`)                |
++--------+-------+---------+--------+---+-----+--------+-----+-------+
+| macOS          | Windows              | Linux                      |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
+| x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
++========+=======+=====+========+=======+=====+========+=====+=======+
+|        |       |     | |f|    |       |     |        |     |       |
++--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
-1. As an MSI installer
-2. As a ZIP file containing all files needed to run the app
+A Windows app is a stub binary, allow with a collection of folders that contain
+the Python code for the app and the Python runtime libraries.
+
+Packaging format
+================
+
+Briefcase supports two packaging formats for a Windows app:
+
+1. As an MSI installer (the default output of ``briefcase package windows``, or by using
+   ``briefcase package windows -p msi``); or
+2. As a ZIP file containing all files needed to run the app (by using ``briefcase
+   package windows -p zip``).
 
 Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
 installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is

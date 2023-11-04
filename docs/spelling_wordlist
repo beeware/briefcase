@@ -15,6 +15,7 @@ codebase
 Cookiecutter
 cryptographic
 customizations
+DBus
 dev
 dialogs
 distributable
@@ -51,6 +52,7 @@ Manjaro
 manylinux
 Namespace
 natively
+openSUSE
 OSX
 passthrough
 Passthrough

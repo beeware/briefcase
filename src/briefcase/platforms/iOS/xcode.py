@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import plistlib
 import subprocess
 import time
-from typing import List
+from pathlib import Path
 from uuid import UUID
 
 from briefcase.commands import (
@@ -13,7 +15,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.console import InputDisabled, select_option
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -23,7 +25,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
-from briefcase.platforms.macOS import macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -252,7 +254,7 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
-    def _extra_pip_args(self, app: BaseConfig):
+    def _extra_pip_args(self, app: AppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
@@ -263,6 +265,45 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
         ]
+
+    def _install_app_requirements(
+        self,
+        app: AppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+    ):
+        # Perform the initial install pass targeting the "iphoneos" platform
+        super()._install_app_requirements(
+            app,
+            requires=requires,
+            app_packages_path=app_packages_path.parent / "app_packages.iphoneos",
+            progress_message="Installing app requirements for iPhone device...",
+            pip_kwargs={
+                "env": {
+                    "PYTHONPATH": str(
+                        self.support_path(app) / "platform-site" / "iphoneos.arm64"
+                    ),
+                }
+            },
+        )
+
+        # Perform a second install pass targeting the "iphonesimulator" platform for the
+        # current architecture
+        super()._install_app_requirements(
+            app,
+            requires=requires,
+            app_packages_path=app_packages_path.parent / "app_packages.iphonesimulator",
+            progress_message="Installing app requirements for iPhone simulator...",
+            pip_kwargs={
+                "env": {
+                    "PYTHONPATH": str(
+                        self.support_path(app)
+                        / "platform-site"
+                        / f"iphonesimulator.{self.tools.host_arch}"
+                    ),
+                }
+            },
+        )
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
@@ -276,7 +317,7 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
 class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
 
-    def info_plist_path(self, app: BaseConfig):
+    def info_plist_path(self, app: AppConfig):
         """Obtain the path to the application's plist file.
 
         :param app: The config object for the app
@@ -284,7 +325,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         """
         return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
-    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
+    def update_app_metadata(self, app: AppConfig, test_mode: bool):
         with self.input.wait_bar("Setting main module..."):
             # Load the original plist
             with self.info_plist_path(app).open("rb") as f:
@@ -298,7 +339,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
             with self.info_plist_path(app).open("wb") as f:
                 plistlib.dump(info_plist, f)
 
-    def build_app(self, app: BaseConfig, test_mode: bool = False, **kwargs):
+    def build_app(self, app: AppConfig, test_mode: bool = False, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
@@ -307,7 +348,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         self.logger.info("Updating app metadata...", prefix=app.app_name)
         self.update_app_metadata(app=app, test_mode=test_mode)
 
-        self.logger.info("Building XCode project...", prefix=app.app_name)
+        self.logger.info("Building Xcode project...", prefix=app.app_name)
         with self.input.wait_bar("Building..."):
             try:
                 self.tools.subprocess.run(
@@ -324,9 +365,12 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         self.tools.host_arch,
                         "-sdk",
                         "iphonesimulator",
-                        "-quiet",
+                        "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
                     ],
                     check=True,
+                    filter_func=(
+                        None if self.tools.logger.is_deep_debug else XcodeBuildFilter()
+                    ),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -347,9 +391,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
     def run_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         udid=None,
         **kwargs,
     ):
@@ -476,7 +520,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--predicate",
                 f'senderImagePath ENDSWITH "/{app.formal_name}"'
                 f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                ' AND senderImagePath ENDSWITH "-iphonesimulator.so")',
+                ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"))',
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

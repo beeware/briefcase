@@ -44,25 +44,25 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "macos", "ubuntu", "windows" ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12-dev" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
         include:
         - experimental: false
         # Allow dev Python to fail without failing entire job
-        - python-version: "3.12-dev"
-          experimental: true
+        #- python-version: "3.13-dev"
+        #  experimental: true
         # Run tests against the latest Windows Store Python
         - platform: "windows"
-          python-version: "winstore3.11"
+          python-version: "winstore3.12"
           experimental: false
     steps:
     - name: Checkout
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
       with:
         fetch-depth: 0
 
     - name: Set up Python
       if: startswith(matrix.python-version, '3')
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v4.7.1
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -70,7 +70,7 @@ jobs:
       if: startswith(matrix.python-version, 'winstore')
       uses: beeware/.github/.github/actions/install-win-store-python@main
       with:
-        python-version: "3.11"
+        python-version: "3.12"
 
     - name: Get Packages
       uses: actions/download-artifact@v3.0.2
@@ -93,7 +93,7 @@ jobs:
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v3.1.3
       with:
         name: coverage-data
         path: ".coverage.*"
@@ -112,12 +112,12 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
       with:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v4.7.1
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
@@ -148,7 +148,7 @@ jobs:
 
     - name: Upload Project Coverage HTML Report
       if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v3.1.3
       with:
         name: html-coverage-report-project
         path: htmlcov
@@ -171,3 +171,8 @@ jobs:
       matrix:
         framework: [ "toga", "pyside2", "pyside6", "ppb", "pygame" ]
         runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+        exclude:
+          # Pyside2 doesn't publish ARM64 wheels, and is unlikely to ever do so.
+          # This means we can't make a universal binary.
+          - framework: "pyside2"
+            runner-os: "macos-latest"

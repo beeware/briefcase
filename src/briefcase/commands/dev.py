@@ -18,6 +18,22 @@ class DevCommand(RunAppMixin, BaseCommand):
     output_format = None
     description = "Run a Briefcase project in the dev environment."
 
+    # On macOS CoreFoundation/NSApplication will do its own independent parsing of argc/argv.
+    # This means that whatever we pass to the Python interpreter on start-up will also be
+    # visible to NSApplication which will interpret things like `-u` (used to make I/O
+    # unbuffered in CPython) as `-u [URL]` (a request to open a document by URL). This is,
+    # rather patently, Not Good.
+    # To avoid this causing unwanted hilarity, we use environment variables to configure the
+    # Python interpreter rather than command-line options.
+    DEV_ENVIRONMENT = {
+        # Equivalent of passing "-u"
+        "PYTHONUNBUFFERED": "1",
+        # Equivalent of passing "-X dev"
+        "PYTHONDEVMODE": "1",
+        # Equivalent of passing "-X utf8"
+        "PYTHONUTF8": "1",
+    }
+
     @property
     def platform(self):
         """The dev command always reports as the local platform."""
@@ -75,6 +91,8 @@ class DevCommand(RunAppMixin, BaseCommand):
                         [
                             sys.executable,
                             "-u",
+                            "-X",
+                            "utf8",
                             "-m",
                             "pip",
                             "install",
@@ -82,6 +100,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                         ]
                         + requires,
                         check=True,
+                        encoding="UTF-8",
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
@@ -104,14 +123,14 @@ class DevCommand(RunAppMixin, BaseCommand):
         :param passthrough: A list of arguments to pass to the app
         """
         main_module = app.main_module(test_mode)
+
+        # Add in the environment settings to get Python in the state we want.
+        env.update(self.DEV_ENVIRONMENT)
+
         app_popen = self.tools.subprocess.Popen(
             [
+                # Do not add additional switches for sys.executable; see DEV_ENVIRONMENT
                 sys.executable,
-                "-u",
-                "-X",
-                "dev",
-                "-X",
-                "utf8",
                 "-c",
                 (
                     "import runpy, sys;"
@@ -121,6 +140,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 ),
             ],
             env=env,
+            encoding="UTF-8",
             cwd=self.tools.home_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

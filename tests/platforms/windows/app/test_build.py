@@ -27,6 +27,7 @@ def build_command(tmp_path):
         data_path=tmp_path / "briefcase",
     )
     command.tools.host_os = "Windows"
+    command.tools.host_arch = "AMD64"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.shutil = mock.MagicMock(spec_set=shutil)
     command.tools.download = mock.MagicMock()

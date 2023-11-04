@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 import briefcase.platforms.windows.visualstudio
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.visualstudio import VisualStudio
@@ -46,8 +46,12 @@ def test_verify(build_command, monkeypatch):
     assert isinstance(build_command.tools.visualstudio, VisualStudio)
 
 
-def test_build_app(build_command, first_app_config, tmp_path):
+@pytest.mark.parametrize("tool_debug_mode", (True, False))
+def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
     """The solution will be compiled when the project is built."""
+    # Enable verbose tool logging
+    if tool_debug_mode:
+        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.build_app(first_app_config)
 
@@ -62,6 +66,7 @@ def test_build_app(build_command, first_app_config, tmp_path):
                     "-property:RestorePackagesConfig=true",
                     "-target:First App",
                     "-property:Configuration=Release",
+                    "-verbosity:detailed" if tool_debug_mode else "-verbosity:normal",
                 ],
                 check=True,
                 cwd=tmp_path

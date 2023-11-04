@@ -18,7 +18,7 @@ def build_command(tmp_path):
 
 def test_process_wheel(build_command, tmp_path):
     """Wheels can have inserted and static content extracted."""
-    # Create an existng file from a previous unpack
+    # Create an existing file from a previous unpack
     create_file(
         tmp_path / "static" / "dummy" / "old" / "existing.css",
         "div.existing {margin: 99px}",

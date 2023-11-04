@@ -22,6 +22,7 @@ from briefcase.platforms.linux import (
     ARCH,
     DEBIAN,
     RHEL,
+    SUSE,
     DockerOpenCommand,
     LinuxMixin,
     LocalRequirementsMixin,
@@ -54,15 +55,6 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
         return options
 
-    @property
-    def linux_arch(self):
-        # Linux uses different architecture identifiers for some platforms
-        return {
-            "x86_64": "amd64",
-            "aarch64": "arm64",
-            "armv6l": "armhf",
-        }.get(self.tools.host_arch, self.tools.host_arch)
-
     def build_path(self, app):
         # Override the default build path to use the vendor name,
         # rather than "linux"
@@ -84,31 +76,6 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             return f"fc{app.target_codename}"
         else:
             return f"el{app.target_codename}"
-
-    def distribution_filename(self, app):
-        if app.packaging_format == "deb":
-            return (
-                f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
-                f"~{app.target_vendor}-{app.target_codename}_{self.linux_arch}.deb"
-            )
-        elif app.packaging_format == "rpm":
-            return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f".{self.rpm_tag(app)}.{self.tools.host_arch}.rpm"
-            )
-        elif app.packaging_format == "pkg":
-            return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f"-{self.tools.host_arch}.pkg.tar.zst"
-            )
-        else:
-            raise BriefcaseCommandError(
-                "Briefcase doesn't currently know how to build system packages in "
-                f"{app.packaging_format.upper()} format."
-            )
-
-    def distribution_path(self, app):
-        return self.dist_path / self.distribution_filename(app)
 
     def target_glibc_version(self, app):
         target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
@@ -235,7 +202,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         # what "use docker" means in terms of target_image.
         return bool(self.target_image)
 
-    def app_python_version_tag(self, app):
+    def app_python_version_tag(self, app: AppConfig):
         if self.use_docker:
             # If we're running in Docker, we can't know the Python3 version
             # before rolling out the template; so we fall back to "3". Later,
@@ -246,6 +213,75 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         else:
             python_version_tag = super().app_python_version_tag(app)
         return python_version_tag
+
+    def _build_env_abi(self, app: AppConfig):
+        """Retrieves the ABI the packaging system is targeting in the build env.
+
+        Each packaging system uses different values to identify the exact ABI that
+        describes the target environment...so just defer to the packaging system.
+        """
+        command = {
+            "deb": ["dpkg", "--print-architecture"],
+            "rpm": ["rpm", "--eval", "%_target_cpu"],
+            "pkg": ["pacman-conf", "Architecture"],
+        }[app.packaging_format]
+        try:
+            return (
+                self.tools[app].app_context.check_output(command).split("\n")[0].strip()
+            )
+        except (OSError, subprocess.CalledProcessError) as e:
+            raise BriefcaseCommandError(
+                "Failed to determine build environment's ABI for packaging."
+            ) from e
+
+    def deb_abi(self, app: AppConfig) -> str:
+        """The default ABI for dpkg packaging for the target environment."""
+        try:
+            return self._deb_abi
+        except AttributeError:
+            self._deb_abi = self._build_env_abi(app)
+            return self._deb_abi
+
+    def rpm_abi(self, app: AppConfig) -> str:
+        """The default ABI for rpm packaging for the target environment."""
+        try:
+            return self._rpm_abi
+        except AttributeError:
+            self._rpm_abi = self._build_env_abi(app)
+            return self._rpm_abi
+
+    def pkg_abi(self, app: AppConfig) -> str:
+        """The default ABI for pacman packaging for the target environment."""
+        try:
+            return self._pkg_abi
+        except AttributeError:
+            self._pkg_abi = self._build_env_abi(app)
+            return self._pkg_abi
+
+    def distribution_filename(self, app: AppConfig) -> str:
+        if app.packaging_format == "deb":
+            return (
+                f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
+                f"~{app.target_vendor}-{app.target_codename}_{self.deb_abi(app)}.deb"
+            )
+        elif app.packaging_format == "rpm":
+            return (
+                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
+                f".{self.rpm_tag(app)}.{self.rpm_abi(app)}.rpm"
+            )
+        elif app.packaging_format == "pkg":
+            return (
+                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
+                f"-{self.pkg_abi(app)}.pkg.tar.zst"
+            )
+        else:
+            raise BriefcaseCommandError(
+                "Briefcase doesn't currently know how to build system packages in "
+                f"{app.packaging_format.upper()} format."
+            )
+
+    def distribution_path(self, app: AppConfig):
+        return self.dist_path / self.distribution_filename(app)
 
     def target_glibc_version(self, app):
         """Determine the glibc version.
@@ -289,7 +325,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
         return target_glibc
 
-    def platform_freedesktop_info(self, app):
+    def platform_freedesktop_info(self, app: AppConfig):
         if self.use_docker:
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
@@ -308,7 +344,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
         return freedesktop_info
 
-    def docker_image_tag(self, app):
+    def docker_image_tag(self, app: AppConfig):
         """The Docker image tag for an app."""
         return f"briefcase/{app.bundle_identifier.lower()}:{app.target_vendor}-{app.target_codename}"
 
@@ -339,7 +375,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         super().clone_options(command)
         self.target_image = command.target_image
 
-    def verify_python(self, app):
+    def verify_python(self, app: AppConfig):
         """Verify that the version of Python being used to build the app in Docker is
         compatible with the version being used to run Briefcase.
 
@@ -441,6 +477,13 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             ]
             system_verify = ["rpm", "-q"]
             system_installer = ["dnf", "install"]
+        elif app.target_vendor_base == SUSE:
+            base_system_packages = [
+                "python3-devel",
+                "patterns-devel-base-devel_basis",
+            ]
+            system_verify = ["rpm", "-q", "--whatprovides"]
+            system_installer = ["zypper", "install"]
         elif app.target_vendor_base == ARCH:
             base_system_packages = [
                 "python3",
@@ -487,7 +530,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             )
             return
 
-        # Run a check for each packages listed in the app's system_requires,
+        # Run a check for each package listed in the app's system_requires,
         # plus the baseline system packages that are required.
         missing = []
         for package in base_system_packages + getattr(app, "system_requires", []):
@@ -665,7 +708,7 @@ with your app's licensing terms.
         with self.input.wait_bar("Installing changelog..."):
             changelog = self.base_path / "CHANGELOG"
             if changelog.is_file():
-                with changelog.open() as infile:
+                with changelog.open(encoding="utf-8") as infile:
                     outfile = gzip.GzipFile(
                         doc_folder / "changelog.gz", mode="wb", mtime=0
                     )
@@ -695,7 +738,7 @@ with details about the release.
         with self.input.wait_bar("Installing man page..."):
             manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
             if manpage_source.is_file():
-                with manpage_source.open() as infile:
+                with manpage_source.open(encoding="utf-8") as infile:
                     outfile = gzip.GzipFile(
                         man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
                     )
@@ -817,6 +860,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 DEBIAN: "deb",
                 RHEL: "rpm",
                 ARCH: "pkg",
+                SUSE: "rpm",
             }.get(app.target_vendor_base, None)
 
         if app.packaging_format is None:
@@ -861,6 +905,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 self.tools.shutil.rmtree(DEBIAN_path)
 
             DEBIAN_path.mkdir()
+            # dpkg-dep requires "DEBIAN" directory is >=0755 and <=0775
+            DEBIAN_path.chmod(0o755)
 
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
@@ -878,15 +924,15 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 f.write(
                     "\n".join(
                         [
-                            f"Package: { app.app_name }",
-                            f"Version: { app.version }",
-                            f"Architecture: { self.linux_arch }",
-                            f"Maintainer: { app.author } <{ app.author_email }>",
-                            f"Homepage: { app.url }",
-                            f"Description: { app.description }",
-                            f" { debian_multiline_description(app.long_description) }",
-                            f"Depends: { system_runtime_requires }",
-                            f"Section: { getattr(app, 'system_section', 'utils') }",
+                            f"Package: {app.app_name}",
+                            f"Version: {app.version}",
+                            f"Architecture: {self.deb_abi(app)}",
+                            f"Maintainer: {app.author} <{app.author_email}>",
+                            f"Homepage: {app.url}",
+                            f"Description: {app.description}",
+                            f" {debian_multiline_description(app.long_description)}",
+                            f"Depends: {system_runtime_requires}",
+                            f"Section: {getattr(app, 'system_section', 'utils')}",
                             "Priority: optional\n",
                         ]
                     )
@@ -992,7 +1038,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                         ]
                         + [
                             "",
-                            f"ExclusiveArch:  {self.tools.host_arch}",
+                            f"ExclusiveArch:  {self.rpm_abi(app)}",
                             "",
                             "%description",
                             app.long_description,
@@ -1070,7 +1116,7 @@ with details about the release.
         self.tools.shutil.move(
             rpmbuild_path
             / "RPMS"
-            / self.tools.host_arch
+            / self.rpm_abi(app)
             / self.distribution_filename(app),
             self.distribution_path(app),
         )
@@ -1138,7 +1184,7 @@ with details about the release.
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",
                             f'pkgdesc="{app.description}"',
-                            f"arch=('{self.tools.host_arch}')",
+                            f"arch=('{self.pkg_abi(app)}')",
                             f'url="{app.url}"',
                             f"license=('{app.license}')",
                             f"depends=({system_runtime_requires})",
@@ -1160,6 +1206,7 @@ with details about the release.
                     [
                         "makepkg",
                     ],
+                    env={"PKGEXT": ".pkg.tar.zst"},
                     check=True,
                     cwd=pkgbuild_path,
                 )

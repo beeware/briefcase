@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import concurrent.futures
 import itertools
 import os
@@ -7,13 +9,14 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
-from typing import List
 
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
+from briefcase.platforms.macOS.filters import macOS_log_clean_filter
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
 
 try:
     import dmgbuild
@@ -25,46 +28,9 @@ except ImportError:  # pragma: no-cover-if-is-macos
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
-
-MACOS_LOG_PREFIX_REGEX = re.compile(
-    r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*?\]"
-    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes\.cpython-3\d{1,2}-.*?\.so\)))? (?P<content>.*)"
-)
-
 ADHOC_IDENTITY_NAME = (
     "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
 )
-
-
-def macOS_log_clean_filter(line):
-    """Filter a macOS system log to extract the Python-generated message content.
-
-    Any system or stub messages are ignored; all logging prefixes are stripped.
-
-    :param line: The raw line from the system log
-    :returns: A tuple, containing (a) the log line, stripped of any system
-        logging context, and (b) a boolean indicating if the message should be
-        included for analysis purposes (i.e., it's Python content, not a system
-        message). Returns a single ``None`` if the line should be dumped.
-    """
-    if any(
-        [
-            # Log stream outputs the filter when it starts
-            line.startswith("Filtering the log data using "),
-            # Log stream outputs barely useful column headers on startup
-            line.startswith("Timestamp          "),
-            # iOS reports an ignorable error on startup
-            line.startswith("Error from getpwuid_r:"),
-        ]
-    ):
-        return None
-
-    match = MACOS_LOG_PREFIX_REGEX.match(line)
-    if match:
-        groups = match.groupdict()
-        return groups["content"], bool(groups["subsystem"])
-
-    return line, False
 
 
 class macOSMixin:
@@ -73,12 +39,121 @@ class macOSMixin:
     supported_host_os_reason = "macOS applications can only be built on macOS."
 
 
+class macOSInstallMixin(AppPackagesMergeMixin):
+    def _install_app_requirements(
+        self,
+        app: AppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+    ):
+        if getattr(app, "universal_build", True):
+            # Perform the initial install targeting the current platform
+            host_app_packages_path = (
+                self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
+            )
+            super()._install_app_requirements(
+                app,
+                requires=requires,
+                app_packages_path=host_app_packages_path,
+            )
+
+            # Find all the packages with binary components.
+            # We can ignore any -universal2 packages; they're already fat.
+            binary_packages = self.find_binary_packages(
+                host_app_packages_path,
+                universal_suffix="_universal2",
+            )
+
+            # Now install dependencies for the architecture that isn't the host architecture.
+            other_arch = {
+                "arm64": "x86_64",
+                "x86_64": "arm64",
+            }[self.tools.host_arch]
+
+            # Create a temporary folder targeting the other platform
+            other_app_packages_path = (
+                self.bundle_path(app) / f"app_packages.{other_arch}"
+            )
+            if other_app_packages_path.is_dir():
+                self.tools.shutil.rmtree(other_app_packages_path)
+            self.tools.os.mkdir(other_app_packages_path)
+
+            if binary_packages:
+                with self.input.wait_bar(
+                    f"Installing binary app requirements for {other_arch}..."
+                ):
+                    self._pip_install(
+                        app,
+                        app_packages_path=other_app_packages_path,
+                        pip_args=[
+                            "--no-deps",
+                            "--only-binary",
+                            ":all:",
+                        ]
+                        + [
+                            f"{package}=={version}"
+                            for package, version in binary_packages
+                        ],
+                        install_hint=f"""
+
+If an {other_arch} wheel has not been published for one or more of your requirements,
+you must compile those wheels yourself, or build a non-universal app by setting:
+
+    universal_build = False
+
+in the macOS configuration section of your pyproject.toml.
+""",
+                        env={
+                            "PYTHONPATH": str(
+                                self.support_path(app)
+                                / "platform-site"
+                                / f"macosx.{other_arch}"
+                            )
+                        },
+                    )
+            else:
+                self.logger.info("All packages are pure Python, or universal.")
+
+            # If given the option of a single architecture binary or a universal2 binary,
+            # pip will install the single platform binary. However, a common situation on
+            # macOS is for there to be an x86_64 binary and a universal2 binary. This means
+            # you only get a universal2 binary in the "other" install pass. This then causes
+            # problems with merging, because the "other" binary contains a copy of the
+            # architecture that the "host" platform provides.
+            #
+            # To avoid this - ensure that the libraries in the app packages for the "other"
+            # arch are all thin.
+            #
+            # This doesn't matter if it happens the other way around - if the "host" arch
+            # installs a universal binary, then the "other" arch won't be asked to install
+            # a binary at all.
+            self.thin_app_packages(other_app_packages_path, arch=other_arch)
+
+            # Merge the binaries
+            self.merge_app_packages(
+                target_app_packages=app_packages_path,
+                sources=[host_app_packages_path, other_app_packages_path],
+            )
+        else:
+            # If we're not building a universal binary, we can do a single install pass
+            # directly into the app_packages folder.
+            super()._install_app_requirements(
+                app,
+                requires=requires,
+                app_packages_path=app_packages_path,
+            )
+
+            # Since we're only targeting 1 architecture, we can strip any universal
+            # libraries down to just the host architecture.
+            self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
+
+
 class macOSRunMixin:
     def run_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
@@ -205,7 +280,7 @@ class macOSSigningMixin:
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
 
-    def entitlements_path(self, app: BaseConfig):
+    def entitlements_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
     def select_identity(self, identity=None):
@@ -289,7 +364,8 @@ or
             process_command.append("--options")
             process_command.append(options)
 
-        self.logger.info(f"Signing {Path(path).relative_to(self.base_path)}")
+        self.logger.verbose(f"Signing {Path(path).relative_to(self.base_path)}")
+
         try:
             self.tools.subprocess.run(
                 process_command,
@@ -299,7 +375,9 @@ or
         except subprocess.CalledProcessError as e:
             errors = e.stderr
             if "code object is not signed at all" in errors:
-                self.logger.info("... file requires a deep sign; retrying")
+                self.logger.verbose(
+                    f"... {Path(path).relative_to(self.base_path)} requires a deep sign; retrying"
+                )
                 try:
                     self.tools.subprocess.run(
                         process_command + ["--deep"],
@@ -322,7 +400,9 @@ or
                 ]
             ):
                 # We should not be signing this in the first place
-                self.logger.info("... no signature required")
+                self.logger.verbose(
+                    f"... {Path(path).relative_to(self.base_path)} does not require a signature"
+                )
                 return
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
@@ -350,7 +430,7 @@ or
             # Sign all embedded frameworks
             sign_targets.extend(folder.rglob("*.framework"))
 
-            # Sign all embedded app objets
+            # Sign all embedded app objects
             sign_targets.extend(folder.rglob("*.app"))
 
         # Sign the bundle path itself
@@ -360,7 +440,7 @@ or
         # However, we need to ensure that objects are signed from the inside out
         # (i.e., a folder must be signed *after* all it's contents has been
         # signed). To do this, we sort the list of signing targets in reverse
-        # lexigraphic order, and then group all the signing targets by parent.
+        # lexicographic order, and then group all the signing targets by parent.
         # This sorts all the signable files into folders; and sign all files in
         # a folder before sorting the next group. This ensures that longer paths
         # are signed first, and all files in a folder are signed before the
@@ -433,7 +513,7 @@ class macOSPackageMixin(macOSSigningMixin):
         )
 
     def verify_tools(self):
-        # Require the XCode command line tools.
+        # Require the Xcode command line tools.
         XcodeCliTools.verify(tools=self.tools)
 
         # Verify superclass tools *after* xcode. This ensures we get the
@@ -598,7 +678,7 @@ password:
 
     def package_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
@@ -628,16 +708,10 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.logger.info(
-                "Signing app with ad-hoc identity...",
-                prefix=app.app_name,
-            )
+            self.logger.info("Signing app with ad-hoc identity...", prefix=app.app_name)
             self.logger.warning(
-                (
-                    "Because you are signing with the ad-hoc identity, this "
-                    "app will run, but cannot be re-distributed."
-                ),
-                prefix=app.app_name,
+                "Because you are signing with the ad-hoc identity, this "
+                "app will run, but cannot be re-distributed."
             )
         else:
             # If we're signing, and notarization isn't explicitly disabled,
@@ -646,13 +720,16 @@ password:
                 notarize_app = True
 
             self.logger.info(
-                f"Signing app with identity {identity_name}...", prefix=app.app_name
+                f"Signing app with identity {identity_name}...",
+                prefix=app.app_name,
             )
 
             if notarize_app:
                 team_id = self.team_id_from_identity(identity_name)
 
         self.sign_app(app=app, identity=identity)
+
+        dist_path: Path = self.distribution_path(app)
 
         if app.packaging_format == "app":
             if notarize_app:
@@ -662,11 +739,9 @@ password:
                 )
                 self.notarize(self.binary_path(app), team_id=team_id)
 
-            with self.input.wait_bar(
-                f"Archiving {self.distribution_path(app).name}..."
-            ):
+            with self.input.wait_bar(f"Archiving {dist_path.name}..."):
                 self.tools.shutil.make_archive(
-                    self.distribution_path(app).with_suffix(""),
+                    dist_path.with_suffix(""),
                     format="zip",
                     root_dir=self.binary_path(app).parent,
                     base_dir=self.binary_path(app).name,
@@ -675,68 +750,65 @@ password:
         else:  # Default packaging format is DMG
             self.logger.info("Building DMG...", prefix=app.app_name)
 
-            dmg_settings = {
-                "files": [os.fsdecode(self.binary_path(app))],
-                "symlinks": {"Applications": "/Applications"},
-                "icon_locations": {
-                    f"{app.formal_name}.app": (75, 75),
-                    "Applications": (225, 75),
-                },
-                "window_rect": ((600, 600), (350, 150)),
-                "icon_size": 64,
-                "text_size": 12,
-            }
+            with self.input.wait_bar(f"Building {dist_path.name}..."):
+                dmg_settings = {
+                    "files": [os.fsdecode(self.binary_path(app))],
+                    "symlinks": {"Applications": "/Applications"},
+                    "icon_locations": {
+                        f"{app.formal_name}.app": (75, 75),
+                        "Applications": (225, 75),
+                    },
+                    "window_rect": ((600, 600), (350, 150)),
+                    "icon_size": 64,
+                    "text_size": 12,
+                }
 
-            try:
-                icon_filename = self.base_path / f"{app.installer_icon}.icns"
-                if not icon_filename.exists():
-                    self.logger.warning(
-                        f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
-                    )
-                    raise AttributeError()
-            except AttributeError:
-                # No installer icon specified. Fall back to the app icon
-                if app.icon:
-                    icon_filename = self.base_path / f"{app.icon}.icns"
+                try:
+                    icon_filename = self.base_path / f"{app.installer_icon}.icns"
                     if not icon_filename.exists():
                         self.logger.warning(
-                            f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
+                            f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
                         )
+                        raise AttributeError()
+                except AttributeError:
+                    # No installer icon specified. Fall back to the app icon
+                    if app.icon:
+                        icon_filename = self.base_path / f"{app.icon}.icns"
+                        if not icon_filename.exists():
+                            self.logger.warning(
+                                f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
+                            )
+                            icon_filename = None
+                    else:
+                        # No app icon specified either
                         icon_filename = None
-                else:
-                    # No app icon specified either
-                    icon_filename = None
 
-            if icon_filename:
-                dmg_settings["icon"] = os.fsdecode(icon_filename)
+                if icon_filename:
+                    dmg_settings["icon"] = os.fsdecode(icon_filename)
 
-            try:
-                image_filename = self.base_path / f"{app.installer_background}.png"
-                if image_filename.exists():
-                    dmg_settings["background"] = os.fsdecode(image_filename)
-                else:
-                    self.logger.warning(
-                        f"Can't find {app.installer_background}.png to use as DMG background"
-                    )
-            except AttributeError:
-                # No installer background image provided
-                pass
+                try:
+                    image_filename = self.base_path / f"{app.installer_background}.png"
+                    if image_filename.exists():
+                        dmg_settings["background"] = os.fsdecode(image_filename)
+                    else:
+                        self.logger.warning(
+                            f"Can't find {app.installer_background}.png to use as DMG background"
+                        )
+                except AttributeError:
+                    # No installer background image provided
+                    pass
 
-            dmg_path = self.distribution_path(app)
-            self.dmgbuild.build_dmg(
-                filename=os.fsdecode(dmg_path),
-                volume_name=f"{app.formal_name} {app.version}",
-                settings=dmg_settings,
-            )
+                self.dmgbuild.build_dmg(
+                    filename=os.fsdecode(dist_path),
+                    volume_name=f"{app.formal_name} {app.version}",
+                    settings=dmg_settings,
+                )
 
-            self.sign_file(
-                dmg_path,
-                identity=identity,
-            )
+            self.sign_file(dist_path, identity=identity)
 
             if notarize_app:
                 self.logger.info(
                     f"Notarizing DMG with team ID {team_id}...",
                     prefix=app.app_name,
                 )
-                self.notarize(dmg_path, team_id=team_id)
+                self.notarize(dist_path, team_id=team_id)

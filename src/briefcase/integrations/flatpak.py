@@ -85,7 +85,10 @@ You must install both flatpak and flatpak-builder.
                 ["flatpak-builder", "--version"]
             ).strip("\n")
 
-            parts = output.split(" ")
+            # flatpak-builder 1.3 changed the output of --version
+            # from "flatpak-builder 1.2.X" to "flatpak-build-1.3.X".
+            # Converge on the new-style format.
+            parts = output.replace(" ", "-").rsplit("-", 1)
             try:
                 if parts[0] == "flatpak-builder":
                     version = parts[1].split(".")
@@ -154,7 +157,8 @@ You must install both flatpak and flatpak-builder.
                     "--if-not-exists",
                     repo_alias,
                     url,
-                ],
+                ]
+                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -186,7 +190,8 @@ You must install both flatpak and flatpak-builder.
                     repo_alias,
                     f"{runtime}/{self.tools.host_arch}/{runtime_version}",
                     f"{sdk}/{self.tools.host_arch}/{runtime_version}",
-                ],
+                ]
+                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
                 check=True,
                 # flatpak install uses many animations that cannot be disabled
                 stream_output=False,
@@ -222,7 +227,8 @@ You must install both flatpak and flatpak-builder.
                     "--user",
                     "build",
                     "manifest.yml",
-                ],
+                ]
+                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
                 check=True,
                 cwd=path,
             )
@@ -269,13 +275,15 @@ flatpak run {bundle_identifier}
         else:
             kwargs = {}
 
+        flatpak_run_cmd = ["flatpak", "run", bundle_identifier]
+        flatpak_run_cmd.extend([] if args is None else args)
+
+        if self.tools.logger.is_deep_debug:
+            # Must come before bundle identifier; otherwise, it's passed as an arg to app
+            flatpak_run_cmd.insert(2, "--verbose")
+
         return self.tools.subprocess.Popen(
-            [
-                "flatpak",
-                "run",
-                bundle_identifier,
-            ]
-            + ([] if args is None else args),
+            flatpak_run_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
@@ -319,7 +327,8 @@ flatpak run {bundle_identifier}
                     output_path,
                     bundle_identifier,
                     version,
-                ],
+                ]
+                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
                 check=True,
                 cwd=build_path,
             )

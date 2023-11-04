@@ -208,6 +208,8 @@ class CreateCommand(BaseCommand):
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
+                # The host architecture
+                "host_arch": self.tools.host_arch,
                 # The Briefcase version
                 "briefcase_version": briefcase.__version__,
                 # Transformations of explicit properties into useful forms
@@ -263,12 +265,22 @@ class CreateCommand(BaseCommand):
         :param support_file_path: The path to the support file to be unpacked.
         :param support_path: The path where support files should be unpacked.
         """
+        # Additional protections for unpacking tar files were introduced in Python 3.12.
+        # This enables the behavior that will be the default in Python 3.14.
+        # However, the protections can only be enabled for tar files...not zip files.
+        is_zip = support_file_path.name.endswith("zip")
+        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
+            tarfile_kwargs = {"filter": "data"}
+        else:
+            tarfile_kwargs = {}
+
         try:
             with self.input.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
                 self.tools.shutil.unpack_archive(
                     support_file_path,
                     extract_dir=support_path,
+                    **tarfile_kwargs,
                 )
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e
@@ -344,6 +356,7 @@ class CreateCommand(BaseCommand):
                             python_version_tag=self.python_version_tag,
                             platform=self.platform,
                             host_arch=self.tools.host_arch,
+                            is_32bit=self.tools.is_32bit_python,
                         )
 
                 support_package_url = self.support_package_url(support_revision)
@@ -384,6 +397,7 @@ class CreateCommand(BaseCommand):
                     python_version_tag=self.python_version_tag,
                     platform=self.platform,
                     host_arch=self.tools.host_arch,
+                    is_32bit=self.tools.is_32bit_python,
                 ) from e
 
     def _write_requirements_file(
@@ -430,31 +444,60 @@ class CreateCommand(BaseCommand):
         """
         return []
 
-    def _pip_kwargs(self, app: AppConfig):
-        """Generate the kwargs to pass when invoking pip.
+    def _pip_install(
+        self,
+        app: AppConfig,
+        app_packages_path: Path,
+        pip_args: list[str],
+        install_hint: str = "",
+        **pip_kwargs,
+    ):
+        """Invoke pip to install a set of requirements.
 
         :param app: The app configuration
-        :returns: The kwargs to pass to the pip call
+        :param app_packages_path: The full path of the app_packages folder into which
+            requirements should be installed.
+        :param pip_args: The list of arguments (including the list of requirements to
+            install) to pass to pip. This is in addition to the default arguments that
+            disable pip version checks, forces upgrades, and installs into the nominated
+            ``app_packages`` path.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
+        :param pip_kwargs: Any additional keyword arguments to pass to ``subprocess.run``
+            when invoking pip.
         """
-        # If there is a support package provided, add the cross-platform
-        # folder of the support package to the PYTHONPATH. This allows
-        # a support package to specify a sitecustomize.py that will make
-        # pip behave as if it was being run on the target platform.
-        pip_kwargs = {}
         try:
-            pip_kwargs["env"] = {
-                "PYTHONPATH": str(self.support_path(app) / "platform-site"),
-            }
-        except KeyError:
-            pass
-
-        return pip_kwargs
+            self.tools[app].app_context.run(
+                [
+                    sys.executable,
+                    "-u",
+                    "-X",
+                    "utf8",
+                    "-m",
+                    "pip",
+                    "install",
+                    "--disable-pip-version-check",
+                    "--no-python-version-warning",
+                    "--upgrade",
+                    "--no-user",
+                    f"--target={app_packages_path}",
+                ]
+                + self._extra_pip_args(app)
+                + pip_args,
+                check=True,
+                encoding="UTF-8",
+                **pip_kwargs,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RequirementsInstallError(install_hint=install_hint) from e
 
     def _install_app_requirements(
         self,
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        progress_message: str = "Installing app requirements...",
+        pip_kwargs: dict[str, str] | None = None,
     ):
         """Install requirements for the app with pip.
 
@@ -462,6 +505,9 @@ class CreateCommand(BaseCommand):
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
+        :param progress_message: The waitbar progress message to display to the user.
+        :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
+            when invoking pip.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
@@ -470,26 +516,13 @@ class CreateCommand(BaseCommand):
 
         # Install requirements
         if requires:
-            with self.input.wait_bar("Installing app requirements..."):
-                try:
-                    self.tools[app].app_context.run(
-                        [
-                            sys.executable,
-                            "-u",
-                            "-m",
-                            "pip",
-                            "install",
-                            "--upgrade",
-                            "--no-user",
-                            f"--target={app_packages_path}",
-                        ]
-                        + self._extra_pip_args(app)
-                        + self._pip_requires(app, requires),
-                        check=True,
-                        **self._pip_kwargs(app),
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise RequirementsInstallError() from e
+            with self.input.wait_bar(progress_message):
+                self._pip_install(
+                    app,
+                    app_packages_path=app_packages_path,
+                    pip_args=self._pip_requires(app, requires),
+                    **(pip_kwargs if pip_kwargs else {}),
+                )
         else:
             self.logger.info("No application requirements.")
 
@@ -729,10 +762,10 @@ class CreateCommand(BaseCommand):
                 for path in self.bundle_path(app).glob(glob):
                     relative_path = path.relative_to(self.bundle_path(app))
                     if path.is_dir():
-                        self.logger.info(f"Removing directory {relative_path}")
+                        self.logger.verbose(f"Removing directory {relative_path}")
                         self.tools.shutil.rmtree(path)
                     else:
-                        self.logger.info(f"Removing {relative_path}")
+                        self.logger.verbose(f"Removing {relative_path}")
                         path.unlink()
 
     def create_app(self, app: AppConfig, test_mode: bool = False, **options):
