@@ -35,6 +35,10 @@
 #
 # Therefore, this script will evaluate the requirements defined in the project's
 # metadata and install the ones matching those being requested to be installed.
+#
+# Dependencies
+# ------------
+# The ``build``, ``setuptools``, and ``wheel`` packages must be installed to run.
 
 from __future__ import annotations
 
