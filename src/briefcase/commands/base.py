@@ -844,6 +844,10 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 repo = self.tools.git.Repo(cached_template)
                 # Raises ValueError if "origin" isn't a valid remote
                 remote = repo.remote(name="origin")
+                # Ensure the existing repo's origin URL points to the location
+                # being requested. A difference can occur, for instance, if a
+                # fork of the template is used.
+                remote.set_url(new_url=template, old_url=remote.url)
                 try:
                     # Attempt to update the repository
                     remote.fetch()
