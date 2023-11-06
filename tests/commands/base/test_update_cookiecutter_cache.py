@@ -84,6 +84,7 @@ def test_explicit_cached_repo_template(base_command, mock_git):
     base_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
     mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_remote.url = "https://example.com/magic/special-template.git"
 
     cached_path = cookiecutter_cache_path(
         "https://example.com/magic/special-template.git"
@@ -98,8 +99,59 @@ def test_explicit_cached_repo_template(base_command, mock_git):
     # The cookiecutter cache location will be interrogated.
     base_command.tools.git.Repo.assert_called_once_with(cached_path)
 
-    # The origin of the repo was fetched
+    # The origin of the repo was updated and fetched
     mock_repo.remote.assert_called_once_with(name="origin")
+    mock_remote.set_url.assert_called_once_with(
+        new_url="https://example.com/magic/special-template.git",
+        old_url="https://example.com/magic/special-template.git",
+    )
+    mock_remote.fetch.assert_called_once_with()
+
+    # The right branch was accessed
+    mock_remote.refs.__getitem__.assert_called_once_with("special")
+
+    # The remote head was checked out.
+    mock_remote_head.checkout.assert_called_once_with()
+
+    # The template that will be used is the original URL
+    assert cached_template == cached_path
+
+
+def test_explicit_cached_repo_template_with_diff_url(base_command, mock_git):
+    """If a previously known URL template is specified but uses a different remote URL,
+    the repo's origin URL is updated and is used."""
+    base_command.tools.git = mock_git
+
+    mock_repo = mock.MagicMock()
+    mock_remote = mock.MagicMock()
+    mock_remote_head = mock.MagicMock()
+
+    # Git returns a Repo, that repo can return a remote, and it has
+    # heads that can be accessed.
+    base_command.tools.git.Repo.return_value = mock_repo
+    mock_repo.remote.return_value = mock_remote
+    mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_remote.url = "https://example.com/existing/special-template.git"
+
+    cached_path = cookiecutter_cache_path(
+        "https://example.com/magic/special-template.git"
+    )
+
+    # Update the cache
+    cached_template = base_command.update_cookiecutter_cache(
+        template="https://example.com/magic/special-template.git",
+        branch="special",
+    )
+
+    # The cookiecutter cache location will be interrogated.
+    base_command.tools.git.Repo.assert_called_once_with(cached_path)
+
+    # The origin of the repo was updated and fetched
+    mock_repo.remote.assert_called_once_with(name="origin")
+    mock_remote.set_url.assert_called_once_with(
+        new_url="https://example.com/magic/special-template.git",
+        old_url="https://example.com/existing/special-template.git",
+    )
     mock_remote.fetch.assert_called_once_with()
 
     # The right branch was accessed
@@ -126,6 +178,7 @@ def test_offline_repo_template(base_command, mock_git):
     # will cause a git error (error code 128).
     base_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
+    mock_remote.url = "https://example.com/magic/special-template.git"
     mock_remote.refs.__getitem__.return_value = mock_remote_head
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError("git", 128)
 
@@ -141,8 +194,12 @@ def test_offline_repo_template(base_command, mock_git):
     # The cookiecutter cache location will be interrogated.
     base_command.tools.git.Repo.assert_called_once_with(cached_path)
 
-    # The origin of the repo was fetched
+    # The origin of the repo was updated and fetched
     mock_repo.remote.assert_called_once_with(name="origin")
+    mock_remote.set_url.assert_called_once_with(
+        new_url="https://example.com/magic/special-template.git",
+        old_url="https://example.com/magic/special-template.git",
+    )
     mock_remote.fetch.assert_called_once_with()
 
     # The right branch was accessed
@@ -167,6 +224,7 @@ def test_cached_missing_branch_template(base_command, mock_git):
     # raises an IndexError
     base_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.return_value = mock_remote
+    mock_remote.url = "https://example.com/magic/special-template.git"
     mock_remote.refs.__getitem__.side_effect = IndexError
 
     cached_path = cookiecutter_cache_path(
@@ -183,23 +241,27 @@ def test_cached_missing_branch_template(base_command, mock_git):
     # The cookiecutter cache location will be interrogated.
     base_command.tools.git.Repo.assert_called_once_with(cached_path)
 
-    # The origin of the repo was fetched
+    # The origin of the repo was updated and fetched
     mock_repo.remote.assert_called_once_with(name="origin")
+    mock_remote.set_url.assert_called_once_with(
+        new_url="https://example.com/magic/special-template.git",
+        old_url="https://example.com/magic/special-template.git",
+    )
     mock_remote.fetch.assert_called_once_with()
 
     # An attempt to access the branch was made
     mock_remote.refs.__getitem__.assert_called_once_with("invalid")
 
 
-def test_value_error(base_command, mock_git):
-    """If the git clone fails a ValueError is raised."""
+def test_git_repo_with_missing_origin_remote(base_command, mock_git):
+    """If the local git repo doesn't have an origin remote, a ValueError is raised."""
     base_command.tools.git = mock_git
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
 
-    # Git returns a Repo, that repo can return a remote, and it has
-    # heads that can be accessed. However, getting the remote will fail if git clone is not complete.
+    # Git returns a Repo, that repo can return a remote, and it has heads that can be
+    # accessed. However, getting the remote will fail if git clone is not complete.
     base_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.side_effect = ValueError("Remote named origin did not exist")
 
@@ -216,6 +278,7 @@ def test_value_error(base_command, mock_git):
     # The cookiecutter cache location will be interrogated.
     base_command.tools.git.Repo.assert_called_once_with(cached_path)
 
-    # The origin of the repo was fetched
+    # The origin of the repo was not updated or fetched
     mock_repo.remote.assert_called_once_with(name="origin")
+    mock_remote.set_url.assert_not_called()
     mock_remote.fetch.assert_not_called()
