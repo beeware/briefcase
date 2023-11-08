@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import operator
 import os
 import platform
@@ -114,6 +115,25 @@ class Printer:
     def export_log(cls):
         """Export the text of the entire log."""
         return cls.log.export_text()
+
+
+class RichLoggingStream:
+    """Stream for logging.StreamHandler that prints to console via debug logging."""
+
+    def __init__(self, logger: Log):
+        self.logger = logger
+
+    def write(self, msg: str) -> None:
+        self.logger.debug(msg)
+
+
+class RichLoggingHandler(logging.StreamHandler):
+    """A debug handler for third party tools using stdlib logging."""
+
+    def __init__(self, stream: RichLoggingStream):
+        super().__init__(stream=stream)
+        self.setLevel(logging.DEBUG)
+        self.setFormatter(logging.Formatter("%(levelname)s %(name)s: %(message)s"))
 
 
 class LogLevel(IntEnum):
@@ -272,6 +292,31 @@ class Log:
         This includes debug logging from third party tools.
         """
         return self.verbosity >= LogLevel.DEEP_DEBUG
+
+    def configure_stdlib_logging(self, logger_name: str):
+        """Configure stdlib logging for a third party tool to log through Rich.
+
+        When a third party tool written in Python uses the stdlib logging for their
+        logging, it may provide an abstraction to enable the logging in the console or
+        may require a handler to be added externally. Either way, the default handler
+        to write to the console, i.e. logging.StreamHandler, will bypass Rich logging
+        and therefore not be included in the logfile. To avoid this issue, this will
+        add a handler that specifically writes to the console through Rich.
+
+        :param logger_name: Name of the logger the third party tool uses. Typically,
+            this is the package name or path to a submodule for the package. Since
+            logging uses namespaces for logging, enabling DEBUG logging for `git` will
+            also enable it for others like `git.cmd`, `git.remote`, `git.config`, etc.
+        """
+        if not self.is_deep_debug:
+            return
+
+        logger = logging.getLogger(logger_name)
+
+        # do not add another rich handler if one already exists
+        if not any(isinstance(h, RichLoggingHandler) for h in logger.handlers):
+            logger.addHandler(RichLoggingHandler(stream=RichLoggingStream(logger=self)))
+            logger.setLevel(logging.DEBUG)
 
     def capture_stacktrace(self, label="Main thread"):
         """Preserve Rich stacktrace from exception while in except block.

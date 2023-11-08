@@ -1,0 +1,1 @@
+GitPython's debug logging is now included in deep debug output.

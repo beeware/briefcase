@@ -1,13 +1,14 @@
 import datetime
+import logging
 from io import TextIOBase
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, call
 
 import pytest
 from rich.traceback import Trace
 
 import briefcase
 from briefcase.commands.dev import DevCommand
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, Log, LogLevel, RichLoggingHandler
 from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
@@ -36,6 +37,14 @@ def command(mock_now, tmp_path) -> DevCommand:
     command.command = "dev"
     command.tools.os.environ = {}
     return command
+
+
+@pytest.fixture
+def logging_logger() -> logging.Logger:
+    logging_logger = logging.getLogger("test_pkg")
+    yield logging_logger
+    # reset handlers since they are persistent
+    logging_logger.handlers.clear()
 
 
 @pytest.mark.parametrize(
@@ -452,3 +461,50 @@ def test_log_error_with_context(capsys):
             "",
         ]
     )
+
+
+@pytest.mark.parametrize(
+    "logging_level, handler_expected",
+    [
+        (LogLevel.DEEP_DEBUG, True),
+        (LogLevel.DEBUG, False),
+        (LogLevel.VERBOSE, False),
+        (LogLevel.INFO, False),
+    ],
+)
+def test_stdlib_logging_config(logging_level, handler_expected, logging_logger):
+    """A logging handler is only added for DEEP_DEBUG mode."""
+    logger = Log(verbosity=logging_level)
+
+    logger.configure_stdlib_logging("test_pkg")
+
+    assert handler_expected is any(
+        isinstance(h, RichLoggingHandler) for h in logging_logger.handlers
+    )
+
+
+def test_stdlib_logging_only_one(logging_logger):
+    """Only one logging handler is ever created for a package."""
+    logger = Log(verbosity=LogLevel.DEEP_DEBUG)
+
+    logger.configure_stdlib_logging("test_pkg")
+    logger.configure_stdlib_logging("test_pkg")
+    logger.configure_stdlib_logging("test_pkg")
+
+    assert len(logging_logger.handlers) == 1
+
+
+def test_stdlib_logging_handler_writes_to_debug(logging_logger):
+    """The logging handler writes to the console through Log()."""
+    logger = Log(verbosity=LogLevel.DEEP_DEBUG)
+    logger.debug = MagicMock(wraps=logger.debug)
+
+    logger.configure_stdlib_logging("test_pkg")
+
+    logging_logger.debug("This is debug output")
+    logging_logger.info("This is info output")
+
+    assert logger.debug.mock_calls == [
+        call("DEBUG test_pkg: This is debug output\n"),
+        call("INFO test_pkg: This is info output\n"),
+    ]

@@ -72,5 +72,7 @@ need to restart your terminal session.
 """
                 ) from e
 
+        tools.logger.configure_stdlib_logging("git")
+
         tools.git = git
         return git

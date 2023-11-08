@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from briefcase.console import LogLevel
+from briefcase.console import LogLevel, RichLoggingHandler
 
 cookiecutter_logger = logging.getLogger("cookiecutter")
 
@@ -16,24 +16,26 @@ def base_command(base_command):
 
 
 @pytest.mark.parametrize(
-    "verbosity, log_level",
+    "logging_level, handler_expected",
     [
-        (LogLevel.INFO, logging.INFO),
-        (LogLevel.DEBUG, logging.INFO),
-        (LogLevel.DEEP_DEBUG, logging.DEBUG),
+        (LogLevel.DEEP_DEBUG, True),
+        (LogLevel.DEBUG, False),
+        (LogLevel.VERBOSE, False),
+        (LogLevel.INFO, False),
     ],
 )
-def test_cookiecutter_logging_config(base_command, verbosity, log_level):
-    """The loggers for cookiecutter are configured as expected."""
-    base_command.logger.verbosity = verbosity
+def test_git_stdlib_logging(base_command, logging_level, handler_expected):
+    """A logging handler is configured for GitPython when DEEP_DEBUG is enabled."""
+    base_command.logger.verbosity = logging_level
 
     base_command.generate_template(
         template="", branch="", output_path="", extra_context={}
     )
-    # call multiple times to ensure only 1 handler ever exists
-    base_command.generate_template(
-        template="", branch="", output_path="", extra_context={}
+
+    assert handler_expected is any(
+        isinstance(h, RichLoggingHandler)
+        for h in logging.getLogger("cookiecutter").handlers
     )
 
-    assert len(cookiecutter_logger.handlers) == 1
-    assert cookiecutter_logger.handlers[0].level == log_level
+    # reset handlers since they are persistent
+    logging.getLogger("cookiecutter").handlers.clear()
