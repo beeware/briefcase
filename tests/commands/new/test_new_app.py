@@ -41,11 +41,16 @@ def test_new_app(
 ):
     """A new app can be created with the default template."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -58,6 +63,7 @@ def test_new_app(
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
@@ -79,6 +85,8 @@ def test_new_app(
             "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": expected_branch,
             "briefcase_version": briefcase_version,
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         },
     )
 
@@ -86,11 +94,16 @@ def test_new_app(
 def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     """If a versioned branch doesn't exist, an error is raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -109,6 +122,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
 
     # The cookiecutter cache is updated once
     new_command.update_cookiecutter_cache.assert_called_once_with(
@@ -132,6 +146,8 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         },
     )
 
@@ -144,11 +160,16 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     """In a dev version, template will fall back to the 'main' branch if a versioned
     template doesn't exist."""
     monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -169,6 +190,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
     # Template is updated
     assert new_command.update_cookiecutter_cache.mock_calls == [
         mock.call(
@@ -199,6 +221,8 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "template_source": "https://github.com/beeware/briefcase-template",
                     "template_branch": "v37.42.7",
                     "briefcase_version": briefcase_version,
+                    "app_source": "main()",
+                    "pyproject_requires": "toga",
                 },
             ),
             mock.call(
@@ -216,6 +240,8 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "template_source": "https://github.com/beeware/briefcase-template",
                     "template_branch": "v37.42.7",
                     "briefcase_version": briefcase_version,
+                    "app_source": "main()",
+                    "pyproject_requires": "toga",
                 },
             ),
         ]
@@ -226,11 +252,16 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     """A specific template can be requested."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -243,6 +274,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
@@ -264,6 +296,8 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         },
     )
 
@@ -271,12 +305,16 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
 def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
     """If the custom template is invalid, an error is raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -295,6 +333,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
@@ -316,6 +355,8 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         },
     )
 
@@ -324,12 +365,16 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     """If the custom template doesn't have a branch for the version, an error is
     raised."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -348,6 +393,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
 
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
@@ -371,6 +417,8 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         },
     )
 
@@ -378,12 +426,16 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
 def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
     """A specific branch can be requested."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-
-    new_command.build_app_context = mock.MagicMock(
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
         return_value={
-            "formal_name": "My Application",
-            "class_name": "MyApplication",
-            "app_name": "myapplication",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         }
     )
     new_command.update_cookiecutter_cache = mock.MagicMock(
@@ -396,6 +448,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
@@ -417,6 +470,8 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "experimental",
             "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
         },
     )
 
@@ -434,6 +489,12 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
+        return_value={
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        }
+    )
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
@@ -446,6 +507,7 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with()
+    new_command.build_gui_context.assert_called_once_with(context=app_context)
     # Template won't be updated or unrolled
     # Cookiecutter was *not* invoked
     assert new_command.update_cookiecutter_cache.call_count == 0
