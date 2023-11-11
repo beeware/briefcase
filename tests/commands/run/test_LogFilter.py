@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 
 from briefcase.commands.run import LogFilter
@@ -8,9 +6,7 @@ from briefcase.integrations.subprocess import StopStreaming
 
 def test_default_filter():
     """A default logfilter echoes content verbatim."""
-    popen = mock.MagicMock()
     log_filter = LogFilter(
-        popen,
         clean_filter=None,
         clean_output=True,
         exit_filter=None,
@@ -34,9 +30,7 @@ def test_clean_filter():
     def clean_filter(line):
         return line[5:], True
 
-    popen = mock.MagicMock()
     log_filter = LogFilter(
-        popen,
         clean_filter=clean_filter,
         clean_output=True,
         exit_filter=None,
@@ -61,9 +55,7 @@ def test_clean_filter_unclean_output():
     def clean_filter(line):
         return line[5:], True
 
-    popen = mock.MagicMock()
     log_filter = LogFilter(
-        popen,
         clean_filter=clean_filter,
         clean_output=False,
         exit_filter=None,
@@ -228,9 +220,7 @@ def test_log_filter(
     exit_filter = LogFilter.test_filter(r"^-----\n\nEXIT (?P<returncode>\d+)$")
 
     # Set up a log stream
-    popen = mock.MagicMock()
     log_filter = LogFilter(
-        popen,
         clean_filter=clean_filter if use_content_filter else None,
         clean_output=clean_output,
         exit_filter=exit_filter,

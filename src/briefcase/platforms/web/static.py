@@ -1,13 +1,13 @@
 import errno
+import re
 import subprocess
 import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 from typing import Any, List
 from zipfile import ZipFile
-
-from briefcase.console import Log
 
 try:
     import tomllib
@@ -15,6 +15,12 @@ except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
     import tomli as tomllib
 
 import tomli_w
+
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:  # pragma: no-cover-if-lt-py312
+    # TODO: Playwright doesn't support Python 3.12 yet.
+    sync_playwright = None
 
 from briefcase.commands import (
     BuildCommand,
@@ -25,13 +31,24 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
+from briefcase.commands.create import _is_local_requirement
+from briefcase.commands.run import LogFilter
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.console import Log
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    BriefcaseTestSuiteFailure,
+)
+from briefcase.integrations.subprocess import StopStreaming
 
 
 class StaticWebMixin:
     output_format = "static"
     platform = "web"
+
+    def local_requirements_path(self, app):
+        return self.bundle_path(app) / "_requirements"
 
     def project_path(self, app):
         return self.bundle_path(app) / "www"
@@ -39,8 +56,11 @@ class StaticWebMixin:
     def binary_path(self, app):
         return self.bundle_path(app) / "www" / "index.html"
 
+    def static_path(self, app):
+        return self.project_path(app) / "static"
+
     def wheel_path(self, app):
-        return self.project_path(app) / "static" / "wheels"
+        return self.static_path(app) / "wheels"
 
     def distribution_path(self, app):
         return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
@@ -55,6 +75,53 @@ class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
             "style_framework": getattr(app, "style_framework", "None"),
         }
 
+    def _write_requirements_file(
+        self,
+        app: AppConfig,
+        requires: list[str],
+        requirements_path: Path,
+    ):
+        if self.local_requirements_path(app).exists():
+            with self.input.wait_bar("Removing old local wheels..."):
+                self.tools.shutil.rmtree(self.local_requirements_path(app))
+
+        self.local_requirements_path(app).mkdir(parents=True)
+
+        with self.input.wait_bar("Writing requirements file..."):
+            with requirements_path.open("w", encoding="utf-8") as f:
+                if requires:
+                    for requirement in requires:
+                        if _is_local_requirement(requirement):
+                            # If the requirement is a local path, build a wheel for the requirement,
+                            # and update the requirements file to reference that wheel.
+                            try:
+                                self.tools.subprocess.run(
+                                    [
+                                        sys.executable,
+                                        "-u",
+                                        "-m",
+                                        "pip",
+                                        "wheel",
+                                        "--no-deps",
+                                        "-w",
+                                        self.local_requirements_path(app),
+                                        requirement,
+                                    ],
+                                    check=True,
+                                )
+                            except subprocess.CalledProcessError as e:
+                                raise BriefcaseCommandError(
+                                    f"Unable to install requirements for app {app.app_name!r}"
+                                ) from e
+
+                        else:
+                            # Otherwise, just use the requirement as defined.
+                            f.write(f"{requirement}\n")
+
+                    # Append all the local wheels to the requirements file.
+                    for filename in self.local_requirements_path(app).glob("*.whl"):
+                        f.write(f"{filename.relative_to(self.bundle_path(app))}\n")
+
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):
     description = "Update an existing static web project."
@@ -67,61 +134,230 @@ class StaticWebOpenCommand(StaticWebMixin, OpenCommand):
 class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     description = "Build a static web project."
 
-    def _trim_file(self, path, sentinel):
-        """Re-write a file to strip any content after a sentinel line.
-
-        The file is stored in-memory, so it shouldn't be used on files with a *lot* of
-        content before the sentinel.
-
-        :param path: The path to the file to be trimmed
-        :param sentinel: The content of the sentinel line. This will become the last
-            line in the trimmed file.
-        """
-        content = []
-        with path.open("r", encoding="utf-8") as f:
-            for line in f:
-                if line.rstrip("\n") == sentinel:
-                    content.append(line)
-                    break
-                else:
-                    content.append(line)
-
-        with path.open("w", encoding="utf-8") as f:
-            for line in content:
-                f.write(line)
-
-    def _process_wheel(self, wheelfile, css_file):
+    def _process_wheel(self, wheelfile, inserts, static_path):
         """Process a wheel, extracting any content that needs to be compiled into the
         final project.
 
+        Extracted content comes in two forms:
+        * inserts - pieces of content that will be inserted into existing files
+        * static - content that will be copied wholesale. Any content in a ``static``
+          folder inside the wheel will be copied as-is to the static folder,
+          namespaced by the package name of the wheel.
+
+        Any pre-existing static content for the wheel will be deleted.
+
         :param wheelfile: The path to the wheel file to be processed.
-        :param css_file: A file handle, opened for write/append, to which any extracted
-            CSS content will be appended.
+        :param inserts: The inserts collection for the app
+        :param static_path: The location where static content should be unpacked
         """
-        package = " ".join(wheelfile.name.split("-")[:2])
+        parts = wheelfile.name.split("-")
+        package_name = parts[0]
+        package_version = parts[1]
+        package_key = f"{package_name} {package_version}"
+
+        # Purge any existing extracted static files
+        if (static_path / package_name).exists():
+            self.tools.shutil.rmtree(static_path / package_name)
+
         with ZipFile(wheelfile) as wheel:
             for filename in wheel.namelist():
                 path = Path(filename)
-                # Any CSS file in a `static` folder is appended
-                if (
-                    len(path.parts) > 1
-                    and path.parts[1] == "static"
-                    and path.suffix == ".css"
-                ):
-                    self.logger.info(f"    Found {filename}")
-                    css_file.write(
-                        "\n/*******************************************************\n"
-                    )
-                    css_file.write(f" * {package}::{'/'.join(path.parts[2:])}\n")
-                    css_file.write(
-                        " *******************************************************/\n\n"
-                    )
-                    css_file.write(wheel.read(filename).decode("utf-8"))
+                if len(path.parts) > 1:
+                    if path.parts[1] == "inserts":
+                        source = str(Path(*path.parts[2:]))
+                        content = wheel.read(filename).decode("utf-8")
+                        if ":" in path.name:
+                            target, insert = source.split(":")
+                            self.logger.info(
+                                f"    {source}: Adding {insert} insert for {target}"
+                            )
+                        else:
+                            target = path.suffix[1:].upper()
+                            insert = source
+                            self.logger.info(f"    {source}: Adding {target} insert")
 
-    def build_app(self, app: AppConfig, **kwargs):
+                        inserts.setdefault(target, {}).setdefault(insert, {})[
+                            package_key
+                        ] = content
+
+                    elif path.parts[1] == "static":
+                        content = wheel.read(filename)
+                        outfilename = static_path / package_name / Path(*path.parts[2:])
+                        outfilename.parent.mkdir(parents=True, exist_ok=True)
+                        with outfilename.open("wb") as f:
+                            f.write(content)
+
+    def _write_pyscript_toml(self, app: AppConfig):
+        """Write the ``pyscript.toml`` file for the app.
+
+        :param app: The application whose ``pyscript.toml`` is being written.
+        """
+        with (self.project_path(app) / "pyscript.toml").open("wb") as f:
+            config = {
+                "name": app.formal_name,
+                "description": app.description,
+                "version": app.version,
+                "splashscreen": {"autoclose": True},
+                "terminal": False,
+                # Ensure that we're using Unix path separators, as the content
+                # will be parsed by pyscript in the browser.
+                "packages": [
+                    f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
+                    for wheel in sorted(self.wheel_path(app).glob("*.whl"))
+                ],
+            }
+            # Parse any additional pyscript.toml content, and merge it into
+            # the overall content
+            try:
+                extra = tomllib.loads(app.extra_pyscript_toml_content)
+                config.update(extra)
+            except tomllib.TOMLDecodeError as e:
+                raise BriefcaseConfigError(
+                    f"Extra pyscript.toml content isn't valid TOML: {e}"
+                ) from e
+            except AttributeError:
+                pass
+
+            # Write the final configuration.
+            tomli_w.dump(config, f)
+
+    def _write_bootstrap(self, app: AppConfig, test_mode: bool):
+        """Write the bootstrap code for the app.
+
+        :param app: The app whose base inserts we need.
+        :param test_mode: Boolean; Is the app running in test mode?
+        """
+        # Construct the bootstrap script.
+        bootstrap = [
+            "import runpy",
+            "",
+            f"# Run {app.formal_name}'s main module",
+            f'runpy.run_module("{app.module_name}", run_name="__main__", alter_sys=True)',
+        ]
+        if test_mode:
+            bootstrap.extend(
+                [
+                    "",
+                    f"# Run {app.formal_name}'s test module",
+                    f'runpy.run_module("tests.{app.module_name}", run_name="__main__", alter_sys=True)',
+                ]
+            )
+
+        with (self.project_path(app) / "main.py").open("w") as f:
+            f.write("\n".join(bootstrap))
+
+    def _merge_insert_content(self, inserts, key, path):
+        """Merge multi-file insert content into a single insert.
+
+        Rewrites the inserts, removing the entry for ``key``,
+        producing a merged entry for ``path`` that has a single
+        ``key`` insert.
+
+        This is used to merge multiple contributed CSS files into
+        a single CSS insert.
+
+        :param inserts: The full set of inserts
+        :param key: The key to merge
+        :param path: The path for the merged insert.
+        """
+        try:
+            original = inserts.pop(key)
+        except KeyError:
+            # Nothing to merge.
+            pass
+        else:
+            merged = {}
+            for filename, package_inserts in original.items():
+                for package, css in package_inserts.items():
+                    try:
+                        old_css = merged[package]
+                    except KeyError:
+                        old_css = ""
+
+                    full_css = f"{old_css}/********** {filename} **********/\n{css}\n"
+                    merged[package] = full_css
+
+            # Preserve the merged content as a single insert
+            inserts[path] = {key: merged}
+
+    def _write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
+        """Write inserts into an existing file.
+
+        This looks for start and end markers in the named file, and replaces the
+        content inside those markers with the inserted content.
+
+        Multiple formats of insert marker are inspected, to accommodate HTML,
+        Python and CSS/JS comment conventions:
+        * HTML: ``<!-----@ insert:start @----->`` and ``<!-----@ insert:end @----->``
+        * Python: ``#####@ insert:start @#####\n`` and ``######@ insert:end @#####\n``
+        * CSS/JS: ``/*****@ insert:end @*****/`` and  ``/*****@ insert:end @*****/``
+
+        :param app: The application whose ``pyscript.toml`` is being written.
+        :param filename: The file whose insert is to be written.
+        :param inserts: The inserts for the file. A 2 level dictionary, keyed by
+            the name of the insert to add, and then package that contributed the
+            insert.
+        """
+        # Read the current content
+        with (self.project_path(app) / filename).open() as f:
+            content = f.read()
+
+        for insert, packages in inserts.items():
+            for comment, marker, replacement in [
+                # HTML
+                (
+                    (
+                        "<!--------------------------------------------------\n"
+                        " * {package}\n"
+                        " -------------------------------------------------->\n"
+                        "{content}"
+                    ),
+                    r"<!-----@ {insert}:start @----->.*?<!-----@ {insert}:end @----->",
+                    r"<!-----@ {insert}:start @----->\n{content}<!-----@ {insert}:end @----->",
+                ),
+                # CSS/JS
+                (
+                    (
+                        "/**************************************************\n"
+                        " * {package}\n"
+                        " *************************************************/\n"
+                        "{content}"
+                    ),
+                    r"/\*\*\*\*\*@ {insert}:start @\*\*\*\*\*/.*?/\*\*\*\*\*@ {insert}:end @\*\*\*\*\*/",
+                    r"/*****@ {insert}:start @*****/\n{content}/*****@ {insert}:end @*****/",
+                ),
+                # Python
+                (
+                    (
+                        "##################################################\n"
+                        "# {package}\n"
+                        "##################################################\n"
+                        "{content}"
+                    ),
+                    r"#####@ {insert}:start @#####\n.*?#####@ {insert}:end @#####",
+                    r"#####@ {insert}:start @#####\n{content}\n#####@ {insert}:end @#####",
+                ),
+            ]:
+                full_insert = "\n".join(
+                    comment.format(package=package, content=content)
+                    for package, content in packages.items()
+                )
+                content = re.sub(
+                    marker.format(insert=insert),
+                    replacement.format(insert=insert, content=full_insert),
+                    content,
+                    flags=re.MULTILINE | re.DOTALL,
+                )
+
+        # Write the new index.html
+        with (self.project_path(app) / filename).open("w") as f:
+            f.write(content)
+
+    def build_app(self, app: AppConfig, test_mode: bool = False, **kwargs):
         """Build the static web deployment for the application.
 
         :param app: The application to build
+        :param test_mode: Boolean; Is the app running in test mode?
         """
         self.logger.info("Building web project...", prefix=app.app_name)
 
@@ -164,13 +400,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         "utf8",
                         "-m",
                         "pip",
-                        "wheel",
-                        "--wheel-dir",
+                        "download",
+                        "--platform",
+                        "emscripten_3_1_32_wasm32",
+                        "--only-binary=:all:",
+                        "--extra-index-url",
+                        "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                        "-d",
                         self.wheel_path(app),
                         "-r",
                         self.bundle_path(app) / "requirements.txt",
                     ],
                     check=True,
+                    cwd=self.bundle_path(app),
                     encoding="UTF-8",
                 )
             except subprocess.CalledProcessError as e:
@@ -179,51 +421,33 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ) from e
 
         with self.input.wait_bar("Writing Pyscript configuration file..."):
-            with (self.project_path(app) / "pyscript.toml").open("wb") as f:
-                config = {
-                    "name": app.formal_name,
-                    "description": app.description,
-                    "version": app.version,
-                    "splashscreen": {"autoclose": True},
-                    "terminal": False,
-                    # Ensure that we're using Unix path separators, as the content
-                    # will be parsed by pyscript in the browser.
-                    "packages": [
-                        f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
-                        for wheel in sorted(self.wheel_path(app).glob("*.whl"))
-                    ],
-                }
-                # Parse any additional pyscript.toml content, and merge it into
-                # the overall content
-                try:
-                    extra = tomllib.loads(app.extra_pyscript_toml_content)
-                    config.update(extra)
-                except tomllib.TOMLDecodeError as e:
-                    raise BriefcaseConfigError(
-                        f"Extra pyscript.toml content isn't valid TOML: {e}"
-                    ) from e
-                except AttributeError:
-                    pass
+            self._write_pyscript_toml(app)
 
-                # Write the final configuration.
-                tomli_w.dump(config, f)
+        inserts = {}
 
-        self.logger.info("Compile static web content from wheels")
-        with self.input.wait_bar("Compiling static web content from wheels..."):
-            # Trim previously compiled content out of briefcase.css
-            briefcase_css_path = (
-                self.project_path(app) / "static" / "css" / "briefcase.css"
-            )
-            self._trim_file(
-                briefcase_css_path,
-                sentinel=" ******************* Wheel contributed styles **********************/",
-            )
-
-            # Extract static resources from packaged wheels
+        self.logger.info("Compile contributed content from wheels")
+        with self.input.wait_bar("Compiling contributed content from wheels..."):
+            # Extract insert and static resources from packaged wheels
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
                 self.logger.info(f"  Processing {wheelfile.name}...")
-                with briefcase_css_path.open("a", encoding="utf-8") as css_file:
-                    self._process_wheel(wheelfile, css_file=css_file)
+                self._process_wheel(
+                    wheelfile,
+                    inserts=inserts,
+                    static_path=self.static_path(app),
+                )
+
+        # Reorganize CSS content so that there's a single content insert
+        # for all contributed packages
+        self._merge_insert_content(inserts, "CSS", "static/css/briefcase.css")
+
+        self._write_bootstrap(app, test_mode=test_mode)
+
+        # Add content inserts to the site content.
+        self.logger.info("Add content inserts")
+        with self.input.wait_bar("Adding content inserts..."):
+            for filename, file_inserts in inserts.items():
+                self.logger.info(f"  Processing {filename}...")
+                self._write_inserts(app, filename=filename, inserts=file_inserts)
 
         return {}
 
@@ -251,16 +475,23 @@ class HTTPHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format: str, *args: Any) -> None:
         message = (format % args).translate(self._control_char_table)
-        self.server.logger.info(
-            f"{self.address_string()} - - [{self.log_date_time_string()}] {message}"
-        )
+        if self.server.logger:
+            self.server.logger.info(
+                f"{self.address_string()} - - [{self.log_date_time_string()}] {message}"
+            )
 
 
 class LocalHTTPServer(ThreadingHTTPServer):
     """An HTTP server that serves local static content."""
 
     def __init__(
-        self, base_path, host, port, RequestHandlerClass=HTTPHandler, *, logger: Log
+        self,
+        base_path,
+        host,
+        port,
+        RequestHandlerClass=HTTPHandler,
+        *,
+        logger: Log,
     ):
         self.base_path = base_path
         self.logger = logger
@@ -269,6 +500,10 @@ class LocalHTTPServer(ThreadingHTTPServer):
 
 class StaticWebRunCommand(StaticWebMixin, RunCommand):
     description = "Run a static web project."
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.playwright = sync_playwright
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -313,9 +548,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         :param port: The port on which to run the server
         :param open_browser: Should a browser be opened on the newly started server.
         """
-        if test_mode:
-            raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
-
         self.logger.info("Starting web server...", prefix=app.app_name)
 
         # At least for now, there's no easy way to pass arguments to a web app.
@@ -324,12 +556,14 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         httpd = None
         try:
-            # Create a local HTTP server
+            # Create a local HTTP server.
+            # Don't log the server if we're in test mode;
+            # otherwise, log server activity to the console
             httpd = LocalHTTPServer(
                 self.project_path(app),
                 host=host,
                 port=port,
-                logger=self.logger,
+                logger=None if test_mode else self.logger,
             )
 
             # Extract the host and port from the server. This is needed
@@ -337,19 +571,90 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             host, port = httpd.socket.getsockname()
             url = f"http://{host}:{port}"
 
-            self.logger.info(f"Web server open on {url}")
-            # If requested, open a browser tab on the newly opened server.
-            if open_browser:
-                webbrowser.open_new_tab(url)
+            if test_mode:
+                # Ensure that the Chromium Playwright browser is installed
+                # This is a no-output, near no-op if the browser *is* installed;
+                # If it isn't, it shows a download progress bar.
+                self.tools.subprocess.run(
+                    ["playwright", "install", "chromium"],
+                    stream_output=False,
+                )
 
-            self.logger.info(
-                "Web server log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
-            )
-            self.logger.info("=" * 75)
+                # Start the web server in a background thread
+                server_thread = Thread(target=httpd.serve_forever)
+                server_thread.start()
 
-            # Run the server.
-            httpd.serve_forever()
+                self.logger.info("Running test suite...")
+                self.logger.info("=" * 75)
+
+                # Open a Playwright session
+                with self.playwright() as playwright:
+                    browser = playwright.chromium.launch(headless=not open_browser)
+                    page = browser.new_page()
+
+                    # Install a handler that will capture every line of
+                    # log content in a buffer.
+                    buffer = []
+                    page.on("console", lambda msg: buffer.append(msg.text))
+
+                    # Load the test page.
+                    page.goto(url)
+
+                    # Build a log filter looking for test suite termination
+                    log_filter = LogFilter(
+                        clean_filter=None,
+                        clean_output=True,
+                        exit_filter=LogFilter.test_filter(
+                            getattr(app, "exit_regex", LogFilter.DEFAULT_EXIT_REGEX)
+                        ),
+                    )
+                    try:
+                        while True:
+                            # Process all the lines in the accumulated log buffer,
+                            # looking for the termination condition. Finding the
+                            # termination condition is what stops the test suite.
+                            for line in buffer:
+                                for filtered in log_filter(line):
+                                    self.logger.info(filtered)
+                            buffer = []
+
+                            # Insert a short pause so that Playwright can
+                            # generate the next batch of console logs
+                            page.wait_for_timeout(100)
+                    except StopStreaming:
+                        if log_filter.returncode == 0:
+                            self.logger.info("Test suite passed!", prefix=app.app_name)
+                        else:
+                            if log_filter.returncode is None:
+                                raise BriefcaseCommandError(
+                                    "Test suite didn't report a result."
+                                )
+                            else:
+                                self.logger.error(
+                                    "Test suite failed!", prefix=app.app_name
+                                )
+                                raise BriefcaseTestSuiteFailure()
+                    finally:
+                        # Close the Playwright browser, and shut down the web server
+                        browser.close()
+                        httpd.shutdown()
+            else:
+                # Normal execution mode
+                self.logger.info(f"Web server open on {url}")
+
+                # If requested, open a browser tab on the newly opened server.
+                if open_browser:
+                    webbrowser.open_new_tab(url)
+
+                self.logger.info(
+                    "Web server log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
+                )
+                self.logger.info("=" * 75)
+
+                # Start the web server in blocking mode.
+                httpd.serve_forever()
+
         except PermissionError as e:
             if port < 1024:
                 raise BriefcaseCommandError(

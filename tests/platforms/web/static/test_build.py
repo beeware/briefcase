@@ -43,7 +43,12 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
                 extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/main.css", "span { padding: 10px; }\n"),
+                    (
+                        "dependency/inserts/index.html:header",
+                        "<link>style.css</link>\n",
+                    ),
                 ],
             ),
         elif args[0][5] == "pip":
@@ -51,14 +56,14 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www" / "static" / "wheels",
                 "dependency",
                 extra_content=[
-                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                    ("dependency/inserts/dependency.css", "div { margin: 20px; }\n"),
                 ],
             ),
             create_wheel(
                 bundle_path / "www" / "static" / "wheels",
                 "other",
                 extra_content=[
-                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                    ("other/inserts/style.css", "div { padding: 30px; }\n"),
                 ],
             ),
         else:
@@ -105,13 +110,19 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
             encoding="UTF-8",
         ),
     ]
@@ -131,7 +142,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             ],
         }
 
-    # briefcase.css has been appended
+    # briefcase.css has been customized
     with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
         encoding="utf-8"
     ) as f:
@@ -143,29 +154,239 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                     "#pyconsole {",
                     "  display: None;",
                     "}",
-                    "/*******************************************************************",
-                    " ******************** Wheel contributed styles ********************/",
+                    "/*****@ CSS:start @*****/",
+                    "/**************************************************",
+                    " * dependency 1.2.3",
+                    " *************************************************/",
+                    "/********** dependency.css **********/",
+                    "div { margin: 20px; }",
                     "",
-                    "/*******************************************************",
-                    " * dependency 1.2.3::style.css",
-                    " *******************************************************/",
                     "",
-                    "div { margin: 10px; }",
-                    "",
-                    "/*******************************************************",
-                    " * first_app 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "/**************************************************",
+                    " * first_app 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
                     "span { margin: 10px; }",
                     "",
-                    "/*******************************************************",
-                    " * other 1.2.3::style.css",
-                    " *******************************************************/",
+                    "/********** main.css **********/",
+                    "span { padding: 10px; }",
                     "",
-                    "div { padding: 10px; }",
+                    "",
+                    "/**************************************************",
+                    " * other 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
+                    "div { padding: 30px; }",
+                    "",
+                    "/*****@ CSS:end @*****/",
                 ]
             )
             + "\n"
+        )
+
+    # index.html has been customized
+    with (bundle_path / "www" / "index.html").open(encoding="utf-8") as f:
+        assert f.read() == "\n".join(
+            [
+                "",
+                "<html>",
+                "    <head>",
+                "<!-----@ header:start @----->",
+                "<!--------------------------------------------------",
+                " * first_app 1.2.3",
+                " -------------------------------------------------->",
+                "<link>style.css</link>",
+                "<!-----@ header:end @----->",
+                "    </head>",
+                "    <body>",
+                "        <py-script>",
+                "#####@ bootstrap:start @#####",
+                "#####@ bootstrap:end @#####",
+                "        </py-script>",
+                "",
+                "    </body>",
+                "</html>",
+                "",
+            ]
+        )
+
+
+def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
+    """An app can be built in test mode."""
+    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+
+    # Invoking build will create wheels as a side effect.
+    def mock_run(*args, **kwargs):
+        if args[0][5] == "wheel":
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/main.css", "span { padding: 10px; }\n"),
+                    (
+                        "dependency/inserts/index.html:header",
+                        "<link>style.css</link>\n",
+                    ),
+                ],
+            ),
+        elif args[0][5] == "pip":
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/inserts/dependency.css", "div { margin: 20px; }\n"),
+                ],
+            ),
+            create_wheel(
+                bundle_path / "www" / "static" / "wheels",
+                "other",
+                extra_content=[
+                    ("other/inserts/style.css", "div { padding: 30px; }\n"),
+                ],
+            ),
+        else:
+            raise ValueError("Unknown command")
+
+    build_command.tools.subprocess.run.side_effect = mock_run
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www" / "static" / "wheels"
+    )
+
+    # Build the web app.
+    build_command.build_app(first_app_generated, test_mode=True)
+
+    # The old wheel folder was removed
+    build_command.tools.shutil.rmtree.assert_called_once_with(
+        bundle_path / "www" / "static" / "wheels"
+    )
+
+    # `wheel pack` and `pip wheel` was invoked
+    assert build_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "wheel",
+                "pack",
+                bundle_path / "app",
+                "--dest-dir",
+                bundle_path / "www" / "static" / "wheels",
+            ],
+            check=True,
+            encoding="UTF-8",
+        ),
+        mock.call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
+                bundle_path / "www" / "static" / "wheels",
+                "-r",
+                bundle_path / "requirements.txt",
+            ],
+            check=True,
+            cwd=bundle_path,
+            encoding="UTF-8",
+        ),
+    ]
+
+    # Pyscript.toml has been written
+    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "name": "First App",
+            "description": "The first simple app \\ demonstration",
+            "version": "0.0.1",
+            "splashscreen": {"autoclose": True},
+            "terminal": False,
+            "packages": [
+                "/static/wheels/dependency-1.2.3-py3-none-any.whl",
+                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+                "/static/wheels/other-1.2.3-py3-none-any.whl",
+            ],
+        }
+
+    # briefcase.css has been customized
+    with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
+        encoding="utf-8"
+    ) as f:
+        assert (
+            f.read()
+            == "\n".join(
+                [
+                    "",
+                    "#pyconsole {",
+                    "  display: None;",
+                    "}",
+                    "/*****@ CSS:start @*****/",
+                    "/**************************************************",
+                    " * dependency 1.2.3",
+                    " *************************************************/",
+                    "/********** dependency.css **********/",
+                    "div { margin: 20px; }",
+                    "",
+                    "",
+                    "/**************************************************",
+                    " * first_app 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
+                    "span { margin: 10px; }",
+                    "",
+                    "/********** main.css **********/",
+                    "span { padding: 10px; }",
+                    "",
+                    "",
+                    "/**************************************************",
+                    " * other 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
+                    "div { padding: 30px; }",
+                    "",
+                    "/*****@ CSS:end @*****/",
+                ]
+            )
+            + "\n"
+        )
+
+    # index.html has been customized
+    with (bundle_path / "www" / "index.html").open(encoding="utf-8") as f:
+        assert f.read() == "\n".join(
+            [
+                "",
+                "<html>",
+                "    <head>",
+                "<!-----@ header:start @----->",
+                "<!--------------------------------------------------",
+                " * first_app 1.2.3",
+                " -------------------------------------------------->",
+                "<link>style.css</link>",
+                "<!-----@ header:end @----->",
+                "    </head>",
+                "    <body>",
+                "        <py-script>",
+                "#####@ bootstrap:start @#####",
+                "#####@ bootstrap:end @#####",
+                "        </py-script>",
+                "",
+                "    </body>",
+                "</html>",
+                "",
+            ]
         )
 
 
@@ -275,13 +496,19 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
                 "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
             encoding="UTF-8",
         ),
     ]
@@ -308,7 +535,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 bundle_path / "www" / "static" / "wheels",
                 "first_app",
                 extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/inserts/style.css", "span { margin: 10px; }\n"),
                 ],
             ),
         elif args[0][5] == "pip":
@@ -357,13 +584,19 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
             encoding="UTF-8",
         ),
     ]
@@ -393,14 +626,14 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     "#pyconsole {",
                     "  display: None;",
                     "}",
-                    "/*******************************************************************",
-                    " ******************** Wheel contributed styles ********************/",
-                    "",
-                    "/*******************************************************",
-                    " * first_app 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "/*****@ CSS:start @*****/",
+                    "/**************************************************",
+                    " * first_app 1.2.3",
+                    " *************************************************/",
+                    "/********** style.css **********/",
                     "span { margin: 10px; }",
+                    "",
+                    "/*****@ CSS:end @*****/",
                 ]
             )
             + "\n"
@@ -515,13 +748,19 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
                 "utf8",
                 "-m",
                 "pip",
-                "wheel",
-                "--wheel-dir",
+                "download",
+                "--platform",
+                "emscripten_3_1_32_wasm32",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pyodide-pypi-api.s3.amazonaws.com/simple/",
+                "-d",
                 bundle_path / "www" / "static" / "wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
             check=True,
+            cwd=bundle_path,
             encoding="UTF-8",
         ),
     ]
