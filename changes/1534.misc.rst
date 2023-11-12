@@ -1,0 +1,1 @@
+Update platformdirs requirement from <4.0,>=2.6 to >=2.6,<5.0.
