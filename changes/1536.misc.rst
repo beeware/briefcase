@@ -1,0 +1,1 @@
+The pre-commit repo for black was updated to its optimized version.
