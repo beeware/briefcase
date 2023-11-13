@@ -488,8 +488,8 @@ What GUI toolkit do you want to use for this project?""",
             # Returning ``None`` is a special case that means the field should not be
             # included in the context and instead deferred to the template default.
 
-            if hasattr(bootstrap, "additional_context"):
-                if (additional_context := bootstrap.additional_context()) is not None:
+            if hasattr(bootstrap, "extra_context"):
+                if (additional_context := bootstrap.extra_context()) is not None:
                     gui_context.update(additional_context)
 
             for context_field in bootstrap.fields:

@@ -9,6 +9,6 @@ def test_base_bootstrap_fields():
     for field in [
         attr
         for attr in BaseGuiBootstrap.__dict__
-        if not attr.startswith("_") and attr not in {"fields", "additional_context"}
+        if not attr.startswith("_") and attr not in {"fields", "extra_context"}
     ]:
         assert field in BaseGuiBootstrap.fields

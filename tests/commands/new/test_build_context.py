@@ -1178,7 +1178,7 @@ def test_question_sequence_custom_bootstrap(new_command, monkeypatch):
         def __init__(self, context):
             pass
 
-        def additional_context(self):
+        def extra_context(self):
             return {"custom_context": "value"}
 
         def requires(self):

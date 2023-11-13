@@ -27,8 +27,8 @@ class BaseGuiBootstrap(ABC):
     fields: list[str] = [
         "app_source",
         "app_start_source",
-        "pyproject_table_briefcase_additional",
-        "pyproject_table_briefcase_app_additional",
+        "pyproject_table_briefcase_extra_content",
+        "pyproject_table_briefcase_app_extra_content",
         "pyproject_requires",
         "pyproject_test_requires",
         "pyproject_table_macOS",
@@ -50,7 +50,7 @@ class BaseGuiBootstrap(ABC):
         # context contains metadata about the app being created
         self.context = context
 
-    def additional_context(self) -> dict[str, Any] | None:
+    def extra_context(self) -> dict[str, Any] | None:
         """Runs prior to other plugin hooks to provide additional context.
 
         This can be used to prompt the user with additional questions or run arbitrary
@@ -63,10 +63,10 @@ class BaseGuiBootstrap(ABC):
     def app_start_source(self) -> str | None:
         """The Python source code for __main__.py to start the app."""
 
-    def pyproject_table_briefcase_additional(self) -> str | None:
+    def pyproject_table_briefcase_extra_content(self) -> str | None:
         """Additional content for ``tool.briefcase`` table."""
 
-    def pyproject_table_briefcase_app_additional(self) -> str | None:
+    def pyproject_table_briefcase_app_extra_content(self) -> str | None:
         """Additional content for ``tool.briefcase.app.<app-name>`` table."""
 
     def pyproject_requires(self) -> str | None:
