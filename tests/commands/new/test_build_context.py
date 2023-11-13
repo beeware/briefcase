@@ -1,8 +1,27 @@
 from unittest.mock import MagicMock
 
+import pytest
 from packaging.version import Version
 
 import briefcase.commands.new
+from briefcase.bootstraps import (
+    PursuedPyBearGuiBootstrap,
+    PygameGuiBootstrap,
+    PySide2GuiBootstrap,
+    PySide6GuiBootstrap,
+    TogaGuiBootstrap,
+)
+
+
+@pytest.fixture
+def mock_builtin_bootstraps():
+    return {
+        "Toga": TogaGuiBootstrap,
+        "PySide2": PySide2GuiBootstrap,
+        "PySide6": PySide6GuiBootstrap,
+        "PursuedPyBear": PursuedPyBearGuiBootstrap,
+        "Pygame": PygameGuiBootstrap,
+    }
 
 
 def test_question_sequence_toga(new_command):
@@ -1191,7 +1210,11 @@ style_framework = "Shoelace v2.3"
     )
 
 
-def test_question_sequence_custom_bootstrap(new_command, monkeypatch):
+def test_question_sequence_custom_bootstrap(
+    new_command,
+    mock_builtin_bootstraps,
+    monkeypatch,
+):
     """Questions are asked, a context is constructed."""
 
     class GuiBootstrap:
@@ -1212,7 +1235,12 @@ def test_question_sequence_custom_bootstrap(new_command, monkeypatch):
     monkeypatch.setattr(
         briefcase.commands.new,
         "get_gui_bootstraps",
-        MagicMock(return_value={"Custom GUI": GuiBootstrap}),
+        MagicMock(
+            return_value=dict(
+                **mock_builtin_bootstraps,
+                **{"Custom GUI": GuiBootstrap},
+            ),
+        ),
     )
 
     # Prime answers for all the questions.
@@ -1258,6 +1286,7 @@ def test_question_sequence_custom_bootstrap(new_command, monkeypatch):
 
 def test_question_sequence_custom_bootstrap_without_additional_context(
     new_command,
+    mock_builtin_bootstraps,
     monkeypatch,
 ):
     """Questions are asked, a context is constructed."""
@@ -1277,7 +1306,12 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
     monkeypatch.setattr(
         briefcase.commands.new,
         "get_gui_bootstraps",
-        MagicMock(return_value={"Custom GUI": GuiBootstrap}),
+        MagicMock(
+            return_value=dict(
+                **mock_builtin_bootstraps,
+                **{"Custom GUI": GuiBootstrap},
+            ),
+        ),
     )
 
     # Prime answers for all the questions.

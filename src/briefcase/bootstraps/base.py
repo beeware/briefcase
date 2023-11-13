@@ -24,6 +24,10 @@ class AppContext(TypedDict):
 class BaseGuiBootstrap(ABC):
     """Definition for a plugin that defines a new Briefcase app."""
 
+    # These are the field names that will be defined in the cookiecutter context.
+    # Any fields defined here must be implemented as methods that return a ``str``
+    # or ``None``. Returning ``None`` omits the field as a key in the context, thereby
+    # deferring the value for the field to the cookiecutter template.
     fields: list[str] = [
         "app_source",
         "app_start_source",
@@ -43,6 +47,10 @@ class BaseGuiBootstrap(ABC):
         "pyproject_table_web",
         "pyproject_extra_content",
     ]
+
+    # A short annotation that's appended to the name of the GUI toolkit when the user
+    # is presented with the options to create a new project.
+    display_name_annotation: str = ""
 
     def __init__(self, context: AppContext):
         # context contains metadata about the app being created

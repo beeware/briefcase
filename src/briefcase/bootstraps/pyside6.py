@@ -2,6 +2,8 @@ from briefcase.bootstraps.base import BaseGuiBootstrap
 
 
 class PySide6GuiBootstrap(BaseGuiBootstrap):
+    display_name_annotation = "does not support iOS/Android deployment"
+
     def app_source(self):
         return """\
 import importlib.metadata

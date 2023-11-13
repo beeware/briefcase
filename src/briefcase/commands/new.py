@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import sys
 import unicodedata
+from collections import OrderedDict
 from email.utils import parseaddr
 from urllib.parse import urlparse
 
@@ -16,12 +17,13 @@ else:  # pragma: no-cover-if-gte-py310
     from importlib_metadata import entry_points
 
 import briefcase
-from briefcase.bootstraps.base import BaseGuiBootstrap
+from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
 )
+from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
 from briefcase.integrations.git import Git
 
@@ -273,39 +275,6 @@ class NewCommand(BaseCommand):
                 self.input.prompt()
                 self.input.prompt(f"Invalid value; {e}")
 
-    def input_select(self, intro, variable, options):
-        """Select one from a list of options.
-
-        The first option is assumed to be the default.
-
-        :param intro: An introductory paragraph explaining the question being asked.
-        :param variable: The variable to display to the user.
-        :param options: A list of text strings, describing the available options.
-        :returns: The string content of the selected option.
-        """
-        self.input.prompt(intro)
-
-        index_choices = [str(key) for key in range(1, len(options) + 1)]
-        display_options = "\n".join(
-            f"    [{index}] {option}" for index, option in zip(index_choices, options)
-        )
-        error_message = (
-            f"Invalid selection; please enter a number between 1 and {len(options)}"
-        )
-        prompt = f"""
-Select one of the following:
-
-{display_options}
-
-{titlecase(variable)} [1]: """
-        selection = self.input.selection_input(
-            prompt=prompt,
-            choices=index_choices,
-            default="1",
-            error_message=error_message,
-        )
-        return options[int(selection) - 1]
-
     def build_context(
         self,
         template_source: str,
@@ -421,21 +390,25 @@ up yet, you can put in a dummy URL.""",
             validator=self.validate_url,
         )
 
-        project_license = self.input_select(
-            intro="""
-What license do you want to use for this project's code?""",
-            variable="project license",
-            options=[
-                "BSD license",
-                "MIT license",
-                "Apache Software License",
-                "GNU General Public License v2 (GPLv2)",
-                "GNU General Public License v2 or later (GPLv2+)",
-                "GNU General Public License v3 (GPLv3)",
-                "GNU General Public License v3 or later (GPLv3+)",
-                "Proprietary",
-                "Other",
-            ],
+        self.input.prompt()
+        self.input.prompt("What license do you want to use for this project's code?")
+        self.input.prompt()
+        licenses = [
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ]
+        project_license = select_option(
+            prompt="Project License [1]: ",
+            input=self.input,
+            default="1",
+            options=list(zip(licenses, licenses)),
         )
 
         return {
@@ -455,33 +428,20 @@ What license do you want to use for this project's code?""",
     def build_gui_context(self, context: dict[str, str]) -> dict[str, str]:
         """Build context specific to the GUI toolkit."""
         bootstraps = get_gui_bootstraps()
-        bootstrap_choices = [
-            "Toga",
-            "PySide2       (does not support iOS/Android deployment)",
-            "PySide6       (does not support iOS/Android deployment)",
-            "PursuedPyBear (does not support iOS/Android deployment)",
-            "Pygame        (does not support iOS/Android deployment)",
-        ]
-        builtin_bootstraps = [c.split(" ")[0] for c in bootstrap_choices]
-        # add choices for bootstraps that aren't built-in to Briefcase
-        bootstrap_choices.extend(set(bootstraps) - set(builtin_bootstraps))
-        bootstrap_choices.append("None")
 
-        bootstrap_choice = self.input_select(
-            intro="""
-What GUI toolkit do you want to use for this project?""",
-            variable="GUI framework",
-            options=bootstrap_choices,
+        self.input.prompt()
+        self.input.prompt("What GUI toolkit do you want to use for this project?")
+        self.input.prompt()
+        bootstrap_class: type[BaseGuiBootstrap] = select_option(
+            prompt="GUI Framework [1]: ",
+            input=self.input,
+            default="1",
+            options=self._gui_bootstrap_choices(bootstraps),
         )
 
         gui_context = {}
 
-        if bootstrap_choice != "None":
-            try:
-                bootstrap_class = bootstraps[bootstrap_choice]
-            except KeyError:
-                bootstrap_class = bootstraps[bootstrap_choice.split(" ")[0]]
-
+        if bootstrap_class is not None:
             bootstrap = bootstrap_class(context=context)
 
             # Iterate over the Bootstrap interface to build the context.
@@ -497,6 +457,35 @@ What GUI toolkit do you want to use for this project?""",
                     gui_context[context_field] = context_value
 
         return gui_context
+
+    def _gui_bootstrap_choices(self, bootstraps):
+        """Construct the list of available GUI bootstraps to display to the user."""
+        # Sort the options alphabetically first
+        ordered = OrderedDict(sorted(bootstraps.items()))
+
+        # Ensure the first 5 options are: Toga, PySide2, PySide6, PursuedPyBear, Pygame
+        ordered.move_to_end("Pygame", last=False)
+        ordered.move_to_end("PursuedPyBear", last=False)
+        ordered.move_to_end("PySide6", last=False)
+        ordered.move_to_end("PySide2", last=False)
+        ordered.move_to_end("Toga", last=False)
+
+        # Option None should always be last
+        ordered["None"] = None
+        ordered.move_to_end("None")
+
+        # Construct the bootstrap options as they should be presented to users.
+        # The name of the bootstrap is its registered entry point name. Along with the
+        # bootstrap's name, a short message important to a user's choice can be shown
+        # also; for instance, several show "does not support iOS/Android deployment".
+        bootstrap_choices = []
+        max_len = max(map(len, ordered))
+        for name, klass in ordered.items():
+            if annotation := getattr(klass, "display_name_annotation", ""):
+                annotation = f"{' ' * (max_len - len(name))} ({annotation})"
+            bootstrap_choices.append((klass, f"{name}{annotation or ''}"))
+
+        return bootstrap_choices
 
     def new_app(
         self,
