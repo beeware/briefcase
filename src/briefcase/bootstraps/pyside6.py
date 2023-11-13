@@ -42,17 +42,18 @@ def main():
     sys.exit(app.exec())
 """
 
-    def pyproject_requires(self):
+    def pyproject_table_briefcase_app_extra_content(self):
         return """
+
+requires = [
     "PySide6-Essentials~=6.5",
     # "PySide6-Addons~=6.5",
-"""
-
-    def pyproject_test_requires(self):
-        return """
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """
 
     def pyproject_table_macOS(self):

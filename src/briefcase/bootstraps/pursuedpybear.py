@@ -45,16 +45,17 @@ def main():
     )
 """
 
-    def pyproject_requires(self):
+    def pyproject_table_briefcase_app_extra_content(self):
         return """
-    "ppb~=1.1",
-"""
 
-    def pyproject_test_requires(self):
-        return """
+requires = [
+    "ppb~=1.1",
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """
 
     def pyproject_table_macOS(self):

@@ -37,14 +37,16 @@ if __name__ == "__main__":
     main().main_loop()
 """
 
-    def pyproject_requires(self):
-        return None
-
-    def pyproject_test_requires(self):
+    def pyproject_table_briefcase_app_extra_content(self):
         return """
+
+requires = [
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """
 
     def pyproject_table_macOS(self):

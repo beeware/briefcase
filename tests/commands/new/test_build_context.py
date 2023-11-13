@@ -74,10 +74,15 @@ from {{ cookiecutter.module_name }}.app import main
 if __name__ == "__main__":
     main().main_loop()
 """,
-        pyproject_test_requires="""
+        pyproject_table_briefcase_app_extra_content="""
+
+requires = [
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """,
         pyproject_table_macOS="""
 universal_build = true
@@ -302,13 +307,16 @@ def main():
     main_window = {{ cookiecutter.class_name }}()
     sys.exit(app.exec_())
 """,
-        pyproject_requires="""
+        pyproject_table_briefcase_app_extra_content="""
+
+requires = [
     "pyside2~=5.15",
-""",
-        pyproject_test_requires="""
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """,
         pyproject_table_macOS="""
 universal_build = true
@@ -485,14 +493,17 @@ def main():
     main_window = {{ cookiecutter.class_name }}()
     sys.exit(app.exec())
 """,
-        pyproject_requires="""
+        pyproject_table_briefcase_app_extra_content="""
+
+requires = [
     "PySide6-Essentials~=6.5",
     # "PySide6-Addons~=6.5",
-""",
-        pyproject_test_requires="""
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """,
         pyproject_table_macOS="""
 universal_build = true
@@ -675,13 +686,16 @@ def main():
         title=metadata["Formal-Name"],
     )
 """,
-        pyproject_requires="""
+        pyproject_table_briefcase_app_extra_content="""
+
+requires = [
     "ppb~=1.1",
-""",
-        pyproject_test_requires="""
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """,
         pyproject_table_macOS="""
 universal_build = true
@@ -843,13 +857,16 @@ def main():
 
     pygame.quit()
 """,
-        pyproject_requires="""
+        pyproject_table_briefcase_app_extra_content="""
+
+requires = [
     "pygame~=2.2",
-""",
-        pyproject_test_requires="""
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """,
         pyproject_table_macOS="""
 universal_build = true
@@ -1017,10 +1034,15 @@ from {{ cookiecutter.module_name }}.app import main
 if __name__ == "__main__":
     main().main_loop()
 """,
-        pyproject_test_requires="""
+        pyproject_table_briefcase_app_extra_content="""
+
+requires = [
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """,
         pyproject_table_macOS="""
 universal_build = true

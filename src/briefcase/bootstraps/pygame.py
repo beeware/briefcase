@@ -49,16 +49,17 @@ def main():
     pygame.quit()
 """
 
-    def pyproject_requires(self):
+    def pyproject_table_briefcase_app_extra_content(self):
         return """
-    "pygame~=2.2",
-"""
 
-    def pyproject_test_requires(self):
-        return """
+requires = [
+    "pygame~=2.2",
+]
+test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
     "pytest",
 {%- endif %}
+]
 """
 
     def pyproject_table_macOS(self):

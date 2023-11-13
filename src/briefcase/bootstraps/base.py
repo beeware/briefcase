@@ -29,8 +29,6 @@ class BaseGuiBootstrap(ABC):
         "app_start_source",
         "pyproject_table_briefcase_extra_content",
         "pyproject_table_briefcase_app_extra_content",
-        "pyproject_requires",
-        "pyproject_test_requires",
         "pyproject_table_macOS",
         "pyproject_table_linux",
         "pyproject_table_linux_system_debian",
@@ -68,12 +66,6 @@ class BaseGuiBootstrap(ABC):
 
     def pyproject_table_briefcase_app_extra_content(self) -> str | None:
         """Additional content for ``tool.briefcase.app.<app-name>`` table."""
-
-    def pyproject_requires(self) -> str | None:
-        """List of package requirements for all platforms and formats."""
-
-    def pyproject_test_requires(self) -> str | None:
-        """List of package requirements for running tests."""
 
     def pyproject_table_macOS(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.macOS`` table."""
