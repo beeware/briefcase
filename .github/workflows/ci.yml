@@ -92,7 +92,7 @@ jobs:
       id: coverage
       if: always() && contains('success,failure', steps.test.outcome)
       # coverage reporting must use the same Python version used to produce coverage
-      run: tox -qe coverage$(tr -d "." <<< "${{ matrix.python-version }}")
+      run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
 
   coverage:
     name: Project coverage
