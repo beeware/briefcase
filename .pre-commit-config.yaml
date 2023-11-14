@@ -23,8 +23,8 @@ repos:
     hooks:
       - id: docformatter
         args: [--in-place, --black]
-  - repo: https://github.com/psf/black
-    rev: 23.10.1
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 23.11.0
     hooks:
       - id: black
         language_version: python3
@@ -36,5 +36,4 @@ repos:
     rev: v2.2.6
     hooks:
     - id: codespell
-      additional_dependencies:
-        - tomli
+      additional_dependencies: [tomli]

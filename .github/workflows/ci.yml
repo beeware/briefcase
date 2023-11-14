@@ -50,10 +50,6 @@ jobs:
         # Allow dev Python to fail without failing entire job
         #- python-version: "3.13-dev"
         #  experimental: true
-        # Run tests against the latest Windows Store Python
-        - platform: "windows"
-          python-version: "winstore3.12"
-          experimental: false
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
@@ -61,16 +57,9 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      if: startswith(matrix.python-version, '3')
       uses: actions/setup-python@v4.7.1
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Install Windows Store Python
-      if: startswith(matrix.python-version, 'winstore')
-      uses: beeware/.github/.github/actions/install-win-store-python@main
-      with:
-        python-version: "3.12"
 
     - name: Get Packages
       uses: actions/download-artifact@v3.0.2
@@ -103,7 +92,7 @@ jobs:
       id: coverage
       if: always() && contains('success,failure', steps.test.outcome)
       # coverage reporting must use the same Python version used to produce coverage
-      run: tox -qe coverage$(echo '${{ matrix.python-version }}' | tr -dc '0-9')
+      run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
 
   coverage:
     name: Project coverage
