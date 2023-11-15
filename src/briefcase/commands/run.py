@@ -141,7 +141,8 @@ class RunAppMixin:
         Catches and cleans up after any Ctrl-C interrupts.
 
         :param app: The app to be launched
-        :param popen: The Popen object for the stream we are monitoring
+        :param popen: The Popen object for the stream we are monitoring; this Popen
+            process will be closed after log streaming completes.
         :param test_mode: Are we launching in test mode?
         :param clean_filter: The log cleaning filter to use; see ``LogFilter``
             for details.
@@ -168,12 +169,13 @@ class RunAppMixin:
 
             # Start streaming logs for the app.
             self.logger.info("=" * 75)
-            self.tools.subprocess.stream_output(
-                label="log stream" if log_stream else app.app_name,
-                popen_process=popen,
-                stop_func=stop_func,
-                filter_func=log_filter,
-            )
+            with popen:
+                self.tools.subprocess.stream_output(
+                    label="log stream" if log_stream else app.app_name,
+                    popen_process=popen,
+                    stop_func=stop_func,
+                    filter_func=log_filter,
+                )
 
             # If we're in test mode, and log streaming ends,
             # check for the status of the test suite.
@@ -196,7 +198,7 @@ class RunAppMixin:
             else:
                 # If we're monitoring an actual app (not just a log stream),
                 # and the app didn't exit cleanly, surface the error to the user.
-                if popen.returncode != 0:
+                if popen.poll() != 0:
                     raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
 
         except KeyboardInterrupt:
