@@ -1,0 +1,1 @@
+The Flatpak build process no longer strips binaries included in third-party (e.g. PyPI) packages that are bundled with the app.
