@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from abc import abstractmethod
+from contextlib import suppress
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
@@ -79,6 +81,14 @@ class LogFilter:
             if self.exit_filter:
                 self.returncode = self.exit_filter(tail)
                 if self.returncode is not None:
+                    # This returncode is captured from output from the app and does not
+                    # necessarily mean the app has already exited. However, once
+                    # StopStreaming is raised, the output streamer sends a signal to
+                    # the app to exit immediately and that may result in the app
+                    # exiting with a non-zero returncode. Therefore, wait for the app
+                    # to close normally before raising StopStreaming.
+                    with suppress(subprocess.TimeoutExpired):
+                        self.log_popen.wait(timeout=3)
                     raise StopStreaming()
 
         # Return the display line
