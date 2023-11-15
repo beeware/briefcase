@@ -59,7 +59,7 @@ test_requires = [
 
     def pyproject_table_macOS(self):
         return """
-universal_build = true
+universal_build = false
 requires = [
     "std-nslog~=1.0.0",
 ]

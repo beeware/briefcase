@@ -338,7 +338,7 @@ test_requires = [
 ]
 """,
         pyproject_table_macOS="""
-universal_build = true
+universal_build = false
 requires = [
     "std-nslog~=1.0.0",
 ]
