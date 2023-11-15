@@ -463,11 +463,10 @@ up yet, you can put in a dummy URL.""",
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 5 options are: Toga, PySide2, PySide6, PursuedPyBear, Pygame
+        # Ensure the first 5 options are: Toga, PySide6, PursuedPyBear, Pygame
         ordered.move_to_end("Pygame", last=False)
         ordered.move_to_end("PursuedPyBear", last=False)
         ordered.move_to_end("PySide6", last=False)
-        ordered.move_to_end("PySide2", last=False)
         ordered.move_to_end("Toga", last=False)
 
         # Option None should always be last

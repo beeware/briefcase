@@ -29,7 +29,7 @@ def main():
     # app's windows to its menu item.
     #
     # For association to work any windows of the app must have WMCLASS
-    # property set to match the value set in app's desktop file. For PySide2
+    # property set to match the value set in app's desktop file. For PySide6
     # this is set with setApplicationName().
 
     # Find the name of the module that was used to start the app
