@@ -20,6 +20,19 @@ Common options
 
 The following options are available to all commands:
 
+``-C <KEY=VALUE>`` / ``--config <KEY=VALUE>``
+---------------------------------------------
+
+Override the value of an app's configuration in ``pyproject.toml`` with the provided
+value.
+
+The value passed to the setting should be valid TOML. If the value being overridden is a
+string, this includes quoting the value. This may require the use of escape sequences at
+the command line. For example, to override the template used by the create command, you
+can use ``-C template=...``, but the value must be quoted::
+
+    briefcase create -C template=\'https://example.com/template\'
+
 ``-h`` / ``--help``
 -------------------
 
