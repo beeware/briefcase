@@ -137,11 +137,12 @@ class PackageCommand(BaseCommand):
         self,
         app: AppConfig | None = None,
         update: bool = False,
+        config_overrides: list[str] | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, config_overrides)
 
         if app:
             state = self._package_app(app, update=update, **options)

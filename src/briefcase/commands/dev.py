@@ -179,6 +179,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         run_app: Optional[bool] = True,
         test_mode: Optional[bool] = False,
         passthrough: Optional[List[str]] = None,
+        config_overrides: list[str] | None = None,
         **options,
     ):
         # Which app should we run? If there's only one defined
@@ -200,7 +201,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             )
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, config_overrides)
 
         self.verify_app(app)
 

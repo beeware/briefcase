@@ -46,6 +46,7 @@ def test_device_option(package_command):
         "notarize_app": False,
         "packaging_format": "dmg",
         "update": False,
+        "config_overrides": None,
     }
 
 

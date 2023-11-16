@@ -104,7 +104,11 @@ def test_new_command(logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {"template": None, "template_branch": None}
+    assert options == {
+        "config_overrides": None,
+        "template": None,
+        "template_branch": None,
+    }
 
 
 # Common tests for dev and run commands.
@@ -159,6 +163,7 @@ def test_dev_command(monkeypatch, logger, console, cmdline, expected_options):
         "run_app": True,
         "test_mode": False,
         "passthrough": [],
+        "config_overrides": None,
         **expected_options,
     }
 
@@ -197,6 +202,7 @@ def test_run_command(monkeypatch, logger, console, cmdline, expected_options):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "config_overrides": None,
         **expected_options,
     }
 
@@ -218,6 +224,7 @@ def test_upgrade_command(monkeypatch, logger, console):
     assert options == {
         "list_tools": False,
         "tool_list": [],
+        "config_overrides": None,
     }
 
 
@@ -235,7 +242,7 @@ def test_bare_command(monkeypatch, logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
@@ -251,7 +258,7 @@ def test_linux_default(logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
@@ -267,7 +274,7 @@ def test_macOS_default(logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
@@ -283,7 +290,7 @@ def test_windows_default(logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 def test_bare_command_help(monkeypatch, capsys, logger, console):
@@ -299,7 +306,8 @@ def test_bare_command_help(monkeypatch, capsys, logger, console):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input] [--log]\n"
+        "usage: briefcase create macOS app [-h] [-C KEY=VALUE] [-v] [-V] [--no-input]\n"
+        "                                  [--log]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -346,7 +354,7 @@ def test_command_explicit_platform(monkeypatch, logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
@@ -364,7 +372,7 @@ def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
@@ -380,7 +388,8 @@ def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
     # Help message is for default platform and format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input] [--log]\n"
+        "usage: briefcase create macOS app [-h] [-C KEY=VALUE] [-v] [-V] [--no-input]\n"
+        "                                  [--log]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -400,7 +409,7 @@ def test_command_explicit_format(monkeypatch, logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 def test_command_unknown_format(monkeypatch, logger, console):
@@ -446,7 +455,8 @@ def test_command_explicit_format_help(monkeypatch, capsys, logger, console):
     # Help message is for default platform, but app format
     output = capsys.readouterr().out
     assert output.startswith(
-        "usage: briefcase create macOS app [-h] [-v] [-V] [--no-input] [--log]\n"
+        "usage: briefcase create macOS app [-h] [-C KEY=VALUE] [-v] [-V] [--no-input]\n"
+        "                                  [--log]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -466,7 +476,7 @@ def test_command_disable_input(monkeypatch, logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {}
+    assert options == {"config_overrides": None}
 
 
 def test_command_options(monkeypatch, capsys, logger, console):
@@ -483,7 +493,7 @@ def test_command_options(monkeypatch, capsys, logger, console):
     assert cmd.logger.verbosity == LogLevel.INFO
     assert cmd.logger is logger
     assert cmd.input is console
-    assert options == {"channel": "s3"}
+    assert options == {"config_overrides": None, "channel": "s3"}
 
 
 def test_unknown_command_options(monkeypatch, capsys, logger, console):
@@ -501,7 +511,7 @@ def test_unknown_command_options(monkeypatch, capsys, logger, console):
     output = capsys.readouterr().err
 
     assert output.startswith(
-        "usage: briefcase publish macOS Xcode [-h] [-v] [-V] [--no-input] [--log]\n"
-        "                                     [-c {s3}]\n"
+        "usage: briefcase publish macOS Xcode [-h] [-C KEY=VALUE] [-v] [-V]\n"
+        "                                     [--no-input] [--log] [-c {s3}]\n"
         "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
     )

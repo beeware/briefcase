@@ -44,10 +44,15 @@ class OpenCommand(BaseCommand):
 
         return state
 
-    def __call__(self, app: AppConfig | None = None, **options):
+    def __call__(
+        self,
+        app: AppConfig | None = None,
+        config_overrides: list[str] | None = None,
+        **options,
+    ):
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, config_overrides)
 
         if app:
             state = self.open_app(app, **options)

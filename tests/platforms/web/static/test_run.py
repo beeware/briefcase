@@ -42,6 +42,7 @@ def test_default_options(run_command):
         "host": "localhost",
         "port": 8080,
         "open_browser": True,
+        "config_overrides": None,
     }
 
 
@@ -63,6 +64,7 @@ def test_options(run_command):
         "host": "myhost",
         "port": 1234,
         "open_browser": False,
+        "config_overrides": None,
     }
 
 

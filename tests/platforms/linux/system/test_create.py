@@ -9,7 +9,9 @@ def test_default_options(create_command):
     """The default options are as expected."""
     options = create_command.parse_options([])
 
-    assert options == {}
+    assert options == {
+        "config_overrides": None,
+    }
 
     assert create_command.target_image is None
 
@@ -18,7 +20,9 @@ def test_options(create_command):
     """The extra options can be parsed."""
     options = create_command.parse_options(["--target", "somevendor:surprising"])
 
-    assert options == {}
+    assert options == {
+        "config_overrides": None,
+    }
 
     assert create_command.target_image == "somevendor:surprising"
 

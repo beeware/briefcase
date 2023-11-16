@@ -40,5 +40,12 @@ def test_new_app(new_command):
         # Tools are verified
         ("verify-tools",),
         # Run the first app
-        ("new", {"template": None, "template_branch": None}),
+        (
+            "new",
+            {
+                "config_overrides": None,
+                "template": None,
+                "template_branch": None,
+            },
+        ),
     ]

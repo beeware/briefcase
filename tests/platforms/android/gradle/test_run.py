@@ -94,6 +94,7 @@ def test_device_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
+        "config_overrides": None,
     }
 
 
@@ -115,6 +116,7 @@ def test_extra_emulator_args_option(run_command):
         "passthrough": [],
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
+        "config_overrides": None,
     }
 
 
@@ -134,6 +136,7 @@ def test_shutdown_on_exit_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
+        "config_overrides": None,
     }
 
 

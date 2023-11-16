@@ -51,6 +51,7 @@ def test_device_option(run_command):
         "test_mode": False,
         "passthrough": [],
         "appname": None,
+        "config_overrides": None,
     }
 
 
