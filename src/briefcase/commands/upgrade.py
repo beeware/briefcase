@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import sys
 from operator import attrgetter
-from typing import List, Set, Type
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -50,12 +51,12 @@ class UpgradeCommand(BaseCommand):
             help="The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded.",
         )
 
-    def get_tools_to_upgrade(self, tool_list: Set[str]) -> List[ManagedTool]:
+    def get_tools_to_upgrade(self, tool_list: set[str]) -> list[ManagedTool]:
         """Returns set of managed Tools that can be upgraded.
 
         Raises ``BriefcaseCommandError`` if user list contains any invalid tool names.
         """
-        upgrade_list: set[Type[Tool]]
+        upgrade_list: set[type[Tool]]
         tools_to_upgrade: set[ManagedTool] = set()
 
         # Validate user tool list against tool registry
@@ -94,7 +95,7 @@ class UpgradeCommand(BaseCommand):
 
         return sorted(list(tools_to_upgrade), key=attrgetter("name"))
 
-    def __call__(self, tool_list: List[str], list_tools: bool = False, **options):
+    def __call__(self, tool_list: list[str], list_tools: bool = False, **options):
         """Perform tool upgrades or list tools qualifying for upgrade.
 
         :param tool_list: List of tool names from user to upgrade.
