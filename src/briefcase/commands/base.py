@@ -11,6 +11,7 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
@@ -101,6 +102,26 @@ def split_passthrough(args):
         return args, []
     else:
         return args[:pos], args[pos + 1 :]
+
+
+def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]:
+    """Parse command line -C/--config option overrides.
+
+    :param config_overrides: The values passed in as configuration overrides. Each value
+        *should* be a "key=<valid TOML>" string.
+    :returns: A dictionary of app configuration keys to override and their new values.
+    :raises BriefcaseCommandError: if any of the values can't be parsed as valid TOML.
+    """
+    overrides = {}
+    if config_overrides:
+        for value in config_overrides:
+            try:
+                overrides.update(tomllib.loads(value))
+            except ValueError:
+                raise BriefcaseCommandError(
+                    f"Unable to parse configuration override {value}"
+                )
+    return overrides
 
 
 class BaseCommand(ABC):
@@ -530,7 +551,11 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(self, app: AppConfig | None = None):
+    def finalize(
+        self,
+        app: AppConfig | None = None,
+        config_overrides: list[str] | None = None,
+    ):
         """Finalize Briefcase configuration.
 
         This will:
@@ -544,6 +569,10 @@ a custom location for Briefcase's tools.
         :param app: If provided, the specific app configuration
             to finalize. By default, all apps will be finalized.
         """
+        # Convert any configuration overrides provided at the command line
+        # into values that can be applied to the app's config
+        overrides = parse_config_overrides(config_overrides)
+
         self.verify_host()
         self.verify_tools()
 
@@ -551,10 +580,14 @@ a custom location for Briefcase's tools.
             for app in self.apps.values():
                 if hasattr(app, "__draft__"):
                     self.finalize_app_config(app)
+                    for key, value in overrides.items():
+                        setattr(app, key, value)
                     delattr(app, "__draft__")
         else:
             if hasattr(app, "__draft__"):
                 self.finalize_app_config(app)
+                for key, value in overrides.items():
+                    setattr(app, key, value)
                 delattr(app, "__draft__")
 
     def verify_app(self, app: AppConfig):
@@ -687,6 +720,14 @@ any compatibility problems, and then add the compatibility declaration.
 
         :param parser: a stub argparse parser for the command.
         """
+        parser.add_argument(
+            "-C",
+            "--config",
+            dest="config_overrides",
+            action="append",
+            metavar="KEY=VALUE",
+            help="Override the value of the app configuration item KEY with VALUE.",
+        )
         parser.add_argument(
             "-v",
             "--verbosity",

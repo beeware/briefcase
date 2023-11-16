@@ -5,12 +5,27 @@ from briefcase.console import LogLevel
 
 def test_parse_options(base_command):
     """Command line options are parsed if provided."""
-    options = base_command.parse_options(extra=("-x", "wibble", "-r", "important"))
+    options = base_command.parse_options(
+        extra=(
+            "-x",
+            "wibble",
+            "-r",
+            "important",
+            "-C",
+            "width=10",
+            "-C",
+            "height=20",
+        )
+    )
 
     assert options == {
         "extra": "wibble",
         "mystery": None,
         "required": "important",
+        "config_overrides": [
+            "width=10",
+            "height=20",
+        ],
     }
     assert base_command.input.enabled
     assert base_command.logger.verbosity == LogLevel.INFO
