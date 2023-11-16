@@ -9,7 +9,7 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailur
 def test_run_app(run_command, first_app):
     """An app can have its logs streamed."""
     popen = mock.MagicMock()
-    popen.returncode = 0
+    popen.poll = mock.MagicMock(return_value=0)
     clean_filter = mock.MagicMock()
 
     # Invoke the stop func as part of streaming. This is to satisfy coverage.
@@ -47,7 +47,7 @@ def test_run_app(run_command, first_app):
 def test_run_app_custom_stop_func(run_command, first_app):
     """An app with a custom stop function can have its logs streamed."""
     popen = mock.MagicMock()
-    popen.returncode = 0
+    popen.poll = mock.MagicMock(return_value=0)
     clean_filter = mock.MagicMock()
     stop_func = mock.MagicMock()
     run_command.tools.subprocess.stream_output = mock.MagicMock()
