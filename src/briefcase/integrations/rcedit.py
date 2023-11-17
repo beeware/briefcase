@@ -14,7 +14,7 @@ class RCEdit(ManagedTool):
     @property
     def download_url(self) -> str:
         return (
-            "https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe"
+            "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe"
         )
 
     @property
