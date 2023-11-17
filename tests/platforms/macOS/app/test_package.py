@@ -38,7 +38,7 @@ def test_package_formats(package_command):
 
 def test_device_option(package_command):
     """The -d option can be parsed."""
-    options = package_command.parse_options(["--no-notarize"])
+    options, overrides = package_command.parse_options(["--no-notarize"])
 
     assert options == {
         "adhoc_sign": False,
@@ -47,6 +47,7 @@ def test_device_option(package_command):
         "packaging_format": "dmg",
         "update": False,
     }
+    assert overrides == {}
 
 
 def test_package_app(package_command, first_app_with_binaries, tmp_path, capsys):

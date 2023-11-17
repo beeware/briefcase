@@ -22,7 +22,7 @@ def test_no_git(update_command, monkeypatch):
 def test_update(update_command, first_app, second_app):
     """The update command can be called."""
     # Configure no command line options
-    options = update_command.parse_options([])
+    options, _ = update_command.parse_options([])
 
     update_command(**options)
 
@@ -51,7 +51,7 @@ def test_update(update_command, first_app, second_app):
 def test_update_single(update_command, first_app, second_app):
     """The update command can be called to update a single app from the config."""
     # Configure no command line options
-    options = update_command.parse_options([])
+    options, _ = update_command.parse_options([])
 
     update_command(app=update_command.apps["first"], **options)
 
@@ -74,7 +74,7 @@ def test_update_single(update_command, first_app, second_app):
 def test_update_with_requirements(update_command, first_app, second_app):
     """The update command can be called, requesting a requirements update."""
     # Configure a requirements update
-    options = update_command.parse_options(["-r"])
+    options, _ = update_command.parse_options(["-r"])
 
     update_command(**options)
 
@@ -105,7 +105,7 @@ def test_update_with_requirements(update_command, first_app, second_app):
 def test_update_with_resources(update_command, first_app, second_app):
     """The update command can be called, requesting a resources update."""
     # Configure no command line options
-    options = update_command.parse_options(["--update-resources"])
+    options, _ = update_command.parse_options(["--update-resources"])
 
     update_command(**options)
 
@@ -136,7 +136,7 @@ def test_update_with_resources(update_command, first_app, second_app):
 def test_update_with_support(update_command, first_app, second_app):
     """The update command can be called, requesting an app support update."""
     # Configure no command line options
-    options = update_command.parse_options(["--update-support"])
+    options, _ = update_command.parse_options(["--update-support"])
 
     update_command(**options)
 

@@ -12,7 +12,7 @@ def test_publish(publish_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options([])
+    options, _ = publish_command.parse_options([])
 
     # Run the publish command
     publish_command(**options)
@@ -50,7 +50,7 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options(["-c", "alternative"])
+    options, _ = publish_command.parse_options(["-c", "alternative"])
 
     # Run the publish command
     publish_command(**options)
@@ -88,7 +88,7 @@ def test_non_existent(publish_command, first_app_config, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options([])
+    options, _ = publish_command.parse_options([])
 
     # Invoking the publish command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -116,7 +116,7 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options([])
+    options, _ = publish_command.parse_options([])
 
     # Invoking the publish command raises an error
     with pytest.raises(BriefcaseCommandError):

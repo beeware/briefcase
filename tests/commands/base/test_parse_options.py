@@ -3,14 +3,50 @@ import pytest
 from briefcase.console import LogLevel
 
 
-def test_parse_options(base_command):
-    """Command line options are parsed if provided."""
-    options = base_command.parse_options(extra=("-x", "wibble", "-r", "important"))
+def test_parse_options_no_overrides(base_command):
+    """Command line options are parsed if provided without overrides."""
+    options, overrides = base_command.parse_options(
+        extra=(
+            "-x",
+            "wibble",
+            "-r",
+            "important",
+        )
+    )
 
     assert options == {
         "extra": "wibble",
         "mystery": None,
         "required": "important",
+    }
+    assert overrides == {}
+    assert base_command.input.enabled
+    assert base_command.logger.verbosity == LogLevel.INFO
+
+
+def test_parse_options_with_overrides(base_command):
+    """Command line options and overrides are parsed if provided."""
+    options, overrides = base_command.parse_options(
+        extra=(
+            "-x",
+            "wibble",
+            "-r",
+            "important",
+            "-C",
+            "width=10",
+            "-C",
+            "height=20",
+        )
+    )
+
+    assert options == {
+        "extra": "wibble",
+        "mystery": None,
+        "required": "important",
+    }
+    assert overrides == {
+        "width": 10,
+        "height": 20,
     }
     assert base_command.input.enabled
     assert base_command.logger.verbosity == LogLevel.INFO

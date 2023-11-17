@@ -831,7 +831,11 @@ class CreateCommand(BaseCommand):
         super().verify_app_tools(app)
         NativeAppContext.verify(tools=self.tools, app=app)
 
-    def __call__(self, app: AppConfig | None = None, **options) -> dict | None:
+    def __call__(
+        self,
+        app: AppConfig | None = None,
+        **options,
+    ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)

@@ -9,7 +9,7 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
     }
 
     # Configure no command line options
-    options = package_command.parse_options([])
+    options, _ = package_command.parse_options([])
 
     # Run the run command
     package_command(**options)
@@ -53,7 +53,7 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
     }
 
     # Configure no command line arguments
-    options = package_command.parse_options([])
+    options, _ = package_command.parse_options([])
 
     # Run the build command on a specific app
     package_command(first_app, **options)
@@ -98,7 +98,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
     }
 
     # Configure no command line options
-    options = package_command.parse_options([])
+    options, _ = package_command.parse_options([])
 
     # Run the package command
     package_command(**options)
@@ -159,7 +159,7 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
     }
 
     # Configure an identity option
-    options = package_command.parse_options(["--identity", "test"])
+    options, _ = package_command.parse_options(["--identity", "test"])
 
     # Run the run command
     package_command(**options)
@@ -203,7 +203,7 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     }
 
     # Configure an ad-hoc signing option
-    options = package_command.parse_options(["--adhoc-sign"])
+    options, _ = package_command.parse_options(["--adhoc-sign"])
 
     # Run the run command
     package_command(**options)
@@ -252,7 +252,7 @@ def test_adhoc_sign_args_package_two_app(
     }
 
     # Configure adhoc command line options
-    options = package_command.parse_options(["--adhoc-sign"])
+    options, _ = package_command.parse_options(["--adhoc-sign"])
 
     # Run the package command
     package_command(**options)
@@ -316,7 +316,7 @@ def test_identity_sign_args_package_two_app(
     }
 
     # Configure an identity option
-    options = package_command.parse_options(["--identity", "test"])
+    options, _ = package_command.parse_options(["--identity", "test"])
 
     # Run the run command
     package_command(**options)
@@ -376,7 +376,7 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
     }
 
     # Configure command line options with an alternate format
-    options = package_command.parse_options(["--packaging-format", "box"])
+    options, _ = package_command.parse_options(["--packaging-format", "box"])
 
     # Run the run command
     package_command(**options)
@@ -419,7 +419,7 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
     }
 
     # Configure no command line options
-    options = package_command.parse_options([])
+    options, _ = package_command.parse_options([])
 
     # Run the run command
     package_command(**options)
@@ -482,7 +482,7 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
     }
 
     # Configure an update option
-    options = package_command.parse_options(["-u"])
+    options, _ = package_command.parse_options(["-u"])
 
     # Run the run command
     package_command(**options)
@@ -549,7 +549,7 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
     }
 
     # Configure an update option
-    options = package_command.parse_options(["--update"])
+    options, _ = package_command.parse_options(["--update"])
 
     # Run the package command
     package_command(**options)
@@ -662,7 +662,7 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
     }
 
     # Configure no command line options
-    options = package_command.parse_options([])
+    options, _ = package_command.parse_options([])
 
     # Run the run command
     package_command(**options)
@@ -719,7 +719,7 @@ def test_already_packaged(package_command, first_app, tmp_path):
     create_file(artefact_path, "Packaged app")
 
     # Configure no command line options
-    options = package_command.parse_options([])
+    options, _ = package_command.parse_options([])
 
     # Run the run command
     package_command(**options)

@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import re
 import unicodedata
 from email.utils import parseaddr
-from typing import Optional
 from urllib.parse import urlparse
 
 from packaging.version import Version
@@ -75,7 +76,7 @@ class NewCommand(BaseCommand):
         """A placeholder; New command doesn't have a binary path."""
         raise NotImplementedError()
 
-    def parse_config(self, filename):
+    def parse_config(self, filename, overrides):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""
         pass
@@ -432,8 +433,8 @@ What GUI toolkit do you want to use for this project?""",
 
     def new_app(
         self,
-        template: Optional[str] = None,
-        template_branch: Optional[str] = None,
+        template: str | None = None,
+        template_branch: str | None = None,
         **options,
     ):
         """Ask questions to generate a new application, and generate a stub project from
@@ -520,8 +521,8 @@ Application '{context['formal_name']}' has been generated. To run your applicati
 
     def __call__(
         self,
-        template: Optional[str] = None,
-        template_branch: Optional[str] = None,
+        template: str | None = None,
+        template_branch: str | None = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.
