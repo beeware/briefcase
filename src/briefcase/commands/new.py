@@ -95,7 +95,7 @@ class NewCommand(BaseCommand):
         """A placeholder; New command doesn't have a binary path."""
         raise NotImplementedError()
 
-    def parse_config(self, filename):
+    def parse_config(self, filename, overrides):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""
         pass

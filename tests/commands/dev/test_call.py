@@ -65,7 +65,7 @@ def test_no_args_one_app(dev_command, first_app):
     }
 
     # Configure no command line options
-    options = dev_command.parse_options([])
+    options, _ = dev_command.parse_options([])
 
     # Run the run command
     dev_command(**options)
@@ -94,7 +94,7 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = dev_command.parse_options([])
+    options, _ = dev_command.parse_options([])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -112,7 +112,7 @@ def test_with_arg_one_app(dev_command, first_app):
     }
 
     # Configure a -a command line option
-    options = dev_command.parse_options(["-a", "first"])
+    options, _ = dev_command.parse_options(["-a", "first"])
 
     # Run the run command
     dev_command(**options)
@@ -141,7 +141,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
     }
 
     # Configure a --app command line option
-    options = dev_command.parse_options(["--app", "second"])
+    options, _ = dev_command.parse_options(["--app", "second"])
 
     # Run the run command
     dev_command(**options)
@@ -171,7 +171,7 @@ def test_bad_app_reference(dev_command, first_app, second_app):
     }
 
     # Configure a --app command line option
-    options = dev_command.parse_options(["--app", "does-not-exist"])
+    options, _ = dev_command.parse_options(["--app", "does-not-exist"])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -189,7 +189,7 @@ def test_update_requirements(dev_command, first_app):
     }
 
     # Configure a requirements update
-    options = dev_command.parse_options(["-r"])
+    options, _ = dev_command.parse_options(["-r"])
 
     # Run the run command
     dev_command(**options)
@@ -219,7 +219,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
     }
 
     # Configure no command line options
-    options = dev_command.parse_options([])
+    options, _ = dev_command.parse_options([])
 
     # Run the run command
     dev_command(**options)
@@ -250,7 +250,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
     }
 
     # Configure a requirements update
-    options = dev_command.parse_options(["-r"])
+    options, _ = dev_command.parse_options(["-r"])
 
     # Run the run command
     dev_command(**options)
@@ -280,7 +280,7 @@ def test_no_run(dev_command, first_app_uninstalled):
     }
 
     # Configure an update without run
-    options = dev_command.parse_options(["--no-run"])
+    options, _ = dev_command.parse_options(["--no-run"])
 
     # Run the run command
     dev_command(**options)
@@ -308,7 +308,7 @@ def test_run_test(dev_command, first_app):
     }
 
     # Configure the test option
-    options = dev_command.parse_options(["--test"])
+    options, _ = dev_command.parse_options(["--test"])
 
     # Run the run command
     dev_command(**options)
@@ -336,7 +336,7 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
     }
 
     # Configure the test option
-    options = dev_command.parse_options(["--test"])
+    options, _ = dev_command.parse_options(["--test"])
 
     # Run the run command
     dev_command(**options)

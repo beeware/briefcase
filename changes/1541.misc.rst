@@ -1,0 +1,1 @@
+Once the exit condition is detected while log streaming, the app is now waited upon to exit normally instead of signaling it to exit immediately.

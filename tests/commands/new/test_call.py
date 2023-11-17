@@ -21,14 +21,14 @@ def test_no_git(new_command, monkeypatch):
 
 def test_parse_config(new_command):
     """Attempting to parse the config is a no-op when invoking new."""
-    assert new_command.parse_config("some_file.toml") is None
+    assert new_command.parse_config("some_file.toml", {}) is None
 
 
 def test_new_app(new_command):
     """A new application can be created."""
 
     # Configure no command line options
-    options = new_command.parse_options([])
+    options, _ = new_command.parse_options([])
 
     # Run the run command
     new_command(**options)

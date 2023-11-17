@@ -20,6 +20,31 @@ Common options
 
 The following options are available to all commands:
 
+``-C <KEY=VALUE>`` / ``--config <KEY=VALUE>``
+---------------------------------------------
+
+Override the value of an app's configuration in ``pyproject.toml`` with the provided
+value.
+
+The key will be applied *after* (and will therefore take precedence over) any platform
+or backend-specific configuration has been merged into the app's configuration. The key
+must be a "top level" TOML key. The use of `dotted keys
+<https://toml.io/en/v1.0.0#keys>`__ to define nested configuration structures is not
+permitted.
+
+The value passed to the setting should be valid TOML. If the value being overridden is a
+string, this means you must quote the value. This may require the use of escape
+sequences at the command line to ensure the value provided to Briefcase by the shell
+includes the quotes.
+
+For example, to override the template used by the create command, you can use ``-C
+template=...``, but the value must be quoted::
+
+    briefcase create -C template=\"https://example.com/template\"
+
+The only app key that *cannot* be overridden with ``-C`` is ``app_name``, as it is used
+to identify apps.
+
 ``-h`` / ``--help``
 -------------------
 

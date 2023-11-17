@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
@@ -112,7 +113,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         app: AppConfig,
         env: dict,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **options,
     ):
         """Run the app in the dev environment.
@@ -174,11 +175,11 @@ class DevCommand(RunAppMixin, BaseCommand):
 
     def __call__(
         self,
-        appname: Optional[str] = None,
-        update_requirements: Optional[bool] = False,
-        run_app: Optional[bool] = True,
-        test_mode: Optional[bool] = False,
-        passthrough: Optional[List[str]] = None,
+        appname: str | None = None,
+        update_requirements: bool | None = False,
+        run_app: bool | None = True,
+        test_mode: bool | None = False,
+        passthrough: list[str] | None = None,
         **options,
     ):
         # Which app should we run? If there's only one defined

@@ -44,7 +44,11 @@ class OpenCommand(BaseCommand):
 
         return state
 
-    def __call__(self, app: AppConfig | None = None, **options):
+    def __call__(
+        self,
+        app: AppConfig | None = None,
+        **options,
+    ):
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)

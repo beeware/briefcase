@@ -11,6 +11,7 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
@@ -101,6 +102,38 @@ def split_passthrough(args):
         return args, []
     else:
         return args[:pos], args[pos + 1 :]
+
+
+def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]:
+    """Parse command line -C/--config option overrides.
+
+    :param config_overrides: The values passed in as configuration overrides. Each value
+        *should* be a "key=<valid TOML>" string.
+    :returns: A dictionary of app configuration keys to override and their new values.
+    :raises BriefcaseCommandError: if any of the values can't be parsed as valid TOML.
+    """
+    overrides = {}
+    if config_overrides:
+        for override in config_overrides:
+            try:
+                # Do initial checks of the key being overridden.
+                # These catch cases that would be valid TOML, but would result
+                # in invalid app configurations.
+                key, _ = override.split("=", 1)
+                if "." in key:
+                    raise BriefcaseConfigError(
+                        "Can't override multi-level configuration keys."
+                    )
+                elif key == "app_name":
+                    raise BriefcaseConfigError("The app name cannot be overridden.")
+
+                # Now actually parse the value
+                overrides.update(tomllib.loads(override))
+            except ValueError as e:
+                raise BriefcaseConfigError(
+                    f"Unable to parse configuration override {override}"
+                ) from e
+    return overrides
 
 
 class BaseCommand(ABC):
@@ -614,7 +647,8 @@ any compatibility problems, and then add the compatibility declaration.
 
         :param extra: the remaining command line arguments after the initial
             ArgumentParser runs over the command line.
-        :return: dictionary of parsed arguments for Command
+        :return: dictionary of parsed arguments for Command, and a dictionary of parsed
+            configuration overrides.
         """
         default_format = getattr(
             get_platforms().get(self.platform), "DEFAULT_OUTPUT_FORMAT", None
@@ -674,7 +708,10 @@ any compatibility problems, and then add the compatibility declaration.
         self.logger.verbosity = options.pop("verbosity")
         self.logger.save_log = options.pop("save_log")
 
-        return options
+        # Parse the configuration overrides
+        overrides = parse_config_overrides(options.pop("config_overrides"))
+
+        return options, overrides
 
     def clone_options(self, command):
         """Clone options from one command to this one.
@@ -688,11 +725,19 @@ any compatibility problems, and then add the compatibility declaration.
         :param parser: a stub argparse parser for the command.
         """
         parser.add_argument(
+            "-C",
+            "--config",
+            dest="config_overrides",
+            action="append",
+            metavar="KEY=VALUE",
+            help="Override the value of the app configuration item KEY with VALUE",
+        )
+        parser.add_argument(
             "-v",
             "--verbosity",
             action="count",
             default=0,
-            help="Enable verbose logging. Use -vv and -vvv to increase logging verbosity.",
+            help="Enable verbose logging. Use -vv and -vvv to increase logging verbosity",
         )
         parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(
@@ -780,7 +825,7 @@ any compatibility problems, and then add the compatibility declaration.
         :param parser: a stub argparse parser for the command.
         """
 
-    def parse_config(self, filename):
+    def parse_config(self, filename, overrides):
         try:
             with open(filename, "rb") as config_file:
                 # Parse the content of the pyproject.toml file, extracting
@@ -792,6 +837,8 @@ any compatibility problems, and then add the compatibility declaration.
                     output_format=self.output_format,
                 )
 
+                # Create the global config
+                global_config.update(overrides)
                 self.global_config = create_config(
                     klass=GlobalConfig,
                     config=global_config,
@@ -801,6 +848,7 @@ any compatibility problems, and then add the compatibility declaration.
                 for app_name, app_config in app_configs.items():
                     # Construct an AppConfig object with the final set of
                     # configuration options for the app.
+                    app_config.update(overrides)
                     self.apps[app_name] = create_config(
                         klass=AppConfig,
                         config=app_config,

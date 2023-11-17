@@ -26,7 +26,7 @@ def test_upgrade_exists(mock_tools, rcedit, tmp_path):
     # A download is invoked
     mock_tools.download.file.assert_called_with(
         url="https://github.com/electron/rcedit/"
-        "releases/download/v1.1.1/rcedit-x64.exe",
+        "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
         role="RCEdit",
     )
@@ -60,7 +60,7 @@ def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
     # A download was invoked
     mock_tools.download.file.assert_called_with(
         url="https://github.com/electron/rcedit/"
-        "releases/download/v1.1.1/rcedit-x64.exe",
+        "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
         role="RCEdit",
     )

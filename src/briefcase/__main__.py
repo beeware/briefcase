@@ -20,8 +20,11 @@ def main():
     try:
         Command, extra_cmdline = parse_cmdline(sys.argv[1:])
         command = Command(logger=logger, console=console)
-        options = command.parse_options(extra=extra_cmdline)
-        command.parse_config(Path.cwd() / "pyproject.toml")
+        options, overrides = command.parse_options(extra=extra_cmdline)
+        command.parse_config(
+            Path.cwd() / "pyproject.toml",
+            overrides=overrides,
+        )
         command(**options)
     except HelpText as e:
         logger.info()
