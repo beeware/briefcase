@@ -726,14 +726,14 @@ any compatibility problems, and then add the compatibility declaration.
             dest="config_overrides",
             action="append",
             metavar="KEY=VALUE",
-            help="Override the value of the app configuration item KEY with VALUE.",
+            help="Override the value of the app configuration item KEY with VALUE",
         )
         parser.add_argument(
             "-v",
             "--verbosity",
             action="count",
             default=0,
-            help="Enable verbose logging. Use -vv and -vvv to increase logging verbosity.",
+            help="Enable verbose logging. Use -vv and -vvv to increase logging verbosity",
         )
         parser.add_argument("-V", "--version", action="version", version=__version__)
         parser.add_argument(
