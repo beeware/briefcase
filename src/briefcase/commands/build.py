@@ -88,7 +88,6 @@ class BuildCommand(BaseCommand):
         update_support: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
-        config_overrides: list[str] | None = None,
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
@@ -113,7 +112,7 @@ class BuildCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, config_overrides)
+        self.finalize(app)
 
         if app:
             state = self._build_app(

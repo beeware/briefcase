@@ -12,7 +12,7 @@ def test_publish(publish_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options([])
+    options, _ = publish_command.parse_options([])
 
     # Run the publish command
     publish_command(**options)
@@ -31,21 +31,13 @@ def test_publish(publish_command, first_app, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Publish the first app to s3
-        ("publish", "first", "s3", {"config_overrides": None}),
+        ("publish", "first", "s3", {}),
         # App template is verified for second app
         ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Publish the second app to s3
-        (
-            "publish",
-            "second",
-            "s3",
-            {
-                "config_overrides": None,
-                "publish_state": "first",
-            },
-        ),
+        ("publish", "second", "s3", {"publish_state": "first"}),
     ]
 
 
@@ -58,7 +50,7 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options(["-c", "alternative"])
+    options, _ = publish_command.parse_options(["-c", "alternative"])
 
     # Run the publish command
     publish_command(**options)
@@ -77,21 +69,13 @@ def test_publish_alternative_channel(publish_command, first_app, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Publish the first app to the alternative channel
-        ("publish", "first", "alternative", {"config_overrides": None}),
+        ("publish", "first", "alternative", {}),
         # App template is verified for second app
         ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Publish the second app to the alternative channel
-        (
-            "publish",
-            "second",
-            "alternative",
-            {
-                "config_overrides": None,
-                "publish_state": "first",
-            },
-        ),
+        ("publish", "second", "alternative", {"publish_state": "first"}),
     ]
 
 
@@ -104,7 +88,7 @@ def test_non_existent(publish_command, first_app_config, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options([])
+    options, _ = publish_command.parse_options([])
 
     # Invoking the publish command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -132,7 +116,7 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
     }
 
     # Configure no command line options
-    options = publish_command.parse_options([])
+    options, _ = publish_command.parse_options([])
 
     # Invoking the publish command raises an error
     with pytest.raises(BriefcaseCommandError):

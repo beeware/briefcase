@@ -80,7 +80,7 @@ def test_binary_path(run_command, first_app_config, tmp_path):
 
 def test_device_option(run_command):
     """The -d option can be parsed."""
-    options = run_command.parse_options(["-d", "myphone"])
+    options, overrides = run_command.parse_options(["-d", "myphone"])
 
     assert options == {
         "device_or_avd": "myphone",
@@ -94,13 +94,13 @@ def test_device_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
-        "config_overrides": None,
     }
+    assert overrides == {}
 
 
 def test_extra_emulator_args_option(run_command):
     """The -d option can be parsed."""
-    options = run_command.parse_options(
+    options, overrides = run_command.parse_options(
         ["--Xemulator=-no-window", "--Xemulator=-no-audio"]
     )
 
@@ -116,13 +116,13 @@ def test_extra_emulator_args_option(run_command):
         "passthrough": [],
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
-        "config_overrides": None,
     }
+    assert overrides == {}
 
 
 def test_shutdown_on_exit_option(run_command):
     """The -d option can be parsed."""
-    options = run_command.parse_options(["--shutdown-on-exit"])
+    options, overrides = run_command.parse_options(["--shutdown-on-exit"])
 
     assert options == {
         "device_or_avd": None,
@@ -136,8 +136,8 @@ def test_shutdown_on_exit_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
-        "config_overrides": None,
     }
+    assert overrides == {}
 
 
 def test_unsupported_template_version(run_command, first_app_generated):

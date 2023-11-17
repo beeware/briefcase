@@ -12,7 +12,7 @@ def test_specific_app(build_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = build_command.parse_options([])
+    options, _ = build_command.parse_options([])
 
     # Run the build command
     build_command(first_app, **options)
@@ -43,7 +43,7 @@ def test_multiple_apps(build_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = build_command.parse_options([])
+    options, _ = build_command.parse_options([])
 
     # Run the build command
     build_command(**options)
@@ -81,7 +81,7 @@ def test_non_existent(build_command, first_app_config, second_app):
     }
 
     # Configure no command line options
-    options = build_command.parse_options([])
+    options, _ = build_command.parse_options([])
 
     # Run the build command
     build_command(**options)
@@ -125,7 +125,7 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
     }
 
     # Configure no command line options
-    options = build_command.parse_options([])
+    options, _ = build_command.parse_options([])
 
     # Run the build command
     build_command(**options)
@@ -163,7 +163,7 @@ def test_update_app(build_command, first_app, second_app):
     }
 
     # Configure a -a command line option
-    options = build_command.parse_options(["-u"])
+    options, _ = build_command.parse_options(["-u"])
 
     # Run the build command
     build_command(**options)
@@ -227,7 +227,7 @@ def test_update_app_requirements(build_command, first_app, second_app):
     }
 
     # Configure update command line options
-    options = build_command.parse_options(["-r"])
+    options, _ = build_command.parse_options(["-r"])
 
     # Run the build command
     build_command(**options)
@@ -291,7 +291,7 @@ def test_update_app_resources(build_command, first_app, second_app):
     }
 
     # Configure update command line options
-    options = build_command.parse_options(["--update-resources"])
+    options, _ = build_command.parse_options(["--update-resources"])
 
     # Run the build command
     build_command(**options)
@@ -355,7 +355,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
     }
 
     # Configure no command line options
-    options = build_command.parse_options(["-u"])
+    options, _ = build_command.parse_options(["-u"])
 
     # Run the build command
     build_command(**options)
@@ -415,7 +415,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
     }
 
     # Configure no command line options
-    options = build_command.parse_options(["-u"])
+    options, _ = build_command.parse_options(["-u"])
 
     # Run the build command
     build_command(**options)
@@ -479,7 +479,7 @@ def test_build_test(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["--test"])
+    options, _ = build_command.parse_options(["--test"])
 
     # Run the build command
     build_command(**options)
@@ -544,7 +544,7 @@ def test_build_test_no_update(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["--test", "--no-update"])
+    options, _ = build_command.parse_options(["--test", "--no-update"])
 
     # Run the build command
     build_command(**options)
@@ -587,7 +587,7 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["--test", "-r"])
+    options, _ = build_command.parse_options(["--test", "-r"])
 
     # Run the build command
     build_command(**options)
@@ -652,7 +652,7 @@ def test_build_test_update_resources(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["--test", "--update-resources"])
+    options, _ = build_command.parse_options(["--test", "--update-resources"])
 
     # Run the build command
     build_command(**options)
@@ -716,7 +716,7 @@ def test_build_invalid_update(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["-u", "--no-update"])
+    options, _ = build_command.parse_options(["-u", "--no-update"])
 
     # Run the build command
     with pytest.raises(
@@ -736,7 +736,7 @@ def test_build_invalid_update_requirements(build_command, first_app, second_app)
     }
 
     # Configure command line options
-    options = build_command.parse_options(["-r", "--no-update"])
+    options, _ = build_command.parse_options(["-r", "--no-update"])
 
     # Run the build command
     with pytest.raises(
@@ -756,7 +756,7 @@ def test_build_invalid_update_resources(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["--update-resources", "--no-update"])
+    options, _ = build_command.parse_options(["--update-resources", "--no-update"])
 
     # Run the build command
     with pytest.raises(
@@ -776,7 +776,7 @@ def test_build_invalid_update_support(build_command, first_app, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["--update-support", "--no-update"])
+    options, _ = build_command.parse_options(["--update-support", "--no-update"])
 
     # Run the build command
     with pytest.raises(
@@ -795,7 +795,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["-u", "--test"])
+    options, _ = build_command.parse_options(["-u", "--test"])
 
     # Run the build command
     build_command(**options)
@@ -856,7 +856,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
     }
 
     # Configure command line options
-    options = build_command.parse_options(["-u", "--test"])
+    options, _ = build_command.parse_options(["-u", "--test"])
 
     # Run the build command
     build_command(**options)

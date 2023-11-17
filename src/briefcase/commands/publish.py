@@ -55,7 +55,11 @@ class PublishCommand(BaseCommand):
 
         return state
 
-    def __call__(self, channel=None, **options):
+    def __call__(
+        self,
+        channel: str | None = None,
+        **options,
+    ):
         # Confirm host compatibility, that all required tools are available,
         # and that all app configurations are finalized.
         self.finalize()

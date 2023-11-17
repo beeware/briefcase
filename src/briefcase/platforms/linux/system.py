@@ -365,10 +365,10 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
     def parse_options(self, extra):
         """Extract the target_image option."""
-        options = super().parse_options(extra)
+        options, overrides = super().parse_options(extra)
         self.target_image = options.pop("target")
 
-        return options
+        return options, overrides
 
     def clone_options(self, command):
         """Clone the target_image option."""

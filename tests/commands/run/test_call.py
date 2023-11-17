@@ -11,7 +11,7 @@ def test_no_args_one_app(run_command, first_app):
     }
 
     # Configure no command line options
-    options = run_command.parse_options([])
+    options, _ = run_command.parse_options([])
 
     # Run the run command
     run_command(**options)
@@ -42,7 +42,7 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
     }
 
     # Configure no command line options
-    options = run_command.parse_options(["--", "foo", "--bar"])
+    options, _ = run_command.parse_options(["--", "foo", "--bar"])
 
     # Run the run command
     run_command(**options)
@@ -73,7 +73,7 @@ def test_no_args_two_apps(run_command, first_app, second_app):
     }
 
     # Configure no command line options
-    options = run_command.parse_options([])
+    options, _ = run_command.parse_options([])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -91,7 +91,7 @@ def test_with_arg_one_app(run_command, first_app):
     }
 
     # Configure a -a command line option
-    options = run_command.parse_options(["-a", "first"])
+    options, _ = run_command.parse_options(["-a", "first"])
 
     # Run the run command
     run_command(**options)
@@ -122,7 +122,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
     }
 
     # Configure a --app command line option
-    options = run_command.parse_options(["--app", "second"])
+    options, _ = run_command.parse_options(["--app", "second"])
 
     # Run the run command
     run_command(**options)
@@ -154,7 +154,7 @@ def test_bad_app_reference(run_command, first_app, second_app):
     }
 
     # Configure a --app command line option
-    options = run_command.parse_options(["--app", "does-not-exist"])
+    options, _ = run_command.parse_options(["--app", "does-not-exist"])
 
     # Invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
@@ -172,7 +172,7 @@ def test_create_app_before_start(run_command, first_app_config):
     }
 
     # Configure no command line options
-    options = run_command.parse_options([])
+    options, _ = run_command.parse_options([])
 
     # Run the run command
     run_command(**options)
@@ -220,7 +220,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
     }
 
     # Configure no command line options
-    options = run_command.parse_options([])
+    options, _ = run_command.parse_options([])
 
     # Run the run command
     run_command(**options)
@@ -267,7 +267,7 @@ def test_update_app(run_command, first_app):
     }
 
     # Configure an update option
-    options = run_command.parse_options(["-u"])
+    options, _ = run_command.parse_options(["-u"])
 
     # Run the run command
     run_command(**options)
@@ -314,7 +314,7 @@ def test_update_app_requirements(run_command, first_app):
     }
 
     # Configure an update option
-    options = run_command.parse_options(["-r"])
+    options, _ = run_command.parse_options(["-r"])
 
     # Run the run command
     run_command(**options)
@@ -361,7 +361,7 @@ def test_update_app_resources(run_command, first_app):
     }
 
     # Configure an update option
-    options = run_command.parse_options(["--update-resources"])
+    options, _ = run_command.parse_options(["--update-resources"])
 
     # Run the run command
     run_command(**options)
@@ -408,7 +408,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
     }
 
     # Configure an update option
-    options = run_command.parse_options(["-u"])
+    options, _ = run_command.parse_options(["-u"])
 
     # Run the run command
     run_command(**options)
@@ -456,7 +456,7 @@ def test_update_non_existent(run_command, first_app_config):
     }
 
     # Configure an update option
-    options = run_command.parse_options(["-u"])
+    options, _ = run_command.parse_options(["-u"])
 
     # Run the run command
     run_command(**options)
@@ -504,7 +504,7 @@ def test_test_mode_existing_app(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["--test"])
+    options, _ = run_command.parse_options(["--test"])
 
     # Run the run command
     run_command(**options)
@@ -551,7 +551,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["--test", "--", "foo", "--bar"])
+    options, _ = run_command.parse_options(["--test", "--", "foo", "--bar"])
 
     # Run the run command
     run_command(**options)
@@ -602,7 +602,7 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["--test", "--no-update"])
+    options, _ = run_command.parse_options(["--test", "--no-update"])
 
     # Run the run command
     run_command(**options)
@@ -637,7 +637,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["--test", "--update-requirements"])
+    options, _ = run_command.parse_options(["--test", "--update-requirements"])
 
     # Run the run command
     run_command(**options)
@@ -684,7 +684,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["--test", "--update-resources"])
+    options, _ = run_command.parse_options(["--test", "--update-resources"])
 
     # Run the run command
     run_command(**options)
@@ -731,7 +731,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
     }
 
     # Configure the test option
-    options = run_command.parse_options(["-u", "--test"])
+    options, _ = run_command.parse_options(["-u", "--test"])
 
     # Run the run command
     run_command(**options)
@@ -778,7 +778,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
     }
 
     # Configure a test option
-    options = run_command.parse_options(["--test"])
+    options, _ = run_command.parse_options(["--test"])
 
     # Run the run command
     run_command(**options)

@@ -114,12 +114,19 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
     """
     overrides = {}
     if config_overrides:
-        for value in config_overrides:
+        for override in config_overrides:
             try:
-                overrides.update(tomllib.loads(value))
+                key, _ = override.split("=", 1)
+                if "." in key:
+                    raise BriefcaseConfigError(
+                        "Can't override multi-level configuration keys"
+                    )
+
+                # Now actually parse the value
+                overrides.update(tomllib.loads(override))
             except ValueError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to parse configuration override {value}"
+                raise BriefcaseConfigError(
+                    f"Unable to parse configuration override {override}"
                 ) from e
     return overrides
 
@@ -551,11 +558,7 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(
-        self,
-        app: AppConfig | None = None,
-        config_overrides: list[str] | None = None,
-    ):
+    def finalize(self, app: AppConfig | None = None):
         """Finalize Briefcase configuration.
 
         This will:
@@ -569,10 +572,6 @@ a custom location for Briefcase's tools.
         :param app: If provided, the specific app configuration
             to finalize. By default, all apps will be finalized.
         """
-        # Convert any configuration overrides provided at the command line
-        # into values that can be applied to the app's config
-        overrides = parse_config_overrides(config_overrides)
-
         self.verify_host()
         self.verify_tools()
 
@@ -580,14 +579,10 @@ a custom location for Briefcase's tools.
             for app in self.apps.values():
                 if hasattr(app, "__draft__"):
                     self.finalize_app_config(app)
-                    for key, value in overrides.items():
-                        setattr(app, key, value)
                     delattr(app, "__draft__")
         else:
             if hasattr(app, "__draft__"):
                 self.finalize_app_config(app)
-                for key, value in overrides.items():
-                    setattr(app, key, value)
                 delattr(app, "__draft__")
 
     def verify_app(self, app: AppConfig):
@@ -647,7 +642,8 @@ any compatibility problems, and then add the compatibility declaration.
 
         :param extra: the remaining command line arguments after the initial
             ArgumentParser runs over the command line.
-        :return: dictionary of parsed arguments for Command
+        :return: dictionary of parsed arguments for Command, and a dictionary of parsed
+            configuration overrides.
         """
         default_format = getattr(
             get_platforms().get(self.platform), "DEFAULT_OUTPUT_FORMAT", None
@@ -707,7 +703,10 @@ any compatibility problems, and then add the compatibility declaration.
         self.logger.verbosity = options.pop("verbosity")
         self.logger.save_log = options.pop("save_log")
 
-        return options
+        # Parse the configuration overrides
+        overrides = parse_config_overrides(options.pop("config_overrides"))
+
+        return options, overrides
 
     def clone_options(self, command):
         """Clone options from one command to this one.
@@ -821,7 +820,7 @@ any compatibility problems, and then add the compatibility declaration.
         :param parser: a stub argparse parser for the command.
         """
 
-    def parse_config(self, filename):
+    def parse_config(self, filename, overrides):
         try:
             with open(filename, "rb") as config_file:
                 # Parse the content of the pyproject.toml file, extracting
@@ -833,6 +832,8 @@ any compatibility problems, and then add the compatibility declaration.
                     output_format=self.output_format,
                 )
 
+                # Create the global config
+                global_config.update(overrides)
                 self.global_config = create_config(
                     klass=GlobalConfig,
                     config=global_config,
@@ -842,6 +843,7 @@ any compatibility problems, and then add the compatibility declaration.
                 for app_name, app_config in app_configs.items():
                     # Construct an AppConfig object with the final set of
                     # configuration options for the app.
+                    app_config.update(overrides)
                     self.apps[app_name] = create_config(
                         klass=AppConfig,
                         config=app_config,

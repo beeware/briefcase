@@ -68,7 +68,6 @@ class UpdateCommand(CreateCommand):
         update_resources: bool = False,
         update_support: bool = False,
         test_mode: bool = False,
-        config_overrides: list[str] | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,

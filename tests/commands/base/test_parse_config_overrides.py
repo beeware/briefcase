@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands.base import parse_config_overrides
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseConfigError
 
 
 @pytest.mark.parametrize(
@@ -52,25 +52,26 @@ def test_valid_overrides(overrides, values):
 
 
 @pytest.mark.parametrize(
-    "overrides",
+    "overrides, message",
     [
         # Bare string
-        ["foobar"],
+        (["foobar"], r"Unable to parse configuration override "),
         # Unquoted string
-        ["key=foobar"],
+        (["key=foobar"], r"Unable to parse configuration override "),
         # Unbalanced quote
-        ["key='foobar"],
+        (["key='foobar"], r"Unable to parse configuration override "),
         # Unmatched brackets
-        ['key=[1, "two",'],
+        (['key=[1, "two",'], r"Unable to parse configuration override "),
         # Unmatches parentheses
-        ['key={a=1, b="two"'],
+        (['key={a=1, b="two"'], r"Unable to parse configuration override "),
         # Valid value followed by invalid
-        ["good=42", "key=foobar"],
+        (["good=42", "key=foobar"], r"Unable to parse configuration override "),
+        # Space in the key.
+        (["spacy key=42"], r"Unable to parse configuration override "),
+        # Multi-level key. This is legal TOML, but difficult to merge.
+        (["multi.level.key=42"], r"Can't override multi-level configuration keys"),
     ],
 )
-def test_invalid_overrides(overrides):
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Unable to parse configuration override ",
-    ):
+def test_invalid_overrides(overrides, message):
+    with pytest.raises(BriefcaseConfigError, match=message):
         parse_config_overrides(overrides)

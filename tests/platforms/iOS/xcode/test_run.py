@@ -39,7 +39,7 @@ def run_command(tmp_path):
 
 def test_device_option(run_command):
     """The -d option can be parsed."""
-    options = run_command.parse_options(["-d", "myphone"])
+    options, overrides = run_command.parse_options(["-d", "myphone"])
 
     assert options == {
         "udid": "myphone",
@@ -51,8 +51,8 @@ def test_device_option(run_command):
         "test_mode": False,
         "passthrough": [],
         "appname": None,
-        "config_overrides": None,
     }
+    assert overrides == {}
 
 
 def test_run_multiple_devices_input_disabled(run_command, first_app_config):

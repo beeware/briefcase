@@ -187,13 +187,13 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
         adhoc_sign=False,
         packaging_format="msi",
         update=False,
-        config_overrides=None,
     )
     expected_options = {**default_options, **signing_options}
 
-    options = package_command.parse_options(extra=cli_args)
+    options, overrides = package_command.parse_options(extra=cli_args)
 
     assert options == expected_options
+    assert overrides == {}
     assert package_command._windows_sdk_needed is is_sdk_needed
 
 

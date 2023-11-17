@@ -28,7 +28,7 @@ def run_command(tmp_path):
 
 def test_default_options(run_command):
     """The default options are as expected."""
-    options = run_command.parse_options([])
+    options, overrides = run_command.parse_options([])
 
     assert options == {
         "appname": None,
@@ -42,13 +42,13 @@ def test_default_options(run_command):
         "host": "localhost",
         "port": 8080,
         "open_browser": True,
-        "config_overrides": None,
     }
+    assert overrides == {}
 
 
 def test_options(run_command):
     """The extra options can be parsed."""
-    options = run_command.parse_options(
+    options, overrides = run_command.parse_options(
         ["--host", "myhost", "--port", "1234", "--no-browser"]
     )
 
@@ -64,8 +64,8 @@ def test_options(run_command):
         "host": "myhost",
         "port": 1234,
         "open_browser": False,
-        "config_overrides": None,
     }
+    assert overrides == {}
 
 
 def test_run(monkeypatch, run_command, first_app_built):

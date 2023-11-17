@@ -229,9 +229,9 @@ class WindowsPackageCommand(PackageCommand):
 
     def parse_options(self, extra):
         """Require the Windows SDK tool if an `identity` is specified for signing."""
-        options = super().parse_options(extra=extra)
+        options, overrides = super().parse_options(extra=extra)
         self._windows_sdk_needed = options["identity"] is not None
-        return options
+        return options, overrides
 
     def sign_file(
         self,

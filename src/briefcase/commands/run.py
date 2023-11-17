@@ -248,7 +248,6 @@ class RunCommand(RunAppMixin, BaseCommand):
         no_update: bool = False,
         test_mode: bool = False,
         passthrough: list[str] | None = None,
-        config_overrides: list[str] | None = None,
         **options,
     ) -> dict | None:
         # Which app should we run? If there's only one defined

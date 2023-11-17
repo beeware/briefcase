@@ -70,9 +70,9 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
     def parse_options(self, extra):
         """Extract the use_docker option."""
-        options = super().parse_options(extra)
+        options, overrides = super().parse_options(extra)
         self.use_docker = options.pop("use_docker")
-        return options
+        return options, overrides
 
     def clone_options(self, command):
         """Clone the use_docker option."""
