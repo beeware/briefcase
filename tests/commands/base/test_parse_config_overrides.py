@@ -69,7 +69,9 @@ def test_valid_overrides(overrides, values):
         # Space in the key.
         (["spacy key=42"], r"Unable to parse configuration override "),
         # Multi-level key. This is legal TOML, but difficult to merge.
-        (["multi.level.key=42"], r"Can't override multi-level configuration keys"),
+        (["multi.level.key=42"], r"Can't override multi-level configuration keys\."),
+        # Key that can't be overridden
+        (["app_name='foobar'"], r"The app name cannot be overridden\."),
     ],
 )
 def test_invalid_overrides(overrides, message):

@@ -116,11 +116,16 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
     if config_overrides:
         for override in config_overrides:
             try:
+                # Do initial checks of the key being overridden.
+                # These catch cases that would be valid TOML, but would result
+                # in invalid app configurations.
                 key, _ = override.split("=", 1)
                 if "." in key:
                     raise BriefcaseConfigError(
-                        "Can't override multi-level configuration keys"
+                        "Can't override multi-level configuration keys."
                     )
+                elif key == "app_name":
+                    raise BriefcaseConfigError("The app name cannot be overridden.")
 
                 # Now actually parse the value
                 overrides.update(tomllib.loads(override))
