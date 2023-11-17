@@ -117,10 +117,10 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
         for value in config_overrides:
             try:
                 overrides.update(tomllib.loads(value))
-            except ValueError:
+            except ValueError as e:
                 raise BriefcaseCommandError(
                     f"Unable to parse configuration override {value}"
-                )
+                ) from e
     return overrides
 
 
