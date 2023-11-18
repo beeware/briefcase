@@ -666,7 +666,7 @@ class Console:
             raise KeyboardInterrupt
 
 
-def select_option(options, input, prompt="> ", error="Invalid selection"):
+def select_option(options, input, prompt="> ", error="Invalid selection", default=None):
     """Prompt the user for a choice from a list of options.
 
     The options are provided as a dictionary; the values are the human-readable options,
@@ -683,6 +683,8 @@ def select_option(options, input, prompt="> ", error="Invalid selection"):
         the user's input can be easily mocked during testing.
     :param prompt: The prompt to display to the user.
     :param error: The error message to display when the user provides invalid input.
+    :param default: The default option for empty user input. The options for the user
+        start numbering at 1; so, to default to the first item, this should be "1".
     :returns: The key corresponding to the user's chosen option.
     """
     if isinstance(options, dict):
@@ -697,5 +699,7 @@ def select_option(options, input, prompt="> ", error="Invalid selection"):
         input.prompt()
 
     choices = [str(index) for index in range(1, len(ordered) + 1)]
-    index = input.selection_input(prompt=prompt, choices=choices, error_message=error)
+    index = input.selection_input(
+        prompt=prompt, choices=choices, error_message=error, default=default
+    )
     return ordered[int(index) - 1][0]

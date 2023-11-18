@@ -142,6 +142,19 @@ jobs:
         name: html-coverage-report-project
         path: htmlcov
 
+  verify-templates:
+    name: Verify Templates
+    needs: unit-tests
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    with:
+      runner-os: ${{ matrix.runner-os }}
+      framework: ${{ matrix.framework }}
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+
   verify-apps:
     name: Build app
     needs: unit-tests
@@ -158,10 +171,5 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside2", "pyside6", "ppb", "pygame" ]
+        framework: [ "toga", "pyside6", "ppb", "pygame" ]
         runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
-        exclude:
-          # Pyside2 doesn't publish ARM64 wheels, and is unlikely to ever do so.
-          # This means we can't make a universal binary.
-          - framework: "pyside2"
-            runner-os: "macos-latest"

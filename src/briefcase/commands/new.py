@@ -1,18 +1,29 @@
 from __future__ import annotations
 
 import re
+import sys
 import unicodedata
+from collections import OrderedDict
 from email.utils import parseaddr
 from urllib.parse import urlparse
 
 from packaging.version import Version
 
+if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
+    from importlib.metadata import entry_points
+else:  # pragma: no-cover-if-gte-py310
+    # Before Python 3.10, entry_points did not support the group argument;
+    # so, the backport package must be used on older versions.
+    from importlib_metadata import entry_points
+
 import briefcase
+from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
 )
+from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
 from briefcase.integrations.git import Git
 
@@ -26,7 +37,7 @@ def titlecase(s):
 
     * Capitalize *only* the first letter of each word
     * ... unless the word is an acronym (e.g., URL)
-    * ... or the word is on the exclude list ('of', 'and', 'the)
+    * ... or the word is on the exclude list ('of', 'and', 'the')
     :param s: The input string
     :returns: A capitalized string.
     """
@@ -59,6 +70,14 @@ def titlecase(s):
         else word.capitalize()
         for word in s.split(" ")
     )
+
+
+def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
+    """Loads built-in and third-party GUI bootstraps."""
+    return {
+        entry_point.name: entry_point.load()
+        for entry_point in entry_points(group="briefcase.bootstraps")
+    }
 
 
 class NewCommand(BaseCommand):
@@ -256,40 +275,26 @@ class NewCommand(BaseCommand):
                 self.input.prompt()
                 self.input.prompt(f"Invalid value; {e}")
 
-    def input_select(self, intro, variable, options):
-        """Select one from a list of options.
-
-        The first option is assumed to be the default.
-
-        :param intro: An introductory paragraph explaining the question being asked.
-        :param variable: The variable to display to the user.
-        :param options: A list of text strings, describing the available options.
-        :returns: The string content of the selected option.
-        """
-        self.input.prompt(intro)
-
-        index_choices = [str(key) for key in range(1, len(options) + 1)]
-        display_options = "\n".join(
-            f"    [{index}] {option}" for index, option in zip(index_choices, options)
+    def build_context(
+        self,
+        template_source: str,
+        template_branch: str,
+        briefcase_version: Version,
+    ) -> dict[str, str]:
+        context = self.build_app_context()
+        # Additional context for the Briefcase template pyproject.toml header to
+        # include the version of Briefcase as well as the source of the template.
+        context.update(
+            {
+                "template_source": template_source,
+                "template_branch": template_branch,
+                "briefcase_version": str(briefcase_version),
+            }
         )
-        error_message = (
-            f"Invalid selection; please enter a number between 1 and {len(options)}"
-        )
-        prompt = f"""
-Select one of the following:
+        context.update(self.build_gui_context(context=context))
+        return context
 
-{display_options}
-
-{titlecase(variable)} [1]: """
-        selection = self.input.selection_input(
-            prompt=prompt,
-            choices=index_choices,
-            default="1",
-            error_message=error_message,
-        )
-        return options[int(selection) - 1]
-
-    def build_app_context(self):
+    def build_app_context(self) -> dict[str, str]:
         """Ask the user for details about the app to be created.
 
         :returns: A context dictionary to be used in the cookiecutter project template.
@@ -385,35 +390,25 @@ up yet, you can put in a dummy URL.""",
             validator=self.validate_url,
         )
 
-        project_license = self.input_select(
-            intro="""
-What license do you want to use for this project's code?""",
-            variable="project license",
-            options=[
-                "BSD license",
-                "MIT license",
-                "Apache Software License",
-                "GNU General Public License v2 (GPLv2)",
-                "GNU General Public License v2 or later (GPLv2+)",
-                "GNU General Public License v3 (GPLv3)",
-                "GNU General Public License v3 or later (GPLv3+)",
-                "Proprietary",
-                "Other",
-            ],
-        )
-
-        gui_framework = self.input_select(
-            intro="""
-What GUI toolkit do you want to use for this project?""",
-            variable="GUI framework",
-            options=[
-                "Toga",
-                "PySide2 (does not support iOS/Android deployment)",
-                "PySide6 (does not support iOS/Android deployment)",
-                "PursuedPyBear (does not support iOS/Android deployment)",
-                "Pygame (does not support iOS/Android deployment)",
-                "None",
-            ],
+        self.input.prompt()
+        self.input.prompt("What license do you want to use for this project's code?")
+        self.input.prompt()
+        licenses = [
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ]
+        project_license = select_option(
+            prompt="Project License [1]: ",
+            input=self.input,
+            default="1",
+            options=list(zip(licenses, licenses)),
         )
 
         return {
@@ -428,8 +423,68 @@ What GUI toolkit do you want to use for this project?""",
             "bundle": bundle,
             "url": url,
             "license": project_license,
-            "gui_framework": (gui_framework.split())[0],
         }
+
+    def build_gui_context(self, context: dict[str, str]) -> dict[str, str]:
+        """Build context specific to the GUI toolkit."""
+        bootstraps = get_gui_bootstraps()
+
+        self.input.prompt()
+        self.input.prompt("What GUI toolkit do you want to use for this project?")
+        self.input.prompt()
+        bootstrap_class: type[BaseGuiBootstrap] = select_option(
+            prompt="GUI Framework [1]: ",
+            input=self.input,
+            default="1",
+            options=self._gui_bootstrap_choices(bootstraps),
+        )
+
+        gui_context = {}
+
+        if bootstrap_class is not None:
+            bootstrap = bootstrap_class(context=context)
+
+            # Iterate over the Bootstrap interface to build the context.
+            # Returning ``None`` is a special case that means the field should not be
+            # included in the context and instead deferred to the template default.
+
+            if hasattr(bootstrap, "extra_context"):
+                if (additional_context := bootstrap.extra_context()) is not None:
+                    gui_context.update(additional_context)
+
+            for context_field in bootstrap.fields:
+                if (context_value := getattr(bootstrap, context_field)()) is not None:
+                    gui_context[context_field] = context_value
+
+        return gui_context
+
+    def _gui_bootstrap_choices(self, bootstraps):
+        """Construct the list of available GUI bootstraps to display to the user."""
+        # Sort the options alphabetically first
+        ordered = OrderedDict(sorted(bootstraps.items()))
+
+        # Ensure the first 5 options are: Toga, PySide6, PursuedPyBear, Pygame
+        ordered.move_to_end("Pygame", last=False)
+        ordered.move_to_end("PursuedPyBear", last=False)
+        ordered.move_to_end("PySide6", last=False)
+        ordered.move_to_end("Toga", last=False)
+
+        # Option None should always be last
+        ordered["None"] = None
+        ordered.move_to_end("None")
+
+        # Construct the bootstrap options as they should be presented to users.
+        # The name of the bootstrap is its registered entry point name. Along with the
+        # bootstrap's name, a short message important to a user's choice can be shown
+        # also; for instance, several show "does not support iOS/Android deployment".
+        bootstrap_choices = []
+        max_len = max(map(len, ordered))
+        for name, klass in ordered.items():
+            if annotation := getattr(klass, "display_name_annotation", ""):
+                annotation = f"{' ' * (max_len - len(name))} ({annotation})"
+            bootstrap_choices.append((klass, f"{name}{annotation or ''}"))
+
+        return bootstrap_choices
 
     def new_app(
         self,
@@ -439,17 +494,12 @@ What GUI toolkit do you want to use for this project?""",
     ):
         """Ask questions to generate a new application, and generate a stub project from
         the briefcase-template."""
-        if template is None:
-            template = "https://github.com/beeware/briefcase-template"
-
         self.input.prompt()
         self.input.prompt("Let's build a new Briefcase app!")
         self.input.prompt()
 
-        context = self.build_app_context()
-
-        self.logger.info()
-        self.logger.info(f"Generating a new application '{context['formal_name']}'")
+        if template is None:
+            template = "https://github.com/beeware/briefcase-template"
 
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
@@ -459,21 +509,16 @@ What GUI toolkit do you want to use for this project?""",
         else:
             branch = template_branch
 
+        context = self.build_context(template, branch, version)
+
+        self.logger.info()
+        self.logger.info(f"Generating a new application '{context['formal_name']}'")
+
         # Make extra sure we won't clobber an existing application.
         if (self.base_path / context["app_name"]).exists():
             raise BriefcaseCommandError(
                 f"A directory named '{context['app_name']}' already exists."
             )
-
-        # Additional context for the Briefcase template pyproject.toml header to
-        # include the version of Briefcase as well as the source of the template.
-        context.update(
-            {
-                "template_source": template,
-                "template_branch": branch,
-                "briefcase_version": briefcase.__version__,
-            }
-        )
 
         try:
             self.logger.info(f"Using app template: {template}, branch {branch}")
@@ -530,5 +575,7 @@ Application '{context['formal_name']}' has been generated. To run your applicati
         self.finalize()
 
         return self.new_app(
-            template=template, template_branch=template_branch, **options
+            template=template,
+            template_branch=template_branch,
+            **options,
         )

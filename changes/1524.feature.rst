@@ -1,0 +1,1 @@
+Briefcase now supports GUI bootstrap plugins to customize how new projects are created.
