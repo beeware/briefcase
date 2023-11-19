@@ -182,7 +182,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "44"
+flatpak_runtime_version = "45"
 flatpak_sdk = "org.gnome.Sdk"
 """
 
