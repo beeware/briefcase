@@ -1,0 +1,28 @@
+[build-system]
+requires = [
+    # keep versions in sync with ../pyproject.toml
+    "setuptools==69.0.0",
+    "setuptools_scm==8.0.4",
+    "setuptools_dynamic_dependencies @ git+https://github.com/beeware/setuptools_dynamic_dependencies",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "x-briefcase-automation"
+description = "A Briefcase plugin for CI automation."
+readme = "README.md"
+license.text = "New BSD"
+classifiers = ["Private :: Do Not Upload"]
+dynamic = ["version", "dependencies"]
+
+[project.entry-points."briefcase.bootstraps"]
+"Toga Automation" = "automation.bootstraps.toga:TogaAutomationBootstrap"
+"PySide6 Automation" = "automation.bootstraps.pyside6:PySide6AutomationBootstrap"
+"Pygame Automation" = "automation.bootstraps.pygame:PygameAutomationBootstrap"
+"PursuedPyBear Automation" = "automation.bootstraps.pursuedpybear:PursuedPyBearAutomationBootstrap"
+
+[tool.setuptools_scm]
+root = "../"
+
+[tool.setuptools_dynamic_dependencies]
+dependencies = ["briefcase == {version}"]
