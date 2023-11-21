@@ -67,7 +67,6 @@ from toga.style.pack import COLUMN, ROW
 
 
 class {{ cookiecutter.class_name }}(toga.App):
-
     def startup(self):
         """Construct and show the Toga application.
 
@@ -841,7 +840,6 @@ from toga.style.pack import COLUMN, ROW
 
 
 class {{ cookiecutter.class_name }}(toga.App):
-
     def startup(self):
         """Construct and show the Toga application.
 
