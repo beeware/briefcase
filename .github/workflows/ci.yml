@@ -142,8 +142,8 @@ jobs:
         name: html-coverage-report-project
         path: htmlcov
 
-  verify-templates:
-    name: Verify Templates
+  verify-projects:
+    name: Verify project
     needs: unit-tests
     uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
