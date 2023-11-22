@@ -1,6 +1,173 @@
 [build-system]
-requires = ["setuptools>=67", "setuptools_scm[toml]>=7.0"]
+requires = [
+    "setuptools==69.0.0",
+    "setuptools_scm==8.0.4",
+]
 build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "briefcase"
+description = "Tools to support converting a Python project into a standalone native application."
+readme = "README.rst"
+requires-python = ">= 3.8"
+license.text = "New BSD"
+authors = [
+    {name="Russell Keith-Magee", email="russell@keith-magee.com"},
+]
+maintainers = [
+    {name="BeeWare Team", email="team@beeware.org"},
+]
+keywords = [
+    "app",
+    "packaging",
+    "installer",
+    "macOS",
+    "iOS",
+    "android",
+    "mobile",
+    "windows",
+    "linux",
+    "flatpak",
+    "appimage",
+    "deb",
+    "rpm",
+    "pkg",
+    "tvOS",
+    "watch",
+    "watchOS",
+    "wearos",
+    "web",
+    "pyscript",
+    "pyodide",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+dependencies = [
+    # Dependencies required at runtime are set as ranges to ensure maximum
+    # compatibility with the end-user's development environment.
+    #
+    # Any dependency that is part of the "core python toolchain" (e.g. pip,
+    # wheel) specify a minimum version, but no maximum, because we always want
+    # the most recent version.
+    "importlib_metadata >= 4.4; python_version <= '3.9'",
+    "packaging >= 22.0",
+    "pip >= 23.1.1",
+    "setuptools >= 60",
+    "wheel >= 0.37",
+    "build >= 0.10",
+    # For the remaining packages: We set the lower version limit to the lowest
+    # possible version that satisfies our API needs. If the package uses semver,
+    # we set a limit to prevent the next major version (which will potentially
+    # cause API breakages). If the package uses calver, we don't pin the upper
+    # version, as the upper version provides no basis for determining API
+    # stability.
+    "cookiecutter >= 2.3.1, < 3.0",
+    "dmgbuild >= 1.6, < 2.0; sys_platform == 'darwin'",
+    "GitPython >= 3.1, < 4.0",
+    "platformdirs >= 2.6, < 5.0",
+    "psutil >= 5.9, < 6.0",
+    "requests >= 2.28, < 3.0",
+    "rich >= 12.6, < 14.0",
+    "tomli >= 2.0, < 3.0; python_version <= '3.10'",
+    "tomli_w >= 1.0, < 2.0",
+]
+
+[project.optional-dependencies]
+# Extras used by developers *of* briefcase are pinned to specific versions to
+# ensure environment consistency.
+dev = [
+    "coverage[toml] == 7.3.2",
+    "coverage-conditional-plugin == 0.9.0",
+    "pre-commit == 3.5.0",
+    "pytest == 7.4.3",
+    "pytest-xdist == 3.4.0",
+    "setuptools_scm == 8.0.4",
+    "tox == 4.11.3",
+]
+docs = [
+    "furo == 2023.9.10",
+    "pyenchant == 3.2.2",
+    # Sphinx 7.2 deprecated support for Python 3.8
+    "sphinx == 7.1.2 ; python_version < '3.9'",
+    "sphinx == 7.2.6 ; python_version >= '3.9'",
+    "sphinx_tabs == 3.4.4",
+    "sphinx-autobuild == 2021.3.14",
+    "sphinx-copybutton == 0.5.2",
+    "sphinxcontrib-spelling == 8.0.0",
+]
+
+[project.urls]
+Homepage = "https://beeware.org/briefcase"
+Funding = "https://beeware.org/contributing/membership/"
+Documentation = "https://briefcase.readthedocs.io/en/latest/"
+Tracker = "https://github.com/beeware/briefcase/issues"
+Source = "https://github.com/beeware/briefcase"
+
+[project.scripts]
+briefcase = "briefcase.__main__:main"
+
+[project.entry-points."briefcase.bootstraps"]
+Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
+PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
+PursuedPyBear = "briefcase.bootstraps.pursuedpybear:PursuedPyBearGuiBootstrap"
+Pygame = "briefcase.bootstraps.pygame:PygameGuiBootstrap"
+
+[project.entry-points."briefcase.platforms"]
+android = "briefcase.platforms.android"
+iOS = "briefcase.platforms.iOS"
+linux = "briefcase.platforms.linux"
+macOS = "briefcase.platforms.macOS"
+# tvOS = "briefcase.platforms.tvOS"
+# watchOS = "briefcase.platforms.watchOS"
+# wearos = "briefcase.platforms.wearos"
+web = "briefcase.platforms.web"
+windows = "briefcase.platforms.windows"
+
+[project.entry-points."briefcase.formats.android"]
+gradle = "briefcase.platforms.android.gradle"
+
+[project.entry-points."briefcase.formats.iOS"]
+xcode = "briefcase.platforms.iOS.xcode"
+
+[project.entry-points."briefcase.formats.linux"]
+appimage = "briefcase.platforms.linux.appimage"
+flatpak = "briefcase.platforms.linux.flatpak"
+system = "briefcase.platforms.linux.system"
+# snap = "briefcase.platforms.linux.snap"
+
+[project.entry-points."briefcase.formats.macOS"]
+app = "briefcase.platforms.macOS.app"
+xcode = "briefcase.platforms.macOS.xcode"
+
+# [project.entry-points."briefcase.formats.tvOS"]
+# xcode = "briefcase.platforms.tvOS.xcode"
+
+# [project.entry-points."briefcase.formats.watchOS"]
+# xcode = "briefcase.platforms.watchOS.xcode"
+
+# [project.entry-points."briefcase.formats.wearos"]
+# gradle = "briefcase.platforms.wearos.gradle"
+
+[project.entry-points."briefcase.formats.web"]
+static = "briefcase.platforms.web.static"
+
+[project.entry-points."briefcase.formats.windows"]
+app = "briefcase.platforms.windows.app"
+visualstudio = "briefcase.platforms.windows.visualstudio"
 
 [tool.coverage.run]
 plugins = ["coverage_conditional_plugin"]

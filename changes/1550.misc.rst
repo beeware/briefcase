@@ -1,0 +1,1 @@
+The project was moved to a pure PEP621 configuration.

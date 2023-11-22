@@ -294,9 +294,9 @@ class LinuxDeployURLPlugin(LinuxDeployPluginBase, Tool):
         # Build a hash of the download URL; this hash is used to
         # identify plugins downloaded from different sources. We don't
         # just use the domain, because we need:
-        #  * http://example.com/release/linuxdeploy-plugin-foobar.sh
-        #  * http://example.com/dev/linuxdeploy-plugin-foobar.sh
-        #  * http://example.com/archive/linuxdeploy-plugin-foobar.sh?version=1
+        #  * https://example.com/release/linuxdeploy-plugin-foobar.sh
+        #  * https://example.com/dev/linuxdeploy-plugin-foobar.sh
+        #  * https://example.com/archive/linuxdeploy-plugin-foobar.sh?version=1
         # to hash as different plugins, because we lose the path/query
         # component when we cache the plugin locally.
         self.hash = hashlib.sha256(url.encode("utf-8"))
