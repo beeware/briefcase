@@ -165,7 +165,7 @@ class WindowsPackageCommand(PackageCommand):
         "Your app will be reported as coming from an unverified publisher."
     )
 
-    IDENTITY_HELP = "The 40-digit hex checksum of the code signing identity to use."
+    IDENTITY_HELP = "The 40-digit hex checksum of the code signing identity to use"
 
     @property
     def packaging_formats(self):
@@ -185,7 +185,7 @@ class WindowsPackageCommand(PackageCommand):
         super().add_options(parser)
         parser.add_argument(
             "--file-digest",
-            help="File digest algorithm to use for code signing; defaults to sha256.",
+            help="File digest algorithm to use for code signing; defaults to sha256",
             default="sha256",
             required=False,
         )
@@ -193,7 +193,7 @@ class WindowsPackageCommand(PackageCommand):
             "--use-local-machine-stores",
             help=(
                 "Specifies the code signing certificate is stored in the Local Machine's "
-                "stores instead of the Current User's."
+                "stores instead of the Current User's"
             ),
             action="store_true",
             dest="use_local_machine",
@@ -203,7 +203,7 @@ class WindowsPackageCommand(PackageCommand):
             "--cert-store",
             help=(
                 "The internal Windows name for the certificate store containing the certificate "
-                "for code signing; defaults to 'My' for the Personal store."
+                "for code signing; defaults to 'My' for the Personal store"
             ),
             default="My",
             required=False,
@@ -212,7 +212,7 @@ class WindowsPackageCommand(PackageCommand):
             "--timestamp-url",
             help=(
                 "URL for the Timestamp Authority server to timestamp the code signing; "
-                "defaults to timestamp.digicert.com."
+                "defaults to timestamp.digicert.com"
             ),
             default="http://timestamp.digicert.com",
             required=False,
@@ -221,7 +221,7 @@ class WindowsPackageCommand(PackageCommand):
             "--timestamp-digest",
             help=(
                 "Digest algorithm to request the Timestamp Authority server uses "
-                "for the timestamp for code signing; defaults to sha256."
+                "for the timestamp for code signing; defaults to sha256"
             ),
             default="sha256",
             required=False,

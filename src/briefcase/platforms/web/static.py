@@ -290,7 +290,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             "--no-browser",
             action="store_false",
             dest="open_browser",
-            help="Don't open a web browser on the newly opened server.",
+            help="Don't open a web browser on the newly opened server",
             required=False,
         )
 

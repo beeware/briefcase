@@ -43,6 +43,7 @@ def test_question_sequence_toga(new_command):
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -268,6 +269,7 @@ def test_question_sequence_pyside6(new_command):
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -458,6 +460,7 @@ def test_question_sequence_pursuedpybear(new_command):
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -625,6 +628,7 @@ def test_question_sequence_pygame(new_command):
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -793,6 +797,7 @@ def test_question_sequence_none(new_command):
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -813,6 +818,201 @@ def test_question_sequence_none(new_command):
     )
 
 
+def test_question_sequence_with_overrides(
+    new_command,
+    mock_builtin_bootstraps,
+    monkeypatch,
+):
+    """Questions are asked, a context is constructed."""
+
+    # Prime answers for none of the questions.
+    new_command.input.values = []
+
+    class GuiBootstrap:
+        fields = []
+
+        def __init__(self, context):
+            pass
+
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(
+            return_value=dict(
+                **mock_builtin_bootstraps,
+                **{"Custom GUI": GuiBootstrap},
+            ),
+        ),
+    )
+
+    context = new_command.build_context(
+        template_source="https://example.com/beeware/briefcase-template",
+        template_branch="my-branch",
+        briefcase_version=Version("1.1.1.post1"),
+        project_overrides=dict(
+            formal_name="My Override App",
+            app_name="myoverrideapp",
+            bundle="net.example",
+            project_name="My Override Project",
+            description="My override description",
+            author="override, author",
+            author_email="author@override.tld",
+            url="https://override.example.com",
+            license="MIT license",
+            bootstrap="Custom GUI",
+        ),
+    )
+
+    assert context == dict(
+        app_name="myoverrideapp",
+        author="override, author",
+        author_email="author@override.tld",
+        bundle="net.example",
+        class_name="MyOverrideApp",
+        description="My override description",
+        formal_name="My Override App",
+        license="MIT license",
+        module_name="myoverrideapp",
+        project_name="My Override Project",
+        url="https://override.example.com",
+        template_source="https://example.com/beeware/briefcase-template",
+        template_branch="my-branch",
+        briefcase_version="1.1.1.post1",
+    )
+
+
+def test_question_sequence_with_bad_license_override(
+    new_command,
+    mock_builtin_bootstraps,
+    monkeypatch,
+):
+    """A bad override for license uses user input instead."""
+
+    # Prime answers for all the questions.
+    new_command.input.values = [
+        "4",  # license
+    ]
+
+    class GuiBootstrap:
+        fields = []
+
+        def __init__(self, context):
+            pass
+
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(
+            return_value=dict(
+                **mock_builtin_bootstraps,
+                **{"Custom GUI": GuiBootstrap},
+            ),
+        ),
+    )
+
+    context = new_command.build_context(
+        template_source="https://example.com/beeware/briefcase-template",
+        template_branch="my-branch",
+        briefcase_version=Version("1.1.1.post1"),
+        project_overrides=dict(
+            formal_name="My Override App",
+            app_name="myoverrideapp",
+            bundle="net.example",
+            project_name="My Override Project",
+            description="My override description",
+            author="override, author",
+            author_email="author@override.tld",
+            url="https://override.example.com",
+            license="BAD i don't exist license",
+            bootstrap="Custom GUI",
+        ),
+    )
+
+    assert context == dict(
+        app_name="myoverrideapp",
+        author="override, author",
+        author_email="author@override.tld",
+        bundle="net.example",
+        class_name="MyOverrideApp",
+        description="My override description",
+        formal_name="My Override App",
+        license="GNU General Public License v2 (GPLv2)",
+        module_name="myoverrideapp",
+        project_name="My Override Project",
+        url="https://override.example.com",
+        template_source="https://example.com/beeware/briefcase-template",
+        template_branch="my-branch",
+        briefcase_version="1.1.1.post1",
+    )
+
+
+def test_question_sequence_with_bad_bootstrap_override(
+    new_command,
+    mock_builtin_bootstraps,
+    monkeypatch,
+):
+    """A bad override for the bootstrap uses user input instead."""
+
+    # Prime answers for none of the questions.
+    new_command.input.values = [
+        "6",  # None
+    ]
+
+    class GuiBootstrap:
+        # if this custom bootstrap is chosen, the lack of
+        # requires() would cause an error
+        fields = ["requires"]
+
+        def __init__(self, context):
+            pass
+
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(
+            return_value=dict(
+                **mock_builtin_bootstraps,
+                **{"Custom GUI": GuiBootstrap},
+            ),
+        ),
+    )
+
+    context = new_command.build_context(
+        template_source="https://example.com/beeware/briefcase-template",
+        template_branch="my-branch",
+        briefcase_version=Version("1.1.1.post1"),
+        project_overrides=dict(
+            formal_name="My Override App",
+            app_name="myoverrideapp",
+            bundle="net.example",
+            project_name="My Override Project",
+            description="My override description",
+            author="override, author",
+            author_email="author@override.tld",
+            url="https://override.example.com",
+            license="MIT license",
+            bootstrap="BAD i don't exist GUI",
+        ),
+    )
+
+    assert context == dict(
+        app_name="myoverrideapp",
+        author="override, author",
+        author_email="author@override.tld",
+        bundle="net.example",
+        class_name="MyOverrideApp",
+        description="My override description",
+        formal_name="My Override App",
+        license="MIT license",
+        module_name="myoverrideapp",
+        project_name="My Override Project",
+        url="https://override.example.com",
+        template_source="https://example.com/beeware/briefcase-template",
+        template_branch="my-branch",
+        briefcase_version="1.1.1.post1",
+    )
+
+
 def test_question_sequence_with_no_user_input(new_command):
     """If no user input is provided, all user inputs are taken as default."""
 
@@ -822,6 +1022,7 @@ def test_question_sequence_with_no_user_input(new_command):
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -1077,6 +1278,7 @@ def test_question_sequence_custom_bootstrap(
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(
@@ -1148,6 +1350,7 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
         template_source="https://example.com/beeware/briefcase-template",
         template_branch="my-branch",
         briefcase_version=Version("1.1.1.post1"),
+        project_overrides={},
     )
 
     assert context == dict(

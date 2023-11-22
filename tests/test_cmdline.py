@@ -101,6 +101,7 @@ def test_unknown_command():
             {
                 "template": None,
                 "template_branch": None,
+                "project_overrides": None,
             },
             {},
         ),
@@ -109,6 +110,7 @@ def test_unknown_command():
             {
                 "template": "path/to/template",
                 "template_branch": "experiment",
+                "project_overrides": None,
             },
             {
                 "version": "1.2.3",
