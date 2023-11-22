@@ -545,6 +545,7 @@ def _test_app_requirements_paths(
         "git+https://github.com/project/package@some-branch#egg=my-package",
         # URL references to wheels
         "http://example.com/path/to/mypackage-1.2.3-py3-none-any.whl",
+        "https://example.com/path/to/mypackage-1.2.3-py3-none-any.whl",
         # Zip file source installs
         "my-package @ https://example.com/path/to/1.2.3.zip",
     ],

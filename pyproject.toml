@@ -111,9 +111,9 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "http://beeware.org/briefcase"
+Homepage = "https://beeware.org/briefcase"
 Funding = "https://beeware.org/contributing/membership/"
-Documentation = "http://briefcase.readthedocs.io/en/latest/"
+Documentation = "https://briefcase.readthedocs.io/en/latest/"
 Tracker = "https://github.com/beeware/briefcase/issues"
 Source = "https://github.com/beeware/briefcase"
 

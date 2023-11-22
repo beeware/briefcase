@@ -5,7 +5,7 @@ Here are some tips for working on this documentation. You're welcome to add
 more and help us out!
 
 First of all, you should check the `Restructured Text (reST) and Sphinx
-CheatSheet <http://thomas-cokelaer.info/tutorials/sphinx/rest_syntax.html>`_ to
+CheatSheet <https://thomas-cokelaer.info/tutorials/sphinx/rest_syntax.html>`_ to
 learn how to write your .rst file.
 
 Create a .rst file
