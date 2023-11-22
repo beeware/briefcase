@@ -9,6 +9,7 @@ class PygameGuiBootstrap(BaseGuiBootstrap):
 import importlib.metadata
 import os
 import sys
+from pathlib import Path
 
 import pygame
 
@@ -18,14 +19,14 @@ WHITE = (255, 255, 255)
 
 
 def main():
-    # Linux desktop environments use app's .desktop file to integrate the app
-    # to their application menus. The .desktop file of this app will include
-    # StartupWMClass key, set to app's formal name, which helps associate
+    # Linux desktop environments use an app's .desktop file to integrate the app
+    # in to their application menus. The .desktop file of this app will include
+    # the StartupWMClass key, set to app's formal name. This helps associate the
     # app's windows to its menu item.
     #
-    # For association to work any windows of the app must have WMCLASS
-    # property set to match the value set in app's desktop file. For PPB this
-    # is set using environment variable.
+    # For association to work, any windows of the app must have WMCLASS property
+    # set to match the value set in app's desktop file. For PyGame, this is set
+    # using the SDL_VIDEO_X11_WMCLASS environment variable.
 
     # Find the name of the module that was used to start the app
     app_module = sys.modules["__main__"].__package__
@@ -33,6 +34,13 @@ def main():
     metadata = importlib.metadata.metadata(app_module)
 
     os.environ["SDL_VIDEO_X11_WMCLASS"] = metadata["Formal-Name"]
+
+    # Set the app's runtime icon
+    pygame.display.set_icon(
+        pygame.image.load(
+            Path(__file__).parent / "resources" / "{{ cookiecutter.app_name }}.png"
+        )
+    )
 
     pygame.init()
     pygame.display.set_caption(metadata["Formal-Name"])
