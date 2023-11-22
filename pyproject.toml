@@ -11,7 +11,7 @@ name = "briefcase"
 description = "Tools to support converting a Python project into a standalone native application."
 readme = "README.rst"
 requires-python = ">= 3.8"
-license.file = "LICENSE"
+license.text = "New BSD"
 authors = [
     {name="Russell Keith-Magee", email="russell@keith-magee.com"},
 ]
@@ -111,7 +111,7 @@ docs = [
 ]
 
 [project.urls]
-Project = "http://beeware.org/briefcase"
+Homepage = "http://beeware.org/briefcase"
 Funding = "https://beeware.org/contributing/membership/"
 Documentation = "http://briefcase.readthedocs.io/en/latest/"
 Tracker = "https://github.com/beeware/briefcase/issues"
