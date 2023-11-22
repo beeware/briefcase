@@ -37,9 +37,7 @@ def main():
 
     # Set the app's runtime icon
     pygame.display.set_icon(
-        pygame.image.load(
-            Path(__file__).parent / "resources" / "{{ cookiecutter.app_name }}.png"
-        )
+        pygame.image.load(Path(__file__).parent / "resources" / "{{ cookiecutter.app_name }}.png")
     )
 
     pygame.init()
