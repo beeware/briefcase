@@ -1,0 +1,1 @@
+New virtual devices for the Android emulator are created using the Pixel 7 Pro skin.
