@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.console import InputDisabled
+from tests.utils import default_rich_prompt
 
 
 @pytest.mark.parametrize(
@@ -19,7 +20,7 @@ def test_text_input(console, value, expected):
     actual = console.text_input(prompt=prompt, default=default)
 
     assert actual == expected
-    console.input.assert_called_once_with(prompt, markup=False)
+    console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
 
 
 def test_disabled(disabled_console):
