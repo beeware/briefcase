@@ -42,13 +42,13 @@ class UpgradeCommand(BaseCommand):
             "--list",
             dest="list_tools",
             action="store_true",
-            help="List the Briefcase-managed tools that are currently installed.",
+            help="List the Briefcase-managed tools that are currently installed",
         )
         parser.add_argument(
             "tool_list",
             metavar="tool",
             nargs="*",
-            help="The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded.",
+            help="The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded",
         )
 
     def get_tools_to_upgrade(self, tool_list: set[str]) -> list[ManagedTool]:

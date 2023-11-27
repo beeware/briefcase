@@ -239,8 +239,10 @@ class GradleRunCommand(GradleMixin, RunCommand):
             "-d",
             "--device",
             dest="device_or_avd",
-            help="The device to target; either a device ID for a physical device, "
-            " or an AVD name ('@emulatorName') ",
+            help=(
+                "The device to target; either a device ID for a physical device, "
+                " or an AVD name ('@emulatorName') "
+            ),
             required=False,
         )
         parser.add_argument(
@@ -253,7 +255,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         parser.add_argument(
             "--shutdown-on-exit",
             action="store_true",
-            help="Shutdown the emulator on exit.",
+            help="Shutdown the emulator on exit",
             required=False,
         )
 

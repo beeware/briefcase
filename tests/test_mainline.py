@@ -75,7 +75,9 @@ def test_command(monkeypatch, tmp_path, capsys):
     assert main() == 0
 
     output = capsys.readouterr().out
-    assert output.startswith("\nGenerating a new application 'Hello World'\n")
+    assert output.startswith(
+        "\n[helloworld] Generating a new application 'Hello World'"
+    )
 
     # No log file was written
     assert len(list(tmp_path.glob(f"{Log.LOG_DIR}/briefcase.*.log"))) == 0

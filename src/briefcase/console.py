@@ -657,13 +657,19 @@ class Console:
         """Present input() interface."""
         if not self.enabled:
             raise InputDisabled()
+
+        # make the prompt *bold* if it doesn't already contain markup
+        escaped_prompt = f"[bold]{escape(prompt)}[/bold]" if not markup else prompt
+
         try:
-            input_value = self.input(prompt, markup=markup)
-            self.print.to_log(prompt)
-            self.print.to_log(f"User input: {input_value}")
-            return input_value
+            input_value = self.input(escaped_prompt, markup=True)
         except EOFError:
             raise KeyboardInterrupt
+
+        self.print.to_log(prompt)
+        self.print.to_log(f"User input: {input_value}")
+
+        return input_value
 
 
 def select_option(options, input, prompt="> ", error="Invalid selection", default=None):

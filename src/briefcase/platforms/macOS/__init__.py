@@ -478,11 +478,11 @@ or
 class macOSPackageMixin(macOSSigningMixin):
     ADHOC_SIGN_HELP = (
         "Perform ad-hoc signing on the app. "
-        "The app will only run on this machine; it cannot be redistributed to others."
+        "The app will only run on this machine; it cannot be redistributed to others"
     )
     IDENTITY_HELP = (
         "The code signing identity to use; either the 40-digit hex "
-        "checksum, or the full name of the identity."
+        "checksum, or the full name of the identity"
     )
 
     @property

@@ -65,7 +65,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             dest="run_app",
             action="store_false",
             default=True,
-            help="Do not run the app, just install requirements.",
+            help="Do not run the app, just install requirements",
         )
         parser.add_argument(
             "--test",

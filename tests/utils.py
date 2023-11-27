@@ -8,6 +8,8 @@ import zipfile
 from email.message import EmailMessage
 from pathlib import Path
 
+from rich.markup import escape
+
 from briefcase.console import Console, InputDisabled
 
 
@@ -22,6 +24,11 @@ class DummyConsole(Console):
             raise InputDisabled()
         self.prompts.append(prompt)
         return self.values.pop(0)
+
+
+def default_rich_prompt(prompt: str) -> str:
+    """Formats a prompt as what is actually passed to Rich."""
+    return f"[bold]{escape(prompt)}[/bold]"
 
 
 def create_file(filepath, content, mode="w", chmod=None):

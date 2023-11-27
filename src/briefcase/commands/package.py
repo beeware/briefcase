@@ -11,8 +11,8 @@ class PackageCommand(BaseCommand):
     command = "package"
     description = "Package an app for distribution."
 
-    ADHOC_SIGN_HELP = "Ignored; signing is not supported."
-    IDENTITY_HELP = "Ignored; signing is not supported."
+    ADHOC_SIGN_HELP = "Ignored; signing is not supported"
+    IDENTITY_HELP = "Ignored; signing is not supported"
 
     @property
     def packaging_formats(self):
@@ -107,13 +107,13 @@ class PackageCommand(BaseCommand):
             "-u",
             "--update",
             action="store_true",
-            help="Update the app before building.",
+            help="Update the app before building",
         )
         parser.add_argument(
             "-p",
             "--packaging-format",
             dest="packaging_format",
-            help="Packaging format to use.",
+            help="Packaging format to use",
             default=self.default_packaging_format,
             choices=self.packaging_formats,
         )

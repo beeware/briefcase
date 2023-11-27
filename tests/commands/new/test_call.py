@@ -24,11 +24,22 @@ def test_parse_config(new_command):
     assert new_command.parse_config("some_file.toml", {}) is None
 
 
-def test_new_app(new_command):
+@pytest.mark.parametrize(
+    "cmdline, overrides",
+    [
+        ([], {}),
+        (["-Q", "license=MIT"], {"license": "MIT"}),
+        (
+            ["-Q", "license=MIT", "-Q", "bootstrap=Toga"],
+            {"license": "MIT", "bootstrap": "Toga"},
+        ),
+    ],
+)
+def test_new_app(new_command, cmdline, overrides):
     """A new application can be created."""
 
     # Configure no command line options
-    options, _ = new_command.parse_options([])
+    options, _ = new_command.parse_options(cmdline)
 
     # Run the run command
     new_command(**options)
@@ -40,5 +51,8 @@ def test_new_app(new_command):
         # Tools are verified
         ("verify-tools",),
         # Run the first app
-        ("new", {"template": None, "template_branch": None}),
+        (
+            "new",
+            {"template": None, "template_branch": None, "project_overrides": overrides},
+        ),
     ]

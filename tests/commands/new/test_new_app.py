@@ -62,8 +62,8 @@ def test_new_app(
     new_command.new_app()
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
@@ -121,8 +121,8 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
         new_command.new_app()
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
 
     # The cookiecutter cache is updated once
     new_command.update_cookiecutter_cache.assert_called_once_with(
@@ -189,8 +189,8 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     new_command.new_app()
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
     # Template is updated
     assert new_command.update_cookiecutter_cache.mock_calls == [
         mock.call(
@@ -273,8 +273,8 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     new_command.new_app(template="https://example.com/other.git")
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
@@ -332,8 +332,8 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
         new_command.new_app(template="https://example.com/other.git")
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
@@ -392,8 +392,8 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
         new_command.new_app(template="https://example.com/other.git")
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
 
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
@@ -447,8 +447,8 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
     new_command.new_app(template_branch="experimental")
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
     # Template is updated
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
@@ -474,6 +474,72 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             "pyproject_requires": "toga",
         },
     )
+
+
+def test_new_app_unused_project_overrides(
+    monkeypatch,
+    new_command,
+    tmp_path,
+    capsys,
+):
+    """The user is informed of unused project configuration overrides."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.build_gui_context = mock.MagicMock(
+        return_value={
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        }
+    )
+    new_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="~/.cookiecutters/briefcase-template"
+    )
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+
+    # Create the new app, using the default template.
+    new_command.new_app(project_overrides={"unused": "override"})
+
+    # App context is constructed
+    new_command.build_app_context.assert_called_once_with({"unused": "override"})
+    new_command.build_gui_context.assert_called_once_with(
+        app_context, {"unused": "override"}
+    )
+    # Template is updated
+    new_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://github.com/beeware/briefcase-template",
+        branch="v37.42.7",
+    )
+    # Cookiecutter is invoked
+    new_command.tools.cookiecutter.assert_called_once_with(
+        "~/.cookiecutters/briefcase-template",
+        no_input=True,
+        output_dir=os.fsdecode(tmp_path),
+        checkout="v37.42.7",
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context
+            # should now also contain the
+            # default template and branch
+            "template_source": "https://github.com/beeware/briefcase-template",
+            "template_branch": "v37.42.7",
+            "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        },
+    )
+
+    unused_project_override_warning = (
+        "WARNING: These project configuration overrides were not used:\n\n"
+        "    unused = override"
+    )
+    assert unused_project_override_warning in capsys.readouterr().out
 
 
 def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
@@ -506,8 +572,8 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
         new_command.new_app()
 
     # App context is constructed
-    new_command.build_app_context.assert_called_once_with()
-    new_command.build_gui_context.assert_called_once_with(context=app_context)
+    new_command.build_app_context.assert_called_once_with(None)
+    new_command.build_gui_context.assert_called_once_with(app_context, None)
     # Template won't be updated or unrolled
     # Cookiecutter was *not* invoked
     assert new_command.update_cookiecutter_cache.call_count == 0

@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.console import InputDisabled
+from tests.utils import default_rich_prompt
 
 
 @pytest.mark.parametrize(
@@ -30,7 +31,7 @@ def test_boolean_input(console, user_input, expected):
     result = console.boolean_input(question=question)
 
     assert result == expected
-    console.input.assert_called_once_with(prompt, markup=False)
+    console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
 
 
 def test_boolean_default_true(console):
@@ -42,7 +43,7 @@ def test_boolean_default_true(console):
     result = console.boolean_input(question=question, default=True)
 
     assert result
-    console.input.assert_called_once_with(prompt, markup=False)
+    console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
 
 
 def test_boolean_default_false(console):
@@ -54,7 +55,7 @@ def test_boolean_default_false(console):
     result = console.boolean_input(question=question, default=False)
 
     assert not result
-    console.input.assert_called_once_with(prompt, markup=False)
+    console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
 
 
 def test_boolean_default_None(console):

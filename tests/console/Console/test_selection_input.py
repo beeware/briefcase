@@ -3,6 +3,7 @@ from unittest.mock import call
 import pytest
 
 from briefcase.console import InputDisabled
+from tests.utils import default_rich_prompt
 
 
 @pytest.mark.parametrize(
@@ -28,7 +29,7 @@ def test_selection_input(console, value, expected, default, transform):
     )
 
     assert actual == expected
-    console.input.assert_called_once_with(prompt, markup=False)
+    console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
 
 
 def test_bad_input(console):
@@ -42,9 +43,15 @@ def test_bad_input(console):
 
     assert actual == "C"
     assert console.input.call_count == 3
-    assert console.input.call_args_list[0] == call(prompt, markup=False)
-    assert console.input.call_args_list[1] == call(prompt, markup=False)
-    assert console.input.call_args_list[2] == call(prompt, markup=False)
+    assert console.input.call_args_list[0] == call(
+        default_rich_prompt(prompt), markup=True
+    )
+    assert console.input.call_args_list[1] == call(
+        default_rich_prompt(prompt), markup=True
+    )
+    assert console.input.call_args_list[2] == call(
+        default_rich_prompt(prompt), markup=True
+    )
 
 
 def test_disabled(disabled_console):
