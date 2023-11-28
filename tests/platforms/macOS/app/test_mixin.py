@@ -73,7 +73,7 @@ def test_distribution_path_app(package_command, first_app_config, tmp_path):
     first_app_config.packaging_format = "app"
     distribution_path = package_command.distribution_path(first_app_config)
 
-    expected_path = tmp_path / "base_path" / "dist" / "First App-0.0.1.app.zip"
+    expected_path = tmp_path / "base_path/dist/First App-0.0.1.app.zip"
     assert distribution_path == expected_path
 
 
@@ -81,5 +81,5 @@ def test_distribution_path_dmg(package_command, first_app_config, tmp_path):
     first_app_config.packaging_format = "dmg"
     distribution_path = package_command.distribution_path(first_app_config)
 
-    expected_path = tmp_path / "base_path" / "dist" / "First App-0.0.1.dmg"
+    expected_path = tmp_path / "base_path/dist/First App-0.0.1.dmg"
     assert distribution_path == expected_path

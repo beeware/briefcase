@@ -39,7 +39,7 @@ class macOSXcodeMixin(macOSMixin):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
     def binary_path(self, app):
-        return self.bundle_path(app) / "build" / "Release" / f"{app.formal_name}.app"
+        return self.bundle_path(app) / "build/Release" / f"{app.formal_name}.app"
 
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, macOSInstallMixin, CreateCommand):

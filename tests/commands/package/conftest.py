@@ -140,7 +140,7 @@ def first_app_unbuilt(first_app_config, tmp_path):
     # The same fixture as first_app_config,
     # but ensures that the bundle for the app exists
     create_file(
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.dummy",
+        tmp_path / "base_path/build/first/tester/dummy/first.dummy",
         "first.dummy",
     )
 
@@ -152,7 +152,7 @@ def first_app(first_app_unbuilt, tmp_path):
     # The same fixture as first_app_uncompiled,
     # but ensures that the binary for the app exists
     create_file(
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bin",
+        tmp_path / "base_path/build/first/tester/dummy/first.bin",
         "first.bin",
     )
 
@@ -193,7 +193,7 @@ def second_app(second_app_uncompiled, tmp_path):
     # The same fixture as second_app_uncompiled,
     # but ensures that the binary for the app exists
     create_file(
-        tmp_path / "base_path" / "build" / "second" / "tester" / "dummy" / "second.bin",
+        tmp_path / "base_path/build/second/tester/dummy/second.bin",
         "second.bin",
     )
 

@@ -49,9 +49,7 @@ def test_project_path(create_command, first_app_config, tmp_path):
     project_path = create_command.project_path(first_app_config)
     bundle_path = create_command.bundle_path(first_app_config)
 
-    expected_path = (
-        tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-    )
+    expected_path = tmp_path / "base_path/build/first-app/linux/appimage"
     assert expected_path == project_path == bundle_path
 
 
@@ -61,8 +59,7 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
     distribution_path = create_command.distribution_path(first_app_config)
 
     assert (
-        distribution_path
-        == tmp_path / "base_path" / "dist" / "First_App-0.0.1-x86_64.AppImage"
+        distribution_path == tmp_path / "base_path/dist/First_App-0.0.1-x86_64.AppImage"
     )
 
 

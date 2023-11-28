@@ -30,13 +30,13 @@ def test_app_path(create_command, myapp):
         }
         tomli_w.dump(index, f)
 
-    assert create_command.app_path(myapp) == bundle_path / "path" / "to" / "app"
+    assert create_command.app_path(myapp) == bundle_path / "path/to/app"
 
     # Requesting a second time should hit the cache,
     # so the briefcase file won't be needed.
     # Delete it to make sure the cache is used.
     (bundle_path / "briefcase.toml").unlink()
-    assert create_command.app_path(myapp) == bundle_path / "path" / "to" / "app"
+    assert create_command.app_path(myapp) == bundle_path / "path/to/app"
 
 
 def test_app_packages_path(create_command, myapp):
@@ -53,8 +53,7 @@ def test_app_packages_path(create_command, myapp):
         tomli_w.dump(index, f)
 
     assert (
-        create_command.app_packages_path(myapp)
-        == bundle_path / "path" / "to" / "app_packages"
+        create_command.app_packages_path(myapp) == bundle_path / "path/to/app_packages"
     )
 
     # Requesting a second time should hit the cache,
@@ -62,8 +61,7 @@ def test_app_packages_path(create_command, myapp):
     # Delete it to make sure the cache is used.
     (bundle_path / "briefcase.toml").unlink()
     assert (
-        create_command.app_packages_path(myapp)
-        == bundle_path / "path" / "to" / "app_packages"
+        create_command.app_packages_path(myapp) == bundle_path / "path/to/app_packages"
     )
 
 
@@ -80,13 +78,13 @@ def test_support_path(create_command, myapp):
         }
         tomli_w.dump(index, f)
 
-    assert create_command.support_path(myapp) == bundle_path / "path" / "to" / "support"
+    assert create_command.support_path(myapp) == bundle_path / "path/to/support"
 
     # Requesting a second time should hit the cache,
     # so the briefcase file won't be needed.
     # Delete it to make sure the cache is used.
     (bundle_path / "briefcase.toml").unlink()
-    assert create_command.support_path(myapp) == bundle_path / "path" / "to" / "support"
+    assert create_command.support_path(myapp) == bundle_path / "path/to/support"
 
 
 def test_support_revision(create_command, myapp):

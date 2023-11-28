@@ -97,7 +97,7 @@ def test_default_template(
         "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout=expected_branch,
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -141,18 +141,14 @@ def test_default_template_dev(
             "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout="v37.42.7",
-            output_dir=os.fsdecode(
-                tmp_path / "base_path" / "build" / "my-app" / "tester"
-            ),
+            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
         ),
         mock.call(
             "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout="main",
-            output_dir=os.fsdecode(
-                tmp_path / "base_path" / "build" / "my-app" / "tester"
-            ),
+            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
         ),
     ]
@@ -192,9 +188,7 @@ def test_default_template_dev_explicit_branch(
             "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout=branch,
-            output_dir=os.fsdecode(
-                tmp_path / "base_path" / "build" / "my-app" / "tester"
-            ),
+            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
         ),
     ]
@@ -241,9 +235,7 @@ def test_default_template_dev_explicit_invalid_branch(
             "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
             no_input=True,
             checkout=branch,
-            output_dir=os.fsdecode(
-                tmp_path / "base_path" / "build" / "my-app" / "tester"
-            ),
+            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
         ),
     ]
@@ -271,7 +263,7 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_p
         "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout=branch,
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -297,7 +289,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
         "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -324,7 +316,7 @@ def test_explicit_repo_template(
         "https://example.com/magic/special-template.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -358,7 +350,7 @@ def test_explicit_repo_template_and_branch(
         "https://example.com/magic/special-template.git",
         no_input=True,
         checkout=branch,
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -381,7 +373,7 @@ def test_explicit_local_template(
         "/path/to/special-template",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -414,7 +406,7 @@ def test_explicit_local_template_and_branch(
         "/path/to/special-template",
         no_input=True,
         checkout=branch,
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -454,7 +446,7 @@ def test_offline_repo_template(
         "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -487,7 +479,7 @@ def test_invalid_repo_template(
         "https://example.com/somewhere/not-a-repo.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -522,7 +514,7 @@ def test_missing_branch_template(
         "https://example.com/somewhere/missing-branch.git",
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -555,10 +547,10 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(
-        os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-Tester-Dummy-template"),
+        os.fsdecode(Path.home() / ".cookiecutters/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -605,10 +597,10 @@ def test_cached_template_offline(
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(
-        os.fsdecode(Path.home() / ".cookiecutters" / "briefcase-Tester-Dummy-template"),
+        os.fsdecode(Path.home() / ".cookiecutters/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path" / "build" / "my-app" / "tester"),
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 

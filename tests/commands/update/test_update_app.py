@@ -17,20 +17,12 @@ def test_update_app(update_command, first_app, tmp_path):
     ]
 
     # App content and resources have been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
     # requirements and resources haven't been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
 
 
 def test_update_non_existing_app(update_command, tmp_path):
@@ -48,12 +40,8 @@ def test_update_non_existing_app(update_command, tmp_path):
     assert update_command.actions == []
 
     # App content has been not updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
 
 
 def test_update_app_with_requirements(update_command, first_app, tmp_path):
@@ -76,20 +64,12 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
     ]
 
     # App content has been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
     # Extras haven't been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
 
 
 def test_update_app_with_resources(update_command, first_app, tmp_path):
@@ -112,20 +92,12 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
     ]
 
     # App content and resources have been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
     # requirements haven't been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
 
 
 def test_update_app_with_support_package(update_command, first_app, tmp_path):
@@ -149,23 +121,13 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
     ]
 
     # App content and support have been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "support"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/support").exists()
     # requirements and resources haven't been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
 
 
 def test_update_app_test_mode(update_command, first_app, tmp_path):
@@ -188,20 +150,12 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
     ]
 
     # App code has been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
     # App requirements and resources have not been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
 
 
 def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
@@ -225,20 +179,12 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
     ]
 
     # App content and requirements have been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
     # App resources have not been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
 
 
 def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
@@ -262,17 +208,9 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
     ]
 
     # App content and resources have been updated
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "code.py"
-    ).exists()
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "resources"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/code.py").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/resources").exists()
     # App requirements have not been updated
-    assert not (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "requirements"
-    ).exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/requirements").exists()
     # ... and the app still exists
-    assert (
-        tmp_path / "base_path" / "build" / "first" / "tester" / "dummy" / "first.bundle"
-    ).exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()

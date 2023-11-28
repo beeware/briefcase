@@ -154,7 +154,7 @@ def test_merge(dummy_command, pre_existing, tmp_path):
     }
 
     # Check that the embedded binary has executable permissions
-    assert os.access(merged_path / "second" / "some-binary", os.X_OK)
+    assert os.access(merged_path / "second/some-binary", os.X_OK)
 
 
 def test_merge_problem(dummy_command, tmp_path):

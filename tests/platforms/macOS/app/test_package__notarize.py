@@ -29,7 +29,7 @@ def package_command(tmp_path):
 
 @pytest.fixture
 def first_app_dmg(tmp_path):
-    dmg_path = tmp_path / "base_path" / "dist" / "First App.dmg"
+    dmg_path = tmp_path / "base_path/dist/First App.dmg"
     dmg_path.parent.mkdir(parents=True)
     with dmg_path.open("w", encoding="utf-8") as f:
         f.write("DMG content here")
@@ -48,9 +48,7 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
         / "app"
         / "First App.app"
     )
-    archive_path = (
-        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
-    )
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
     package_command.notarize(app_path, team_id="DEADBEEF")
 
     # As a result of mocking os.unlink, the zip archive won't be
@@ -156,7 +154,7 @@ def test_notarize_dmg(package_command, first_app_dmg):
 
 def test_notarize_unknown_format(package_command, tmp_path):
     """Attempting to notarize a file of unknown format raises an error."""
-    pkg_path = tmp_path / "base_path" / "dist" / "First App.pkg"
+    pkg_path = tmp_path / "base_path/dist/First App.pkg"
 
     # The notarization call will fail with an error
     with pytest.raises(
@@ -257,9 +255,7 @@ def test_credential_storage_failure_app(
         / "app"
         / "First App.app"
     )
-    archive_path = (
-        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
-    )
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
 
     # Set up subprocess to fail on the first notarization attempt,
     # then fail on the storage of credentials
@@ -392,9 +388,7 @@ def test_credential_storage_disabled_input_app(
         / "app"
         / "First App.app"
     )
-    archive_path = (
-        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
-    )
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
 
     # Set up subprocess to fail on the first notarization attempt.
     package_command.tools.subprocess.run.side_effect = [
@@ -570,9 +564,7 @@ def test_app_notarization_failure_with_credentials(
         / "app"
         / "First App.app"
     )
-    archive_path = (
-        tmp_path / "base_path" / "build" / "first-app" / "macos" / "app" / "archive.zip"
-    )
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
 
     # Set up subprocess to fail on the first notarization attempt
     # for a reason other than credentials

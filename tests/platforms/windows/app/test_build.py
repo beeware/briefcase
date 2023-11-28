@@ -102,7 +102,7 @@ def test_build_app_without_windows_sdk(build_command, first_app_config, tmp_path
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
         [
-            tmp_path / "briefcase" / "tools" / "rcedit-x64.exe",
+            tmp_path / "briefcase/tools/rcedit-x64.exe",
             Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
@@ -129,7 +129,7 @@ def test_build_app_without_windows_sdk(build_command, first_app_config, tmp_path
             "icon.ico",
         ],
         check=True,
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
 
 
@@ -147,17 +147,17 @@ def test_build_app_with_windows_sdk(
     # remove any digital signatures on the app binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
         [
-            tmp_path / "win_sdk" / "bin" / "86.1.1" / "x64" / "signtool.exe",
+            tmp_path / "win_sdk/bin/86.1.1/x64/signtool.exe",
             "remove",
             "-s",
             Path("src/First App.exe"),
         ],
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
         [
-            tmp_path / "briefcase" / "tools" / "rcedit-x64.exe",
+            tmp_path / "briefcase/tools/rcedit-x64.exe",
             Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
@@ -184,7 +184,7 @@ def test_build_app_with_windows_sdk(
             "icon.ico",
         ],
         check=True,
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
 
 
@@ -213,17 +213,17 @@ def test_build_app_without_any_digital_signatures(
     # remove any digital signatures on the app binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
         [
-            tmp_path / "win_sdk" / "bin" / "86.1.1" / "x64" / "signtool.exe",
+            tmp_path / "win_sdk/bin/86.1.1/x64/signtool.exe",
             "remove",
             "-s",
             Path("src/First App.exe"),
         ],
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
         [
-            tmp_path / "briefcase" / "tools" / "rcedit-x64.exe",
+            tmp_path / "briefcase/tools/rcedit-x64.exe",
             Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
@@ -250,7 +250,7 @@ def test_build_app_without_any_digital_signatures(
             "icon.ico",
         ],
         check=True,
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
 
 
@@ -287,12 +287,12 @@ def test_build_app_error_remove_signature(
     # remove any digital signatures on the app binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
         [
-            tmp_path / "win_sdk" / "bin" / "86.1.1" / "x64" / "signtool.exe",
+            tmp_path / "win_sdk/bin/86.1.1/x64/signtool.exe",
             "remove",
             "-s",
             Path("src/First App.exe"),
         ],
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
     # update the app binary resources not called
     build_command.tools.subprocess.run.assert_not_called()
@@ -334,7 +334,7 @@ def test_build_app_with_support_package_update(
 
     # Fake the existence of some source files.
     create_file(
-        tmp_path / "base_path" / "src" / "first_app" / "app.py",
+        tmp_path / "base_path/src/first_app/app.py",
         "print('an app')",
     )
 
@@ -360,7 +360,7 @@ def test_build_app_with_support_package_update(
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
         [
-            tmp_path / "briefcase" / "tools" / "rcedit-x64.exe",
+            tmp_path / "briefcase/tools/rcedit-x64.exe",
             Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
@@ -387,7 +387,7 @@ def test_build_app_with_support_package_update(
             "icon.ico",
         ],
         check=True,
-        cwd=tmp_path / "base_path" / "build" / "first-app" / "windows" / "app",
+        cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
 
     # No attempt was made to clean up the support package.

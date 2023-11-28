@@ -41,7 +41,7 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_package_one_explicit_app(package_command, first_app, second_app, tmp_path):
@@ -86,7 +86,7 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
     assert not hasattr(second_app, "packaging_format")
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_no_args_package_two_app(package_command, first_app, second_app, tmp_path):
@@ -147,7 +147,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
@@ -191,7 +191,7 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
@@ -235,7 +235,7 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_adhoc_sign_args_package_two_app(
@@ -301,7 +301,7 @@ def test_adhoc_sign_args_package_two_app(
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_identity_sign_args_package_two_app(
@@ -365,7 +365,7 @@ def test_identity_sign_args_package_two_app(
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_package_alternate_format(package_command, first_app, tmp_path):
@@ -408,7 +408,7 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "box"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_create_before_package(package_command, first_app_config, tmp_path):
@@ -471,7 +471,7 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
     assert first_app_config.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_update_package_one_app(package_command, first_app, tmp_path):
@@ -537,7 +537,7 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_update_package_two_app(package_command, first_app, second_app, tmp_path):
@@ -651,7 +651,7 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
@@ -704,7 +704,7 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
     assert first_app_unbuilt.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
 
 def test_already_packaged(package_command, first_app, tmp_path):
@@ -715,7 +715,7 @@ def test_already_packaged(package_command, first_app, tmp_path):
     }
 
     # Mock a historical package artefact.
-    artefact_path = tmp_path / "base_path" / "dist" / "first-0.0.1.pkg"
+    artefact_path = tmp_path / "base_path/dist/first-0.0.1.pkg"
     create_file(artefact_path, "Packaged app")
 
     # Configure no command line options
@@ -751,7 +751,7 @@ def test_already_packaged(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder still exists
-    assert tmp_path / "base_path" / "dist"
+    assert tmp_path / "base_path/dist"
 
     # But the artefact has been deleted.
     # NOTE: This is a testing quirk - because we're mocking the

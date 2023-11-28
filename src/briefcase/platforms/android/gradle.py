@@ -405,7 +405,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         # Move artefact to final location.
         self.tools.shutil.move(
-            self.bundle_path(app) / "app" / "build" / "outputs" / build_artefact_path,
+            self.bundle_path(app) / "app/build/outputs" / build_artefact_path,
             self.distribution_path(app),
         )
 

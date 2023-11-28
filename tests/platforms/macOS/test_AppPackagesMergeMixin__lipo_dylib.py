@@ -16,13 +16,13 @@ def test_lipo_dylib(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create 3 source binaries.
-    create_file(tmp_path / "source-1" / "path" / "to" / "file.dylib", "dylib-1")
-    create_file(tmp_path / "source-2" / "path" / "to" / "file.dylib", "dylib-2")
-    create_file(tmp_path / "source-3" / "path" / "to" / "file.dylib", "dylib-3")
+    create_file(tmp_path / "source-1/path/to/file.dylib", "dylib-1")
+    create_file(tmp_path / "source-2/path/to/file.dylib", "dylib-2")
+    create_file(tmp_path / "source-3/path/to/file.dylib", "dylib-3")
 
     # Merge the libraries
     dummy_command.lipo_dylib(
-        Path("path") / "to" / "file.dylib",
+        Path("path/to/file.dylib"),
         tmp_path / "target",
         [
             tmp_path / "source-1",
@@ -37,16 +37,16 @@ def test_lipo_dylib(dummy_command, verbose, tmp_path, capsys):
             "lipo",
             "-create",
             "-output",
-            tmp_path / "target" / "path" / "to" / "file.dylib",
-            tmp_path / "source-1" / "path" / "to" / "file.dylib",
-            tmp_path / "source-2" / "path" / "to" / "file.dylib",
-            tmp_path / "source-3" / "path" / "to" / "file.dylib",
+            tmp_path / "target/path/to/file.dylib",
+            tmp_path / "source-1/path/to/file.dylib",
+            tmp_path / "source-2/path/to/file.dylib",
+            tmp_path / "source-3/path/to/file.dylib",
         ],
         check=True,
     )
 
     # The target directory exists.
-    assert (tmp_path / "target" / "path" / "to").is_dir()
+    assert (tmp_path / "target/path/to").is_dir()
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
@@ -60,12 +60,12 @@ def test_lipo_dylib_partial(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create 2 source binaries. Source-2 doesn't have the binary.
-    create_file(tmp_path / "source-1" / "path" / "to" / "file.dylib", "dylib-1")
-    create_file(tmp_path / "source-3" / "path" / "to" / "file.dylib", "dylib-3")
+    create_file(tmp_path / "source-1/path/to/file.dylib", "dylib-1")
+    create_file(tmp_path / "source-3/path/to/file.dylib", "dylib-3")
 
     # Merge the libraries
     dummy_command.lipo_dylib(
-        Path("path") / "to" / "file.dylib",
+        Path("path/to/file.dylib"),
         tmp_path / "target",
         [
             tmp_path / "source-1",
@@ -79,15 +79,15 @@ def test_lipo_dylib_partial(dummy_command, verbose, tmp_path, capsys):
             "lipo",
             "-create",
             "-output",
-            tmp_path / "target" / "path" / "to" / "file.dylib",
-            tmp_path / "source-1" / "path" / "to" / "file.dylib",
-            tmp_path / "source-3" / "path" / "to" / "file.dylib",
+            tmp_path / "target/path/to/file.dylib",
+            tmp_path / "source-1/path/to/file.dylib",
+            tmp_path / "source-3/path/to/file.dylib",
         ],
         check=True,
     )
 
     # The target directory exists.
-    assert (tmp_path / "target" / "path" / "to").is_dir()
+    assert (tmp_path / "target/path/to").is_dir()
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
@@ -101,9 +101,9 @@ def test_lipo_dylib_merge_error(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create 3 source binaries.
-    create_file(tmp_path / "source-1" / "path" / "to" / "file.dylib", "dylib-1")
-    create_file(tmp_path / "source-2" / "path" / "to" / "file.dylib", "dylib-2")
-    create_file(tmp_path / "source-3" / "path" / "to" / "file.dylib", "dylib-3")
+    create_file(tmp_path / "source-1/path/to/file.dylib", "dylib-1")
+    create_file(tmp_path / "source-2/path/to/file.dylib", "dylib-2")
+    create_file(tmp_path / "source-3/path/to/file.dylib", "dylib-3")
 
     # lipo raises an exception.
     dummy_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
@@ -116,7 +116,7 @@ def test_lipo_dylib_merge_error(dummy_command, verbose, tmp_path, capsys):
         match=r"Unable to create fat library for path[/\\]to[/\\]file\.dylib",
     ):
         dummy_command.lipo_dylib(
-            Path("path") / "to" / "file.dylib",
+            Path("path/to/file.dylib"),
             tmp_path / "target",
             [
                 tmp_path / "source-1",
@@ -131,16 +131,16 @@ def test_lipo_dylib_merge_error(dummy_command, verbose, tmp_path, capsys):
             "lipo",
             "-create",
             "-output",
-            tmp_path / "target" / "path" / "to" / "file.dylib",
-            tmp_path / "source-1" / "path" / "to" / "file.dylib",
-            tmp_path / "source-2" / "path" / "to" / "file.dylib",
-            tmp_path / "source-3" / "path" / "to" / "file.dylib",
+            tmp_path / "target/path/to/file.dylib",
+            tmp_path / "source-1/path/to/file.dylib",
+            tmp_path / "source-2/path/to/file.dylib",
+            tmp_path / "source-3/path/to/file.dylib",
         ],
         check=True,
     )
 
     # The target directory exists.
-    assert (tmp_path / "target" / "path" / "to").is_dir()
+    assert (tmp_path / "target/path/to").is_dir()
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")

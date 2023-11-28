@@ -40,7 +40,7 @@ def test_non_managed_install(mock_tools, tmp_path, capsys):
 def test_non_existing_install(mock_tools, tmp_path):
     """If there's no existing managed JDK install, upgrading is an error."""
     # Create an SDK wrapper around a non-existing managed install
-    jdk = JDK(mock_tools, java_home=tmp_path / "tools" / "java")
+    jdk = JDK(mock_tools, java_home=tmp_path / "tools/java")
 
     with pytest.raises(MissingToolError):
         jdk.upgrade()
@@ -52,7 +52,7 @@ def test_non_existing_install(mock_tools, tmp_path):
 def test_existing_install(mock_tools, tmp_path):
     """If there's an existing managed JDK install, it is deleted and re-downloaded."""
     # Create a mock of a previously installed Java version.
-    java_home = tmp_path / "tools" / "java"
+    java_home = tmp_path / "tools/java"
     (java_home / "bin").mkdir(parents=True)
 
     # We actually need to delete the original java install
@@ -101,7 +101,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     mock_tools.host_os = "Darwin"
 
     # Create a mock of a previously installed Java version.
-    java_home = tmp_path / "tools" / "java" / "Contents" / "Home"
+    java_home = tmp_path / "tools/java/Contents/Home"
     (java_home / "bin").mkdir(parents=True)
 
     # We actually need to delete the original java install
@@ -125,7 +125,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     jdk.upgrade()
 
     # The old version has been deleted
-    mock_tools.shutil.rmtree.assert_called_with(tmp_path / "tools" / "java")
+    mock_tools.shutil.rmtree.assert_called_with(tmp_path / "tools/java")
 
     # A download was initiated
     mock_tools.download.file.assert_called_with(
@@ -147,7 +147,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
 def test_download_fail(mock_tools, tmp_path):
     """If there's an existing managed JDK install, it is deleted and re-downloaded."""
     # Create a mock of a previously installed Java version.
-    java_home = tmp_path / "tools" / "java"
+    java_home = tmp_path / "tools/java"
     (java_home / "bin").mkdir(parents=True)
 
     # We actually need to delete the original java install
@@ -184,7 +184,7 @@ def test_download_fail(mock_tools, tmp_path):
 def test_unpack_fail(mock_tools, tmp_path):
     """If there's an existing managed JDK install, it is deleted and re-downloaded."""
     # Create a mock of a previously installed Java version.
-    java_home = tmp_path / "tools" / "java"
+    java_home = tmp_path / "tools/java"
     (java_home / "bin").mkdir(parents=True)
 
     # We actually need to delete the original java install

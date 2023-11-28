@@ -10,7 +10,7 @@ from briefcase.exceptions import BriefcaseCommandError, NetworkFailure
 def test_existing_skin(mock_tools, android_sdk):
     """If the skin already exists, don't attempt to download it again."""
     # Mock the existence of a system image
-    (android_sdk.root_path / "skins" / "pixel_X").mkdir(parents=True)
+    (android_sdk.root_path / "skins/pixel_X").mkdir(parents=True)
 
     # Verify the system image that we already have
     android_sdk.verify_emulator_skin("pixel_X")
@@ -40,7 +40,7 @@ def test_new_skin(mock_tools, android_sdk):
     # Skin is unpacked.
     mock_tools.shutil.unpack_archive.assert_called_once_with(
         skin_tgz_path,
-        extract_dir=android_sdk.root_path / "skins" / "pixel_X",
+        extract_dir=android_sdk.root_path / "skins/pixel_X",
         **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
@@ -103,7 +103,7 @@ def test_unpack_failure(mock_tools, android_sdk, tmp_path):
     # An attempt to unpack the skin was made.
     mock_tools.shutil.unpack_archive.assert_called_once_with(
         skin_tgz_path,
-        extract_dir=android_sdk.root_path / "skins" / "pixel_X",
+        extract_dir=android_sdk.root_path / "skins/pixel_X",
         **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 

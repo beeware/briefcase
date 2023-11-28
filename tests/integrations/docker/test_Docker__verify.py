@@ -323,7 +323,7 @@ def test_docker_image_hint(mock_tools):
 
 def test_user_mapping_write_file_path(mock_tools):
     """The write test file path is as expected."""
-    expected_path = Path.cwd() / "build" / "container_write_test"
+    expected_path = Path.cwd() / "build/container_write_test"
     assert Docker(mock_tools)._write_test_path() == expected_path
 
 

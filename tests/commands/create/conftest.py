@@ -203,15 +203,15 @@ def bundle_path(myapp, tmp_path):
     # Return the bundle path for the app; however, as a side effect,
     # ensure that the app, and app_packages target directories
     # exist, and the briefcase index file has been created.
-    bundle_path = tmp_path / "base_path" / "build" / myapp.app_name / "tester" / "dummy"
-    (bundle_path / "path" / "to" / "app").mkdir(parents=True, exist_ok=True)
+    bundle_path = tmp_path / "base_path/build" / myapp.app_name / "tester/dummy"
+    (bundle_path / "path/to/app").mkdir(parents=True, exist_ok=True)
 
     return bundle_path
 
 
 @pytest.fixture
 def app_packages_path_index(bundle_path):
-    (bundle_path / "path" / "to" / "app_packages").mkdir(parents=True, exist_ok=True)
+    (bundle_path / "path/to/app_packages").mkdir(parents=True, exist_ok=True)
     with (bundle_path / "briefcase.toml").open("wb") as f:
         index = {
             "paths": {
@@ -265,19 +265,19 @@ def no_support_path_index(bundle_path):
 
 @pytest.fixture
 def support_path(bundle_path):
-    return bundle_path / "path" / "to" / "support"
+    return bundle_path / "path/to/support"
 
 
 @pytest.fixture
 def app_requirements_path(bundle_path):
-    return bundle_path / "path" / "to" / "requirements.txt"
+    return bundle_path / "path/to/requirements.txt"
 
 
 @pytest.fixture
 def app_packages_path(bundle_path):
-    return bundle_path / "path" / "to" / "app_packages"
+    return bundle_path / "path/to/app_packages"
 
 
 @pytest.fixture
 def app_path(bundle_path):
-    return bundle_path / "path" / "to" / "app"
+    return bundle_path / "path/to/app"

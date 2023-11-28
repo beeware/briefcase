@@ -8,10 +8,7 @@ def test_single_source(base_command, my_app):
     dist-info location."""
     my_app.sources = ["src/my_app"]
 
-    assert (
-        base_command.app_module_path(my_app)
-        == base_command.base_path / "src" / "my_app"
-    )
+    assert base_command.app_module_path(my_app) == base_command.base_path / "src/my_app"
 
 
 def test_no_prefix(base_command, my_app):
@@ -29,7 +26,7 @@ def test_long_prefix(base_command, my_app):
 
     assert (
         base_command.app_module_path(my_app)
-        == base_command.base_path / "path" / "to" / "src" / "my_app"
+        == base_command.base_path / "path/to/src/my_app"
     )
 
 
@@ -38,10 +35,7 @@ def test_matching_source(base_command, my_app):
     info location."""
     my_app.sources = ["src/other", "src/my_app", "src/extra"]
 
-    assert (
-        base_command.app_module_path(my_app)
-        == base_command.base_path / "src" / "my_app"
-    )
+    assert base_command.app_module_path(my_app) == base_command.base_path / "src/my_app"
 
 
 def test_multiple_match(base_command, my_app):

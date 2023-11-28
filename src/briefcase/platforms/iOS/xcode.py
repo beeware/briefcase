@@ -281,7 +281,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(
-                        self.support_path(app) / "platform-site" / "iphoneos.arm64"
+                        self.support_path(app) / "platform-site/iphoneos.arm64"
                     ),
                 }
             },

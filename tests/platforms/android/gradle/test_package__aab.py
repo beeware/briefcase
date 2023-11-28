@@ -38,7 +38,7 @@ def test_unsupported_template_version(package_command, first_app_generated):
 def test_distribution_path(package_command, first_app_aab, tmp_path):
     assert (
         package_command.distribution_path(first_app_aab)
-        == tmp_path / "base_path" / "dist" / "First App-0.0.1.aab"
+        == tmp_path / "base_path/dist/First App-0.0.1.aab"
     )
 
 
@@ -111,7 +111,7 @@ def test_execute_gradle(
     )
 
     # The release asset has been moved into the dist folder
-    assert (tmp_path / "base_path" / "dist" / "First App-0.0.1.aab").exists()
+    assert (tmp_path / "base_path/dist/First App-0.0.1.aab").exists()
 
 
 def test_print_gradle_errors(package_command, first_app_aab):

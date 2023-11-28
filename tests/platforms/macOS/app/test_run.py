@@ -50,7 +50,7 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
-    sender = bin_path / "Contents" / "MacOS" / "First App"
+    sender = bin_path / "Contents/MacOS/First App"
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "log",
@@ -113,7 +113,7 @@ def test_run_app_with_passthrough(
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
-    sender = bin_path / "Contents" / "MacOS" / "First App"
+    sender = bin_path / "Contents/MacOS/First App"
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "log",
@@ -163,7 +163,7 @@ def test_run_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
-    sender = bin_path / "Contents" / "MacOS" / "First App"
+    sender = bin_path / "Contents/MacOS/First App"
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "log",
@@ -210,7 +210,7 @@ def test_run_app_find_pid_failed(
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
-    sender = bin_path / "Contents" / "MacOS" / "First App"
+    sender = bin_path / "Contents/MacOS/First App"
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "log",
@@ -261,7 +261,7 @@ def test_run_app_test_mode(
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
-    sender = bin_path / "Contents" / "MacOS" / "First App"
+    sender = bin_path / "Contents/MacOS/First App"
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             "log",

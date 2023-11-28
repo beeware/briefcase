@@ -65,9 +65,7 @@ def test_create_emulator(
     ]
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = (
-        tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
-    )
+    avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")

@@ -1,8 +1,6 @@
 def test_avd_config(mock_tools, android_sdk, tmp_path):
     """An AVD configuration can be read."""
-    config_file = (
-        tmp_path / "home" / ".android" / "avd" / "testDevice.avd" / "config.ini"
-    )
+    config_file = tmp_path / "home/.android/avd/testDevice.avd/config.ini"
     config_file.parent.mkdir(parents=True)
 
     # Write a default config. It contains:
@@ -37,9 +35,7 @@ disk.cachePartition.size=37MB
 
 def test_avd_config_with_space(mock_tools, android_sdk, tmp_path):
     """An AVD configuration that contains spaces can be read."""
-    config_file = (
-        tmp_path / "home" / ".android" / "avd" / "testDevice.avd" / "config.ini"
-    )
+    config_file = tmp_path / "home/.android/avd/testDevice.avd/config.ini"
     config_file.parent.mkdir(parents=True)
 
     # Write a default config. It contains:

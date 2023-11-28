@@ -10,7 +10,7 @@ from briefcase.integrations.xcode import Xcode
 
 @pytest.fixture
 def default_xcode_install_path(tmp_path):
-    return tmp_path / "Applications" / "Xcode.app"
+    return tmp_path / "Applications/Xcode.app"
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def test_not_installed(tmp_path, mock_tools):
 def test_custom_install_location(default_xcode_install_path, tmp_path, mock_tools):
     """If Xcode is in a non-default location, that's fine."""
     # Create a custom Xcode location
-    custom_xcode_location = tmp_path / "custom" / "Xcode.app"
+    custom_xcode_location = tmp_path / "custom/Xcode.app"
     custom_xcode_location.mkdir(parents=True, exist_ok=True)
 
     mock_tools.subprocess.check_output.side_effect = [
@@ -140,7 +140,7 @@ def test_custom_install_with_command_line_tools(
     """If the cmdline tools are installed, and Xcode is in a non-default location, raise
     an error."""
     # Create a custom Xcode location
-    custom_xcode_location = tmp_path / "custom" / "Xcode.app"
+    custom_xcode_location = tmp_path / "custom/Xcode.app"
     custom_xcode_location.mkdir(parents=True, exist_ok=True)
 
     mock_tools.subprocess.check_output.side_effect = [

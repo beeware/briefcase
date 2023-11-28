@@ -23,7 +23,7 @@ info_plist_path="Info.plist"
     )
 
     create_plist_file(
-        tmp_path / "base_path" / "build" / "first-app" / "ios" / "xcode" / "Info.plist",
+        tmp_path / "base_path/build/first-app/ios/xcode/Info.plist",
         {
             "MainModule": "first_app",
         },

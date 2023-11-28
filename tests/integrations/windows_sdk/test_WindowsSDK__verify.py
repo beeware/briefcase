@@ -109,7 +109,7 @@ def test_winsdk_arch(
     win_sdk = WindowsSDK.verify(mock_tools)
 
     # The returned paths are as expected (and are the full paths)
-    signtool_path = tmp_path / "win_sdk" / "bin" / "1.1.1.0" / sdk_arch / "signtool.exe"
+    signtool_path = tmp_path / "win_sdk/bin/1.1.1.0" / sdk_arch / "signtool.exe"
     assert win_sdk.signtool_exe == signtool_path
 
 
@@ -133,7 +133,7 @@ def test_winsdk_valid_env_vars(mock_tools, mock_winreg, tmp_path, monkeypatch):
     win_sdk = WindowsSDK.verify(mock_tools)
 
     # The returned paths are as expected (and are the full paths)
-    signtool_path = tmp_path / "win_sdk" / "bin" / "1.1.1.0" / "x64" / "signtool.exe"
+    signtool_path = tmp_path / "win_sdk/bin/1.1.1.0/x64/signtool.exe"
     assert win_sdk.signtool_exe == signtool_path
 
 
@@ -191,7 +191,7 @@ def test_winsdk_latest_install_from_reg(mock_tools, mock_winreg, tmp_path, monke
     mock_tools.os.environ.get.assert_called_once_with("WindowsSDKDir")
 
     # The returned paths are as expected (and are the full paths)
-    signtool_path = tmp_path / "win_sdk" / "bin" / "83.0.1.0" / "x64" / "signtool.exe"
+    signtool_path = tmp_path / "win_sdk/bin/83.0.1.0/x64/signtool.exe"
     assert win_sdk.signtool_exe == signtool_path
 
 
@@ -245,7 +245,7 @@ def test_winsdk_nonlatest_install_from_reg(
     assert capsys.readouterr().out == expected_output
 
     # The returned paths are as expected (and are the full paths)
-    signtool_path = tmp_path / "win_sdk" / "bin" / "85.0.8.0" / "x64" / "signtool.exe"
+    signtool_path = tmp_path / "win_sdk/bin/85.0.8.0/x64/signtool.exe"
     assert win_sdk.signtool_exe == signtool_path
 
 
@@ -388,7 +388,7 @@ def test_winsdk_valid_install_from_default_dir(
     assert capsys.readouterr().out == expected_output
 
     # The returned paths are as expected (and are the full paths)
-    signtool_path = tmp_path / "win_sdk" / "bin" / "86.0.8.0" / "x64" / "signtool.exe"
+    signtool_path = tmp_path / "win_sdk/bin/86.0.8.0/x64/signtool.exe"
     assert win_sdk.signtool_exe == signtool_path
 
 

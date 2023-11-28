@@ -63,4 +63,4 @@ def test_project_path(create_command, first_app_config, tmp_path):
 def test_distribution_path(create_command, first_app_config, tmp_path):
     distribution_path = create_command.distribution_path(first_app_config)
 
-    assert distribution_path == tmp_path / "base_path" / "dist" / "First App-0.0.1.msi"
+    assert distribution_path == tmp_path / "base_path/dist/First App-0.0.1.msi"

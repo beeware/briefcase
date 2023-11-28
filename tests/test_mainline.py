@@ -59,10 +59,8 @@ def test_command(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
 
     # Create a dummy empty template to use in the new command
-    create_file(tmp_path / "template" / "cookiecutter.json", '{"app_name": "app_name"}')
-    create_file(
-        tmp_path / "template" / "{{ cookiecutter.app_name }}" / "app", "content"
-    )
+    create_file(tmp_path / "template/cookiecutter.json", '{"app_name": "app_name"}')
+    create_file(tmp_path / "template/{{ cookiecutter.app_name }}/app", "content")
 
     # Set the test command line
     monkeypatch.setattr(

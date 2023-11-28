@@ -125,15 +125,15 @@ def test_source_dir(
     #     submodule /
     #       deeper.py
     create_file(
-        tmp_path / "base_path" / "src" / "first" / "demo.py",
+        tmp_path / "base_path/src/first/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path/src/second/shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "submodule" / "deeper.py",
+        tmp_path / "base_path/src/second/submodule/deeper.py",
         "print('hello deep second')\n",
     )
 
@@ -144,13 +144,13 @@ def test_source_dir(
 
     # All the sources exist.
     assert (app_path / "first").exists()
-    assert (app_path / "first" / "demo.py").exists()
+    assert (app_path / "first/demo.py").exists()
 
     assert (app_path / "second").exists()
-    assert (app_path / "second" / "shallow.py").exists()
+    assert (app_path / "second/shallow.py").exists()
 
-    assert (app_path / "second" / "submodule").exists()
-    assert (app_path / "second" / "submodule" / "deeper.py").exists()
+    assert (app_path / "second/submodule").exists()
+    assert (app_path / "second/submodule/deeper.py").exists()
 
     # Metadata has been created
     assert_dist_info(app_path)
@@ -173,11 +173,11 @@ def test_source_file(
     #   demo.py
     # other.py
     create_file(
-        tmp_path / "base_path" / "src" / "demo.py",
+        tmp_path / "base_path/src/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "other.py",
+        tmp_path / "base_path/other.py",
         "print('hello second')\n",
     )
 
@@ -215,15 +215,15 @@ def test_no_existing_app_folder(
     #     submodule /
     #       deeper.py
     create_file(
-        tmp_path / "base_path" / "src" / "first" / "demo.py",
+        tmp_path / "base_path/src/first/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path/src/second/shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "submodule" / "deeper.py",
+        tmp_path / "base_path/src/second/submodule/deeper.py",
         "print('hello deep second')\n",
     )
 
@@ -241,19 +241,19 @@ def test_no_existing_app_folder(
         assert f.read() == "print('hello first')\n"
 
     assert (app_path / "second").exists()
-    assert (app_path / "second" / "shallow.py").exists()
-    with (app_path / "second" / "shallow.py").open(encoding="utf-8") as f:
+    assert (app_path / "second/shallow.py").exists()
+    with (app_path / "second/shallow.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello shallow second')\n"
 
-    assert (app_path / "second" / "submodule").exists()
-    assert (app_path / "second" / "submodule" / "deeper.py").exists()
-    with (app_path / "second" / "submodule" / "deeper.py").open(encoding="utf-8") as f:
+    assert (app_path / "second/submodule").exists()
+    assert (app_path / "second/submodule/deeper.py").exists()
+    with (app_path / "second/submodule/deeper.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello deep second')\n"
 
     # The stale/broken modules have been removed.
     assert not (app_path / "stale.py").exists()
-    assert not (app_path / "second" / "stale.py").exists()
-    assert not (app_path / "second" / "broken").exists()
+    assert not (app_path / "second/stale.py").exists()
+    assert not (app_path / "second/broken").exists()
 
     # Metadata has been updated.
     assert not (app_path / "my_app-1.2.2.dist-info").exists()
@@ -281,15 +281,15 @@ def test_replace_sources(
     #     submodule /
     #       deeper.py
     create_file(
-        tmp_path / "base_path" / "src" / "first" / "demo.py",
+        tmp_path / "base_path/src/first/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path/src/second/shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "submodule" / "deeper.py",
+        tmp_path / "base_path/src/second/submodule/deeper.py",
         "print('hello deep second')\n",
     )
 
@@ -306,27 +306,27 @@ def test_replace_sources(
     #       other.py
     #   my_app-1.2.2.dist-info /
     create_file(
-        app_path / "src" / "demo.py",
+        app_path / "src/demo.py",
         "print('old hello first')\n",
     )
     create_file(
-        app_path / "src" / "stale.py",
+        app_path / "src/stale.py",
         "print('stale hello first')\n",
     )
     create_file(
-        app_path / "src" / "second" / "shallow.py",
+        app_path / "src/second/shallow.py",
         "print('old hello shallow second')\n",
     )
     create_file(
-        app_path / "src" / "second" / "stale.py",
+        app_path / "src/second/stale.py",
         "print('hello second stale')\n",
     )
     create_file(
-        app_path / "src" / "second" / "submodule" / "deeper.py",
+        app_path / "src/second/submodule/deeper.py",
         "print('hello deep second')\n",
     )
     create_file(
-        app_path / "src" / "second" / "broken" / "other.py",
+        app_path / "src/second/broken/other.py",
         "print('hello second deep broken')\n",
     )
 
@@ -344,19 +344,19 @@ def test_replace_sources(
         assert f.read() == "print('hello first')\n"
 
     assert (app_path / "second").exists()
-    assert (app_path / "second" / "shallow.py").exists()
-    with (app_path / "second" / "shallow.py").open(encoding="utf-8") as f:
+    assert (app_path / "second/shallow.py").exists()
+    with (app_path / "second/shallow.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello shallow second')\n"
 
-    assert (app_path / "second" / "submodule").exists()
-    assert (app_path / "second" / "submodule" / "deeper.py").exists()
-    with (app_path / "second" / "submodule" / "deeper.py").open(encoding="utf-8") as f:
+    assert (app_path / "second/submodule").exists()
+    assert (app_path / "second/submodule/deeper.py").exists()
+    with (app_path / "second/submodule/deeper.py").open(encoding="utf-8") as f:
         assert f.read() == "print('hello deep second')\n"
 
     # The stale/broken modules have been removed.
     assert not (app_path / "stale.py").exists()
-    assert not (app_path / "second" / "stale.py").exists()
-    assert not (app_path / "second" / "broken").exists()
+    assert not (app_path / "second/stale.py").exists()
+    assert not (app_path / "second/broken").exists()
 
     # Metadata has been updated.
     assert not (app_path / "my_app-1.2.2.dist-info").exists()
@@ -446,27 +446,27 @@ def test_test_sources(
     #   special /
     #     test_weird.py
     create_file(
-        tmp_path / "base_path" / "src" / "first" / "demo.py",
+        tmp_path / "base_path/src/first/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path/src/second/shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "base_path" / "tests" / "first.py",
+        tmp_path / "base_path/tests/first.py",
         "print('hello first test suite')\n",
     )
     create_file(
-        tmp_path / "base_path" / "tests" / "deep" / "test_case.py",
+        tmp_path / "base_path/tests/deep/test_case.py",
         "print('hello test case')\n",
     )
     create_file(
-        tmp_path / "base_path" / "othertests" / "test_more.py",
+        tmp_path / "base_path/othertests/test_more.py",
         "print('hello more tests')\n",
     )
     create_file(
-        tmp_path / "base_path" / "othertests" / "special" / "test_weird.py",
+        tmp_path / "base_path/othertests/special/test_weird.py",
         "print('hello weird tests')\n",
     )
 
@@ -478,10 +478,10 @@ def test_test_sources(
 
     # App sources exist.
     assert (app_path / "first").exists()
-    assert (app_path / "first" / "demo.py").exists()
+    assert (app_path / "first/demo.py").exists()
 
     assert (app_path / "second").exists()
-    assert (app_path / "second" / "shallow.py").exists()
+    assert (app_path / "second/shallow.py").exists()
 
     # Test sources do not exist
     assert not (app_path / "tests").exists()
@@ -518,27 +518,27 @@ def test_test_sources_test_mode(
     #   special /
     #     test_weird.py
     create_file(
-        tmp_path / "base_path" / "src" / "first" / "demo.py",
+        tmp_path / "base_path/src/first/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path/src/second/shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "base_path" / "tests" / "first.py",
+        tmp_path / "base_path/tests/first.py",
         "print('hello first test suite')\n",
     )
     create_file(
-        tmp_path / "base_path" / "tests" / "deep" / "test_case.py",
+        tmp_path / "base_path/tests/deep/test_case.py",
         "print('hello test case')\n",
     )
     create_file(
-        tmp_path / "base_path" / "othertests" / "test_more.py",
+        tmp_path / "base_path/othertests/test_more.py",
         "print('hello more tests')\n",
     )
     create_file(
-        tmp_path / "base_path" / "othertests" / "special" / "test_weird.py",
+        tmp_path / "base_path/othertests/special/test_weird.py",
         "print('hello weird tests')\n",
     )
 
@@ -550,17 +550,17 @@ def test_test_sources_test_mode(
 
     # App sources exist.
     assert (app_path / "first").exists()
-    assert (app_path / "first" / "demo.py").exists()
+    assert (app_path / "first/demo.py").exists()
 
     assert (app_path / "second").exists()
-    assert (app_path / "second" / "shallow.py").exists()
+    assert (app_path / "second/shallow.py").exists()
 
     # Test sources exist
-    assert (app_path / "tests" / "first.py").exists()
-    assert (app_path / "tests" / "deep" / "test_case.py").exists()
+    assert (app_path / "tests/first.py").exists()
+    assert (app_path / "tests/deep/test_case.py").exists()
 
-    assert (app_path / "othertests" / "test_more.py").exists()
-    assert (app_path / "othertests" / "special" / "test_weird.py").exists()
+    assert (app_path / "othertests/test_more.py").exists()
+    assert (app_path / "othertests/special/test_weird.py").exists()
 
     # Metadata has been created
     assert_dist_info(app_path)
@@ -589,27 +589,27 @@ def test_only_test_sources_test_mode(
     #   special /
     #     test_weird.py
     create_file(
-        tmp_path / "base_path" / "src" / "first" / "demo.py",
+        tmp_path / "base_path/src/first/demo.py",
         "print('hello first')\n",
     )
     create_file(
-        tmp_path / "base_path" / "src" / "second" / "shallow.py",
+        tmp_path / "base_path/src/second/shallow.py",
         "print('hello shallow second')\n",
     )
     create_file(
-        tmp_path / "base_path" / "tests" / "first.py",
+        tmp_path / "base_path/tests/first.py",
         "print('hello first test suite')\n",
     )
     create_file(
-        tmp_path / "base_path" / "tests" / "deep" / "test_case.py",
+        tmp_path / "base_path/tests/deep/test_case.py",
         "print('hello test case')\n",
     )
     create_file(
-        tmp_path / "base_path" / "othertests" / "test_more.py",
+        tmp_path / "base_path/othertests/test_more.py",
         "print('hello more tests')\n",
     )
     create_file(
-        tmp_path / "base_path" / "othertests" / "special" / "test_weird.py",
+        tmp_path / "base_path/othertests/special/test_weird.py",
         "print('hello weird tests')\n",
     )
 
@@ -624,11 +624,11 @@ def test_only_test_sources_test_mode(
     assert not (app_path / "second").exists()
 
     # Test sources exist
-    assert (app_path / "tests" / "first.py").exists()
-    assert (app_path / "tests" / "deep" / "test_case.py").exists()
+    assert (app_path / "tests/first.py").exists()
+    assert (app_path / "tests/deep/test_case.py").exists()
 
-    assert (app_path / "othertests" / "test_more.py").exists()
-    assert (app_path / "othertests" / "special" / "test_weird.py").exists()
+    assert (app_path / "othertests/test_more.py").exists()
+    assert (app_path / "othertests/special/test_weird.py").exists()
 
     # Metadata has been created
     assert_dist_info(app_path)

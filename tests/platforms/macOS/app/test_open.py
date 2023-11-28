@@ -30,7 +30,7 @@ def test_open(open_command, first_app_config, tmp_path):
     """On macOS, Open starts the finder on the Content folder."""
     # Create the binary that would be in the project bundle.
     create_file(
-        open_command.project_path(first_app_config) / "MacOS" / "First App",
+        open_command.project_path(first_app_config) / "MacOS/First App",
         "binary",
     )
 

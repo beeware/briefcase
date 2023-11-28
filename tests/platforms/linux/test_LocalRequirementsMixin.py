@@ -100,43 +100,43 @@ def create_command(no_docker_create_command, first_app_config, tmp_path):
 def first_package(tmp_path):
     # Create a local package to be built
     create_file(
-        tmp_path / "local" / "first" / "setup.py",
+        tmp_path / "local/first/setup.py",
         content="Python config",
     )
     create_file(
-        tmp_path / "local" / "first" / "first.py",
+        tmp_path / "local/first/first.py",
         content="Python source",
     )
 
-    return str(tmp_path / "local" / "first")
+    return str(tmp_path / "local/first")
 
 
 @pytest.fixture
 def second_package(tmp_path):
     # Create a local pre-built sdist
     create_tgz_file(
-        tmp_path / "local" / "second-2.3.4.tar.gz",
+        tmp_path / "local/second-2.3.4.tar.gz",
         content=[
             ("setup.py", "Python config"),
             ("second.py", "Python source"),
         ],
     )
 
-    return str(tmp_path / "local" / "second-2.3.4.tar.gz")
+    return str(tmp_path / "local/second-2.3.4.tar.gz")
 
 
 @pytest.fixture
 def third_package(tmp_path):
     # Create a local pre-built wheel
     create_zip_file(
-        tmp_path / "local" / "third-3.4.5-py3-none-any.whl",
+        tmp_path / "local/third-3.4.5-py3-none-any.whl",
         content=[
             ("MANIFEST.in", "Wheel config"),
             ("third.py", "Python source"),
         ],
     )
 
-    return str(tmp_path / "local" / "third-3.4.5-py3-none-any.whl")
+    return str(tmp_path / "local/third-3.4.5-py3-none-any.whl")
 
 
 @pytest.fixture
@@ -309,7 +309,7 @@ def test_install_app_requirements_with_locals(
             / "tester"
             / "dummy"
             / "_requirements",
-            str(tmp_path / "local" / "first"),
+            str(tmp_path / "local/first"),
         ],
         encoding="UTF-8",
     )
@@ -317,7 +317,7 @@ def test_install_app_requirements_with_locals(
     # An attempt was made to copy the prebuilt packages
     create_command.tools.shutil.copy.mock_calls = [
         call(
-            str(tmp_path / "local" / "second-2.3.4.tar.gz"),
+            str(tmp_path / "local/second-2.3.4.tar.gz"),
             tmp_path
             / "base_path"
             / "build"
@@ -327,7 +327,7 @@ def test_install_app_requirements_with_locals(
             / "_requirements",
         ),
         call(
-            str(tmp_path / "local" / "third-3.4.5-py3-none-any.whl"),
+            str(tmp_path / "local/third-3.4.5-py3-none-any.whl"),
             tmp_path
             / "base_path"
             / "build"
@@ -428,7 +428,7 @@ def test_install_app_requirements_with_bad_local(
             / "tester"
             / "dummy"
             / "_requirements",
-            str(tmp_path / "local" / "first"),
+            str(tmp_path / "local/first"),
         ],
         encoding="UTF-8",
     )
@@ -453,7 +453,7 @@ def test_install_app_requirements_with_missing_local_build(
     """If the app references a requirement that needs to be built, but is missing, an
     error is raised."""
     # Define a local requirement, but don't create the files it points at
-    first_app_config.requires.append(str(tmp_path / "local" / "first"))
+    first_app_config.requires.append(str(tmp_path / "local/first"))
 
     # Install requirements
     with pytest.raises(
@@ -485,7 +485,7 @@ def test_install_app_requirements_with_bad_local_file(
     """If the app references a local requirement file that doesn't exist, an error is
     raised."""
     # Add a local requirement that doesn't exist
-    first_app_config.requires.append(str(tmp_path / "local" / "missing-2.3.4.tar.gz"))
+    first_app_config.requires.append(str(tmp_path / "local/missing-2.3.4.tar.gz"))
 
     # Install requirements
     with pytest.raises(
@@ -496,7 +496,7 @@ def test_install_app_requirements_with_bad_local_file(
 
     # An attempt was made to copy the package
     create_command.tools.shutil.copy.assert_called_once_with(
-        str(tmp_path / "local" / "missing-2.3.4.tar.gz"),
+        str(tmp_path / "local/missing-2.3.4.tar.gz"),
         tmp_path
         / "base_path"
         / "build"

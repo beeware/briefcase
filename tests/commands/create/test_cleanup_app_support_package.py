@@ -35,7 +35,7 @@ def test_cleanup_support_package(
     """If a support package already exists, it can be cleaned up."""
 
     # Mock an existing support file
-    create_file(support_path / "old" / "trash.txt", "Old support file")
+    create_file(support_path / "old/trash.txt", "Old support file")
 
     # Mock shutil so we can confirm that rmtree is called,
     # but we still want the side effect of calling it

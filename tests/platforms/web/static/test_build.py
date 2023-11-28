@@ -34,13 +34,13 @@ def build_command(tmp_path):
 
 def test_build_app(build_command, first_app_generated, tmp_path):
     """An app can be built."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
         if args[0][5] == "wheel":
             create_wheel(
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "first_app",
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
@@ -48,14 +48,14 @@ def test_build_app(build_command, first_app_generated, tmp_path):
             ),
         elif args[0][5] == "pip":
             create_wheel(
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "dependency",
                 extra_content=[
                     ("dependency/static/style.css", "div { margin: 10px; }\n"),
                 ],
             ),
             create_wheel(
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "other",
                 extra_content=[
                     ("other/static/style.css", "div { padding: 10px; }\n"),
@@ -68,7 +68,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # Build the web app.
@@ -76,7 +76,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
     # The old wheel folder was removed
     build_command.tools.shutil.rmtree.assert_called_once_with(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # `wheel pack` and `pip wheel` was invoked
@@ -92,7 +92,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 "pack",
                 bundle_path / "app",
                 "--dest-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
             ],
             check=True,
             encoding="UTF-8",
@@ -107,7 +107,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 "pip",
                 "wheel",
                 "--wheel-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
@@ -117,7 +117,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
     ]
 
     # Pyscript.toml has been written
-    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
         assert tomllib.load(f) == {
             "name": "First App",
             "description": "The first simple app \\ demonstration",
@@ -132,9 +132,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
         }
 
     # briefcase.css has been appended
-    with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
-        encoding="utf-8"
-    ) as f:
+    with (bundle_path / "www/static/css/briefcase.css").open(encoding="utf-8") as f:
         assert (
             f.read()
             == "\n".join(
@@ -171,7 +169,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
 
 def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_path):
     """An app with extra pyscript.toml content can be written."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     first_app_generated.extra_pyscript_toml_content = (
         "\n".join(
@@ -193,14 +191,14 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # Build the web app.
     build_command.build_app(first_app_generated)
 
     # Pyscript.toml has been written
-    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
         assert tomllib.load(f) == {
             "name": "First App",
             "description": "The first simple app \\ demonstration",
@@ -219,13 +217,13 @@ def test_build_app_invalid_custom_pyscript_toml(
     build_command, first_app_generated, tmp_path
 ):
     """An app with invalid extra pyscript.toml content raises an error."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     first_app_generated.extra_pyscript_toml_content = "This isn't toml"
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # Building the web app raises an error
@@ -238,10 +236,10 @@ def test_build_app_invalid_custom_pyscript_toml(
 
 def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_path):
     """If the template is corrupted, the wheels folder is still created."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     # Remove the wheels folder
-    shutil.rmtree(bundle_path / "www" / "static" / "wheels")
+    shutil.rmtree(bundle_path / "www/static/wheels")
 
     # Build the web app.
     build_command.build_app(first_app_generated)
@@ -262,7 +260,7 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
                 "pack",
                 bundle_path / "app",
                 "--dest-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
             ],
             check=True,
             encoding="UTF-8",
@@ -277,7 +275,7 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
                 "pip",
                 "wheel",
                 "--wheel-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
@@ -287,25 +285,25 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
     ]
 
     # Wheels folder exists
-    assert (bundle_path / "www" / "static" / "wheels").is_dir()
+    assert (bundle_path / "www/static/wheels").is_dir()
 
     # Pyscript.toml has been written
-    assert (bundle_path / "www" / "pyscript.toml").exists()
+    assert (bundle_path / "www/pyscript.toml").exists()
 
     # briefcase.css has been appended
     # (just check for existence; a full check is done in other tests)
-    assert (bundle_path / "www" / "static" / "css" / "briefcase.css").exists()
+    assert (bundle_path / "www/static/css/briefcase.css").exists()
 
 
 def test_build_app_no_requirements(build_command, first_app_generated, tmp_path):
     """An app with no requirements can be built."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
         if args[0][5] == "wheel":
             create_wheel(
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "first_app",
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
@@ -320,7 +318,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # Build the web app.
@@ -328,7 +326,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
     # The old wheel folder was removed
     build_command.tools.shutil.rmtree.assert_called_once_with(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # `wheel pack` and `pip wheel` was invoked
@@ -344,7 +342,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 "pack",
                 bundle_path / "app",
                 "--dest-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
             ],
             check=True,
             encoding="UTF-8",
@@ -359,7 +357,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 "pip",
                 "wheel",
                 "--wheel-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
@@ -369,7 +367,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
     ]
 
     # Pyscript.toml has been written
-    with (bundle_path / "www" / "pyscript.toml").open("rb") as f:
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
         assert tomllib.load(f) == {
             "name": "First App",
             "description": "The first simple app \\ demonstration",
@@ -382,9 +380,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
         }
 
     # briefcase.css has been appended
-    with (bundle_path / "www" / "static" / "css" / "briefcase.css").open(
-        encoding="utf-8"
-    ) as f:
+    with (bundle_path / "www/static/css/briefcase.css").open(encoding="utf-8") as f:
         assert (
             f.read()
             == "\n".join(
@@ -409,11 +405,11 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
 def test_app_package_fail(build_command, first_app_generated, tmp_path):
     """If the app can't be packaged as a wheel,an error is raised."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # Mock the side effect of a successful package build, but failure
@@ -431,7 +427,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
 
     # The old wheel folder was removed
     build_command.tools.shutil.rmtree.assert_called_once_with(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # `wheel pack` was invoked
@@ -447,7 +443,7 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
                 "pack",
                 bundle_path / "app",
                 "--dest-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
             ],
             check=True,
             encoding="UTF-8",
@@ -455,19 +451,19 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
     ]
 
     # Wheels folder still exists
-    assert (bundle_path / "www" / "static" / "wheels").is_dir()
+    assert (bundle_path / "www/static/wheels").is_dir()
 
     # Pyscript.toml was not written
-    assert not (bundle_path / "www" / "pyscript.toml").exists()
+    assert not (bundle_path / "www/pyscript.toml").exists()
 
 
 def test_dependency_fail(build_command, first_app_generated, tmp_path):
     """If dependencies can't be downloaded, an error is raised."""
-    bundle_path = tmp_path / "base_path" / "build" / "first-app" / "web" / "static"
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # Mock the side effect of a successful package build, but failure
@@ -486,7 +482,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
 
     # The old wheel folder was removed
     build_command.tools.shutil.rmtree.assert_called_once_with(
-        bundle_path / "www" / "static" / "wheels"
+        bundle_path / "www/static/wheels"
     )
 
     # `wheel pack` and `pip wheel` was invoked
@@ -502,7 +498,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
                 "pack",
                 bundle_path / "app",
                 "--dest-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
             ],
             check=True,
             encoding="UTF-8",
@@ -517,7 +513,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
                 "pip",
                 "wheel",
                 "--wheel-dir",
-                bundle_path / "www" / "static" / "wheels",
+                bundle_path / "www/static/wheels",
                 "-r",
                 bundle_path / "requirements.txt",
             ],
@@ -527,7 +523,7 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
     ]
 
     # Wheels folder still exists
-    assert (bundle_path / "www" / "static" / "wheels").is_dir()
+    assert (bundle_path / "www/static/wheels").is_dir()
 
     # Pyscript.toml was not written
-    assert not (bundle_path / "www" / "pyscript.toml").exists()
+    assert not (bundle_path / "www/pyscript.toml").exists()

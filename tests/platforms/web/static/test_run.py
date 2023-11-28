@@ -447,7 +447,7 @@ def test_served_paths(monkeypatch, tmp_path):
     # Invoke this as a static method because we don't want to
     # instantiate a full server just to verify that URL rewriting works.
     assert handler.translate_path("/static/css/briefcase.css") == str(
-        tmp_path / "base_path" / "static" / "css" / "briefcase.css"
+        tmp_path / "base_path/static/css/briefcase.css"
     )
 
 

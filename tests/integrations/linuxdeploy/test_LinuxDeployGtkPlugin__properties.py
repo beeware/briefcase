@@ -12,7 +12,7 @@ def test_file_path(linuxdeploy_gtk_plugin, mock_tools):
     """Default Linuxdeploy plugins reside in the linuxdeploy plugins path."""
     assert (
         linuxdeploy_gtk_plugin.file_path
-        == mock_tools.base_path / "linuxdeploy_plugins" / "gtk"
+        == mock_tools.base_path / "linuxdeploy_plugins/gtk"
     )
 
 

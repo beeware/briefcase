@@ -85,7 +85,7 @@ def test_emulator_path(mock_tools, android_sdk, host_os, emulator_name):
 
 
 def test_avd_path(mock_tools, android_sdk, tmp_path):
-    assert android_sdk.avd_path == tmp_path / "home" / ".android" / "avd"
+    assert android_sdk.avd_path == tmp_path / "home/.android/avd"
 
 
 def test_simple_env(mock_tools, android_sdk, tmp_path):

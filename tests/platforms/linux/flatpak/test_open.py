@@ -47,6 +47,6 @@ def test_open(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xdg-open",
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "flatpak",
+            tmp_path / "base_path/build/first-app/linux/flatpak",
         ]
     )

@@ -32,7 +32,7 @@ def package_command(tmp_path, first_app_config, monkeypatch):
     )
 
     # Make sure the dist folder exists
-    (tmp_path / "base_path" / "dist").mkdir(parents=True)
+    (tmp_path / "base_path/dist").mkdir(parents=True)
     return command
 
 

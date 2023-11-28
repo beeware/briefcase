@@ -40,9 +40,9 @@ def test_thin_app_packages(dummy_command, tmp_path):
     dummy_command.thin_app_packages(app_packages, arch="gothic")
 
     # All libraries have been thinned
-    assert file_content(app_packages / "pkg" / "sub1" / "module1.dylib") == "dylib-thin"
-    assert file_content(app_packages / "pkg" / "sub1" / "module2.so") == "dylib-thin"
-    assert file_content(app_packages / "pkg" / "sub2" / "module3.dylib") == "dylib-thin"
+    assert file_content(app_packages / "pkg/sub1/module1.dylib") == "dylib-thin"
+    assert file_content(app_packages / "pkg/sub1/module2.so") == "dylib-thin"
+    assert file_content(app_packages / "pkg/sub2/module3.dylib") == "dylib-thin"
 
 
 def test_thin_app_packages_problem(dummy_command, tmp_path):

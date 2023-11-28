@@ -69,7 +69,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         return self.bundle_path(app) / f"{app.app_name}-{app.version}"
 
     def binary_path(self, app):
-        return self.project_path(app) / "usr" / "bin" / app.app_name
+        return self.project_path(app) / "usr/bin" / app.app_name
 
     def rpm_tag(self, app):
         if app.target_vendor == "fedora":

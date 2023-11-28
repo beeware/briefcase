@@ -29,7 +29,7 @@ def test_non_managed_install(mock_tools, tmp_path, capsys):
 def test_non_existing_wix_install(mock_tools, tmp_path):
     """If there's no existing managed WiX install, upgrading is an error."""
     # Create an SDK wrapper around a non-existing managed install
-    wix = WiX(mock_tools, wix_home=tmp_path / "tools" / "wix")
+    wix = WiX(mock_tools, wix_home=tmp_path / "tools/wix")
 
     with pytest.raises(MissingToolError):
         wix.upgrade()
@@ -41,16 +41,16 @@ def test_non_existing_wix_install(mock_tools, tmp_path):
 def test_existing_wix_install(mock_tools, tmp_path):
     """If there's an existing managed WiX install, it is deleted and redownloaded."""
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
     wix_path.mkdir(parents=True)
     (wix_path / "heat.exe").touch()
     (wix_path / "light.exe").touch()
     (wix_path / "candle.exe").touch()
 
     # Mock the download
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
+    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
     wix_zip = MagicMock()
     wix_zip.__fspath__.return_value = wix_zip_path
 
@@ -84,7 +84,7 @@ def test_existing_wix_install(mock_tools, tmp_path):
 def test_download_fail(mock_tools, tmp_path):
     """If the download doesn't complete, the upgrade fails."""
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
     wix_path.mkdir(parents=True)
     (wix_path / "heat.exe").touch()
     (wix_path / "light.exe").touch()
@@ -114,14 +114,14 @@ def test_download_fail(mock_tools, tmp_path):
 def test_unpack_fail(mock_tools, tmp_path):
     """If the download archive is corrupted, the validator fails."""
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
     wix_path.mkdir(parents=True)
     (wix_path / "heat.exe").touch()
     (wix_path / "light.exe").touch()
     (wix_path / "candle.exe").touch()
 
     # Mock the download
-    wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
+    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
     wix_zip = MagicMock()
     wix_zip.__fspath__.return_value = wix_zip_path
 
