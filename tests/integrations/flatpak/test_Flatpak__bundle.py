@@ -19,7 +19,7 @@ def test_bundle(flatpak, tool_debug_mode, tmp_path):
         app_name="my-app",
         version="1.2.3",
         build_path=tmp_path / "build",
-        output_path=tmp_path / "output" / "MyApp.flatpak",
+        output_path=tmp_path / "output/MyApp.flatpak",
     )
 
     # The expected call was made
@@ -30,7 +30,7 @@ def test_bundle(flatpak, tool_debug_mode, tmp_path):
             "--runtime-repo",
             "https://example.com/flatpak",
             "repo",
-            tmp_path / "output" / "MyApp.flatpak",
+            tmp_path / "output/MyApp.flatpak",
             "com.example.my-app",
             "1.2.3",
         ]
@@ -56,5 +56,5 @@ def test_bundle_fail(flatpak, tmp_path):
             app_name="my-app",
             version="1.2.3",
             build_path=tmp_path / "build",
-            output_path=tmp_path / "output" / "MyApp.flatpak",
+            output_path=tmp_path / "output/MyApp.flatpak",
         )

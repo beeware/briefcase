@@ -28,7 +28,7 @@ def test_unsupported_os(mock_tools, host_os):
 
 def test_verify_exists(mock_tools, tmp_path):
     """If RCEdit already exists, verification doesn't download."""
-    rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
+    rcedit_path = tmp_path / "tools/rcedit-x64.exe"
 
     # Mock the existence of an install
     rcedit_path.touch()
@@ -61,7 +61,7 @@ def test_verify_does_not_exist_dont_install(mock_tools, tmp_path):
 
 def test_verify_does_not_exist(mock_tools, tmp_path):
     """If RCEdit doesn't exist, it is downloaded."""
-    rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
+    rcedit_path = tmp_path / "tools/rcedit-x64.exe"
 
     # Mock a successful download
     def side_effect_create_mock_appimage(*args, **kwargs):

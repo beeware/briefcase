@@ -114,7 +114,7 @@ def second_app(second_app_config, tmp_path):
         "second.bundle",
     )
     create_file(
-        tmp_path / "base_path" / "build" / "second" / "tester" / "dummy" / "second.bin",
+        tmp_path / "base_path/build/second/tester/dummy/second.bin",
         "second.bin",
     )
 

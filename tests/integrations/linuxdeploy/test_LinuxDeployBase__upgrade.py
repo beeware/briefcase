@@ -6,7 +6,7 @@ from tests.integrations.linuxdeploy.utils import side_effect_create_mock_appimag
 
 def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
     """If linuxdeploy already exists, upgrading deletes first."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-i386.AppImage"
+    appimage_path = tmp_path / "tools/linuxdeploy-i386.AppImage"
 
     # Mock the existence of an install
     appimage_path.touch()
@@ -45,7 +45,7 @@ def test_upgrade_does_not_exist(linuxdeploy, mock_tools):
 def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path):
     """If linuxdeploy doesn't exist, but a download failure occurs, an error is
     raised."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-i386.AppImage"
+    appimage_path = tmp_path / "tools/linuxdeploy-i386.AppImage"
 
     # Mock the existence of an install
     appimage_path.touch()

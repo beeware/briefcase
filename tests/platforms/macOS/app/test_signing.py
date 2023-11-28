@@ -242,14 +242,14 @@ def test_sign_file_adhoc_identity(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Sign the file with an ad-hoc identity
-    dummy_command.sign_file(tmp_path / "base_path" / "random.file", identity="-")
+    dummy_command.sign_file(tmp_path / "base_path/random.file", identity="-")
 
     # An attempt to codesign was made without the runtime option
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 identity="-",
                 entitlements=False,
                 runtime=False,
@@ -271,7 +271,7 @@ def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
 
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
-        tmp_path / "base_path" / "random.file",
+        tmp_path / "base_path/random.file",
         identity="Sekrit identity (DEADBEEF)",
         entitlements=tmp_path
         / "base_path"
@@ -285,7 +285,7 @@ def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
     # An attempt to codesign was made without the runtime option
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "base_path" / "random.file"),
+            sign_call(tmp_path, tmp_path / "base_path/random.file"),
         ],
         any_order=False,
     )
@@ -308,7 +308,7 @@ def test_sign_file_deep_sign(dummy_command, verbose, tmp_path, capsys):
 
     # Sign the file
     dummy_command.sign_file(
-        tmp_path / "base_path" / "random.file", identity="Sekrit identity (DEADBEEF)"
+        tmp_path / "base_path/random.file", identity="Sekrit identity (DEADBEEF)"
     )
 
     # 2 attempt to codesign was made; the second enabled the deep argument.
@@ -316,12 +316,12 @@ def test_sign_file_deep_sign(dummy_command, verbose, tmp_path, capsys):
         [
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 entitlements=False,
             ),
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 entitlements=False,
                 deep=True,
             ),
@@ -355,7 +355,7 @@ def test_sign_file_deep_sign_failure(dummy_command, verbose, tmp_path, capsys):
     # Sign the file
     with pytest.raises(BriefcaseCommandError, match="Unable to deep code sign "):
         dummy_command.sign_file(
-            tmp_path / "base_path" / "random.file",
+            tmp_path / "base_path/random.file",
             identity="Sekrit identity (DEADBEEF)",
         )
 
@@ -364,7 +364,7 @@ def test_sign_file_deep_sign_failure(dummy_command, verbose, tmp_path, capsys):
         [
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 entitlements=False,
             ),
         ],
@@ -394,7 +394,7 @@ def test_sign_file_unsupported_format(dummy_command, verbose, tmp_path, capsys):
 
     # Sign the file
     dummy_command.sign_file(
-        tmp_path / "base_path" / "random.file",
+        tmp_path / "base_path/random.file",
         identity="Sekrit identity (DEADBEEF)",
     )
 
@@ -403,7 +403,7 @@ def test_sign_file_unsupported_format(dummy_command, verbose, tmp_path, capsys):
         [
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 entitlements=False,
             ),
         ],
@@ -433,7 +433,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, verbose, tmp_path, capsy
 
     # Sign the file
     dummy_command.sign_file(
-        tmp_path / "base_path" / "random.file",
+        tmp_path / "base_path/random.file",
         identity="Sekrit identity (DEADBEEF)",
     )
 
@@ -442,7 +442,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, verbose, tmp_path, capsy
         [
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 entitlements=False,
             ),
         ],
@@ -469,7 +469,7 @@ def test_sign_file_unknown_error(dummy_command, verbose, tmp_path, capsys):
 
     with pytest.raises(BriefcaseCommandError, match="Unable to code sign "):
         dummy_command.sign_file(
-            tmp_path / "base_path" / "random.file",
+            tmp_path / "base_path/random.file",
             identity="Sekrit identity (DEADBEEF)",
         )
 
@@ -478,7 +478,7 @@ def test_sign_file_unknown_error(dummy_command, verbose, tmp_path, capsys):
         [
             sign_call(
                 tmp_path,
-                tmp_path / "base_path" / "random.file",
+                tmp_path / "base_path/random.file",
                 entitlements=False,
             ),
         ],
@@ -518,23 +518,21 @@ def test_sign_app(dummy_command, first_app_with_binaries, verbose, tmp_path, cap
         / "app"
         / "First App.app"
     )
-    lib_path = app_path / "Contents" / "Resources" / "app_packages"
-    frameworks_path = app_path / "Contents" / "Frameworks"
+    lib_path = app_path / "Contents/Resources/app_packages"
+    frameworks_path = app_path / "Contents/Frameworks"
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, lib_path / "subfolder" / "second_so.so"),
-            sign_call(tmp_path, lib_path / "subfolder" / "second_dylib.dylib"),
+            sign_call(tmp_path, lib_path / "subfolder/second_so.so"),
+            sign_call(tmp_path, lib_path / "subfolder/second_dylib.dylib"),
             sign_call(tmp_path, lib_path / "special.binary"),
             sign_call(tmp_path, lib_path / "other_binary"),
             sign_call(tmp_path, lib_path / "first_so.so"),
             sign_call(tmp_path, lib_path / "first_dylib.dylib"),
-            sign_call(
-                tmp_path, lib_path / "Extras.app" / "Contents" / "MacOS" / "Extras"
-            ),
+            sign_call(tmp_path, lib_path / "Extras.app/Contents/MacOS/Extras"),
             sign_call(tmp_path, lib_path / "Extras.app"),
             sign_call(
                 tmp_path,
-                frameworks_path / "Extras.framework" / "Resources" / "extras.dylib",
+                frameworks_path / "Extras.framework/Resources/extras.dylib",
             ),
             sign_call(tmp_path, frameworks_path / "Extras.framework"),
             sign_call(tmp_path, app_path),

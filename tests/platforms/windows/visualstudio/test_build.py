@@ -23,7 +23,7 @@ def build_command(tmp_path):
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.visualstudio = VisualStudio(
         tools=command.tools,
-        msbuild_path=tmp_path / "Visual Studio" / "MSBuild.exe",
+        msbuild_path=tmp_path / "Visual Studio/MSBuild.exe",
     )
     return command
 
@@ -60,7 +60,7 @@ def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
             # Collect manifest
             mock.call(
                 [
-                    Path(tmp_path) / "Visual Studio" / "MSBuild.exe",
+                    Path(tmp_path) / "Visual Studio/MSBuild.exe",
                     "First App.sln",
                     "-target:restore",
                     "-property:RestorePackagesConfig=true",

@@ -129,7 +129,7 @@ class AndroidSDK(ManagedTool):
         return self.dot_android_path / "avd"
 
     def avd_config_filename(self, avd: str) -> Path:
-        return self.avd_path / f"{avd}.avd" / "config.ini"
+        return self.avd_path / f"{avd}.avd/config.ini"
 
     @property
     def env(self) -> dict[str, str]:
@@ -580,7 +580,7 @@ its output for errors.
 
         Raises an error if licenses are not.
         """
-        license_path = self.root_path / "licenses" / "android-sdk-license"
+        license_path = self.root_path / "licenses/android-sdk-license"
         if license_path.exists():
             return
 

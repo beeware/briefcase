@@ -123,7 +123,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "xdg-open",
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
+            tmp_path / "base_path/build/first-app/linux/appimage",
         ]
     )
 
@@ -147,6 +147,6 @@ def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
     open_command.tools.subprocess.Popen.assert_called_once_with(
         [
             "open",
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage",
+            tmp_path / "base_path/build/first-app/linux/appimage",
         ]
     )

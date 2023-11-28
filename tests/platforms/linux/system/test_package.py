@@ -90,7 +90,7 @@ def test_distribution_path(
 
     assert (
         package_command.distribution_path(first_app)
-        == tmp_path / "base_path" / "dist" / filename
+        == tmp_path / "base_path/dist" / filename
     )
 
     # Confirm ABI was requested from build env

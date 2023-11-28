@@ -214,7 +214,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 
     def _write_test_path(self) -> Path:
         """Host system filepath to perform write test from a container."""
-        return Path.cwd() / "build" / "container_write_test"
+        return Path.cwd() / "build/container_write_test"
 
     def _is_user_mapping_enabled(self, image_tag: str | None = None) -> bool:
         """Determine whether Docker is mapping users between the container and the host.

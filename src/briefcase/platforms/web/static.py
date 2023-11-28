@@ -37,10 +37,10 @@ class StaticWebMixin:
         return self.bundle_path(app) / "www"
 
     def binary_path(self, app):
-        return self.bundle_path(app) / "www" / "index.html"
+        return self.bundle_path(app) / "www/index.html"
 
     def wheel_path(self, app):
-        return self.project_path(app) / "static" / "wheels"
+        return self.project_path(app) / "static/wheels"
 
     def distribution_path(self, app):
         return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
@@ -211,9 +211,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         self.logger.info("Compile static web content from wheels")
         with self.input.wait_bar("Compiling static web content from wheels..."):
             # Trim previously compiled content out of briefcase.css
-            briefcase_css_path = (
-                self.project_path(app) / "static" / "css" / "briefcase.css"
-            )
+            briefcase_css_path = self.project_path(app) / "static/css/briefcase.css"
             self._trim_file(
                 briefcase_css_path,
                 sentinel=" ******************* Wheel contributed styles **********************/",

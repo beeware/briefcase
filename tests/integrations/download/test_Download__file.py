@@ -111,7 +111,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     response.iter_content.assert_not_called()
 
     # The filename is derived from the URL or header
-    assert filename == mock_tools.base_path / "downloads" / "something.zip"
+    assert filename == mock_tools.base_path / "downloads/something.zip"
 
     # Temporary file was created in download dir and was renamed
     temp_filename = Path(mock_tools.shutil.move.call_args_list[0].args[0])
@@ -128,9 +128,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     mock_tools.os.remove.assert_called_with(str(temp_filename))
 
     # File content is as expected
-    with (mock_tools.base_path / "downloads" / "something.zip").open(
-        encoding="utf-8"
-    ) as f:
+    with (mock_tools.base_path / "downloads/something.zip").open(encoding="utf-8") as f:
         assert f.read() == "all content"
 
 

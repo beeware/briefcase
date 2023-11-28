@@ -42,9 +42,9 @@ def test_valid_wix_envvar(mock_tools, tmp_path):
 
     # Mock the interesting parts of a WiX install
     (wix_path / "bin").mkdir(parents=True)
-    (wix_path / "bin" / "heat.exe").touch()
-    (wix_path / "bin" / "light.exe").touch()
-    (wix_path / "bin" / "candle.exe").touch()
+    (wix_path / "bin/heat.exe").touch()
+    (wix_path / "bin/light.exe").touch()
+    (wix_path / "bin/candle.exe").touch()
 
     # Verify the install
     wix = WiX.verify(mock_tools)
@@ -53,9 +53,9 @@ def test_valid_wix_envvar(mock_tools, tmp_path):
     mock_tools.os.environ.get.assert_called_with("WIX")
 
     # The returned paths are as expected (and are the full paths)
-    assert wix.heat_exe == tmp_path / "wix" / "bin" / "heat.exe"
-    assert wix.light_exe == tmp_path / "wix" / "bin" / "light.exe"
-    assert wix.candle_exe == tmp_path / "wix" / "bin" / "candle.exe"
+    assert wix.heat_exe == tmp_path / "wix/bin/heat.exe"
+    assert wix.light_exe == tmp_path / "wix/bin/light.exe"
+    assert wix.candle_exe == tmp_path / "wix/bin/candle.exe"
 
 
 def test_invalid_wix_envvar(mock_tools, tmp_path):
@@ -75,7 +75,7 @@ def test_existing_wix_install(mock_tools, tmp_path):
     mock_tools.os.environ.get.return_value = None
 
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
     wix_path.mkdir(parents=True)
     (wix_path / "heat.exe").touch()
     (wix_path / "light.exe").touch()
@@ -90,9 +90,9 @@ def test_existing_wix_install(mock_tools, tmp_path):
     assert mock_tools.download.file.call_count == 0
 
     # The returned paths are as expected
-    assert wix.heat_exe == tmp_path / "tools" / "wix" / "heat.exe"
-    assert wix.light_exe == tmp_path / "tools" / "wix" / "light.exe"
-    assert wix.candle_exe == tmp_path / "tools" / "wix" / "candle.exe"
+    assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
+    assert wix.light_exe == tmp_path / "tools/wix/light.exe"
+    assert wix.candle_exe == tmp_path / "tools/wix/candle.exe"
 
 
 def test_download_wix(mock_tools, tmp_path):
@@ -101,9 +101,9 @@ def test_download_wix(mock_tools, tmp_path):
     mock_tools.os.environ.get.return_value = None
 
     # Mock the download
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
+    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
     wix_zip = MagicMock()
     wix_zip.__fspath__.return_value = wix_zip_path
 
@@ -131,9 +131,9 @@ def test_download_wix(mock_tools, tmp_path):
     wix_zip.unlink.assert_called_with()
 
     # The returned paths are as expected
-    assert wix.heat_exe == tmp_path / "tools" / "wix" / "heat.exe"
-    assert wix.light_exe == tmp_path / "tools" / "wix" / "light.exe"
-    assert wix.candle_exe == tmp_path / "tools" / "wix" / "candle.exe"
+    assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
+    assert wix.light_exe == tmp_path / "tools/wix/light.exe"
+    assert wix.candle_exe == tmp_path / "tools/wix/candle.exe"
 
 
 def test_dont_install(mock_tools, tmp_path):
@@ -185,9 +185,9 @@ def test_unpack_fail(mock_tools, tmp_path):
     mock_tools.os.environ.get.return_value = None
 
     # Mock the download
-    wix_path = tmp_path / "tools" / "wix"
+    wix_path = tmp_path / "tools/wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / "tools" / "wix.zip")
+    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
     wix_zip = MagicMock()
     wix_zip.__fspath__.return_value = wix_zip_path
 

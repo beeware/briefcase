@@ -44,7 +44,7 @@ def test_no_requested_size(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original.png"
+    source_file = tmp_path / "base_path/input/original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -65,7 +65,7 @@ def test_no_requested_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.tools.shutil.copy.assert_called_with(
-        create_command.base_path / "input" / "original.png",
+        create_command.base_path / "input/original.png",
         out_path,
     )
 
@@ -98,7 +98,7 @@ def test_requested_size(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original-3742.png"
+    source_file = tmp_path / "base_path/input/original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -119,7 +119,7 @@ def test_requested_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.tools.shutil.copy.assert_called_with(
-        create_command.base_path / "input" / "original-3742.png",
+        create_command.base_path / "input/original-3742.png",
         out_path,
     )
 
@@ -152,7 +152,7 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original.png"
+    source_file = tmp_path / "base_path/input/original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -175,7 +175,7 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.tools.shutil.copy.assert_called_with(
-        create_command.base_path / "input" / "original.png",
+        create_command.base_path / "input/original.png",
         out_path,
     )
 
@@ -188,7 +188,7 @@ def test_variant_without_variant_source_and_no_requested_size(
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original.png"
+    source_file = tmp_path / "base_path/input/original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -216,7 +216,7 @@ def test_unknown_variant_with_no_requested_size(create_command, tmp_path, capsys
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original.png"
+    source_file = tmp_path / "base_path/input/original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -246,7 +246,7 @@ def test_variant_with_size(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original-3742.png"
+    source_file = tmp_path / "base_path/input/original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -271,7 +271,7 @@ def test_variant_with_size(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.tools.shutil.copy.assert_called_with(
-        create_command.base_path / "input" / "original-3742.png",
+        create_command.base_path / "input/original-3742.png",
         out_path,
     )
 
@@ -282,7 +282,7 @@ def test_variant_with_size_without_variants(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original-3742.png"
+    source_file = tmp_path / "base_path/input/original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -311,7 +311,7 @@ def test_unknown_variant_with_size(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original-3742.png"
+    source_file = tmp_path / "base_path/input/original-3742.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -341,7 +341,7 @@ def test_unsized_variant(create_command, tmp_path, capsys):
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Create the source image
-    source_file = tmp_path / "base_path" / "input" / "original.png"
+    source_file = tmp_path / "base_path/input/original.png"
     source_file.parent.mkdir(parents=True, exist_ok=True)
     with source_file.open("w", encoding="utf-8") as f:
         f.write("image")
@@ -366,6 +366,6 @@ def test_unsized_variant(create_command, tmp_path, capsys):
 
     # The file was copied into position
     create_command.tools.shutil.copy.assert_called_with(
-        create_command.base_path / "input" / "original.png",
+        create_command.base_path / "input/original.png",
         out_path,
     )

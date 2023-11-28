@@ -18,7 +18,7 @@ def package_command(tmp_path, first_app_config):
     command.tools.host_arch = "x86_64"
 
     # Ensure the dist folder exists
-    (tmp_path / "base_path" / "dist").mkdir(parents=True)
+    (tmp_path / "base_path/dist").mkdir(parents=True)
 
     return command
 
@@ -42,6 +42,4 @@ def test_package_app(package_command, first_app_config, tmp_path):
     package_command.package_app(first_app_config)
 
     # The binary has been copied to the dist folder
-    assert (
-        tmp_path / "base_path" / "dist" / "First_App-0.0.1-x86_64.AppImage"
-    ).exists()
+    assert (tmp_path / "base_path/dist/First_App-0.0.1-x86_64.AppImage").exists()

@@ -27,7 +27,7 @@ def test_build_path(
 
     assert (
         create_command.build_path(first_app_config)
-        == tmp_path / "base_path" / "build" / "first-app" / vendor
+        == tmp_path / "base_path/build/first-app" / vendor
     )
 
 
@@ -51,7 +51,7 @@ def test_bundle_path(
 
     assert (
         create_command.bundle_path(first_app_config)
-        == tmp_path / "base_path" / "build" / "first-app" / vendor / codename
+        == tmp_path / "base_path/build/first-app" / vendor / codename
     )
 
 
@@ -105,7 +105,7 @@ def test_distribution_path(
 
     assert (
         create_command.distribution_path(first_app_config)
-        == tmp_path / "base_path" / "dist" / filename
+        == tmp_path / "base_path/dist" / filename
     )
 
 

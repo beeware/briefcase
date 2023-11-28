@@ -36,9 +36,9 @@ def test_package_msi(package_command, first_app_config, tmp_path):
             # Collect manifest
             mock.call(
                 [
-                    tmp_path / "wix" / "bin" / "heat.exe",
+                    tmp_path / "wix/bin/heat.exe",
                     "dir",
-                    os.fsdecode(Path("x64") / "Release"),
+                    os.fsdecode(Path("x64/Release")),
                     "-nologo",
                     "-gg",
                     "-sfrag",
@@ -65,7 +65,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
             # Compile MSI
             mock.call(
                 [
-                    tmp_path / "wix" / "bin" / "candle.exe",
+                    tmp_path / "wix/bin/candle.exe",
                     "-nologo",
                     "-ext",
                     "WixUtilExtension",
@@ -73,7 +73,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "WixUIExtension",
                     "-arch",
                     "x64",
-                    f'-dSourceDir={os.fsdecode(Path("x64") / "Release")}',
+                    f'-dSourceDir={os.fsdecode(Path("x64/Release"))}',
                     "first-app.wxs",
                     "first-app-manifest.wxs",
                 ],
@@ -88,7 +88,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
             # Link MSI
             mock.call(
                 [
-                    tmp_path / "wix" / "bin" / "light.exe",
+                    tmp_path / "wix/bin/light.exe",
                     "-nologo",
                     "-ext",
                     "WixUtilExtension",
@@ -97,7 +97,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "-loc",
                     "unicode.wxl",
                     "-o",
-                    tmp_path / "base_path" / "dist" / "First App-0.0.1.msi",
+                    tmp_path / "base_path/dist/First App-0.0.1.msi",
                     "first-app.wixobj",
                     "first-app-manifest.wixobj",
                 ],

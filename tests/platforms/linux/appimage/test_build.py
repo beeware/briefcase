@@ -33,15 +33,15 @@ def first_app(first_app_config, tmp_path):
         / "appimage"
         / "First App.AppDir"
     )
-    (app_dir / "usr" / "app" / "support").mkdir(parents=True, exist_ok=True)
-    (app_dir / "usr" / "app_packages" / "firstlib").mkdir(parents=True, exist_ok=True)
-    (app_dir / "usr" / "app_packages" / "secondlib").mkdir(parents=True, exist_ok=True)
+    (app_dir / "usr/app/support").mkdir(parents=True, exist_ok=True)
+    (app_dir / "usr/app_packages/firstlib").mkdir(parents=True, exist_ok=True)
+    (app_dir / "usr/app_packages/secondlib").mkdir(parents=True, exist_ok=True)
 
     # Create some .so files
-    (app_dir / "usr" / "app" / "support" / "support.so").touch()
-    (app_dir / "usr" / "app_packages" / "firstlib" / "first.so").touch()
-    (app_dir / "usr" / "app_packages" / "secondlib" / "second_a.so").touch()
-    (app_dir / "usr" / "app_packages" / "secondlib" / "second_b.so").touch()
+    (app_dir / "usr/app/support/support.so").touch()
+    (app_dir / "usr/app_packages/firstlib/first.so").touch()
+    (app_dir / "usr/app_packages/secondlib/second_a.so").touch()
+    (app_dir / "usr/app_packages/secondlib/second_b.so").touch()
 
     return first_app_config
 
@@ -181,9 +181,7 @@ def test_build_appimage(build_command, first_app, debug_mode, tmp_path, sub_stre
         expected_env["DEBUG"] = "1"
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
-            ),
+            os.fsdecode(tmp_path / "briefcase/tools/linuxdeploy-x86_64.AppImage"),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -192,16 +190,14 @@ def test_build_appimage(build_command, first_app, debug_mode, tmp_path, sub_stre
             "appimage",
             "-v0" if debug_mode else "-v1",
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            os.fsdecode(app_dir / "usr/app/support"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            os.fsdecode(app_dir / "usr/app_packages/firstlib"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+            os.fsdecode(app_dir / "usr/app_packages/secondlib"),
         ],
         env=expected_env,
-        cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-        ),
+        cwd=os.fsdecode(tmp_path / "base_path/build/first-app/linux/appimage"),
         **sub_stream_kw,
     )
     # Binary is marked executable
@@ -235,7 +231,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
     gtk_plugin_path.parent.mkdir(parents=True)
     gtk_plugin_path.touch()
 
-    local_file_plugin_path = tmp_path / "local" / "linuxdeploy-plugin-something.sh"
+    local_file_plugin_path = tmp_path / "local/linuxdeploy-plugin-something.sh"
     local_file_plugin_path.parent.mkdir(parents=True)
     local_file_plugin_path.touch()
 
@@ -261,9 +257,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
-            ),
+            os.fsdecode(tmp_path / "briefcase/tools/linuxdeploy-x86_64.AppImage"),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -272,11 +266,11 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
             "appimage",
             "-v1",
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            os.fsdecode(app_dir / "usr/app/support"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            os.fsdecode(app_dir / "usr/app_packages/firstlib"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+            os.fsdecode(app_dir / "usr/app_packages/secondlib"),
             "--plugin",
             "gtk",
             "--plugin",
@@ -290,9 +284,7 @@ def test_build_appimage_with_plugin(build_command, first_app, tmp_path, sub_stre
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "x86_64",
         },
-        cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-        ),
+        cwd=os.fsdecode(tmp_path / "base_path/build/first-app/linux/appimage"),
         **sub_stream_kw,
     )
     # Local plugin marked executable
@@ -344,9 +336,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
-            ),
+            os.fsdecode(tmp_path / "briefcase/tools/linuxdeploy-x86_64.AppImage"),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -355,11 +345,11 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
             "appimage",
             "-v1",
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            os.fsdecode(app_dir / "usr/app/support"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            os.fsdecode(app_dir / "usr/app_packages/firstlib"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+            os.fsdecode(app_dir / "usr/app_packages/secondlib"),
         ],
         env={
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
@@ -368,9 +358,7 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "x86_64",
         },
-        cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-        ),
+        cwd=os.fsdecode(tmp_path / "base_path/build/first-app/linux/appimage"),
         **sub_stream_kw,
     )
 
@@ -489,7 +477,7 @@ def test_build_appimage_with_plugins_in_docker(
     gtk_plugin_path.parent.mkdir(parents=True)
     gtk_plugin_path.touch()
 
-    local_file_plugin_path = tmp_path / "local" / "linuxdeploy-plugin-something.sh"
+    local_file_plugin_path = tmp_path / "local/linuxdeploy-plugin-something.sh"
     local_file_plugin_path.parent.mkdir(parents=True)
     local_file_plugin_path.touch()
 
@@ -632,7 +620,7 @@ def test_build_appimage_with_support_package_update(
 
     # Fake the existence of some source files.
     create_file(
-        tmp_path / "base_path" / "src" / "first_app" / "app.py",
+        tmp_path / "base_path/src/first_app/app.py",
         "print('an app')",
     )
 
@@ -665,9 +653,7 @@ def test_build_appimage_with_support_package_update(
     )
     build_command._subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(
-                tmp_path / "briefcase" / "tools" / "linuxdeploy-x86_64.AppImage"
-            ),
+            os.fsdecode(tmp_path / "briefcase/tools/linuxdeploy-x86_64.AppImage"),
             "--appdir",
             os.fsdecode(app_dir),
             "--desktop-file",
@@ -676,11 +662,11 @@ def test_build_appimage_with_support_package_update(
             "appimage",
             "-v1",
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app" / "support"),
+            os.fsdecode(app_dir / "usr/app/support"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "firstlib"),
+            os.fsdecode(app_dir / "usr/app_packages/firstlib"),
             "--deploy-deps-only",
-            os.fsdecode(app_dir / "usr" / "app_packages" / "secondlib"),
+            os.fsdecode(app_dir / "usr/app_packages/secondlib"),
         ],
         env={
             "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
@@ -689,9 +675,7 @@ def test_build_appimage_with_support_package_update(
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "x86_64",
         },
-        cwd=os.fsdecode(
-            tmp_path / "base_path" / "build" / "first-app" / "linux" / "appimage"
-        ),
+        cwd=os.fsdecode(tmp_path / "base_path/build/first-app/linux/appimage"),
         **sub_stream_kw,
     )
     # Binary is marked executable

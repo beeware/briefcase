@@ -7,7 +7,7 @@ from briefcase.integrations.linuxdeploy import LinuxDeployLocalFilePlugin
 def linuxdeploy_local_file_plugin(mock_tools, tmp_path):
     return LinuxDeployLocalFilePlugin(
         mock_tools,
-        plugin_path=tmp_path / "path" / "to" / "linuxdeploy-plugin-custom.sh",
+        plugin_path=tmp_path / "path/to/linuxdeploy-plugin-custom.sh",
         bundle_path=tmp_path / "bundle",
     )
 

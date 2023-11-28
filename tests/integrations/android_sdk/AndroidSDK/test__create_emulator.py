@@ -64,9 +64,7 @@ def test_create_emulator(
     android_sdk.verify_emulator_skin = MagicMock()
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = (
-        tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
-    )
+    avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
@@ -144,9 +142,7 @@ def test_create_emulator_with_defaults(
     android_sdk.verify_emulator_skin = MagicMock()
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = (
-        tmp_path / "home" / ".android" / "avd" / "new-emulator.avd" / "config.ini"
-    )
+    avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
@@ -238,9 +234,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     mock_tools.input.return_value = ""
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = (
-        tmp_path / "home" / ".android" / "avd" / "beePhone.avd" / "config.ini"
-    )
+    avd_config_path = tmp_path / "home/.android/avd/beePhone.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
@@ -269,9 +263,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     mock_tools.input.return_value = ""
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = (
-        tmp_path / "home" / ".android" / "avd" / "beePhone3.avd" / "config.ini"
-    )
+    avd_config_path = tmp_path / "home/.android/avd/beePhone3.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")

@@ -78,7 +78,7 @@ class JDK(ManagedTool):
         """
         output = tools.subprocess.check_output(
             [
-                os.fsdecode(Path(java_path) / "bin" / "javac"),
+                os.fsdecode(Path(java_path) / "bin/javac"),
                 "-version",
             ],
         )
@@ -239,7 +239,7 @@ class JDK(ManagedTool):
             # The macOS download has a weird layout (inherited from the official Oracle
             # release). The actual JAVA_HOME is deeper inside the directory structure.
             if tools.host_os == "Darwin":
-                java_home = java_home / "Contents" / "Home"
+                java_home = java_home / "Contents/Home"
 
             java = JDK(tools=tools, java_home=java_home)
 

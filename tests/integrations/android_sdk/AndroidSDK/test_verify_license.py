@@ -12,7 +12,7 @@ def test_verify_license_passes_quickly_if_license_present(mock_tools, android_sd
     If `android-sdk-license` exists in the right place, we expect verify_license() to
     run no subprocesses.
     """
-    license_path = android_sdk.root_path / "licenses" / "android-sdk-license"
+    license_path = android_sdk.root_path / "licenses/android-sdk-license"
     license_path.parent.mkdir(parents=True)
     license_path.touch()
 

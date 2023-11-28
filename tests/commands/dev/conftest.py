@@ -18,8 +18,8 @@ def dev_command(tmp_path):
 @pytest.fixture
 def first_app_uninstalled(tmp_path):
     # Make sure the source code exists
-    (tmp_path / "src" / "first").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "src" / "first" / "__init__.py").open("w", encoding="UTF-8") as f:
+    (tmp_path / "src/first").mkdir(parents=True, exist_ok=True)
+    with (tmp_path / "src/first/__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
     return AppConfig(
@@ -35,19 +35,19 @@ def first_app_uninstalled(tmp_path):
 def first_app(tmp_path, first_app_uninstalled):
     # The same fixture as first_app_uninstalled,
     # but ensures that the .dist-info folder for the app exists
-    (tmp_path / "src" / "first.dist-info").mkdir(exist_ok=True)
+    (tmp_path / "src/first.dist-info").mkdir(exist_ok=True)
     return first_app_uninstalled
 
 
 @pytest.fixture
 def second_app(tmp_path):
     # Make sure the source code exists
-    (tmp_path / "src" / "second").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "src" / "second" / "__init__.py").open("w", encoding="UTF-8") as f:
+    (tmp_path / "src/second").mkdir(parents=True, exist_ok=True)
+    with (tmp_path / "src/second/__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
     # Create the dist-info folder
-    (tmp_path / "src" / "second.dist-info").mkdir(exist_ok=True)
+    (tmp_path / "src/second.dist-info").mkdir(exist_ok=True)
 
     return AppConfig(
         app_name="second",
@@ -61,12 +61,12 @@ def second_app(tmp_path):
 @pytest.fixture
 def third_app(tmp_path):
     # Make sure the source code exists
-    (tmp_path / "src" / "third").mkdir(parents=True, exist_ok=True)
-    with (tmp_path / "src" / "third" / "__init__.py").open("w", encoding="UTF-8") as f:
+    (tmp_path / "src/third").mkdir(parents=True, exist_ok=True)
+    with (tmp_path / "src/third/__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
     # Create the dist-info folder
-    (tmp_path / "src" / "third.dist-info").mkdir(exist_ok=True)
+    (tmp_path / "src/third.dist-info").mkdir(exist_ok=True)
 
     return AppConfig(
         app_name="third",

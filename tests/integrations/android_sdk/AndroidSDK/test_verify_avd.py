@@ -68,7 +68,7 @@ def test_valid_system_image(android_sdk):
             "disk.cachePartition.size": "42M",
             # Add an OS-dependent image.sysdir.1 value, with a trailing slash.
             "image.sysdir.1": os.fsdecode(
-                Path("system-images") / "android-31" / "default" / "arm64-v8a"
+                Path("system-images/android-31/default/arm64-v8a")
             )
             + "/",
         }

@@ -116,7 +116,7 @@ def test_cwd(mock_docker_app_context, tmp_path, sub_stream_kw, capsys):
 
     mock_docker_app_context.run(
         ["hello", "world"],
-        cwd=tmp_path / "bundle" / "foobar",
+        cwd=tmp_path / "bundle/foobar",
     )
 
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_once_with(

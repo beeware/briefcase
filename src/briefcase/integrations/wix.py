@@ -42,21 +42,21 @@ class WiX(ManagedTool):
         if self.bin_install:
             return self.wix_home / "heat.exe"
         else:
-            return self.wix_home / "bin" / "heat.exe"
+            return self.wix_home / "bin/heat.exe"
 
     @property
     def light_exe(self) -> Path:
         if self.bin_install:
             return self.wix_home / "light.exe"
         else:
-            return self.wix_home / "bin" / "light.exe"
+            return self.wix_home / "bin/light.exe"
 
     @property
     def candle_exe(self) -> Path:
         if self.bin_install:
             return self.wix_home / "candle.exe"
         else:
-            return self.wix_home / "bin" / "candle.exe"
+            return self.wix_home / "bin/candle.exe"
 
     @classmethod
     def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> WiX:

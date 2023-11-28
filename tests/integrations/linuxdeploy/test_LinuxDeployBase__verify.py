@@ -56,9 +56,7 @@ def test_unsupported_os(mock_tools, host_os):
 
 def test_verify_exists(mock_tools, tmp_path):
     """If the tool/plugin already exists, verification doesn't download."""
-    appimage_path = (
-        tmp_path / "tools" / "somewhere" / "linuxdeploy-dummy-wonky.AppImage"
-    )
+    appimage_path = tmp_path / "tools/somewhere/linuxdeploy-dummy-wonky.AppImage"
 
     # Mock the existence of an install
     appimage_path.parent.mkdir(parents=True)
@@ -89,9 +87,7 @@ def test_verify_does_not_exist_dont_install(mock_tools):
 
 def test_verify_does_not_exist(mock_tools, tmp_path):
     """If the tool/plugin doesn't exist, it is downloaded."""
-    appimage_path = (
-        tmp_path / "tools" / "somewhere" / "linuxdeploy-dummy-wonky.AppImage"
-    )
+    appimage_path = tmp_path / "tools/somewhere/linuxdeploy-dummy-wonky.AppImage"
 
     # Mock a successful download
     mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
@@ -111,7 +107,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
     # A download is invoked
     mock_tools.download.file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
-        download_path=tmp_path / "tools" / "somewhere",
+        download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
     )
     # The downloaded file will be made executable
@@ -124,7 +120,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
 def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
     """If a non-Appimage tool/plugin doesn't exist, it is downloaded, but not elf-
     patched."""
-    tool_path = tmp_path / "tools" / "somewhere" / "linuxdeploy-dummy.sh"
+    tool_path = tmp_path / "tools/somewhere/linuxdeploy-dummy.sh"
 
     # Mock a successful download
     mock_tools.download.file.side_effect = side_effect_create_mock_tool(tool_path)
@@ -135,7 +131,7 @@ def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
     # A download is invoked
     mock_tools.download.file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy.sh",
-        download_path=tmp_path / "tools" / "somewhere",
+        download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
     )
     # The downloaded file will be made executable
@@ -160,6 +156,6 @@ def test_verify_linuxdeploy_download_failure(mock_tools, tmp_path):
     # A download was invoked
     mock_tools.download.file.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
-        download_path=tmp_path / "tools" / "somewhere",
+        download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
     )

@@ -33,7 +33,7 @@ def test_package_app(package_command, first_app_built, tmp_path):
 
     # The packaged archive exists, and contains all the www files,
     # but without the www prefix.
-    archive_file = tmp_path / "base_path" / "dist" / "First App-0.0.1.web.zip"
+    archive_file = tmp_path / "base_path/dist/First App-0.0.1.web.zip"
     assert archive_file.exists()
     with ZipFile(archive_file) as archive:
         assert sorted(archive.namelist()) == [

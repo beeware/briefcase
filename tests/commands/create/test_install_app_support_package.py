@@ -54,14 +54,14 @@ def test_install_app_support_package(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path / "data" / "support" / "Python-3.X-tester-support.b37.tar.gz",
+        tmp_path / "data/support/Python-3.X-tester-support.b37.tar.gz",
         extract_dir=support_path,
         **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
 
 def test_install_pinned_app_support_package(
@@ -100,14 +100,14 @@ def test_install_pinned_app_support_package(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path / "data" / "support" / "Python-3.X-Tester-support.b42.tar.gz",
+        tmp_path / "data/support/Python-3.X-Tester-support.b42.tar.gz",
         extract_dir=support_path,
         **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
 
 def test_install_custom_app_support_package_file(
@@ -119,11 +119,11 @@ def test_install_custom_app_support_package_file(
 ):
     """A custom support package can be specified as a local file."""
     # Provide an app-specific override of the package URL
-    myapp.support_package = os.fsdecode(tmp_path / "custom" / "support.zip")
+    myapp.support_package = os.fsdecode(tmp_path / "custom/support.zip")
 
     # Write a temporary support zip file
     support_file = create_zip_file(
-        tmp_path / "custom" / "support.zip",
+        tmp_path / "custom/support.zip",
         [("internal/file.txt", "hello world")],
     )
 
@@ -150,7 +150,7 @@ def test_install_custom_app_support_package_file(
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
 
 def test_install_custom_app_support_package_file_with_revision(
@@ -164,12 +164,12 @@ def test_install_custom_app_support_package_file_with_revision(
     """If a custom support package file also specifies a revision, the revision is
     ignored with a warning."""
     # Provide an app-specific override of the package URL
-    myapp.support_package = os.fsdecode(tmp_path / "custom" / "support.zip")
+    myapp.support_package = os.fsdecode(tmp_path / "custom/support.zip")
     myapp.support_revision = "42"
 
     # Write a temporary support zip file
     support_file = create_zip_file(
-        tmp_path / "custom" / "support.zip",
+        tmp_path / "custom/support.zip",
         [("internal/file.txt", "hello world")],
     )
 
@@ -196,7 +196,7 @@ def test_install_custom_app_support_package_file_with_revision(
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
     # A warning about the support revision was generated.
     assert "support revision will be ignored." in capsys.readouterr().out
@@ -309,7 +309,7 @@ def test_install_custom_app_support_package_url(
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
 
 def test_install_custom_app_support_package_url_with_revision(
@@ -365,7 +365,7 @@ def test_install_custom_app_support_package_url_with_revision(
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
     # A warning about the support revision was generated.
     assert "support revision will be ignored." in capsys.readouterr().out
@@ -418,7 +418,7 @@ def test_install_custom_app_support_package_url_with_args(
 
     # Confirm that the full path to the support file
     # has been unpacked.
-    assert (support_path / "internal" / "file.txt").exists()
+    assert (support_path / "internal/file.txt").exists()
 
 
 def test_offline_install(

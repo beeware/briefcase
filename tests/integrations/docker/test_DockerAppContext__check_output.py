@@ -72,7 +72,7 @@ def test_cwd(mock_docker_app_context, tmp_path, sub_check_output_kw, capsys):
     assert (
         mock_docker_app_context.check_output(
             ["hello", "world"],
-            cwd=tmp_path / "bundle" / "foobar",
+            cwd=tmp_path / "bundle/foobar",
         )
         == "goodbye\n"
     )

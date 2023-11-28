@@ -33,7 +33,7 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
 
     # Mock a successful download
     mock_tools.download.file.side_effect = side_effect_create_mock_tool(
-        tmp_path / "tools" / "linuxdeploy_plugins" / "gtk" / "linuxdeploy-plugin-gtk.sh"
+        tmp_path / "tools/linuxdeploy_plugins/gtk/linuxdeploy-plugin-gtk.sh"
     )
 
     plugins = linuxdeploy.verify_plugins(["gtk"], bundle_path=tmp_path / "bundle")
@@ -43,7 +43,7 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
 
     mock_tools.download.file.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh",
-        download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "gtk",
+        download_path=tmp_path / "tools/linuxdeploy_plugins/gtk",
         role="linuxdeploy GTK plugin",
     )
 
@@ -70,7 +70,7 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
             "releases/download/continuous/linuxdeploy-plugin-qt-i386.AppImage"
         ),
-        download_path=tmp_path / "tools" / "linuxdeploy_plugins" / "qt",
+        download_path=tmp_path / "tools/linuxdeploy_plugins/qt",
         role="linuxdeploy Qt plugin",
     )
 
@@ -115,7 +115,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom local file plugin can be verified."""
 
     # Create a local file
-    plugin_path = tmp_path / "path" / "to" / "linuxdeploy-plugin-sometool-i386.AppImage"
+    plugin_path = tmp_path / "path/to/linuxdeploy-plugin-sometool-i386.AppImage"
     create_mock_appimage(plugin_path)
 
     plugins = linuxdeploy.verify_plugins(
@@ -129,7 +129,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     # No download happened
     mock_tools.download.file.assert_not_called()
     # But a copy happened
-    assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-i386.AppImage").exists()
+    assert (tmp_path / "bundle/linuxdeploy-plugin-sometool-i386.AppImage").exists()
 
 
 @pytest.mark.parametrize(
@@ -229,9 +229,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
     mock_tools.download.file.side_effect = mock_downloads
 
     # Local file tool is a local file.
-    local_plugin_path = (
-        tmp_path / "path" / "to" / "linuxdeploy-plugin-sometool-i386.AppImage"
-    )
+    local_plugin_path = tmp_path / "path/to/linuxdeploy-plugin-sometool-i386.AppImage"
     create_mock_appimage(local_plugin_path)
 
     # Verify all the plugins
@@ -258,7 +256,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
     # Local file plugin is as expected
     assert isinstance(plugins["sometool"], LinuxDeployLocalFilePlugin)
     assert plugins["sometool"].env == {"QUALITY": "really nice"}
-    assert (tmp_path / "bundle" / "linuxdeploy-plugin-sometool-i386.AppImage").exists()
+    assert (tmp_path / "bundle/linuxdeploy-plugin-sometool-i386.AppImage").exists()
 
     # URL plugin is as expected
     assert isinstance(plugins["network"], LinuxDeployURLPlugin)

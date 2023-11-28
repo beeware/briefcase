@@ -12,7 +12,7 @@ def test_file_path(mock_tools, linuxdeploy_qt_plugin):
     """Default Linuxdeploy plugins reside in the linuxdeploy plugins path."""
     assert (
         linuxdeploy_qt_plugin.file_path
-        == mock_tools.base_path / "linuxdeploy_plugins" / "qt"
+        == mock_tools.base_path / "linuxdeploy_plugins/qt"
     )
 
 

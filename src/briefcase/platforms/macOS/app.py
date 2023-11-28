@@ -64,7 +64,7 @@ class macOSAppCreateCommand(macOSAppMixin, macOSInstallMixin, CreateCommand):
                 # The stub binary is universal by default. If we're building a non-universal app,
                 # we can strip the binary to remove the unused slice.
                 self.ensure_thin_binary(
-                    self.binary_path(app) / "Contents" / "MacOS" / app.formal_name,
+                    self.binary_path(app) / "Contents/MacOS" / app.formal_name,
                     arch=self.tools.host_arch,
                 )
 

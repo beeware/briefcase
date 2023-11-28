@@ -31,5 +31,5 @@ def test_open_windows(open_command, first_app_config, tmp_path):
     open_command(first_app_config)
 
     open_command.tools.os.startfile.assert_called_once_with(
-        tmp_path / "base_path" / "build" / "first-app" / "windows" / "app"
+        tmp_path / "base_path/build/first-app/windows/app"
     )

@@ -11,7 +11,7 @@ from tests.integrations.linuxdeploy.utils import create_mock_appimage
 
 def test_patch_linuxdeploy_elf_header_unpatched(linuxdeploy, tmp_path):
     """If the linuxdeploy tool/plugin is not patched, patch it."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-i386.AppImage"
+    appimage_path = tmp_path / "tools/linuxdeploy-i386.AppImage"
 
     # Mock an unpatched linuxdeploy AppImage
     pre_patch_header = create_mock_appimage(
@@ -32,7 +32,7 @@ def test_patch_linuxdeploy_elf_header_unpatched(linuxdeploy, tmp_path):
 
 def test_patch_linuxdeploy_elf_header_already_patched(linuxdeploy, tmp_path):
     """If linuxdeploy is already patched, don't patch it."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-i386.AppImage"
+    appimage_path = tmp_path / "tools/linuxdeploy-i386.AppImage"
 
     # Mock a patched linuxdeploy AppImage
     pre_patch_header = create_mock_appimage(
@@ -53,7 +53,7 @@ def test_patch_linuxdeploy_elf_header_already_patched(linuxdeploy, tmp_path):
 
 def test_patch_linuxdeploy_elf_header_bad_appimage(linuxdeploy, tmp_path):
     """If linuxdeploy does not have a valid header, raise an error."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-i386.AppImage"
+    appimage_path = tmp_path / "tools/linuxdeploy-i386.AppImage"
 
     # Mock a bad linuxdeploy AppImage
     create_mock_appimage(appimage_path=appimage_path, mock_appimage_kind="corrupt")
@@ -65,7 +65,7 @@ def test_patch_linuxdeploy_elf_header_bad_appimage(linuxdeploy, tmp_path):
 
 def test_patch_linuxdeploy_elf_header_empty_appimage(linuxdeploy, tmp_path):
     """If file is empty, raise an error."""
-    appimage_path = tmp_path / "tools" / "linuxdeploy-i386.AppImage"
+    appimage_path = tmp_path / "tools/linuxdeploy-i386.AppImage"
 
     # Mock a bad linuxdeploy AppImage
     create_mock_appimage(appimage_path=appimage_path, mock_appimage_kind="empty")

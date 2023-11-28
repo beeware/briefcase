@@ -92,13 +92,13 @@ def test_macos_tool_failure(mock_tools, tmp_path, capsys):
     )
 
     # Create a directory to make it look like the Briefcase Java already exists.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools/java17/Contents/Home/bin").mkdir(parents=True)
 
     # Create a JDK wrapper by verification
     jdk = JDK.verify(mock_tools)
 
     # The JDK should have the briefcase JAVA_HOME
-    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
+    assert jdk.java_home == tmp_path / "tools/java17/Contents/Home"
 
     assert mock_tools.subprocess.check_output.mock_calls == [CALL_JAVA_HOME]
 
@@ -121,13 +121,13 @@ def test_macos_wrong_jdk_version(mock_tools, tmp_path, capsys):
     ]
 
     # Create a directory to make it look like the Briefcase Java already exists.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools/java17/Contents/Home/bin").mkdir(parents=True)
 
     # Create a JDK wrapper by verification
     jdk = JDK.verify(mock_tools)
 
     # The JDK should have the briefcase JAVA_HOME
-    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
+    assert jdk.java_home == tmp_path / "tools/java17/Contents/Home"
 
     assert mock_tools.subprocess.check_output.mock_calls == [
         CALL_JAVA_HOME,
@@ -153,13 +153,13 @@ def test_macos_invalid_jdk_path(mock_tools, tmp_path, capsys):
     ]
 
     # Create a directory to make it look like the Briefcase Java already exists.
-    (tmp_path / "tools" / "java17" / "Contents" / "Home" / "bin").mkdir(parents=True)
+    (tmp_path / "tools/java17/Contents/Home/bin").mkdir(parents=True)
 
     # Create a JDK wrapper by verification
     jdk = JDK.verify(mock_tools)
 
     # The JDK should have the briefcase JAVA_HOME
-    assert jdk.java_home == tmp_path / "tools" / "java17" / "Contents" / "Home"
+    assert jdk.java_home == tmp_path / "tools/java17/Contents/Home"
 
     assert mock_tools.subprocess.check_output.mock_calls == [
         CALL_JAVA_HOME,

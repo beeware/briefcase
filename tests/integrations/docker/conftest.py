@@ -57,7 +57,7 @@ def mock_docker_app_context(tmp_path, my_app, mock_tools) -> DockerAppContext:
     mock_docker_app_context = DockerAppContext(mock_tools, my_app)
     mock_docker_app_context.prepare(
         image_tag="briefcase/com.example.myapp:py3.X",
-        dockerfile_path=tmp_path / "bundle" / "Dockerfile",
+        dockerfile_path=tmp_path / "bundle/Dockerfile",
         app_base_path=tmp_path / "base",
         host_bundle_path=tmp_path / "bundle",
         host_data_path=tmp_path / "briefcase",
@@ -76,7 +76,7 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
     monkeypatch.setattr(
         briefcase.integrations.docker.Docker,
         "_write_test_path",
-        MagicMock(return_value=tmp_path / "build" / "mock_write_test"),
+        MagicMock(return_value=tmp_path / "build/mock_write_test"),
     )
     return [
         call(

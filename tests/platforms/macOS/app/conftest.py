@@ -38,7 +38,7 @@ entitlements_path="Entitlements.plist"
 
     # Create the plist file for the app
     create_plist_file(
-        app_path / "Contents" / "Info.plist",
+        app_path / "Contents/Info.plist",
         {
             "MainModule": "first_app",
         },
@@ -60,8 +60,8 @@ entitlements_path="Entitlements.plist"
     )
 
     # Create some folders that need to exist.
-    (app_path / "Contents" / "Resources" / "app_packages").mkdir(parents=True)
-    (app_path / "Contents" / "Frameworks").mkdir(parents=True)
+    (app_path / "Contents/Resources/app_packages").mkdir(parents=True)
+    (app_path / "Contents/Frameworks").mkdir(parents=True)
 
     # Select dmg packaging by default
     first_app_config.packaging_format = "dmg"
@@ -82,14 +82,14 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     )
 
     # Create some libraries that need to be signed.
-    lib_path = app_path / "Contents" / "Resources" / "app_packages"
-    frameworks_path = app_path / "Contents" / "Frameworks"
+    lib_path = app_path / "Contents/Resources/app_packages"
+    frameworks_path = app_path / "Contents/Frameworks"
 
     for lib in [
         "first_so.so",
-        Path("subfolder") / "second_so.so",
+        Path("subfolder/second_so.so"),
         "first_dylib.dylib",
-        Path("subfolder") / "second_dylib.dylib",
+        Path("subfolder/second_dylib.dylib"),
         "other_binary",
     ]:
         (lib_path / lib).parent.mkdir(parents=True, exist_ok=True)
@@ -102,17 +102,13 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     os.chmod(lib_path / "special.binary", 0o755)
 
     # An embedded app
-    (lib_path / "Extras.app" / "Contents" / "MacOS").mkdir(parents=True, exist_ok=True)
-    with (lib_path / "Extras.app" / "Contents" / "MacOS" / "Extras").open("wb") as f:
+    (lib_path / "Extras.app/Contents/MacOS").mkdir(parents=True, exist_ok=True)
+    with (lib_path / "Extras.app/Contents/MacOS/Extras").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # An embedded framework
-    (frameworks_path / "Extras.framework" / "Resources").mkdir(
-        parents=True, exist_ok=True
-    )
-    with (frameworks_path / "Extras.framework" / "Resources" / "extras.dylib").open(
-        "wb"
-    ) as f:
+    (frameworks_path / "Extras.framework/Resources").mkdir(parents=True, exist_ok=True)
+    with (frameworks_path / "Extras.framework/Resources/extras.dylib").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEBinary content here")
 
     # Make sure there are some files in the bundle that *don't* need to be signed...

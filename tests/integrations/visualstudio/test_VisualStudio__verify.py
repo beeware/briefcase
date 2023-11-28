@@ -19,7 +19,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 @pytest.fixture
 def custom_msbuild_path(tmp_path):
     """Create a dummy MSBuild executable at a custom location."""
-    msbuild_path = tmp_path / "custom" / "MSBuild.exe"
+    msbuild_path = tmp_path / "custom/MSBuild.exe"
     msbuild_path.parent.mkdir(parents=True)
     with msbuild_path.open("w", encoding="utf-8") as f:
         f.write("Dummy MSBuild")
@@ -48,9 +48,7 @@ def vswhere_path(tmp_path):
 @pytest.fixture
 def msbuild_path(tmp_path):
     """Create a dummy MSBuild executable."""
-    msbuild_path = (
-        tmp_path / "Visual Studio" / "MSBuild" / "Current" / "Bin" / "MSBuild.exe"
-    )
+    msbuild_path = tmp_path / "Visual Studio/MSBuild/Current/Bin/MSBuild.exe"
     msbuild_path.parent.mkdir(parents=True)
     with msbuild_path.open("w", encoding="utf-8") as f:
         f.write("Dummy MSBuild")
@@ -155,7 +153,7 @@ def test_msbuild_envvar_doesnt_exist(mock_tools, tmp_path):
     """If MSBUILD is set in the environment, but it points to a non-existent file, an
     error is raised."""
     # Point at an MSBuild that does not exist
-    mock_tools.os.environ["MSBUILD"] = tmp_path / "custom" / "MSBuild.exe"
+    mock_tools.os.environ["MSBUILD"] = tmp_path / "custom/MSBuild.exe"
 
     # MSBuild is not on the path
     mock_tools.subprocess.check_output.side_effect = FileNotFoundError

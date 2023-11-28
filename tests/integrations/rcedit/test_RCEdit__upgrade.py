@@ -5,7 +5,7 @@ from briefcase.exceptions import MissingToolError, NetworkFailure
 
 def test_upgrade_exists(mock_tools, rcedit, tmp_path):
     """If rcedit already exists, upgrading deletes first."""
-    rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
+    rcedit_path = tmp_path / "tools/rcedit-x64.exe"
 
     # Mock the existence of an install
     rcedit_path.touch()
@@ -45,7 +45,7 @@ def test_upgrade_does_not_exist(mock_tools, rcedit, tmp_path):
 def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
     """If rcedit doesn't exist, but a download failure occurs, an error is raised."""
     # Mock the existence of an install
-    rcedit_path = tmp_path / "tools" / "rcedit-x64.exe"
+    rcedit_path = tmp_path / "tools/rcedit-x64.exe"
     rcedit_path.touch()
 
     mock_tools.download.file.side_effect = NetworkFailure("mock")

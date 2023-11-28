@@ -15,7 +15,7 @@ def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
-    create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-original")
+    create_file(tmp_path / "path/to/file.dylib", "dylib-original")
 
     # Mock the result of the "lipo info" call.
     dummy_command.tools.subprocess.check_output.return_value = (
@@ -24,7 +24,7 @@ def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
 
     # Thin the binary; this is effectively a no-op
     dummy_command.ensure_thin_binary(
-        tmp_path / "path" / "to" / "file.dylib",
+        tmp_path / "path/to/file.dylib",
         arch="gothic",
     )
 
@@ -33,7 +33,7 @@ def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
         [
             "lipo",
             "-info",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
         ],
     )
 
@@ -41,7 +41,7 @@ def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
     dummy_command.tools.subprocess.run.assert_not_called()
 
     # The original file is unmodified.
-    assert file_content(tmp_path / "path" / "to" / "file.dylib") == "dylib-original"
+    assert file_content(tmp_path / "path/to/file.dylib") == "dylib-original"
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
@@ -55,7 +55,7 @@ def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
-    create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
+    create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
 
     # Mock the result of the "lipo info" call.
     dummy_command.tools.subprocess.check_output.return_value = (
@@ -70,7 +70,7 @@ def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
 
     # Thin the binary to the "gothic" architecture
     dummy_command.ensure_thin_binary(
-        tmp_path / "path" / "to" / "file.dylib",
+        tmp_path / "path/to/file.dylib",
         arch="gothic",
     )
 
@@ -79,7 +79,7 @@ def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
         [
             "lipo",
             "-info",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
         ],
     )
 
@@ -90,14 +90,14 @@ def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
             "-thin",
             "gothic",
             "-output",
-            tmp_path / "path" / "to" / "file.dylib.gothic",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib.gothic",
+            tmp_path / "path/to/file.dylib",
         ],
         check=True,
     )
 
     # The original file now has the thinned content.
-    assert file_content(tmp_path / "path" / "to" / "file.dylib") == "dylib-thin"
+    assert file_content(tmp_path / "path/to/file.dylib") == "dylib-thin"
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
@@ -111,7 +111,7 @@ def test_fat_dylib_arch_mismatch(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
-    create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
+    create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
 
     # Mock the result of the "lipo info" call.
     dummy_command.tools.subprocess.check_output.return_value = (
@@ -124,7 +124,7 @@ def test_fat_dylib_arch_mismatch(dummy_command, verbose, tmp_path, capsys):
         match=r"file\.dylib does not contain a gothic slice",
     ):
         dummy_command.ensure_thin_binary(
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
             arch="gothic",
         )
 
@@ -133,7 +133,7 @@ def test_fat_dylib_arch_mismatch(dummy_command, verbose, tmp_path, capsys):
         [
             "lipo",
             "-info",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
         ],
     )
 
@@ -149,7 +149,7 @@ def test_fat_dylib_unknown_info(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
-    create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
+    create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
 
     # Mock the result of the "lipo info" call.
     dummy_command.tools.subprocess.check_output.return_value = (
@@ -162,7 +162,7 @@ def test_fat_dylib_unknown_info(dummy_command, verbose, tmp_path, capsys):
         match=r"Unable to determine architectures in .*file\.dylib",
     ):
         dummy_command.ensure_thin_binary(
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
             arch="gothic",
         )
 
@@ -171,7 +171,7 @@ def test_fat_dylib_unknown_info(dummy_command, verbose, tmp_path, capsys):
         [
             "lipo",
             "-info",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
         ],
     )
 
@@ -182,7 +182,7 @@ def test_fat_dylib_unknown_info(dummy_command, verbose, tmp_path, capsys):
 def test_lipo_info_fail(dummy_command, tmp_path):
     """If lipo can't inspect a binary, an error is raised."""
     # Create a source binary.
-    create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
+    create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
 
     # Mock the result of the "lipo info" call.
     dummy_command.tools.subprocess.check_output.side_effect = (
@@ -194,7 +194,7 @@ def test_lipo_info_fail(dummy_command, tmp_path):
         BriefcaseCommandError, match=r"Unable to inspect architectures in .*file\.dylib"
     ):
         dummy_command.ensure_thin_binary(
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
             arch="gothic",
         )
 
@@ -203,7 +203,7 @@ def test_lipo_info_fail(dummy_command, tmp_path):
         [
             "lipo",
             "-info",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
         ],
     )
 
@@ -218,7 +218,7 @@ def test_lipo_thin_fail(dummy_command, verbose, tmp_path, capsys):
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
-    create_file(tmp_path / "path" / "to" / "file.dylib", "dylib-fat")
+    create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
 
     # Mock the result of the "lipo -info" call.
     dummy_command.tools.subprocess.check_output.return_value = (
@@ -236,7 +236,7 @@ def test_lipo_thin_fail(dummy_command, verbose, tmp_path, capsys):
         match=r"Unable to create thin binary from .*file.dylib",
     ):
         dummy_command.ensure_thin_binary(
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
             arch="gothic",
         )
 
@@ -245,7 +245,7 @@ def test_lipo_thin_fail(dummy_command, verbose, tmp_path, capsys):
         [
             "lipo",
             "-info",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib",
         ],
     )
 
@@ -256,14 +256,14 @@ def test_lipo_thin_fail(dummy_command, verbose, tmp_path, capsys):
             "-thin",
             "gothic",
             "-output",
-            tmp_path / "path" / "to" / "file.dylib.gothic",
-            tmp_path / "path" / "to" / "file.dylib",
+            tmp_path / "path/to/file.dylib.gothic",
+            tmp_path / "path/to/file.dylib",
         ],
         check=True,
     )
 
     # The original file is unmodified.
-    assert file_content(tmp_path / "path" / "to" / "file.dylib") == "dylib-fat"
+    assert file_content(tmp_path / "path/to/file.dylib") == "dylib-fat"
 
     # Output only happens if in debug mode
     output = capsys.readouterr().out.split("\n")
