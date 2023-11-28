@@ -168,7 +168,7 @@ class AndroidSDK(ManagedTool):
 
     @property
     def DEFAULT_DEVICE_SKIN(self) -> str:
-        return "pixel_3a"
+        return "pixel_7_pro"
 
     @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
