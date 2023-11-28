@@ -9,9 +9,9 @@ from zipfile import ZipFile
 
 from briefcase.console import Log
 
-try:
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
-except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
+else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 import tomli_w

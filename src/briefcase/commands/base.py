@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.metadata
 import inspect
 import os
 import platform
 import shutil
 import subprocess
+import sys
 import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
@@ -17,14 +19,9 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
-try:
-    import importlib_metadata
-except ImportError:  # pragma: no-cover-if-lt-py310
-    import importlib.metadata as importlib_metadata
-
-try:
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
-except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
+else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 from briefcase import __version__
@@ -520,7 +517,7 @@ a custom location for Briefcase's tools.
         # Native format is ">=3.8"
         return tuple(
             int(v)
-            for v in importlib_metadata.metadata("briefcase")["Requires-Python"]
+            for v in importlib.metadata.metadata("briefcase")["Requires-Python"]
             .split("=")[1]
             .strip()
             .split(".")
