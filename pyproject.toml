@@ -63,6 +63,8 @@ dependencies = [
     # Any dependency that is part of the "core python toolchain" (e.g. pip,
     # wheel) specify a minimum version, but no maximum, because we always want
     # the most recent version.
+    #
+    # limited to <=3.9 for the `group` argument for `entry_points()`
     "importlib_metadata >= 4.4; python_version <= '3.9'",
     "packaging >= 22.0",
     "pip >= 23.1.1",

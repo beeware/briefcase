@@ -3,9 +3,9 @@ import subprocess
 import sys
 from unittest import mock
 
-try:
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
-except ModuleNotFoundError:
+else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 import pytest

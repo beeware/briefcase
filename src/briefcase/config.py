@@ -1,12 +1,13 @@
 import copy
 import keyword
 import re
+import sys
 import unicodedata
 from types import SimpleNamespace
 
-try:
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
-except ModuleNotFoundError:  # pragma: no-cover-if-gte-py310
+else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 from briefcase.platforms import get_output_formats, get_platforms
