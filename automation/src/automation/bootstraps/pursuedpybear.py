@@ -1,12 +1,3 @@
-import sys
-
-import tomli_w
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
 from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
 from briefcase.bootstraps import PursuedPyBearGuiBootstrap
 
@@ -63,21 +54,3 @@ def main():
         title=metadata["Formal-Name"],
     )
 """
-
-    # The constraint of pysdl2-dll==2.0.22 is required for ppb==1.1.0;
-    # the libraries in later versions of pysdl2-dll are not compatible.
-
-    def pyproject_table_linux_flatpak(self):
-        table = tomllib.loads(super().pyproject_table_linux_flatpak())
-        table.setdefault("requires", []).append("pysdl2-dll==2.0.22")
-        return f"\n{tomli_w.dumps(table)}"
-
-    def pyproject_table_windows(self):
-        table = tomllib.loads(super().pyproject_table_windows())
-        table.setdefault("requires", []).append("pysdl2-dll==2.0.22")
-        return f"\n{tomli_w.dumps(table)}"
-
-    def pyproject_table_macOS(self):
-        table = tomllib.loads(super().pyproject_table_macOS())
-        table.setdefault("requires", []).append("pysdl2-dll==2.0.22")
-        return f"\n{tomli_w.dumps(table)}"

@@ -52,6 +52,7 @@ def main():
 
 requires = [
     "ppb~=1.1",
+    "pysdl2-dll==2.0.22",
 ]
 test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
