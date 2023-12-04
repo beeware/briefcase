@@ -1,0 +1,1 @@
+The web server for running static web projects now falls back to a system allocated port if the requested port is already in use.
