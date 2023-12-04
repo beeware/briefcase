@@ -1,0 +1,1 @@
+CI will now create a wheel for Automation as well as Briefcase to support running the packaged app in CI testing.
