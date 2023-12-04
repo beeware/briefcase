@@ -14,6 +14,14 @@ from briefcase.platforms.web.static import (
 )
 
 
+# OSError doesn't expose errno in the constructor; create some
+# custom exceptions that mock common connection errors.
+class ErrnoError(OSError):
+    def __init__(self, errno):
+        super().__init__()
+        self.errno = errno
+
+
 @pytest.fixture
 def run_command(tmp_path):
     command = StaticWebRunCommand(
@@ -118,6 +126,74 @@ def test_run(monkeypatch, run_command, first_app_built):
     mock_server_close.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ErrnoError(errno.EADDRINUSE),
+        ErrnoError(errno.ENOSR),
+    ],
+)
+def test_run_with_fallback_port(
+    monkeypatch,
+    run_command,
+    first_app_built,
+    exception,
+    capsys,
+):
+    """A static web app can be launched as a server even when the requested port is
+    already in use."""
+    # Mock server creation that first errors on port, then connects with port 0
+    mock_server_init = mock.MagicMock(side_effect=[exception, HTTPServer])
+    monkeypatch.setattr(HTTPServer, "__init__", mock_server_init)
+
+    # Mock the socket name returned by the server.
+    # This value has been auto-selected by the server.
+    socket = mock.MagicMock()
+    socket.getsockname.return_value = ("127.0.0.1", "12345")
+    LocalHTTPServer.socket = socket
+
+    # Mock server execution, raising a user exit.
+    mock_serve_forever = mock.MagicMock(side_effect=KeyboardInterrupt())
+    monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
+
+    # Mock shutdown
+    mock_shutdown = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "shutdown", mock_shutdown)
+
+    # Mock server close
+    mock_server_close = mock.MagicMock()
+    monkeypatch.setattr(HTTPServer, "server_close", mock_server_close)
+
+    # Mock the webbrowser
+    mock_open_new_tab = mock.MagicMock()
+    monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
+
+    # Run the app
+    run_command.run_app(
+        first_app_built,
+        test_mode=False,
+        passthrough=[],
+        host="localhost",
+        port=8080,
+        open_browser=True,
+    )
+
+    # User is warned a system-allocated port is being used
+    assert "Using a system-allocated port since port 8080" in capsys.readouterr().out
+
+    # The browser was opened
+    mock_open_new_tab.assert_called_once_with("http://127.0.0.1:12345")
+
+    # The server was started
+    mock_serve_forever.assert_called_once_with()
+
+    # The webserver was shutdown.
+    mock_shutdown.assert_called_once_with()
+
+    # The webserver was closed.
+    mock_server_close.assert_called_once_with()
+
+
 def test_run_with_args(monkeypatch, run_command, first_app_built):
     """A static web app can be launched as a server; passthrough args will be
     ignored."""
@@ -169,14 +245,6 @@ def test_run_with_args(monkeypatch, run_command, first_app_built):
     mock_server_close.assert_called_once_with()
 
 
-# OSError doesn't expose errno in the constructor; create some
-# custom exceptions that mock common connection errors.
-class ErrnoError(OSError):
-    def __init__(self, errno):
-        super().__init__()
-        self.errno = errno
-
-
 @pytest.mark.parametrize(
     "host, port, exception, message",
     [
@@ -191,18 +259,6 @@ class ErrnoError(OSError):
             8080,
             PermissionError(),
             r"Did you specify a valid host and port\?",
-        ),
-        (
-            "localhost",
-            8080,
-            ErrnoError(errno.EADDRINUSE),
-            r"localhost:8080 is already in use.",
-        ),
-        (
-            "localhost",
-            8080,
-            ErrnoError(errno.ENOSR),
-            r"localhost:8080 is already in use.",
         ),
         (
             "999.999.999.999",
@@ -231,7 +287,13 @@ class ErrnoError(OSError):
     ],
 )
 def test_cleanup_server_error(
-    monkeypatch, run_command, first_app_built, host, port, exception, message
+    monkeypatch,
+    run_command,
+    first_app_built,
+    host,
+    port,
+    exception,
+    message,
 ):
     """If the server raises an error, it is cleaned up."""
     # Mock server creation, raising an error.

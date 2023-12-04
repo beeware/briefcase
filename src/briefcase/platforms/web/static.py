@@ -323,12 +323,27 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         httpd = None
         try:
             # Create a local HTTP server
-            httpd = LocalHTTPServer(
-                self.project_path(app),
-                host=host,
-                port=port,
-                logger=self.logger,
-            )
+            try:
+                httpd = LocalHTTPServer(
+                    self.project_path(app),
+                    host=host,
+                    port=port,
+                    logger=self.logger,
+                )
+            except OSError as e:
+                if e.errno in (errno.EADDRINUSE, errno.ENOSR):
+                    self.logger.warning(
+                        f"Using a system-allocated port since port {port} is already in use. "
+                        "Use -p/--port to manually specify a port."
+                    )
+                    httpd = LocalHTTPServer(
+                        self.project_path(app),
+                        host=host,
+                        port=0,
+                        logger=self.logger,
+                    )
+                else:
+                    raise
 
             # Extract the host and port from the server. This is needed
             # because specifying a port of 0 lets the server pick a port.
@@ -358,11 +373,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                     "Unable to start web server; Permission denied. Did you specify a valid host and port?"
                 ) from e
         except OSError as e:
-            if e.errno in (errno.EADDRINUSE, errno.ENOSR):
-                raise BriefcaseCommandError(
-                    f"Unable to start web server. {host}:{port} is already in use."
-                ) from e
-            elif e.errno in (errno.EADDRNOTAVAIL, errno.ENOSTR):
+            if e.errno in (errno.EADDRNOTAVAIL, errno.ENOSTR):
                 raise BriefcaseCommandError(
                     f"Unable to start web server. {host} is not a valid hostname."
                 ) from e
