@@ -34,6 +34,8 @@ jobs:
   package:
     name: Python package
     uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    with:
+      tox-factors: -with-automation
 
   unit-tests:
     name: Unit tests
