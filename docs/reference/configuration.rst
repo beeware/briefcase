@@ -503,7 +503,7 @@ PEP621 compatibility
 
 Many of the keys that exist in Briefcase's configuration have analogous settings
 in `PEP621 project metadata
-<https://packaging.python.org/en/latest/specifications/declaring-project-metadata>`__.
+<https://packaging.python.org/en/latest/specifications/pyproject-toml/>`__.
 If your ``pyproject.toml`` defines a ``[project]`` section, Briefcase will honor
 those settings as a top level definition. Any ``[tool.briefcase]`` definitions
 will override those in the ``[project]`` section.
