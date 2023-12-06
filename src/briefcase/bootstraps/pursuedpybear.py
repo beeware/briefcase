@@ -121,7 +121,7 @@ system_runtime_requires = [
 
     def pyproject_table_linux_appimage(self):
         return """
-manylinux = "manylinux2014"
+manylinux = "manylinux_2_28"
 
 system_requires = [
 # ?? FIXME

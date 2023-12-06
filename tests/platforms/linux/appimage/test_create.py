@@ -175,6 +175,32 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
                 "use_non_root_user": True,
             },
         ),
+        # Linux on aarch64 hardware
+        (
+            "manylinux_2_28",
+            None,
+            "Linux",
+            "aarch64",
+            False,
+            {
+                "manylinux_image": "manylinux_2_28_aarch64:latest",
+                "vendor_base": "almalinux",
+                "use_non_root_user": True,
+            },
+        ),
+        # Linux on arm hardware
+        (
+            "manylinux_2_28",
+            None,
+            "Linux",
+            "armv7l",
+            False,
+            {
+                "manylinux_image": "manylinux_2_28_unknown:latest",
+                "vendor_base": "almalinux",
+                "use_non_root_user": True,
+            },
+        ),
         # macOS on x86_64
         (
             "manylinux2014",
