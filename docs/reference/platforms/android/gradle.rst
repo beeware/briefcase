@@ -110,16 +110,13 @@ configuration of an ``accent_color``, ``primary_color``, and
 ``primary_color_dark``.
 
 * ``accent_color`` is used subtly throughout an Android app to call attention
-to key elements. It's used on things like form labels and inputs.
-
+  to key elements. It's used on things like form labels and inputs.
 * ``primary_color`` is the main branding color of the app and is used to
-color the app bar in the main window.
-
+  color the app bar in the main window.
 * ``primary_color_dark`` is used alongside the primary color to color the
-status bar at the top of the screen.
-
+  status bar at the top of the screen.
 * ``splash_background_color`` is the color of the splash background that
-displays while an app is loading.
+  displays while an app is loading.
 
 Application configuration
 =========================
