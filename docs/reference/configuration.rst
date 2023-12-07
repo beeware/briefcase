@@ -303,16 +303,14 @@ the ``description``, or include the ``description`` as the first line of the
 ~~~~~~~~~~~~~~~~~
 
 A hexadecimal RGB color value (e.g., ``#008577``) to use as the primary color
-for the application. On Android this will be used to color the app bar in the
-main window. This setting is only used if the platform allows color
+for the application. This setting is only used if the platform allows color
 modification, otherwise it is ignored.
 
 ``primary_color_dark``
 ~~~~~~~~~~~~~~~~~~~~~~
 
 A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
-color. On Android this is used to color the status bar at the top of the
-screen. This setting is only used if the platform allows color modification,
+color. This setting is only used if the platform allows color modification,
 otherwise it is ignored.
 
 ``requires``

@@ -109,6 +109,21 @@ The following options can be added to the
 ``tool.briefcase.app.<appname>.android`` section of your ``pyproject.toml``
 file.
 
+``accent_color``
+----------------
+The accent color is used subtly throughout an Android app to call attention
+to key elements. It's used on things like form labels and inputs.
+
+``primary_color``
+-----------------
+The primary color is the main branding color of the app and is used to color
+the app bar in the main window.
+
+``primary_color_dark``
+----------------------
+The dark primary color is used alongside the primary color to color the
+status bar at the top of the screen.
+
 ``version_code``
 ----------------
 

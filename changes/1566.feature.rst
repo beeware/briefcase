@@ -1,1 +1,1 @@
-Briefcase Android Gradle Template now allows for setting accent_color, primary_color and primary_color_dark. These settings can now be used in pyproject.toml for Android projects.
+Apps can now specify a primary color (for both light and dark modes), and an accent color. If the platform allows apps to customize color use, these colors will be used to style the app's presentation.
