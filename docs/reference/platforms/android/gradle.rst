@@ -97,20 +97,16 @@ for more details on devices, sizes, and display densities. `This list of common
 devices with their sizes and DPI <https://m2.material.io/resources/devices/>`__
 may also be helpful.
 
-You can specify a background color for the splash screen using the
-``splash_background_color`` configuration setting.
-
 Android projects do not support installer images.
 
 Colors
 ======
 
-In addition to ``splash_background_color``, Android projects allow for
-configuration of an ``accent_color``, ``primary_color``, and
-``primary_color_dark``.
+Android allows for some customization of the colors used by your app:
 
-* ``accent_color`` is used subtly throughout an Android app to call attention
-  to key elements. It's used on things like form labels and inputs.
+* ``accent_color`` is used as a subtle highlight throughout your app to
+  call attention to key elements. It's used on things like form labels and
+  inputs.
 * ``primary_color`` is the main branding color of the app and is used to
   color the app bar in the main window.
 * ``primary_color_dark`` is used alongside the primary color to color the
