@@ -19,17 +19,23 @@ def test_file_path(linuxdeploy, mock_tools):
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, linuxdeploy_arch",
+    "host_os, host_arch, is_32bit_python, linuxdeploy_arch",
     [
-        ("Linux", "x86_64", "x86_64"),
-        ("Linux", "i686", "i386"),
-        ("Darwin", "x86_64", "x86_64"),
+        ("Linux", "x86_64", False, "x86_64"),
+        ("Linux", "x86_64", True, "i386"),
+        ("Linux", "i686", True, "i386"),
+        ("Linux", "aarch64", True, "armhf"),
+        ("Linux", "aarch64", False, "aarch64"),
+        ("Linux", "armv7l", True, "armhf"),
+        ("Linux", "armv8l", True, "armhf"),
+        ("Darwin", "x86_64", False, "x86_64"),
     ],
 )
-def test_file_name(mock_tools, host_os, host_arch, linuxdeploy_arch):
+def test_file_name(mock_tools, host_os, host_arch, is_32bit_python, linuxdeploy_arch):
     """Linuxdeploy filename is architecture dependent."""
     mock_tools.host_os = host_os
     mock_tools.host_arch = host_arch
+    mock_tools.is_32bit_python = is_32bit_python
 
     linuxdeploy = LinuxDeploy(mock_tools)
 

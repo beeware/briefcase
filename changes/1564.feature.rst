@@ -1,0 +1,1 @@
+AppImages can now be built for the ARM architecture.

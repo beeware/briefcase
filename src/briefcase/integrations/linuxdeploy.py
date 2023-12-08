@@ -50,16 +50,32 @@ class LinuxDeployBase(ABC):
         """The folder on the local filesystem that contains the file_name."""
 
     @classmethod
-    def arch(cls, host_arch: str) -> str:
+    def arch(cls, tools: ToolCache) -> str:
         """The architecture defined (and supported) by linuxdeploy for AppImages."""
+        system_arch = tools.host_arch
+
+        # If Python is 32 bit, then use 32 bit linuxdeploy regardless of hardware.
+        # It is non-trivial to determine if Linux is 32 bit or 64 bit; so, this uses
+        # Python's bitness as a proxy for Linux's bitness. Furthermore, though, pip
+        # will install 32 bit packages if Python is 32 bit. So, using 32 bit
+        # linuxdeploy in this case ensures the entire resulting AppImage is consistent.
+        if tools.is_32bit_python:
+            system_arch = {
+                "aarch64": "armv8l",
+                "x86_64": "i686",
+            }.get(tools.host_arch, tools.host_arch)
+
         try:
             return {
                 "x86_64": "x86_64",
                 "i686": "i386",
-            }[host_arch]
+                "armv7l": "armhf",
+                "armv8l": "armhf",
+                "aarch64": "aarch64",
+            }[system_arch]
         except KeyError as e:
             raise UnsupportedHostError(
-                f"Linux AppImages cannot be built on {host_arch}."
+                f"Linux AppImages cannot be built on {tools.host_arch}."
             ) from e
 
     def exists(self) -> bool:
@@ -222,7 +238,7 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
 
     @property
     def file_name(self) -> str:
-        return f"linuxdeploy-plugin-qt-{self.arch(self.tools.host_arch)}.AppImage"
+        return f"linuxdeploy-plugin-qt-{self.arch(self.tools)}.AppImage"
 
     @property
     def download_url(self) -> str:
@@ -333,7 +349,7 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
 
     @property
     def file_name(self) -> str:
-        return f"linuxdeploy-{self.arch(self.tools.host_arch)}.AppImage"
+        return f"linuxdeploy-{self.arch(self.tools)}.AppImage"
 
     @property
     def download_url(self) -> str:

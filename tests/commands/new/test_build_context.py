@@ -198,7 +198,7 @@ system_runtime_requires = [
 ]
 """,
         pyproject_table_linux_appimage="""
-manylinux = "manylinux2014"
+manylinux = "manylinux_2_28"
 
 system_requires = [
     # Needed to compile pycairo wheel
@@ -578,7 +578,7 @@ system_runtime_requires = [
 ]
 """,
         pyproject_table_linux_appimage="""
-manylinux = "manylinux2014"
+manylinux = "manylinux_2_28"
 
 system_requires = [
 # ?? FIXME
@@ -748,7 +748,7 @@ system_runtime_requires = [
 ]
 """,
         pyproject_table_linux_appimage="""
-manylinux = "manylinux2014"
+manylinux = "manylinux_2_28"
 
 system_requires = [
 ]
@@ -1178,7 +1178,7 @@ system_runtime_requires = [
 ]
 """,
         pyproject_table_linux_appimage="""
-manylinux = "manylinux2014"
+manylinux = "manylinux_2_28"
 
 system_requires = [
     # Needed to compile pycairo wheel
