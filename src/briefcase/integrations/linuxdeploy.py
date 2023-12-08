@@ -54,7 +54,11 @@ class LinuxDeployBase(ABC):
         """The architecture defined (and supported) by linuxdeploy for AppImages."""
         system_arch = tools.host_arch
 
-        # use 32bit linuxdeploy if using 32bit Python on 64bit hardware
+        # If Python is 32 bit, then use 32 bit linuxdeploy regardless of hardware.
+        # It is non-trivial to determine if Linux is 32 bit or 64 bit; so, this uses
+        # Python's bitness as a proxy for Linux's bitness. Furthermore, though, pip
+        # will install 32 bit packages if Python is 32 bit. So, using 32 bit
+        # linuxdeploy in this case ensures the entire resulting AppImage is consistent.
         if tools.is_32bit_python:
             system_arch = {
                 "aarch64": "armv8l",

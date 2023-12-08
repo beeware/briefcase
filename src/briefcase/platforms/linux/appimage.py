@@ -182,9 +182,9 @@ class LinuxAppImageCreateCommand(
                 "aarch64": "aarch64",
             }[LinuxDeploy.arch(self.tools)]
         except KeyError:
-            manylinux_arch = "unknown"
+            manylinux_arch = LinuxDeploy.arch(self.tools)
             self.logger.warning(
-                f"There is not a manylinux base image for {LinuxDeploy.arch(self.tools)}"
+                f"There is no manylinux base image for {manylinux_arch}"
             )
 
         # Add the manylinux tag to the template context.

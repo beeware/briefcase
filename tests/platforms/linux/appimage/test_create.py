@@ -196,7 +196,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
             "armv7l",
             False,
             {
-                "manylinux_image": "manylinux_2_28_unknown:latest",
+                "manylinux_image": "manylinux_2_28_armhf:latest",
                 "vendor_base": "almalinux",
                 "use_non_root_user": True,
             },
