@@ -177,6 +177,14 @@ specific.
 Optional values
 ---------------
 
+``accent_color``
+~~~~~~~~~~~~~~~~
+
+A hexadecimal RGB color value (e.g., ``#D81B60``) for a subtle secondary color
+to be used throughout an application to call attention to key elements. This
+setting is only used if the platform allows color modification, otherwise it
+is ignored.
+
 ``author``
 ~~~~~~~~~~
 
@@ -290,6 +298,20 @@ A longer description of the purpose of the application. This description can be
 multiple paragraphs, if necessary. The long description *must not* be a copy of
 the ``description``, or include the ``description`` as the first line of the
 ``long_description``.
+
+``primary_color``
+~~~~~~~~~~~~~~~~~
+
+A hexadecimal RGB color value (e.g., ``#008577``) to use as the primary color
+for the application. This setting is only used if the platform allows color
+modification, otherwise it is ignored.
+
+``primary_color_dark``
+~~~~~~~~~~~~~~~~~~~~~~
+
+A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
+color. This setting is only used if the platform allows color modification,
+otherwise it is ignored.
 
 ``requires``
 ~~~~~~~~~~~~
