@@ -233,7 +233,7 @@ a binary component.
 If the package contains a binary component, that wheel needs to be compiled for Android.
 PyPI does not currently support uploading Android-compatible wheels, so you can't rely
 on PyPI to provide those wheels. Briefcase uses a `secondary repository
-<https://chaquo.com/pypi-7.0/>`__ to provide pre-compiled Android wheels.
+<https://chaquo.com/pypi-13.1/>`__ to provide pre-compiled Android wheels.
 
 This repository is maintained by the BeeWare project, and as a result, it does not have
 binary wheels for *every* package that is available on PyPI, or even every *version* of
@@ -257,7 +257,7 @@ build an Android wheel.
 The `Chaquopy repository <https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__
 contains tools to assist with cross-compiling Android binary wheels. This repository contains
 recipes for building the packages that are stored in the `secondary package repository
-<https://chaquo.com/pypi-7.0/>`__. Contributions of new package recipes are welcome, and
+<https://chaquo.com/pypi-13.1/>`__. Contributions of new package recipes are welcome, and
 can be submitted as pull requests. Or, if you have a particular package that you'd like
 us to support, please visit the `issue tracker
 <https://github.com/chaquo/chaquopy/issues>`__ and provide details about that package.
