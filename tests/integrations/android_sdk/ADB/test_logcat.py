@@ -20,6 +20,8 @@ def test_logcat(mock_tools, adb):
             "exampleDevice",
             "logcat",
             "--format=tag",
+            "-v",
+            "color",
             "--pid",
             "1234",
             "EGL_emulation:S",

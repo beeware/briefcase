@@ -1576,6 +1576,8 @@ Activity class not found while starting app.
                 self.device,
                 "logcat",
                 "--format=tag",
+                "-v",
+                "color",
                 "--pid",  # This option is available since API level 24.
                 pid,
             ]
