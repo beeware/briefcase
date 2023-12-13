@@ -29,6 +29,9 @@ from briefcase import __version__
 # Regex to identify settings likely to contain sensitive information
 SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
 
+# Regex to remove ANSI color from text. from stackoverflow.com/a/38662876
+ANSI_ESCAPE = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
+
 
 class InputDisabled(Exception):
     def __init__(self):
@@ -114,7 +117,8 @@ class Printer:
     @classmethod
     def export_log(cls):
         """Export the text of the entire log."""
-        return cls.log.export_text()
+
+        return ANSI_ESCAPE.sub("", cls.log.export_text())
 
 
 class RichLoggingStream:
