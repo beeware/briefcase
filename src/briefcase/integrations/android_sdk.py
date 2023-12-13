@@ -1606,6 +1606,8 @@ Activity class not found while starting app.
                     self.device,
                     "logcat",
                     "--format=tag",
+                    "-v",
+                    "color",
                     "-t",
                     since.strftime("%m-%d %H:%M:%S.000000"),
                     "-s",
