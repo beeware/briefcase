@@ -64,7 +64,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Get Packages
-      uses: actions/download-artifact@v3.0.2
+      uses: actions/download-artifact@v4.0.0
       with:
         name: ${{ needs.package.outputs.artifact-name }}
         path: dist
@@ -122,7 +122,7 @@ jobs:
         python -m install_requirement tox --extra dev
 
     - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v3.0.2
+      uses: actions/download-artifact@v4.0.0
       with:
         name: coverage-data
 
