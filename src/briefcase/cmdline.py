@@ -7,6 +7,7 @@ from argparse import RawDescriptionHelpFormatter
 from briefcase import __version__
 from briefcase.commands import (
     BuildCommand,
+    ConvertCommand,
     CreateCommand,
     DevCommand,
     NewCommand,
@@ -25,6 +26,7 @@ from .exceptions import InvalidFormatError, NoCommandError, UnsupportedCommandEr
 COMMANDS = [
     NewCommand,
     DevCommand,
+    ConvertCommand,
     CreateCommand,
     OpenCommand,
     BuildCommand,
@@ -122,7 +124,9 @@ def parse_cmdline(args):
         raise NoCommandError(parser.format_help())
 
     # Commands agnostic to the platform and format
-    if options.command == "new":
+    if options.command == "convert":
+        Command = ConvertCommand
+    elif options.command == "new":
         Command = NewCommand
     elif options.command == "dev":
         Command = DevCommand
