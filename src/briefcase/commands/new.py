@@ -5,6 +5,7 @@ import sys
 import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
+from pathlib import Path
 from typing import Iterable
 from urllib.parse import urlparse
 
@@ -362,6 +363,41 @@ class NewCommand(BaseCommand):
 
             self.input.prompt()
 
+    def show_welcome_prompt(self) -> None:
+        """Show a welcome prompt that describes what this command will do."""
+        self.input.prompt()
+        self.input.prompt("Let's build a new Briefcase app!")
+
+    def get_version_and_template_info(self, template, template_branch):
+        """The briefcase version and which template to use."""
+        # If the template wasn't specified with --template, we use the default briefcase template
+        if template is None:
+            template = "https://github.com/beeware/briefcase-template"
+
+        # If a branch wasn't supplied through the --template-branch argument,
+        # use the branch derived from the Briefcase version
+        version = Version(briefcase.__version__)
+        if template_branch is None:
+            branch = f"v{version.base_version}"
+        else:
+            branch = template_branch
+
+        return version, template, branch
+
+    def input_project_name(self, formal_name, override_value):
+        return self.input_text(
+            intro=(
+                "Briefcase can manage projects that contain multiple applications, so "
+                "we need a Project name.\n"
+                "\n"
+                "If you're only planning to have one application in this project, you "
+                "can use the formal name as the project name."
+            ),
+            variable="project name",
+            default=formal_name,
+            override_value=override_value,
+        )
+
     def build_context(
         self,
         template_source: str,
@@ -370,6 +406,10 @@ class NewCommand(BaseCommand):
         project_overrides: dict[str, str],
     ) -> dict[str, str]:
         """Builds the cookiecutter context dict for the new project."""
+        self.show_welcome_prompt()
+        if template_source is None:
+            template_source = "https://github.com/beeware/briefcase-template"
+
         context = self.build_app_context(project_overrides)
         # Additional context for the Briefcase template pyproject.toml header to
         # include the version of Briefcase as well as the source of the template.
@@ -381,6 +421,8 @@ class NewCommand(BaseCommand):
             }
         )
         context.update(self.build_gui_context(context, project_overrides))
+
+        self.prompt_divider()  # close the prompting section of output
         return context
 
     def build_app_context(self, project_overrides: dict[str, str]) -> dict[str, str]:
@@ -448,17 +490,8 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("bundle", None),
         )
 
-        project_name = self.input_text(
-            intro=(
-                "Briefcase can manage projects that contain multiple applications, so "
-                "we need a Project name.\n"
-                "\n"
-                "If you're only planning to have one application in this project, you "
-                "can use the formal name as the project name."
-            ),
-            variable="project name",
-            default=formal_name,
-            override_value=project_overrides.pop("project_name", None),
+        project_name = self.input_project_name(
+            formal_name, project_overrides.pop("project_name", None)
         )
 
         description = self.input_text(
@@ -620,6 +653,41 @@ class NewCommand(BaseCommand):
 
         return bootstrap_choices
 
+    def safe_generate_template(
+        self,
+        template: str,
+        branch: str,
+        output_path: str | Path,
+        extra_context: dict[str, str],
+        version: Version,
+    ) -> None:
+        try:
+            self.logger.info(f"Using app template: {template}, branch {branch}")
+            # Unroll the new app template
+            self.generate_template(
+                template=template,
+                branch=branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
+        except TemplateUnsupportedVersion:
+            # If we're *not* on a development branch, raise an error about
+            # the missing template branch.
+            if version.dev is None:
+                raise
+
+            # Development branches can use the main template.
+            self.logger.info(
+                f"Template branch {branch} not found; falling back to development template"
+            )
+            branch = "main"
+            self.generate_template(
+                template=template,
+                branch=branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
+
     def new_app(
         self,
         template: str | None = None,
@@ -629,22 +697,10 @@ class NewCommand(BaseCommand):
     ):
         """Ask questions to generate a new application, and generate a stub project from
         the briefcase-template."""
-        self.input.prompt()
-        self.input.prompt("Let's build a new Briefcase app!")
-
-        if template is None:
-            template = "https://github.com/beeware/briefcase-template"
-
-        # If a branch wasn't supplied through the --template-branch argument,
-        # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
-        if template_branch is None:
-            branch = f"v{version.base_version}"
-        else:
-            branch = template_branch
-
+        version, template, branch = self.get_version_and_template_info(
+            template, template_branch
+        )
         context = self.build_context(template, branch, version, project_overrides)
-        self.prompt_divider()  # close the prompting section of output
 
         # Inform user of project configuration overrides that were not used
         if project_overrides:
@@ -668,32 +724,14 @@ class NewCommand(BaseCommand):
                 f"A directory named {context['app_name']!r} already exists."
             )
 
-        try:
-            self.logger.info(f"Using app template: {template}, branch {branch}")
-            # Unroll the new app template
-            self.generate_template(
-                template=template,
-                branch=branch,
-                output_path=self.base_path,
-                extra_context=context,
-            )
-        except TemplateUnsupportedVersion:
-            # If we're *not* on a development branch, raise an error about
-            # the missing template branch.
-            if version.dev is None:
-                raise
-
-            # Development branches can use the main template.
-            self.logger.info(
-                f"Template branch {branch} not found; falling back to development template"
-            )
-            branch = "main"
-            self.generate_template(
-                template=template,
-                branch=branch,
-                output_path=self.base_path,
-                extra_context=context,
-            )
+        # Create the project files
+        self.safe_generate_template(
+            template=template,
+            branch=branch,
+            output_path=self.base_path,
+            extra_context=context,
+            version=version,
+        )
 
         self.logger.info(
             f"Generated new application {context['formal_name']!r}",
