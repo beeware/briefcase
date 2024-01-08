@@ -522,8 +522,7 @@ def main():
         pyproject_table_briefcase_app_extra_content="""
 
 requires = [
-    "ppb~=1.1",
-    "pysdl2-dll==2.0.22",
+    "ppb~=3.2.0",
 ]
 test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}

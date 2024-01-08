@@ -4,6 +4,7 @@
 *.egg-info
 /dist
 /build
+automation/build
 docs/_build/
 distribute-*
 .DS_Store
