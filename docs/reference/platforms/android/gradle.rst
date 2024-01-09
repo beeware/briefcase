@@ -117,9 +117,69 @@ Android allows for some customization of the colors used by your app:
 Application configuration
 =========================
 
-The following options can be added to the
-``tool.briefcase.app.<appname>.android`` section of your ``pyproject.toml``
-file.
+The following options can be added to the ``tool.briefcase.app.<appname>.android``
+section of your ``pyproject.toml`` file.
+
+``android_manifest_attrs_extra_content``
+----------------------------------------
+
+Additional attributes that will be added verbatim to add to the ``<manifest>``
+declaration of the ``AndroidManifest.xml`` of your app.
+
+``android_manifest_extra_content``
+----------------------------------
+
+Additional content that will be added verbatim to add just before the closing
+``</manifest>`` declaration of the ``AndroidManifest.xml`` of your app.
+
+``android_manifest_application_attrs_extra_content``
+----------------------------------------------------
+
+Additional attributes that will be added verbatim to add to the ``<application>``
+declaration of the ``AndroidManifest.xml`` of your app.
+
+``android_manifest_application_extra_content``
+----------------------------------------------
+
+Additional content that will be added verbatim to add just before the closing
+``</application>`` declaration of the ``AndroidManifest.xml`` of your app.
+
+``android_manifest_activity_attrs_extra_content``
+-------------------------------------------------
+
+Additional attributes that will be added verbatim to add to the ``<activity>``
+declaration of the ``AndroidManifest.xml`` of your app.
+
+``android_manifest_activity_extra_content``
+-------------------------------------------
+
+Additional content that will be added verbatim to add just before the closing
+``</activity>`` declaration of the ``AndroidManifest.xml`` of your app.
+
+``build_gradle_extra_content``
+------------------------------
+
+A string providing additional Gradle settings to use when building your app.
+This will be added verbatim to the end of your ``app/build.gradle`` file.
+
+``features``
+------------
+
+A property whose sub-properties define the features that will be marked as required by
+the final app. Each entry will be converted into a ``<uses-feature>`` declaration in
+your app's ``AndroidManifest.xml``, with the feature name matching the name of the
+sub-attribute.
+
+For example, specifying::
+
+    features."android.hardware.bluetooth" = true
+
+will result in an ``AndroidManifest.xml`` declaration of::
+
+    <uses-feature android:name="android.hardware.bluetooth" android:required="true">
+
+The use of some cross-platform permissions will imply the addition of features; see
+:ref:`the discussion on Android permissions <android-permissions>` for more details.
 
 ``version_code``
 ----------------
@@ -197,18 +257,48 @@ continue to run in the background, but there will be no visual manifestation
 that it is running. It may also be useful as a cleanup mechanism when running
 in a CI configuration.
 
-Application configuration
-=========================
+.. _android-permissions:
 
-The following options can be added to the
-``tool.briefcase.app.<appname>.android`` section of your ``pyproject.toml``
-file:
+Permissions
+===========
 
-``build_gradle_extra_content``
-------------------------------
+Briefcase cross platform permissions map to ``<uses-permission>`` declarations in the
+app's ``AppManifest.xml``:
 
-A string providing additional Gradle settings to use when building your app.
-This will be added verbatim to the end of your ``app/build.gradle`` file.
+* ``camera``: ``android.permission.CAMERA``
+* ``microphone``: ``android.permission.RECORD_AUDIO``
+* ``coarse_location``: ``android.permission.ACCESS_COARSE_LOCATION``
+* ``fine_location``: ``android.permission.ACCESS_FINE_LOCATION``
+* ``background_location``: ``android.permission.ACCESS_BACKGROUND_LOCATION``
+* ``photo_library``: ``android.permission.READ_MEDIA_VISUAL_USER_SELECTED``
+
+Every application will be automatically granted the ``android.permission.INTERNET`` and
+``android.permission.NETWORK_STATE`` permissions.
+
+Specifying a ``camera`` permission will result in the following non-required features
+being implicitly added to your app:
+
+* ``android.hardware.camera``,
+* ``android.hardware.camera.any``,
+* ``android.hardware.camera.front``,
+* ``android.hardware.camera.external`` and
+* ``android.hardware.camera.autofocus``.
+
+Specifying the ``coarse_location``, ``fine_location`` or ``background_location``
+permissions will result in the following non-required features being implicitly added to
+your app:
+
+* ``android.hardware.location.network``
+* ``android.hardware.location.gps``
+
+This is done to ensure that an app is not prevented from installing if the device
+doesn't have the given features. You can make the feature explicitly required by
+manually defining these feature requirements. For example, to make location hardware
+required, you could add the following to the Android section of your
+``pyproject.toml``::
+
+    feature."android.hardware.location.network" = True
+    feature."android.hardware.location.gps" = True
 
 Platform quirks
 ===============

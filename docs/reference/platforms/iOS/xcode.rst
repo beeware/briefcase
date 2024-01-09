@@ -64,6 +64,34 @@ run
 The device simulator to target. Can be either a UDID, a device name (e.g.,
 ``"iPhone 11"``), or a device name and OS version (``"iPhone 11::iOS 13.3"``).
 
+Application configuration
+=========================
+
+The following options can be added to the ``tool.briefcase.app.<appname>.iOS.app``
+section of your ``pyproject.toml`` file.
+
+``info_plist_extra_content``
+----------------------------
+
+A string providing additional content that will be added verbatim to the end of your
+app's ``Info.plist`` file, at the end of the main ``<dict>`` declaration.
+
+Permissions
+===========
+
+Briefcase cross platform permissions map to the following keys in the app's
+``Info.plist``:
+
+* ``camera``: ``NSCameraUsageDescription``
+* ``microphone``: ``NSMicrophoneUsageDescription``
+* ``coarse_location``: ``NSLocationDefaultAccuracyReduced=True`` if ``fine_location`` is
+  not defined, plus ``NSLocationWhenInUseUsageDescription`` if ``background_location``
+  is not defined
+* ``fine_location``: ``NSLocationDefaultAccuracyReduced=False``, plus
+  ``NSLocationWhenInUseUsageDescription`` if ``background_location`` is not defined
+* ``background_location``: ``NSLocationAlwaysAndWhenInUseUsageDescription``
+* ``photo_library``: ``NSPhotoLibraryAddUsageDescription``
+
 Platform quirks
 ===============
 
