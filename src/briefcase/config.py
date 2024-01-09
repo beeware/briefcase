@@ -346,11 +346,27 @@ def merge_config(config, data):
         situ.
     :param data: The new configuration data to merge into the configuration.
     """
-    for option in ["requires", "sources", "test_requires", "test_sources"]:
+    # Properties that are cumulative lists
+    for option in [
+        "requires",
+        "sources",
+        "test_requires",
+        "test_sources",
+    ]:
         value = data.pop(option, [])
 
         if value:
             config.setdefault(option, []).extend(value)
+
+    # Properties that are cumulative tables
+    for option in [
+        "permissions",
+        "device_requires",
+    ]:
+        value = data.pop(option, {})
+
+        if value:
+            config.setdefault(option, {}).update(value)
 
     config.update(data)
 
