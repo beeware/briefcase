@@ -73,3 +73,37 @@ class TOMLEscape(Extension):
 
         environment.filters["escape_toml"] = escape_toml
         environment.filters["escape_non_ascii"] = escape_non_ascii
+
+
+class PListExtension(Extension):
+    """Jinja2 extension for generating plist values."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def plist_value(obj):
+            """Render value in plist format."""
+            if isinstance(obj, bool):
+                if obj:
+                    return "<true/>"
+                else:
+                    return "<false/>"
+            else:
+                return f"<string>{obj}</string>"
+
+        environment.filters["plist_value"] = plist_value
+
+
+class XMLExtension(Extension):
+    """Jinja2 extension for generating XML values."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def bool_attr(obj):
+            """Render value in XML format appropriate for an attribute."""
+            return "true" if obj else "false"
+
+        environment.filters["bool_attr"] = bool_attr
