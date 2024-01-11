@@ -166,6 +166,38 @@ class CreateCommand(BaseCommand):
         except KeyError:
             return {}
 
+    def _x_permissions(self, app: AppConfig):
+        """Extract the known cross-platform permission definitions from the app's
+        permissions definitions.
+
+        After calling this method, the ``permissions`` declaration for the app will
+        only contain keys that are *not* cross-platform keys.
+
+        :param app: The config object for the app
+        :returns: A dictionary of known cross-platform permission definitions.
+        """
+        return {
+            key: app.permissions.pop(key, False)
+            for key in [
+                "camera",
+                "microphone",
+                "coarse_location",
+                "fine_location",
+                "background_location",
+                "photo_library",
+            ]
+        }
+
+    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param x_permissions: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        return {}
+
     def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
@@ -222,6 +254,9 @@ class CreateCommand(BaseCommand):
                 "month": date.today().strftime("%B"),
             }
         )
+
+        # Add in any extra template context to support permissions
+        extra_context.update(self.permissions_context(app, self._x_permissions(app)))
 
         # Add in any extra template context required by the output format.
         extra_context.update(self.output_format_template_context(app))

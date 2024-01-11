@@ -89,6 +89,19 @@ class DummyCreateCommand(CreateCommand):
     def output_format_template_context(self, app):
         return {"output_format": "dummy"}
 
+    # Handle platform-specific permissions.
+    # Convert all the cross-platform permissions to upper case, prefixing DUMMY_.
+    # All other permissions are returned under a "custom" key.
+    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+        return {
+            "x_permissions": {
+                f"DUMMY_{key.upper()}": value.upper()
+                for key, value in x_permissions.items()
+                if value
+            },
+            "permissions": app.permissions,
+        }
+
 
 class TrackingCreateCommand(DummyCreateCommand):
     """A dummy creation command that doesn't actually do anything.

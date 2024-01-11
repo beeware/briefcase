@@ -39,6 +39,7 @@ def full_context():
         "splash": None,
         "supported": True,
         "permissions": {},
+        "x_permissions": {},
         "document_types": {},
         # Properties of the generating environment
         "python_version": platform.python_version(),
@@ -625,3 +626,62 @@ def test_cached_missing_branch_template(monkeypatch, create_command, myapp):
     # Generating the template under there conditions raises an error
     with pytest.raises(TemplateUnsupportedVersion):
         create_command.generate_app_template(myapp)
+
+
+def test_x_permissions(
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
+):
+    # Set the Briefcase version
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
+
+    # Define some permissions
+    myapp.permissions = {
+        # Cross-platform permissions
+        "camera": "I need to see you",
+        "microphone": "I need to hear you",
+        "coarse_location": "I need to know approximately where you are",
+        "fine_location": "I need to know exactly where you are",
+        "background_location": "I need to know where you are constantly",
+        "photo_library": "I need to see your photos",
+        # Custom permissions
+        "DUMMY_sit": "I can't sit without an invitation",
+        "DUMMY.leave.the.dinner.table": "It would be impolite.",
+    }
+
+    # In the final context, all cross-platform permissions have been converted to upper
+    # case, prefixed with "DUMMY", and moved to the `x_permissions` key.
+    full_context["x_permissions"] = {
+        "DUMMY_CAMERA": "I NEED TO SEE YOU",
+        "DUMMY_MICROPHONE": "I NEED TO HEAR YOU",
+        "DUMMY_COARSE_LOCATION": "I NEED TO KNOW APPROXIMATELY WHERE YOU ARE",
+        "DUMMY_FINE_LOCATION": "I NEED TO KNOW EXACTLY WHERE YOU ARE",
+        "DUMMY_BACKGROUND_LOCATION": "I NEED TO KNOW WHERE YOU ARE CONSTANTLY",
+        "DUMMY_PHOTO_LIBRARY": "I NEED TO SEE YOUR PHOTOS",
+    }
+
+    # All custom permissions are left as-is.
+    full_context["permissions"] = {
+        "DUMMY_sit": "I can't sit without an invitation",
+        "DUMMY.leave.the.dinner.table": "It would be impolite.",
+    }
+
+    # There won't be a cookiecutter cache, so there won't be
+    # a cache path (yet).
+    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+
+    # Generate the template.
+    create_command.generate_app_template(myapp)
+
+    # Cookiecutter was invoked with the expected template name and context.
+    create_command.tools.cookiecutter.assert_called_once_with(
+        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        no_input=True,
+        checkout="v37.42.7",
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
+        extra_context=full_context,
+    )
