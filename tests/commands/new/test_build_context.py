@@ -522,8 +522,7 @@ def main():
         pyproject_table_briefcase_app_extra_content="""
 
 requires = [
-    "ppb~=1.1",
-    "pysdl2-dll==2.0.22",
+    "ppb~=3.2.0",
 ]
 test_requires = [
 {%- if cookiecutter.test_framework == "pytest" %}
@@ -543,45 +542,63 @@ requires = [
 """,
         pyproject_table_linux_system_debian="""
 system_requires = [
-# ?? FIXME
 ]
 
 system_runtime_requires = [
-# ?? FIXME
+    "libsdl2-2.0-0",
+    "libsdl2-mixer-2.0-0",
+    "libsdl2-image-2.0-0",
+    "libsdl2-gfx-1.0-0",
+    "libsdl2-ttf-2.0-0",
 ]
 """,
         pyproject_table_linux_system_rhel="""
 system_requires = [
-# ?? FIXME
 ]
 
 system_runtime_requires = [
-# ?? FIXME
+    "SDL2",
+    "SDL2_ttf",
+    "SDL2_image",
+    "SDL2_gfx",
+    "SDL2_mixer",
+    "libmodplug",
 ]
 """,
         pyproject_table_linux_system_suse="""
 system_requires = [
-# ?? FIXME
 ]
 
 system_runtime_requires = [
-# ?? FIXME
+    "SDL2",
+    "SDL2_gfx",
+    "SDL2_ttf",
+    "SDL2_image",
+    "SDL2_mixer",
+    "libmodplug1",
 ]
 """,
         pyproject_table_linux_system_arch="""
 system_requires = [
-# ?? FIXME
+    "sdl2",
+    "sdl2_ttf",
+    "sdl2_image",
+    "sdl2_gfx",
+    "sdl2_mixer",
 ]
 
 system_runtime_requires = [
-# ?? FIXME
+    "sdl2",
+    "sdl2_ttf",
+    "sdl2_image",
+    "sdl2_gfx",
+    "sdl2_mixer",
 ]
 """,
         pyproject_table_linux_appimage="""
 manylinux = "manylinux_2_28"
 
 system_requires = [
-# ?? FIXME
 ]
 
 linuxdeploy_plugins = [
