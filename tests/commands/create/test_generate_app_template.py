@@ -38,6 +38,7 @@ def full_context():
         "icon": None,
         "splash": None,
         "supported": True,
+        "permissions": {},
         "document_types": {},
         # Properties of the generating environment
         "python_version": platform.python_version(),

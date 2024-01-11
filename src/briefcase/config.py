@@ -191,6 +191,7 @@ class AppConfig(BaseConfig):
         icon=None,
         splash=None,
         document_type=None,
+        permissions=None,
         template=None,
         template_branch=None,
         test_sources=None,
@@ -218,6 +219,7 @@ class AppConfig(BaseConfig):
         self.icon = icon
         self.splash = splash
         self.document_types = {} if document_type is None else document_type
+        self.permissions = {} if permissions is None else permissions
         self.template = template
         self.template_branch = template_branch
         self.test_sources = test_sources
