@@ -162,7 +162,7 @@ system_runtime_requires = [
     # Needed to provide GTK
     "gtk3",
     # Needed to support Python bindings to GTK
-    "gobject-introspection", "typelib(Gtk)=3.0",
+    "gobject-introspection", "typelib(Gtk) = 3.0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-0",
     # Needed to provide WebKit2 at runtime
@@ -1159,7 +1159,7 @@ system_runtime_requires = [
     # Needed to provide GTK
     "gtk3",
     # Needed to support Python bindings to GTK
-    "gobject-introspection", "typelib(Gtk)=3.0",
+    "gobject-introspection", "typelib(Gtk) = 3.0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-0",
     # Needed to provide WebKit2 at runtime

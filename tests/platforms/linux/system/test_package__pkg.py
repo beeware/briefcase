@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 import sys
@@ -100,8 +101,15 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_pkg):
     makepkg.exists.assert_called_once()
 
 
-def test_verify_makepkg_missing(monkeypatch, package_command, first_app_pkg):
+@pytest.mark.parametrize(
+    "vendor_base, installer", [("arch", "pacman -Syu"), (None, "[system installer]")]
+)
+def test_verify_makepkg_missing(
+    monkeypatch, package_command, first_app_pkg, vendor_base, installer
+):
     """If makepkg isn't installed, an error is raised."""
+    first_app_pkg.target_vendor_base = vendor_base
+
     # Mock not using docker
     package_command.target_image = None
 
@@ -115,7 +123,9 @@ def test_verify_makepkg_missing(monkeypatch, package_command, first_app_pkg):
     # Verifying app tools will raise an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Can't find the `makepkg` tool. Try running `sudo pacman -Syu pacman`.",
+        match=re.escape(
+            rf"Can't find the `makepkg` tool. Try running `sudo {installer} pacman`."
+        ),
     ):
         package_command.verify_app_tools(first_app_pkg)
 

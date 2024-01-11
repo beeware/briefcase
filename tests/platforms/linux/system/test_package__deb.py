@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 import sys
@@ -72,8 +73,15 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_deb):
     dpkg_deb.exists.assert_called_once()
 
 
-def test_verify_dpkg_deb_missing(monkeypatch, package_command, first_app_deb):
+@pytest.mark.parametrize(
+    "vendor_base, installer", [("debian", "apt install"), (None, "[system installer]")]
+)
+def test_verify_dpkg_deb_missing(
+    monkeypatch, package_command, first_app_deb, vendor_base, installer
+):
     """If dpkg_deb isn't installed, an error is raised."""
+    first_app_deb.target_vendor_base = vendor_base
+
     # Mock not using docker
     package_command.target_image = None
 
@@ -87,7 +95,9 @@ def test_verify_dpkg_deb_missing(monkeypatch, package_command, first_app_deb):
     # Verifying app tools will raise an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`.",
+        match=re.escape(
+            rf"Can't find the dpkg tools. Try running `sudo {installer} dpkg-dev`."
+        ),
     ):
         package_command.verify_app_tools(first_app_deb)
 

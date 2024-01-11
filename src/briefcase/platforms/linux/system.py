@@ -261,18 +261,35 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
     def distribution_filename(self, app: AppConfig) -> str:
         if app.packaging_format == "deb":
             return (
-                f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
-                f"~{app.target_vendor}-{app.target_codename}_{self.deb_abi(app)}.deb"
+                f"{app.app_name}"
+                f"_{app.version}"
+                f"-{getattr(app, 'revision', 1)}"
+                f"~{app.target_vendor}"
+                f"-{app.target_codename}"
+                f"_{self.deb_abi(app)}"
+                ".deb"
             )
         elif app.packaging_format == "rpm":
+            # openSUSE doesn't include a distro tag
+            if app.target_vendor_base == SUSE:
+                distro_tag = ""
+            else:
+                distro_tag = f".{self.rpm_tag(app)}"
             return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f".{self.rpm_tag(app)}.{self.rpm_abi(app)}.rpm"
+                f"{app.app_name}"
+                f"-{app.version}"
+                f"-{getattr(app, 'revision', 1)}"
+                f"{distro_tag}"
+                f".{self.rpm_abi(app)}"
+                f".rpm"
             )
         elif app.packaging_format == "pkg":
             return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f"-{self.pkg_abi(app)}.pkg.tar.zst"
+                f"{app.app_name}"
+                f"-{app.version}"
+                f"-{getattr(app, 'revision', 1)}"
+                f"-{self.pkg_abi(app)}"
+                ".pkg.tar.zst"
             )
         else:
             raise BriefcaseCommandError(
@@ -830,26 +847,27 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
     def packaging_formats(self):
         return ["deb", "rpm", "pkg", "system"]
 
-    def _verify_deb_tools(self):
-        """Verify that the local environment contains the debian packaging tools."""
-        if not Path("/usr/bin/dpkg-deb").exists():
+    def _verify_packaging_tools(self, app: AppConfig):
+        """Verify that the local environment contains the packaging tools."""
+        if install_cmd := self._system_requirement_tools(app)[2]:
+            install_cmd = " ".join(install_cmd)
+        else:
+            install_cmd = "[system installer]"
+
+        if app.packaging_format == "deb" and not Path("/usr/bin/dpkg-deb").exists():
             raise BriefcaseCommandError(
-                "Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`."
+                f"Can't find the dpkg tools. Try running `sudo {install_cmd} dpkg-dev`."
             )
 
-    def _verify_rpm_tools(self):
-        """Verify that the local environment contains the redhat packaging tools."""
-        if not Path("/usr/bin/rpmbuild").exists():
+        if app.packaging_format == "rpm" and not Path("/usr/bin/rpmbuild").exists():
             raise BriefcaseCommandError(
-                "Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`."
+                f"Can't find the rpm-build tools. Try running `sudo {install_cmd} rpm-build`."
             )
 
-    def _verify_pkg_tools(self):
-        """Verify that the local environment contains the arch packaging tools(ABS)."""
-        if not Path("/usr/bin/makepkg").exists():
+        if app.packaging_format == "pkg" and not Path("/usr/bin/makepkg").exists():
             raise BriefcaseCommandError(
-                "Can't find the `makepkg` tool. Try running `sudo pacman -Syu pacman`."
                 # makepkg is part of pacman package
+                f"Can't find the `makepkg` tool. Try running `sudo {install_cmd} pacman`."
             )
 
     def verify_app_tools(self, app):
@@ -871,8 +889,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
         if not self.use_docker:
-            # Check for the format-specific packaging tools.
-            getattr(self, f"_verify_{app.packaging_format}_tools")()
+            self._verify_packaging_tools(app)
 
     def package_app(self, app: AppConfig, **kwargs):
         if app.packaging_format == "deb":

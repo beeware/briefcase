@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 import sys
@@ -49,7 +50,7 @@ def package_command(first_app, tmp_path):
 def first_app_rpm(first_app, tmp_path):
     # Mock a Red Hat app
     first_app.python_version_tag = "3"
-    first_app.target_vendor_base = "redhat"
+    first_app.target_vendor_base = "rhel"
     first_app.packaging_format = "rpm"
     first_app.glibc_version = "2.99"
     first_app.long_description = "Long description\nfor the app"
@@ -98,8 +99,15 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
     rpmbuild.exists.assert_called_once()
 
 
-def test_verify_rpmbuild_missing(monkeypatch, package_command, first_app_rpm):
+@pytest.mark.parametrize(
+    "vendor_base, installer", [("rhel", "dnf install"), (None, "[system installer]")]
+)
+def test_verify_rpmbuild_missing(
+    monkeypatch, package_command, first_app_rpm, vendor_base, installer
+):
     """If rpmbuild isn't installed, an error is raised."""
+    first_app_rpm.target_vendor_base = vendor_base
+
     # Mock not using docker
     package_command.target_image = None
 
@@ -113,7 +121,9 @@ def test_verify_rpmbuild_missing(monkeypatch, package_command, first_app_rpm):
     # Verifying app tools will raise an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`.",
+        match=re.escape(
+            rf"Can't find the rpm-build tools. Try running `sudo {installer} rpm-build`."
+        ),
     ):
         package_command.verify_app_tools(first_app_rpm)
 
