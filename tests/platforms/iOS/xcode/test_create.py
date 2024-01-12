@@ -120,3 +120,171 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             },
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "permissions, context",
+    [
+        # No permissions
+        (
+            {},
+            {"permissions": {}},
+        ),
+        # Only custom permissions
+        (
+            {
+                "NSCameraUsageDescription": "I need to see you",
+                "NSMicrophoneUsageDescription": "I need to hear you",
+            },
+            {
+                "permissions": {
+                    "NSCameraUsageDescription": "I need to see you",
+                    "NSMicrophoneUsageDescription": "I need to hear you",
+                }
+            },
+        ),
+        # Camera permissions
+        (
+            {
+                "camera": "I need to see you",
+            },
+            {
+                "permissions": {
+                    "NSCameraUsageDescription": "I need to see you",
+                },
+            },
+        ),
+        # Microphone permissions
+        (
+            {
+                "microphone": "I need to hear you",
+            },
+            {
+                "permissions": {
+                    "NSMicrophoneUsageDescription": "I need to hear you",
+                },
+            },
+        ),
+        # Coarse location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationDefaultAccuracyReduced": True,
+                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
+                }
+            },
+        ),
+        # Fine location permissions
+        (
+            {
+                "fine_location": "I need to know exactly where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationDefaultAccuracyReduced": False,
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                }
+            },
+        ),
+        # Background location permissions
+        (
+            {
+                "background_location": "I always need to know where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                }
+            },
+        ),
+        # Coarse location background permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationDefaultAccuracyReduced": True,
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                }
+            },
+        ),
+        # Fine location background permissions
+        (
+            {
+                "fine_location": "I need to know exactly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationDefaultAccuracyReduced": False,
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                }
+            },
+        ),
+        # Coarse and fine location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "fine_location": "I need to know exactly where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationDefaultAccuracyReduced": False,
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                }
+            },
+        ),
+        # Coarse and fine background location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "fine_location": "I need to know exactly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {
+                "permissions": {
+                    "NSLocationDefaultAccuracyReduced": False,
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                }
+            },
+        ),
+        # Photo library permissions
+        (
+            {
+                "photo_library": "I need to see your library",
+            },
+            {
+                "permissions": {
+                    "NSPhotoLibraryAddUsageDescription": "I need to see your library"
+                }
+            },
+        ),
+        # Override and augment by cross-platform definitions
+        (
+            {
+                "camera": "I need to see you",
+                "NSCameraUsageDescription": "Platform specific",
+                "NSCustomPermission": "Custom message",
+            },
+            {
+                "permissions": {
+                    "NSCameraUsageDescription": "Platform specific",
+                    "NSCustomPermission": "Custom message",
+                }
+            },
+        ),
+    ],
+)
+def test_permissions_context(create_command, first_app, permissions, context):
+    """Platform-specific permissions can be added to the context."""
+    # Set the permissions value
+    first_app.permission = permissions
+    # Extract the cross-platform permissions
+    x_permissions = create_command._x_permissions(first_app)
+    # Check that the final platform permissions are rendered as expected.
+    assert context == create_command.permissions_context(first_app, x_permissions)
