@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import gzip
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -530,7 +531,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             system_installer,
         ) = self._system_requirement_tools(app)
 
-        if system_verify is None:
+        if not (system_verify and self.tools.shutil.which(system_verify[0])):
             self.logger.warning(
                 """
 *************************************************************************
@@ -562,7 +563,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
-    sudo {' '.join(system_installer)} {' '.join(missing)}
+    sudo {" ".join(system_installer)} {" ".join(missing)}
 
 to install the missing dependencies, and re-run Briefcase.
 """
@@ -797,7 +798,7 @@ class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
     supported_host_os_reason = "Linux system projects can only be executed on Linux."
 
     def run_app(
-        self, app: AppConfig, test_mode: bool, passthrough: List[str], **kwargs
+        self, app: AppConfig, test_mode: bool, passthrough: list[str], **kwargs
     ):
         """Start the application.
 
@@ -849,26 +850,23 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
     def _verify_packaging_tools(self, app: AppConfig):
         """Verify that the local environment contains the packaging tools."""
-        if install_cmd := self._system_requirement_tools(app)[2]:
-            install_cmd = " ".join(install_cmd)
-        else:
-            install_cmd = "[system installer]"
+        tool_name, executable_name, package_name = {
+            "deb": ("dpkg", "dpkg-deb", "dpkg-dev"),
+            "rpm": ("rpm-build", "rpmbuild", "rpmbuild"),
+            "pkg": ("makepkg", "makepkg", "pacman"),
+        }[app.packaging_format]
 
-        if app.packaging_format == "deb" and not Path("/usr/bin/dpkg-deb").exists():
-            raise BriefcaseCommandError(
-                f"Can't find the dpkg tools. Try running `sudo {install_cmd} dpkg-dev`."
-            )
-
-        if app.packaging_format == "rpm" and not Path("/usr/bin/rpmbuild").exists():
-            raise BriefcaseCommandError(
-                f"Can't find the rpm-build tools. Try running `sudo {install_cmd} rpm-build`."
-            )
-
-        if app.packaging_format == "pkg" and not Path("/usr/bin/makepkg").exists():
-            raise BriefcaseCommandError(
-                # makepkg is part of pacman package
-                f"Can't find the `makepkg` tool. Try running `sudo {install_cmd} pacman`."
-            )
+        if not self.tools.shutil.which(executable_name):
+            if install_cmd := self._system_requirement_tools(app)[2]:
+                raise BriefcaseCommandError(
+                    f"Can't find the {tool_name} tools. "
+                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`."
+                )
+            else:
+                raise BriefcaseCommandError(
+                    f"Can't find the {executable_name} tool. "
+                    f"Install this first to package the {app.packaging_format}."
+                )
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app)

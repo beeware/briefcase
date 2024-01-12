@@ -20,6 +20,9 @@ def build_command(tmp_path, first_app):
     command.tools.host_os = "Linux"
     command.tools.host_arch = "wonky"
 
+    # All calls to `shutil.which()` succeed
+    command.tools.shutil.which = MagicMock(return_value="/path/to/exe")
+
     # Mock subprocess
     command.tools.subprocess = MagicMock()
 
@@ -122,6 +125,21 @@ def test_missing_packages(build_command, first_app_config, capsys):
         match=r"    sudo system install_flag compiler second",
     ):
         build_command.verify_system_packages(first_app_config)
+
+
+def test_missing_system_verify(build_command, first_app_config, capsys):
+    """If the program to verify system packages doesn't exist, a warning is logged."""
+    # Mock the system verifier is missing
+    build_command.tools.shutil.which = MagicMock(return_value="")
+
+    build_command.verify_system_packages(first_app_config)
+
+    # No packages verified
+    build_command.tools.subprocess.check_output.assert_not_called()
+
+    # A warning was logged.
+    output = capsys.readouterr().out
+    assert "WARNING: Can't verify system packages" in output
 
 
 def test_packages_installed(build_command, first_app_config, capsys):
