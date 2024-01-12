@@ -157,7 +157,8 @@ in the macOS configuration section of your pyproject.toml.
             definitions.
         :returns: The template context describing permissions for the app.
         """
-        permissions = {}
+        # The info.plist entries for the app
+        info = {}
 
         # Default entitlements for all macOS apps
         entitlements = {
@@ -171,28 +172,24 @@ in the macOS configuration section of your pyproject.toml.
             entitlements["com.apple.security.device.microphone"] = True
 
         if cross_platform["background_location"]:
-            permissions["NSLocationUsageDescription"] = cross_platform[
-                "background_location"
-            ]
+            info["NSLocationUsageDescription"] = cross_platform["background_location"]
             entitlements["com.apple.security.personal-information.location"] = True
         elif cross_platform["fine_location"]:
-            permissions["NSLocationUsageDescription"] = cross_platform["fine_location"]
+            info["NSLocationUsageDescription"] = cross_platform["fine_location"]
             entitlements["com.apple.security.personal-information.location"] = True
         elif cross_platform["coarse_location"]:
-            permissions["NSLocationUsageDescription"] = cross_platform[
-                "coarse_location"
-            ]
+            info["NSLocationUsageDescription"] = cross_platform["coarse_location"]
             entitlements["com.apple.security.personal-information.location"] = True
 
         if cross_platform["photo_library"]:
             entitlements["com.apple.security.personal-information.photo_library"] = True
 
-        # Override any permission and entitlement definitions with the platform specific definitions
-        permissions.update(app.permission)
+        # Override any info and entitlement definitions with the platform specific definitions
+        info.update(getattr(app, "info", {}))
         entitlements.update(getattr(app, "entitlement", {}))
 
         return {
-            "permissions": permissions,
+            "info": info,
             "entitlements": entitlements,
         }
 

@@ -123,21 +123,23 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "permissions, context",
+    "permissions, info, context",
     [
         # No permissions
         (
             {},
-            {"permissions": {}},
+            {},
+            {"info": {}},
         ),
         # Only custom permissions
         (
+            {},
             {
                 "NSCameraUsageDescription": "I need to see you",
                 "NSMicrophoneUsageDescription": "I need to hear you",
             },
             {
-                "permissions": {
+                "info": {
                     "NSCameraUsageDescription": "I need to see you",
                     "NSMicrophoneUsageDescription": "I need to hear you",
                 }
@@ -148,8 +150,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "camera": "I need to see you",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSCameraUsageDescription": "I need to see you",
                 },
             },
@@ -159,8 +162,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "microphone": "I need to hear you",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSMicrophoneUsageDescription": "I need to hear you",
                 },
             },
@@ -170,8 +174,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "coarse_location": "I need to know roughly where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationDefaultAccuracyReduced": True,
                     "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
                 }
@@ -182,8 +187,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "fine_location": "I need to know exactly where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationDefaultAccuracyReduced": False,
                     "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
                 }
@@ -194,8 +200,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "background_location": "I always need to know where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
                 }
             },
@@ -206,8 +213,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
                 "coarse_location": "I need to know roughly where you are",
                 "background_location": "I always need to know where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationDefaultAccuracyReduced": True,
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
                 }
@@ -219,8 +227,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
                 "fine_location": "I need to know exactly where you are",
                 "background_location": "I always need to know where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationDefaultAccuracyReduced": False,
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
                 }
@@ -232,8 +241,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
                 "coarse_location": "I need to know roughly where you are",
                 "fine_location": "I need to know exactly where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationDefaultAccuracyReduced": False,
                     "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
                 }
@@ -246,8 +256,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
                 "fine_location": "I need to know exactly where you are",
                 "background_location": "I always need to know where you are",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationDefaultAccuracyReduced": False,
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
                 }
@@ -258,8 +269,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "photo_library": "I need to see your library",
             },
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSPhotoLibraryAddUsageDescription": "I need to see your library"
                 }
             },
@@ -268,11 +280,13 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
         (
             {
                 "camera": "I need to see you",
+            },
+            {
                 "NSCameraUsageDescription": "Platform specific",
                 "NSCustomPermission": "Custom message",
             },
             {
-                "permissions": {
+                "info": {
                     "NSCameraUsageDescription": "Platform specific",
                     "NSCustomPermission": "Custom message",
                 }
@@ -280,10 +294,11 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
         ),
     ],
 )
-def test_permissions_context(create_command, first_app, permissions, context):
+def test_permissions_context(create_command, first_app, permissions, info, context):
     """Platform-specific permissions can be added to the context."""
     # Set the permissions value
     first_app.permission = permissions
+    first_app.info = info
     # Extract the cross-platform permissions
     x_permissions = create_command._x_permissions(first_app)
     # Check that the final platform permissions are rendered as expected.

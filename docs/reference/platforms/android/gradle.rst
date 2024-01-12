@@ -181,6 +181,22 @@ will result in an ``AndroidManifest.xml`` declaration of::
 The use of some cross-platform permissions will imply the addition of features; see
 :ref:`the discussion on Android permissions <android-permissions>` for more details.
 
+``permission``
+--------------
+
+A property whose sub-properties define the platform-specific permissions that will be
+marked as required by the final app. Each entry will be converted into a
+``<uses-permission>`` declaration in your app's ``AndroidManifest.xml``, with the
+feature name matching the name of the sub-attribute.
+
+For example, specifying::
+
+    permission."android.permission.HIGH_SAMPLING_RATE_SENSORS" = true
+
+will result in an ``AndroidManifest.xml`` declaration of::
+
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
+
 ``version_code``
 ----------------
 
@@ -275,8 +291,8 @@ app's ``AppManifest.xml``:
 Every application will be automatically granted the ``android.permission.INTERNET`` and
 ``android.permission.NETWORK_STATE`` permissions.
 
-Specifying a ``camera`` permission will result in the following non-required features
-being implicitly added to your app:
+Specifying a ``camera`` permission will result in the following non-required ``feature``
+definitions being implicitly added to your app:
 
 * ``android.hardware.camera``,
 * ``android.hardware.camera.any``,
@@ -285,8 +301,8 @@ being implicitly added to your app:
 * ``android.hardware.camera.autofocus``.
 
 Specifying the ``coarse_location``, ``fine_location`` or ``background_location``
-permissions will result in the following non-required features being implicitly added to
-your app:
+permissions will result in the following non-required ``feature`` declarations being
+implicitly added to your app:
 
 * ``android.hardware.location.network``
 * ``android.hardware.location.gps``

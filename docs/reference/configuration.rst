@@ -477,19 +477,15 @@ Briefcase maintains a set of cross-platform permissions:
 * ``permission.background_location`` - permission to track GPS location while in the background.
 * ``permission.photo_library`` - permission to access to the user's photo library.
 
-If a cross-platform permission is used, it will be mapped to platform-specific values.
-Permissions can also be specified directly as platform-specific keys. For example,
-Android defines a ``android.permission.HIGH_SAMPLING_RATE_SENSORS`` permission; this
-could be specified by defining
-``permission."android.permission.HIGH_SAMPLING_RATE_SENSORS"``. If a platform-specific
-key is specified, it will override any value specified as part of a cross-platform
-value.
+If a cross-platform permission is used, it will be mapped to platform-specific values in
+whatever files are used to define permissions on that platform.
+
+Permissions can also be configured by adding platform-specific configuration items. See the documentation for the the platform backends to see the options that are available.
 
 The value for each permission is a short description of why that permission is required.
 If the platform requires, the value may be displayed to the user as part of an
 authorization dialog. This description should describe *why* the app requires the
-permission, rather than a generic description of the permission being requested. The
-values for platform-specific permissions may also be Boolean or integers if required.
+permission, rather than a generic description of the permission being requested.
 
 The use of cross-platform may also imply other settings in your app. See the individual
 platform backends for details on how cross-platform permissions are mapped.

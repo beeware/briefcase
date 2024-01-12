@@ -262,41 +262,38 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             definitions.
         :returns: The template context describing permissions for the app.
         """
-        permissions = {}
+        # The collection of info.plist entries
+        info = {}
 
         if x_permissions["camera"]:
-            permissions["NSCameraUsageDescription"] = x_permissions["camera"]
+            info["NSCameraUsageDescription"] = x_permissions["camera"]
         if x_permissions["microphone"]:
-            permissions["NSMicrophoneUsageDescription"] = x_permissions["microphone"]
+            info["NSMicrophoneUsageDescription"] = x_permissions["microphone"]
 
         if x_permissions["fine_location"]:
-            permissions["NSLocationDefaultAccuracyReduced"] = False
+            info["NSLocationDefaultAccuracyReduced"] = False
         elif x_permissions["coarse_location"]:
-            permissions["NSLocationDefaultAccuracyReduced"] = True
+            info["NSLocationDefaultAccuracyReduced"] = True
 
         if x_permissions["background_location"]:
-            permissions["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
+            info["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
                 "background_location"
             ]
         elif x_permissions["fine_location"]:
-            permissions["NSLocationWhenInUseUsageDescription"] = x_permissions[
-                "fine_location"
-            ]
+            info["NSLocationWhenInUseUsageDescription"] = x_permissions["fine_location"]
         elif x_permissions["coarse_location"]:
-            permissions["NSLocationWhenInUseUsageDescription"] = x_permissions[
+            info["NSLocationWhenInUseUsageDescription"] = x_permissions[
                 "coarse_location"
             ]
 
         if x_permissions["photo_library"]:
-            permissions["NSPhotoLibraryAddUsageDescription"] = x_permissions[
-                "photo_library"
-            ]
+            info["NSPhotoLibraryAddUsageDescription"] = x_permissions["photo_library"]
 
-        # Override any permission definitions with the platform specific definitions
-        permissions.update(app.permission)
+        # Override any info.plist entries with the platform specific definitions
+        info.update(getattr(app, "info", {}))
 
         return {
-            "permissions": permissions,
+            "info": info,
         }
 
     def _extra_pip_args(self, app: AppConfig):

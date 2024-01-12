@@ -70,17 +70,25 @@ Application configuration
 The following options can be added to the ``tool.briefcase.app.<appname>.iOS.app``
 section of your ``pyproject.toml`` file.
 
-``info_plist_extra_content``
-----------------------------
+``info``
+--------
 
-A string providing additional content that will be added verbatim to the end of your
-app's ``Info.plist`` file, at the end of the main ``<dict>`` declaration.
+A property whose sub-attributes define keys that will be added to the app's
+``Info.plist`` file. Each entry will be converted into a key in the entitlements
+file. For example, specifying::
+
+    info."UIFileSharingEnabled" = true
+
+will result in an ``Info.plist`` declaration of::
+
+    <key>UIFileSharingEnabled</key><true/>
+
+Any Boolean or string value can be used for an ``Info.plist`` value.
 
 Permissions
 ===========
 
-Briefcase cross platform permissions map to the following keys in the app's
-``Info.plist``:
+Briefcase cross platform permissions map to the following ``info`` keys:
 
 * ``camera``: ``NSCameraUsageDescription``
 * ``microphone``: ``NSMicrophoneUsageDescription``

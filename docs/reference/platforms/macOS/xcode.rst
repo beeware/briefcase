@@ -90,11 +90,20 @@ enable library validation, you could add the following to your ``pyproject.toml`
 
     entitlement."com.apple.security.cs.disable-library-validation" = false
 
-``info_plist_extra_content``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``info``
+~~~~~~~~
 
-A string providing additional content that will be added verbatim to the end of your
-app's ``Info.plist`` file, at the end of the main ``<dict>`` declaration.
+A property whose sub-attributes define keys that will be added to the app's
+``Info.plist`` file. Each entry will be converted into a key in the entitlements
+file. For example, specifying::
+
+    info."NSAppleScriptEnabled" = true
+
+will result in an ``Info.plist`` declaration of::
+
+    <key>NSAppleScriptEnabled</key><true/>
+
+Any Boolean or string value can be used for an ``Info.plist`` value.
 
 ``universal_build``
 ~~~~~~~~~~~~~~~~~~~
@@ -108,20 +117,20 @@ you will produce an ARM64 binary.
 Permissions
 ===========
 
-Briefcase cross platform permissions map to a combination of ``entitlement``
-definitions, and keys in the app's ``Info.plist``:
+Briefcase cross platform permissions map to a combination of ``info`` and ``entitlement``
+keys:
 
-* ``camera``: an entitlement of ``com.apple.security.device.camera``
-* ``microphone``: an entitlement of ``com.apple.security.device.audio-input``
-* ``coarse_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``
+* ``microphone``: an ``entitlement`` of ``com.apple.security.device.audio-input``
+* ``camera``: an ``entitlement`` of ``com.apple.security.device.camera``
+* ``coarse_location``: an ``info`` entry for ``NSLocationUsageDescription``
   (ignored if ``background_location`` or ``fine_location`` is defined); plus an
   entitlement of ``com.apple.security.personal-information.location``
-* ``fine_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``(ignored
-  if ``background_location`` is defined); plus a device requirement of
+* ``fine_location``: an ``info`` entry for ``NSLocationUsageDescription``(ignored
+  if ``background_location`` is defined); plus an ``entitlement`` of
   ``com.apple.security.personal-information.location``
-* ``background_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``;
-  plus an entitlement of ``com.apple.security.personal-information.location``
-* ``photo_library``: an entitlement of ``com.apple.security.personal-information.photos-library``
+* ``background_location``: an ``info`` entry for ``NSLocationUsageDescription``;
+  plus an ``entitlement`` of ``com.apple.security.personal-information.location``
+* ``photo_library``: an ``entitlement`` of ``com.apple.security.personal-information.photos-library``
 
 Platform quirks
 ===============

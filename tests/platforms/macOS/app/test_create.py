@@ -28,14 +28,15 @@ def create_command(tmp_path, first_app_templated):
 
 
 @pytest.mark.parametrize(
-    "permissions, entitlements, context",
+    "permissions, info, entitlements, context",
     [
         # No permissions
         (
             {},
             {},
+            {},
             {
-                "permissions": {},
+                "info": {},
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
@@ -44,6 +45,7 @@ def create_command(tmp_path, first_app_templated):
         ),
         # Only custom permissions
         (
+            {},
             {
                 "NSCustomPermission": "Custom message",
             },
@@ -51,7 +53,7 @@ def create_command(tmp_path, first_app_templated):
                 "com.apple.vm.networking": True,
             },
             {
-                "permissions": {
+                "info": {
                     "NSCustomPermission": "Custom message",
                 },
                 "entitlements": {
@@ -67,8 +69,9 @@ def create_command(tmp_path, first_app_templated):
                 "camera": "I need to see you",
             },
             {},
+            {},
             {
-                "permissions": {},
+                "info": {},
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
@@ -82,8 +85,9 @@ def create_command(tmp_path, first_app_templated):
                 "microphone": "I need to hear you",
             },
             {},
+            {},
             {
-                "permissions": {},
+                "info": {},
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
@@ -97,8 +101,9 @@ def create_command(tmp_path, first_app_templated):
                 "coarse_location": "I need to know roughly where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I need to know roughly where you are",
                 },
                 "entitlements": {
@@ -114,8 +119,9 @@ def create_command(tmp_path, first_app_templated):
                 "fine_location": "I need to know exactly where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I need to know exactly where you are",
                 },
                 "entitlements": {
@@ -131,8 +137,9 @@ def create_command(tmp_path, first_app_templated):
                 "background_location": "I always need to know where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I always need to know where you are",
                 },
                 "entitlements": {
@@ -149,8 +156,9 @@ def create_command(tmp_path, first_app_templated):
                 "background_location": "I always need to know where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I always need to know where you are",
                 },
                 "entitlements": {
@@ -167,8 +175,9 @@ def create_command(tmp_path, first_app_templated):
                 "background_location": "I always need to know where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I always need to know where you are",
                 },
                 "entitlements": {
@@ -185,8 +194,9 @@ def create_command(tmp_path, first_app_templated):
                 "fine_location": "I need to know exactly where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I need to know exactly where you are",
                 },
                 "entitlements": {
@@ -204,8 +214,9 @@ def create_command(tmp_path, first_app_templated):
                 "background_location": "I always need to know where you are",
             },
             {},
+            {},
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "I always need to know where you are",
                 },
                 "entitlements": {
@@ -221,8 +232,9 @@ def create_command(tmp_path, first_app_templated):
                 "photo_library": "I need to see your library",
             },
             {},
+            {},
             {
-                "permissions": {},
+                "info": {},
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
@@ -234,6 +246,8 @@ def create_command(tmp_path, first_app_templated):
         (
             {
                 "fine_location": "I need to know where you are",
+            },
+            {
                 "NSCustomMessage": "Custom message",
                 "NSLocationUsageDescription": "Platform specific",
             },
@@ -243,7 +257,7 @@ def create_command(tmp_path, first_app_templated):
                 "com.apple.vm.networking": True,
             },
             {
-                "permissions": {
+                "info": {
                     "NSLocationUsageDescription": "Platform specific",
                     "NSCustomMessage": "Custom message",
                 },
@@ -258,11 +272,12 @@ def create_command(tmp_path, first_app_templated):
     ],
 )
 def test_permissions_context(
-    create_command, first_app, permissions, entitlements, context
+    create_command, first_app, permissions, info, entitlements, context
 ):
     """Platform-specific permissions can be added to the context."""
-    # Set the permission and entitlement value
+    # Set the permission, info and entitlement values
     first_app.permission = permissions
+    first_app.info = info
     first_app.entitlement = entitlements
     # Extract the cross-platform permissions
     x_permissions = create_command._x_permissions(first_app)
