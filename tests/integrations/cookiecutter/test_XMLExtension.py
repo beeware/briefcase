@@ -19,7 +19,7 @@ from briefcase.integrations.cookiecutter import XMLExtension
         ("", "false"),
     ],
 )
-def bool_attr(value, expected):
+def test_bool_attr(value, expected):
     env = MagicMock()
     env.filters = {}
     XMLExtension(env)
