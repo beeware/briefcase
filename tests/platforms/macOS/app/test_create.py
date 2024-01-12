@@ -28,6 +28,249 @@ def create_command(tmp_path, first_app_templated):
 
 
 @pytest.mark.parametrize(
+    "permissions, entitlements, context",
+    [
+        # No permissions
+        (
+            {},
+            {},
+            {
+                "permissions": {},
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                },
+            },
+        ),
+        # Only custom permissions
+        (
+            {
+                "NSCustomPermission": "Custom message",
+            },
+            {
+                "com.apple.vm.networking": True,
+            },
+            {
+                "permissions": {
+                    "NSCustomPermission": "Custom message",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.vm.networking": True,
+                },
+            },
+        ),
+        # Camera permissions
+        (
+            {
+                "camera": "I need to see you",
+            },
+            {},
+            {
+                "permissions": {},
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.device.camera": True,
+                },
+            },
+        ),
+        # Microphone permissions
+        (
+            {
+                "microphone": "I need to hear you",
+            },
+            {},
+            {
+                "permissions": {},
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.device.microphone": True,
+                },
+            },
+        ),
+        # Coarse location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I need to know roughly where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Fine location permissions
+        (
+            {
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Background location permissions
+        (
+            {
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I always need to know where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Coarse location background permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I always need to know where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Fine location background permissions
+        (
+            {
+                "fine_location": "I need to know exactly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I always need to know where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Coarse and fine location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Coarse and fine background location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "fine_location": "I need to know exactly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "I always need to know where you are",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.location": True,
+                },
+            },
+        ),
+        # Photo library permissions
+        (
+            {
+                "photo_library": "I need to see your library",
+            },
+            {},
+            {
+                "permissions": {},
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.personal-information.photo_library": True,
+                },
+            },
+        ),
+        # Override and augment by cross-platform definitions
+        (
+            {
+                "fine_location": "I need to know where you are",
+                "NSCustomMessage": "Custom message",
+                "NSLocationUsageDescription": "Platform specific",
+            },
+            {
+                "com.apple.security.personal-information.location": False,
+                "com.apple.security.cs.disable-library-validation": False,
+                "com.apple.vm.networking": True,
+            },
+            {
+                "permissions": {
+                    "NSLocationUsageDescription": "Platform specific",
+                    "NSCustomMessage": "Custom message",
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": False,
+                    "com.apple.security.personal-information.location": False,
+                    "com.apple.vm.networking": True,
+                },
+            },
+        ),
+    ],
+)
+def test_permissions_context(
+    create_command, first_app, permissions, entitlements, context
+):
+    """Platform-specific permissions can be added to the context."""
+    # Set the permission and entitlement value
+    first_app.permission = permissions
+    first_app.entitlement = entitlements
+    # Extract the cross-platform permissions
+    x_permissions = create_command._x_permissions(first_app)
+    # Check that the final platform permissions are rendered as expected.
+    assert context == create_command.permissions_context(first_app, x_permissions)
+
+
+@pytest.mark.parametrize(
     "host_arch, other_arch",
     [
         ("arm64", "x86_64"),

@@ -13,7 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 from briefcase.platforms.macOS import (
-    macOSInstallMixin,
+    macOSCreateMixin,
     macOSMixin,
     macOSPackageMixin,
     macOSRunMixin,
@@ -31,7 +31,7 @@ class macOSAppMixin(macOSMixin):
         return self.bundle_path(app) / f"{app.formal_name}.app"
 
 
-class macOSAppCreateCommand(macOSAppMixin, macOSInstallMixin, CreateCommand):
+class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
     description = "Create and populate a macOS app."
 
     def support_path(self, app: AppConfig, runtime=False) -> Path:
