@@ -145,3 +145,265 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
     first_app_config.test_sources = test_sources
     context = create_command.output_format_template_context(first_app_config)
     assert context["extract_packages"] == expected
+
+
+@pytest.mark.parametrize(
+    "permissions, features, context",
+    [
+        # No permissions
+        (
+            {},
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                },
+                "features": {},
+            },
+        ),
+        # Only custom permissions
+        (
+            {
+                "android.permission.READ_CONTACTS": True,
+            },
+            {
+                "android.hardware.bluetooth": True,
+            },
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.READ_CONTACTS": True,
+                },
+                "features": {
+                    "android.hardware.bluetooth": True,
+                },
+            },
+        ),
+        # Camera permissions
+        (
+            {
+                "camera": "I need to see you",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.CAMERA": True,
+                },
+                "features": {
+                    "android.hardware.camera": False,
+                    "android.hardware.camera.any": False,
+                    "android.hardware.camera.autofocus": False,
+                    "android.hardware.camera.external": False,
+                    "android.hardware.camera.front": False,
+                },
+            },
+        ),
+        # Microphone permissions
+        (
+            {
+                "microphone": "I need to hear you",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.RECORD_AUDIO": True,
+                },
+                "features": {},
+            },
+        ),
+        # Coarse location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Fine location permissions
+        (
+            {
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_FINE_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Background location permissions
+        (
+            {
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Coarse location background permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Fine location background permissions
+        (
+            {
+                "fine_location": "I need to know exactly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_FINE_LOCATION": True,
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Coarse and fine location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                    "android.permission.ACCESS_FINE_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Coarse and fine background location permissions
+        (
+            {
+                "coarse_location": "I need to know roughly where you are",
+                "fine_location": "I need to know exactly where you are",
+                "background_location": "I always need to know where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                    "android.permission.ACCESS_FINE_LOCATION": True,
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Photo library permissions
+        (
+            {
+                "photo_library": "I need to see your library",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.READ_MEDIA_VISUAL_USER_SELECTED": True,
+                },
+                "features": {},
+            },
+        ),
+        # Override and augment by cross-platform definitions
+        (
+            {
+                "camera": "I need to see you",
+                "android.permission.CAMERA": False,
+                "android.permission.READ_CONTACTS": True,
+            },
+            {
+                "android.hardware.camera.external": True,
+                "android.hardware.bluetooth": True,
+            },
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.INTERNET": True,
+                    "android.permission.CAMERA": False,
+                    "android.permission.READ_CONTACTS": True,
+                },
+                "features": {
+                    "android.hardware.camera": False,
+                    "android.hardware.camera.any": False,
+                    "android.hardware.camera.autofocus": False,
+                    "android.hardware.camera.external": True,
+                    "android.hardware.camera.front": False,
+                    "android.hardware.bluetooth": True,
+                },
+            },
+        ),
+    ],
+)
+def test_permissions_context(create_command, first_app, permissions, features, context):
+    """Platform-specific permissions can be added to the context."""
+    # Set the permission and entitlement value
+    first_app.permission = permissions
+    first_app.feature = features
+    # Extract the cross-platform permissions
+    x_permissions = create_command._x_permissions(first_app)
+    # Check that the final platform permissions are rendered as expected.
+    assert context == create_command.permissions_context(first_app, x_permissions)
