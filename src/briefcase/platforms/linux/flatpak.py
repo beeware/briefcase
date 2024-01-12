@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 
 from briefcase.commands import (
     BuildCommand,
@@ -203,7 +203,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.

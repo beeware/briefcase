@@ -144,6 +144,13 @@ build the Flatpak app.
 The Flatpak runtime and SDK are paired; so, both a ``flatpak_runtime`` and a
 corresponding ``flatpak_sdk`` must be defined.
 
+``modules_extra_content``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Additional build instructions that will be inserted into the Flatpak manifest, *after*
+Python has been installed and ``pip`` is guaranteed to exist, but *before* any app code
+or app packages have been installed into the Flatpak.
+
 Permissions
 ===========
 
