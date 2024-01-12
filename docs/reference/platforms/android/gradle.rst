@@ -162,8 +162,8 @@ Additional content that will be added verbatim to add just before the closing
 A string providing additional Gradle settings to use when building your app.
 This will be added verbatim to the end of your ``app/build.gradle`` file.
 
-``features``
-------------
+``feature``
+-----------
 
 A property whose sub-properties define the features that will be marked as required by
 the final app. Each entry will be converted into a ``<uses-feature>`` declaration in
@@ -172,7 +172,7 @@ sub-attribute.
 
 For example, specifying::
 
-    features."android.hardware.bluetooth" = true
+    feature."android.hardware.bluetooth" = true
 
 will result in an ``AndroidManifest.xml`` declaration of::
 
@@ -293,11 +293,10 @@ your app:
 
 This is done to ensure that an app is not prevented from installing if the device
 doesn't have the given features. You can make the feature explicitly required by
-manually defining these feature requirements. For example, to make location hardware
+manually defining these feature requirements. For example, to make GPS hardware
 required, you could add the following to the Android section of your
 ``pyproject.toml``::
 
-    feature."android.hardware.location.network" = True
     feature."android.hardware.location.gps" = True
 
 Platform quirks

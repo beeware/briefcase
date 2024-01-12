@@ -39,7 +39,8 @@ def full_context():
         "splash": None,
         "supported": True,
         "permissions": {},
-        "x_permissions": {},
+        "custom_permissions": {},
+        "requests": {},
         "document_types": {},
         # Properties of the generating environment
         "python_version": platform.python_version(),
@@ -639,8 +640,10 @@ def test_x_permissions(
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
 
-    # Define some permissions
-    myapp.permissions = {
+    # Define some permissions and requests. The original "permission" and "request"
+    # definitions will be hidden from the final template context.
+
+    myapp.permission = {
         # Cross-platform permissions
         "camera": "I need to see you",
         "microphone": "I need to hear you",
@@ -652,10 +655,12 @@ def test_x_permissions(
         "DUMMY_sit": "I can't sit without an invitation",
         "DUMMY.leave.the.dinner.table": "It would be impolite.",
     }
+    myapp.request = {"tasty.beverage": True}
 
     # In the final context, all cross-platform permissions have been converted to upper
-    # case, prefixed with "DUMMY", and moved to the `x_permissions` key.
-    full_context["x_permissions"] = {
+    # case, prefixed with "DUMMY", and moved to the `permissions` key. Custom
+    # permissions have been moved to the "custom_permissions" key
+    full_context["permissions"] = {
         "DUMMY_CAMERA": "I NEED TO SEE YOU",
         "DUMMY_MICROPHONE": "I NEED TO HEAR YOU",
         "DUMMY_COARSE_LOCATION": "I NEED TO KNOW APPROXIMATELY WHERE YOU ARE",
@@ -663,11 +668,16 @@ def test_x_permissions(
         "DUMMY_BACKGROUND_LOCATION": "I NEED TO KNOW WHERE YOU ARE CONSTANTLY",
         "DUMMY_PHOTO_LIBRARY": "I NEED TO SEE YOUR PHOTOS",
     }
-
-    # All custom permissions are left as-is.
-    full_context["permissions"] = {
+    full_context["custom_permissions"] = {
         "DUMMY_sit": "I can't sit without an invitation",
         "DUMMY.leave.the.dinner.table": "It would be impolite.",
+    }
+
+    # An extra request has been added because of the camera permission, and the
+    # custom request has been preserved.
+    full_context["requests"] = {
+        "good.lighting": True,
+        "tasty.beverage": True,
     }
 
     # There won't be a cookiecutter cache, so there won't be

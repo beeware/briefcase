@@ -66,7 +66,7 @@ A property whose sub-attributes define keys that will be added to the app's
 ``Entitlements.plist`` file. Each entry will be converted into a key in the entitlements
 file. For example, specifying::
 
-    entitlements."com.apple.vm.networking" = true
+    entitlement."com.apple.vm.networking" = true
 
 will result in an ``Entitlements.plist`` declaration of::
 
@@ -108,13 +108,13 @@ definitions, and keys in the app's ``Info.plist``:
 * ``camera``: an entitlement of ``com.apple.security.device.camera``
 * ``microphone``: an entitlement of ``com.apple.security.device.audio-input``
 * ``coarse_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``
-  (ignored if ``fine_location`` is defined); plus an entitlement of
+  (ignored if ``background_location`` or ``fine_location`` is defined); plus an
+  entitlement of ``com.apple.security.personal-information.location``
+* ``fine_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``(ignored
+  if ``background_location`` is defined); plus a device requirement of
   ``com.apple.security.personal-information.location``
-* ``fine_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``; plus a
-  device requirement of ``com.apple.security.personal-information.location``
-* ``background_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``
-  (ignored if ``fine_location`` or ``coarse_location`` is defined); plus an entitlement
-  of ``com.apple.security.personal-information.location``
+* ``background_location``: an ``Info.plist`` entry for ``NSLocationUsageDescription``;
+  plus an entitlement of ``com.apple.security.personal-information.location``
 * ``photo_library``: an entitlement of ``com.apple.security.personal-information.photos-library``
 
 Platform quirks

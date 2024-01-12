@@ -14,7 +14,7 @@ def test_merge_no_data():
     """If there are no new options, nothing changes."""
     config = {
         "requires": ["first", "second"],
-        "permissions": {"up": True, "down": False},
+        "permission": {"up": True, "down": False},
         "other": 1234,
     }
 
@@ -22,7 +22,7 @@ def test_merge_no_data():
 
     assert config == {
         "requires": ["first", "second"],
-        "permissions": {"up": True, "down": False},
+        "permission": {"up": True, "down": False},
         "other": 1234,
     }
 
@@ -35,13 +35,13 @@ def test_merge_no_option():
         config,
         {
             "requires": ["third", "fourth"],
-            "permissions": {"left": True, "right": False},
+            "permission": {"left": True, "right": False},
         },
     )
 
     assert config == {
         "requires": ["third", "fourth"],
-        "permissions": {"left": True, "right": False},
+        "permission": {"left": True, "right": False},
         "other": 1234,
     }
 
@@ -50,7 +50,7 @@ def test_merge():
     """If there are existing options and new options, merge."""
     config = {
         "requires": ["first", "second"],
-        "permissions": {"up": True, "down": False},
+        "permission": {"up": True, "down": False},
         "other": 1234,
     }
 
@@ -58,14 +58,14 @@ def test_merge():
         config,
         {
             "requires": ["third", "fourth"],
-            "permissions": {"left": True, "right": False},
+            "permission": {"left": True, "right": False},
             "other": 5678,
         },
     )
 
     assert config == {
         "requires": ["first", "second", "third", "fourth"],
-        "permissions": {"up": True, "down": False, "left": True, "right": False},
+        "permission": {"up": True, "down": False, "left": True, "right": False},
         "other": 5678,
     }
 
@@ -75,7 +75,7 @@ def test_merge_collision():
     new options, merge."""
     config = {
         "requires": ["first", "second"],
-        "permissions": {"up": True, "down": False},
+        "permission": {"up": True, "down": False},
         "other": 1234,
     }
 
@@ -83,14 +83,14 @@ def test_merge_collision():
         config,
         {
             "requires": ["second", "fourth"],
-            "permissions": {"down": True, "right": False},
+            "permission": {"down": True, "right": False},
             "other": 5678,
         },
     )
 
     assert config == {
         "requires": ["first", "second", "second", "fourth"],
-        "permissions": {"up": True, "down": True, "right": False},
+        "permission": {"up": True, "down": True, "right": False},
         "other": 5678,
     }
 
@@ -99,7 +99,7 @@ def test_convert_base_definition():
     """The merge operation succeeds when called on itself."""
     config = {
         "requires": ["first", "second"],
-        "permissions": {"up": True, "down": False},
+        "permission": {"up": True, "down": False},
         "other": 1234,
     }
 
@@ -107,7 +107,7 @@ def test_convert_base_definition():
 
     assert config == {
         "requires": ["first", "second"],
-        "permissions": {"up": True, "down": False},
+        "permission": {"up": True, "down": False},
         "other": 1234,
     }
 
@@ -117,8 +117,7 @@ def test_merged_keys():
     config = {
         "requires": ["first", "second"],
         "sources": ["a", "b"],
-        "permissions": {"up": True, "down": False},
-        "device_requires": {"north": True, "south": False},
+        "permission": {"up": True, "down": False},
         "non-merge": ["1", "2"],
         "other": 1234,
     }
@@ -127,8 +126,7 @@ def test_merged_keys():
         config,
         {
             "requires": ["third", "fourth"],
-            "permissions": {"left": True, "right": False},
-            "device_requires": {"west": True, "east": False},
+            "permission": {"left": True, "right": False},
             "sources": ["c", "d"],
             "non-merge": ["3", "4"],
         },
@@ -137,8 +135,7 @@ def test_merged_keys():
     assert config == {
         "requires": ["first", "second", "third", "fourth"],
         "sources": ["a", "b", "c", "d"],
-        "permissions": {"up": True, "down": False, "left": True, "right": False},
-        "device_requires": {"north": True, "south": False, "west": True, "east": False},
+        "permission": {"up": True, "down": False, "left": True, "right": False},
         "non-merge": ["3", "4"],
         "other": 1234,
     }

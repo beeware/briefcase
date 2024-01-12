@@ -77,15 +77,15 @@ The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.flatpak`` section of your
 ``pyproject.toml`` file:
 
-``finish_args``
-~~~~~~~~~~~~~~~
+``finish_arg``
+~~~~~~~~~~~~~~
 
-The arguments used to configure the Flatpak sandbox. ``finish_args`` is an attribute
+The arguments used to configure the Flatpak sandbox. ``finish_arg`` is an attribute
 that can have additional sub-attributes; each sub-attribute maps to a single property
 that will be added to the app's manifest. For example, to add ``--allow=bluetooth`` as a
 finish argument, you would specify::
 
-    device_requires."allow=bluetooth" = True
+    finish_arg."allow=bluetooth" = True
 
 Briefcase adds the following finish arguments by default:
 
@@ -104,7 +104,7 @@ Briefcase adds the following finish arguments by default:
 These can be disabled by explicitly setting their value to ``False``; for example, to
 disable audio access, you would specify::
 
-    device_requires."socket=pulseaudio" = false
+    finish_arg."socket=pulseaudio" = false
 
 ``flatpak_runtime_repo_alias``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

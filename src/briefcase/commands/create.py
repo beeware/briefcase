@@ -84,6 +84,9 @@ class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
 
+    # app properties that won't be exposed to the context
+    hidden_app_properties = {"permission"}
+
     @property
     def app_template_url(self):
         """The URL for a cookiecutter repository to use when creating apps."""
@@ -177,7 +180,7 @@ class CreateCommand(BaseCommand):
         :returns: A dictionary of known cross-platform permission definitions.
         """
         return {
-            key: app.permissions.pop(key, False)
+            key: app.permission.pop(key, None)
             for key in [
                 "camera",
                 "microphone",
@@ -226,7 +229,11 @@ class CreateCommand(BaseCommand):
             template_branch = app.template_branch
 
         # Construct a template context from the app configuration.
-        extra_context = app.__dict__.copy()
+        extra_context = {
+            key: value
+            for key, value in app.__dict__.items()
+            if key not in self.hidden_app_properties
+        }
 
         # Remove the context items that describe the template
         extra_context.pop("template")

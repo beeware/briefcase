@@ -462,7 +462,7 @@ Permissions
 ===========
 
 Applications may also need to declare the permissions they require. Permissions are
-specified as sub-attributes of a ``permissions`` property, defined at the level of an
+specified as sub-attributes of a ``permission`` property, defined at the level of an
 project, app, or platform. Permission declarations are *cumulative*; if an application
 defines permissions at the global level, application level, *and* platform level, the
 final set of permissions will be the *merged* set of all permissions from all levels,
@@ -470,18 +470,18 @@ starting from least to most specific, with the most specific taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
-* ``permissions.camera`` - permission to access to the camera to take photos or video.
-* ``permissions.microphone`` - permission to access the microphone.
-* ``permissions.coarse_location`` - permission to determine a rough GPS location.
-* ``permissions.fine_location`` - permission to determine a precise GPS location.
-* ``permissions.background_location`` - permission to track GPS location while in the background.
-* ``permissions.photo_library`` - permission to access to the user's photo library.
+* ``permission.camera`` - permission to access to the camera to take photos or video.
+* ``permission.microphone`` - permission to access the microphone.
+* ``permission.coarse_location`` - permission to determine a rough GPS location.
+* ``permission.fine_location`` - permission to determine a precise GPS location.
+* ``permission.background_location`` - permission to track GPS location while in the background.
+* ``permission.photo_library`` - permission to access to the user's photo library.
 
 If a cross-platform permission is used, it will be mapped to platform-specific values.
 Permissions can also be specified directly as platform-specific keys. For example,
 Android defines a ``android.permission.HIGH_SAMPLING_RATE_SENSORS`` permission; this
 could be specified by defining
-``permissions."android.permission.HIGH_SAMPLING_RATE_SENSORS"``. If a platform-specific
+``permission."android.permission.HIGH_SAMPLING_RATE_SENSORS"``. If a platform-specific
 key is specified, it will override any value specified as part of a cross-platform
 value.
 
