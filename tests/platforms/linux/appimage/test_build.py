@@ -13,7 +13,7 @@ from briefcase.exceptions import (
     NetworkFailure,
     UnsupportedHostError,
 )
-from briefcase.integrations.docker import DockerAppContext
+from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployBase
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
@@ -369,13 +369,20 @@ def test_build_failure(build_command, first_app, tmp_path, sub_stream_kw):
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-def test_build_appimage_in_docker(build_command, first_app, tmp_path, sub_stream_kw):
+def test_build_appimage_in_docker(
+    build_command, first_app, sub_stream_kw, tmp_path, monkeypatch
+):
     """A Linux app can be packaged as an AppImage in a docker container."""
 
     # Enable docker, and move to a non-Linux OS.
     build_command.tools.host_os = "TestOS"
     build_command.use_docker = True
 
+    # Provide Docker
+    monkeypatch.setattr(
+        Docker, "_is_user_mapping_enabled", mock.MagicMock(return_value=True)
+    )
+    build_command.tools.docker = Docker(tools=build_command.tools)
     # Provide Docker app context
     build_command.tools[first_app].app_context = DockerAppContext(
         tools=build_command.tools,
@@ -494,6 +501,11 @@ def test_build_appimage_with_plugins_in_docker(
     monkeypatch.setattr(LinuxDeployBase, "supported_host_os", {"TestOS"})
     build_command.use_docker = True
 
+    # Provide Docker
+    monkeypatch.setattr(
+        Docker, "_is_user_mapping_enabled", mock.MagicMock(return_value=True)
+    )
+    build_command.tools.docker = Docker(tools=build_command.tools)
     # Provide Docker app context
     build_command.tools[first_app].app_context = DockerAppContext(
         tools=build_command.tools,

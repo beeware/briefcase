@@ -1,6 +1,6 @@
 import subprocess
 from collections import namedtuple
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from unittest.mock import MagicMock, call
 
 import pytest
@@ -10,7 +10,8 @@ from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 
-VALID_DOCKER_VERSION = "Docker version 19.03.8, build afacb8b\n"
+DOCKER_VERSION_MIN = "20.10"
+VALID_DOCKER_VERSION = f"Docker version {DOCKER_VERSION_MIN}, build afacb8b\n"
 VALID_DOCKER_INFO = "docker info printout"
 VALID_BUILDX_VERSION = "github.com/docker/buildx v0.10.2 00ed17d\n"
 VALID_USER_MAPPING_IMAGE_CACHE = "1ed313b0551f"
@@ -64,7 +65,7 @@ def test_docker_install_url(host_os):
     assert host_os in Docker.DOCKER_INSTALL_URL
 
 
-def test_docker_exists(mock_tools, user_mapping_run_calls, capsys, tmp_path):
+def test_docker_exists(mock_tools, user_mapping_run_calls, capsys):
     """If docker exists, the Docker wrapper is returned."""
     # Mock the return value of Docker Version
     mock_tools.subprocess.check_output.side_effect = [
@@ -72,6 +73,8 @@ def test_docker_exists(mock_tools, user_mapping_run_calls, capsys, tmp_path):
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
+        "",  # touch host_write_file
+        "",  # rm -f host_write_file
     ]
 
     # Invoke docker verify
@@ -80,11 +83,10 @@ def test_docker_exists(mock_tools, user_mapping_run_calls, capsys, tmp_path):
     # The verify call should return the Docker wrapper
     assert isinstance(result, Docker)
 
-    # Docker version and plugins were verified
-    mock_tools.subprocess.check_output.assert_has_calls(DOCKER_VERIFICATION_CALLS)
-
-    # Docker user mapping inspection occurred
-    mock_tools.subprocess.run.assert_has_calls(user_mapping_run_calls)
+    # Docker version and plugins were verified and user mapping inspection occurred
+    mock_tools.subprocess.check_output.assert_has_calls(
+        DOCKER_VERIFICATION_CALLS + user_mapping_run_calls
+    )
 
     # No console output
     output = capsys.readouterr()
@@ -117,6 +119,8 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
         "Success!",
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
+        "",  # touch host_write_file
+        "",  # rm -f host_write_file
     ]
 
     # Invoke Docker verify
@@ -125,11 +129,10 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
     # The verify call should return the Docker wrapper
     assert isinstance(result, Docker)
 
-    # Docker version and plugins were verified
-    mock_tools.subprocess.check_output.assert_has_calls(DOCKER_VERIFICATION_CALLS)
-
-    # Docker user mapping inspection occurred
-    mock_tools.subprocess.run.assert_has_calls(user_mapping_run_calls)
+    # Docker version and plugins were verified and user mapping inspection occurred
+    mock_tools.subprocess.check_output.assert_has_calls(
+        DOCKER_VERIFICATION_CALLS + user_mapping_run_calls
+    )
 
     # console output
     output = capsys.readouterr()
@@ -141,12 +144,12 @@ def test_docker_bad_version(mock_tools, capsys):
     """If docker exists but the version string doesn't make sense, the Docker wrapper is
     returned with a warning."""
     # Mock a bad return value of `docker --version`
-    mock_tools.subprocess.check_output.return_value = "Docker version 17.2\n"
+    mock_tools.subprocess.check_output.return_value = "Docker version 19.03.8, build\n"
 
     # Invoke Docker verify
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase requires Docker 19 or higher",
+        match=rf"Briefcase requires Docker {DOCKER_VERSION_MIN} or higher",
     ):
         Docker.verify(mock_tools)
 
@@ -163,11 +166,10 @@ def test_docker_unknown_version(mock_tools, user_mapping_run_calls, capsys):
     # The verify call should return the Docker wrapper
     assert isinstance(result, Docker)
 
-    # Docker version and plugins were verified
-    mock_tools.subprocess.check_output.assert_has_calls(DOCKER_VERIFICATION_CALLS)
-
-    # Docker user mapping inspection occurred
-    mock_tools.subprocess.run.assert_has_calls(user_mapping_run_calls)
+    # Docker version and plugins were verified and user mapping inspection occurred
+    mock_tools.subprocess.check_output.assert_has_calls(
+        DOCKER_VERIFICATION_CALLS + user_mapping_run_calls
+    )
 
     # console output
     output = capsys.readouterr()
@@ -284,14 +286,18 @@ def test_docker_image_hint(mock_tools):
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
+        "",  # touch host_write_file
+        "",  # rm -f host_write_file
     ]
 
     Docker.verify(mock_tools, image_tag="myimage:tagtorulethemall")
 
-    mock_tools.subprocess.run.assert_has_calls(
-        [
+    mock_tools.subprocess.check_output.assert_has_calls(
+        DOCKER_VERIFICATION_CALLS
+        + [
+            call(["docker", "images", "-q", "myimage:tagtorulethemall"]),
             call(
-                [
+                args=[
                     "docker",
                     "run",
                     "--rm",
@@ -299,12 +305,11 @@ def test_docker_image_hint(mock_tools):
                     f"{Path.cwd() / 'build'}:/host_write_test:z",
                     "myimage:tagtorulethemall",
                     "touch",
-                    PurePosixPath("/host_write_test/container_write_test"),
+                    "/host_write_test/container_write_test",
                 ],
-                check=True,
             ),
             call(
-                [
+                args=[
                     "docker",
                     "run",
                     "--rm",
@@ -313,9 +318,8 @@ def test_docker_image_hint(mock_tools):
                     "myimage:tagtorulethemall",
                     "rm",
                     "-f",
-                    PurePosixPath("/host_write_test/container_write_test"),
+                    "/host_write_test/container_write_test",
                 ],
-                check=True,
             ),
         ]
     )
@@ -357,12 +361,9 @@ def test_user_mapping_write_test_file_creation_fails(mock_tools, mock_write_test
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
+        # Mock failure for deleting an existing write test file
+        subprocess.CalledProcessError(returncode=1, cmd=["docker", "run", "..."]),
     ]
-
-    # Mock failure for deleting an existing write test file
-    mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd=["docker", "run", "..."]
-    )
 
     # Fails when file cannot be deleted
     with pytest.raises(
@@ -381,11 +382,8 @@ def test_user_mapping_write_test_file_cleanup_fails(mock_tools, mock_write_test_
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
-    ]
-
-    # Mock failure for deleting an existing write test file
-    mock_tools.subprocess.run.side_effect = [
-        "container write test file creation succeeded",
+        # Mock failure for deleting an existing write test file
+        "",  # touch host_write_file
         subprocess.CalledProcessError(returncode=1, cmd=["docker", "run", "..."]),
     ]
 
@@ -412,6 +410,8 @@ def test_user_mapping_setting(
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
+        "",  # touch host_write_file
+        "",  # rm -f host_write_file
     ]
 
     stat_result = namedtuple("stat_result", "st_uid")
@@ -421,6 +421,8 @@ def test_user_mapping_setting(
     docker = Docker.verify(mock_tools)
 
     # Docker user mapping inspection occurred
-    mock_tools.subprocess.run.assert_has_calls(user_mapping_run_calls)
+    mock_tools.subprocess.check_output.assert_has_calls(
+        DOCKER_VERIFICATION_CALLS + user_mapping_run_calls
+    )
 
     assert docker.is_user_mapped is expected

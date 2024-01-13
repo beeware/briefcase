@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import subprocess
-from pathlib import PurePosixPath
 from unittest.mock import MagicMock, call
 
 import pytest
@@ -7,7 +8,7 @@ import pytest
 import briefcase
 from briefcase.config import AppConfig
 from briefcase.integrations.base import ToolCache
-from briefcase.integrations.docker import DockerAppContext
+from briefcase.integrations.docker import Docker, DockerAppContext
 
 
 @pytest.fixture
@@ -21,20 +22,25 @@ def mock_tools(mock_tools, tmp_path) -> ToolCache:
     mock_tools.os.getuid.return_value = "37"
     mock_tools.os.getgid.return_value = "42"
 
-    # Mock return values for run
+    # Mock return values for run()
     run_result = MagicMock(spec=subprocess.CompletedProcess, returncode=3)
     mock_tools.subprocess._subprocess.run.return_value = run_result
 
-    # Mock return values for check_output
+    # Mock return values for check_output()
     mock_tools.subprocess._subprocess.check_output.return_value = "goodbye\n"
 
-    # Short circuit the process streamer
+    # Mock the return value for Popen()
+    popen_process = MagicMock(spec_set=subprocess.Popen)
+    mock_tools.subprocess._subprocess.Popen = MagicMock(return_value=popen_process)
+    # preserve the Popen process for test assertions
+    mock_tools._popen_process = popen_process
+
+    # Mock the Wait Bar streamer
     wait_bar_streamer = MagicMock()
     wait_bar_streamer.stdout.readline.return_value = ""
     wait_bar_streamer.poll.return_value = 0
-    mock_tools.subprocess._subprocess.Popen.return_value.__enter__.return_value = (
-        wait_bar_streamer
-    )
+    # assume using the Popen process in a context manager is for Wait Bar
+    popen_process.__enter__.return_value = wait_bar_streamer
 
     return mock_tools
 
@@ -53,9 +59,29 @@ def my_app() -> AppConfig:
 
 
 @pytest.fixture
-def mock_docker_app_context(tmp_path, my_app, mock_tools) -> DockerAppContext:
-    mock_docker_app_context = DockerAppContext(mock_tools, my_app)
-    mock_docker_app_context.prepare(
+def mock_docker(mock_tools, monkeypatch) -> Docker:
+    """Adds a mocked Docker to the mock_tools."""
+    # Default to mapped users to avoid subprocess calls
+    monkeypatch.setattr(
+        Docker, "_is_user_mapping_enabled", MagicMock(return_value=True)
+    )
+
+    mock_tools.docker = Docker(mock_tools)
+
+    # Reset the mock so that the user mapping calls don't appear in test results
+    mock_tools.subprocess._subprocess.check_output.reset_mock()
+
+    # Reset the LRU cache for Docker.cache_image() for each test
+    Docker.cache_image.cache_clear()
+
+    return mock_tools.docker
+
+
+@pytest.fixture
+def mock_docker_app_context(mock_tools, my_app, tmp_path) -> DockerAppContext:
+    """Adds a mocked DockerAppContext to the mock_tools."""
+    mock_tools[my_app].app_context = DockerAppContext(mock_tools, my_app)
+    mock_tools[my_app].app_context.prepare(
         image_tag="briefcase/com.example.myapp:py3.X",
         dockerfile_path=tmp_path / "bundle/Dockerfile",
         app_base_path=tmp_path / "base",
@@ -64,23 +90,28 @@ def mock_docker_app_context(tmp_path, my_app, mock_tools) -> DockerAppContext:
         python_version="3.X",
     )
 
-    # Reset the mock so that the prepare call doesn't appear in test results.
-    mock_docker_app_context.tools.subprocess._subprocess.Popen.reset_mock()
+    mock_tools[my_app].app_context._dockerize_args = MagicMock(
+        wraps=mock_tools[my_app].app_context._dockerize_args
+    )
 
-    return mock_docker_app_context
+    # Reset the mock so that the prepare call doesn't appear in test results
+    mock_tools[my_app].app_context.tools.subprocess._subprocess.Popen.reset_mock()
+
+    return mock_tools[my_app].app_context
 
 
 @pytest.fixture
-def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
-    # Mock the container write test path in to pytest's tmp directory
+def user_mapping_run_calls(tmp_path, monkeypatch) -> list[call]:
+    """The series of calls for determining how users are mapped."""
     monkeypatch.setattr(
         briefcase.integrations.docker.Docker,
         "_write_test_path",
         MagicMock(return_value=tmp_path / "build/mock_write_test"),
     )
     return [
+        call(["docker", "images", "-q", "alpine"]),
         call(
-            [
+            args=[
                 "docker",
                 "run",
                 "--rm",
@@ -88,12 +119,11 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
                 f"{tmp_path / 'build'}:/host_write_test:z",
                 "alpine",
                 "touch",
-                PurePosixPath("/host_write_test/mock_write_test"),
+                "/host_write_test/mock_write_test",
             ],
-            check=True,
         ),
         call(
-            [
+            args=[
                 "docker",
                 "run",
                 "--rm",
@@ -102,8 +132,7 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list:
                 "alpine",
                 "rm",
                 "-f",
-                PurePosixPath("/host_write_test/mock_write_test"),
+                "/host_write_test/mock_write_test",
             ],
-            check=True,
         ),
     ]

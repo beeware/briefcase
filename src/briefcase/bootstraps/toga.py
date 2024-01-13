@@ -71,6 +71,10 @@ system_requires = [
     "libcairo2-dev",
     # Needed to compile PyGObject wheel
     "libgirepository1.0-dev",
+    # Needed to run the app in Docker
+    "gir1.2-gtk-3.0",
+    # Needed to provide WebKit2 to run in Docker
+    # "gir1.2-webkit2-4.0",
 ]
 
 system_runtime_requires = [
@@ -91,6 +95,10 @@ system_requires = [
     "cairo-gobject-devel",
     # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
+    # Needed to run the app in Docker
+    "gtk3",
+    # Needed to provide WebKit2 to run in Docker
+    # "webkit2gtk3",
 ]
 
 system_runtime_requires = [
@@ -112,6 +120,12 @@ system_requires = [
     "cairo-devel",
     # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
+    # Needed to run the app in Docker
+    "gtk3",
+    "typelib-1_0-Gtk-3_0",
+    # Needed to provide WebKit2 to run in Docker
+    # "libwebkit2gtk3",
+    # "typelib-1_0-WebKit2-4_1",
 ]
 
 system_runtime_requires = [

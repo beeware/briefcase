@@ -1,12 +1,12 @@
 import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
-from briefcase.integrations.docker import DockerAppContext
-from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.docker import Docker, DockerAppContext
 
 
 @pytest.fixture
@@ -42,23 +42,19 @@ def test_unsupported_os(mock_tools, first_app_config, verify_kwargs):
         DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
 
 
-def test_success(mock_tools, first_app_config, verify_kwargs):
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+)
+@pytest.mark.usefixtures("mock_docker")
+def test_success(mock_tools, first_app_config, verify_kwargs, sub_stream_kw):
     """Docker app context is successfully created and prepared."""
-    mock_tools.subprocess = MagicMock(spec_set=Subprocess)
-    # Mock the existence of Docker.
-    mock_tools.subprocess.check_output.side_effect = [
-        "Docker version 19.03.8, build afacb8b\n",
-        "docker info return value",
-        "github.com/docker/buildx v0.10.2 00ed17d\n",
-        "1ed313b0551f",  # cached image check
-    ]
 
     DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
 
     assert isinstance(mock_tools[first_app_config].app_context, DockerAppContext)
 
     # Docker image is created/updated
-    mock_tools.subprocess.run.assert_called_with(
+    mock_tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
             "build",
@@ -67,47 +63,40 @@ def test_success(mock_tools, first_app_config, verify_kwargs):
             "--tag",
             "com.example.first-app:py3.X",
             "--file",
-            Path("/path/to/Dockerfile"),
+            "/path/to/Dockerfile",
             "--build-arg",
             "SYSTEM_REQUIRES=",
             "--build-arg",
             "HOST_UID=37",
             "--build-arg",
             "HOST_GID=42",
-            Path("/app/base/src"),
+            "/app/base/src",
         ],
-        check=True,
+        **sub_stream_kw,
     )
 
 
-def test_docker_verify_fail(mock_tools, first_app_config, verify_kwargs):
+def test_docker_verify_fail(mock_tools, first_app_config, verify_kwargs, monkeypatch):
     """Failure if Docker cannot be verified."""
-    mock_tools.subprocess = MagicMock(spec_set=Subprocess)
-    # Mock the absence of Docker
-    mock_tools.subprocess.check_output.side_effect = FileNotFoundError
+    monkeypatch.setattr(
+        Docker,
+        "verify_install",
+        MagicMock(
+            spec_set=Docker.verify_install,
+            side_effect=BriefcaseCommandError("No docker for you"),
+        ),
+    )
 
-    with pytest.raises(BriefcaseCommandError, match="Briefcase requires Docker"):
+    with pytest.raises(BriefcaseCommandError, match="No docker for you"):
         DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
 
 
+@pytest.mark.usefixtures("mock_docker")
 def test_docker_image_build_fail(mock_tools, first_app_config, verify_kwargs):
     """Failure if Docker image build fails."""
-    mock_tools.subprocess = MagicMock(spec_set=Subprocess)
-    # Mock the existence of Docker.
-    mock_tools.subprocess.check_output.side_effect = [
-        "Docker version 19.03.8, build afacb8b\n",
-        "docker info return value",
-        "github.com/docker/buildx v0.10.2 00ed17d\n",
-        "1ed313b0551f",  # cached image check
-    ]
-
-    mock_tools.subprocess.run.side_effect = [
-        # Mock the user mapping inspection calls
-        "",
-        "",
-        # Mock the image build failing
-        subprocess.CalledProcessError(returncode=80, cmd=["docker" "build"]),
-    ]
+    mock_tools.subprocess._subprocess.Popen.side_effect = subprocess.CalledProcessError(
+        returncode=80, cmd=["docker" "build"]
+    )
 
     with pytest.raises(
         BriefcaseCommandError,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import operator
 import os
@@ -109,18 +110,17 @@ def ensure_console_is_safe(sub_method):
     """
 
     @wraps(sub_method)
-    def inner(sub: Subprocess, sub_args: SubprocessArgsT, *args, **kwargs):
+    def inner(sub: Subprocess, args: SubprocessArgsT, *wrapped_args, **wrapped_kwargs):
         """Evaluate whether conditions are met to remove any dynamic elements in the
         console before returning control to Subprocess.
 
         :param sub: Bound Subprocess object
-        :param sub_args: command line to run in subprocess
-        :param args: list of implicit strings that will be run as subprocess command
+        :param args: command line to run in subprocess
         :return: the return value for the Subprocess method
         """
         # Just run the command if no dynamic elements are active
         if not sub.tools.input.is_console_controlled:
-            return sub_method(sub, sub_args, *args, **kwargs)
+            return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
 
         remove_dynamic_elements = False
 
@@ -129,18 +129,18 @@ def ensure_console_is_safe(sub_method):
         # it may prompt the user to abort the script and dynamic elements
         # such as the Wait Bar can hide this message from the user.
         if sub.tools.host_os == "Windows":
-            executable = str(sub_args[0]).strip() if sub_args else ""
+            executable = str(args[0]).strip() if args else ""
             remove_dynamic_elements |= executable.lower().endswith(".bat")
 
         # Release control for commands that cannot be streamed.
-        remove_dynamic_elements |= kwargs.get("stream_output") is False
+        remove_dynamic_elements |= wrapped_kwargs.get("stream_output") is False
 
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
             with sub.tools.input.release_console_control():
-                return sub_method(sub, sub_args, *args, **kwargs)
+                return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
         else:
-            return sub_method(sub, sub_args, *args, **kwargs)
+            return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
 
     return inner
 
@@ -176,6 +176,15 @@ class Subprocess(Tool):
         """Perform any environment preparation required to execute processes."""
         # This is a no-op; the native subprocess environment is ready-to-use.
         pass
+
+    @contextlib.contextmanager
+    def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:
+        """A manager to wrap subprocess calls to run a Briefcase project app.
+
+        :param subprocess_kwargs: initialized keyword arguments for subprocess calls
+        """
+        # This is a no-op; the native subprocess environment is ready-to-use.
+        yield subprocess_kwargs
 
     def full_env(self, overrides: dict[str, str]) -> dict[str, str]:
         """Generate the full environment in which the command will run.

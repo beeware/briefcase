@@ -119,6 +119,10 @@ system_requires = [
     "libcairo2-dev",
     # Needed to compile PyGObject wheel
     "libgirepository1.0-dev",
+    # Needed to run the app in Docker
+    "gir1.2-gtk-3.0",
+    # Needed to provide WebKit2 to run in Docker
+    # "gir1.2-webkit2-4.0",
 ]
 
 system_runtime_requires = [
@@ -137,6 +141,10 @@ system_requires = [
     "cairo-gobject-devel",
     # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
+    # Needed to run the app in Docker
+    "gtk3",
+    # Needed to provide WebKit2 to run in Docker
+    # "webkit2gtk3",
 ]
 
 system_runtime_requires = [
@@ -156,6 +164,12 @@ system_requires = [
     "cairo-devel",
     # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
+    # Needed to run the app in Docker
+    "gtk3",
+    "typelib-1_0-Gtk-3_0",
+    # Needed to provide WebKit2 to run in Docker
+    # "libwebkit2gtk3",
+    # "typelib-1_0-WebKit2-4_1",
 ]
 
 system_runtime_requires = [
@@ -358,11 +372,42 @@ requires = [
 """,
         pyproject_table_linux_system_debian="""
 system_requires = [
+    # Derived from https://doc.qt.io/qt-6/linux-requirements.html
+    "libxrender1",
+    "libxcb-cursor0",
+    "libxcb-render0",
+    "libxcb-render-util0",
+    "libxcb-shape0",
+    "libxcb-randr0",
+    "libxcb-xfixes0",
+    "libxcb-xkb1",
+    "libxcb-sync1",
+    "libxcb-shm0",
+    "libxcb-icccm4",
+    "libxcb-keysyms1",
+    "libxcb-image0",
+    "libxcb-util1",
+    "libxkbcommon0",
+    "libxkbcommon-x11-0",
+    "libfontconfig1",
+    "libfreetype6",
+    "libxext6",
+    "libx11-6",
+    "libxcb1",
+    "libx11-xcb1",
+    "libsm6",
+    "libice6",
+    "libglib2.0-0",
+    "libgl1",
+    "libegl1-mesa",
+    "libdbus-1-3",
+    "libgssapi-krb5-2",
 ]
 
 system_runtime_requires = [
     # Derived from https://doc.qt.io/qt-6/linux-requirements.html
     "libxrender1",
+    "libxcb-cursor0",
     "libxcb-render0",
     "libxcb-render-util0",
     "libxcb-shape0",
@@ -394,6 +439,7 @@ system_runtime_requires = [
 """,
         pyproject_table_linux_system_rhel="""
 system_requires = [
+    "qt6-qtbase-gui",
 ]
 
 system_runtime_requires = [
@@ -402,9 +448,12 @@ system_runtime_requires = [
 """,
         pyproject_table_linux_system_suse="""
 system_requires = [
+    "libgthread-2_0-0",
+    "libQt6Gui6",
 ]
 
 system_runtime_requires = [
+    "libgthread-2_0-0",
     "libQt6Gui6",
 ]
 """,
@@ -551,6 +600,11 @@ requires = [
 """,
         pyproject_table_linux_system_debian="""
 system_requires = [
+    "libsdl2-2.0-0",
+    "libsdl2-mixer-2.0-0",
+    "libsdl2-image-2.0-0",
+    "libsdl2-gfx-1.0-0",
+    "libsdl2-ttf-2.0-0",
 ]
 
 system_runtime_requires = [
@@ -563,6 +617,12 @@ system_runtime_requires = [
 """,
         pyproject_table_linux_system_rhel="""
 system_requires = [
+    "SDL2",
+    "SDL2_ttf",
+    "SDL2_image",
+    "SDL2_gfx",
+    "SDL2_mixer",
+    "libmodplug",
 ]
 
 system_runtime_requires = [
@@ -576,6 +636,12 @@ system_runtime_requires = [
 """,
         pyproject_table_linux_system_suse="""
 system_requires = [
+    "SDL2",
+    "SDL2_gfx",
+    "SDL2_ttf",
+    "SDL2_image",
+    "SDL2_mixer",
+    "libmodplug1",
 ]
 
 system_runtime_requires = [
@@ -1125,6 +1191,10 @@ system_requires = [
     "libcairo2-dev",
     # Needed to compile PyGObject wheel
     "libgirepository1.0-dev",
+    # Needed to run the app in Docker
+    "gir1.2-gtk-3.0",
+    # Needed to provide WebKit2 to run in Docker
+    # "gir1.2-webkit2-4.0",
 ]
 
 system_runtime_requires = [
@@ -1143,6 +1213,10 @@ system_requires = [
     "cairo-gobject-devel",
     # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
+    # Needed to run the app in Docker
+    "gtk3",
+    # Needed to provide WebKit2 to run in Docker
+    # "webkit2gtk3",
 ]
 
 system_runtime_requires = [
@@ -1162,6 +1236,12 @@ system_requires = [
     "cairo-devel",
     # Needed to compile PyGObject wheel
     "gobject-introspection-devel",
+    # Needed to run the app in Docker
+    "gtk3",
+    "typelib-1_0-Gtk-3_0",
+    # Needed to provide WebKit2 to run in Docker
+    # "libwebkit2gtk3",
+    # "typelib-1_0-WebKit2-4_1",
 ]
 
 system_runtime_requires = [
