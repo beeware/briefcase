@@ -58,41 +58,49 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_deb):
     # Mock not using docker
     package_command.target_image = None
 
-    # Mock the path of dpkg-deb
-    dpkg_deb = mock.MagicMock()
-    dpkg_deb.exists.return_value = True
-
-    mock_Path = mock.MagicMock(return_value=dpkg_deb)
-    monkeypatch.setattr(system, "Path", mock_Path)
+    # Mock the existence of dpkg-deb
+    package_command.tools.shutil.which = mock.MagicMock(return_value="/mybin/dpkg-deb")
 
     # App tools can be verified
     package_command.verify_app_tools(first_app_deb)
 
     # dpkg_deb was inspected
-    dpkg_deb.exists.assert_called_once()
+    package_command.tools.shutil.which.assert_called_once_with("dpkg-deb")
 
 
-def test_verify_dpkg_deb_missing(monkeypatch, package_command, first_app_deb):
-    """If dpkg_deb isn't installed, an error is raised."""
+@pytest.mark.parametrize(
+    "vendor_base, error_msg",
+    [
+        (
+            "debian",
+            "Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`.",
+        ),
+        (None, "Can't find the dpkg-deb tool. Install this first to package the deb."),
+    ],
+)
+def test_verify_dpkg_deb_missing(
+    monkeypatch,
+    package_command,
+    first_app_deb,
+    vendor_base,
+    error_msg,
+):
+    """If dpkg-deb isn't installed, an error is raised."""
+    # Mock distro so packager is found or not appropriately
+    first_app_deb.target_vendor_base = vendor_base
+
+    # Mock packager as missing
+    package_command.tools.shutil.which = mock.MagicMock(return_value="")
+
     # Mock not using docker
     package_command.target_image = None
 
-    # Mock the path of dpkg-deb
-    dpkg_deb = mock.MagicMock()
-    dpkg_deb.exists.return_value = False
-
-    mock_Path = mock.MagicMock(return_value=dpkg_deb)
-    monkeypatch.setattr(system, "Path", mock_Path)
-
     # Verifying app tools will raise an error
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`.",
-    ):
+    with pytest.raises(BriefcaseCommandError, match=error_msg):
         package_command.verify_app_tools(first_app_deb)
 
-    # dpkg_deb was inspected
-    dpkg_deb.exists.assert_called_once()
+    # which was called for dpkg-deb
+    package_command.tools.shutil.which.assert_called_once_with("dpkg-deb")
 
 
 def test_verify_docker(monkeypatch, package_command, first_app_deb):

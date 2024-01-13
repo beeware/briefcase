@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import gzip
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -261,18 +262,35 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
     def distribution_filename(self, app: AppConfig) -> str:
         if app.packaging_format == "deb":
             return (
-                f"{app.app_name}_{app.version}-{getattr(app, 'revision', 1)}"
-                f"~{app.target_vendor}-{app.target_codename}_{self.deb_abi(app)}.deb"
+                f"{app.app_name}"
+                f"_{app.version}"
+                f"-{getattr(app, 'revision', 1)}"
+                f"~{app.target_vendor}"
+                f"-{app.target_codename}"
+                f"_{self.deb_abi(app)}"
+                ".deb"
             )
         elif app.packaging_format == "rpm":
+            # openSUSE doesn't include a distro tag
+            if app.target_vendor_base == SUSE:
+                distro_tag = ""
+            else:
+                distro_tag = f".{self.rpm_tag(app)}"
             return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f".{self.rpm_tag(app)}.{self.rpm_abi(app)}.rpm"
+                f"{app.app_name}"
+                f"-{app.version}"
+                f"-{getattr(app, 'revision', 1)}"
+                f"{distro_tag}"
+                f".{self.rpm_abi(app)}"
+                f".rpm"
             )
         elif app.packaging_format == "pkg":
             return (
-                f"{app.app_name}-{app.version}-{getattr(app, 'revision', 1)}"
-                f"-{self.pkg_abi(app)}.pkg.tar.zst"
+                f"{app.app_name}"
+                f"-{app.version}"
+                f"-{getattr(app, 'revision', 1)}"
+                f"-{self.pkg_abi(app)}"
+                ".pkg.tar.zst"
             )
         else:
             raise BriefcaseCommandError(
@@ -513,7 +531,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             system_installer,
         ) = self._system_requirement_tools(app)
 
-        if system_verify is None:
+        if not (system_verify and self.tools.shutil.which(system_verify[0])):
             self.logger.warning(
                 """
 *************************************************************************
@@ -545,7 +563,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
-    sudo {' '.join(system_installer)} {' '.join(missing)}
+    sudo {" ".join(system_installer)} {" ".join(missing)}
 
 to install the missing dependencies, and re-run Briefcase.
 """
@@ -780,7 +798,7 @@ class LinuxSystemRunCommand(LinuxSystemPassiveMixin, RunCommand):
     supported_host_os_reason = "Linux system projects can only be executed on Linux."
 
     def run_app(
-        self, app: AppConfig, test_mode: bool, passthrough: List[str], **kwargs
+        self, app: AppConfig, test_mode: bool, passthrough: list[str], **kwargs
     ):
         """Start the application.
 
@@ -830,27 +848,25 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
     def packaging_formats(self):
         return ["deb", "rpm", "pkg", "system"]
 
-    def _verify_deb_tools(self):
-        """Verify that the local environment contains the debian packaging tools."""
-        if not Path("/usr/bin/dpkg-deb").exists():
-            raise BriefcaseCommandError(
-                "Can't find the dpkg tools. Try running `sudo apt install dpkg-dev`."
-            )
+    def _verify_packaging_tools(self, app: AppConfig):
+        """Verify that the local environment contains the packaging tools."""
+        tool_name, executable_name, package_name = {
+            "deb": ("dpkg", "dpkg-deb", "dpkg-dev"),
+            "rpm": ("rpm-build", "rpmbuild", "rpmbuild"),
+            "pkg": ("makepkg", "makepkg", "pacman"),
+        }[app.packaging_format]
 
-    def _verify_rpm_tools(self):
-        """Verify that the local environment contains the redhat packaging tools."""
-        if not Path("/usr/bin/rpmbuild").exists():
-            raise BriefcaseCommandError(
-                "Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`."
-            )
-
-    def _verify_pkg_tools(self):
-        """Verify that the local environment contains the arch packaging tools(ABS)."""
-        if not Path("/usr/bin/makepkg").exists():
-            raise BriefcaseCommandError(
-                "Can't find the `makepkg` tool. Try running `sudo pacman -Syu pacman`."
-                # makepkg is part of pacman package
-            )
+        if not self.tools.shutil.which(executable_name):
+            if install_cmd := self._system_requirement_tools(app)[2]:
+                raise BriefcaseCommandError(
+                    f"Can't find the {tool_name} tools. "
+                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`."
+                )
+            else:
+                raise BriefcaseCommandError(
+                    f"Can't find the {executable_name} tool. "
+                    f"Install this first to package the {app.packaging_format}."
+                )
 
     def verify_app_tools(self, app):
         super().verify_app_tools(app)
@@ -871,8 +887,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
         if not self.use_docker:
-            # Check for the format-specific packaging tools.
-            getattr(self, f"_verify_{app.packaging_format}_tools")()
+            self._verify_packaging_tools(app)
 
     def package_app(self, app: AppConfig, **kwargs):
         if app.packaging_format == "deb":

@@ -49,7 +49,7 @@ def package_command(first_app, tmp_path):
 def first_app_rpm(first_app, tmp_path):
     # Mock a Red Hat app
     first_app.python_version_tag = "3"
-    first_app.target_vendor_base = "redhat"
+    first_app.target_vendor_base = "rhel"
     first_app.packaging_format = "rpm"
     first_app.glibc_version = "2.99"
     first_app.long_description = "Long description\nfor the app"
@@ -84,41 +84,49 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
     # Mock not using docker
     package_command.target_image = None
 
-    # Mock the path of rpmbuild
-    rpmbuild = mock.MagicMock()
-    rpmbuild.exists.return_value = True
-
-    mock_Path = mock.MagicMock(return_value=rpmbuild)
-    monkeypatch.setattr(system, "Path", mock_Path)
+    # Mock the existence of rpmbuild
+    package_command.tools.shutil.which = mock.MagicMock(return_value="/mybin/rpmbuild")
 
     # App tools can be verified
     package_command.verify_app_tools(first_app_rpm)
 
     # rpmbuild was inspected
-    rpmbuild.exists.assert_called_once()
+    package_command.tools.shutil.which.assert_called_once_with("rpmbuild")
 
 
-def test_verify_rpmbuild_missing(monkeypatch, package_command, first_app_rpm):
+@pytest.mark.parametrize(
+    "vendor_base, error_msg",
+    [
+        (
+            "rhel",
+            "Can't find the rpm-build tools. Try running `sudo dnf install rpmbuild`.",
+        ),
+        (None, "Can't find the rpmbuild tool. Install this first to package the rpm."),
+    ],
+)
+def test_verify_rpmbuild_missing(
+    monkeypatch,
+    package_command,
+    first_app_rpm,
+    vendor_base,
+    error_msg,
+):
     """If rpmbuild isn't installed, an error is raised."""
+    # Mock distro so packager is found or not appropriately
+    first_app_rpm.target_vendor_base = vendor_base
+
+    # Mock packager as missing
+    package_command.tools.shutil.which = mock.MagicMock(return_value="")
+
     # Mock not using docker
     package_command.target_image = None
 
-    # Mock the path of rpmbuild
-    rpmbuild = mock.MagicMock()
-    rpmbuild.exists.return_value = False
-
-    mock_Path = mock.MagicMock(return_value=rpmbuild)
-    monkeypatch.setattr(system, "Path", mock_Path)
-
     # Verifying app tools will raise an error
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`.",
-    ):
+    with pytest.raises(BriefcaseCommandError, match=error_msg):
         package_command.verify_app_tools(first_app_rpm)
 
     # rpmbuild was inspected
-    rpmbuild.exists.assert_called_once()
+    package_command.tools.shutil.which.assert_called_once_with("rpmbuild")
 
 
 def test_verify_docker(monkeypatch, package_command, first_app_rpm):
