@@ -1,0 +1,1 @@
+The Flatpak runtimes for new projects were updated. ``org.freedesktop.Platform`` will now default to 23.08; ``org.gnome.Platform`` will now default to 45; and ``org.kde.Platform`` will now default to 6.6.

@@ -220,7 +220,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "44"
+flatpak_runtime_version = "45"
 flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""
@@ -420,7 +420,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""
 flatpak_runtime = "org.kde.Platform"
-flatpak_runtime_version = "6.4"
+flatpak_runtime_version = "6.6"
 flatpak_sdk = "org.kde.Sdk"
 """,
         pyproject_table_windows="""
@@ -606,7 +606,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "22.08"
+flatpak_runtime_version = "23.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         pyproject_table_windows="""
@@ -775,7 +775,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "22.08"
+flatpak_runtime_version = "23.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         pyproject_table_windows="""
@@ -1217,7 +1217,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "44"
+flatpak_runtime_version = "45"
 flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""

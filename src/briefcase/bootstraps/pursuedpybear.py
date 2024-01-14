@@ -151,7 +151,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "22.08"
+flatpak_runtime_version = "23.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """
 
