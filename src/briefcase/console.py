@@ -13,6 +13,7 @@ from enum import IntEnum
 from pathlib import Path
 
 from rich.console import Console as RichConsole
+from rich.control import strip_control_codes
 from rich.highlighter import RegexHighlighter
 from rich.markup import escape
 from rich.progress import (
@@ -29,12 +30,24 @@ from briefcase import __version__
 # Regex to identify settings likely to contain sensitive information
 SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
 
+# 7-bit C1 ANSI escape sequences
+ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
 
 class InputDisabled(Exception):
     def __init__(self):
         super().__init__(
             "Input is disabled; cannot request user input without a default"
         )
+
+
+def sanitize_text(text: str) -> str:
+    """Remove control codes and ANSI escape sequences from a line of text.
+
+    This is useful for extracting the plain text from the output of third party tools
+    that may be including markup for display in the console.
+    """
+    return ANSI_ESCAPE_RE.sub("", strip_control_codes(text))
 
 
 class RichConsoleHighlighter(RegexHighlighter):
@@ -102,18 +115,18 @@ class Printer:
         cls.to_log(*messages, stack_offset=stack_offset, **kwargs)
 
     @classmethod
-    def to_console(cls, *renderables, **kwargs):
-        """Specialized print to the console only omitting the log."""
-        cls.console.print(*renderables, **kwargs)
+    def to_console(cls, *messages, **kwargs):
+        """Write only to the console and skip writing to the log."""
+        cls.console.print(*messages, **kwargs)
 
     @classmethod
-    def to_log(cls, *renderables, stack_offset=5, **kwargs):
-        """Specialized print to the log only omitting the console."""
-        cls.log.log(*renderables, _stack_offset=stack_offset, **kwargs)
+    def to_log(cls, *messages, stack_offset=5, **kwargs):
+        """Write only to the log and skip writing to the console."""
+        cls.log.log(*map(sanitize_text, messages), _stack_offset=stack_offset, **kwargs)
 
     @classmethod
     def export_log(cls):
-        """Export the text of the entire log."""
+        """Export the text of the entire log; the log is also cleared."""
         return cls.log.export_text()
 
 
@@ -399,7 +412,8 @@ class Log:
         # build log header and export buffered log from Rich
         uname = platform.uname()
         sanitized_env_vars = "\n".join(
-            f"    {env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
+            f"\t{env_var}="
+            f"{sanitize_text(value) if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
             for env_var, value in sorted(command.tools.os.environ.items())
         )
         return (
