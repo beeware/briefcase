@@ -167,7 +167,6 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     command.tools.os.environ = {
         "GITHUB_KEY": "super-secret-key",
         "ANDROID_HOME": "/androidsdk",
-        "ANSI_ENV_VAR": f"{chr(7)}this is sanitized env var: \u001b[31mred",
     }
 
     logger = Log(verbosity=LogLevel.DEBUG)
@@ -212,7 +211,6 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     assert "this is console output" not in log_contents
     # Environment variables are in the output
     assert "ANDROID_HOME=/androidsdk" in log_contents
-    assert "ANSI_ENV_VAR=this is sanitized env var: red" in log_contents
     assert "GITHUB_KEY=********************" in log_contents
     assert "GITHUB_KEY=super-secret-key" not in log_contents
     # Environment variables are sorted

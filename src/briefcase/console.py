@@ -412,8 +412,7 @@ class Log:
         # build log header and export buffered log from Rich
         uname = platform.uname()
         sanitized_env_vars = "\n".join(
-            f"\t{env_var}="
-            f"{sanitize_text(value) if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
+            f"\t{env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
             for env_var, value in sorted(command.tools.os.environ.items())
         )
         return (
