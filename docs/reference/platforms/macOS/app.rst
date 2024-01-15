@@ -59,6 +59,46 @@ Application configuration
 The following options can be added to the ``tool.briefcase.app.<appname>.macOS.app``
 section of your ``pyproject.toml`` file.
 
+``entitlement``
+~~~~~~~~~~~~~~~
+
+A property whose sub-attributes define keys that will be added to the app's
+``Entitlements.plist`` file. Each entry will be converted into a key in the entitlements
+file. For example, specifying::
+
+    entitlement."com.apple.vm.networking" = true
+
+will result in an ``Entitlements.plist`` declaration of::
+
+    <key>com.apple.vm.networking</key><true/>
+
+Any Boolean or string value can be used for an entitlement value.
+
+All macOS apps are automatically granted the following entitlements:
+
+* ``com.apple.security.cs.allow-unsigned-executable-memory``
+* ``com.apple.security.cs.disable-library-validation``
+
+You can disable these default entitlements by defining them manually. For example, to
+enable library validation, you could add the following to your ``pyproject.toml``::
+
+    entitlement."com.apple.security.cs.disable-library-validation" = false
+
+``info``
+~~~~~~~~
+
+A property whose sub-attributes define keys that will be added to the app's
+``Info.plist`` file. Each entry will be converted into a key in the entitlements
+file. For example, specifying::
+
+    info."NSAppleScriptEnabled" = true
+
+will result in an ``Info.plist`` declaration of::
+
+    <key>NSAppleScriptEnabled</key><true/>
+
+Any Boolean or string value can be used for an ``Info.plist`` value.
+
 ``universal_build``
 ~~~~~~~~~~~~~~~~~~~
 
@@ -67,6 +107,24 @@ can target both x86_64 and ARM64). Defaults to ``true``; if ``false``, the binar
 only be executable on the host platform on which it was built - i.e., if you build on
 an x86_64 machine, you will produce an x86_65 binary; if you build on an ARM64 machine,
 you will produce an ARM64 binary.
+
+Permissions
+===========
+
+Briefcase cross platform permissions map to a combination of ``info`` and ``entitlement``
+keys:
+
+* ``microphone``: an ``entitlement`` of ``com.apple.security.device.audio-input``
+* ``camera``: an ``entitlement`` of ``com.apple.security.device.camera``
+* ``coarse_location``: an ``info`` entry for ``NSLocationUsageDescription``
+  (ignored if ``background_location`` or ``fine_location`` is defined); plus an
+  entitlement of ``com.apple.security.personal-information.location``
+* ``fine_location``: an ``info`` entry for ``NSLocationUsageDescription``(ignored
+  if ``background_location`` is defined); plus an ``entitlement`` of
+  ``com.apple.security.personal-information.location``
+* ``background_location``: an ``info`` entry for ``NSLocationUsageDescription``;
+  plus an ``entitlement`` of ``com.apple.security.personal-information.location``
+* ``photo_library``: an ``entitlement`` of ``com.apple.security.personal-information.photos-library``
 
 Platform quirks
 ===============

@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 
 from briefcase.commands import (
     BuildCommand,
@@ -102,6 +102,7 @@ Your application configuration must provide values for
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
+    hidden_app_properties = {"permission", "finish_arg"}
 
     def output_format_template_context(self, app: AppConfig):
         """Add flatpak runtime/SDK details to the app template."""
@@ -109,6 +110,42 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             "flatpak_runtime": self.flatpak_runtime(app),
             "flatpak_runtime_version": self.flatpak_runtime_version(app),
             "flatpak_sdk": self.flatpak_sdk(app),
+        }
+
+    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param x_permissions: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        # The default finish arguments that Briefcase adds on every Flatpak.
+        finish_args = {
+            # X11 + XShm access
+            "share=ipc": True,
+            "socket=x11": True,
+            # Disable Wayland access
+            "nosocket=wayland": True,
+            # Network access
+            "share=network": True,
+            # GPU access
+            "device=dri": True,
+            # Sound access
+            "socket=pulseaudio": True,
+            # Host filesystem access
+            "filesystem=xdg-cache": True,
+            "filesystem=xdg-config": True,
+            "filesystem=xdg-data": True,
+            "filesystem=xdg-documents": True,
+            # DBus access
+            "socket=session-bus": True,
+        }
+
+        finish_args.update(getattr(app, "finish_arg", {}))
+
+        return {
+            "finish_args": finish_args,
         }
 
 
@@ -166,7 +203,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.

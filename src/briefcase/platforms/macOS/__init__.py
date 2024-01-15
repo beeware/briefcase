@@ -39,7 +39,9 @@ class macOSMixin:
     supported_host_os_reason = "macOS applications can only be built on macOS."
 
 
-class macOSInstallMixin(AppPackagesMergeMixin):
+class macOSCreateMixin(AppPackagesMergeMixin):
+    hidden_app_properties = {"permission", "entitlement"}
+
     def _install_app_requirements(
         self,
         app: AppConfig,
@@ -146,6 +148,50 @@ in the macOS configuration section of your pyproject.toml.
             # Since we're only targeting 1 architecture, we can strip any universal
             # libraries down to just the host architecture.
             self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
+
+    def permissions_context(self, app: AppConfig, cross_platform: dict[str, str]):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param cross_platform: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        # The info.plist entries for the app
+        info = {}
+
+        # Default entitlements for all macOS apps
+        entitlements = {
+            "com.apple.security.cs.allow-unsigned-executable-memory": True,
+            "com.apple.security.cs.disable-library-validation": True,
+        }
+
+        if cross_platform["camera"]:
+            entitlements["com.apple.security.device.camera"] = True
+        if cross_platform["microphone"]:
+            entitlements["com.apple.security.device.microphone"] = True
+
+        if cross_platform["background_location"]:
+            info["NSLocationUsageDescription"] = cross_platform["background_location"]
+            entitlements["com.apple.security.personal-information.location"] = True
+        elif cross_platform["fine_location"]:
+            info["NSLocationUsageDescription"] = cross_platform["fine_location"]
+            entitlements["com.apple.security.personal-information.location"] = True
+        elif cross_platform["coarse_location"]:
+            info["NSLocationUsageDescription"] = cross_platform["coarse_location"]
+            entitlements["com.apple.security.personal-information.location"] = True
+
+        if cross_platform["photo_library"]:
+            entitlements["com.apple.security.personal-information.photo_library"] = True
+
+        # Override any info and entitlement definitions with the platform specific definitions
+        info.update(getattr(app, "info", {}))
+        entitlements.update(getattr(app, "entitlement", {}))
+
+        return {
+            "info": info,
+            "entitlements": entitlements,
+        }
 
 
 class macOSRunMixin:

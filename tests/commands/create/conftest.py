@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from unittest import mock
 
 import pytest
@@ -46,6 +48,7 @@ class DummyCreateCommand(CreateCommand):
     platform = "Tester"
     output_format = "Dummy"
     description = "Dummy create command"
+    hidden_app_properties = {"permission", "request"}
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
         kwargs.setdefault("logger", Log())
@@ -88,6 +91,31 @@ class DummyCreateCommand(CreateCommand):
     # Define output format-specific template context.
     def output_format_template_context(self, app):
         return {"output_format": "dummy"}
+
+    # Handle platform-specific permissions.
+    # Convert all the cross-platform permissions to upper case, prefixing DUMMY_.
+    # Add a "good lighting" request if the camera permission has been requested.
+    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+        # We don't actually need anything from the superclass; but call it to ensure
+        # coverage.
+        context = super().permissions_context(app, x_permissions)
+        if context:
+            # Make sure the base class *isn't* doing anything.
+            return context
+
+        permissions = {
+            f"DUMMY_{key.upper()}": value.upper()
+            for key, value in x_permissions.items()
+            if value
+        }
+        context["permissions"] = permissions
+        context["custom_permissions"] = app.permission
+
+        requests = {"good.lighting": True} if x_permissions["camera"] else {}
+        requests.update(getattr(app, "request", {}))
+        context["requests"] = requests
+
+        return context
 
 
 class TrackingCreateCommand(DummyCreateCommand):

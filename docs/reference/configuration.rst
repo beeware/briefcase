@@ -458,6 +458,38 @@ sources from all levels, starting from least to most specific.
 
 A URL where more details about the application can be found.
 
+Permissions
+===========
+
+Applications may also need to declare the permissions they require. Permissions are
+specified as sub-attributes of a ``permission`` property, defined at the level of an
+project, app, or platform. Permission declarations are *cumulative*; if an application
+defines permissions at the global level, application level, *and* platform level, the
+final set of permissions will be the *merged* set of all permissions from all levels,
+starting from least to most specific, with the most specific taking priority.
+
+Briefcase maintains a set of cross-platform permissions:
+
+* ``permission.camera`` - permission to access to the camera to take photos or video.
+* ``permission.microphone`` - permission to access the microphone.
+* ``permission.coarse_location`` - permission to determine a rough GPS location.
+* ``permission.fine_location`` - permission to determine a precise GPS location.
+* ``permission.background_location`` - permission to track GPS location while in the background.
+* ``permission.photo_library`` - permission to access to the user's photo library.
+
+If a cross-platform permission is used, it will be mapped to platform-specific values in
+whatever files are used to define permissions on that platform.
+
+Permissions can also be configured by adding platform-specific configuration items. See the documentation for the the platform backends to see the options that are available.
+
+The value for each permission is a short description of why that permission is required.
+If the platform requires, the value may be displayed to the user as part of an
+authorization dialog. This description should describe *why* the app requires the
+permission, rather than a generic description of the permission being requested.
+
+The use of permissions may also imply other settings in your app. See the individual
+platform backends for details on how cross-platform permissions are mapped.
+
 Document types
 ==============
 
@@ -498,7 +530,7 @@ will use ``resources/icon.icns`` on macOS, and ``resources/icon.ico`` on
 Windows.
 
 Some platforms also require different *variants* (e.g., both square and round
-icons). These variants can be specified by qualifying the icon specification:
+icons). These variants can be specified by qualifying the icon specification::
 
     icon.round = "resource/round-icon"
     icon.square = "resource/square-icon"

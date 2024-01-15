@@ -5,11 +5,11 @@ import pytest
 from briefcase.commands.base import BaseCommand
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.macOS.app import macOSAppMixin, macOSInstallMixin
+from briefcase.platforms.macOS.app import macOSAppMixin, macOSCreateMixin
 from tests.utils import DummyConsole
 
 
-class DummyInstallCommand(macOSAppMixin, macOSInstallMixin, BaseCommand):
+class DummyInstallCommand(macOSAppMixin, macOSCreateMixin, BaseCommand):
     """A dummy command to expose package installation capabilities."""
 
     command = "install"

@@ -77,6 +77,35 @@ The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.flatpak`` section of your
 ``pyproject.toml`` file:
 
+``finish_arg``
+~~~~~~~~~~~~~~
+
+The arguments used to configure the Flatpak sandbox. ``finish_arg`` is an attribute
+that can have additional sub-attributes; each sub-attribute maps to a single property
+that will be added to the app's manifest. For example, to add ``--allow=bluetooth`` as a
+finish argument, you would specify::
+
+    finish_arg."allow=bluetooth" = True
+
+Briefcase adds the following finish arguments by default:
+
+* ``share=ipc``
+* ``socket=x11``
+* ``nosocket=wayland``
+* ``share=network``
+* ``device=dri``
+* ``socket=pulseaudio``
+* ``filesystem=xdg-cache``
+* ``filesystem=xdg-config``
+* ``filesystem=xdg-data``
+* ``filesystem=xdg-documents``
+* ``socket=session-bus``
+
+These can be disabled by explicitly setting their value to ``False``; for example, to
+disable audio access, you would specify::
+
+    finish_arg."socket=pulseaudio" = false
+
 ``flatpak_runtime_repo_alias``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -114,6 +143,18 @@ build the Flatpak app.
 
 The Flatpak runtime and SDK are paired; so, both a ``flatpak_runtime`` and a
 corresponding ``flatpak_sdk`` must be defined.
+
+``modules_extra_content``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Additional build instructions that will be inserted into the Flatpak manifest, *after*
+Python has been installed and ``pip`` is guaranteed to exist, but *before* any app code
+or app packages have been installed into the Flatpak.
+
+Permissions
+===========
+
+Permissions are not used for Flatpak packaging.
 
 Compilation issues with Flatpak
 ===============================

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 
 MACOS_LOG_PREFIX_REGEX = re.compile(

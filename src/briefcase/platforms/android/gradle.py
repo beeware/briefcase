@@ -15,7 +15,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig, parsed_version
+from briefcase.config import AppConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
@@ -145,6 +145,7 @@ class GradleMixin:
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
+    hidden_app_properties = {"permission", "feature"}
 
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
@@ -152,7 +153,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: BaseConfig):
+    def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -181,6 +182,61 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             ),
         }
 
+    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param x_permissions: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        # Default permissions for all Android apps
+        permissions = {
+            "android.permission.INTERNET": True,
+            "android.permission.ACCESS_NETWORK_STATE": True,
+        }
+
+        # Default feature usage for all Android apps
+        features = {}
+
+        if x_permissions["camera"]:
+            permissions["android.permission.CAMERA"] = True
+            features["android.hardware.camera"] = False
+            features["android.hardware.camera.any"] = False
+            features["android.hardware.camera.front"] = False
+            features["android.hardware.camera.external"] = False
+            features["android.hardware.camera.autofocus"] = False
+
+        if x_permissions["microphone"]:
+            permissions["android.permission.RECORD_AUDIO"] = True
+
+        if x_permissions["fine_location"]:
+            permissions["android.permission.ACCESS_FINE_LOCATION"] = True
+            features["android.hardware.location.network"] = False
+            features["android.hardware.location.gps"] = False
+
+        if x_permissions["coarse_location"]:
+            permissions["android.permission.ACCESS_COARSE_LOCATION"] = True
+            features["android.hardware.location.network"] = False
+            features["android.hardware.location.gps"] = False
+
+        if x_permissions["background_location"]:
+            permissions["android.permission.ACCESS_BACKGROUND_LOCATION"] = True
+            features["android.hardware.location.network"] = False
+            features["android.hardware.location.gps"] = False
+
+        if x_permissions["photo_library"]:
+            permissions["android.permission.READ_MEDIA_VISUAL_USER_SELECTED"] = True
+
+        # Override any permission and entitlement definitions with the platform specific definitions
+        permissions.update(app.permission)
+        features.update(getattr(app, "feature", {}))
+
+        return {
+            "permissions": permissions,
+            "features": features,
+        }
+
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
@@ -193,10 +249,10 @@ class GradleOpenCommand(GradleMixin, OpenCommand):
 class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
 
-    def metadata_resource_path(self, app: BaseConfig):
+    def metadata_resource_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
-    def update_app_metadata(self, app: BaseConfig, test_mode: bool):
+    def update_app_metadata(self, app: AppConfig, test_mode: bool):
         with self.input.wait_bar("Setting main module..."):
             with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
                 # Set the name of the app's main module; this will depend
@@ -209,7 +265,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 """
                 )
 
-    def build_app(self, app: BaseConfig, test_mode: bool, **kwargs):
+    def build_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Build an application.
 
         :param app: The application to build
@@ -261,7 +317,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
     def run_app(
         self,
-        app: BaseConfig,
+        app: AppConfig,
         test_mode: bool,
         passthrough: list[str],
         device_or_avd=None,
@@ -380,7 +436,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create an Android App Bundle and APK in release mode."
 
-    def package_app(self, app: BaseConfig, **kwargs):
+    def package_app(self, app: AppConfig, **kwargs):
         """Package the app for distribution.
 
         This involves building the release app bundle.

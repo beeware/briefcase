@@ -254,6 +254,48 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
+    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param x_permissions: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        # The collection of info.plist entries
+        info = {}
+
+        if x_permissions["camera"]:
+            info["NSCameraUsageDescription"] = x_permissions["camera"]
+        if x_permissions["microphone"]:
+            info["NSMicrophoneUsageDescription"] = x_permissions["microphone"]
+
+        if x_permissions["fine_location"]:
+            info["NSLocationDefaultAccuracyReduced"] = False
+        elif x_permissions["coarse_location"]:
+            info["NSLocationDefaultAccuracyReduced"] = True
+
+        if x_permissions["background_location"]:
+            info["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
+                "background_location"
+            ]
+        elif x_permissions["fine_location"]:
+            info["NSLocationWhenInUseUsageDescription"] = x_permissions["fine_location"]
+        elif x_permissions["coarse_location"]:
+            info["NSLocationWhenInUseUsageDescription"] = x_permissions[
+                "coarse_location"
+            ]
+
+        if x_permissions["photo_library"]:
+            info["NSPhotoLibraryAddUsageDescription"] = x_permissions["photo_library"]
+
+        # Override any info.plist entries with the platform specific definitions
+        info.update(getattr(app, "info", {}))
+
+        return {
+            "info": info,
+        }
+
     def _extra_pip_args(self, app: AppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
