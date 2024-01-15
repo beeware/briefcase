@@ -177,6 +177,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     logger.error("this is error output")
     logger.print("this is print output")
     logger.print.to_log("this is log output")
+    logger.print.to_log(f"{chr(7)}this is sanitized log output: \u001b[31mred")
     logger.print.to_console("this is console output")
 
     logger.info("this is [bold]info output with markup[/bold]")
@@ -206,6 +207,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     assert "this is error output" in log_contents
     assert "this is print output" in log_contents
     assert "this is log output" in log_contents
+    assert "this is sanitized log output: red" in log_contents
     assert "this is console output" not in log_contents
     # Environment variables are in the output
     assert "ANDROID_HOME=/androidsdk" in log_contents
