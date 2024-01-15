@@ -487,7 +487,7 @@ If the platform requires, the value may be displayed to the user as part of an
 authorization dialog. This description should describe *why* the app requires the
 permission, rather than a generic description of the permission being requested.
 
-The use of cross-platform may also imply other settings in your app. See the individual
+The use of permissions may also imply other settings in your app. See the individual
 platform backends for details on how cross-platform permissions are mapped.
 
 Document types
