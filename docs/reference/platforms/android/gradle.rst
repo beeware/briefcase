@@ -123,38 +123,38 @@ section of your ``pyproject.toml`` file.
 ``android_manifest_attrs_extra_content``
 ----------------------------------------
 
-Additional attributes that will be added verbatim to add to the ``<manifest>``
-declaration of the ``AndroidManifest.xml`` of your app.
+Additional attributes that will be added verbatim to the ``<manifest>`` declaration of
+the ``AndroidManifest.xml`` of your app.
 
 ``android_manifest_extra_content``
 ----------------------------------
 
-Additional content that will be added verbatim to add just before the closing
-``</manifest>`` declaration of the ``AndroidManifest.xml`` of your app.
+Additional content that will be added verbatim just before the closing ``</manifest>``
+declaration of the ``AndroidManifest.xml`` of your app.
 
 ``android_manifest_application_attrs_extra_content``
 ----------------------------------------------------
 
-Additional attributes that will be added verbatim to add to the ``<application>``
-declaration of the ``AndroidManifest.xml`` of your app.
+Additional attributes that will be added verbatim to the ``<application>`` declaration
+of the ``AndroidManifest.xml`` of your app.
 
 ``android_manifest_application_extra_content``
 ----------------------------------------------
 
-Additional content that will be added verbatim to add just before the closing
+Additional content that will be added verbatim just before the closing
 ``</application>`` declaration of the ``AndroidManifest.xml`` of your app.
 
 ``android_manifest_activity_attrs_extra_content``
 -------------------------------------------------
 
-Additional attributes that will be added verbatim to add to the ``<activity>``
-declaration of the ``AndroidManifest.xml`` of your app.
+Additional attributes that will be added verbatim to the ``<activity>`` declaration of
+the ``AndroidManifest.xml`` of your app.
 
 ``android_manifest_activity_extra_content``
 -------------------------------------------
 
-Additional content that will be added verbatim to add just before the closing
-``</activity>`` declaration of the ``AndroidManifest.xml`` of your app.
+Additional content that will be added verbatim just before the closing ``</activity>``
+declaration of the ``AndroidManifest.xml`` of your app.
 
 ``build_gradle_extra_content``
 ------------------------------
