@@ -71,32 +71,47 @@ class RichConsoleHighlighter(RegexHighlighter):
 class Printer:
     """Interface for printing and managing output to the console and/or log."""
 
-    # Console to manage console output.
-    console = RichConsole(
-        highlighter=RichConsoleHighlighter(), emoji=False, soft_wrap=True
-    )
+    def __init__(self, width=180):
+        """Create an interface for printing and managing output to the console and/or
+        log.
 
-    # Console to record all logging to a buffer while not printing anything to the console.
-    # We need to be wide enough to render `sdkmanager --list_installed` output without
-    # line wrapping.
-    LOG_FILE_WIDTH = 180
-    # Rich only records what's being logged if it is actually written somewhere;
-    # writing to /dev/null allows Rich to do so without needing to print the logs
-    # in the console or save them to file before it is known a file is wanted.
-    dev_null = open(os.devnull, "w", encoding="utf-8", errors="ignore")
-    log = RichConsole(
-        file=dev_null,
-        record=True,
-        width=LOG_FILE_WIDTH,
-        no_color=True,
-        markup=False,
-        emoji=False,
-        highlight=False,
-        soft_wrap=True,
-    )
+        The default width is wide enough to render the output of ``sdkmanager
+        --list_installed`` without line wrapping.
 
-    @classmethod
-    def __call__(cls, *messages, stack_offset=5, show=True, **kwargs):
+        :param width: The width at which content should be wrapped.
+        """
+        self.width = width
+
+        # A wrapper around the console
+        self.console = RichConsole(
+            highlighter=RichConsoleHighlighter(),
+            emoji=False,
+            soft_wrap=True,
+        )
+
+        # Rich only records what's being logged if it is actually written somewhere;
+        # writing to /dev/null allows Rich to do so without needing to print the
+        # logs in the console or save them to file before it is known a file is
+        # wanted.
+        self.dev_null = open(os.devnull, "w", encoding="utf-8", errors="ignore")
+        self.log = RichConsole(
+            file=self.dev_null,
+            record=True,
+            width=self.width,
+            force_interactive=False,
+            force_terminal=False,
+            no_color=True,
+            color_system=None,
+            markup=False,
+            emoji=False,
+            highlight=False,
+            soft_wrap=True,
+        )
+
+    def __del__(self):
+        self.dev_null.close()
+
+    def __call__(self, *messages, stack_offset=5, show=True, **kwargs):
         """Entry point for all printing to the console and the log.
 
         The log records all content that is printed whether it is shown in the console
@@ -111,23 +126,22 @@ class Printer:
             most uses are 5 levels deep from the actual logging.
         """
         if show:
-            cls.to_console(*messages, **kwargs)
-        cls.to_log(*messages, stack_offset=stack_offset, **kwargs)
+            self.to_console(*messages, **kwargs)
+        self.to_log(*messages, stack_offset=stack_offset, **kwargs)
 
-    @classmethod
-    def to_console(cls, *messages, **kwargs):
+    def to_console(self, *messages, **kwargs):
         """Write only to the console and skip writing to the log."""
-        cls.console.print(*messages, **kwargs)
+        self.console.print(*messages, **kwargs)
 
-    @classmethod
-    def to_log(cls, *messages, stack_offset=5, **kwargs):
+    def to_log(self, *messages, stack_offset=5, **kwargs):
         """Write only to the log and skip writing to the console."""
-        cls.log.log(*map(sanitize_text, messages), _stack_offset=stack_offset, **kwargs)
+        self.log.log(
+            *map(sanitize_text, messages), _stack_offset=stack_offset, **kwargs
+        )
 
-    @classmethod
-    def export_log(cls):
+    def export_log(self):
         """Export the text of the entire log; the log is also cleared."""
-        return cls.log.export_text()
+        return self.log.export_text()
 
 
 class RichLoggingStream:
@@ -162,8 +176,8 @@ class Log:
     # subdirectory of command.base_path to store log files
     LOG_DIR = "logs"
 
-    def __init__(self, printer=Printer(), verbosity: LogLevel = LogLevel.INFO):
-        self.print = printer
+    def __init__(self, printer=None, verbosity: LogLevel = LogLevel.INFO):
+        self.print = Printer() if printer is None else printer
         # --verbosity flag: 0 for info, 1 for debug, 2 for deep debug
         self.verbosity = verbosity
         # --log flag to force logfile creation
@@ -390,7 +404,7 @@ class Log:
                     f"{thread} traceback:",
                     Traceback(
                         trace=stacktrace,
-                        width=self.print.LOG_FILE_WIDTH,
+                        width=self.print.width,
                         show_locals=True,
                     ),
                     new_line_start=True,
@@ -447,11 +461,11 @@ class Log:
 
 
 class Console:
-    def __init__(self, printer=Printer(), enabled=True):
+    def __init__(self, printer=None, enabled=True):
         self.enabled = enabled
-        self.print = printer
+        self.print = Printer() if printer is None else printer
         # Use Rich's input() to read from user
-        self.input = printer.console.input
+        self.input = self.print.console.input
         self._wait_bar: Progress = None
         # Signal that Rich is dynamically controlling the console output. Therefore,
         # all output must be printed to the screen by Rich to prevent corruption of

@@ -1,4 +1,5 @@
 import inspect
+import os
 import subprocess
 import time
 from unittest.mock import ANY
@@ -6,15 +7,19 @@ from unittest.mock import ANY
 import pytest
 
 from briefcase.config import AppConfig
-from briefcase.console import Printer
 
 from .utils import create_file
 
 
-def pytest_sessionfinish(session, exitstatus):
-    """When pytest is wrapping up, close the /dev/null file handle for the logfile Rich
-    Console to avoid spurious ResourceWarning errors."""
-    Printer.dev_null.close()
+def pytest_sessionstart(session):
+    """Ensure that tests don't use a color console."""
+
+    os.environ["TERM"] = "dumb"
+    os.environ["NO_COLOR"] = "1"
+    try:
+        del os.environ["FORCE_COLOR"]
+    except KeyError:
+        pass
 
 
 # alias so fixtures can still use them
