@@ -71,7 +71,7 @@ class RichConsoleHighlighter(RegexHighlighter):
 class Printer:
     """Interface for printing and managing output to the console and/or log."""
 
-    def __init__(self, width=180):
+    def __init__(self, log_width=180):
         """Create an interface for printing and managing output to the console and/or
         log.
 
@@ -80,7 +80,7 @@ class Printer:
 
         :param width: The width at which content should be wrapped.
         """
-        self.width = width
+        self.log_width = log_width
 
         # A wrapper around the console
         self.console = RichConsole(
@@ -97,7 +97,7 @@ class Printer:
         self.log = RichConsole(
             file=self.dev_null,
             record=True,
-            width=self.width,
+            width=self.log_width,
             force_interactive=False,
             force_terminal=False,
             no_color=True,
@@ -404,7 +404,7 @@ class Log:
                     f"{thread} traceback:",
                     Traceback(
                         trace=stacktrace,
-                        width=self.print.width,
+                        width=self.print.log_width,
                         show_locals=True,
                     ),
                     new_line_start=True,
