@@ -193,7 +193,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 for path in (app.test_sources or [])
                 if (name := Path(path).name)
             ),
-            "system_runtime_requires": {"libs": system_runtime_requires},
+            "dependencies": {"implementation": system_runtime_requires},
         }
 
     def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):

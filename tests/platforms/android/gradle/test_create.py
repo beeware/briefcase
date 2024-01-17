@@ -107,7 +107,7 @@ def test_version_code(create_command, first_app_config, version, build, version_
         (
             None,
             {
-                "libs": [
+                "implementation": [
                     "androidx.appcompat:appcompat:1.0.2",
                     "androidx.constraintlayout:constraintlayout:1.1.3",
                     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
@@ -116,7 +116,7 @@ def test_version_code(create_command, first_app_config, version, build, version_
         ),
         (
             [],
-            {"libs": []},
+            {"implementation": []},
         ),
         (
             [
@@ -124,7 +124,7 @@ def test_version_code(create_command, first_app_config, version, build, version_
                 "com.example.bar:bar:2.3.4",
             ],
             {
-                "libs": [
+                "implementation": [
                     "com.example.foo:foo:1.2.3",
                     "com.example.bar:bar:2.3.4",
                 ]
@@ -138,7 +138,7 @@ def test_system_runtime_requires(create_command, first_app_config, input, output
         first_app_config.system_runtime_requires = input
 
     context = create_command.output_format_template_context(first_app_config)
-    assert context["system_runtime_requires"] == output
+    assert context["dependencies"] == output
 
 
 extract_packages_params = [
