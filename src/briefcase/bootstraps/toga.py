@@ -206,6 +206,13 @@ requires = [
 requires = [
     "toga-android~=0.4.0",
 ]
+
+system_runtime_requires = [
+    "androidx.appcompat:appcompat:1.0.2",
+    "androidx.constraintlayout:constraintlayout:1.1.3",
+    "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    "com.google.android.material:material:1.0.0",
+]
 """
 
     def pyproject_table_web(self):
