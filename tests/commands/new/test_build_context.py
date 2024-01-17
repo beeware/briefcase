@@ -239,10 +239,12 @@ requires = [
     "toga-android~=0.4.0",
 ]
 
-dependencies = [
+gradle_dependencies = [
     "androidx.appcompat:appcompat:1.0.2",
     "androidx.constraintlayout:constraintlayout:1.1.3",
+    # Needed for DetailedList
     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # Needed for OptionContainer
     "com.google.android.material:material:1.0.0",
 ]
 """,
@@ -1243,10 +1245,12 @@ requires = [
     "toga-android~=0.4.0",
 ]
 
-dependencies = [
+gradle_dependencies = [
     "androidx.appcompat:appcompat:1.0.2",
     "androidx.constraintlayout:constraintlayout:1.1.3",
+    # Needed for DetailedList
     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # Needed for OptionContainer
     "com.google.android.material:material:1.0.0",
 ]
 """,

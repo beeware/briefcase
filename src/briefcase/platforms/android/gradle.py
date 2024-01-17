@@ -174,13 +174,34 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         # list that was hard-coded in the Briefcase 0.3.16 Android template, prior to
         # the introduction of customizable system requirements for Android.
         try:
-            dependencies = app.system_runtime_requires
+            dependencies = app.gradle_dependencies
         except AttributeError:
             self.logger.warning(
                 (
-                    "The Android configuration for this app does not contain "
-                    "a `dependencies` definition. Using a default value; you should "
-                    "add an explicit list of Android dependencies for the project."
+                    """
+*************************************************************************
+** WARNING: App does not define gradle_dependencies                    **
+*************************************************************************
+
+    The Android configuration for this app does not contain a
+    `gradle_dependencies` definition. Briefcase will use a default
+    value of:
+
+        gradle_dependencies = [
+            "androidx.appcompat:appcompat:1.0.2",
+            "androidx.constraintlayout:constraintlayout:1.1.3",
+            "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+        ]
+
+    You should add this definition to the Android configuration
+    of your project's pyproject.toml file. See:
+
+        https://briefcase.readthedocs.io/en/stable/reference/platforms/android.html#gradle-dependencies
+
+    for more information.
+
+*************************************************************************
+"""
                 ),
                 prefix=app.app_name,
             )
@@ -200,7 +221,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 for path in (app.test_sources or [])
                 if (name := Path(path).name)
             ),
-            "dependencies": {"implementation": dependencies},
+            "gradle_dependencies": {"implementation": dependencies},
         }
 
     def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):

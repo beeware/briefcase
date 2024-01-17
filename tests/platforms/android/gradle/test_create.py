@@ -102,7 +102,7 @@ def test_version_code(create_command, first_app_config, version, build, version_
 
 
 @pytest.mark.parametrize(
-    "input, output",
+    "input, output, has_warning",
     [
         (
             None,
@@ -113,10 +113,12 @@ def test_version_code(create_command, first_app_config, version, build, version_
                     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
                 ]
             },
+            True,
         ),
         (
             [],
             {"implementation": []},
+            False,
         ),
         (
             [
@@ -129,16 +131,29 @@ def test_version_code(create_command, first_app_config, version, build, version_
                     "com.example.bar:bar:2.3.4",
                 ]
             },
+            False,
         ),
     ],
 )
-def test_system_runtime_requires(create_command, first_app_config, input, output):
+def test_system_runtime_requires(
+    create_command,
+    first_app_config,
+    input,
+    output,
+    has_warning,
+    capsys,
+):
     """Validate that create adds version_code to the template context."""
     if input is not None:
-        first_app_config.system_runtime_requires = input
+        first_app_config.gradle_dependencies = input
 
     context = create_command.output_format_template_context(first_app_config)
-    assert context["dependencies"] == output
+    assert context["gradle_dependencies"] == output
+
+    assert (
+        "** WARNING: App does not define gradle_dependencies                    **"
+        in capsys.readouterr().out
+    ) == has_warning
 
 
 extract_packages_params = [

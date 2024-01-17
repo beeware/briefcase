@@ -162,17 +162,6 @@ declaration of the ``AndroidManifest.xml`` of your app.
 A string providing additional Gradle settings to use when building your app.
 This will be added verbatim to the end of your ``app/build.gradle`` file.
 
-``dependencies``
-----------------
-
-The list of libraries that should be linked into the Android application. Each library
-should be a versioned Maven package specifier. If unspecified, three libraries will be
-linked into the app:
-
-* ``androidx.appcompat:appcompat:1.0.2``
-* ``androidx.constraintlayout:constraintlayout:1.1.3``
-* ``androidx.swiperefreshlayout:swiperefreshlayout:1.1.0``
-
 ``feature``
 -----------
 
@@ -191,6 +180,17 @@ will result in an ``AndroidManifest.xml`` declaration of::
 
 The use of some cross-platform permissions will imply the addition of features; see
 :ref:`the discussion on Android permissions <android-permissions>` for more details.
+
+``gradle_dependencies``
+-----------------------
+
+The list of libraries that should be linked into the Android application. Each library
+should be a versioned Maven package specifier. If unspecified, three libraries will be
+linked into the app:
+
+* ``androidx.appcompat:appcompat:1.0.2``
+* ``androidx.constraintlayout:constraintlayout:1.1.3``
+* ``androidx.swiperefreshlayout:swiperefreshlayout:1.1.0``
 
 ``permission``
 --------------
