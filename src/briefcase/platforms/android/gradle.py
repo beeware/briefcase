@@ -170,6 +170,19 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             build = int(getattr(app, "build", "0"))
             version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
 
+        # The default runtime libraries included in an app. The default value is the
+        # list that was hard-coded in the Briefcase 0.3.16 Android template, prior to
+        # the introduction of customizable system requirements for Android.
+        system_runtime_requires = getattr(
+            app,
+            "system_runtime_requires",
+            [
+                "androidx.appcompat:appcompat:1.0.2",
+                "androidx.constraintlayout:constraintlayout:1.1.3",
+                "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+            ],
+        )
+
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
@@ -180,6 +193,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 for path in (app.test_sources or [])
                 if (name := Path(path).name)
             ),
+            "system_runtime_requires": {"libs": system_runtime_requires},
         }
 
     def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):

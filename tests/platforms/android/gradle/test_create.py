@@ -101,6 +101,46 @@ def test_version_code(create_command, first_app_config, version, build, version_
     assert int(version_code) < 2147483647
 
 
+@pytest.mark.parametrize(
+    "input, output",
+    [
+        (
+            None,
+            {
+                "libs": [
+                    "androidx.appcompat:appcompat:1.0.2",
+                    "androidx.constraintlayout:constraintlayout:1.1.3",
+                    "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+                ]
+            },
+        ),
+        (
+            [],
+            {"libs": []},
+        ),
+        (
+            [
+                "com.example.foo:foo:1.2.3",
+                "com.example.bar:bar:2.3.4",
+            ],
+            {
+                "libs": [
+                    "com.example.foo:foo:1.2.3",
+                    "com.example.bar:bar:2.3.4",
+                ]
+            },
+        ),
+    ],
+)
+def test_system_runtime_requires(create_command, first_app_config, input, output):
+    """Validate that create adds version_code to the template context."""
+    if input is not None:
+        first_app_config.system_runtime_requires = input
+
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["system_runtime_requires"] == output
+
+
 extract_packages_params = [
     ([], ""),
     ([""], ""),
