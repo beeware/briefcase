@@ -173,15 +173,22 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         # The default runtime libraries included in an app. The default value is the
         # list that was hard-coded in the Briefcase 0.3.16 Android template, prior to
         # the introduction of customizable system requirements for Android.
-        system_runtime_requires = getattr(
-            app,
-            "system_runtime_requires",
-            [
+        try:
+            dependencies = app.system_runtime_requires
+        except AttributeError:
+            self.logger.warning(
+                (
+                    "The Android configuration for this app does not contain "
+                    "a `dependencies` definition. Using a default value; you should "
+                    "add an explicit list of Android dependencies for the project."
+                ),
+                prefix=app.app_name,
+            )
+            dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",
                 "androidx.constraintlayout:constraintlayout:1.1.3",
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-            ],
-        )
+            ]
 
         return {
             "version_code": version_code,
@@ -193,7 +200,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 for path in (app.test_sources or [])
                 if (name := Path(path).name)
             ),
-            "dependencies": {"implementation": system_runtime_requires},
+            "dependencies": {"implementation": dependencies},
         }
 
     def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
