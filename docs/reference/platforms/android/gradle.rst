@@ -104,6 +104,7 @@ Colors
 
 Android allows for some customization of the colors used by your app:
 
+* ``base_theme`` is used to set the base Android theme.
 * ``accent_color`` is used as a subtle highlight throughout your app to
   call attention to key elements. It's used on things like form labels and
   inputs.
@@ -155,6 +156,11 @@ the ``AndroidManifest.xml`` of your app.
 
 Additional content that will be added verbatim just before the closing ``</activity>``
 declaration of the ``AndroidManifest.xml`` of your app.
+
+``base_theme``
+--------------
+
+The base theme for the application. Defaults to ``Theme.AppCompat.Light.DarkActionBar``
 
 ``build_gradle_extra_content``
 ------------------------------

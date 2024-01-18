@@ -207,6 +207,8 @@ requires = [
     "toga-android~=0.4.0",
 ]
 
+base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
+
 gradle_dependencies = [
     "androidx.appcompat:appcompat:1.0.2",
     "androidx.constraintlayout:constraintlayout:1.1.3",
