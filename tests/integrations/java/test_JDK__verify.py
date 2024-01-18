@@ -1,10 +1,12 @@
 import os
+import platform
 import shutil
 import subprocess
 from pathlib import Path
 from unittest import mock
 
 import pytest
+import requests
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -518,6 +520,15 @@ def test_successful_jdk_download(
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
+
+
+def test_jdk_url_exists(mock_tools, tmp_path):
+    """The JDK download URL is resolvable for the platform."""
+    # ensure the system hasn't been mocked
+    mock_tools.host_arch = platform.machine()
+    mock_tools.host_os = platform.system()
+
+    requests.head(JDK(mock_tools, tmp_path).OpenJDK_download_url).raise_for_status()
 
 
 def test_not_installed(mock_tools, tmp_path):
