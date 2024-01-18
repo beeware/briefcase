@@ -245,7 +245,7 @@ gradle_dependencies = [
     # Needed for DetailedList
     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for OptionContainer
-    "com.google.android.material:material:1.0.0",
+    "com.google.android.material:material:1.11.0",
 ]
 """,
         pyproject_table_web="""
@@ -1251,7 +1251,7 @@ gradle_dependencies = [
     # Needed for DetailedList
     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for OptionContainer
-    "com.google.android.material:material:1.0.0",
+    "com.google.android.material:material:1.11.0",
 ]
 """,
         pyproject_table_web="""
