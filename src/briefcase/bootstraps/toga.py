@@ -209,7 +209,7 @@ requires = [
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
-gradle_dependencies = [
+build_gradle_dependencies = [
     "androidx.appcompat:appcompat:1.0.2",
     "androidx.constraintlayout:constraintlayout:1.1.3",
     # Needed for DetailedList

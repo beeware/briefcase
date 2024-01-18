@@ -135,7 +135,7 @@ def test_version_code(create_command, first_app_config, version, build, version_
         ),
     ],
 )
-def test_system_runtime_requires(
+def test_build_gradle_dependencies(
     create_command,
     first_app_config,
     input,
@@ -145,13 +145,13 @@ def test_system_runtime_requires(
 ):
     """Validate that create adds version_code to the template context."""
     if input is not None:
-        first_app_config.gradle_dependencies = input
+        first_app_config.build_gradle_dependencies = input
 
     context = create_command.output_format_template_context(first_app_config)
-    assert context["gradle_dependencies"] == output
+    assert context["build_gradle_dependencies"] == output
 
     assert (
-        "** WARNING: App does not define gradle_dependencies                    **"
+        "** WARNING: App does not define build_gradle_dependencies              **"
         in capsys.readouterr().out
     ) == has_warning
 
