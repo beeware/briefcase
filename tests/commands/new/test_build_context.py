@@ -242,12 +242,9 @@ requires = [
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
 build_gradle_dependencies = [
-    "androidx.appcompat:appcompat:1.6.1",
-    "androidx.constraintlayout:constraintlayout:1.1.3",
+    "com.google.android.material:material:1.11.0",
     # Needed for DetailedList
     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-    # Needed for OptionContainer
-    "com.google.android.material:material:1.11.0",
 ]
 """,
         pyproject_table_web="""
@@ -1250,12 +1247,9 @@ requires = [
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
 build_gradle_dependencies = [
-    "androidx.appcompat:appcompat:1.6.1",
-    "androidx.constraintlayout:constraintlayout:1.1.3",
+    "com.google.android.material:material:1.11.0",
     # Needed for DetailedList
     "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-    # Needed for OptionContainer
-    "com.google.android.material:material:1.11.0",
 ]
 """,
         pyproject_table_web="""
