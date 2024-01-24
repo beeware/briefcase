@@ -163,7 +163,7 @@ declaration of the ``AndroidManifest.xml`` of your app.
 The base theme for the application. Defaults to ``Theme.AppCompat.Light.DarkActionBar``
 
 ``build_gradle_dependencies``
------------------------
+-----------------------------
 
 The list of libraries that should be linked into the Android application. Each library
 should be a versioned Maven package specifier. If unspecified, three libraries will be
