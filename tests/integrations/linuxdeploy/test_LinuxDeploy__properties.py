@@ -7,6 +7,8 @@ from briefcase.integrations.linuxdeploy import (
     LinuxDeployQtPlugin,
 )
 
+from ...utils import assert_url_resolvable
+
 
 def test_managed_install(linuxdeploy):
     """All linuxdeploy installs are managed."""
@@ -72,6 +74,7 @@ def test_download_url(mock_tools, host_os, host_arch, linuxdeploy_arch):
         "https://github.com/linuxdeploy/linuxdeploy/"
         f"releases/download/continuous/linuxdeploy-{linuxdeploy_arch}.AppImage"
     )
+    assert_url_resolvable(linuxdeploy.download_url)
 
 
 def test_plugins(linuxdeploy):

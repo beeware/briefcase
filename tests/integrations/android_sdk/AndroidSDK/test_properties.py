@@ -5,6 +5,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+from ....utils import assert_url_resolvable
 from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
 
 
@@ -25,6 +26,7 @@ def test_cmdline_tools_url(mock_tools, android_sdk, host_os, host_arch, name):
     assert android_sdk.cmdline_tools_url == (
         f"https://dl.google.com/android/repository/commandlinetools-{name}-{SDK_MGR_DL_VER}_latest.zip"
     )
+    assert_url_resolvable(android_sdk.cmdline_tools_url)
 
 
 @pytest.mark.parametrize(

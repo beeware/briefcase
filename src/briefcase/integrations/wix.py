@@ -7,8 +7,6 @@ from pathlib import Path
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError
 from briefcase.integrations.base import ManagedTool, ToolCache
 
-WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
-
 
 class WiX(ManagedTool):
     name = "wix"
@@ -36,6 +34,10 @@ class WiX(ManagedTool):
         else:
             self.wix_home = tools.base_path / "wix"
         self.bin_install = bin_install
+
+    @property
+    def download_url(self) -> str:
+        return "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
 
     @property
     def heat_exe(self) -> Path:
@@ -133,7 +135,7 @@ does not point to an install of the WiX Toolset.
     def install(self):
         """Download and install WiX."""
         wix_zip_path = self.tools.download.file(
-            url=WIX_DOWNLOAD_URL,
+            url=self.download_url,
             download_path=self.tools.base_path,
             role="WiX",
         )

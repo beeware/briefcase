@@ -2,6 +2,8 @@ import pytest
 
 from briefcase.integrations.linuxdeploy import LinuxDeployQtPlugin
 
+from ...utils import assert_url_resolvable
+
 
 @pytest.fixture
 def linuxdeploy_qt_plugin(mock_tools):
@@ -60,3 +62,4 @@ def test_download_url(mock_tools, host_os, host_arch, linuxdeploy_arch):
         "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
         f"releases/download/continuous/linuxdeploy-plugin-qt-{linuxdeploy_arch}.AppImage"
     )
+    assert_url_resolvable(linuxdeploy_qt_plugin.download_url)

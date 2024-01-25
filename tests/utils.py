@@ -8,7 +8,10 @@ import zipfile
 from email.message import EmailMessage
 from pathlib import Path
 
+import requests
+from requests.adapters import HTTPAdapter
 from rich.markup import escape
+from urllib3.util.retry import Retry
 
 from briefcase.console import Console, InputDisabled
 
@@ -298,3 +301,13 @@ def file_content(path: Path) -> str | None:
         return None
     with path.open(encoding="utf-8") as f:
         return f.read()
+
+
+def assert_url_resolvable(url: str):
+    """Tests whether a URL is resolvable with retries; raises for failure."""
+    with requests.session() as sess:
+        adapter = HTTPAdapter(max_retries=Retry(status_forcelist={500, 502, 504}))
+        sess.mount("http://", adapter)
+        sess.mount("https://", adapter)
+
+        sess.head(url).raise_for_status()
