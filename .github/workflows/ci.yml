@@ -25,11 +25,11 @@ env:
 jobs:
   pre-commit:
     name: Pre-commit checks
-    uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/pre-commit-run.yml@towncrier-instructions
 
   towncrier:
     name: Check towncrier
-    uses: beeware/.github/.github/workflows/towncrier-run.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/towncrier-run.yml@towncrier-instructions
 
   package:
     name: Python package

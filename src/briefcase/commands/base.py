@@ -19,6 +19,8 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from platformdirs import PlatformDirs
 
+import time   # unused import to fail pre-commit
+
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
