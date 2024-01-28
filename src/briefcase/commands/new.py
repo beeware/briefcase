@@ -47,32 +47,34 @@ def titlecase(s):
     :returns: A capitalized string.
     """
     return " ".join(
-        word
-        if (
-            word.isupper()
-            or word
-            in {
-                "a",
-                "an",
-                "and",
-                "as",
-                "at",
-                "but",
-                "by",
-                "en",
-                "for",
-                "if",
-                "in",
-                "of",
-                "on",
-                "or",
-                "the",
-                "to",
-                "via",
-                "vs",
-            }
+        (
+            word
+            if (
+                word.isupper()
+                or word
+                in {
+                    "a",
+                    "an",
+                    "and",
+                    "as",
+                    "at",
+                    "but",
+                    "by",
+                    "en",
+                    "for",
+                    "if",
+                    "in",
+                    "of",
+                    "on",
+                    "or",
+                    "the",
+                    "to",
+                    "via",
+                    "vs",
+                }
+            )
+            else word.capitalize()
         )
-        else word.capitalize()
         for word in s.split(" ")
     )
 
