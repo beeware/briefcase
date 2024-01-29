@@ -86,10 +86,8 @@ def test_build_app(build_command, first_app, tmp_path):
 def test_build_bootstrap_failed(build_command, first_app, tmp_path):
     """If the bootstrap binary can't be compiled, an error is raised."""
     # Mock a build failure
-    build_command.tools[
-        first_app
-    ].app_context.run.side_effect = subprocess.CalledProcessError(
-        cmd=["make ..."], returncode=-1
+    build_command.tools[first_app].app_context.run.side_effect = (
+        subprocess.CalledProcessError(cmd=["make ..."], returncode=-1)
     )
 
     # Build the app; it will fail
