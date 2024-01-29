@@ -9,7 +9,9 @@ from briefcase.exceptions import (
     NetworkFailure,
     NonManagedToolError,
 )
-from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
+from briefcase.integrations.wix import WiX
+
+from .conftest import WIX_DOWNLOAD_URL
 
 
 def test_non_managed_install(mock_tools, tmp_path, capsys):

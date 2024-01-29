@@ -9,7 +9,10 @@ from briefcase.exceptions import (
     NetworkFailure,
     UnsupportedHostError,
 )
-from briefcase.integrations.wix import WIX_DOWNLOAD_URL, WiX
+from briefcase.integrations.wix import WiX
+
+from ...utils import assert_url_resolvable
+from .conftest import WIX_DOWNLOAD_URL
 
 
 def test_short_circuit(mock_tools):
@@ -134,6 +137,9 @@ def test_download_wix(mock_tools, tmp_path):
     assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
     assert wix.light_exe == tmp_path / "tools/wix/light.exe"
     assert wix.candle_exe == tmp_path / "tools/wix/candle.exe"
+
+    # The WiX URL is resolvable
+    assert_url_resolvable(wix.download_url)
 
 
 def test_dont_install(mock_tools, tmp_path):

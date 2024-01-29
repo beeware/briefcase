@@ -1,12 +1,10 @@
 import os
-import platform
 import shutil
 import subprocess
 from pathlib import Path
 from unittest import mock
 
 import pytest
-import requests
 
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -17,6 +15,7 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.java import JDK
 
+from ...utils import assert_url_resolvable
 from .conftest import JDK_BUILD, JDK_RELEASE
 
 CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"])
@@ -520,15 +519,8 @@ def test_successful_jdk_download(
     )
     # The original archive was deleted
     archive.unlink.assert_called_once_with()
-
-
-def test_jdk_url_exists(mock_tools, tmp_path):
-    """The JDK download URL is resolvable for the platform."""
-    # ensure the system hasn't been mocked
-    mock_tools.host_arch = platform.machine()
-    mock_tools.host_os = platform.system()
-
-    requests.head(JDK(mock_tools, tmp_path).OpenJDK_download_url).raise_for_status()
+    # The download URL for JDK exists
+    assert_url_resolvable(mock_tools.java.OpenJDK_download_url)
 
 
 def test_not_installed(mock_tools, tmp_path):

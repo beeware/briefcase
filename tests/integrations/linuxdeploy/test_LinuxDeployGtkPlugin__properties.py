@@ -2,6 +2,8 @@ import pytest
 
 from briefcase.integrations.linuxdeploy import LinuxDeployGtkPlugin
 
+from ...utils import assert_url_resolvable
+
 
 @pytest.fixture
 def linuxdeploy_gtk_plugin(mock_tools):
@@ -32,3 +34,4 @@ def test_download_url(linuxdeploy_gtk_plugin):
         "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/"
         "master/linuxdeploy-plugin-gtk.sh"
     )
+    assert_url_resolvable(linuxdeploy_gtk_plugin.download_url)
