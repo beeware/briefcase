@@ -206,6 +206,15 @@ requires = [
 requires = [
     "toga-android~=0.4.0",
 ]
+
+base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
+
+build_gradle_dependencies = [
+    "androidx.appcompat:appcompat:1.6.1",
+    "com.google.android.material:material:1.11.0",
+    # Needed for DetailedList
+    "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+]
 """
 
     def pyproject_table_web(self):
