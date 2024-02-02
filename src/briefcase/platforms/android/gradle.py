@@ -177,8 +177,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             dependencies = app.build_gradle_dependencies
         except AttributeError:
             self.logger.warning(
-                (
-                    """
+                """
 *************************************************************************
 ** WARNING: App does not define build_gradle_dependencies              **
 *************************************************************************
@@ -201,9 +200,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     for more information.
 
 *************************************************************************
+
 """
-                ),
-                prefix=app.app_name,
             )
             dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",
