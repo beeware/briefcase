@@ -864,8 +864,12 @@ connection.
 
                     details = {}
                     for part in parts[2:]:
-                        key, value = part.split(":")
-                        details[key] = value
+                        try:
+                            key, value = part.split(":")
+                            details[key] = value
+                        except ValueError:
+                            # Ignore any entry that isn't in "key:value" format.
+                            pass
 
                     if parts[1] == "device":
                         try:

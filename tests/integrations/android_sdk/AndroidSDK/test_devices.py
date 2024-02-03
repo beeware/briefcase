@@ -81,3 +81,17 @@ def test_daemon_start(mock_tools, android_sdk):
     mock_tools.subprocess.check_output.return_value = devices_result("daemon_start")
 
     assert android_sdk.devices() == {}
+
+
+def test_physical_device_macOS(mock_tools, android_sdk):
+    """An extra piece of device detail is returned on macOS for physical devices."""
+    mock_tools.subprocess.check_output.return_value = devices_result(
+        "physical_device_macOS"
+    )
+
+    assert android_sdk.devices() == {
+        "200ABCDEFGHIJK": {
+            "authorized": True,
+            "name": "Pixel 7",
+        }
+    }
