@@ -864,8 +864,12 @@ connection.
 
                     details = {}
                     for part in parts[2:]:
-                        key, value = part.split(":")
-                        details[key] = value
+                        try:
+                            key, value = part.split(":")
+                            details[key] = value
+                        except ValueError:
+                            # Ignore any entry that isn't in "key:value" format.
+                            pass
 
                     if parts[1] == "device":
                         try:
@@ -877,7 +881,7 @@ connection.
                         name = "Unknown device (offline)"
                         authorized = False
                     else:
-                        name = "Unknown device (not authorized for development)"
+                        name = f"Device not available for development ({' '.join(parts[1:])})"
                         authorized = False
 
                     devices[parts[0]] = {
