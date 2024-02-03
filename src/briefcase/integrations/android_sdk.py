@@ -881,7 +881,7 @@ connection.
                         name = "Unknown device (offline)"
                         authorized = False
                     else:
-                        name = "Unknown device (not authorized for development)"
+                        name = f"Device not available for development ({' '.join(parts[1:])})"
                         authorized = False
 
                     devices[parts[0]] = {

@@ -1,0 +1,3 @@
+List of devices attached
+200ABCDEFGHIJK         no permissions (user russell is not in the plugdev group); see [http://developer.android.com/tools/device.html] usb:5-4.4.1 transport_id:1
+300ABCDEFGHIJK         no permissions (missing udev rules? user is in the plugdev group); see [http://developer.android.com/tools/device.html] usb:5-4.4.1 transport_id:1

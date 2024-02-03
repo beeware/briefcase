@@ -48,7 +48,10 @@ def test_multiple_devices(mock_tools, android_sdk):
 
     assert android_sdk.devices() == {
         "041234567892009a": {
-            "name": "Unknown device (not authorized for development)",
+            "name": (
+                "Device not available for development "
+                "(unauthorized usb:336675328X transport_id:2)"
+            ),
             "authorized": False,
         },
         "KABCDABCDA1513": {
@@ -94,4 +97,31 @@ def test_physical_device_macOS(mock_tools, android_sdk):
             "authorized": True,
             "name": "Pixel 7",
         }
+    }
+
+
+def test_device_permissions(mock_tools, android_sdk):
+    """If AndroidSDK doesn't have access to the device, the error message can be
+    parsed."""
+    mock_tools.subprocess.check_output.return_value = devices_result("no_permissions")
+
+    assert android_sdk.devices() == {
+        "200ABCDEFGHIJK": {
+            "authorized": False,
+            "name": (
+                "Device not available for development (no permissions "
+                "(user russell is not in the plugdev group); "
+                "see [http://developer.android.com/tools/device.html] "
+                "usb:5-4.4.1 transport_id:1)"
+            ),
+        },
+        "300ABCDEFGHIJK": {
+            "authorized": False,
+            "name": (
+                "Device not available for development (no permissions "
+                "(missing udev rules? user is in the plugdev group); "
+                "see [http://developer.android.com/tools/device.html] "
+                "usb:5-4.4.1 transport_id:1)"
+            ),
+        },
     }
