@@ -423,7 +423,17 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
     assert "Android emulator was unable to boot!" in exc_info.value.msg
 
 
-def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
+@pytest.mark.parametrize(
+    "emulator_comm, expected_log",
+    [
+        (("This is stdout", "this is stderr"), "Emulator output log\nThis is stdout"),
+        (
+            subprocess.TimeoutExpired(cmd="emulator", timeout=1),
+            "Emulator output log\n> Briefcase failed",
+        ),
+    ],
+)
+def test_emulator_ctrl_c(mock_tools, android_sdk, emulator_comm, expected_log, capsys):
     """If emulator startup is interrupted by the user, an error is displayed."""
     # Short circuit device loop by returning no devices
     android_sdk.devices = MagicMock(side_effect=[{}, {}])
@@ -434,6 +444,9 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
     emu_popen.args = [android_sdk.emulator_path, "@idleEmulator"]
     emu_popen.poll.side_effect = [None, None, KeyboardInterrupt]
     mock_tools.subprocess.Popen.return_value = emu_popen
+
+    # Mock emulator output
+    emu_popen.communicate.side_effect = [emulator_comm]
 
     # Start the emulator
     with pytest.raises(KeyboardInterrupt):
@@ -457,10 +470,13 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
     # Took a total of 2 naps before KeyboardInterrupt.
     assert android_sdk.sleep.call_count == 2
 
+    output = capsys.readouterr().out
+
+    # Emulator's log was printed.
+    assert expected_log in output
+
     # Expected error message was printed.
-    assert (
-        "Is the Android emulator not starting up properly?" in capsys.readouterr().out
-    )
+    assert "Is the Android emulator not starting up properly?" in output
 
 
 def test_start_emulator_extra_args(mock_tools, android_sdk):
