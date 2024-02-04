@@ -37,131 +37,132 @@ jobs:
     with:
       tox-factors: -with-automation
 
-  unit-tests:
-    name: Unit tests
-    needs: [ pre-commit, towncrier, package ]
-    runs-on: ${{ matrix.platform }}-latest
-    continue-on-error: ${{ matrix.experimental }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ "macos", "ubuntu", "windows" ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
-        include:
-        - experimental: false
-        # Allow dev Python to fail without failing entire job
-        #- python-version: "3.13-dev"
-        #  experimental: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.1.1
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Get Packages
-      uses: actions/download-artifact@v4.1.1
-      with:
-        name: ${{ needs.package.outputs.artifact-name }}
-        path: dist
-
-    - name: Install dev Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools build wheel
-        # Utility script installs tox as defined in pyproject.toml
-        python -m install_requirement tox --extra dev
-
-    - name: Test
-      id: test
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.${{ matrix.python-version }}"
-      run: tox -e py --installpkg dist/briefcase-*.whl
-
-    - name: Store Coverage Data
-      if: always() && contains('success,failure', steps.test.outcome)
-      uses: actions/upload-artifact@v4.3.0
-      with:
-        name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
-        path: ".coverage.*"
-        if-no-files-found: ignore
-
-    - name: Report Platform Coverage
-      id: coverage
-      if: always() && contains('success,failure', steps.test.outcome)
-      # coverage reporting must use the same Python version used to produce coverage
-      run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
-
-  coverage:
-    name: Project coverage
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    if: always() && contains('success,failure', needs.unit-tests.result)
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.1.1
-      with:
-        fetch-depth: 0
-
-    - name: Setup Python
-      uses: actions/setup-python@v5.0.0
-      with:
-        # Use minimum version of python for coverage to avoid phantom branches
-        # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
-        python-version: "3.8"
-
-    - name: Install dev Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools build wheel
-        # Utility script installs tox as defined in pyproject.toml
-        python -m install_requirement tox --extra dev
-
-    - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v4.1.1
-      with:
-        pattern: coverage-data-*
-        merge-multiple: true
-
-    - name: Platform Coverage Reports
-      id: platform-coverage
-      run: >
-        tox p --parallel-no-spinner -qe
-        coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
-
-    - name: Project Coverage Report
-      id: project-coverage
-      if: always() || contains('success,failure', needs.platform-coverage.result)
-      run: tox -qe coverage-ci-project-html
-
-    - name: Upload Project Coverage HTML Report
-      if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v4.3.0
-      with:
-        name: html-coverage-report-project
-        path: htmlcov
-
-  verify-projects:
-    name: Verify project
-    needs: unit-tests
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
-    with:
-      runner-os: ${{ matrix.runner-os }}
-      framework: ${{ matrix.framework }}
-    strategy:
-      fail-fast: false
-      matrix:
-        framework: [ "toga", "pyside6", "ppb", "pygame" ]
-        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+#  unit-tests:
+#    name: Unit tests
+#    needs: [ pre-commit, towncrier, package ]
+#    runs-on: ${{ matrix.platform }}-latest
+#    continue-on-error: ${{ matrix.experimental }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        platform: [ "macos", "ubuntu", "windows" ]
+#        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+#        include:
+#        - experimental: false
+#        # Allow dev Python to fail without failing entire job
+#        #- python-version: "3.13-dev"
+#        #  experimental: true
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v4.1.1
+#      with:
+#        fetch-depth: 0
+#
+#    - name: Set up Python
+#      uses: actions/setup-python@v5.0.0
+#      with:
+#        python-version: ${{ matrix.python-version }}
+#
+#    - name: Get Packages
+#      uses: actions/download-artifact@v4.1.1
+#      with:
+#        name: ${{ needs.package.outputs.artifact-name }}
+#        path: dist
+#
+#    - name: Install dev Dependencies
+#      run: |
+#        python -m pip install --upgrade pip
+#        python -m pip install --upgrade setuptools build wheel
+#        # Utility script installs tox as defined in pyproject.toml
+#        python -m install_requirement tox --extra dev
+#
+#    - name: Test
+#      id: test
+#      env:
+#        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.${{ matrix.python-version }}"
+#      run: tox -e py --installpkg dist/briefcase-*.whl
+#
+#    - name: Store Coverage Data
+#      if: always() && contains('success,failure', steps.test.outcome)
+#      uses: actions/upload-artifact@v4.3.0
+#      with:
+#        name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
+#        path: ".coverage.*"
+#        if-no-files-found: ignore
+#
+#    - name: Report Platform Coverage
+#      id: coverage
+#      if: always() && contains('success,failure', steps.test.outcome)
+#      # coverage reporting must use the same Python version used to produce coverage
+#      run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
+#
+#  coverage:
+#    name: Project coverage
+#    runs-on: ubuntu-latest
+#    needs: unit-tests
+#    if: always() && contains('success,failure', needs.unit-tests.result)
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v4.1.1
+#      with:
+#        fetch-depth: 0
+#
+#    - name: Setup Python
+#      uses: actions/setup-python@v5.0.0
+#      with:
+#        # Use minimum version of python for coverage to avoid phantom branches
+#        # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
+#        python-version: "3.8"
+#
+#    - name: Install dev Dependencies
+#      run: |
+#        python -m pip install --upgrade pip
+#        python -m pip install --upgrade setuptools build wheel
+#        # Utility script installs tox as defined in pyproject.toml
+#        python -m install_requirement tox --extra dev
+#
+#    - name: Retrieve Coverage Data
+#      uses: actions/download-artifact@v4.1.1
+#      with:
+#        pattern: coverage-data-*
+#        merge-multiple: true
+#
+#    - name: Platform Coverage Reports
+#      id: platform-coverage
+#      run: >
+#        tox p --parallel-no-spinner -qe
+#        coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
+#
+#    - name: Project Coverage Report
+#      id: project-coverage
+#      if: always() || contains('success,failure', needs.platform-coverage.result)
+#      run: tox -qe coverage-ci-project-html
+#
+#    - name: Upload Project Coverage HTML Report
+#      if: always() && steps.project-coverage.outcome == 'failure'
+#      uses: actions/upload-artifact@v4.3.0
+#      with:
+#        name: html-coverage-report-project
+#        path: htmlcov
+#
+#  verify-projects:
+#    name: Verify project
+#    needs: unit-tests
+#    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+#    with:
+#      runner-os: ${{ matrix.runner-os }}
+#      framework: ${{ matrix.framework }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+#        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
 
   verify-apps:
     name: Build app
-    needs: unit-tests
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+#    needs: unit-tests
+    needs: [ pre-commit, towncrier, package ]
+    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@debug-disk-space
     with:
       # This *must* be the version of Python that is the system Python on the
       # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
@@ -174,5 +175,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside6", "ppb", "pygame" ]
-        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+#        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+        framework: [ "toga" ]
+#        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+        runner-os: [ "ubuntu-22.04" ]
