@@ -1378,13 +1378,16 @@ You can also start the emulator manually by running:
                         # Try again in 2 seconds...
                         self.sleep(2)
         except BaseException as e:
-            self.tools.logger.info("Emulator output log", prefix=self.name)
+            self.tools.logger.warning(
+                "Emulator output log for startup failure",
+                prefix=self.name,
+            )
             try:
                 # if the emulator exited, this should return its output immediately
                 self.tools.logger.info(emulator_popen.communicate(timeout=1)[0])
             except subprocess.TimeoutExpired:
                 self.tools.logger.info(
-                    "> Briefcase failed to retrieve emulator output "
+                    "Briefcase failed to retrieve emulator output "
                     "(this is expected if the emulator is running)"
                 )
 

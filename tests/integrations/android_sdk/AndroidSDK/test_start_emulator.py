@@ -426,10 +426,13 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
 @pytest.mark.parametrize(
     "emulator_comm, expected_log",
     [
-        (("This is stdout", "this is stderr"), "Emulator output log\nThis is stdout"),
+        (
+            ("This is stdout", "this is stderr"),
+            "Emulator output log for startup failure\nThis is stdout",
+        ),
         (
             subprocess.TimeoutExpired(cmd="emulator", timeout=1),
-            "Emulator output log\n> Briefcase failed",
+            "Emulator output log for startup failure\nBriefcase failed",
         ),
     ],
 )
