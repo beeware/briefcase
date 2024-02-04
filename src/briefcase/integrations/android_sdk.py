@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 import time
-from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 
@@ -1310,20 +1309,25 @@ In future, you can specify this device by running:
             for arg in map(str, emulator_popen.args)
         )
 
-        error_msg = (
-            "{prologue}"
-            + f"""
+        general_error_msg = f"""
+Review the emulator output above for:
+ - Troubleshooting or resolution steps such as enabling hardware acceleration
+ - Other errors or warnings that may be suggesting the cause of the startup failure
 
-Try starting the emulator manually by running:
+Ensure your Android SDK is up-to-date by running:
+
+    $ briefcase update {AndroidSDK.name}
+
+To review Google's general troubleshooting steps for the emulator, visit:
+
+    https://developer.android.com/studio/run/emulator-troubleshooting
+
+You can also start the emulator manually by running:
 
     $ {emulator_command}
-
-Resolve any problems you discover, then try running your app again. You may
-find this page helpful in diagnosing emulator problems.
-
-    https://developer.android.com/studio/run/emulator-acceleration#accel-vm
 """
-        )
+
+        failed_startup_error_msg = f"{{prologue}}\n{general_error_msg}"
 
         # The boot process happens in 2 phases.
         # First, the emulator appears in the device list. However, it's
@@ -1339,7 +1343,7 @@ find this page helpful in diagnosing emulator problems.
                 while adb is None:
                     if emulator_popen.poll() is not None:
                         raise BriefcaseCommandError(
-                            error_msg.format(
+                            failed_startup_error_msg.format(
                                 prologue="Android emulator was unable to start!"
                             )
                         )
@@ -1370,7 +1374,7 @@ find this page helpful in diagnosing emulator problems.
                     while not adb.has_booted():
                         if emulator_popen.poll() is not None:
                             raise BriefcaseCommandError(
-                                error_msg.format(
+                                failed_startup_error_msg.format(
                                     prologue="Android emulator was unable to boot!"
                                 )
                             )
@@ -1378,19 +1382,32 @@ find this page helpful in diagnosing emulator problems.
                         # Try again in 2 seconds...
                         self.sleep(2)
         except BaseException as e:
-            # if the emulator exited, this should return its output immediately;
-            # if it is still running, this will quickly time out and print nothing.
-            with suppress(subprocess.TimeoutExpired):
+            self.tools.logger.warning(
+                "Emulator output log for startup failure",
+                prefix=self.name,
+            )
+            try:
+                # if the emulator exited, this should return its output immediately
                 self.tools.logger.info(emulator_popen.communicate(timeout=1)[0])
+            except subprocess.TimeoutExpired:
+                self.tools.logger.info(
+                    "Briefcase failed to retrieve emulator output "
+                    "(this is expected if the emulator is running)"
+                )
 
             # Provide troubleshooting steps if user gives up on the emulator starting
             if isinstance(e, KeyboardInterrupt):
-                self.tools.logger.warning()
                 self.tools.logger.warning(
-                    error_msg.format(
-                        prologue="Is the Android emulator not starting up properly?"
-                    )
+                    "Is the Android emulator not starting up properly?",
+                    prefix=self.name,
                 )
+                self.tools.logger.info(
+                    """
+If the emulator opened after pressing CTRL+C, then leave the emulator open and
+run Briefcase again. The running emulator can then be selected from the list.
+"""
+                )
+                self.tools.logger.info(general_error_msg)
 
             raise
 
