@@ -104,7 +104,7 @@ dev = [
     "tox == 4.12.1",
 ]
 docs = [
-    "furo == 2023.9.10",
+    "furo == 2024.1.29",
     "pyenchant == 3.2.2",
     # Sphinx 7.2 deprecated support for Python 3.8
     "sphinx == 7.1.2 ; python_version < '3.9'",
