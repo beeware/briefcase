@@ -42,6 +42,9 @@ jobs:
           name: ${{ needs.ci.outputs.artifact-name }}
           path: dist
 
+      - name: Purge non-release packages
+        run: rm -rf dist/x-*
+
       - name: Install packages
         run: pip install dist/*.whl
 
