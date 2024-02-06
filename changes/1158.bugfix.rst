@@ -1,1 +1,0 @@
-When a custom Briefcase template from a git repository is used to create an app, Briefcase now ensures that git repository is always used.

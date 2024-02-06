@@ -1,1 +1,0 @@
-The download URLs for tools are now verified during tests.

@@ -1,1 +1,0 @@
-The warning for missing ``build_gradle_dependencies`` in pyproject.toml is now printed without the app title prefix.

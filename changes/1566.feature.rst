@@ -1,1 +1,0 @@
-Apps can now specify a primary color (for both light and dark modes), and an accent color. If the platform allows apps to customize color use, these colors will be used to style the app's presentation.

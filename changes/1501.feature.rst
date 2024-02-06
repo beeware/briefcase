@@ -1,1 +1,0 @@
-The verbosity flag, ``-v``, was expanded to support three levels of logging verbosity.

@@ -1,1 +1,0 @@
-The ``-C``/``--config`` option can now be used to override app settings from the command line.

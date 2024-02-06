@@ -1,1 +1,0 @@
-Android apps are now able to customize the libraries included in the app at build time.

@@ -1,1 +1,0 @@
-The build version requirement for ``setuptools`` was bumped from 60 to 67.

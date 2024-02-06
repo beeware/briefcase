@@ -1,1 +1,0 @@
-The Briefcase Automation package was created to facilitate automated testing in CI; for example, starting apps built in CI that can automatically exit.

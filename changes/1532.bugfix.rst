@@ -1,1 +1,0 @@
-The BeeWare icon of Brutus is now used as the runtime icon for new projects created with PyGame.

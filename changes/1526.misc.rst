@@ -1,1 +1,0 @@
-The ``setuptools`` and ``build`` packages are always installed prior to running ``install_requirement.py`` now.

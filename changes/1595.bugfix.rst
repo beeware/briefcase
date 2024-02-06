@@ -1,1 +1,0 @@
-Linux System RPM packaging for openSUSE Tumbleweed no longer errors with ``FileNotFoundError``.

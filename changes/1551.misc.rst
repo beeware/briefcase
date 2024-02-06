@@ -1,1 +1,0 @@
-The Pygame bootstrap now complies with Black.

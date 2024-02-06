@@ -1,1 +1,0 @@
-The use of AppImage as an output format now generates a warning.

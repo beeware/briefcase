@@ -1,1 +1,0 @@
-Support to create new projects using PySide2 has been removed and Briefcase's release testing will no longer explicitly verify compatibility for it.

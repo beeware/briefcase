@@ -1,1 +1,0 @@
-It is now possible to create an Android emulator AVD on Linux for arm64.

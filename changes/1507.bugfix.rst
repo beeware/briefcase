@@ -1,1 +1,0 @@
-The filter for iOS build warnings was improved to catch messages from Xcode 15.0.1.

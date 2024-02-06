@@ -25,11 +25,11 @@ Dockerfile
 dr
 embeddable
 executables
-Freedesktop
 Flathub
 flatpak
 Flatpak
 Flatpaks
+Freedesktop
 Github
 gradle
 Gradle
@@ -63,10 +63,12 @@ px
 Pygame
 Pyodide
 PyScript
+PySide
 pytest
 rst
 runtime
 Runtime
+runtimes
 Runtimes
 sandboxed
 sandboxing
@@ -78,8 +80,8 @@ subprocesses
 tl
 toml
 towncrier
-TTY
 tox
+TTY
 tvOS
 untrusted
 VisualStudio

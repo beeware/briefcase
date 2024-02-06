@@ -1,1 +1,0 @@
-The Toga app source code for new projects now passes Black.

@@ -1,1 +1,0 @@
-App permissions can now be declared as part of an app's configuration.

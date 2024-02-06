@@ -39,6 +39,13 @@ The procedure for cutting a new release is as follows:
 
    to generate the updated release notes.
 
+#. Build the documentation to ensure that the new release notes don't include any
+   spelling errors or markup problems:
+
+   .. code-block:: console
+
+     $ tox -e docs-lint,docs
+
 #. Ensure that there is a version branch for the new Briefcase version in
    every template that Briefcase will use at runtime:
 

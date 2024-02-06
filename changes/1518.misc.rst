@@ -1,1 +1,0 @@
-The docs linting process no longer verifies hyperlinks the Briefcase GitHub repo and the platform support table is now uniform.

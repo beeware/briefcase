@@ -1,1 +1,0 @@
-The version of PursuedPyBear for new projects was bumped from 1.1 to 3.2.0.

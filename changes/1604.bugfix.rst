@@ -1,1 +1,0 @@
-Any ANSI escape sequences or console control codes are now stripped in all output captured in the Briefcase log file.

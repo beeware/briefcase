@@ -1,1 +1,0 @@
-The common options available to every command have now been documented.

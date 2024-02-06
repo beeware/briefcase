@@ -1,1 +1,0 @@
-The Java JDK was upgraded from 17.0.8.1+1 to 17.0.10+7. Run ``briefcase upgrade java`` to upgrade existing Briefcase installations.

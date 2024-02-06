@@ -1,1 +1,0 @@
-When the Android emulator fails to start up properly, users are now presented with additional resources to help resolve any issues.

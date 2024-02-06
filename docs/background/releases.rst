@@ -4,6 +4,68 @@ Release History
 
 .. towncrier release notes start
 
+0.3.17 (2024-02-06)
+===================
+
+Features
+--------
+
+* Android apps are now able to customize the libraries included in the app at build time. (`#485 <https://github.com/beeware/briefcase/issues/485>`__)
+* App permissions can now be declared as part of an app's configuration. (`#547 <https://github.com/beeware/briefcase/issues/547>`__)
+* The ``-C``/``--config`` option can now be used to override app settings from the command line. (`#1115 <https://github.com/beeware/briefcase/issues/1115>`__)
+* The verbosity flag, ``-v``, was expanded to support three levels of logging verbosity. (`#1501 <https://github.com/beeware/briefcase/issues/1501>`__)
+* Briefcase now supports GUI bootstrap plugins to customize how new projects are created. (`#1524 <https://github.com/beeware/briefcase/issues/1524>`__)
+* GitPython's debug logging is now included in deep debug output. (`#1529 <https://github.com/beeware/briefcase/issues/1529>`__)
+* RCEdit v2.0.0 is now used to build Windows apps. Run ``briefcase upgrade`` to use this latest version. (`#1543 <https://github.com/beeware/briefcase/issues/1543>`__)
+* The Flatpak runtimes for new projects were updated. ``org.freedesktop.Platform`` will now default to 23.08; ``org.gnome.Platform`` will now default to 45; and ``org.kde.Platform`` will now default to 6.6. (`#1545 <https://github.com/beeware/briefcase/issues/1545>`__)
+* When creating new projects with the ``briefcase new`` command, project configuration overrides can be specified via the ``-Q`` command line argument. For instance, a specific license can be specified with ``-Q "license=MIT license"``. (`#1552 <https://github.com/beeware/briefcase/issues/1552>`__)
+* New virtual devices for the Android emulator are created using the Pixel 7 Pro skin. (`#1554 <https://github.com/beeware/briefcase/issues/1554>`__)
+* The web server for running static web projects now falls back to a system allocated port if the requested port is already in use. (`#1561 <https://github.com/beeware/briefcase/issues/1561>`__)
+* Flatpaks are now created with permissions to access the GPU and sound devices. (`#1563 <https://github.com/beeware/briefcase/issues/1563>`__)
+* AppImages can now be built for the ARM architecture. (`#1564 <https://github.com/beeware/briefcase/issues/1564>`__)
+* Apps can now specify a primary color (for both light and dark modes), and an accent color. If the platform allows apps to customize color use, these colors will be used to style the app's presentation. (`#1566 <https://github.com/beeware/briefcase/issues/1566>`__)
+* The version of PursuedPyBear for new projects was bumped from 1.1 to 3.2.0. (`#1592 <https://github.com/beeware/briefcase/issues/1592>`__)
+* Python 3.12 is now supported on Android. (`#1596 <https://github.com/beeware/briefcase/issues/1596>`__)
+* Android apps can now specify the base theme used to style the application. (`#1610 <https://github.com/beeware/briefcase/issues/1610>`__)
+* The Java JDK was upgraded from 17.0.8.1+1 to 17.0.10+7. Run ``briefcase upgrade java`` to upgrade existing Briefcase installations. (`#1611 <https://github.com/beeware/briefcase/issues/1611>`__)
+* When the Android emulator fails to start up properly, users are now presented with additional resources to help resolve any issues. (`#1630 <https://github.com/beeware/briefcase/issues/1630>`__)
+
+
+Bugfixes
+--------
+
+* When a custom Briefcase template from a git repository is used to create an app, Briefcase now ensures that git repository is always used. (`#1158 <https://github.com/beeware/briefcase/issues/1158>`__)
+* The filter for iOS build warnings was improved to catch messages from Xcode 15.0.1. (`#1507 <https://github.com/beeware/briefcase/issues/1507>`__)
+* When merging dependencies on macOS, file permissions are now preserved. (`#1510 <https://github.com/beeware/briefcase/issues/1510>`__)
+* ``flatpak-builder`` 1.3+ can now be correctly identified. (`#1513 <https://github.com/beeware/briefcase/issues/1513>`__)
+* The BeeWare icon of Brutus is now used as the runtime icon for new projects created with PyGame. (`#1532 <https://github.com/beeware/briefcase/issues/1532>`__)
+* Linux System RPM packaging for openSUSE Tumbleweed no longer errors with ``FileNotFoundError``. (`#1595 <https://github.com/beeware/briefcase/issues/1595>`__)
+* Any ANSI escape sequences or console control codes are now stripped in all output captured in the Briefcase log file. (`#1604 <https://github.com/beeware/briefcase/issues/1604>`__)
+* The detection of physical Android devices on macOS was made more resilient. (`#1627 <https://github.com/beeware/briefcase/issues/1627>`__)
+
+
+Backward Incompatible Changes
+-----------------------------
+
+* The use of AppImage as an output format now generates a warning. (`#1500 <https://github.com/beeware/briefcase/issues/1500>`__)
+* Support for creating new projects using PySide2 has been removed. Briefcase's release testing will no longer explicitly verify compatibility with PySide2. (`#1524 <https://github.com/beeware/briefcase/issues/1524>`__)
+* The Flatpak build process no longer strips binaries included in third-party (e.g. PyPI) packages that are bundled with the app. (`#1540 <https://github.com/beeware/briefcase/issues/1540>`__)
+* New projects will now use ``manylinux_2_28`` instead of ``manylinux2014`` to create AppImages in Docker. (`#1564 <https://github.com/beeware/briefcase/issues/1564>`__)
+* It is highly recommended that Android applications add a definition for ``build_gradle_dependencies`` to their app configuration. A default value will be used if this option is not explicitly provided. Refer to `the Android documentation <https://briefcase.readthedocs.io/en/latest/reference/platforms/android/gradle.html#build-gradle-dependencies>`__ for the default value that will be used. (`#1610 <https://github.com/beeware/briefcase/issues/1610>`__)
+
+
+Documentation
+-------------
+
+* The common options available to every command have now been documented. (`#1517 <https://github.com/beeware/briefcase/issues/1517>`__)
+
+
+Misc
+----
+
+* `#1504 <https://github.com/beeware/briefcase/issues/1504>`__, `#1505 <https://github.com/beeware/briefcase/issues/1505>`__, `#1506 <https://github.com/beeware/briefcase/issues/1506>`__, `#1515 <https://github.com/beeware/briefcase/issues/1515>`__, `#1516 <https://github.com/beeware/briefcase/issues/1516>`__, `#1518 <https://github.com/beeware/briefcase/issues/1518>`__, `#1519 <https://github.com/beeware/briefcase/issues/1519>`__, `#1526 <https://github.com/beeware/briefcase/issues/1526>`__, `#1527 <https://github.com/beeware/briefcase/issues/1527>`__, `#1533 <https://github.com/beeware/briefcase/issues/1533>`__, `#1534 <https://github.com/beeware/briefcase/issues/1534>`__, `#1535 <https://github.com/beeware/briefcase/issues/1535>`__, `#1536 <https://github.com/beeware/briefcase/issues/1536>`__, `#1538 <https://github.com/beeware/briefcase/issues/1538>`__, `#1541 <https://github.com/beeware/briefcase/issues/1541>`__, `#1548 <https://github.com/beeware/briefcase/issues/1548>`__, `#1549 <https://github.com/beeware/briefcase/issues/1549>`__, `#1550 <https://github.com/beeware/briefcase/issues/1550>`__, `#1551 <https://github.com/beeware/briefcase/issues/1551>`__, `#1555 <https://github.com/beeware/briefcase/issues/1555>`__, `#1556 <https://github.com/beeware/briefcase/issues/1556>`__, `#1557 <https://github.com/beeware/briefcase/issues/1557>`__, `#1560 <https://github.com/beeware/briefcase/issues/1560>`__, `#1562 <https://github.com/beeware/briefcase/issues/1562>`__, `#1567 <https://github.com/beeware/briefcase/issues/1567>`__, `#1568 <https://github.com/beeware/briefcase/issues/1568>`__, `#1569 <https://github.com/beeware/briefcase/issues/1569>`__, `#1571 <https://github.com/beeware/briefcase/issues/1571>`__, `#1575 <https://github.com/beeware/briefcase/issues/1575>`__, `#1576 <https://github.com/beeware/briefcase/issues/1576>`__, `#1579 <https://github.com/beeware/briefcase/issues/1579>`__, `#1582 <https://github.com/beeware/briefcase/issues/1582>`__, `#1585 <https://github.com/beeware/briefcase/issues/1585>`__, `#1586 <https://github.com/beeware/briefcase/issues/1586>`__, `#1589 <https://github.com/beeware/briefcase/issues/1589>`__, `#1590 <https://github.com/beeware/briefcase/issues/1590>`__, `#1597 <https://github.com/beeware/briefcase/issues/1597>`__, `#1606 <https://github.com/beeware/briefcase/issues/1606>`__, `#1607 <https://github.com/beeware/briefcase/issues/1607>`__, `#1613 <https://github.com/beeware/briefcase/issues/1613>`__, `#1614 <https://github.com/beeware/briefcase/issues/1614>`__, `#1615 <https://github.com/beeware/briefcase/issues/1615>`__, `#1618 <https://github.com/beeware/briefcase/issues/1618>`__, `#1621 <https://github.com/beeware/briefcase/issues/1621>`__, `#1622 <https://github.com/beeware/briefcase/issues/1622>`__, `#1623 <https://github.com/beeware/briefcase/issues/1623>`__, `#1624 <https://github.com/beeware/briefcase/issues/1624>`__, `#1628 <https://github.com/beeware/briefcase/issues/1628>`__, `#1632 <https://github.com/beeware/briefcase/issues/1632>`__, `#1633 <https://github.com/beeware/briefcase/issues/1633>`__
+
+
 0.3.16 (2023-10-20)
 ===================
 

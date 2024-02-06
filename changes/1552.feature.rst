@@ -1,1 +1,0 @@
-When creating new projects with the ``briefcase new`` command, project configuration overrides can be specified via the ``-Q`` command line argument. For instance, a specific license can be specified with ``-Q "license=MIT license"``.

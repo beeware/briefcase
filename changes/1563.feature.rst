@@ -1,1 +1,0 @@
-Flatpaks are now created with permissions to access the GPU and sound devices.
