@@ -55,6 +55,7 @@ def my_app() -> AppConfig:
         description="This is a simple app",
         sources=["path/to/src/myapp", "other/stuff"],
         system_requires=["things==1.2", "stuff>=3.4"],
+        system_runtime_requires=["runtime_things==1.42", "stuff>=3.4"],
     )
 
 
@@ -90,6 +91,7 @@ def mock_docker_app_context(mock_tools, my_app, tmp_path) -> DockerAppContext:
         python_version="3.X",
     )
 
+    # Allow for asserting _dockerize_args() calls but still run logic
     mock_tools[my_app].app_context._dockerize_args = MagicMock(
         wraps=mock_tools[my_app].app_context._dockerize_args
     )

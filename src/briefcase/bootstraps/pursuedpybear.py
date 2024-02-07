@@ -77,11 +77,6 @@ requires = [
     def pyproject_table_linux_system_debian(self):
         return """
 system_requires = [
-    "libsdl2-2.0-0",
-    "libsdl2-mixer-2.0-0",
-    "libsdl2-image-2.0-0",
-    "libsdl2-gfx-1.0-0",
-    "libsdl2-ttf-2.0-0",
 ]
 
 system_runtime_requires = [
@@ -96,12 +91,6 @@ system_runtime_requires = [
     def pyproject_table_linux_system_rhel(self):
         return """
 system_requires = [
-    "SDL2",
-    "SDL2_ttf",
-    "SDL2_image",
-    "SDL2_gfx",
-    "SDL2_mixer",
-    "libmodplug",
 ]
 
 system_runtime_requires = [
@@ -117,12 +106,6 @@ system_runtime_requires = [
     def pyproject_table_linux_system_suse(self):
         return """
 system_requires = [
-    "SDL2",
-    "SDL2_gfx",
-    "SDL2_ttf",
-    "SDL2_image",
-    "SDL2_mixer",
-    "libmodplug1",
 ]
 
 system_runtime_requires = [
@@ -138,11 +121,6 @@ system_runtime_requires = [
     def pyproject_table_linux_system_arch(self):
         return """
 system_requires = [
-    "sdl2",
-    "sdl2_ttf",
-    "sdl2_image",
-    "sdl2_gfx",
-    "sdl2_mixer",
 ]
 
 system_runtime_requires = [

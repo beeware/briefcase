@@ -868,6 +868,11 @@ class DockerAppContext(Tool):
             prefix=self.app.app_name,
         )
         with self.tools.input.wait_bar("Building Docker image..."):
+            # Install requirements for both building *and* running the app
+            # (ensure a copy of system_requires is used to avoid modification)
+            system_requires = getattr(self.app, "system_requires", []).copy()
+            system_requires.extend(getattr(self.app, "system_runtime_requires", []))
+
             with self.tools.logger.context("Docker"):
                 try:
                     self.tools.subprocess.run(
@@ -881,7 +886,7 @@ class DockerAppContext(Tool):
                             "--file",
                             dockerfile_path,
                             "--build-arg",
-                            f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
+                            f"SYSTEM_REQUIRES={' '.join(system_requires)}",
                             "--build-arg",
                             f"HOST_UID={self.tools.os.getuid()}",
                             "--build-arg",
