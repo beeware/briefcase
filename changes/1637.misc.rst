@@ -1,0 +1,1 @@
+The installation guide in the README was clarified.
