@@ -45,6 +45,19 @@ If you want to see Briefcase in action, try the `BeeWare tutorial
 <https://beeware.readthedocs.io>`__. That tutorial walks you through the
 process of creating and packaging a new application with Briefcase.
 
+Installation
+----------
+
+To install Briefcase, run the following::
+
+Using pip:
+
+``pip install briefcase``
+
+Using pipx:
+
+``pipx install briefcase``
+
 Documentation
 -------------
 
