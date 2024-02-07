@@ -48,15 +48,11 @@ process of creating and packaging a new application with Briefcase.
 Installation
 ----------
 
-To install Briefcase, run the following::
+To install briefcase in your project's virtual environment, run the following::
 
-Using pip:
+   $ python -m pip install briefcase
 
-``pip install briefcase``
-
-Using pipx:
-
-``pipx install briefcase``
+It is important that you use ``python -m pip``, rather than a bare ``pip``. Briefcase needs to ensure that it has an up-to-date version of ``pip`` and ``setuptools``, and a bare invocation of ``pip`` can’t self-update. If you want to know more, `Brett Cannon has a detailed blog post about the issue <https://snarky.ca/why-you-should-use-python-m-pip/>`__.
 
 Documentation
 -------------
