@@ -41,18 +41,16 @@ application. You can package projects for:
 
 Support for AppleTV, watchOS, and wearOS deployments is planned.
 
-If you want to see Briefcase in action, try the `BeeWare tutorial
-<https://beeware.readthedocs.io>`__. That tutorial walks you through the
-process of creating and packaging a new application with Briefcase.
+Getting started
+---------------
 
-Installation
-----------
-
-To install briefcase in your project's virtual environment, run the following::
+To install Briefcase, run::
 
    $ python -m pip install briefcase
 
-It is important that you use ``python -m pip``, rather than a bare ``pip``. Briefcase needs to ensure that it has an up-to-date version of ``pip`` and ``setuptools``, and a bare invocation of ``pip`` can’t self-update. If you want to know more, `Brett Cannon has a detailed blog post about the issue <https://snarky.ca/why-you-should-use-python-m-pip/>`__.
+If you would like a full introduction to using Briefcase, try the `BeeWare tutorial
+<https://docs.beeware.io>`__. This tutorial walks you through the process of creating
+and packaging a new application with Briefcase.
 
 Documentation
 -------------
