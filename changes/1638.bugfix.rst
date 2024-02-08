@@ -1,0 +1,1 @@
+Fix an typo in rpm-build's package name, from ``rpmbuild`` to ``rpm-build``, so that ``briefcase package`` will prompt the correct ``sudo dnf install rpm-build`` if not installed.
