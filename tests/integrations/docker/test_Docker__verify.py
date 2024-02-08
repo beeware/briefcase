@@ -295,7 +295,10 @@ def test_docker_image_hint(mock_tools):
     mock_tools.subprocess.check_output.assert_has_calls(
         DOCKER_VERIFICATION_CALLS
         + [
-            call(["docker", "images", "-q", "myimage:tagtorulethemall"]),
+            call(
+                ["docker", "images", "-q", "myimage:tagtorulethemall"],
+                env={"DOCKER_CLI_HINTS": "false"},
+            ),
             call(
                 args=[
                     "docker",
@@ -307,6 +310,7 @@ def test_docker_image_hint(mock_tools):
                     "touch",
                     "/host_write_test/container_write_test",
                 ],
+                env={"DOCKER_CLI_HINTS": "false"},
             ),
             call(
                 args=[
@@ -320,6 +324,7 @@ def test_docker_image_hint(mock_tools):
                     "-f",
                     "/host_write_test/container_write_test",
                 ],
+                env={"DOCKER_CLI_HINTS": "false"},
             ),
         ]
     )

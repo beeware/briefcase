@@ -347,20 +347,23 @@ Delete this file and run Briefcase again.
         :param image_tag: Image name/tag to pull if not locally cached
         """
         image_id = self.tools.subprocess.check_output(
-            ["docker", "images", "-q", image_tag]
+            ["docker", "images", "-q", image_tag],
+            **self.final_kwargs(),
         ).strip()
 
         if not image_id:
             self.tools.logger.info(
                 f"Downloading Docker base image for {image_tag}...",
-                prefix="Docker",
+                prefix=self.full_name,
             )
             try:
                 # disable streaming so image download progress bar is shown
                 self.tools.subprocess.run(
                     ["docker", "pull", image_tag],
-                    check=True,
-                    stream_output=False,
+                    **self.final_kwargs(
+                        check=True,
+                        stream_output=False,
+                    ),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -387,6 +390,16 @@ Delete this file and run Briefcase again.
         return self.tools.subprocess.check_output(
             **self.dockerize_args(args, image_tag=image_tag, **kwargs)
         )
+
+    def final_kwargs(self, **kwargs) -> dict[str, ...]:
+        """Augments the keyword arguments for subprocess to invoke Docker.
+
+        These changes should affect the way subprocess runs Docker; changes for how a
+        command runs inside a Docker container should occur in dockerize_args().
+        """
+        # Disable the hints/recommendations that Docker prints in the console
+        kwargs.setdefault("env", {})["DOCKER_CLI_HINTS"] = "false"
+        return kwargs
 
     def dockerize_args(
         self,
@@ -462,7 +475,7 @@ Delete this file and run Briefcase again.
 
         subprocess_kwargs["args"] = docker_cmdline
 
-        return subprocess_kwargs
+        return self.final_kwargs(**subprocess_kwargs)
 
     def dockerize_path(
         self,

@@ -12,7 +12,10 @@ def test_dockerize_simple_call(mock_tools):
         image_tag="best-image",
     )
 
-    assert args == dict(args=["docker", "run", "--rm", "best-image", "hello", "world"])
+    assert args == dict(
+        args=["docker", "run", "--rm", "best-image", "hello", "world"],
+        env={"DOCKER_CLI_HINTS": "false"},
+    )
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -25,7 +28,8 @@ def test_dockerize_interactive(mock_tools):
     )
 
     assert args == dict(
-        args=["docker", "run", "--rm", "-it", "best-image", "hello", "world"]
+        args=["docker", "run", "--rm", "-it", "best-image", "hello", "world"],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -53,7 +57,8 @@ def test_dockerize_mounts(mock_tools):
             "best-image",
             "hello",
             "world",
-        ]
+        ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -80,7 +85,8 @@ def test_dockerize_cwd(mock_tools, cwd):
             "best-image",
             "hello",
             "world",
-        ]
+        ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -120,7 +126,8 @@ def test_dockerize_env(mock_tools):
             "best-image",
             "hello",
             "world",
-        ]
+        ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -151,7 +158,8 @@ def test_dockerize_add_hosts(mock_tools):
             "best-image",
             "hello",
             "world",
-        ]
+        ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -208,7 +216,8 @@ DOCKERIZE_TEST_PARAMS = [
                 "best-image",
                 "hello",
                 "world",
-            ]
+            ],
+            env={"DOCKER_CLI_HINTS": "false"},
         ),
     )
 ]

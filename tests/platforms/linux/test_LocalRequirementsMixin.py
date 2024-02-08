@@ -194,6 +194,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
         ],
         check=True,
         encoding="UTF-8",
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
     # The local requirements path exists, but is empty
@@ -374,6 +375,7 @@ def test_install_app_requirements_with_locals(
         ],
         check=True,
         encoding="UTF-8",
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
     # The local requirements path exists, and contains the compiled sdist, the

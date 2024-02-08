@@ -23,6 +23,7 @@ def test_dockerize_args(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -48,6 +49,7 @@ def test_dockerize_args_sys_executable(mock_tools, my_app, tmp_path):
             "-m",
             "pip",
         ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -80,6 +82,7 @@ def test_dockerize_args_mounts(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -114,6 +117,7 @@ def test_dockerize_args_mounts_path(mock_tools, my_app, tmp_path):
             "world",
             "/container/second/bin",
         ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -144,6 +148,7 @@ def test_dockerize_args_cwd(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -180,6 +185,7 @@ def test_dockerize_args_arg_and_env(mock_tools, my_app, tmp_path):
         ],
         check=True,
         steam_output=True,
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 
@@ -223,4 +229,5 @@ def test_dockerize_args_path_arg_and_env(mock_tools, my_app, tmp_path):
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
+        env={"DOCKER_CLI_HINTS": "false"},
     )

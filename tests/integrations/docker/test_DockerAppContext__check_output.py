@@ -20,7 +20,9 @@ def test_simple_call(mock_tools, my_app, tmp_path, sub_check_output_kw, capsys):
         ["hello", "world"]
     )
     mock_tools.subprocess._subprocess.check_output.assert_called_with(
-        ANY, **sub_check_output_kw
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_check_output_kw,
     )
     assert capsys.readouterr().out == ""
 
@@ -48,6 +50,7 @@ def test_call_with_extra_kwargs(mock_tools, my_app, tmp_path, capsys):
         stderr=subprocess.STDOUT,
         text=True,
         errors="backslashreplace",
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
     )
     assert capsys.readouterr().out == ""
 
@@ -71,6 +74,8 @@ def test_simple_verbose_call(
         ["hello", "world"]
     )
     mock_tools.subprocess._subprocess.check_output.assert_called_once_with(
-        ANY, **sub_check_output_kw
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_check_output_kw,
     )
     assert ">>> Running Command:\n" in capsys.readouterr().out

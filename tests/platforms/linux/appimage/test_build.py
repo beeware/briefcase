@@ -446,6 +446,10 @@ def test_build_appimage_in_docker(
             "--deploy-deps-only",
             "/app/First App.AppDir/usr/app_packages/secondlib",
         ],
+        env={
+            "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
+            "DOCKER_CLI_HINTS": "false",
+        },
         **sub_stream_kw,
     )
     # Binary is marked executable
@@ -580,6 +584,10 @@ def test_build_appimage_with_plugins_in_docker(
             "--plugin",
             "something",
         ],
+        env={
+            "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere",
+            "DOCKER_CLI_HINTS": "false",
+        },
         **sub_stream_kw,
     )
     # Local plugin marked executable

@@ -19,7 +19,11 @@ def test_simple_call(mock_tools, my_app, tmp_path, sub_kw, capsys):
     mock_tools[my_app].app_context._dockerize_args.assert_called_once_with(
         ["hello", "world"]
     )
-    mock_tools.subprocess._subprocess.Popen.assert_called_once_with(ANY, **sub_kw)
+    mock_tools.subprocess._subprocess.Popen.assert_called_once_with(
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_kw,
+    )
     assert capsys.readouterr().out == ""
 
 
@@ -45,6 +49,7 @@ def test_call_with_extra_kwargs(mock_tools, my_app, tmp_path, capsys):
         encoding="ISO-42",
         text=True,
         errors="backslashreplace",
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
     )
     assert capsys.readouterr().out == ""
 
@@ -61,5 +66,9 @@ def test_simple_verbose_call(mock_tools, my_app, tmp_path, sub_kw, capsys):
     mock_tools[my_app].app_context._dockerize_args.assert_called_once_with(
         ["hello", "world"]
     )
-    mock_tools.subprocess._subprocess.Popen.assert_called_once_with(ANY, **sub_kw)
+    mock_tools.subprocess._subprocess.Popen.assert_called_once_with(
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_kw,
+    )
     assert ">>> Running Command:\n" in capsys.readouterr().out

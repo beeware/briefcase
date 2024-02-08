@@ -69,6 +69,8 @@ def mock_docker(mock_tools, monkeypatch) -> Docker:
 
     mock_tools.docker = Docker(mock_tools)
 
+    mock_tools.os.environ = {"PROCESS_ENV_VAR": "VALUE"}
+
     # Reset the mock so that the user mapping calls don't appear in test results
     mock_tools.subprocess._subprocess.check_output.reset_mock()
 
@@ -111,7 +113,10 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list[call]:
         MagicMock(return_value=tmp_path / "build/mock_write_test"),
     )
     return [
-        call(["docker", "images", "-q", "alpine"]),
+        call(
+            ["docker", "images", "-q", "alpine"],
+            env={"DOCKER_CLI_HINTS": "false"},
+        ),
         call(
             args=[
                 "docker",
@@ -123,6 +128,7 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list[call]:
                 "touch",
                 "/host_write_test/mock_write_test",
             ],
+            env={"DOCKER_CLI_HINTS": "false"},
         ),
         call(
             args=[
@@ -136,5 +142,6 @@ def user_mapping_run_calls(tmp_path, monkeypatch) -> list[call]:
                 "-f",
                 "/host_write_test/mock_write_test",
             ],
+            env={"DOCKER_CLI_HINTS": "false"},
         ),
     ]
