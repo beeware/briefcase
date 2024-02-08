@@ -504,6 +504,8 @@ Delete this file and run Briefcase again.
         through a Docker-provided mapping of the host's network interface to the spoofed
         display that finally proxies those commands to the actual display.
 
+        Full docs: https://briefcase.readthedocs.io/en/stable/how-to/internal/x11passthrough.html
+
         :param subprocess_kwargs: Existing keywords args from the caller
         :returns: augmented keyword args for the call to subprocess
         """
