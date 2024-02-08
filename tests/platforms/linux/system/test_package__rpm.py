@@ -99,7 +99,7 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
     [
         (
             "rhel",
-            "Can't find the rpm-build tools. Try running `sudo dnf install rpmbuild`.",
+            "Can't find the rpm-build tools. Try running `sudo dnf install rpm-build`.",
         ),
         (None, "Can't find the rpmbuild tool. Install this first to package the rpm."),
     ],
