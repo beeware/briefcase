@@ -1,0 +1,1 @@
+The hyperlink to the documentation in the README was corrected.
