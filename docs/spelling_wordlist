@@ -4,6 +4,7 @@ amongst
 appimage
 artefact
 artefacts
+authorising
 autodetect
 backend
 backends
@@ -20,7 +21,6 @@ DBus
 dev
 dialogs
 distributable
-distros
 Django
 dmg
 Dockerfile

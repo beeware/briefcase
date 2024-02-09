@@ -529,7 +529,7 @@ Delete this file and run Briefcase again.
                     """\
 An X11 authentication database could not be created for the display.
 
-Briefcase will proceed but if access to the display is rejected, this may be why.
+Briefcase will proceed, but if access to the display is rejected, this may be why.
 """
                 )
             else:

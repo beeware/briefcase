@@ -2,21 +2,20 @@
 Docker X11 Passthrough
 ======================
 
-The ability to run apps targeting other Linux distributions was added in
-`beeware/briefcase#1603 <https://github.com/beeware/briefcase/pull/1603>`__.
-This how-to explains the details of exposing the host environment to the Docker
-container in which the app runs.
+Briefcase can use Docker to build apps for Linux distributions other than the
+distribution you're currently using. Docker can also be used to *run* the app
+on the foreign distribution, exporting the graphical aspects of the app to your
+local display. This document describes how to configure your system to do this.
 
 X Window System Background
 --------------------------
 
-Nearly all modern Linux distributions use `Version 11
-<https://www.x.org/releases/X11R7.7/doc/xproto/x11protocol.html>`__ of the X
-Window System Protocol (X11) as the foundation for their graphical displays.
-Notably, though, `Wayland <https://wayland.freedesktop.org/>`__ is gaining
-traction as the successor to X11. Due to reasons of entrenchment, Wayland will
-likely continue providing their X11 compatibility layer to support X
-applications well in to the future.
+Linux distributions use either the `X Window System <https://www.x.org/>`_
+(sometimes called X or X11) or `Wayland <https://wayland.freedesktop.org/>`__
+to manage their graphical displays. X11 is the older of the two; Wayland
+maintains compatibility with the `X11 protocol
+<https://www.x.org/releases/X11R7.7/doc/xproto/x11protocol.html>`__ for
+backwards compatibility.
 
 The X11 protocol operates in a client/server framework; any application that
 wishes to display a window or receive user input will send and receive commands
@@ -35,12 +34,12 @@ for ``DISPLAY`` is ``:0`` for many installations.
 While security is relatively weak for X11, there are basic facilities to
 mitigate unauthenticated access. The ``XAUTHORITY`` environment variable can
 specify a file path to an ``xauth`` database; if ``XAUTHORITY`` is not set,
-there will normally be a system default file path configured foe each user. The
-``xauth`` database, itself, is protected by file system access controls and
-will contain "cookies" for individual displays that assigned by the X server
-for clients to use to facilitate authentication.
+there will normally be a system default file path configured for each user. The
+``xauth`` database itself is protected by file system access controls and
+will contain "cookies" for individual displays that are assigned by the X
+server for clients to use to facilitate authentication.
 
-An example ``xauth`` database:
+An ``xauth`` database authorising a host named ``jupiter`` might look like:
 
 .. code-block:: console
 
@@ -49,17 +48,17 @@ An example ``xauth`` database:
    #ffff#6a757069746572#:  MIT-MAGIC-COOKIE-1  9e9a67185b1fdc0c46e00dc400559873
 
 Along with cookie-based authentication, it is also possible to add entities to
-an allowlist for a display. For instance, some distros are configured to allow
-any process owned by the logged in user access to the display. This is
+an allowlist for a display. For instance, some distributions are configured to
+allow any process owned by the logged in user access to the display. This is
 configured by ``xhost``.
 
-Example ``xhost`` configuration:
+An ``xhost`` configuration authorising a user named ``brutus`` might look like:
 
 .. code-block:: console
 
   $ xhost
   access control enabled, only authorized clients can connect
-  SI:localuser:russell
+  SI:localuser:brutus
 
 X Operation
 ~~~~~~~~~~~
@@ -81,9 +80,9 @@ the number of the DISPLAY they are connected to; so, the file for Display 0 is
 Along with a UNIX socket connection, X servers can also listen on a TCP socket
 on the machine's network interfaces. However, since a network connection can
 easily be reached by other machines, listening on a TCP socket is normally
-disabled on most distros. That said, the X11 standard reserves port numbers
-starting at port 6000 for X displays. Therefore, Display 0 is available at port
-6000 while Display 99 would be available at port 6099 and so on.
+disabled on most Linux distributions. That said, the X11 standard reserves port
+numbers starting at port 6000 for X displays. Therefore, Display 0 is available
+at port 6000 while Display 99 would be available at port 6099 and so on.
 
 Docker
 ------
@@ -136,7 +135,7 @@ arbitrary UNIX sockets either. Therefore, attempting to bind mount
 ``/tmp/.X11-unix/X0``, for instance, in to a Docker Desktop container will not
 allow processes inside the container to successfully communicate with the
 socket. (The Docker team has added support to pass specific sockets such as the
-socket Docker, itself, uses as well as the SSH agent socket; but exposing
+socket Docker itself uses, as well as the SSH agent socket; but exposing
 arbitrary sockets has been deemed out of scope for now.)
 
 Therefore, since it is not possible to expose a socket for an X display to a
@@ -221,7 +220,7 @@ Since the proxy creates a spoofed display, a new ``xauth`` database needs to be
 created for the spoofed display using the authentication afforded to the user
 for the current display.
 
-Steps to create new database:
+To create a new database, you need to:
  - Extract the cookie for the current display
  - Create a new database file
  - Add an entry for the spoofed display using the extracted cookie to the new
