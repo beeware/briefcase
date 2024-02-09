@@ -1,0 +1,1 @@
+When Briefcase can't find ``rpmbuild` on an RPM-based system, the message giving install instructions now uses the correct package name.

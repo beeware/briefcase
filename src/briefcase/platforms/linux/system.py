@@ -852,7 +852,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
         """Verify that the local environment contains the packaging tools."""
         tool_name, executable_name, package_name = {
             "deb": ("dpkg", "dpkg-deb", "dpkg-dev"),
-            "rpm": ("rpm-build", "rpmbuild", "rpmbuild"),
+            "rpm": ("rpm-build", "rpmbuild", "rpm-build"),
             "pkg": ("makepkg", "makepkg", "pacman"),
         }[app.packaging_format]
 
