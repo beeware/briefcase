@@ -48,7 +48,8 @@ Use Briefcase to build a release bundle for your application:
 
 This will result in an Android App Bundle file being generated. An `Android App
 Bundle <https://developer.android.com/guide/app-bundle>`__ is a publishing
-format that includes all your app’s compiled code and resources.
+format that includes all your app’s compiled code and resources. 
+To generate a release APK instead of an AAB, you can add the `-p apk` option.
 
 .. admonition:: AAB and APK
 
