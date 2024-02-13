@@ -39,7 +39,7 @@ there will normally be a system default file path configured for each user. The
 will contain "cookies" for individual displays that are assigned by the X
 server for clients to use to facilitate authentication.
 
-An ``xauth`` database authorising a host named ``jupiter`` might look like:
+An ``xauth`` database authorizing a host named ``jupiter`` might look like:
 
 .. code-block:: console
 
@@ -52,7 +52,7 @@ an allowlist for a display. For instance, some distributions are configured to
 allow any process owned by the logged in user access to the display. This is
 configured by ``xhost``.
 
-An ``xhost`` configuration authorising a user named ``brutus`` might look like:
+An ``xhost`` configuration authorizing a user named ``brutus`` might look like:
 
 .. code-block:: console
 
@@ -97,9 +97,10 @@ An example of a well-published method to accomplish this:
   $ docker run --rm -it --net host --env DISPLAY ubuntu xeyes
 
 This method assumes:
- - the user in the container is ``root`` or its ID matches the host user
- - ``xhost`` is configured to allow any connections from the user
- - the X server is running an abstract socket for the display
+
+- the user in the container is ``root`` or its ID matches the host user
+- ``xhost`` is configured to allow any connections from the user
+- the X server is running an abstract socket for the display
 
 By virtue of how access control is managed for abstract sockets, the
 ``--net host`` configuration allows access to the abstract socket for the
@@ -221,11 +222,14 @@ created for the spoofed display using the authentication afforded to the user
 for the current display.
 
 To create a new database, you need to:
- - Extract the cookie for the current display
- - Create a new database file
- - Add an entry for the spoofed display using the extracted cookie to the new
-   database
- - Rewrite the hostname of the entry that was just created to be "FamilyWild"
+
+- Extract the cookie for the current display
+- Create a new database file
+- Add an entry for the spoofed display using the extracted cookie to the new
+  database
+- Rewrite the hostname of the entry that was just created to be "FamilyWild" (a name
+  `reserved by the Xauth specification to match all displays
+  <https://www.x.org/archive/current/doc/man/man7/Xsecurity.7.xhtml>`__)
 
 This new ``xauth`` database file is set in the ``XAUTHORITY`` environment
 variable for the container so any X connections use it.
