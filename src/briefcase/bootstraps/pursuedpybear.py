@@ -121,11 +121,6 @@ system_runtime_requires = [
     def pyproject_table_linux_system_arch(self):
         return """
 system_requires = [
-    "sdl2",
-    "sdl2_ttf",
-    "sdl2_image",
-    "sdl2_gfx",
-    "sdl2_mixer",
 ]
 
 system_runtime_requires = [

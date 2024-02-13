@@ -9,7 +9,7 @@ import pytest
 from briefcase.commands import CreateCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.docker import DockerAppContext
+from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux import LocalRequirementsMixin
 
@@ -61,10 +61,15 @@ def no_docker_create_command(first_app_config, tmp_path):
 
 
 @pytest.fixture
-def create_command(no_docker_create_command, first_app_config, tmp_path):
+def create_command(no_docker_create_command, first_app_config, tmp_path, monkeypatch):
     # Enable Docker use
     no_docker_create_command.use_docker = True
 
+    # Provide Docker
+    monkeypatch.setattr(
+        Docker, "_is_user_mapping_enabled", MagicMock(return_value=True)
+    )
+    no_docker_create_command.tools.docker = Docker(tools=no_docker_create_command.tools)
     # Provide Docker app context
     no_docker_create_command.tools[first_app_config].app_context = DockerAppContext(
         tools=no_docker_create_command.tools,
@@ -163,7 +168,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
 
     # pip was invoked inside docker.
     create_command.tools.subprocess.run.assert_called_once_with(
-        [
+        args=[
             "docker",
             "run",
             "--rm",
@@ -340,7 +345,7 @@ def test_install_app_requirements_with_locals(
 
     # pip was invoked inside docker.
     create_command.tools.subprocess.run.assert_called_once_with(
-        [
+        args=[
             "docker",
             "run",
             "--rm",

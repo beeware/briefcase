@@ -1,22 +1,34 @@
 from __future__ import annotations
 
+import contextlib
 import os
+import socket
 import subprocess
 import sys
-from pathlib import Path, PurePosixPath
+from functools import lru_cache
+from pathlib import Path, PosixPath, PurePosixPath
+from typing import Iterable, Mapping
+
+from packaging.version import InvalidVersion, Version
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
-from briefcase.integrations.subprocess import SubprocessArgsT, SubprocessArgT
+from briefcase.integrations.subprocess import SubprocessArgsT
+
+
+class XauthDatabaseCreationFailure(Exception):
+    """Creating a xauth database file from the user's current X auth failed."""
 
 
 class Docker(Tool):
     name = "docker"
     full_name = "Docker"
 
+    DOCKER_VERSION_MIN = "20.10"
+
     WRONG_DOCKER_VERSION_ERROR = """\
-Briefcase requires Docker 19 or higher, but you are currently running
+Briefcase requires Docker {version_min} or higher, but you are currently running
 version {docker_version}. Visit:
 
     {install_url}
@@ -38,7 +50,7 @@ to download and install an updated version of Docker.
 
     In your report, please including the output from running:
 
-      docker --version
+      $ docker --version
 
     from the command prompt.
 
@@ -59,7 +71,7 @@ to download and install an updated version of Docker.
 
     In your report, please including the output from running:
 
-      docker --version
+      $ docker --version
 
     from the command prompt.
 
@@ -153,29 +165,28 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         """Verify Docker version is compatible."""
         try:
             # Try to get the version of docker that is installed.
-            output = tools.subprocess.check_output(["docker", "--version"]).strip("\n")
+            # expected output format: Docker version 25.0.2, build 29cf629\n
+            docker_version = (
+                tools.subprocess.check_output(["docker", "--version"])
+                .split("Docker version ")[1]
+                .split(",")[0]
+            )
 
-            # Do a simple check that the docker that was invoked
-            # actually looks like the real deal, and is a version that
-            # meets our requirements.
-            if output.startswith("Docker version "):
-                docker_version = output[15:]
-                version = docker_version.split(".")
-                if int(version[0]) < 19:
-                    # Docker version isn't compatible.
-                    raise BriefcaseCommandError(
-                        cls.WRONG_DOCKER_VERSION_ERROR.format(
-                            docker_version=docker_version,
-                            install_url=cls.DOCKER_INSTALL_URL[tools.host_os],
-                        )
+            # Ensure Docker version is compatible
+            if Version(docker_version) < Version(cls.DOCKER_VERSION_MIN):
+                raise BriefcaseCommandError(
+                    cls.WRONG_DOCKER_VERSION_ERROR.format(
+                        version_min=cls.DOCKER_VERSION_MIN,
+                        docker_version=docker_version,
+                        install_url=cls.DOCKER_INSTALL_URL[tools.host_os],
                     )
-
-            else:
-                tools.logger.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
+                )
+        except (InvalidVersion, IndexError):
+            tools.logger.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
         except subprocess.CalledProcessError:
             tools.logger.warning(cls.DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
         except OSError as e:
-            # Docker executable doesn't exist.
+            # Docker executable doesn't exist
             raise BriefcaseCommandError(
                 cls.DOCKER_NOT_INSTALLED_ERROR.format(
                     install_url=cls.DOCKER_INSTALL_URL[tools.host_os]
@@ -268,22 +279,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
         """
         host_write_test_path = self._write_test_path()
         container_write_test_path = PurePosixPath(
-            "/host_write_test", host_write_test_path.name
+            f"/host_write_test/{host_write_test_path.name}"
         )
-
-        image_tag = "alpine" if image_tag is None else image_tag
-        # Cache the image first so the attempts below to run the image don't
-        # log irrelevant errors when the image may just have a simple typo
-        self.cache_image(image_tag)
-
-        docker_run_cmd = [
-            "docker",
-            "run",
-            "--rm",
-            "--volume",
-            f"{host_write_test_path.parent}:{container_write_test_path.parent}:z",
-            image_tag,
-        ]
 
         host_write_test_path.parent.mkdir(exist_ok=True)
 
@@ -301,23 +298,32 @@ Delete this file and run Briefcase again.
 """
             ) from e
 
+        image_tag = "alpine" if image_tag is None else image_tag
+        write_test_mounts = [
+            (host_write_test_path.parent, container_write_test_path.parent)
+        ]
+
+        # Write the test file in the bind mount inside the container
         try:
-            self.tools.subprocess.run(
-                docker_run_cmd + ["touch", container_write_test_path],
-                check=True,
+            self.check_output(
+                ["touch", container_write_test_path],
+                image_tag=image_tag,
+                mounts=write_test_mounts,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 "Unable to determine if Docker is mapping users"
             ) from e
 
-        # if the file is not owned by `root`, then Docker is mapping usernames
+        # If the file is not owned by `root`, then Docker is mapping usernames
         is_user_mapped = 0 != self.tools.os.stat(host_write_test_path).st_uid
 
+        # Delete the file inside the container since it may be owned by root on the host
         try:
-            self.tools.subprocess.run(
-                docker_run_cmd + ["rm", "-f", container_write_test_path],
-                check=True,
+            self.check_output(
+                ["rm", "-f", container_write_test_path],
+                image_tag=image_tag,
+                mounts=write_test_mounts,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
@@ -326,6 +332,7 @@ Delete this file and run Briefcase again.
 
         return is_user_mapped
 
+    @lru_cache(maxsize=None)
     def cache_image(self, image_tag: str):
         """Ensures an image is available and cached locally.
 
@@ -361,7 +368,7 @@ Delete this file and run Briefcase again.
                     "Is the image name correct?"
                 ) from e
 
-    def check_output(self, args: list[SubprocessArgT], image_tag: str) -> str:
+    def check_output(self, args: SubprocessArgsT, image_tag: str, **kwargs) -> str:
         """Run a process inside a Docker container, capturing output.
 
         This ensures the image is locally cached and then runs a bare Docker invocation;
@@ -378,8 +385,405 @@ Delete this file and run Briefcase again.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            ["docker", "run", "--rm", image_tag] + args
+            **self.dockerize_args(args, image_tag=image_tag, **kwargs)
         )
+
+    def dockerize_args(
+        self,
+        args: SubprocessArgsT,
+        image_tag: str,
+        interactive: bool = False,
+        mounts: Iterable[tuple[str | os.PathLike, str | os.PathLike]] | None = None,
+        path_map: Mapping[str | os.PathLike, str | os.PathLike] | None = None,
+        env: Mapping[str, str | os.PathLike] | None = None,
+        cwd: str | os.PathLike | None = None,
+        add_hosts: Iterable[tuple[str, str]] | None = None,
+        **subprocess_kwargs,
+    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+        """Convert arguments and environment into a Docker-compatible form.
+
+        Converts an argument and environment specification into a form that can be used
+        as arguments to invoke Docker. This involves:
+
+         * Ensuring the run deletes the container when it exits
+         * Adding volume bind mounts for specified paths
+         * Injecting environment variables in to the container's session
+         * Setting the current working directory for the container's session
+         * Adding additional DNS entries via /etc/hosts
+
+        :param args: The arguments for the command to be invoked
+        :param image_tag: The name of the image to start the container with
+        :param interactive: Start the container with stdin attached and a tty allocated
+        :param mounts: Bind mounts to add to the container
+        :param path_map: Mapping of files paths from the host to the container; these
+            mappings are applied to all values to be dockerized
+        :param env: The environment specification for the command to be executed
+        :param cwd: The working directory for the command to be executed
+        :param add_hosts: DNS mappings to add to the container's network
+        :param subprocess_kwargs: Keyword arguments passed through in return value
+        :returns: A dictionary of keyword arguments to drive subprocess calls
+        """
+        docker_cmdline = ["docker", "run", "--rm"]
+
+        # Add "-it" if in interactive mode
+        if interactive:
+            docker_cmdline.append("-it")
+
+        # Add volume mounts
+        # The :z suffix on volume mounts allows SELinux to modify the host mount;
+        # it is ignored on non-SELinux platforms
+        if mounts:
+            for source, target in mounts:
+                docker_cmdline.extend(
+                    ("--volume", f"{os.fsdecode(source)}:{os.fsdecode(target)}:z")
+                )
+
+        # Pass environment variables in as --env arguments to Docker
+        if env:
+            for key, value in env.items():
+                docker_cmdline.extend(
+                    ("--env", f"{key}={self.dockerize_path(value, path_map)}")
+                )
+
+        # Set a cwd as the working directory for the container
+        if cwd:
+            docker_cmdline.extend(("--workdir", self.dockerize_path(cwd, path_map)))
+
+        # Host mappings to add to container's /etc/hosts
+        if add_hosts:
+            for host_name, address in add_hosts:
+                docker_cmdline.extend(("--add-host", f"{host_name}:{address}"))
+
+        # Add the image name to create the temporary container with
+        docker_cmdline.append(image_tag)
+
+        # Finally, add the command (and its arguments) to run in the container
+        docker_cmdline.extend(self.dockerize_path(arg, path_map) for arg in args)
+
+        subprocess_kwargs["args"] = docker_cmdline
+
+        return subprocess_kwargs
+
+    def dockerize_path(
+        self,
+        arg: str | os.PathLike,
+        path_map: Mapping[str | os.PathLike, str | os.PathLike] | None = None,
+    ) -> str:  # pragma: no-cover-if-is-windows
+        """Translates host file paths into the equivalent location in the docker
+        filesystem as defined by a file path mapping.
+
+        Additionally, fsdecode() is called for the input value to ensure it's something
+        that can represent a path and will always be returned as a string.
+
+        :param arg: The argument to convert to dockerized paths
+        :param path_map: A mapping of host file system paths to the docker container
+            file system; e.g. $HOME/.cache/briefcase -> /briefcase, such that,
+            $HOME/.cache/briefcase/tools/java becomes /briefcase/tools/java
+        :returns: A string where all convertible paths have been replaced
+        """
+        arg = os.fsdecode(arg)
+
+        if path_map:
+            for source, target in path_map.items():
+                arg = arg.replace(os.fsdecode(source), os.fsdecode(target))
+
+        return arg
+
+    @contextlib.contextmanager
+    def x11_passthrough(
+        self, subprocess_kwargs: dict[str, ...]
+    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+        """Manager to expose the host's X11 server to a container.
+
+        This allows Docker containers to use the host's X11 server with the
+        authorization afforded to the current user. The user's X11 auth is copied and
+        modified in a dedicated temporary xauth file. A TCP server is set up to spoof a
+        new X display and proxies X commands to the current display. The XAUTHORITY
+        environment variable is set to the temporary xauth file and DISPLAY is set to
+        "host.docker.internal:<display number>" so that the container sends X commands
+        through a Docker-provided mapping of the host's network interface to the spoofed
+        display that finally proxies those commands to the actual display.
+
+        Full docs: https://briefcase.readthedocs.io/en/stable/how-to/internal/x11passthrough.html
+
+        :param subprocess_kwargs: Existing keywords args from the caller
+        :returns: augmented keyword args for the call to subprocess
+        """
+        if not (DISPLAY := self.tools.os.getenv("DISPLAY")):
+            raise BriefcaseCommandError(
+                "The DISPLAY environment variable must be set to run an app in Docker"
+            )
+
+        # Create a TCP proxy for a spoofed X display
+        proxy_popen, proxy_display_num = self._x11_tcp_proxy(DISPLAY)
+
+        # Define the xauth database files for the spoofed display
+        xauth_file_path = self._x11_proxy_display_xauth_file_path(proxy_display_num)
+        docker_xauth_file_path = PurePosixPath("/tmp") / xauth_file_path.name
+        try:
+            # Create the xauth database file for the spoofed display
+            try:
+                self._x11_write_xauth_file(DISPLAY, xauth_file_path, proxy_display_num)
+            except XauthDatabaseCreationFailure:
+                self.tools.logger.warning(
+                    """\
+An X11 authentication database could not be created for the display.
+
+Briefcase will proceed, but if access to the display is rejected, this may be why.
+"""
+                )
+            else:
+                # Add the xauth database to the container
+                subprocess_kwargs.setdefault("mounts", []).append(
+                    (xauth_file_path, docker_xauth_file_path)
+                )
+                # Tell X clients to use the xauth database to connect to the display
+                subprocess_kwargs.setdefault("env", {}).update(
+                    {"XAUTHORITY": docker_xauth_file_path}
+                )
+
+            # This updates the container's /etc/hosts with a mapping for
+            # `host.docker.internal` to a network address for the host such that
+            # network-based services on the host can be reached within the container.
+            #
+            # The keyword `host.docker.internal` is already always defined for
+            # containers created by Docker Desktop via the DNS configured within its
+            # Linux VM. However, for Docker Engine, DNS is managed by the Linux host;
+            # therefore, this mapping for `host.docker.internal` must be defined each
+            # time a container is started.
+            #
+            # The keyword `host-gateway` is interpreted and replaced with a network
+            # address for the host by the Docker server when a container starts. The
+            # specific network address used here will be dependent on the Docker
+            # implementation, but it will likely be either the address for `docker0` or
+            # and address for the host otherwise mapped through to the container.
+            subprocess_kwargs.setdefault("add_hosts", []).append(
+                ("host.docker.internal", "host-gateway")
+            )
+
+            # Finally, tell X clients to use the spoofed display
+            subprocess_kwargs.setdefault("env", {}).update(
+                {"DISPLAY": f"host.docker.internal:{proxy_display_num}"}
+            )
+
+            yield subprocess_kwargs
+
+        finally:
+            self.tools.subprocess.cleanup("X display proxy", proxy_popen)
+            xauth_file_path.unlink(missing_ok=True)
+
+    def _x11_tcp_proxy(self, DISPLAY: str) -> tuple[subprocess.Popen, int]:
+        """Starts a TCP proxy as a spoofed X display.
+
+        The TCP server's port is chosen as 6000 + the display number as defined in the
+        X11 standard. In this way, when X clients attempt to make a connection for the
+        chosen display number, this TCP port will be automatically evaluated by the
+        client for consideration as an X display.
+
+        The proxy is bound to 0.0.0.0 and as such will be reachable on all network
+        interfaces defined for the host. Ideally, the proxy would only need to bind to
+        the network bridge defined by Docker, usually `docker0`, but Docker Desktop is
+        not able to use a shared network interface bridge as Docker Engine does since
+        it runs containers inside a Linux VM. Instead, it attaches the host's primary
+        network interface as a device on a virtual network interface bridge created by
+        the VM. Because of this, the proxy must be exposed to the network at large to
+        also be exposed within the container.
+
+        :param DISPLAY: value of DISPLAY environment variable
+        :returns: the Popen process for the proxy and the display number it is using
+        """
+        if not self.tools.shutil.which("socat"):
+            raise BriefcaseCommandError(
+                "Install socat to run an app for a targeted Linux distribution"
+            )
+
+        try:
+            # The DISPLAY environment variable is expected to be of the form:
+            #   [hostname]:[display number].[screen number]
+            display_num = int(DISPLAY.split(":")[1].split(".")[0])
+        except (IndexError, ValueError, AttributeError) as e:
+            raise BriefcaseCommandError(
+                f"Unsupported value for environment variable DISPLAY: {str(DISPLAY)!r}"
+            ) from e
+
+        proxy_display_num = self._x11_allocate_display()
+        proxy_display_tcp_port = 6000 + proxy_display_num
+
+        # If a TCP server is already running for the X display on the host, then start
+        # a proxy to that TCP server for the display. While most distros do not support
+        # TCP for an X display by default, X11 forwarding over SSH is facilitated by
+        # opening an SSH channel on the port for the X display; so, proxying to that
+        # channel allows the container to use the X display exposed by X11 forwarding.
+        if self._x11_is_display_tcp(display_num):
+            proxy_process = self.tools.subprocess.Popen(
+                [
+                    "socat",
+                    f"TCP-LISTEN:{proxy_display_tcp_port},reuseaddr,fork,bind=0.0.0.0",
+                    f"TCP:localhost:{6000 + display_num}",
+                ]
+            )
+
+        # Otherwise, just proxy to the UNIX socket for the display
+        elif self._x11_is_display_unix(display_num):
+            proxy_process = self.tools.subprocess.Popen(
+                [
+                    "socat",
+                    f"TCP-LISTEN:{proxy_display_tcp_port},reuseaddr,fork,bind=0.0.0.0",
+                    f"UNIX-CONNECT:/tmp/.X11-unix/X{display_num}",
+                ]
+            )
+
+        else:
+            raise BriefcaseCommandError(f"Cannot find X11 display for {DISPLAY!r}")
+
+        return proxy_process, proxy_display_num
+
+    def _x11_proxy_display_xauth_file_path(
+        self, display_num: int
+    ) -> PosixPath:  # pragma: no-cover-if-is-windows
+        """Path to the xauth database for the proxy display.
+
+        The project's build directory is used to accommodate Docker Desktop. By default,
+        Docker Desktop only allows bind mounts from directories/files within the user's
+        home directory. So, while it may be more appropriate to use a dedicated temp
+        directory, such as /tmp, this avoids having to instruct users to add that
+        directory as a source of possible bind mounts.
+        """
+        return PosixPath.cwd() / f"build/.briefcase.docker.xauth.{display_num}"
+
+    def _x11_allocate_display(self) -> int:
+        """Finds available X display number for use; raises otherwise.
+
+        A universal mechanism to request and reserve an X display does not exist. On
+        most systems, though, there will not be many active X displays. So, this
+        approach is similar to that of OpenSSH's strategy for reserving an X display
+        for X11 forwarding: simply iterate over candidate display numbers using the
+        first one that is not already is use.
+
+        This check for whether a display number is already in use is limited to
+        verifying a TCP server or UNIX socket does not already exist for the display.
+        While other transport protocols are possible, any modern system should be using
+        at least one of these transports in tandem with anything else.
+        """
+        # This range of candidate display numbers is arbitrary. Typically, locally
+        # configured displays start at number 0 while SSH displays start at number 10.
+        # So, in the common case, this is expected to return the first candidate.
+        # Although, in cases where parts of this range are already allocated, the check
+        # for a UNIX socket is immediate while the TCP check must actually attempt to
+        # connect to the port; in practice, this should also be immediate as anything
+        # listening accepts the connection or the OS rejects it since nothing is there.
+        for num in range(50, 299 + 1):
+            if not (self._x11_is_display_unix(num) or self._x11_is_display_tcp(num)):
+                display_num = num
+                break
+        else:
+            raise BriefcaseCommandError("Failed to allocate X11 display")
+
+        return display_num
+
+    def _x11_is_display_tcp(self, display_num: int) -> bool:
+        """Is a TCP server running for the X display?"""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(3)
+            try:
+                # returns 0 only if the connection is successful
+                return 0 == sock.connect_ex(("localhost", 6000 + display_num))
+            except OSError:
+                return False
+
+    def _x11_display_unix_socket_path(
+        self, display_num: int
+    ) -> PosixPath:  # pragma: no-cover-if-is-windows
+        """Path to the UNIX socket for the display."""
+        return PosixPath(f"/tmp/.X11-unix/X{display_num}")
+
+    def _x11_is_display_unix(
+        self, display_num: int
+    ) -> bool:  # pragma: no-cover-if-is-windows
+        """Is a UNIX socket running for the X display?"""
+        try:
+            return self._x11_display_unix_socket_path(display_num).is_socket()
+        except OSError:
+            return False
+
+    def _x11_write_xauth_file(
+        self,
+        DISPLAY: str,
+        xauth_file_path: Path,
+        target_display_num: int,
+    ) -> None:
+        """Writes a xauth file using the current user's X authorization.
+
+        :param DISPLAY: Value of DISPLAY environment variable
+        :param xauth_file_path: File path to write xauth database for target display
+        :param target_display_num: Number of targeted X display
+        """
+        if not self.tools.shutil.which("xauth"):
+            raise BriefcaseCommandError(
+                "Install xauth to run an app for a targeted Linux distribution"
+            )
+
+        # Extract the 32 byte X auth cookie for the current display
+        # `xauth nlist` outputs the auth C struct defined by the libxau library
+        try:
+            x_display_auth_cookie = (
+                self.tools.subprocess.check_output(["xauth", "-i", "nlist", DISPLAY])
+                .splitlines()[0]
+                .split(" ")[8]  # assumed to be a MIT-MAGIC-COOKIE-1
+            )
+        except (subprocess.CalledProcessError, IndexError) as e:
+            raise XauthDatabaseCreationFailure("Failed to retrieve xauth cookie") from e
+
+        # Initialize X authentication file
+        xauth_file_path.parent.mkdir(parents=True, exist_ok=True)
+        xauth_file_path.unlink(missing_ok=True)
+        xauth_file_path.touch()
+
+        # Create a xauth database for the target display using the current display's cookie
+        try:
+            self.tools.subprocess.check_output(
+                [
+                    "xauth",
+                    "-i",
+                    "-f",
+                    xauth_file_path,
+                    "add",
+                    f":{target_display_num}",
+                    "MIT-MAGIC-COOKIE-1",
+                    x_display_auth_cookie,
+                ]
+            )
+        except subprocess.CalledProcessError as e:
+            raise XauthDatabaseCreationFailure(
+                "Failed to add a xauth entry for existing cookie"
+            ) from e
+
+        # Retrieve xauth list that was just written for the target display
+        try:
+            xauth_list = self.tools.subprocess.check_output(
+                ["xauth", "-i", "-f", xauth_file_path, "nlist"]
+            )
+        except subprocess.CalledProcessError as e:
+            raise XauthDatabaseCreationFailure("Failed to retrieve xauth list") from e
+
+        # When an X auth entry is added to a xauth database, the auth is tied to a
+        # hostname and a display number. Since this X auth will be used to connect to
+        # the host machine's X server via a proxy exposed within the container, those
+        # connections will be using a different hostname for the display. Therefore,
+        # this replaces the hostname in the auth entry with the "FamilyWild" tag which
+        # allows using the auth for the display regardless of the targeted hostname.
+        xauth_list = "\n".join("ffff" + line[4:] for line in xauth_list.splitlines())
+
+        # Re-write xauth for target display to support any target hostname
+        try:
+            self.tools.subprocess.check_output(
+                ["xauth", "-i", "-f", xauth_file_path, "nmerge", "-"],
+                input=xauth_list,
+            )
+        except subprocess.CalledProcessError as e:
+            raise XauthDatabaseCreationFailure(
+                "Failed to merge xauth updates for FamilyWild hostname"
+            ) from e
 
 
 class DockerAppContext(Tool):
@@ -412,7 +816,7 @@ class DockerAppContext(Tool):
         host_data_path: Path,
         python_version: str,
         **kwargs,
-    ) -> DockerAppContext:
+    ) -> DockerAppContext:  # pragma: no-cover-if-is-windows
         """Verify that docker is available as an app-bound tool.
 
         Creates or updates the Docker image for the app to run commands in a context for
@@ -466,6 +870,11 @@ class DockerAppContext(Tool):
             prefix=self.app.app_name,
         )
         with self.tools.input.wait_bar("Building Docker image..."):
+            # Install requirements for both building *and* running the app
+            # (ensure a copy of system_requires is used to avoid modification)
+            system_requires = getattr(self.app, "system_requires", []).copy()
+            system_requires.extend(getattr(self.app, "system_runtime_requires", []))
+
             with self.tools.logger.context("Docker"):
                 try:
                     self.tools.subprocess.run(
@@ -479,7 +888,7 @@ class DockerAppContext(Tool):
                             "--file",
                             dockerfile_path,
                             "--build-arg",
-                            f"SYSTEM_REQUIRES={' '.join(getattr(self.app, 'system_requires', ''))}",
+                            f"SYSTEM_REQUIRES={' '.join(system_requires)}",
                             "--build-arg",
                             f"HOST_UID={self.tools.os.getuid()}",
                             "--build-arg",
@@ -496,134 +905,65 @@ class DockerAppContext(Tool):
                         f"Error building Docker container image for {self.app.app_name}."
                     ) from e
 
-    def _dockerize_path(self, arg: str) -> str:  # pragma: no-cover-if-is-windows
-        """Relocate any local path into the equivalent location on the docker
-        filesystem.
+    @contextlib.contextmanager
+    def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:
+        """Manager to run a Briefcase project app in a container.
 
-        Converts:
-        * any reference to `sys.executable` into the python executable in the docker container
-        * any path in <build path> into the equivalent stemming from /app
-        * any path in <data path> into the equivalent in ~/.cache/briefcase
-
-        :param arg: The string argument to convert to dockerized paths
-        :returns: A string where all convertible paths have been replaced.
+        :returns: context manager to wrap the call to Popen/run/check_output()
         """
-        if arg == sys.executable:
-            return f"python{self.python_version}"
-        arg = arg.replace(os.fsdecode(self.host_bundle_path), "/app")
-        arg = arg.replace(
-            os.fsdecode(self.host_data_path), os.fsdecode(self.docker_briefcase_path)
-        )
+        with self.tools.docker.x11_passthrough(subprocess_kwargs) as subprocess_kwargs:
+            yield subprocess_kwargs
 
-        return arg
-
-    def _dockerize_args(
-        self,
-        args: SubprocessArgsT,
-        interactive: bool = False,
-        mounts: list[tuple[str | Path, str | Path]] | None = None,
-        env: dict[str, str] | None = None,
-        cwd: Path | None = None,
-    ) -> list[str]:  # pragma: no-cover-if-is-windows
-        """Convert arguments and environment into a Docker-compatible form. Convert an
-        argument and environment specification into a form that can be used as arguments
-        to invoke Docker. This involves:
-
-         * Configuring the Docker invocation to reference the
-           appropriate container image, and clean up afterward
-         * Setting volume mounts for the container instance
-         * Transforming any references to local paths into Docker path references.
-
-        :param args: The arguments for the command to be invoked
-        :param env: The environment specification for the command to be executed
-        :param cwd: The working directory for the command to be executed
-        :returns: A list of arguments that can be used to invoke the command
-            inside a docker container.
-        """
-        docker_args = ["docker", "run", "--rm"]
-
-        # Add "-it" if in interactive mode
-        if interactive:
-            docker_args.append("-it")
-
-        # Add default volume mounts for the app folder, plus the Briefcase data
-        # path.
-        #
-        # The :z suffix on volume mounts allows SELinux to modify the host
-        # mount; it is ignored on non-SELinux platforms.
-        docker_args.extend(
-            [
-                "--volume",
-                f"{self.host_bundle_path}:/app:z",
-                "--volume",
-                f"{self.host_data_path}:{self.docker_briefcase_path}:z",
-            ]
-        )
-
-        # Add any extra volume mounts
-        if mounts:
-            for source, target in mounts:
-                docker_args.extend(["--volume", f"{source}:{target}:z"])
-
-        # If any environment variables have been defined, pass them in
-        # as --env arguments to Docker.
-        if env:
-            for key, value in env.items():
-                docker_args.extend(["--env", f"{key}={self._dockerize_path(value)}"])
-
-        # If a working directory has been specified, pass it
-        if cwd:
-            docker_args.extend(["--workdir", self._dockerize_path(os.fsdecode(cwd))])
-
-        # ... then the image name to create the temporary container with
-        docker_args.append(self.image_tag)
-
-        # ... then add the command (and its arguments) to run in the container
-        docker_args.extend([self._dockerize_path(str(arg)) for arg in args])
-
-        return docker_args
-
-    def run(
-        self,
-        args: SubprocessArgsT,
-        env: dict[str, str] | None = None,
-        cwd: Path | None = None,
-        interactive: bool = False,
-        mounts: list[tuple[str | Path, str | Path]] | None = None,
-        **kwargs,
-    ):
+    def run(self, args: SubprocessArgsT, **kwargs) -> None:
         """Run a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.run()" behaves as closely to
         # "subprocess.run()" as possible.
+        if kwargs.get("interactive"):
+            kwargs["stream_output"] = False
+
         with self.tools.logger.context("Docker"):
-            if interactive:
-                kwargs["stream_output"] = False
+            self.tools.subprocess.run(**self._dockerize_args(args, **kwargs))
 
-            self.tools.subprocess.run(
-                self._dockerize_args(
-                    args,
-                    interactive=interactive,
-                    mounts=mounts,
-                    env=env,
-                    cwd=cwd,
-                ),
-                **kwargs,
-            )
-
-    def check_output(
-        self,
-        args: SubprocessArgsT,
-        env: dict[str, str] | None = None,
-        cwd: Path | None = None,
-        mounts: list[tuple[str | Path, str | Path]] | None = None,
-        **kwargs,
-    ) -> str:
-        """Run a process inside a Docker container, capturing output."""
+    def check_output(self, args: SubprocessArgsT, **kwargs) -> str:
+        """Capture and return output from a process inside a Docker container."""
         # Any exceptions from running the process are *not* caught.
         # This ensures that "docker.check_output()" behaves as closely to
         # "subprocess.check_output()" as possible.
         return self.tools.subprocess.check_output(
-            self._dockerize_args(args, mounts=mounts, env=env, cwd=cwd),
-            **kwargs,
+            **self._dockerize_args(args, **kwargs)
         )
+
+    def Popen(self, args: SubprocessArgsT, **kwargs) -> subprocess.Popen:
+        """Open and return a process running inside a Docker container."""
+        return self.tools.subprocess.Popen(**self._dockerize_args(args, **kwargs))
+
+    def _dockerize_args(
+        self, args: SubprocessArgsT, **kwargs
+    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+        """App-specific wrapper for Docker.dockerize_args().
+
+        Uses the app's dedicated Docker image to run the container.
+
+        Adds app's bundle directory and the Briefcase data directory as bind mounts.
+
+        All bind mount definitions also serve as path mappings from the host in to the
+        container file system; these mappings are applied to the command arguments,
+        environment variable values, and the working directory.
+        """
+        kwargs["image_tag"] = self.image_tag
+
+        kwargs.setdefault("mounts", []).extend(
+            [
+                (self.host_bundle_path, "/app"),
+                (self.host_data_path, self.docker_briefcase_path),
+            ]
+        )
+
+        kwargs.setdefault("path_map", {}).update(dict(kwargs["mounts"]))
+
+        # Convert fully-qualified paths for the host's Python to the unqualified Python
+        # binary available inside the container
+        kwargs["path_map"][sys.executable] = f"python{self.python_version}"
+
+        return self.tools.docker.dockerize_args(args, **kwargs)

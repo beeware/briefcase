@@ -1,0 +1,1 @@
+The ``briefcase run`` command now supports the ``--target`` option to run Linux apps from within Docker for other distributions.

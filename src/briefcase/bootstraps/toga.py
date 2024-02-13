@@ -122,8 +122,7 @@ system_runtime_requires = [
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-0",
     # Needed to provide WebKit2 at runtime
-    # "libwebkit2gtk3",
-    # "typelib(WebKit2)",
+    # "libwebkit2gtk3", "typelib(WebKit2)",
 ]
 """
 

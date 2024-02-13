@@ -166,8 +166,7 @@ system_runtime_requires = [
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-0",
     # Needed to provide WebKit2 at runtime
-    # "libwebkit2gtk3",
-    # "typelib(WebKit2)",
+    # "libwebkit2gtk3", "typelib(WebKit2)",
 ]
 """,
         pyproject_table_linux_system_arch="""
@@ -362,34 +361,25 @@ system_requires = [
 
 system_runtime_requires = [
     # Derived from https://doc.qt.io/qt-6/linux-requirements.html
+    "libxext6",
     "libxrender1",
-    "libxcb-render0",
-    "libxcb-render-util0",
+    "libx11-xcb1",
+    "libxkbcommon-x11-0",
+    "libxcb-image0",
+    "libxcb-cursor0",
     "libxcb-shape0",
     "libxcb-randr0",
     "libxcb-xfixes0",
-    "libxcb-xkb1",
     "libxcb-sync1",
-    "libxcb-shm0",
     "libxcb-icccm4",
     "libxcb-keysyms1",
-    "libxcb-image0",
-    "libxcb-util1",
-    "libxkbcommon0",
-    "libxkbcommon-x11-0",
     "libfontconfig1",
-    "libfreetype6",
-    "libxext6",
-    "libx11-6",
-    "libxcb1",
-    "libx11-xcb1",
     "libsm6",
     "libice6",
     "libglib2.0-0",
     "libgl1",
-    "libegl1-mesa",
+    "libegl1",
     "libdbus-1-3",
-    "libgssapi-krb5-2",
 ]
 """,
         pyproject_table_linux_system_rhel="""
@@ -405,12 +395,12 @@ system_requires = [
 ]
 
 system_runtime_requires = [
+    "libgthread-2_0-0",
     "libQt6Gui6",
 ]
 """,
         pyproject_table_linux_system_arch="""
 system_requires = [
-    "qt6-base",
 ]
 
 system_runtime_requires = [
@@ -589,11 +579,6 @@ system_runtime_requires = [
 """,
         pyproject_table_linux_system_arch="""
 system_requires = [
-    "sdl2",
-    "sdl2_ttf",
-    "sdl2_image",
-    "sdl2_gfx",
-    "sdl2_mixer",
 ]
 
 system_runtime_requires = [
@@ -1172,8 +1157,7 @@ system_runtime_requires = [
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-0",
     # Needed to provide WebKit2 at runtime
-    # "libwebkit2gtk3",
-    # "typelib(WebKit2)",
+    # "libwebkit2gtk3", "typelib(WebKit2)",
 ]
 """,
         pyproject_table_linux_system_arch="""

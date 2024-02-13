@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.integrations.docker import DockerAppContext
+from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageOpenCommand
 
@@ -42,12 +42,17 @@ def open_command(tmp_path):
     sys.platform == "win32",
     reason="Windows paths aren't converted in Docker context",
 )
-def test_open_docker(open_command, first_app_config, tmp_path):
+def test_open_docker(open_command, first_app_config, tmp_path, monkeypatch):
     """Open starts a docker session by default."""
 
     # Enable docker
     open_command.use_docker = True
 
+    # Provide Docker
+    monkeypatch.setattr(
+        Docker, "_is_user_mapping_enabled", MagicMock(return_value=True)
+    )
+    open_command.tools.docker = Docker(tools=open_command.tools)
     # Provide Docker app context
     open_command.tools[first_app_config].app_context = DockerAppContext(
         tools=open_command.tools,
@@ -88,7 +93,7 @@ def test_open_docker(open_command, first_app_config, tmp_path):
 
     # The docker session was started
     open_command._subprocess.run.assert_called_once_with(
-        [
+        args=[
             "docker",
             "run",
             "--rm",

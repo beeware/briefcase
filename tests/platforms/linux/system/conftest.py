@@ -24,6 +24,9 @@ def first_app(first_app_config, tmp_path):
     first_app_config.target_codename = "surprising"
     first_app_config.target_vendor_base = "basevendor"
 
+    # Targeted Python version
+    first_app_config.python_version_tag = "3"
+
     # Some project-level files.
     create_file(tmp_path / "base_path/LICENSE", "First App License")
     create_file(tmp_path / "base_path/CHANGELOG", "First App Changelog")
