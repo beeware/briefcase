@@ -16,9 +16,9 @@ VALID_DOCKER_INFO = "docker info printout"
 VALID_BUILDX_VERSION = "github.com/docker/buildx v0.10.2 00ed17d\n"
 VALID_USER_MAPPING_IMAGE_CACHE = "1ed313b0551f"
 DOCKER_VERIFICATION_CALLS = [
-    call(["docker", "--version"]),
-    call(["docker", "info"]),
-    call(["docker", "buildx", "version"]),
+    call(["docker", "--version"], env={"DOCKER_CLI_HINTS": "false"}),
+    call(["docker", "info"], env={"DOCKER_CLI_HINTS": "false"}),
+    call(["docker", "buildx", "version"], env={"DOCKER_CLI_HINTS": "false"}),
 ]
 
 
@@ -104,7 +104,9 @@ def test_docker_doesnt_exist(mock_tools):
         Docker.verify(mock_tools)
 
     # But docker was invoked
-    mock_tools.subprocess.check_output.assert_called_with(["docker", "--version"])
+    mock_tools.subprocess.check_output.assert_called_with(
+        ["docker", "--version"], env={"DOCKER_CLI_HINTS": "false"}
+    )
 
 
 def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):

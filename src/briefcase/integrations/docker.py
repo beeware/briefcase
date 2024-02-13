@@ -167,7 +167,10 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             # Try to get the version of docker that is installed.
             # expected output format: Docker version 25.0.2, build 29cf629\n
             docker_version = (
-                tools.subprocess.check_output(["docker", "--version"])
+                tools.subprocess.check_output(
+                    ["docker", "--version"],
+                    env=cls.subprocess_env(),
+                )
                 .split("Docker version ")[1]
                 .split(",")[0]
             )
@@ -200,7 +203,10 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             # Invoke a docker command to check if the daemon is running,
             # and the user has sufficient permissions.
             # We don't care about the output, just that it succeeds.
-            tools.subprocess.check_output(["docker", "info"])
+            tools.subprocess.check_output(
+                ["docker", "info"],
+                env=cls.subprocess_env(),
+            )
         except subprocess.CalledProcessError as e:
             failure_output = e.output
             if "permission denied while trying to connect" in failure_output:
@@ -219,7 +225,10 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
     def _buildx_installed(cls, tools: ToolCache):
         """Verify the buildx plugin is installed."""
         try:
-            tools.subprocess.check_output(["docker", "buildx", "version"])
+            tools.subprocess.check_output(
+                ["docker", "buildx", "version"],
+                env=cls.subprocess_env(),
+            )
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
 
@@ -348,7 +357,7 @@ Delete this file and run Briefcase again.
         """
         image_id = self.tools.subprocess.check_output(
             ["docker", "images", "-q", image_tag],
-            **self.final_kwargs(),
+            env=self.subprocess_env(),
         ).strip()
 
         if not image_id:
@@ -360,10 +369,9 @@ Delete this file and run Briefcase again.
                 # disable streaming so image download progress bar is shown
                 self.tools.subprocess.run(
                     ["docker", "pull", image_tag],
-                    **self.final_kwargs(
-                        check=True,
-                        stream_output=False,
-                    ),
+                    check=True,
+                    stream_output=False,
+                    env=self.subprocess_env(),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -391,15 +399,17 @@ Delete this file and run Briefcase again.
             **self.dockerize_args(args, image_tag=image_tag, **kwargs)
         )
 
-    def final_kwargs(self, **kwargs) -> dict[str, ...]:
-        """Augments the keyword arguments for subprocess to invoke Docker.
-
-        These changes should affect the way subprocess runs Docker; changes for how a
-        command runs inside a Docker container should occur in dockerize_args().
-        """
-        # Disable the hints/recommendations that Docker prints in the console
-        kwargs.setdefault("env", {})["DOCKER_CLI_HINTS"] = "false"
-        return kwargs
+    @classmethod
+    def subprocess_env(cls, env: dict[str, str] | None = None) -> dict[str, str]:
+        """Adds environment variables to the context that Docker runs in."""
+        env = {} if env is None else env
+        env.update(
+            {
+                # Disable the hints/recommendations that Docker prints in the console
+                "DOCKER_CLI_HINTS": "false",
+            }
+        )
+        return env
 
     def dockerize_args(
         self,
@@ -473,9 +483,11 @@ Delete this file and run Briefcase again.
         # Finally, add the command (and its arguments) to run in the container
         docker_cmdline.extend(self.dockerize_path(arg, path_map) for arg in args)
 
+        # Augment configuration to drive the subprocess call
         subprocess_kwargs["args"] = docker_cmdline
+        subprocess_kwargs["env"] = self.subprocess_env()
 
-        return self.final_kwargs(**subprocess_kwargs)
+        return subprocess_kwargs
 
     def dockerize_path(
         self,
