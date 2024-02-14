@@ -402,14 +402,13 @@ Delete this file and run Briefcase again.
     @classmethod
     def subprocess_env(cls, env: dict[str, str] | None = None) -> dict[str, str]:
         """Adds environment variables to the context that Docker runs in."""
-        env = {} if env is None else env
-        env.update(
-            {
-                # Disable the hints/recommendations that Docker prints in the console
-                "DOCKER_CLI_HINTS": "false",
-            }
-        )
-        return env
+        final_env = {
+            # Disable the hints/recommendations that Docker prints in the console
+            "DOCKER_CLI_HINTS": "false",
+        }
+        if env is not None:
+            final_env.update(env)
+        return final_env
 
     def dockerize_args(
         self,
@@ -529,7 +528,7 @@ Delete this file and run Briefcase again.
         through a Docker-provided mapping of the host's network interface to the spoofed
         display that finally proxies those commands to the actual display.
 
-        Full docs: https://briefcase.readthedocs.io/en/stable/how-to/internal/x11passthrough.html
+        Full docs: https://briefcase.readthedocs.io/en/latest/how-to/internal/x11passthrough.html
 
         :param subprocess_kwargs: Existing keywords args from the caller
         :returns: augmented keyword args for the call to subprocess

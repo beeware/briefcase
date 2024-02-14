@@ -6,11 +6,12 @@ import pytest
     [
         (None, {"DOCKER_CLI_HINTS": "false"}),
         ({}, {"DOCKER_CLI_HINTS": "false"}),
+        ({"ENV_VAR": "VALUE"}, {"ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"}),
         (
             {"ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "true"},
             {
                 "ENV_VAR": "VALUE",
-                "DOCKER_CLI_HINTS": "false",
+                "DOCKER_CLI_HINTS": "true",
             },
         ),
     ],
