@@ -19,10 +19,15 @@ def test_check_output(mock_tools, sub_check_output_kw):
     mock_tools.subprocess._subprocess.check_output.assert_has_calls(
         [
             # Verify image is cached in Docker
-            call(["docker", "images", "-q", "ubuntu:jammy"], **sub_check_output_kw),
+            call(
+                ["docker", "images", "-q", "ubuntu:jammy"],
+                env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
+                **sub_check_output_kw,
+            ),
             # Run command in Docker using image
             call(
                 ["docker", "run", "--rm", "ubuntu:jammy", "cmd", "arg1", "arg2"],
+                env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
                 **sub_check_output_kw,
             ),
         ]
@@ -47,10 +52,15 @@ def test_check_output_fail(mock_tools, sub_check_output_kw):
     mock_tools.subprocess._subprocess.check_output.assert_has_calls(
         [
             # Verify image is cached in Docker
-            call(["docker", "images", "-q", "ubuntu:jammy"], **sub_check_output_kw),
+            call(
+                ["docker", "images", "-q", "ubuntu:jammy"],
+                env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
+                **sub_check_output_kw,
+            ),
             # Command errors in Docker using image
             call(
                 ["docker", "run", "--rm", "ubuntu:jammy", "cmd", "arg1", "arg2"],
+                env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
                 **sub_check_output_kw,
             ),
         ]

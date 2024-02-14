@@ -105,6 +105,7 @@ def test_open_docker(open_command, first_app_config, tmp_path, monkeypatch):
             f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         ],
         stream_output=False,
+        env={"DOCKER_CLI_HINTS": "false"},
     )
 
 

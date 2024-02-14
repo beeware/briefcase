@@ -178,6 +178,11 @@ def test_supported_host_os_docker(
         return_value=log_popen
     )
 
+    # Mock out the environment
+    monkeypatch.setattr(
+        run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
+    )
+
     # Parse the command line
     run_command.parse_options([])
 
@@ -210,6 +215,7 @@ def test_supported_host_os_docker(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env={"ENVVAR": "Value", "DISPLAY": ":99", "DOCKER_CLI_HINTS": "false"},
         **sub_kw,
     )
 
@@ -270,7 +276,7 @@ def test_run_app(run_command, first_app, sub_kw, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
-def test_run_app_docker(run_command, first_app, sub_kw, tmp_path):
+def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     """A bootstrap binary can be started in Docker."""
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
@@ -284,6 +290,11 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path):
     log_popen = mock.MagicMock()
     run_command.tools.subprocess._subprocess.Popen = mock.MagicMock(
         return_value=log_popen
+    )
+
+    # Mock out the environment
+    monkeypatch.setattr(
+        run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
     )
 
     # Run the app
@@ -315,6 +326,7 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env={"ENVVAR": "Value", "DISPLAY": ":99", "DOCKER_CLI_HINTS": "false"},
         **sub_kw,
     )
 
@@ -358,7 +370,7 @@ def test_run_app_failed(run_command, first_app, sub_kw, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
-def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path):
+def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     """If there's a problem starting the app in Docker, an exception is raised."""
 
     # Trigger to run in Docker
@@ -368,6 +380,11 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess.check_output.return_value = "3.99"
     # Provide Docker app context
     run_command.verify_app_tools(app=first_app)
+
+    # Mock out the environment
+    monkeypatch.setattr(
+        run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
+    )
 
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
@@ -400,6 +417,7 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env={"ENVVAR": "Value", "DISPLAY": ":99", "DOCKER_CLI_HINTS": "false"},
         **sub_kw,
     )
 
@@ -470,6 +488,11 @@ def test_run_app_test_mode_docker(
     log_popen = mock.MagicMock()
     run_command.tools.subprocess._subprocess.Popen.return_value = log_popen
 
+    # Mock out the environment
+    monkeypatch.setattr(
+        run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
+    )
+
     # Run the app
     run_command.run_app(first_app, test_mode=True, passthrough=[])
 
@@ -501,6 +524,7 @@ def test_run_app_test_mode_docker(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env={"ENVVAR": "Value", "DISPLAY": ":99", "DOCKER_CLI_HINTS": "false"},
         **sub_kw,
     )
 
@@ -588,6 +612,11 @@ def test_run_app_test_mode_with_args_docker(
     log_popen = mock.MagicMock()
     run_command.tools.subprocess._subprocess.Popen.return_value = log_popen
 
+    # Mock out the environment
+    monkeypatch.setattr(
+        run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
+    )
+
     # Run the app with args
     run_command.run_app(
         first_app,
@@ -625,6 +654,7 @@ def test_run_app_test_mode_with_args_docker(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env={"ENVVAR": "Value", "DISPLAY": ":99", "DOCKER_CLI_HINTS": "false"},
         **sub_kw,
     )
 

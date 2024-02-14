@@ -17,12 +17,21 @@ def test_cache_image(mock_tools, sub_kw, sub_check_output_kw):
 
     # Confirms that image is not available
     mock_tools.subprocess._subprocess.check_output.assert_called_with(
-        ["docker", "images", "-q", "ubuntu:jammy"], **sub_check_output_kw
+        ["docker", "images", "-q", "ubuntu:jammy"],
+        env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
+        **sub_check_output_kw,
     )
 
     # Image is pulled and cached
     mock_tools.subprocess._subprocess.run.assert_has_calls(
-        [call(["docker", "pull", "ubuntu:jammy"], check=True, **sub_kw)]
+        [
+            call(
+                ["docker", "pull", "ubuntu:jammy"],
+                check=True,
+                env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
+                **sub_kw,
+            ),
+        ]
     )
 
 
@@ -37,7 +46,9 @@ def test_cache_image_already_cached(mock_tools, sub_check_output_kw):
 
     # Confirms that image is not available
     mock_tools.subprocess._subprocess.check_output.assert_called_with(
-        ["docker", "images", "-q", "ubuntu:jammy"], **sub_check_output_kw
+        ["docker", "images", "-q", "ubuntu:jammy"],
+        env={"PROCESS_ENV_VAR": "VALUE", "DOCKER_CLI_HINTS": "false"},
+        **sub_check_output_kw,
     )
 
     # Image is not pulled and cached

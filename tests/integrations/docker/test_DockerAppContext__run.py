@@ -21,7 +21,9 @@ def test_simple_call(mock_tools, my_app, tmp_path, sub_stream_kw, capsys):
     )
     # calls to run() default to using Popen() due to output streaming
     mock_tools.subprocess._subprocess.Popen.assert_called_once_with(
-        ANY, **sub_stream_kw
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_stream_kw,
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -46,7 +48,11 @@ def test_interactive(mock_tools, my_app, tmp_path, sub_kw, capsys):
         stream_output=False,
     )
     # Interactive means the call to run is direct, rather than going through Popen
-    mock_tools.subprocess._subprocess.run.assert_called_once_with(ANY, **sub_kw)
+    mock_tools.subprocess._subprocess.run.assert_called_once_with(
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_kw,
+    )
     assert capsys.readouterr().out == (
         "\n"
         "Entering Docker context...\n"
@@ -89,6 +95,7 @@ def test_call_with_extra_kwargs(
         bufsize=1,
         text=True,
         errors="backslashreplace",
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
     )
     assert capsys.readouterr().out == (
         "\n"
@@ -112,7 +119,9 @@ def test_simple_verbose_call(mock_tools, my_app, tmp_path, sub_stream_kw, capsys
         ["hello", "world"],
     )
     mock_tools.subprocess._subprocess.Popen.assert_called_once_with(
-        ANY, **sub_stream_kw
+        ANY,
+        env={"DOCKER_CLI_HINTS": "false", "PROCESS_ENV_VAR": "VALUE"},
+        **sub_stream_kw,
     )
     console_output = capsys.readouterr().out
     assert "Entering Docker context...\n" in console_output
