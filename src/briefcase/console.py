@@ -72,13 +72,12 @@ class Printer:
     """Interface for printing and managing output to the console and/or log."""
 
     def __init__(self, log_width=180):
-        """Create an interface for printing and managing output to the console and/or
-        log.
+        """Interface for printing and managing output to the console and/or log.
 
         The default width is wide enough to render the output of ``sdkmanager
         --list_installed`` without line wrapping.
 
-        :param width: The width at which content should be wrapped.
+        :param log_width: The width at which content should be wrapped in the log file
         """
         self.log_width = log_width
 
@@ -484,7 +483,8 @@ class Console:
         can dramatically compromise the quality of logged output. So, dynamic elements
         should be specifically disabled in non-interactive sessions.
         """
-        return sys.stdout.isatty()
+        # `sys.__stdout__` is used because Rich captures and redirects `sys.stdout`
+        return sys.__stdout__.isatty()
 
     def progress_bar(self):
         """Returns a progress bar as a context manager."""
@@ -521,34 +521,45 @@ class Console:
         :param markup: whether to interpret Rich styling markup in the message; if True,
             the message must already be escaped; defaults False.
         """
+        is_wait_bar_disabled = not self.is_interactive
+        show_outcome_message = message and (is_wait_bar_disabled or not transient)
+
         if self._wait_bar is None:
             self._wait_bar = Progress(
                 TextColumn("    "),
                 BarColumn(bar_width=20, style="black", pulse_style="white"),
                 TextColumn("{task.fields[message]}"),
                 transient=True,
-                disable=not self.is_interactive,
+                disable=is_wait_bar_disabled,
                 console=self.print.console,
             )
             # start=False causes the progress bar to "pulse"
             # message=None is a sentinel the Wait Bar should be inactive
             self._wait_bar.add_task("", start=False, message=None)
 
+        self.print(
+            f"{message} started", markup=markup, show=message and is_wait_bar_disabled
+        )
+
         self.is_console_controlled = True
         wait_bar_task = self._wait_bar.tasks[0]
         previous_message = wait_bar_task.fields["message"]
         self._wait_bar.update(wait_bar_task.id, message=message)
+
         try:
             self._wait_bar.start()
             yield
-        except BaseException:
+        except BaseException as e:
+            error_message = "aborted" if isinstance(e, KeyboardInterrupt) else "errored"
             # ensure the message is left on the screen even if user sends CTRL+C
-            if message and not transient:
-                self.print(message, markup=markup)
+            self.print(
+                f"{message} {error_message}", markup=markup, show=show_outcome_message
+            )
             raise
         else:
-            if message and not transient:
-                self.print(f"{message} {done_message}", markup=markup)
+            self.print(
+                f"{message} {done_message}", markup=markup, show=show_outcome_message
+            )
         finally:
             self._wait_bar.update(wait_bar_task.id, message=previous_message)
             # Deactivate the Wait Bar if returning to its initial state

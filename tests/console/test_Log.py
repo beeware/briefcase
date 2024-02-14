@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import logging
 from io import TextIOBase
@@ -8,7 +9,7 @@ from rich.traceback import Trace
 
 import briefcase
 from briefcase.commands.dev import DevCommand
-from briefcase.console import Console, Log, LogLevel, RichLoggingHandler
+from briefcase.console import Console, Log, LogLevel, Printer, RichLoggingHandler
 from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
@@ -169,8 +170,11 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
         "ANDROID_HOME": "/androidsdk",
     }
 
-    logger = Log(verbosity=LogLevel.DEBUG)
+    printer = Printer()
+    command.tools.input = Console(printer=printer)
+    logger = command.tools.logger = Log(printer=printer, verbosity=LogLevel.DEBUG)
     logger.save_log = True
+
     logger.debug("this is debug output")
     logger.info("this is info output")
     logger.warning("this is warning output")
@@ -190,6 +194,15 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
         prefix="wibble",
         markup=True,
     )
+
+    with command.tools.input.wait_bar("transient message...", transient=True):
+        pass
+    with command.tools.input.wait_bar("wait message..."):
+        pass
+    with contextlib.suppress(KeyboardInterrupt):
+        with command.tools.input.wait_bar("abort message..."):
+            raise KeyboardInterrupt
+
     logger.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
@@ -215,6 +228,13 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     assert "GITHUB_KEY=super-secret-key" not in log_contents
     # Environment variables are sorted
     assert log_contents.index("ANDROID_HOME") < log_contents.index("GITHUB_KEY")
+    # wait bar status messages are included
+    assert "transient message... started" in log_contents
+    assert "transient message... done" in log_contents
+    assert "wait message... started" in log_contents
+    assert "wait message... done" in log_contents
+    assert "abort message... started" in log_contents
+    assert "abort message... aborted" in log_contents
 
     assert TRACEBACK_HEADER not in log_contents
     assert EXTRA_HEADER not in log_contents

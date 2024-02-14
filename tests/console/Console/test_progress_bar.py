@@ -1,6 +1,6 @@
-def test_wait_bar_always_interactive(interactive_console):
+def test_wait_bar_always_interactive(console):
     """Progress Bar is not disabled when console is interactive."""
-    with interactive_console.progress_bar() as bar:
+    with console.progress_bar() as bar:
         assert bar.disable is False
 
 

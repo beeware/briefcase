@@ -1,0 +1,1 @@
+In non-interactive environments, such as CI, a message is now printed to signify a task has begun where an animated bar would be displayed in interactive console sessions.

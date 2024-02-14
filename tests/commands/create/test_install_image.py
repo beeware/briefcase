@@ -60,7 +60,10 @@ def test_no_requested_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    expected = "Installing input/original.png as sample image... done\n\n"
+    expected = (
+        "Installing input/original.png as sample image... started\n"
+        "Installing input/original.png as sample image... done\n\n"
+    )
     assert capsys.readouterr().out == expected
 
     # The file was copied into position
@@ -114,7 +117,10 @@ def test_requested_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    expected = "Installing input/original-3742.png as 3742px sample image... done\n\n"
+    expected = (
+        "Installing input/original-3742.png as 3742px sample image... started\n"
+        "Installing input/original-3742.png as 3742px sample image... done\n\n"
+    )
     assert capsys.readouterr().out == expected
 
     # The file was copied into position
@@ -170,7 +176,10 @@ def test_variant_with_no_requested_size(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    expected = "Installing input/original.png as round sample image... done\n\n"
+    expected = (
+        "Installing input/original.png as round sample image... started\n"
+        "Installing input/original.png as round sample image... done\n\n"
+    )
     assert capsys.readouterr().out == expected
 
     # The file was copied into position
@@ -265,6 +274,7 @@ def test_variant_with_size(create_command, tmp_path, capsys):
 
     # The right message was written to output
     expected = (
+        "Installing input/original-3742.png as 3742px round sample image... started\n"
         "Installing input/original-3742.png as 3742px round sample image... done\n\n"
     )
     assert capsys.readouterr().out == expected
@@ -361,7 +371,10 @@ def test_unsized_variant(create_command, tmp_path, capsys):
     )
 
     # The right message was written to output
-    expected = "Installing input/original.png as round sample image... done\n\n"
+    expected = (
+        "Installing input/original.png as round sample image... started\n"
+        "Installing input/original.png as round sample image... done\n\n"
+    )
     assert capsys.readouterr().out == expected
 
     # The file was copied into position
