@@ -12,7 +12,7 @@ on:
 
 # Cancel active CI runs for a PR before starting another run
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -40,18 +40,31 @@ jobs:
   unit-tests:
     name: Unit tests
     needs: [ pre-commit, towncrier, package ]
-    runs-on: ${{ matrix.platform }}-latest
+    runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "macos", "ubuntu", "windows" ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12", "3.13-dev" ]
+        platform: [ macos-12, macos-14, windows-latest, ubuntu-latest ]
+        python-version: [ "3.8", "3.12", "3.13-dev" ]
         include:
-        - experimental: false
-        # Allow dev Python to fail without failing entire job
-        - python-version: "3.13-dev"
-          experimental: true
+          - experimental: false
+          - platform: ubuntu-latest
+            python-version: "3.9"
+            experimental: false
+          - platform: ubuntu-latest
+            python-version: "3.10"
+            experimental: false
+          - platform: ubuntu-latest
+            python-version: "3.11"
+            experimental: false
+          # Allow dev Python to fail without failing entire job
+          - python-version: "3.13-dev"
+            experimental: true
+        exclude:
+          # macos-14 (i.e. arm64) does not support Python 3.8
+          - platform: macos-14
+            python-version: "3.8"
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
@@ -78,9 +91,11 @@ jobs:
 
     - name: Test
       id: test
-      env:
-        COVERAGE_FILE: ".coverage.${{ matrix.platform }}.${{ matrix.python-version }}"
-      run: tox -e py --installpkg dist/briefcase-*.whl
+      run: |
+        RUNNER_OS=$(cut -d- -f1 <<< ${{ matrix.platform }})
+        RUNNER_VERSION=$(cut -d- -f2 <<< ${{ matrix.platform }})
+        COVERAGE_FILE=".coverage.${RUNNER_OS}.${RUNNER_VERSION}.${{ matrix.python-version }}" \
+          tox -e py --installpkg dist/briefcase-*.whl
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
@@ -129,9 +144,9 @@ jobs:
 
     - name: Platform Coverage Reports
       id: platform-coverage
-      run: >
-        tox p --parallel-no-spinner -qe
-        coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
+      run: |
+        tox --parallel-no-spinner -qe \
+          coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
 
     - name: Project Coverage Report
       id: project-coverage
@@ -155,8 +170,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside6", "ppb", "pygame" ]
-        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+        framework: [ toga, pyside6, ppb, pygame ]
+        runner-os: [ macos-12, macos-14, ubuntu-22.04, windows-latest ]
 
   verify-apps:
     name: Build app
@@ -174,5 +189,5 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside6", "ppb", "pygame" ]
-        runner-os: [ "macos-latest", "ubuntu-22.04", "windows-latest" ]
+        framework: [ toga, pyside6, ppb, pygame ]
+        runner-os: [ macos-12, macos-14, ubuntu-22.04, windows-latest ]

@@ -1,0 +1,1 @@
+CI now includes testing for macOS arm64.
