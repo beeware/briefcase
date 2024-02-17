@@ -6,11 +6,13 @@ import os
 import platform
 import re
 import sys
+import time
 import traceback
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
+from typing import Callable, Iterable
 
 from rich.console import Console as RichConsole
 from rich.control import strip_control_codes
@@ -23,7 +25,7 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn,
 )
-from rich.traceback import Traceback
+from rich.traceback import Trace, Traceback
 
 from briefcase import __version__
 
@@ -65,17 +67,17 @@ class RichConsoleHighlighter(RegexHighlighter):
     """
 
     base_style = "repr."
-    highlights = [r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#]*)"]
+    highlights = [
+        r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)"
+    ]
 
 
 class Printer:
-    """Interface for printing and managing output to the console and/or log."""
-
     def __init__(self, log_width=180):
         """Interface for printing and managing output to the console and/or log.
 
         The default width is wide enough to render the output of ``sdkmanager
-        --list_installed`` without line wrapping.
+        --list_installed`` in the log file without line wrapping.
 
         :param log_width: The width at which content should be wrapped in the log file
         """
@@ -90,8 +92,7 @@ class Printer:
 
         # Rich only records what's being logged if it is actually written somewhere;
         # writing to /dev/null allows Rich to do so without needing to print the
-        # logs in the console or save them to file before it is known a file is
-        # wanted.
+        # logs in the console or save them to file before it is known a file is wanted.
         self.dev_null = open(os.devnull, "w", encoding="utf-8", errors="ignore")
         self.log = RichConsole(
             file=self.dev_null,
@@ -175,9 +176,13 @@ class Log:
     # subdirectory of command.base_path to store log files
     LOG_DIR = "logs"
 
-    def __init__(self, printer=None, verbosity: LogLevel = LogLevel.INFO):
+    def __init__(
+        self,
+        printer: Printer | None = None,
+        verbosity: LogLevel = LogLevel.INFO,
+    ):
         self.print = Printer() if printer is None else printer
-        # --verbosity flag: 0 for info, 1 for debug, 2 for deep debug
+        # --verbosity flag: see LogLevel for valid values
         self.verbosity = verbosity
         # --log flag to force logfile creation
         self.save_log = False
@@ -185,14 +190,14 @@ class Log:
         self.skip_log = False
         # Rich stacktraces of exceptions for logging to file.
         # A list of tuples containing a label for the thread context, and the Trace object
-        self.stacktraces = []
+        self.stacktraces: list[tuple[str, Trace]] = []
         # functions to run for additional logging if creating a logfile
-        self.log_file_extras = []
+        self.log_file_extras: list[Callable[[], object]] = []
         # The current context for the log
         self._context = ""
 
     @contextmanager
-    def context(self, context):
+    def context(self, context: str):
         """Wrap a collection of output in a logging context.
 
         A logging context is a prefix on every logging line. It is used when a set of
@@ -271,7 +276,7 @@ class Log:
         )
 
     def verbose(self, message="", *, prefix="", markup=False):
-        """Log message at verbose level if debug enabled; included if verbosity >= 1."""
+        """Log message at verbose level; included if verbosity >= 1."""
         self._log(prefix=prefix, message=message, show=self.is_verbose, markup=markup)
 
     def info(self, message="", *, prefix="", markup=False):
@@ -358,7 +363,7 @@ class Log:
 
         self.stacktraces.append((label, Traceback.extract(*exc_info, show_locals=True)))
 
-    def add_log_file_extra(self, func):
+    def add_log_file_extra(self, func: Callable[[], object]):
         """Register a function to be called in the event that a log file is written.
 
         This can be used to provide additional debugging information which is too
@@ -459,13 +464,41 @@ class Log:
         )
 
 
+class NotDeadYet:
+    # I’m getting better! No you’re not, you’ll be stone dead in a minute.
+
+    def __init__(self, printer: Printer):
+        """A keep-alive spinner for long-running processes without console output.
+
+        Returned by the Wait Bar's context manager but can be used independently. Use in
+        a loop that calls update() each iteration. A keep-alive message will be printed
+        every 10 seconds.
+        """
+        self.printer: Printer = printer
+        self.interval_sec: int = 10
+        self.message: str = "... still waiting"
+        self.ready_time: float = 0.0
+
+        self.reset()  # initialize
+
+    def update(self):
+        """Write keep-alive message if the periodic interval has elapsed."""
+        if self.ready_time < time.time():
+            self.printer(self.message)
+            self.reset()
+
+    def reset(self):
+        """Initialize periodic interval to now; next message prints after interval."""
+        self.ready_time = time.time() + self.interval_sec
+
+
 class Console:
-    def __init__(self, printer=None, enabled=True):
+    def __init__(self, printer: Printer | None = None, enabled: bool = True):
         self.enabled = enabled
         self.print = Printer() if printer is None else printer
         # Use Rich's input() to read from user
         self.input = self.print.console.input
-        self._wait_bar: Progress = None
+        self._wait_bar: Progress | None = None
         # Signal that Rich is dynamically controlling the console output. Therefore,
         # all output must be printed to the screen by Rich to prevent corruption of
         # dynamic elements like the Wait Bar.
@@ -502,12 +535,12 @@ class Console:
     @contextmanager
     def wait_bar(
         self,
-        message="",
-        done_message="done",
+        message: str = "",
+        done_message: str = "done",
         *,
-        transient=False,
-        markup=False,
-    ):
+        transient: bool = False,
+        markup: bool = False,
+    ) -> NotDeadYet:
         """Activates the Wait Bar as a context manager.
 
         If the Wait Bar is already active, then its message is updated for the new
@@ -520,6 +553,7 @@ class Console:
             if False (default), the message will remain on the screen without pulsing bar.
         :param markup: whether to interpret Rich styling markup in the message; if True,
             the message must already be escaped; defaults False.
+        :returns:  Keep-alive spinner to notify user Briefcase is still waiting
         """
         is_wait_bar_disabled = not self.is_interactive
         show_outcome_message = message and (is_wait_bar_disabled or not transient)
@@ -548,10 +582,10 @@ class Console:
 
         try:
             self._wait_bar.start()
-            yield
+            yield NotDeadYet(printer=self.print)
         except BaseException as e:
+            # capture BaseException so message is left on the screen even if user sends CTRL+C
             error_message = "aborted" if isinstance(e, KeyboardInterrupt) else "errored"
-            # ensure the message is left on the screen even if user sends CTRL+C
             self.print(
                 f"{message} {error_message}", markup=markup, show=show_outcome_message
             )
@@ -595,7 +629,7 @@ class Console:
                 self._wait_bar.start()
 
     def prompt(self, *values, markup=False, **kwargs):
-        """Print to the screen for soliciting user interaction.
+        """Print to the screen for soliciting user interaction if input enabled.
 
         :param values: strings to print as the user prompt
         :param markup: True if prompt contains Rich markup
@@ -603,7 +637,7 @@ class Console:
         if self.enabled:
             self.print(*values, markup=markup, stack_offset=4, **kwargs)
 
-    def boolean_input(self, question, default=False):
+    def boolean_input(self, question: str, default: bool = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
 
         The user might press "y" for true or "n" for false. If input is disabled,
@@ -641,12 +675,12 @@ class Console:
 
     def selection_input(
         self,
-        prompt,
-        choices,
-        default=None,
-        error_message="Invalid Selection",
-        transform=None,
-    ):
+        prompt: str,
+        choices: Iterable[str],
+        default: str | None = None,
+        error_message: str = "Invalid Selection",
+        transform: Callable[[str], str] | None = None,
+    ) -> str:
         """Prompt the user to select an option from a list of choices.
 
         :param prompt: The text prompt to display
@@ -668,7 +702,7 @@ class Console:
             self.prompt()
             self.prompt(error_message)
 
-    def text_input(self, prompt, default=None):
+    def text_input(self, prompt: str, default: str | None = None) -> str:
         """Prompt the user for text input.
 
         If no default is specified, the input will be returned as entered.
@@ -691,8 +725,8 @@ class Console:
 
         return user_input
 
-    def __call__(self, prompt, *, markup=False):
-        """Present input() interface."""
+    def __call__(self, prompt: str, *, markup: bool = False):
+        """Present input() interface; prompt should be bold if markup is included."""
         if not self.enabled:
             raise InputDisabled()
 

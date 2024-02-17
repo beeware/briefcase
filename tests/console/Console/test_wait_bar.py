@@ -1,4 +1,8 @@
+from unittest.mock import MagicMock
+
 import pytest
+
+import briefcase.console
 
 
 def test_wait_bar_done_message_interactive(console, capsys):
@@ -312,3 +316,31 @@ def test_wait_bar_non_interactive(non_interactive_console):
         assert non_interactive_console._wait_bar.disable is True
         with non_interactive_console.wait_bar():
             assert non_interactive_console._wait_bar.disable is True
+
+
+def test_wait_bar_alive_messages_interactive(
+    console,
+    non_interactive_console,
+    capsys,
+    monkeypatch,
+):
+    """Wait Bar keep_alive prints keep alive messages."""
+    for test_console in [console, non_interactive_console]:
+
+        # initialization will set interval to a small number
+        # update() will see time at a large number and print the message
+        # then interval is reset back to a small number
+        monkeypatch.setattr(
+            briefcase.console.time,
+            "time",
+            MagicMock(side_effect=[0] + [1e42, 0] * 2),
+        )
+
+        with test_console.wait_bar("task") as keep_alive:
+            for _ in range(2):
+                keep_alive.update()
+
+        assert capsys.readouterr().out.endswith(
+            "... still waiting\n... still waiting\ntask done\n\n"
+        )
+        assert capsys.readouterr().out == ""
