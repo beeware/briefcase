@@ -45,17 +45,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ macos-12, macos-14, windows-latest, ubuntu-latest ]
+        platform: [ "macos-12", "macos-14", "windows-latest", "ubuntu-latest" ]
         python-version: [ "3.8", "3.12", "3.13-dev" ]
         include:
           - experimental: false
-          - platform: ubuntu-latest
+          - platform: "ubuntu-latest"
             python-version: "3.9"
             experimental: false
-          - platform: ubuntu-latest
+          - platform: "ubuntu-latest"
             python-version: "3.10"
             experimental: false
-          - platform: ubuntu-latest
+          - platform: "ubuntu-latest"
             python-version: "3.11"
             experimental: false
           # Allow dev Python to fail without failing entire job
@@ -63,7 +63,7 @@ jobs:
             experimental: true
         exclude:
           # macos-14 (i.e. arm64) does not support Python 3.8
-          - platform: macos-14
+          - platform: "macos-14"
             python-version: "3.8"
     steps:
     - name: Checkout
@@ -170,8 +170,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ toga, pyside6, ppb, pygame ]
-        runner-os: [ macos-12, macos-14, ubuntu-22.04, windows-latest ]
+        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+        runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
 
   verify-apps:
     name: Build app
@@ -189,5 +189,5 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ toga, pyside6, ppb, pygame ]
-        runner-os: [ macos-12, macos-14, ubuntu-22.04, windows-latest ]
+        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+        runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
