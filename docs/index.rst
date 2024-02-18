@@ -7,7 +7,7 @@ native application. It supports producing binaries for:
 
 * macOS, as a standalone .app
 * Windows, as an MSI installer
-* Linux, as an AppImage
+* Linux, as a native system package
 * iOS, as an Xcode project
 * Android, as a Gradle project
 * the Web, as a static web site using PyScript for client-side Python
@@ -51,7 +51,6 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
 .. _BeeWare suite: https://beeware.org
 .. _Read The Docs: https://briefcase.readthedocs.io
-
 
 .. toctree::
    :maxdepth: 2
