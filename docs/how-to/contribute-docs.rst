@@ -94,6 +94,36 @@ Once your development environment is set up, run:
 The output of the file should be in the ``docs/_build/html`` folder. If there
 are any markup problems, they'll raise an error.
 
+Live documentation preview
+--------------------------
+
+To support rapid editing of documentation, Briefcase also has a "live preview" mode:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e docs-live
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e docs-live
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e docs-live
+
+This will build the documentation, start a web server to serve the build documentation,
+and watch the file system for any changes to the documentation source. If a change is
+detected, the documentation will be rebuilt, and any browser viewing the modified page
+will be automatically refreshed.
+
 Documentation linting
 ---------------------
 
