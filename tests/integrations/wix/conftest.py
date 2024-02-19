@@ -7,7 +7,9 @@ from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 
-WIX_DOWNLOAD_URL = "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip"
+WIX_DOWNLOAD_URL = (
+    "https://github.com/wixtoolset/wix3/releases/download/wix314rtm/wix314-binaries.zip"
+)
 
 
 @pytest.fixture
