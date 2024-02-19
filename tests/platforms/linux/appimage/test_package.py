@@ -29,12 +29,7 @@ def test_package_app(package_command, first_app_config, tmp_path):
     # Create the app binary
     create_file(
         tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage"
-        / "First_App-0.0.1-x86_64.AppImage",
+        / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage",
         "AppImage",
     )
 

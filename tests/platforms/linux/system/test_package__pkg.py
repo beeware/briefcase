@@ -43,6 +43,10 @@ def package_command(first_app, tmp_path):
     # Make the mock rmtree still remove content
     command.tools.shutil.rmtree = mock.MagicMock(side_effect=shutil.rmtree)
 
+    # Mock not using docker
+    command.target_image = None
+    command.extra_docker_build_args = []
+
     return command
 
 
@@ -58,14 +62,7 @@ def first_app_pkg(first_app, tmp_path):
 
     # Mock the side effects of building the app
     usr_dir = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
+        tmp_path / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr"
     )
 
     # Create the binary
@@ -81,11 +78,8 @@ def first_app_pkg(first_app, tmp_path):
     return first_app
 
 
-def test_verify_no_docker(monkeypatch, package_command, first_app_pkg):
+def test_verify_no_docker(package_command, first_app_pkg, monkeypatch):
     """If not using docker, existence of makepkg is verified."""
-    # Mock not using docker
-    package_command.target_image = None
-
     # Mock the existence of makepkg
     package_command.tools.shutil.which = mock.MagicMock(return_value="/mybin/makepkg")
 
@@ -107,11 +101,11 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_pkg):
     ],
 )
 def test_verify_makepkg_missing(
-    monkeypatch,
     package_command,
     first_app_pkg,
     vendor_base,
     error_msg,
+    monkeypatch,
 ):
     """If makepkg isn't installed, an error is raised."""
     # Mock distro so packager is found or not appropriately
@@ -119,9 +113,6 @@ def test_verify_makepkg_missing(
 
     # Mock packager as missing
     package_command.tools.shutil.which = mock.MagicMock(return_value="")
-
-    # Mock not using docker
-    package_command.target_image = None
 
     # Verifying app tools will raise an error
     with pytest.raises(BriefcaseCommandError, match=error_msg):
@@ -131,7 +122,7 @@ def test_verify_makepkg_missing(
     package_command.tools.shutil.which.assert_called_once_with("makepkg")
 
 
-def test_verify_docker(monkeypatch, package_command, first_app_pkg):
+def test_verify_docker(package_command, first_app_pkg, monkeypatch):
     """If using Docker, no tool checks are needed."""
     # Mock using docker
     package_command.target_image = "somevendor:surprising"

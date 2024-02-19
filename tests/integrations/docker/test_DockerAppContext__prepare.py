@@ -7,7 +7,8 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import DockerAppContext
 
 
-def test_prepare(mock_tools, my_app, tmp_path, sub_stream_kw):
+@pytest.mark.parametrize("extra_args", [[], ["--option-one", "--option-two"]])
+def test_prepare(mock_tools, my_app, extra_args, tmp_path, sub_stream_kw):
     """The Docker environment can be prepared."""
     mock_docker_app_context = DockerAppContext(mock_tools, my_app)
     mock_docker_app_context.prepare(
@@ -17,12 +18,15 @@ def test_prepare(mock_tools, my_app, tmp_path, sub_stream_kw):
         host_bundle_path=tmp_path / "bundle",
         host_data_path=tmp_path / "briefcase",
         python_version="3.X",
+        extra_build_args=extra_args,
     )
 
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
+            "buildx",
             "build",
+            "--load",
             "--progress",
             "plain",
             "--tag",
@@ -36,7 +40,8 @@ def test_prepare(mock_tools, my_app, tmp_path, sub_stream_kw):
             "--build-arg",
             "HOST_GID=42",
             os.fsdecode(tmp_path / "base/path/to/src"),
-        ],
+        ]
+        + extra_args,
         **sub_stream_kw,
     )
 
@@ -62,12 +67,15 @@ def test_prepare_failure(mock_docker_app_context, tmp_path, sub_stream_kw):
             host_bundle_path=tmp_path / "bundle",
             host_data_path=tmp_path / "briefcase",
             python_version="3.X",
+            extra_build_args=["--option-one", "--option-two"],
         )
 
     mock_docker_app_context.tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
+            "buildx",
             "build",
+            "--load",
             "--progress",
             "plain",
             "--tag",
@@ -81,6 +89,8 @@ def test_prepare_failure(mock_docker_app_context, tmp_path, sub_stream_kw):
             "--build-arg",
             "HOST_GID=42",
             os.fsdecode(tmp_path / "base/path/to/src"),
+            "--option-one",
+            "--option-two",
         ],
         **sub_stream_kw,
     )

@@ -97,6 +97,8 @@ AppImages.
 
 Use native execution, rather than using Docker to start a container.
 
+.. include:: docker_build_options.rst
+
 Application configuration
 =========================
 

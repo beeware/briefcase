@@ -42,6 +42,11 @@ def package_command(first_app, tmp_path):
 
     # Mock the RPM tag, since "somevendor" won't identify as rpm.
     command.rpm_tag = mock.MagicMock(return_value="fcXX")
+
+    # Mock not using docker
+    command.target_image = None
+    command.extra_docker_build_args = []
+
     return command
 
 
@@ -56,14 +61,7 @@ def first_app_rpm(first_app, tmp_path):
 
     # Mock the side effects of building the app
     usr_dir = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
+        tmp_path / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr"
     )
 
     # Create the binary
@@ -79,11 +77,8 @@ def first_app_rpm(first_app, tmp_path):
     return first_app
 
 
-def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
+def test_verify_no_docker(package_command, first_app_rpm, monkeypatch):
     """If not using docker, existence of rpmbuild is verified."""
-    # Mock not using docker
-    package_command.target_image = None
-
     # Mock the existence of rpmbuild
     package_command.tools.shutil.which = mock.MagicMock(return_value="/mybin/rpmbuild")
 
@@ -105,11 +100,11 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_rpm):
     ],
 )
 def test_verify_rpmbuild_missing(
-    monkeypatch,
     package_command,
     first_app_rpm,
     vendor_base,
     error_msg,
+    monkeypatch,
 ):
     """If rpmbuild isn't installed, an error is raised."""
     # Mock distro so packager is found or not appropriately
@@ -117,9 +112,6 @@ def test_verify_rpmbuild_missing(
 
     # Mock packager as missing
     package_command.tools.shutil.which = mock.MagicMock(return_value="")
-
-    # Mock not using docker
-    package_command.target_image = None
 
     # Verifying app tools will raise an error
     with pytest.raises(BriefcaseCommandError, match=error_msg):
@@ -129,7 +121,7 @@ def test_verify_rpmbuild_missing(
     package_command.tools.shutil.which.assert_called_once_with("rpmbuild")
 
 
-def test_verify_docker(monkeypatch, package_command, first_app_rpm):
+def test_verify_docker(package_command, first_app_rpm, monkeypatch):
     """If using Docker, no tool checks are needed."""
     # Mock using docker
     package_command.target_image = "somevendor:surprising"
@@ -428,11 +420,7 @@ def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
 
     # The rpm was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
-        bundle_path
-        / "rpmbuild"
-        / "RPMS"
-        / "wonky"
-        / "first-app-0.0.1-1.fcXX.wonky.rpm",
+        bundle_path / "rpmbuild/RPMS/wonky/first-app-0.0.1-1.fcXX.wonky.rpm",
         tmp_path / "base_path/dist/first-app-0.0.1-1.fcXX.wonky.rpm",
     )
 
@@ -575,7 +563,7 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
-    """If an packaging doesn't succeed, an error is raised."""
+    """If packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
     # Mock a packaging failure

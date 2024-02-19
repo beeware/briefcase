@@ -111,14 +111,16 @@ supported by the vendor, and system Python is Python 3.8 or later.
 
 The following Linux vendors are known to work as Docker targets:
 
-* Debian (e.g., ``debian:bullseye`` or ``debian:11``)
+* Debian (e.g., ``debian:bookworm`` or ``debian:12``)
 * Ubuntu (e.g., ``ubuntu:jammy`` or ``ubuntu:22.04``)
-* Fedora (e.g, ``fedora:37``)
+* Fedora (e.g, ``fedora:39``)
 * AlmaLinux (e.g., ``almalinux:9``)
 * Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
 * openSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
 * Arch Linux (e.g., ``archlinux:latest``)
 * Manjaro Linux (e.g., ``manjarolinux/base:latest``)
+
+.. include:: docker_build_options.rst
 
 Application configuration
 =========================

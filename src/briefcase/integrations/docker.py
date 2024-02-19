@@ -839,6 +839,7 @@ class DockerAppContext(Tool):
         host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
+        extra_build_args: list[str] | None = None,
         **kwargs,
     ) -> DockerAppContext:  # pragma: no-cover-if-is-windows
         """Verify that docker is available as an app-bound tool.
@@ -870,6 +871,7 @@ class DockerAppContext(Tool):
             host_bundle_path=host_bundle_path,
             host_data_path=host_data_path,
             python_version=python_version,
+            extra_build_args=extra_build_args,
         )
         return tools[app].app_context
 
@@ -881,6 +883,7 @@ class DockerAppContext(Tool):
         host_bundle_path: Path,
         host_data_path: Path,
         python_version: str,
+        extra_build_args: list[str] | None = None,
     ):
         """Create/update the Docker image from the app's Dockerfile."""
         self.app_base_path = app_base_path
@@ -904,7 +907,9 @@ class DockerAppContext(Tool):
                     self.tools.subprocess.run(
                         [
                             "docker",
+                            "buildx",
                             "build",
+                            "--load",
                             "--progress",
                             "plain",
                             "--tag",
@@ -921,7 +926,8 @@ class DockerAppContext(Tool):
                                 self.app_base_path,
                                 *self.app.sources[0].split("/")[:-1],
                             ),
-                        ],
+                        ]
+                        + (extra_build_args if extra_build_args is not None else []),
                         check=True,
                     )
                 except subprocess.CalledProcessError as e:

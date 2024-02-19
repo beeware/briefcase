@@ -47,6 +47,7 @@ def test_open_docker(open_command, first_app_config, tmp_path, monkeypatch):
 
     # Enable docker
     open_command.use_docker = True
+    open_command.extra_docker_build_args = []
 
     # Provide Docker
     monkeypatch.setattr(
@@ -61,19 +62,9 @@ def test_open_docker(open_command, first_app_config, tmp_path, monkeypatch):
     open_command.tools[first_app_config].app_context.prepare(
         image_tag=f"briefcase/com.example.first-app:py3.{sys.version_info.minor}",
         dockerfile_path=tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage"
-        / "Dockerfile",
+        / "base_path/build/first-app/linux/appimage/Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_bundle_path=tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage",
+        host_bundle_path=tmp_path / "base_path/build/first-app/linux/appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
     )
@@ -83,8 +74,7 @@ def test_open_docker(open_command, first_app_config, tmp_path, monkeypatch):
     # Create the desktop file that would be in the project folder.
     create_file(
         open_command.project_path(first_app_config)
-        / "First App.AppDir"
-        / "com.example.firstapp.desktop",
+        / "First App.AppDir/com.example.firstapp.desktop",
         "FreeDesktop file",
     )
 
@@ -116,8 +106,7 @@ def test_open_no_docker_linux(open_command, first_app_config, tmp_path):
     # Create the desktop file that would be in the project folder.
     create_file(
         open_command.project_path(first_app_config)
-        / "First App.AppDir"
-        / "com.example.firstapp.desktop",
+        / "First App.AppDir/com.example.firstapp.desktop",
         "FreeDesktop file",
     )
 
@@ -140,8 +129,7 @@ def test_open_no_docker_macOS(open_command, first_app_config, tmp_path):
     # Create the desktop file that would be in the project folder.
     create_file(
         open_command.project_path(first_app_config)
-        / "First App.AppDir"
-        / "com.example.firstapp.desktop",
+        / "First App.AppDir/com.example.firstapp.desktop",
         "FreeDesktop file",
     )
 

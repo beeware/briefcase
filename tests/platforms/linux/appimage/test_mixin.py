@@ -35,12 +35,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     assert (
         binary_path
         == tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage"
-        / "First_App-0.0.1-x86_64.AppImage"
+        / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage"
     )
 
 
@@ -105,10 +100,11 @@ def test_verify_linux_no_docker(create_command, first_app_config, tmp_path):
     assert not hasattr(create_command.tools, "docker")
 
 
-def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeypatch):
+def test_verify_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
     """If Docker is enabled on Linux, the Docker alias is set."""
     create_command.tools.host_os = "Linux"
     create_command.use_docker = True
+    create_command.extra_docker_build_args = ["--option-one", "--option-two"]
 
     # Mock Docker tool verification
     mock__version_compat = MagicMock(spec=Docker._version_compat)
@@ -157,21 +153,12 @@ def test_verify_linux_docker(create_command, tmp_path, first_app_config, monkeyp
         app=first_app_config,
         image_tag="briefcase/com.example.first-app:appimage",
         dockerfile_path=tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage"
-        / "Dockerfile",
+        / "base_path/build/first-app/linux/appimage/Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_bundle_path=tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage",
+        host_bundle_path=tmp_path / "base_path/build/first-app/linux/appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
+        extra_build_args=["--option-one", "--option-two"],
     )
 
 
@@ -184,6 +171,7 @@ def test_verify_non_linux_docker(
     """If Docker is enabled on non-Linux, the Docker alias is set."""
     create_command.tools.host_os = "Darwin"
     create_command.use_docker = True
+    create_command.extra_docker_build_args = ["--option-one", "--option-two"]
 
     # Mock Docker tool verification
     mock__version_compat = MagicMock(spec=Docker._version_compat)
@@ -232,21 +220,12 @@ def test_verify_non_linux_docker(
         app=first_app_config,
         image_tag="briefcase/com.example.first-app:appimage",
         dockerfile_path=tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage"
-        / "Dockerfile",
+        / "base_path/build/first-app/linux/appimage/Dockerfile",
         app_base_path=tmp_path / "base_path",
-        host_bundle_path=tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "linux"
-        / "appimage",
+        host_bundle_path=tmp_path / "base_path/build/first-app/linux/appimage",
         host_data_path=tmp_path / "briefcase",
         python_version=f"3.{sys.version_info.minor}",
+        extra_build_args=["--option-one", "--option-two"],
     )
 
 
@@ -259,9 +238,11 @@ def test_clone_options(tmp_path):
         data_path=tmp_path / "briefcase",
     )
     build_command.use_docker = True
+    build_command.extra_docker_build_args = ["--option-one", "--option-two"]
 
     create_command = build_command.create_command
 
     # Confirm the use_docker option has been cloned
     assert create_command.is_clone
     assert create_command.use_docker
+    assert create_command.extra_docker_build_args == ["--option-one", "--option-two"]

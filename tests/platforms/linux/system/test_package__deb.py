@@ -38,6 +38,10 @@ def package_command(first_app, tmp_path):
     # Make the mock rmtree still remove content
     command.tools.shutil.rmtree.side_effect = shutil.rmtree
 
+    # Mock not using docker
+    command.target_image = None
+    command.extra_docker_build_args = []
+
     return command
 
 
@@ -53,11 +57,8 @@ def first_app_deb(first_app):
     return first_app
 
 
-def test_verify_no_docker(monkeypatch, package_command, first_app_deb):
+def test_verify_no_docker(package_command, first_app_deb, monkeypatch):
     """If not using docker, existence of dpkg-deb is verified."""
-    # Mock not using docker
-    package_command.target_image = None
-
     # Mock the existence of dpkg-deb
     package_command.tools.shutil.which = mock.MagicMock(return_value="/mybin/dpkg-deb")
 
@@ -79,11 +80,11 @@ def test_verify_no_docker(monkeypatch, package_command, first_app_deb):
     ],
 )
 def test_verify_dpkg_deb_missing(
-    monkeypatch,
     package_command,
     first_app_deb,
     vendor_base,
     error_msg,
+    monkeypatch,
 ):
     """If dpkg-deb isn't installed, an error is raised."""
     # Mock distro so packager is found or not appropriately
@@ -91,9 +92,6 @@ def test_verify_dpkg_deb_missing(
 
     # Mock packager as missing
     package_command.tools.shutil.which = mock.MagicMock(return_value="")
-
-    # Mock not using docker
-    package_command.target_image = None
 
     # Verifying app tools will raise an error
     with pytest.raises(BriefcaseCommandError, match=error_msg):
@@ -103,7 +101,7 @@ def test_verify_dpkg_deb_missing(
     package_command.tools.shutil.which.assert_called_once_with("dpkg-deb")
 
 
-def test_verify_docker(monkeypatch, package_command, first_app_deb):
+def test_verify_docker(package_command, first_app_deb, monkeypatch):
     """If using Docker, no tool checks are needed."""
     # Mock using docker
     package_command.target_image = "somevendor:surprising"
@@ -176,10 +174,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
     # The deb was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
         bundle_path / "first-app-0.0.1.deb",
-        tmp_path
-        / "base_path"
-        / "dist"
-        / "first-app_0.0.1-1~somevendor-surprising_wonky.deb",
+        tmp_path / "base_path/dist/first-app_0.0.1-1~somevendor-surprising_wonky.deb",
     )
 
 
@@ -232,10 +227,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
     # The deb was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
         bundle_path / "first-app-0.0.1.deb",
-        tmp_path
-        / "base_path"
-        / "dist"
-        / "first-app_0.0.1-1~somevendor-surprising_wonky.deb",
+        tmp_path / "base_path/dist/first-app_0.0.1-1~somevendor-surprising_wonky.deb",
     )
 
 
@@ -324,10 +316,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
     # The deb was moved into the final location
     package_command.tools.shutil.move.assert_called_once_with(
         bundle_path / "first-app-0.0.1.deb",
-        tmp_path
-        / "base_path"
-        / "dist"
-        / "first-app_0.0.1-42~somevendor-surprising_wonky.deb",
+        tmp_path / "base_path/dist/first-app_0.0.1-42~somevendor-surprising_wonky.deb",
     )
 
 

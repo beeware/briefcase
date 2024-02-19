@@ -67,17 +67,26 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
             help="Don't use Docker for building the AppImage",
             required=False,
         )
+        parser.add_argument(
+            "--Xdocker-build",
+            action="append",
+            dest="extra_docker_build_args",
+            help="Additional arguments to use when building the Docker image",
+            required=False,
+        )
 
     def parse_options(self, extra):
         """Extract the use_docker option."""
         options, overrides = super().parse_options(extra)
         self.use_docker = options.pop("use_docker")
+        self.extra_docker_build_args = options.pop("extra_docker_build_args")
         return options, overrides
 
     def clone_options(self, command):
         """Clone the use_docker option."""
         super().clone_options(command)
         self.use_docker = command.use_docker
+        self.extra_docker_build_args = command.extra_docker_build_args
 
     def finalize_app_config(self, app: AppConfig):
         """If we're *not* using Docker, warn the user about portability."""
@@ -149,6 +158,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
                 host_bundle_path=self.bundle_path(app),
                 host_data_path=self.data_path,
                 python_version=self.python_version_tag,
+                extra_build_args=self.extra_docker_build_args,
             )
         else:
             NativeAppContext.verify(tools=self.tools, app=app)
