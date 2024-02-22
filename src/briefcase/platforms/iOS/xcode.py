@@ -513,32 +513,31 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.logger.info(f"Installing {label}...", prefix=app.app_name)
         with self.input.wait_bar(
             "Uninstalling any existing app version..."
-        ) as keep_alive:
-            uninstall_popen = self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+        ) as keep_alive, self.tools.subprocess.Popen(
+            ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+        ) as uninstall_popen:
+            while (ret_code := uninstall_popen.poll()) is None:
+                keep_alive.update()
+                time.sleep(0.25)
+        if ret_code != 0:
+            self.logger.error(f"{ret_code=}")
+            raise BriefcaseCommandError(
+                f"Unable to uninstall old version of app {app.app_name}."
             )
-            with uninstall_popen:
-                while (ret_code := uninstall_popen.poll()) is None:
-                    keep_alive.update()
-                    time.sleep(0.25)
-            if ret_code != 0:
-                raise BriefcaseCommandError(
-                    f"Unable to uninstall old version of app {app.app_name}."
-                )
 
         # Install the app.
-        with self.input.wait_bar(f"Installing new {label} version..."):
-            install_popen = self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+        with self.input.wait_bar(
+            f"Installing new {label} version..."
+        ) as keep_alive, self.tools.subprocess.Popen(
+            ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+        ) as install_popen:
+            while (ret_code := install_popen.poll()) is None:
+                keep_alive.update()
+                time.sleep(0.25)
+        if ret_code != 0:
+            raise BriefcaseCommandError(
+                f"Unable to install new version of app {app.app_name}."
             )
-            with install_popen:
-                while (ret_code := install_popen.poll()) is None:
-                    keep_alive.update()
-                    time.sleep(0.25)
-            if ret_code != 0:
-                raise BriefcaseCommandError(
-                    f"Unable to install new version of app {app.app_name}."
-                )
 
         # Start log stream for the app.
         # The following sets up a log stream filter that looks for:

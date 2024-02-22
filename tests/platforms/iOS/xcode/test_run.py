@@ -92,9 +92,11 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -221,9 +223,11 @@ def test_run_app_simulator_booted_underscore(
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -342,9 +346,11 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -475,9 +481,11 @@ def test_run_app_simulator_shut_down(
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -614,9 +622,11 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -830,7 +840,8 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
     # Call uninstall fails
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 1]
     run_command.tools.subprocess.Popen.side_effect = [uninstall_popen]
 
@@ -895,9 +906,11 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
 
     # Call to install fails
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 1]
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
@@ -984,9 +997,11 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -1102,9 +1117,11 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.check_output.return_value = "No PID returned"
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -1222,9 +1239,11 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -1342,9 +1361,11 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
@@ -1449,9 +1470,11 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     )
 
     # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen, name="asdf")
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
