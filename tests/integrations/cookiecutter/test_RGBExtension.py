@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.integrations.cookiecutter import RGBExtension
 
 

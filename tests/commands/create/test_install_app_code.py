@@ -2,9 +2,8 @@ import os
 import shutil
 from unittest import mock
 
-import pytest
-
 import briefcase
+import pytest
 from briefcase.exceptions import MissingAppSources
 
 from ...utils import create_file

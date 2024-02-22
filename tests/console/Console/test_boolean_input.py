@@ -1,6 +1,6 @@
 import pytest
-
 from briefcase.console import InputDisabled
+
 from tests.utils import default_rich_prompt
 
 

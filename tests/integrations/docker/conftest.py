@@ -3,9 +3,8 @@ from __future__ import annotations
 import subprocess
 from unittest.mock import MagicMock, call
 
-import pytest
-
 import briefcase
+import pytest
 from briefcase.config import AppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker, DockerAppContext

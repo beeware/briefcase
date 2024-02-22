@@ -4,10 +4,9 @@ import subprocess
 from pathlib import Path
 from unittest import mock
 
+import briefcase.platforms.windows.app
 import pytest
 import tomli_w
-
-import briefcase.platforms.windows.app
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit

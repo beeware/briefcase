@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.console import sanitize_text
 
 

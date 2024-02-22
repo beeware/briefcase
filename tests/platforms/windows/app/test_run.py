@@ -3,7 +3,6 @@ import subprocess
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppRunCommand

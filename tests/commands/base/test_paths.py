@@ -5,7 +5,6 @@ from contextlib import suppress
 from pathlib import Path
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 
 from .conftest import DummyCommand

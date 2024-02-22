@@ -101,7 +101,7 @@ def parse_cmdline(args):
     # actually used to register the platform. This function maps the lower-case
     # version of the registered name to the actual registered name.
     def normalize(name):
-        return {n.lower(): n for n in platforms.keys()}.get(name.lower(), name)
+        return {n.lower(): n for n in platforms}.get(name.lower(), name)
 
     # argparse handles `--` specially, so make the passthrough args bypass the parser.
     def parse_known_args(args):

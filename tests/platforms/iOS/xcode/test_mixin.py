@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock
 
-import pytest
-
 import briefcase.integrations.xcode
+import pytest
 from briefcase.console import Console, Log
 from briefcase.exceptions import NoDistributionArtefact
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand

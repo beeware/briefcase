@@ -3,7 +3,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess

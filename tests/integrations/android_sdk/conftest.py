@@ -2,7 +2,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download

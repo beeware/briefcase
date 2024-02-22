@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 
 from ....utils import assert_url_resolvable

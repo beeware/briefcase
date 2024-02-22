@@ -7,13 +7,12 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import briefcase.integrations
 import pytest
 import requests
-from cookiecutter.main import cookiecutter
-
-import briefcase.integrations
 from briefcase.console import Console, Log
 from briefcase.integrations.base import ToolCache
+from cookiecutter.main import cookiecutter
 
 from .test_tool_registry import integrations_modules, tools_for_module
 

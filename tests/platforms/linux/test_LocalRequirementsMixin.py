@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, call
 
 import pytest
-
 from briefcase.commands import CreateCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError

@@ -1,11 +1,11 @@
 from unittest import mock
 
 import pytest
-
 from briefcase.commands.base import BaseCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
+
 from tests.utils import DummyConsole
 
 

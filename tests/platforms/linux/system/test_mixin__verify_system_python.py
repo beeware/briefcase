@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import system
 

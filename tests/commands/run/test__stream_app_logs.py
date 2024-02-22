@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-
 from briefcase.commands.run import LogFilter
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 

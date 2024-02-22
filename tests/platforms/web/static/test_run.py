@@ -4,7 +4,6 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.web.static import (

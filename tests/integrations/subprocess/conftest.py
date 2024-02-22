@@ -3,7 +3,6 @@ import time
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.integrations.subprocess import Subprocess
 
 # hardcoded here since subprocess will only include these constants if Python is literally on Windows

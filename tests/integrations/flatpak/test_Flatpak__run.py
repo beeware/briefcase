@@ -2,7 +2,6 @@ import subprocess
 from unittest import mock
 
 import pytest
-
 from briefcase.console import LogLevel
 
 

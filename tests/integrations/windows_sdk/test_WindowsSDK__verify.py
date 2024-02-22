@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations import windows_sdk

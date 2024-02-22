@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 

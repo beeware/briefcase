@@ -1,7 +1,6 @@
 import subprocess
 
 import pytest
-
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 

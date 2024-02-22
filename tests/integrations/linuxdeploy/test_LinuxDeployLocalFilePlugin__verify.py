@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.linuxdeploy import LinuxDeployLocalFilePlugin
 

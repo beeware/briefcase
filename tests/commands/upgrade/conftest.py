@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock
 
-import pytest
-
 import briefcase.commands.upgrade
+import pytest
 from briefcase.commands import UpgradeCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import MissingToolError

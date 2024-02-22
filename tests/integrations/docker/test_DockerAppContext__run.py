@@ -2,7 +2,6 @@ import subprocess
 from unittest.mock import ANY
 
 import pytest
-
 from briefcase.console import LogLevel
 
 # These tests ignore the elsewhere-tested complexities of Dockerizing

@@ -1,15 +1,14 @@
 from unittest.mock import MagicMock
 
-import pytest
-from packaging.version import Version
-
 import briefcase.commands.new
+import pytest
 from briefcase.bootstraps import (
     PursuedPyBearGuiBootstrap,
     PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
+from packaging.version import Version
 
 
 @pytest.fixture

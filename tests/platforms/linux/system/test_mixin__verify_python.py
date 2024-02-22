@@ -2,7 +2,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import DockerAppContext
 

@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import call
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.visualstudio import VisualStudio
 

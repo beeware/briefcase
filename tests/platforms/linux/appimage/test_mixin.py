@@ -1,9 +1,8 @@
 import sys
 from unittest.mock import MagicMock
 
-import pytest
-
 import briefcase.platforms.linux.appimage
+import pytest
 from briefcase.console import Console, Log
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy

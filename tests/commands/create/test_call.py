@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.commands.create import Git
 from briefcase.exceptions import BriefcaseCommandError
 

@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.exceptions import ParseError
 from briefcase.platforms.linux import parse_freedesktop_os_release
 

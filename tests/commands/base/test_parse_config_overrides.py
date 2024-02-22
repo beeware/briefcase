@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.commands.base import parse_config_overrides
 from briefcase.exceptions import BriefcaseConfigError
 

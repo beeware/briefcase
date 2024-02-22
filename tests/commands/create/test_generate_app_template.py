@@ -5,16 +5,15 @@ from datetime import date
 from pathlib import Path
 from unittest import mock
 
-import pytest
-from cookiecutter import exceptions as cookiecutter_exceptions
-from git import exc as git_exceptions
-
 import briefcase
+import pytest
 from briefcase.exceptions import (
     InvalidTemplateRepository,
     NetworkFailure,
     TemplateUnsupportedVersion,
 )
+from cookiecutter import exceptions as cookiecutter_exceptions
+from git import exc as git_exceptions
 
 
 @pytest.fixture

@@ -4,7 +4,6 @@ from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 
 

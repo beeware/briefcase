@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.config import make_class_name
 
 

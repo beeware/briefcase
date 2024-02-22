@@ -1,7 +1,6 @@
 import logging
 
 import pytest
-
 from briefcase.console import LogLevel, RichLoggingHandler
 
 cookiecutter_logger = logging.getLogger("cookiecutter")

@@ -9,7 +9,6 @@ else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
@@ -45,7 +44,7 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
                 ],
-            ),
+            )
         elif args[0][5] == "pip":
             create_wheel(
                 bundle_path / "www/static/wheels",
@@ -53,14 +52,14 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 extra_content=[
                     ("dependency/static/style.css", "div { margin: 10px; }\n"),
                 ],
-            ),
+            )
             create_wheel(
                 bundle_path / "www/static/wheels",
                 "other",
                 extra_content=[
                     ("other/static/style.css", "div { padding: 10px; }\n"),
                 ],
-            ),
+            )
         else:
             raise ValueError("Unknown command")
 
@@ -308,7 +307,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
                 ],
-            ),
+            )
         elif args[0][5] == "pip":
             pass
         else:

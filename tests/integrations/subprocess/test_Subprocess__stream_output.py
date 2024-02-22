@@ -4,7 +4,6 @@ from threading import Event
 from unittest import mock
 
 import pytest
-
 from briefcase.console import LogLevel
 from briefcase.integrations import subprocess
 

@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.platforms.android.gradle import android_log_clean_filter
 
 

@@ -2,7 +2,6 @@
 # for line length.
 # flake8: noqa: E501
 import pytest
-
 from briefcase.platforms.macOS.filters import XcodeBuildFilter
 
 

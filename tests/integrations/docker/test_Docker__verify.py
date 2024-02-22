@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, call
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker

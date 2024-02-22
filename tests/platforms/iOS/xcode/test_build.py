@@ -3,7 +3,6 @@ import subprocess
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess

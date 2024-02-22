@@ -3,9 +3,8 @@ import pkgutil
 import sys
 from typing import Dict, Set, Type
 
-import pytest
-
 import briefcase.integrations
+import pytest
 from briefcase.integrations.base import ManagedTool, Tool, tool_registry
 
 

@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from briefcase.__main__ import main
 from briefcase.commands.create import CreateCommand
 from briefcase.commands.run import RunCommand

@@ -1,7 +1,6 @@
 from collections import namedtuple
 
 import pytest
-
 from briefcase.console import Log
 from briefcase.integrations.subprocess import get_process_id_by_command
 

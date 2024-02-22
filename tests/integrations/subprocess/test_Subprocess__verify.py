@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
 

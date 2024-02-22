@@ -3,13 +3,12 @@ import logging
 from io import TextIOBase
 from unittest.mock import MagicMock, PropertyMock, call
 
-import pytest
-from rich.traceback import Trace
-
 import briefcase
+import pytest
 from briefcase.commands.dev import DevCommand
 from briefcase.console import Console, Log, LogLevel, RichLoggingHandler
 from briefcase.exceptions import BriefcaseError
+from rich.traceback import Trace
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
 EXTRA_HEADER = "Extra information:"

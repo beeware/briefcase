@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.visualstudio import VisualStudio
 

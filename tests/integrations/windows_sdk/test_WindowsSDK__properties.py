@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.integrations.windows_sdk import WindowsSDK
 
 

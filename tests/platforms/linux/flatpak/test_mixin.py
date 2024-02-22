@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock
 
-import pytest
-
 import briefcase.platforms.linux.flatpak
+import pytest
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak

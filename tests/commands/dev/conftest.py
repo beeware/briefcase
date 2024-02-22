@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-
 from briefcase.commands import DevCommand
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log

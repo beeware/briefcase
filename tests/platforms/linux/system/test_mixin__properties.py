@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand

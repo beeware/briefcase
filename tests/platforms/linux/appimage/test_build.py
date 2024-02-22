@@ -6,7 +6,6 @@ from unittest import mock
 
 import pytest
 import tomli_w
-
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import (
     BriefcaseCommandError,

@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
 from briefcase.console import Console, Log

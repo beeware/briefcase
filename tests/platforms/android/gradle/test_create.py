@@ -2,7 +2,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.android.gradle import GradleCreateCommand

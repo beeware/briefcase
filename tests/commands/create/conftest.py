@@ -4,13 +4,12 @@ from unittest import mock
 
 import pytest
 import tomli_w
-from cookiecutter.main import cookiecutter
-
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
+from cookiecutter.main import cookiecutter
 
 from ...utils import DummyConsole, create_file
 

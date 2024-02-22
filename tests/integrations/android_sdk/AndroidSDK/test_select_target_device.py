@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import (
     ADB,

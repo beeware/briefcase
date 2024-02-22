@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.config import is_pep440_canonical_version, parsed_version
 
 

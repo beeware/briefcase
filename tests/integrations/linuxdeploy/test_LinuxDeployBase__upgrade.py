@@ -1,6 +1,6 @@
 import pytest
-
 from briefcase.exceptions import MissingToolError, NetworkFailure
+
 from tests.integrations.linuxdeploy.utils import side_effect_create_mock_appimage
 
 

@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.base import Tool
 

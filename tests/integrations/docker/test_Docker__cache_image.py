@@ -2,7 +2,6 @@ import subprocess
 from unittest.mock import call
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 
 

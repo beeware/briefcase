@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.config import is_valid_bundle_identifier
 
 

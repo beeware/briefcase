@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.exceptions import MissingToolError, NetworkFailure, UnsupportedHostError
 from briefcase.integrations.rcedit import RCEdit
 

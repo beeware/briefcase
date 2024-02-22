@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import Subprocess

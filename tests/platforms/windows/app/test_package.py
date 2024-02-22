@@ -2,9 +2,8 @@ from subprocess import CalledProcessError
 from unittest import mock
 from zipfile import ZipFile
 
-import pytest
-
 import briefcase.platforms.windows
+import pytest
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess

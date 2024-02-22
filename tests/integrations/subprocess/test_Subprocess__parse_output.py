@@ -2,7 +2,6 @@ import subprocess
 from unittest.mock import ANY
 
 import pytest
-
 from briefcase.integrations.subprocess import CommandOutputParseError, ParseError
 
 

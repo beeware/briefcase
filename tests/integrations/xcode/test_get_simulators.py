@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseError
 from briefcase.integrations.base import ToolCache

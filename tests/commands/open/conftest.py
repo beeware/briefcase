@@ -2,7 +2,6 @@ import os
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.commands import OpenCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig

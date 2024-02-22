@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.integrations.subprocess import ParseError, json_parser
 
 

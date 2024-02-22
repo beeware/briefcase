@@ -3,9 +3,8 @@ import subprocess
 from unittest import mock
 from zipfile import ZipFile
 
-import pytest
-
 import briefcase.integrations.xcode
+import pytest
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.macOS.app import macOSAppPackageCommand

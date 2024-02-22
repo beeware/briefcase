@@ -2,7 +2,6 @@ import subprocess
 from unittest.mock import MagicMock, Mock
 
 import pytest
-
 from briefcase.integrations.subprocess import Subprocess
 
 

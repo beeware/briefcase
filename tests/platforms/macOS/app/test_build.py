@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.platforms.macOS.app import macOSAppBuildCommand
 

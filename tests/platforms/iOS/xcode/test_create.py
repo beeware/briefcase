@@ -2,7 +2,6 @@ import sys
 from unittest.mock import MagicMock, call
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess

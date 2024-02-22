@@ -8,14 +8,13 @@ from unittest import mock
 import pytest
 import requests
 import requests.exceptions
-from urllib3._collections import HTTPHeaderDict
-
 from briefcase.exceptions import (
     BadNetworkResourceError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
 from briefcase.integrations.base import ToolCache
+from urllib3._collections import HTTPHeaderDict
 
 TEMPORARY_DOWNLOAD_FILE_SUFFIX = ".download"
 

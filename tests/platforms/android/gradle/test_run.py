@@ -9,7 +9,6 @@ from unittest import mock
 
 import pytest
 import requests
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK

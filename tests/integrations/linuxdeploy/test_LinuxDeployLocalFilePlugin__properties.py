@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.integrations.linuxdeploy import LinuxDeployLocalFilePlugin
 
 

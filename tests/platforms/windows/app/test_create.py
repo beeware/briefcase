@@ -1,7 +1,6 @@
 import sys
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.platforms.windows.app import WindowsAppCreateCommand

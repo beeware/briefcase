@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 import requests
-
 from briefcase.console import Console, Log
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import Subprocess

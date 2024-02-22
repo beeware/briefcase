@@ -5,7 +5,6 @@ from pathlib import Path, PosixPath, PurePosixPath
 from unittest.mock import MagicMock, call
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import XauthDatabaseCreationFailure
 

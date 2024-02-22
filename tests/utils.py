@@ -9,11 +9,10 @@ from email.message import EmailMessage
 from pathlib import Path
 
 import requests
+from briefcase.console import Console, InputDisabled
 from requests.adapters import HTTPAdapter
 from rich.markup import escape
 from urllib3.util.retry import Retry
-
-from briefcase.console import Console, InputDisabled
 
 
 class DummyConsole(Console):

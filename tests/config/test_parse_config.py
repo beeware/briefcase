@@ -1,7 +1,6 @@
 from io import BytesIO
 
 import pytest
-
 from briefcase.config import parse_config
 from briefcase.exceptions import BriefcaseConfigError
 

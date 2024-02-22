@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.console import LogLevel
 
 from ...utils import create_file

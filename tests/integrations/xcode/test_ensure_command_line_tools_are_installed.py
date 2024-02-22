@@ -1,7 +1,6 @@
 import subprocess
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import XcodeCliTools
 

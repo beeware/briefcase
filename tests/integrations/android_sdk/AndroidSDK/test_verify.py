@@ -4,7 +4,6 @@ import shutil
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.console import LogLevel
 from briefcase.exceptions import (
     BriefcaseCommandError,

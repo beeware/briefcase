@@ -2,7 +2,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import get_identities
 

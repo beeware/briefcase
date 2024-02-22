@@ -7,7 +7,6 @@ from signal import SIGTERM
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOS_log_clean_filter

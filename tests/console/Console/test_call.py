@@ -1,7 +1,7 @@
 import pytest
+from briefcase.console import InputDisabled
 from rich.markup import escape
 
-from briefcase.console import InputDisabled
 from tests.utils import default_rich_prompt
 
 

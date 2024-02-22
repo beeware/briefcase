@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.platforms.linux import parse_freedesktop_os_release
 
 from .os_release import OS_RELEASE

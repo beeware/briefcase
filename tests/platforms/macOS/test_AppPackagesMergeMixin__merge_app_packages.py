@@ -3,7 +3,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 
 from ...utils import create_file, create_installed_package, file_content

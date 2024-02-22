@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.integrations.subprocess import Subprocess

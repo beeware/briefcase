@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.platforms.android.gradle import safe_formal_name
 
 

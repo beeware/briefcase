@@ -11,7 +11,6 @@
 
 import os
 import sys
-
 from importlib.metadata import version as metadata_version
 
 # If extensions (or modules to document with autodoc) are in another directory,

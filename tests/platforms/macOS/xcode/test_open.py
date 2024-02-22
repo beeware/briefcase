@@ -4,7 +4,6 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.xcode import macOSXcodeOpenCommand

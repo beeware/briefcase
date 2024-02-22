@@ -3,7 +3,6 @@ import sys
 from unittest import mock
 
 import pytest
-
 from briefcase import __version__, cmdline
 from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
 from briefcase.console import Console, Log, LogLevel

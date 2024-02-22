@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.config import is_reserved_keyword
 
 

@@ -3,7 +3,6 @@ import subprocess
 from unittest import mock
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import Xcode
 

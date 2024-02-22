@@ -1,6 +1,6 @@
 import pytest
-
 from briefcase.console import select_option
+
 from tests.utils import DummyConsole
 
 

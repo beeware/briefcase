@@ -1,7 +1,6 @@
 import re
 
 import pytest
-
 from briefcase.console import Printer
 
 

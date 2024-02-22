@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.integrations.windows_sdk import WindowsSDK
 
 from .test_WindowsSDK__verify import setup_winsdk_install

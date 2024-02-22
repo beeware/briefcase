@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.exceptions import BriefcaseConfigError
 
 from ...utils import create_file

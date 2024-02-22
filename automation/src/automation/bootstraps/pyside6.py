@@ -1,5 +1,6 @@
-from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
 from briefcase.bootstraps import PySide6GuiBootstrap
+
+from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
 
 
 class PySide6AutomationBootstrap(PySide6GuiBootstrap):

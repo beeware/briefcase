@@ -1,5 +1,6 @@
-from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
 from briefcase.bootstraps import PygameGuiBootstrap
+
+from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
 
 
 class PygameAutomationBootstrap(PygameGuiBootstrap):

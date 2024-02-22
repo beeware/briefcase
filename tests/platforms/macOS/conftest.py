@@ -1,11 +1,11 @@
 from unittest import mock
 
 import pytest
-
 from briefcase.commands.base import BaseCommand
 from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppMixin, macOSCreateMixin
+
 from tests.utils import DummyConsole
 
 

@@ -2,9 +2,8 @@ import subprocess
 from pathlib import Path
 from unittest import mock
 
-import pytest
-
 import briefcase.platforms.windows.visualstudio
+import pytest
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess

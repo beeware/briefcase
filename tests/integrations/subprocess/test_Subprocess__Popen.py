@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
-
 from briefcase.console import LogLevel
 
 from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW

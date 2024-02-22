@@ -1,8 +1,8 @@
 import pytest
-
 from briefcase.exceptions import MissingToolError, NetworkFailure, UnsupportedHostError
 from briefcase.integrations.base import ManagedTool
 from briefcase.integrations.linuxdeploy import LinuxDeployBase
+
 from tests.integrations.linuxdeploy.utils import (
     side_effect_create_mock_appimage,
     side_effect_create_mock_tool,

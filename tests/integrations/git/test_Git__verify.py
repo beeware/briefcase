@@ -1,7 +1,6 @@
 import logging
 
 import pytest
-
 from briefcase.console import LogLevel, RichLoggingHandler
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.git import Git

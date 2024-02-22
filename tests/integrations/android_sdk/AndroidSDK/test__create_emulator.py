@@ -3,7 +3,6 @@ import subprocess
 from unittest.mock import ANY, MagicMock
 
 import pytest
-
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK

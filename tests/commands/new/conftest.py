@@ -1,8 +1,8 @@
 import pytest
-
 from briefcase.commands import NewCommand
 from briefcase.commands.base import full_options
 from briefcase.console import Console, Log
+
 from tests.utils import DummyConsole
 
 

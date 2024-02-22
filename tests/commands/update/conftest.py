@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.commands import UpdateCommand
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log

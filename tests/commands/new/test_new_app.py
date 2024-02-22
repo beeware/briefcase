@@ -1,11 +1,8 @@
 import os
 from unittest import mock
 
-import pytest
-from cookiecutter import exceptions as cookiecutter_exceptions
-from cookiecutter.main import cookiecutter
-
 import briefcase
+import pytest
 from briefcase.commands import NewCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
@@ -13,6 +10,8 @@ from briefcase.exceptions import (
     InvalidTemplateRepository,
     TemplateUnsupportedVersion,
 )
+from cookiecutter import exceptions as cookiecutter_exceptions
+from cookiecutter.main import cookiecutter
 
 
 @pytest.fixture

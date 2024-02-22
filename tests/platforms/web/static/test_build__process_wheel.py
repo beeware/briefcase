@@ -1,7 +1,6 @@
 from io import StringIO
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.platforms.web.static import StaticWebBuildCommand
 

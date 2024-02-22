@@ -48,7 +48,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 from shutil import get_terminal_size
 
-from build.util import project_wheel_metadata
+from build.util import project_wheel_metadata  # ruff: isort: skip
 from packaging.requirements import Requirement
 
 

@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.commands.run import LogFilter
 
 

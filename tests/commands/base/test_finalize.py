@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.config import AppConfig
 
 from .conftest import DummyCommand

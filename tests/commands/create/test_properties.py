@@ -1,6 +1,5 @@
 import pytest
 import tomli_w
-
 from briefcase.exceptions import BriefcaseCommandError
 
 

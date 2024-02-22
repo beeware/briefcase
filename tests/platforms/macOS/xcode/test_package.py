@@ -1,8 +1,7 @@
 from unittest import mock
 
-import pytest
-
 import briefcase.integrations.xcode
+import pytest
 from briefcase.console import Console, Log
 from briefcase.platforms.macOS.xcode import macOSXcodePackageCommand
 

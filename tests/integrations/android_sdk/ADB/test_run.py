@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 
 

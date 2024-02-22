@@ -5,7 +5,6 @@ import time
 from unittest.mock import ANY
 
 import pytest
-
 from briefcase.config import AppConfig
 
 from .utils import create_file

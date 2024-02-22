@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from briefcase.commands.create import cookiecutter_cache_path
 
 

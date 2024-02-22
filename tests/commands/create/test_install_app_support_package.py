@@ -4,14 +4,13 @@ import sys
 from unittest import mock
 
 import pytest
-from requests import exceptions as requests_exceptions
-
 from briefcase.exceptions import (
     InvalidSupportPackage,
     MissingNetworkResourceError,
     MissingSupportPackage,
     NetworkFailure,
 )
+from requests import exceptions as requests_exceptions
 
 from ...utils import (
     create_zip_file,

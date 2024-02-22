@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 from zipfile import ZipFile
 
 import pytest
-
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess

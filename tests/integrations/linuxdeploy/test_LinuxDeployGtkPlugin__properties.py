@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.integrations.linuxdeploy import LinuxDeployGtkPlugin
 
 from ...utils import assert_url_resolvable

@@ -217,15 +217,6 @@ no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COVERAGE_EX
 no-cover-if-lt-py310 = "sys_version_info < (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-gte-py310 = "sys_version_info > (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
-[tool.isort]
-profile = "black"
-skip_glob = [
-    "docs/conf.py",
-    "venv*",
-    "local",
-]
-multi_line_output = 3
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
@@ -254,11 +245,33 @@ type = [
     { directory = "removal", name = "Backward Incompatible Changes", showcontent = true },
     { directory = "doc", name = "Documentation", showcontent = true },
     { directory = "misc", name = "Misc", showcontent = false },
- ]
+]
+
+[tool.ruff]
+line-length = 119
+target-version = "py38"
+
+[tool.ruff.lint]
+ignore = [
+]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    #"B",
+    # flake8-simplify
+    #"SIM",
+    # isort
+    "I",
+]
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
-# the way to make case sensitive skips of words etc
+# the way to make case-sensitive skips of words etc
 ignore-regex = '\bNd\b'
-# case insensitive
+# case-insensitive
 # ignore-words-list = ''

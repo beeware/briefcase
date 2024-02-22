@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 
 

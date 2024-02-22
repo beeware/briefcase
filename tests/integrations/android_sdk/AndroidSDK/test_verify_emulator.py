@@ -3,7 +3,6 @@ import subprocess
 import sys
 
 import pytest
-
 from briefcase.exceptions import BriefcaseCommandError
 
 from ....utils import create_file

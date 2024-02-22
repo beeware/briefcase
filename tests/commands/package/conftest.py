@@ -1,5 +1,4 @@
 import pytest
-
 from briefcase.commands import PackageCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
