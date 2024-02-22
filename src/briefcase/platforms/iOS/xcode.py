@@ -427,9 +427,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         super().__init__(*args, **kwargs)
 
         # External service APIs.
-        # These are abstracted to enable testing without patching.
+        # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
-        self.sleep = time.sleep
 
     def run_app(
         self,
@@ -471,7 +470,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             with self.input.wait_bar("Waiting for simulator shutdown..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-                    self.sleep(2)
+                    time.sleep(2)
                     device_state = self.get_device_state(self.tools, udid)
 
         # We now know the simulator is either shut down or booted;
@@ -512,28 +511,34 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         self.logger.info(f"Installing {label}...", prefix=app.app_name)
-        try:
-            with self.input.wait_bar("Uninstalling any existing app version..."):
-                self.tools.subprocess.run(
-                    ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier],
-                    check=True,
+        with self.input.wait_bar(
+            "Uninstalling any existing app version..."
+        ) as keep_alive:
+            uninstall_popen = self.tools.subprocess.Popen(
+                ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+            )
+            with uninstall_popen:
+                while (ret_code := uninstall_popen.poll()) is None:
+                    keep_alive.update()
+                    time.sleep(0.25)
+            if ret_code != 0:
+                raise BriefcaseCommandError(
+                    f"Unable to uninstall old version of app {app.app_name}."
                 )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to uninstall old version of app {app.app_name}."
-            ) from e
 
         # Install the app.
-        try:
-            with self.input.wait_bar(f"Installing new {label} version..."):
-                self.tools.subprocess.run(
-                    ["xcrun", "simctl", "install", udid, self.binary_path(app)],
-                    check=True,
+        with self.input.wait_bar(f"Installing new {label} version..."):
+            install_popen = self.tools.subprocess.Popen(
+                ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+            )
+            with install_popen:
+                while (ret_code := install_popen.poll()) is None:
+                    keep_alive.update()
+                    time.sleep(0.25)
+            if ret_code != 0:
+                raise BriefcaseCommandError(
+                    f"Unable to install new version of app {app.app_name}."
                 )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to install new version of app {app.app_name}."
-            ) from e
 
         # Start log stream for the app.
         # The following sets up a log stream filter that looks for:
@@ -571,7 +576,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         )
 
         # Wait for the log stream start up
-        self.sleep(0.25)
+        time.sleep(0.25)
 
         try:
             self.logger.info(f"Starting {label}...", prefix=app.app_name)
