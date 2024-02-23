@@ -59,6 +59,7 @@ def run_command(tmp_path, first_app, monkeypatch):
 
     # Disable Docker by default
     command.target_image = None
+    command.extra_docker_build_args = []
 
     command.tools.subprocess._subprocess = mock.MagicMock(spec_set=subprocess)
     command.tools.subprocess.run = mock.MagicMock(spec_set=Subprocess.run)
@@ -248,15 +249,7 @@ def test_run_app(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "somevendor"
-                / "surprising"
-                / "first-app-0.0.1"
-                / "usr"
-                / "bin"
-                / "first-app"
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),

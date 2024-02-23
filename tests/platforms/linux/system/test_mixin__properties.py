@@ -67,15 +67,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     assert (
         create_command.binary_path(first_app_config)
         == tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
+        / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
     )
 
 
@@ -178,9 +170,11 @@ def test_clone_options(create_command, tmp_path):
         data_path=tmp_path / "briefcase",
     )
     build_command.target_image = "somevendor:surprising"
+    build_command.extra_docker_build_args = ["--option-one", "--option-two"]
 
     create_command = build_command.create_command
 
     # Confirm the use_docker option has been cloned.
     assert create_command.is_clone
     assert create_command.target_image == "somevendor:surprising"
+    assert create_command.extra_docker_build_args == ["--option-one", "--option-two"]

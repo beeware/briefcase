@@ -58,12 +58,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "linux"
-                / "appimage"
-                / "First_App-0.0.1-x86_64.AppImage"
+                / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -99,12 +94,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "linux"
-                / "appimage"
-                / "First_App-0.0.1-x86_64.AppImage"
+                / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage"
             ),
             "foo",
             "--bar",
@@ -136,12 +126,7 @@ def test_run_app_failed(run_command, first_app_config, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "linux"
-                / "appimage"
-                / "First_App-0.0.1-x86_64.AppImage"
+                / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -168,12 +153,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "linux"
-                / "appimage"
-                / "First_App-0.0.1-x86_64.AppImage"
+                / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage"
             )
         ],
         cwd=tmp_path / "home",
@@ -210,12 +190,7 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "linux"
-                / "appimage"
-                / "First_App-0.0.1-x86_64.AppImage"
+                / "base_path/build/first-app/linux/appimage/First_App-0.0.1-x86_64.AppImage"
             ),
             "foo",
             "--bar",

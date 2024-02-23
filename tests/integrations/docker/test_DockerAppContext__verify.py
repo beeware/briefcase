@@ -18,6 +18,7 @@ def verify_kwargs():
         host_bundle_path=Path("/host/bundle"),
         host_data_path=Path("/host/data"),
         python_version="py3.X",
+        extra_build_args=["--option-one", "--option-two"],
     )
 
 
@@ -57,7 +58,9 @@ def test_success(mock_tools, first_app_config, verify_kwargs, sub_stream_kw):
     mock_tools.subprocess._subprocess.Popen.assert_called_with(
         [
             "docker",
+            "buildx",
             "build",
+            "--load",
             "--progress",
             "plain",
             "--tag",
@@ -71,6 +74,8 @@ def test_success(mock_tools, first_app_config, verify_kwargs, sub_stream_kw):
             "--build-arg",
             "HOST_GID=42",
             "/app/base/src",
+            "--option-one",
+            "--option-two",
         ],
         **sub_stream_kw,
     )

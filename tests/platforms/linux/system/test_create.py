@@ -18,13 +18,19 @@ def test_default_options(create_command):
 def test_options(create_command):
     """The extra options can be parsed."""
     options, overrides = create_command.parse_options(
-        ["--target", "somevendor:surprising"]
+        [
+            "--target",
+            "somevendor:surprising",
+            "--Xdocker-build=--option-one",
+            "--Xdocker-build=--option-two",
+        ]
     )
 
     assert options == {}
     assert overrides == {}
 
     assert create_command.target_image == "somevendor:surprising"
+    assert create_command.extra_docker_build_args == ["--option-one", "--option-two"]
 
 
 @pytest.mark.parametrize("host_os", ["Windows", "WeirdOS"])

@@ -56,11 +56,19 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             help="Docker base image tag for the distribution to target for the build (e.g., `ubuntu:jammy`)",
             required=False,
         )
+        parser.add_argument(
+            "--Xdocker-build",
+            action="append",
+            dest="extra_docker_build_args",
+            help="Additional arguments to use when building the Docker image",
+            required=False,
+        )
 
     def parse_options(self, extra):
         """Extract the target_image option."""
         options, overrides = super().parse_options(extra)
         self.target_image = options.pop("target")
+        self.extra_docker_build_args = options.pop("extra_docker_build_args")
 
         return options, overrides
 
@@ -377,6 +385,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         """Clone the target_image option."""
         super().clone_options(command)
         self.target_image = command.target_image
+        self.extra_docker_build_args = command.extra_docker_build_args
 
     def verify_python(self, app: AppConfig):
         """Verify that the version of Python being used to build the app in Docker is
@@ -577,6 +586,7 @@ to install the missing dependencies, and re-run Briefcase.
                 host_bundle_path=self.bundle_path(app),
                 host_data_path=self.data_path,
                 python_version=app.python_version_tag,
+                extra_build_args=self.extra_docker_build_args,
             )
 
             # Check the system Python on the target system to see if it is
