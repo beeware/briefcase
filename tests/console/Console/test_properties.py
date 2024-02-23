@@ -1,6 +1,3 @@
-import os
-import sys
-
 from briefcase.console import Console
 
 
@@ -28,17 +25,10 @@ def test_enable(disabled_console):
 def test_disable():
     """A disabled console can be enabled."""
     console = Console()
-
     assert console.enabled
 
     console.enabled = False
-
     assert not console.enabled
-
-
-def test_is_interactive_is_tty(console):
-    """Interactivity should match whether a tty is attached to stdout."""
-    assert console.is_interactive is os.isatty(sys.stdout.fileno())
 
 
 def test_is_interactive_non_interactive(non_interactive_console):
@@ -46,6 +36,6 @@ def test_is_interactive_non_interactive(non_interactive_console):
     assert non_interactive_console.is_interactive is False
 
 
-def test_is_interactive_always_interactive(interactive_console):
+def test_is_interactive_always_interactive(console):
     """Console is interactive when stdout has a tty."""
-    assert interactive_console.is_interactive is True
+    assert console.is_interactive is True

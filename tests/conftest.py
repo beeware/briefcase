@@ -2,7 +2,7 @@ import inspect
 import os
 import subprocess
 import time
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -50,7 +50,7 @@ def no_print(monkeypatch):
 @pytest.fixture
 def sleep_zero(monkeypatch):
     """Replace all calls to ``time.sleep(x)`` with ``time.sleep(0)``."""
-    monkeypatch.setattr(time, "sleep", lambda x: _sleep(0))
+    monkeypatch.setattr(time, "sleep", MagicMock(wraps=lambda x: _sleep(0)))
 
 
 @pytest.fixture

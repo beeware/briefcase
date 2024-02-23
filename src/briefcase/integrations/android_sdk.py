@@ -1337,7 +1337,7 @@ You can also start the emulator manually by running:
         # Phase 1: Wait for the device to appear so we can get an
         # ADB instance for the new device.
         try:
-            with self.tools.input.wait_bar("Starting emulator..."):
+            with self.tools.input.wait_bar("Starting emulator...") as keep_alive:
                 adb = None
                 known_devices = set()
                 while adb is None:
@@ -1366,11 +1366,12 @@ You can also start the emulator manually by running:
 
                     # If we haven't found a device, try again in 2 seconds...
                     if adb is None:
+                        keep_alive.update()
                         self.sleep(2)
 
             # Phase 2: Wait for the boot process to complete
             if not adb.has_booted():
-                with self.tools.input.wait_bar("Booting emulator..."):
+                with self.tools.input.wait_bar("Booting emulator...") as keep_alive:
                     while not adb.has_booted():
                         if emulator_popen.poll() is not None:
                             raise BriefcaseCommandError(
@@ -1380,6 +1381,7 @@ You can also start the emulator manually by running:
                             )
 
                         # Try again in 2 seconds...
+                        keep_alive.update()
                         self.sleep(2)
         except BaseException as e:
             self.tools.logger.warning(

@@ -27,11 +27,8 @@ def test_console_is_not_controlled():
     assert console.is_console_controlled is False
 
 
-def test_wait_bar_is_active(interactive_console):
+def test_wait_bar_is_active(console):
     """An active Wait Bar is stopped."""
-    # Always run in interactive mode; otherwise, is_started is will never be True
-    console = interactive_console
-
     with console.wait_bar("Testing..."):
         # Wrap the Wait Bar stop and start methods
         console._wait_bar.stop = Mock(wraps=console._wait_bar.stop)
