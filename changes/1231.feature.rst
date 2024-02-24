@@ -1,0 +1,1 @@
+Briefcase now supports setting up existing projects with the ``briefcase convert`` command.

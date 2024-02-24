@@ -1,23 +1,23 @@
+from __future__ import annotations
+
 import re
 from difflib import SequenceMatcher
 from functools import cached_property
 from pathlib import Path
 from shutil import copy2, copytree
 from tempfile import TemporaryDirectory
-from typing import Callable, Optional
+from typing import Callable
 from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
 
 from ..config import is_valid_app_name
-from .new import NewCommand, titlecase
+from .new import NewCommand, parse_project_overrides, titlecase
 
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
-
-import tomli_w
 
 from briefcase.config import make_class_name
 from briefcase.exceptions import BriefcaseCommandError
@@ -54,8 +54,9 @@ class ConvertCommand(NewCommand):
     @cached_property
     def pyproject(self):
         """The contents of the pyproject.toml file (as a dictionary)."""
-        if Path("pyproject.toml").exists():
-            with open(Path("pyproject.toml"), "rb") as file:
+        pyproject_file = self.base_path / "pyproject.toml"
+        if pyproject_file.exists():
+            with open(pyproject_file, "rb") as file:
                 return tomllib.load(file)
         else:
             return {}
@@ -78,16 +79,8 @@ class ConvertCommand(NewCommand):
             :returns: True. If there are any validation problems, raises ValueError with
                   a diagnostic message.
             """
-            if not test_source_dir:
-                return True
-
-            if not (self.base_path / test_source_dir).is_dir():
-                raise ValueError(
-                    "The test sources directory must exist and be a directory."
-                )
-            if (
-                test_entry := self.base_path / test_source_dir / f"{app_name}.py"
-            ).exists():
+            test_path = self.base_path / test_source_dir
+            if (test_entry := test_path / f"{app_name}.py").exists():
                 raise ValueError(
                     f"{test_entry} is reserved for the briefcase test entry script, but it already exists.\n"
                     "\n"
@@ -117,7 +110,7 @@ class ConvertCommand(NewCommand):
 
         return True
 
-    def input_app_name(self) -> str:
+    def input_app_name(self, override_value: str | None) -> str:
         """Ask about the app name, using hints from the pyproject.toml file or directory
         name if there are any.
 
@@ -133,26 +126,37 @@ class ConvertCommand(NewCommand):
             "spaces or punctuation, and it can't start with a hyphen or underscore."
         )
 
-        if "name" in self.pep621_data and is_valid_app_name(self.pep621_data["name"]):
-            return canonicalize_name(self.pep621_data["name"])
-        elif is_valid_app_name(Path.cwd().name):  # Directory name is normalised
-            default = canonicalize_name(Path.cwd().name)
+        default = "hello-world"
+        if (
+            "name" in self.pep621_data
+            and is_valid_app_name(self.pep621_data["name"])
+            and override_value is None
+        ):
+            app_name = canonicalize_name(self.pep621_data["name"])
+            self.prompt_divider(title="App name")
+            self.input.prompt()
+            self.input.prompt(
+                f"Using value from PEP621 formatted pyproject.toml {app_name!r}"
+            )
+            return app_name
+
+        if is_valid_app_name(self.base_path.name):  # Directory name is normalised
+            default = canonicalize_name(self.base_path.name)
             intro += (
                 "\n"
-                f"Based on your PEP508 formatted directory name, we suggest an app name of '{default}',\n"
+                f"Based on your PEP508 formatted directory name, we suggest an app name of {default!r},\n"
                 "but you can use another name if you want."
             )
-        else:
-            default = "hello-world"
 
         return self.input_text(
             intro=intro,
             variable="app name",
             default=default,
             validator=self.validate_app_name,
+            override_value=override_value,
         )
 
-    def input_formal_name(self, app_name) -> str:
+    def input_formal_name(self, app_name: str, override_value: str | None) -> str:
         """Ask about formal name.
 
         :returns: The source directory
@@ -163,32 +167,42 @@ class ConvertCommand(NewCommand):
                 "We need a formal name for your application. This is the name that will\n"
                 "be displayed to humans whenever the name of the application is displayed. It\n"
                 "can have spaces and punctuation if you like, and any capitalization will be\n"
-                f"used as you type it. Based on the app name, we believe it is {default}."
+                f"used as you type it. Based on the app name, we believe it is {default!r}."
             ),
             variable="formal name",
             default=default,
+            override_value=override_value,
         )
 
-    def get_source_dir_hint(self, module_name: str) -> tuple[str, str]:
+    def get_source_dir_hint(self, app_name: str) -> tuple[str, str]:
         """Parse folder layout to get hint for the source directory.
 
         :returns: The source directory hint
         :returns: The description text for the source dir prompt.
         """
         valid_src_children = [
-            p for p in Path("src").glob("*/") if p.name.isidentifier()
+            p for p in (self.base_path / "src").glob("*/") if p.name.isidentifier()
         ]
-        valid_root_children = [p for p in Path().glob("*/") if p.name.isidentifier()]
+        valid_root_children = [
+            p for p in self.base_path.glob("*/") if p.name.isidentifier()
+        ]
 
-        if Path(f"src/{module_name}").is_dir():
-            default = f"src/{module_name}"
-        elif Path(module_name).is_dir():
-            default = module_name
+        module_name_guess = app_name.replace("-", "_")
+
+        if (self.base_path / f"src/{module_name_guess}").is_dir():
+            default = self.base_path / f"src/{module_name_guess}"
+        elif (self.base_path / module_name_guess).is_dir():
+            default = self.base_path / module_name_guess
         elif valid_src_children:
-            default = find_most_similar_path_by_name(valid_src_children, module_name)
+            default = find_most_similar_path_by_name(
+                valid_src_children, module_name_guess
+            )
         else:  # We have already checked that there are directories in the project root
-            default = find_most_similar_path_by_name(valid_root_children, module_name)
+            default = find_most_similar_path_by_name(
+                valid_root_children, module_name_guess
+            )
 
+        default = str(default.relative_to(self.base_path)).replace("\\", "/")
         intro = (
             "To set up an existing project for Briefcase, we need to know the path of the\n"
             "application entry point relative to the project root (the current working directory).\n"
@@ -197,25 +211,25 @@ class ConvertCommand(NewCommand):
             "running ``src/myapp/__main__.py``, then you should set the source directory to\n"
             "``src/myapp``.\n"
             "\n"
-            "Based on your project's folder layout, we believe it might be {default}."
+            f"Based on your project's folder layout, we believe it might be '{default}'."
         )
         return default, intro
 
-    def input_source_dir(self, app_name: str) -> str:
+    def input_source_dir(self, app_name: str, override_value: str | None) -> str:
         """Ask about the source dir, using hints from the project folder layout.
 
         :returns: The source directory
         """
-
         default, intro = self.get_source_dir_hint(app_name)
         return self.input_text(
             intro=intro,
             variable="source directory",
             default=default,
             validator=self.validate_source_dir,
+            override_value=override_value,
         )
 
-    def input_test_source_dir(self, app_name) -> str:
+    def input_test_source_dir(self, app_name, override_value) -> str:
         """Ask about the test source dir, using hints from the project folder layout.
 
         :returns: The test source directory
@@ -227,17 +241,17 @@ class ConvertCommand(NewCommand):
             "If the provided directory doesn't exist, it will be created and populated with\n"
             "some default test files."
         )
-        if Path("test").exists():
+        if (self.base_path / "test").exists():
             default = "test"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
-                '"test" might be your test directory'
+                "'test' might be your test directory"
             )
-        elif Path("tests").exists():
+        elif (self.base_path / "tests").exists():
             default = "tests"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
-                + '"tests" might be your test directory'
+                + "'tests' might be your test directory"
             )
         else:
             default = "tests"
@@ -247,9 +261,10 @@ class ConvertCommand(NewCommand):
             variable="test source directory",
             default=default,
             validator=self.create_test_source_dir_validator(app_name=app_name),
+            override_value=override_value,
         )
 
-    def input_description(self) -> str:
+    def input_description(self, override_value: str | None) -> str:
         """Ask about the app description, using hints from the pyproject.toml file if
         there are any.
 
@@ -258,30 +273,33 @@ class ConvertCommand(NewCommand):
 
         :returns: The app description
         """
+        if "description" in self.pep621_data and override_value is None:
+            description = self.pep621_data["description"]
 
-        if "description" in self.pep621_data:
-            # The description field will be deleted if it is present in the PEP621 data. Moreover, we have no guarantee
-            # for the description field being a single line (despite the PEP621 standard mandating it), which can lead
-            # to weird exceptions as the cookiecutter template assumes a single-line string. We therefore return an
-            # empty line here if a description is in the 621 data beforehand.
-            return ""
+            self.prompt_divider(title="Description")
+            self.input.prompt()
+            self.input.prompt(
+                f"Using value from PEP621 formatted pyproject.toml {description!r}"
+            )
+            return description
 
         return self.input_text(
             intro="Now, we need a one line description for your application.",
             variable="description",
             default="My first application",
+            override_value=override_value,
         )
 
-    def input_url(self, app_name) -> str:
+    def input_url(self, app_name, override_value: str | None) -> str:
         """Ask about the URL, using hints from the pyproject.toml file if there are any.
 
         :returns: The project
         """
         options = list(self.pep621_data.get("urls", {}).values())
 
-        if options is not None and len(options) > 1:
+        if options is not None and len(options) > 1 and not override_value:
             options.append("Other")
-            url = self.input_select(
+            url = self.select_option(
                 intro=(
                     "What is the website URL for this application? If you don't have a website set\n"
                     'up, you can select "Other" and type in a dummy URL.\n'
@@ -289,17 +307,19 @@ class ConvertCommand(NewCommand):
                     "We found these urls in the PEP621 formatted pyproject.toml."
                 ),
                 variable="application URL",
+                default=None,
                 options=options,
+                override_value=override_value,
             )
 
-            if url == "Other":
+            if url == "Other" and not override_value:
                 url = self.input_text(
                     intro="\nWrite the url.",
                     variable="application URL",
                     default=self.make_project_url("com.example", app_name),
                     validator=self.validate_url,
                 )
-        elif options:
+        elif options and not override_value:
             url = self.input_text(
                 intro=(
                     "What is the website URL for this application? If you don't have a website set\n"
@@ -310,6 +330,7 @@ class ConvertCommand(NewCommand):
                 variable="application URL",
                 default=options[0],
                 validator=self.validate_url,
+                override_value=override_value,
             )
 
         else:
@@ -321,17 +342,18 @@ class ConvertCommand(NewCommand):
                 variable="application URL",
                 default=self.make_project_url("com.example", app_name),
                 validator=self.validate_url,
+                override_value=override_value,
             )
 
         return url
 
-    def input_bundle(self, url, app_name) -> str:
+    def input_bundle(self, url, app_name, override_value: str | None) -> str:
         if not (url.startswith("https://") or url.startswith("http://")):
             url = f"https://{url}"
 
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
         return self.input_text(
-            (
+            intro=(
                 "Now we need a bundle identifier for your application. App stores need to\n"
                 "protect against having multiple applications with the same name; the bundle\n"
                 "identifier is the namespace they use to identify applications that come from\n"
@@ -343,21 +365,22 @@ class ConvertCommand(NewCommand):
                 "combined with your application's machine readable name to form a complete\n"
                 f"application identifier (e.g., com.example.{app_name}).\n"
                 "\n"
-                f"Based on the URL you selected, we believe a reasonable bundle is {default}."
+                f"Based on the URL you selected, we believe a reasonable bundle is {default!r}."
             ),
             variable="bundle identifier",
             default=default,
             validator=self.validate_bundle,
+            override_value=override_value,
         )
 
-    def input_author(self) -> str:
+    def input_author(self, override_value: str | None) -> str:
         """Ask about the author name, using hints from the pyproject.toml file if there
         are any.
 
         :returns: author name
         """
         intro = (
-            "Who do you want to be credited as the author of this application? This could be\n"
+            "Who do you want to be credited as the author of this application? This could be"
             "your own name, or the name of your company you work for."
         )
 
@@ -372,15 +395,17 @@ class ConvertCommand(NewCommand):
                 intro=intro,
                 variable="author",
                 default="Jane Developer",
+                override_value=override_value,
             )
         elif len(options) == 1:
             return self.input_text(
                 intro=(
                     intro
-                    + f"\n\nBased on the PEP621 formatted pyproject.toml file, we believe it might be {options[0]}"
+                    + f"\n\nBased on the PEP621 formatted pyproject.toml file, we believe it might be {options[0]!r}"
                 ),
                 variable="author",
                 default=options[0],
+                override_value=override_value,
             )
 
         # Add a line with all authors joined: E.g. 'Jane Developer & Joe Developer'
@@ -388,25 +413,33 @@ class ConvertCommand(NewCommand):
         options.append(", ".join(options[:-1]) + f" & {options[-1]}")
         options.append("Other")
 
-        author = self.input_select(
-            intro=(
-                intro
-                + "We found these author names in the PEP621 formatted pyproject.toml. Who do you"
-                + "want to be credited as the author of this application?"
-            ),
-            variable="author",
-            options=options,
-        )
-        if author == "Other":
+        # We want to use the input_text-function if override_value is provided or if the selected author is "Other"
+        # However, since we don't want the select_option prompt if an override value is provided, we need to
+        # initialise the author variable here.
+        author = None
+        if override_value is None:
+            author = self.select_option(
+                intro=(
+                    intro
+                    + "\n\n"
+                    + "We found these author names in the PEP621 formatted pyproject.toml. Who do you "
+                    + "want to be credited as the author of this application?"
+                ),
+                variable="Author",
+                options=options,
+                default=None,
+            )
+        if author == "Other" or override_value:
             author = self.input_text(
                 intro="Write the name(s)",
                 variable="author",
                 default="Jane Developer",
+                override_value=override_value,
             )
 
         return author
 
-    def input_email(self, author: str, bundle: str) -> str:
+    def input_email(self, author: str, bundle: str, override_value: str | None) -> str:
         """Ask about the author email, using hints from the pyproject.toml file if there
         are any.
 
@@ -425,7 +458,7 @@ class ConvertCommand(NewCommand):
             "What email address should people use to contact the developers of this\n"
             "application? This might be your own email address, or a generic contact address\n"
             f"you set up specifically for this application. Based on {default_source},\n"
-            f"we believe it could be {default}."
+            f"we believe it could be {default!r}."
         )
 
         author_email = self.input_text(
@@ -433,31 +466,35 @@ class ConvertCommand(NewCommand):
             variable="author's email",
             default=default,
             validator=self.validate_email,
+            override_value=override_value,
         )
 
         return author_email
 
-    def get_license_from_text(self, license_text):
+    def get_license_from_text(self, license_text: str) -> str:
         """Infer the license from the license file."""
+
+        # The order here is quite important, if we have GPLvX+ after GPLvX, then it will never be matched
+        # if the license text is GPLvX+, since it will already have matched GPLvX.
         hint_patterns = {
             "MIT license": ["Permission is hereby granted, free of charge", "MIT"],
             "Apache Software License": ["Apache"],
             "BSD license": ["Redistribution and use in source and binary forms", "BSD"],
-            "GNU General Public License v2 (GPLv2)": [
-                "version 2 of the GNU General Public License",
-                "GPLv2",
-            ],
             "GNU General Public License v2 or later (GPLv2+)": [
                 "Free Software Foundation, either version 2 of the License",
                 "GPLv2+",
             ],
-            "GNU General Public License v3 (GPLv3)": [
-                "version 3 of the GNU General Public License",
-                "GPLv3",
+            "GNU General Public License v2 (GPLv2)": [
+                "version 2 of the GNU General Public License",
+                "GPLv2",
             ],
             "GNU General Public License v3 or later (GPLv3+)": [
                 "either version 3 of the License",
                 "GPLv3+",
+            ],
+            "GNU General Public License v3 (GPLv3)": [
+                "version 3 of the GNU General Public License",
+                "GPLv3",
             ],
         }
         for hint, license_patterns in hint_patterns.items():
@@ -467,7 +504,7 @@ class ConvertCommand(NewCommand):
 
         return "Other"
 
-    def get_license_hint(self) -> tuple[Optional[str], str]:
+    def get_license_hint(self) -> tuple[str | None, str]:
         """Get hint for project license, either by reading pyproject.toml or the license
         file.
 
@@ -482,75 +519,84 @@ class ConvertCommand(NewCommand):
             default = self.get_license_from_text(self.pep621_data["license"]["text"])
             default_source = "the PEP621 formatted pyproject.toml"
         elif "file" in self.pep621_data.get("license", {}):
-            with open(self.pep621_data["license"]["file"]) as f:
-                license_text = f.read()
+            license_text = (
+                self.base_path / self.pep621_data["license"]["file"]
+            ).read_text()
             default = self.get_license_from_text(license_text)
             default_source = "the license file"
-        elif Path("LICENSE").exists():
-            with open("LICENSE") as f:
-                license_text = f.read()
+        elif (self.base_path / "LICENSE").exists():
+            license_text = (self.base_path / "LICENSE").read_text()
             default = self.get_license_from_text(license_text)
             default_source = "the license file"
-
-        if (
-            not default
-        ):  # Use new if test, not else here since self.get_license_from_text can return None
+        else:
             return None, intro
 
-        intro += f"\nBased on {default_source} we believe it is {default}."
+        intro += f"\nBased on {default_source} we believe it is {default!r}."
         return default, intro
 
-    def input_license(self) -> str:
+    def input_license(self, override_value: str | None) -> str:
         """Ask about the license, using hints from the pyproject.toml or license file if
         there are any.
 
         :returns: The project
         """
         default, intro = self.get_license_hint()
-        if default:
-            project_license = self.input_text(
-                intro=intro,
-                variable="project license",
-                default=default,
-            )
-        else:
-            project_license = self.input_select(
-                intro=intro,
-                variable="project license",
-                options=[
-                    "BSD license",
-                    "MIT license",
-                    "Apache Software License",
-                    "GNU General Public License v2 (GPLv2)",
-                    "GNU General Public License v2 or later (GPLv2+)",
-                    "GNU General Public License v3 (GPLv3)",
-                    "GNU General Public License v3 or later (GPLv3+)",
-                    "Proprietary",
-                    "Other",
-                ],
-            )
-        return project_license
+        options = [
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ]
+
+        return self.select_option(
+            intro=intro,
+            variable="Project License",
+            options=options,
+            default=default,
+            override_value=override_value,
+        )
 
     def build_app_context(self, project_overrides):
         """Ask the user for details about the app to be created.
 
         :returns: A context dictionary to be used in the cookiecutter project template.
         """
-        app_name = self.input_app_name()
-        formal_name = self.input_formal_name(app_name)
+        app_name = self.input_app_name(
+            override_value=project_overrides.pop("app_name", None)
+        )
+        formal_name = self.input_formal_name(
+            app_name, override_value=project_overrides.pop("formal_name", None)
+        )
         # The class name can be completely derived from the formal name.
         class_name = make_class_name(formal_name)
         # The module name can be completely derived from the app name.
-        source_dir = self.input_source_dir(app_name)
+        source_dir = self.input_source_dir(
+            app_name, override_value=project_overrides.pop("source_dir", None)
+        )
         module_name = Path(source_dir).name
-        test_source_dir = self.input_test_source_dir(app_name)
-        project_name = self.input_project_name(formal_name, override_value=None)
-        description = self.input_description()
-        url = self.input_url(app_name)
-        bundle = self.input_bundle(url, app_name)
-        author = self.input_author()
-        author_email = self.input_email(author, bundle)
-        project_license = self.input_license()
+        test_source_dir = self.input_test_source_dir(
+            app_name, override_value=project_overrides.pop("test_source_dir", None)
+        )
+        project_name = self.input_project_name(
+            formal_name, override_value=project_overrides.pop("project_name", None)
+        )
+        description = self.input_description(
+            override_value=project_overrides.pop("description", None)
+        )
+        url = self.input_url(app_name, project_overrides.pop("url", None))
+        bundle = self.input_bundle(url, app_name, project_overrides.pop("bundle", None))
+        author = self.input_author(override_value=project_overrides.pop("author", None))
+        author_email = self.input_email(
+            author, bundle, override_value=project_overrides.pop("author_email", None)
+        )
+        project_license = self.input_license(
+            override_value=project_overrides.pop("license", None)
+        )
 
         return {
             "formal_name": formal_name,
@@ -575,49 +621,17 @@ class ConvertCommand(NewCommand):
     ) -> dict[str, str]:
         return {"gui_framework": "None"}
 
-    def remove_redundant_fields(self, briefcase_config_file):
-        with open(briefcase_config_file, "rb") as f:
-            src_config = tomllib.load(f)
-
-        # Remove tags that are in the pyproject.toml file
-        briefcase_config = src_config["tool"]["briefcase"]
-        app_name = list(briefcase_config["app"])[0]
-        app_config = briefcase_config["app"][app_name]
-        if self.pep621_data.get("description"):
-            del app_config["description"]
-
-        if briefcase_config["url"] == self.pep621_data.get("urls", {}).get("Homepage"):
-            del briefcase_config["url"]
-
-        if briefcase_config["license"] == self.get_license_hint()[0]:
-            del briefcase_config["license"]
-
-        if "version" in self.pep621_data:
-            del briefcase_config["version"]
-
-        # When Briefcase parses PEP621 data, it only considers the first author
-        pep621_first_author = next(iter(self.pep621_data.get("authors", [])), {})
-        if briefcase_config["author"] == pep621_first_author.get("name"):
-            del briefcase_config["author"]
-        if briefcase_config["author_email"] == pep621_first_author.get("email"):
-            del briefcase_config["author_email"]
-
-        with open(briefcase_config_file, "wb") as f:
-            tomli_w.dump(src_config, f)
-
-    def merge_or_copy_pyproject(self, briefcase_config_file) -> None:
-        """Merge pyproject.toml file in the src directory with that in dst.
+    def merge_or_copy_pyproject(self, briefcase_config_file: Path) -> None:
+        """Merge pyproject.toml file made by the cookiecutter with the one in the
+        existing project.
 
         If the target directory doesn't have a pyproject.toml file, then the newly
         created will be copied
 
-        :param src: The path to the project created by the cookiecutter.
-        :param dst: The path where the newly created pyproject.toml file should be
-            migrated to.
+        :param briefcase_config_file: The path to the project created by the
+            cookiecutter.
         """
         pyproject_file = self.base_path / "pyproject.toml"
-
-        self.remove_redundant_fields(briefcase_config_file)
 
         briefcase_pyproject = briefcase_config_file.read_text()
         if pyproject_file.exists():
@@ -636,7 +650,7 @@ class ConvertCommand(NewCommand):
         with open(pyproject_file, "w") as file:
             file.write(merged_pyproject)
 
-    def migrate_necessary_files(self, project_dir, test_source_dir):
+    def migrate_necessary_files(self, project_dir, test_source_dir, module_name):
         """Copy and merge the necessary files from project_dir to the current base path.
 
         Will warn a LICENSE or CHANGELOG file is missing.
@@ -651,19 +665,14 @@ class ConvertCommand(NewCommand):
         license_file = self.pep621_data.get("license", {}).get("file")
         if license_file is not None and Path(license_file).name != "LICENSE":
             self.logger.warning(
-                f"License file found in {self.base_path}, but its name is not LICENSE. Renaming the file to LICENSE."
+                f"License file found in {self.base_path}, but its name is {Path(license_file).name} not LICENSE. "
+                "Creating a template LICENSE file, but you might want to consider renaming the file you have."
             )
-            (self.base_path / license_file).rename(self.base_path / "LICENSE")
-
-            with open(self.base_path / "pyproject.toml") as f:
-                pyproject_text = f.read()
-            pyproject_text = pyproject_text.replace(license_file, "LICENSE")
-            with open(self.base_path / "pyproject.toml", "w") as f:
-                f.write(pyproject_text)
+            copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
         elif not (self.base_path / "LICENSE").exists():
             self.logger.warning(
-                f"License file not found in {self.base_path}. Creating a template LICENSE file "
+                f"License file not found in {self.base_path}. Creating a template LICENSE file."
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
@@ -676,14 +685,15 @@ class ConvertCommand(NewCommand):
             )
 
         # Copy tests or test entry script
-        if test_source_dir:
-            test_entry_script = project_dir / test_source_dir / f"{project_dir.name}.py"
+        test_path = self.base_path / test_source_dir
+        if test_path.exists():
+            test_entry_script = project_dir / "tests" / f"{module_name}.py"
             copy2(
                 test_entry_script,
-                self.base_path / test_source_dir / f"{project_dir.name}.py",
+                test_path / f"{module_name}.py",
             )
         else:
-            copytree(project_dir / "tests", self.base_path / "tests")
+            copytree(project_dir / "tests", test_path)
 
     def show_welcome_prompt(self) -> None:
         """Show a welcome prompt that describes what this command will do."""
@@ -693,8 +703,9 @@ class ConvertCommand(NewCommand):
     def convert_app(
         self,
         tmp_path: Path,
-        template: Optional[str] = None,
-        template_branch: Optional[str] = None,
+        template: str | None = None,
+        template_branch: str | None = None,
+        project_overrides: dict[str, str] | None = None,
         **options,
     ) -> None:
         """Run the wizard in a temporary directory and copy the necessary files into the
@@ -708,11 +719,14 @@ class ConvertCommand(NewCommand):
         version, template, branch = self.get_version_and_template_info(
             template, template_branch
         )
-        context = self.build_context(template, branch, version, project_overrides={})
+        context = self.build_context(template, branch, version, project_overrides)
+
+        self.warn_unused_overrides(project_overrides)
 
         self.logger.info()
         self.logger.info(
-            f"Generating required files to set up {context['formal_name']!r} with Briefcase"
+            f"Generating required files to set up {context['formal_name']!r} with Briefcase",
+            prefix=context["app_name"],
         )
 
         # Create the project files
@@ -726,14 +740,16 @@ class ConvertCommand(NewCommand):
 
         app_path = context["app_name"]
         self.logger.info(
-            f"Application '{context['formal_name']}' has been generated. To run your application, type:\n"
+            f"Application {context['formal_name']!r} has been generated. To run your application, type:\n"
             "\n"
             f"cd {app_path}\n"
             "briefcase dev"
         )
 
         project_dir = tmp_path / context["app_name"]
-        self.migrate_necessary_files(project_dir, context["test_source_dir"])
+        self.migrate_necessary_files(
+            project_dir, context["test_source_dir"], context["module_name"]
+        )
 
     def validate_pyproject_file(self) -> None:
         """Cannot setup new app if it already has briefcase settings in pyproject."""
@@ -751,7 +767,7 @@ class ConvertCommand(NewCommand):
         """Cannot setup new app for a project containing only a child directory with log
         files or no child directories."""
         # Check first for no child directories
-        directories = (p for p in Path().iterdir() if p.is_dir())
+        directories = (p for p in self.base_path.iterdir() if p.is_dir())
         if not (log_dir_candidate := next(directories, None)):
             raise BriefcaseCommandError(
                 "Cannot automatically set up briefcase for a project with no directories"
@@ -770,13 +786,13 @@ class ConvertCommand(NewCommand):
 
     def __call__(
         self,
-        template: Optional[str] = None,
-        template_branch: Optional[str] = None,
+        template: str | None = None,
+        template_branch: str | None = None,
+        project_overrides: list[str] = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.
         # There are no apps, so finalize() will be a no op on app configurations.
-
         self.finalize()
 
         self.validate_pyproject_file()
@@ -789,5 +805,6 @@ class ConvertCommand(NewCommand):
                 tmp_path=tmp_path,
                 template=template,
                 template_branch=template_branch,
+                project_overrides=parse_project_overrides(project_overrides),
                 **options,
             )
