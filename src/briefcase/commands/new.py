@@ -521,6 +521,8 @@ class NewCommand(BaseCommand):
 
         # The module name can be completely derived from the app name.
         module_name = self.make_module_name(app_name)
+        source_dir = f"src/{module_name}"
+        test_source_dir = "tests"
 
         bundle = self.input_text(
             intro=(
@@ -599,6 +601,8 @@ class NewCommand(BaseCommand):
             "app_name": app_name,
             "class_name": class_name,
             "module_name": module_name,
+            "source_dir": source_dir,
+            "test_source_dir": test_source_dir,
             "project_name": project_name,
             "description": description,
             "author": author,
