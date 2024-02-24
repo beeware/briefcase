@@ -4,6 +4,7 @@ import re
 import sys
 import unicodedata
 from collections import OrderedDict
+from collections.abc import Sequence
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Iterable
@@ -363,6 +364,38 @@ class NewCommand(BaseCommand):
 
             self.input.prompt()
 
+    def select_option(
+        self,
+        intro: str,
+        variable: str,
+        default: str | None,
+        options: Sequence[str],
+        override_value: str | None,
+    ) -> str:
+        variable = titlecase(variable)
+        self.prompt_divider(title=variable)
+
+        if override_value is not None:
+            if self.validate_selection_override(options, override_value):
+                return override_value
+            else:
+                self.logger.warning(
+                    f"Invalid override value {override_value!r} for {variable}, using user-provided value."
+                )
+
+        if default is not None:
+            default = str(options.index(default) + 1)
+        else:
+            default = "1"
+
+        self.prompt_intro(intro=intro)
+        return select_option(
+            prompt=f"{variable} [{default}]:",
+            input=self.input,
+            default=default,
+            options=list(zip(options, options)),
+        )
+
     def show_welcome_prompt(self) -> None:
         """Show a welcome prompt that describes what this command will do."""
         self.input.prompt()
@@ -395,6 +428,26 @@ class NewCommand(BaseCommand):
             ),
             variable="project name",
             default=formal_name,
+            override_value=override_value,
+        )
+
+    def input_license(self, override_value: str | None):
+        licenses = [
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ]
+        return self.select_option(
+            intro="What license do you want to use for this project's code?",
+            variable="Project License",
+            options=licenses,
+            default=None,
             override_value=override_value,
         )
 
@@ -537,36 +590,9 @@ class NewCommand(BaseCommand):
             validator=self.validate_url,
             override_value=project_overrides.pop("url", None),
         )
-
-        licenses = [
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ]
-
-        self.prompt_divider(title="Project License")
-
-        project_license = None
-        if license_override := project_overrides.pop("license", None):
-            if self.validate_selection_override(licenses, license_override):
-                project_license = license_override
-
-        if not project_license:
-            self.prompt_intro(
-                "What license do you want to use for this project's code?"
-            )
-            project_license = select_option(
-                prompt="Project License [1]: ",
-                input=self.input,
-                default="1",
-                options=list(zip(licenses, licenses)),
-            )
+        project_license = self.input_license(
+            override_value=project_overrides.pop("license", None)
+        )
 
         return {
             "formal_name": formal_name,
@@ -688,6 +714,18 @@ class NewCommand(BaseCommand):
                 extra_context=extra_context,
             )
 
+    def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
+        """Inform user of project configuration overrides that were not used."""
+        if project_overrides:
+            unused_overrides = "\n    ".join(
+                f"{key} = {value}" for key, value in project_overrides.items()
+            )
+            self.logger.warning()
+            self.logger.warning(
+                "WARNING: These project configuration overrides were not used:\n\n"
+                f"    {unused_overrides}"
+            )
+
     def new_app(
         self,
         template: str | None = None,
@@ -702,16 +740,7 @@ class NewCommand(BaseCommand):
         )
         context = self.build_context(template, branch, version, project_overrides)
 
-        # Inform user of project configuration overrides that were not used
-        if project_overrides:
-            unused_overrides = "\n    ".join(
-                f"{key} = {value}" for key, value in project_overrides.items()
-            )
-            self.logger.warning()
-            self.logger.warning(
-                "WARNING: These project configuration overrides were not used:\n\n"
-                f"    {unused_overrides}"
-            )
+        self.warn_unused_overrides(project_overrides)
 
         self.logger.info(
             f"Generating a new application {context['formal_name']!r}",
