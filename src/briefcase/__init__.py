@@ -15,6 +15,7 @@ except (ModuleNotFoundError, LookupError):  # pragma: no-cover-if-missing-setupt
     # If it *is* in the environment, but the code isn't a git checkout (e.g.,
     # it's been pip installed non-editable) the call to get_version() will fail.
     # If either of these occurs, read version from the installer metadata.
+    # edit for pr
     from importlib.metadata import version
 
     __version__ = version("briefcase")
