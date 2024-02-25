@@ -3,7 +3,6 @@ import os
 import platform
 import sys
 import time
-from os.path import normpath
 from pathlib import Path
 from unittest import mock
 
@@ -53,6 +52,7 @@ def run_command(tmp_path, first_app_config, jdk):
     command.tools.requests = mock.MagicMock(spec_set=requests)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.sys = mock.MagicMock(spec_set=sys)
+    command.tools.home_path = tmp_path / "home"
 
     command._stream_app_logs = mock.MagicMock()
 
@@ -524,7 +524,7 @@ def test_run_idle_device(run_command, first_app_config):
     )
 
 
-def test_log_file_extra(run_command, monkeypatch):
+def test_log_file_extra(run_command, tmp_path, monkeypatch):
     """Android commands register a log file extra to list SDK packages."""
     mock_android_sdk_verify = mock.MagicMock(return_value=run_command.tools.android_sdk)
     monkeypatch.setattr(AndroidSDK, "verify", mock_android_sdk_verify)
@@ -545,14 +545,17 @@ def test_log_file_extra(run_command, monkeypatch):
     run_command.tools.logger.save_log = True
     run_command.tools.logger.save_log_to_file(run_command)
 
-    sdk_manager = f"/path/to/android_sdk/cmdline-tools/{AndroidSDK.SDK_MANAGER_VER}/bin/sdkmanager"
-    if platform.system() == "Windows":
-        sdk_manager += ".bat"
+    sdk_manager = Path(
+        f"/path/to/android_sdk/cmdline-tools/{AndroidSDK.SDK_MANAGER_VER}"
+        f"/bin/sdkmanager{'.bat' if platform.system() == 'Windows' else ''}"
+    )
     run_command.tools.subprocess.check_output.assert_called_once_with(
-        [normpath(sdk_manager), "--list_installed"],
+        [sdk_manager, "--list_installed"],
         env={
             "ANDROID_HOME": str(run_command.tools.android_sdk.root_path),
             "ANDROID_SDK_ROOT": str(run_command.tools.android_sdk.root_path),
+            "ANDROID_USER_HOME": f"{tmp_path / 'home/.android'}",
+            "ANDROID_AVD_HOME": f"{tmp_path / 'home/.android/avd'}",
             "JAVA_HOME": str(run_command.tools.java.java_home),
         },
     )

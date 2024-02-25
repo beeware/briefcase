@@ -1,6 +1,5 @@
-import os
 import subprocess
-from unittest.mock import ANY, MagicMock
+from unittest.mock import ANY, MagicMock, PropertyMock
 
 import pytest
 
@@ -88,7 +87,7 @@ def test_create_emulator(
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.avdmanager_path),
+            android_sdk.avdmanager_path,
             "--verbose",
             "create",
             "avd",
@@ -161,7 +160,7 @@ def test_create_emulator_with_defaults(
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.avdmanager_path),
+            android_sdk.avdmanager_path,
             "--verbose",
             "create",
             "avd",
@@ -182,6 +181,69 @@ def test_create_emulator_with_defaults(
         config = f.read().split("\n")
     assert "hw.keyboard=yes" in config
     assert "skin.name=pixel_7_pro" in config
+
+
+def test_create_emulator_with_nonexistent_avd_home(
+    mock_tools,
+    android_sdk,
+    tmp_path,
+    monkeypatch,
+):
+    """Ensure a AVD home directory is created for a new emulator."""
+    # Mock the hardware and operating system to specific values
+    mock_tools.host_os = "Darwin"
+    mock_tools.host_arch = "x86_64"
+
+    # Mock system image and skin verification
+    android_sdk.verify_system_image = MagicMock()
+    android_sdk.verify_emulator_skin = MagicMock()
+
+    # Mock a custom location for the AVDs
+    android_sdk.update_emulator_config = MagicMock()
+    avd_home_path = tmp_path / "my-avds"
+    monkeypatch.setattr(
+        type(android_sdk),
+        "avd_home_path",
+        PropertyMock(return_value=avd_home_path),
+    )
+    assert avd_home_path.is_dir() is False
+
+    # Create the emulator
+    android_sdk._create_emulator(
+        avd="new-emulator",
+        device_type="slab",
+        skin="slab_skin",
+        system_image="system-images;android-42;default;gothic",
+    )
+
+    # The system image was verified
+    android_sdk.verify_system_image.assert_called_once_with(
+        "system-images;android-42;default;gothic"
+    )
+
+    # The emulator skin was verified
+    android_sdk.verify_emulator_skin.assert_called_once_with("slab_skin")
+
+    # avdmanager was invoked
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [
+            android_sdk.avdmanager_path,
+            "--verbose",
+            "create",
+            "avd",
+            "--name",
+            "new-emulator",
+            "--abi",
+            "x86_64",
+            "--package",
+            "system-images;android-42;default;gothic",
+            "--device",
+            "slab",
+        ],
+        env=android_sdk.env,
+    )
+
+    assert avd_home_path.is_dir()
 
 
 def test_create_failure(mock_tools, android_sdk):
@@ -208,7 +270,7 @@ def test_create_failure(mock_tools, android_sdk):
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.avdmanager_path),
+            android_sdk.avdmanager_path,
             "--verbose",
             "create",
             "avd",

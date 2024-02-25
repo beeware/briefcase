@@ -1,0 +1,1 @@
+The environment variables ``ANDROID_USER_HOME`` and ``ANDROID_AVD_HOME`` are now respected and passed through to Android SDK commands. This allows for storing AVDs for the Android emulator outside of the home directory.

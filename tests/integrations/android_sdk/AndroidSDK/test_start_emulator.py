@@ -1,4 +1,3 @@
-import os
 import subprocess
 from unittest.mock import MagicMock, call
 
@@ -109,7 +108,7 @@ def test_start_emulator(mock_tools, android_sdk):
     # The process was started.
     mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(android_sdk.emulator_path),
+            android_sdk.emulator_path,
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
@@ -190,7 +189,7 @@ def test_start_emulator_fast_start(mock_tools, android_sdk):
     # The process was started.
     mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(android_sdk.emulator_path),
+            android_sdk.emulator_path,
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
@@ -285,7 +284,7 @@ def test_emulator_fail_to_start(mock_tools, android_sdk):
     # The process was started.
     mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(android_sdk.emulator_path),
+            android_sdk.emulator_path,
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
@@ -389,7 +388,7 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
     # The process was started.
     mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(android_sdk.emulator_path),
+            android_sdk.emulator_path,
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
@@ -458,7 +457,7 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, emulator_comm, expected_log, c
     # The process was started.
     mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(android_sdk.emulator_path),
+            android_sdk.emulator_path,
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",
@@ -524,7 +523,7 @@ def test_start_emulator_extra_args(mock_tools, android_sdk):
     # The process was started with the headless test options.
     mock_tools.subprocess.Popen.assert_called_with(
         [
-            os.fsdecode(android_sdk.emulator_path),
+            android_sdk.emulator_path,
             "@idleEmulator",
             "-dns-server",
             "8.8.8.8",

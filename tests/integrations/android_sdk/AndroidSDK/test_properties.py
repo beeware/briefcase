@@ -86,8 +86,55 @@ def test_emulator_path(mock_tools, android_sdk, host_os, emulator_name):
     )
 
 
+def test_dot_android_path(mock_tools, android_sdk, tmp_path):
+    """Default user android path is $HOME/.android/avd."""
+    assert android_sdk.dot_android_path == tmp_path / "home/.android"
+
+
+def test_dot_android_path_env_var(mock_tools, android_sdk, monkeypatch):
+    """ANDROID_AVD_HOME is respected as AVD path."""
+    mock_tools.os.environ = {"ANDROID_USER_HOME": "/my/android"}
+    assert android_sdk.dot_android_path == Path("/my/android")
+
+
+def test_avd_home_path(mock_tools, android_sdk, tmp_path):
+    """Default AVD path is $HOME/.android/avd."""
+    assert android_sdk.avd_home_path == tmp_path / "home/.android/avd"
+
+
+def test_avd_home_path_env_var(mock_tools, android_sdk, monkeypatch):
+    """ANDROID_AVD_HOME is respected as AVD path."""
+    mock_tools.os.environ = {"ANDROID_AVD_HOME": "/my/avds"}
+    assert android_sdk.avd_home_path == Path("/my/avds")
+
+
 def test_avd_path(mock_tools, android_sdk, tmp_path):
-    assert android_sdk.avd_path == tmp_path / "home/.android/avd"
+    """Default path for AVD is correct."""
+    assert (
+        android_sdk.avd_path(avd="my-avd") == tmp_path / "home/.android/avd/my-avd.avd"
+    )
+
+
+def test_avd_path_env_var(mock_tools, android_sdk, tmp_path, monkeypatch):
+    """ANDROID_AVD_HOME is respected for AVD path."""
+    mock_tools.os.environ = {"ANDROID_AVD_HOME": "/my/avds"}
+    assert android_sdk.avd_path(avd="my-avd") == Path("/my/avds/my-avd.avd")
+
+
+def test_avd_config_filepath(mock_tools, android_sdk, tmp_path):
+    """Default AVD config file is correct."""
+    assert (
+        android_sdk.avd_config_filepath(avd="my-avd")
+        == tmp_path / "home/.android/avd/my-avd.avd/config.ini"
+    )
+
+
+def test_avd_config_filepath_env_var(mock_tools, android_sdk, tmp_path, monkeypatch):
+    """ANDROID_AVD_HOME is respected for AVD config filepath."""
+    mock_tools.os.environ = {"ANDROID_AVD_HOME": "/my/avds"}
+    assert android_sdk.avd_config_filepath(avd="my-avd") == Path(
+        "/my/avds/my-avd.avd/config.ini"
+    )
 
 
 def test_simple_env(mock_tools, android_sdk, tmp_path):
@@ -96,6 +143,8 @@ def test_simple_env(mock_tools, android_sdk, tmp_path):
         "JAVA_HOME": os.fsdecode(Path("/path/to/jdk")),
         "ANDROID_HOME": os.fsdecode(tmp_path / "sdk"),
         "ANDROID_SDK_ROOT": os.fsdecode(tmp_path / "sdk"),
+        "ANDROID_USER_HOME": os.fsdecode(tmp_path / "home/.android"),
+        "ANDROID_AVD_HOME": os.fsdecode(tmp_path / "home/.android/avd"),
     }
 
 

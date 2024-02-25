@@ -1,4 +1,3 @@
-import os
 import subprocess
 from datetime import datetime
 from unittest.mock import MagicMock
@@ -16,7 +15,7 @@ def test_logcat_tail(mock_tools, adb):
     # Validate call parameters.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(mock_tools.android_sdk.adb_path),
+            mock_tools.android_sdk.adb_path,
             "-s",
             "exampleDevice",
             "logcat",
