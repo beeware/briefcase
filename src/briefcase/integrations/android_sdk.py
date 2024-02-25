@@ -1316,7 +1316,7 @@ Review the emulator output above for:
 
 Ensure your Android SDK is up-to-date by running:
 
-    $ briefcase update {AndroidSDK.name}
+    $ briefcase upgrade {AndroidSDK.name}
 
 To review Google's general troubleshooting steps for the emulator, visit:
 
