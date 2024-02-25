@@ -1,0 +1,1 @@
+Update cookiecutter requirement from <2.6.0,>=2.3.1 to >=2.3.1,<2.7.0.
