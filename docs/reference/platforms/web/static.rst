@@ -48,6 +48,32 @@ Splash Image format
 
 Web projects do not support splash screens or installer images.
 
+Additional options
+==================
+
+The following options can be provided at the command line when producing
+web projects:
+
+run
+---
+
+``--host <ip or hostname>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The hostname or IP address that the development web server should be bound to.
+Defaults to ``localhost``.
+
+``-p <port>`` / ``--port <port>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The port that the development web server should be bound to. Defaults to ``8080``.
+If port ``8080`` is already in use, an arbitrary available port will be used.
+
+``--no-browser``
+~~~~~~~~~~~~~~~~
+
+Don't open a web browser after starting the development web server.
+
 Application configuration
 =========================
 
@@ -73,28 +99,3 @@ define a custom runtime, and change the default PyScript app name, you could use
     [[runtimes]]
     src = "https://example.com/custom/pyodide.js"
     """
-
-Additional options
-==================
-
-The following options can be provided at the command line when producing
-web projects:
-
-run
----
-
-``--host <ip or hostname>``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The hostname or IP address that the development web server should be bound to.
-Defaults to ``localhost``.
-
-``-p <port>`` / ``--port <port>``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The port that the development web server should be bound to. Defaults to ``8080``.
-
-``--no-browser``
-~~~~~~~~~~~~~~~~
-
-Don't open a web browser after starting the development web server.
