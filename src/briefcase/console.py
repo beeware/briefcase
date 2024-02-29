@@ -33,7 +33,8 @@ from briefcase import __version__
 SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
 
 # 7-bit C1 ANSI escape sequences
-ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+ANSI_ESC_SEQ_RE_DEF = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
+ANSI_ESCAPE_RE = re.compile(ANSI_ESC_SEQ_RE_DEF)
 
 
 class InputDisabled(Exception):

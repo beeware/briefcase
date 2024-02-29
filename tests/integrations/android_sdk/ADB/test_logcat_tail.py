@@ -20,6 +20,7 @@ def test_logcat_tail(mock_tools, adb):
             "exampleDevice",
             "logcat",
             "--format=tag",
+            "--format=color",
             "-t",
             "11-10 09:08:07.000000",
             "-s",

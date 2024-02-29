@@ -1606,6 +1606,7 @@ Activity class not found while starting app.
                 self.device,
                 "logcat",
                 "--format=tag",
+                "--format=color",
                 "--pid",  # This option is available since API level 24.
                 pid,
             ]
@@ -1634,6 +1635,7 @@ Activity class not found while starting app.
                     self.device,
                     "logcat",
                     "--format=tag",
+                    "--format=color",
                     "-t",
                     since.strftime("%m-%d %H:%M:%S.000000"),
                     "-s",

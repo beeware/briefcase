@@ -1,0 +1,1 @@
+When an app runs on an Android device or emulator, the logging output is now colored.

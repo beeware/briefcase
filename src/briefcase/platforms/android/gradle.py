@@ -16,6 +16,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig, parsed_version
+from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
@@ -35,7 +36,11 @@ def safe_formal_name(name):
     return re.sub(r"\s+", " ", re.sub(r'[!/\\:<>"\?\*\|]', "", name)).strip()
 
 
-ANDROID_LOG_PREFIX_REGEX = re.compile(r"[A-Z]/(?P<tag>.*?): (?P<content>.*)")
+# Matches zero or more ANSI control chars wrapping the message for when
+# the Android emulator is printing in color.
+ANDROID_LOG_PREFIX_REGEX = re.compile(
+    rf"(?:{ANSI_ESC_SEQ_RE_DEF})*[A-Z]/(?P<tag>.*?): (?P<content>.*?(?=\x1B|$))(?:{ANSI_ESC_SEQ_RE_DEF})*"
+)
 
 
 def android_log_clean_filter(line):
