@@ -24,7 +24,7 @@ def test_merge_pyproject(convert_command, tmp_path_generator):
 
     base_config_content = {"placeholder1": "a"}
     briefcase_config_content = {"placeholder2": "b"}
-    merged_dict = base_config_content | briefcase_config_content
+    merged_dict = {**base_config_content, **briefcase_config_content}
 
     with open(base_config_file, "wb") as file:
         tomli_w.dump(base_config_content, file)

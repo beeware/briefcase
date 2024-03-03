@@ -30,6 +30,27 @@ def test_multiple_pep621_authors(convert_command, monkeypatch):
     ]
 
 
+def test_single_pep621_author(convert_command, monkeypatch):
+    """If there is only one author, then you don't get the joined authors-option."""
+    m_select_option = MagicMock()
+    m_select_option.return_value = "Firstname Firstauthor"
+    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+
+    (convert_command.base_path / "pyproject.toml").write_text(
+        "[project]\n"
+        "authors = [\n"
+        '    {name="Firstname Firstauthor", email="mail1@tld.com"},\n'
+        "]",
+        encoding="utf-8",
+    )
+    convert_command.input_author(None)
+    m_select_option.assert_called_once()
+    assert m_select_option.call_args.kwargs["options"] == [
+        "Firstname Firstauthor",
+        "Other",
+    ]
+
+
 def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
     """If you select "Other", then you can type in a name."""
     m_select_option = MagicMock()
@@ -52,23 +73,6 @@ def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
     assert convert_command.input_author(None) == "Some Name"
     m_select_option.assert_called_once()
     m_input_text.assert_called_once()
-
-
-def test_single_pep621_author(convert_command, monkeypatch):
-    """If there is only one author, then you don't get the option select prompt."""
-    m_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
-
-    (convert_command.base_path / "pyproject.toml").write_text(
-        "[project]\n"
-        "authors = [\n"
-        '    {name="Firstname Firstauthor", email="mail1@tld.com"},\n'
-        "]",
-        encoding="utf-8",
-    )
-    convert_command.input_author(None)
-    m_input_text.assert_called_once()
-    assert m_input_text.call_args.kwargs["default"] == "Firstname Firstauthor"
 
 
 @pytest.mark.parametrize("write_empty_pyproject", [True, False])

@@ -11,7 +11,7 @@ def test_valid_test_source_dir(convert_command):
     full_test_source_dir = convert_command.base_path / test_source_dir
     full_test_source_dir.mkdir(parents=True)
 
-    assert convert_command.create_test_source_dir_validator(app_name)(test_source_dir)
+    assert convert_command.validate_test_source_dir(app_name, test_source_dir)
 
 
 def test_test_source_dir_shouldnt_contain_test_entry_script(convert_command):
@@ -24,4 +24,4 @@ def test_test_source_dir_shouldnt_contain_test_entry_script(convert_command):
     create_file(test_entry_path, "TEST ENTRY SCRIPT")
 
     with pytest.raises(ValueError):
-        convert_command.create_test_source_dir_validator(app_name)(test_source_dir)
+        convert_command.validate_test_source_dir(app_name, test_source_dir)

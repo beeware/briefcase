@@ -8,7 +8,7 @@ import briefcase.commands.new
 @pytest.fixture
 def mock_select_option(monkeypatch):
     mock = MagicMock()
-    monkeypatch.setattr(briefcase.commands.new, "select_option", mock)
+    monkeypatch.setattr(briefcase.commands.new, "_select_option", mock)
     return mock
 
 
