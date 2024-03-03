@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import re
 from difflib import SequenceMatcher
-from functools import cached_property
+from functools import cached_property, partial
 from pathlib import Path
 from shutil import copy2, copytree
 from tempfile import TemporaryDirectory
-from typing import Callable
 from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
@@ -69,29 +68,24 @@ class ConvertCommand(NewCommand):
         """
         return self.pyproject.get("project", {})
 
-    def create_test_source_dir_validator(self, app_name: str) -> Callable[[str], bool]:
-        """Factory for functions that check if the test_source_dir is valid."""
+    def validate_test_source_dir(self, app_name: str, test_source_dir: str) -> bool:
+        """Determine if the test_source_dir is valid.
 
-        def validate_test_source_dir(test_source_dir: str) -> bool:
-            """Determine if the test_source_dir is valid.
+        :param test_source_dir: The candidate test source directory
+        :returns: True. If there are any validation problems, raises ValueError with a
+            diagnostic message.
+        """
+        test_path = self.base_path / test_source_dir
+        if (test_entry := test_path / f"{app_name}.py").exists():
+            raise ValueError(
+                f"{test_entry} is reserved for the briefcase test entry script, but it already exists.\n"
+                "\n"
+                "Briefcase expects this file to contain the test entry script, so if "
+                f"{self.base_path / test_source_dir} is your test directory, then you must"
+                f"rename {test_entry} before setting up your project for briefcase."
+            )
 
-            :param test_source_dir: The candidate test source directory
-            :returns: True. If there are any validation problems, raises ValueError with
-                  a diagnostic message.
-            """
-            test_path = self.base_path / test_source_dir
-            if (test_entry := test_path / f"{app_name}.py").exists():
-                raise ValueError(
-                    f"{test_entry} is reserved for the briefcase test entry script, but it already exists.\n"
-                    "\n"
-                    "Briefcase expects this file to contain the test entry script, so if "
-                    f"{self.base_path / test_source_dir} is your test directory, then you must"
-                    f"rename {test_entry} before setting up your project for briefcase."
-                )
-
-            return True
-
-        return validate_test_source_dir
+        return True
 
     def validate_source_dir(self, source_dir: str) -> bool:
         """Determine if the source_dir is valid.
@@ -101,7 +95,9 @@ class ConvertCommand(NewCommand):
             diagnostic message.
         """
         if not (self.base_path / source_dir).is_dir():
-            raise ValueError("The source directory must exist and be a directory.")
+            raise ValueError(
+                "The source directory must exist and be a directory with a ``__main__.py`` file."
+            )
 
         if not (self.base_path / source_dir / "__main__.py").is_file():
             raise ValueError(
@@ -164,10 +160,11 @@ class ConvertCommand(NewCommand):
         default = titlecase(" ".join(re.split("[-_]", app_name)))
         return self.input_text(
             intro=(
-                "We need a formal name for your application. This is the name that will\n"
-                "be displayed to humans whenever the name of the application is displayed. It\n"
-                "can have spaces and punctuation if you like, and any capitalization will be\n"
-                f"used as you type it. Based on the app name, we believe it is {default!r}."
+                "We need a formal name for your application. This is the name that will be\n"
+                "displayed to humans whenever the name of the application is displayed. It\n"
+                "can include spaces and punctuation, and any capitalization will be used as\n"
+                "you type it here. Based on the app name, we suggest a formal name of\n"
+                f"{default!r}, but you can use another name if you want."
             ),
             variable="formal name",
             default=default,
@@ -260,7 +257,7 @@ class ConvertCommand(NewCommand):
             intro=intro,
             variable="test source directory",
             default=default,
-            validator=self.create_test_source_dir_validator(app_name=app_name),
+            validator=partial(self.validate_test_source_dir, app_name),
             override_value=override_value,
         )
 
@@ -297,52 +294,38 @@ class ConvertCommand(NewCommand):
         """
         options = list(self.pep621_data.get("urls", {}).values())
 
-        if options is not None and len(options) > 1 and not override_value:
-            options.append("Other")
-            url = self.select_option(
+        if not options or override_value:
+            default = self.make_project_url("com.example", app_name)
+            return self.input_text(
                 intro=(
-                    "What is the website URL for this application? If you don't have a website set\n"
-                    'up, you can select "Other" and type in a dummy URL.\n'
-                    "\n"
-                    "We found these urls in the PEP621 formatted pyproject.toml."
+                    "What website URL do you want to use for this application? Based "
+                    f"on your existing pyproject.toml, this might be {default}"
                 ),
                 variable="application URL",
-                default=None,
-                options=options,
-                override_value=override_value,
-            )
-
-            if url == "Other" and not override_value:
-                url = self.input_text(
-                    intro="\nWrite the url.",
-                    variable="application URL",
-                    default=self.make_project_url("com.example", app_name),
-                    validator=self.validate_url,
-                )
-        elif options and not override_value:
-            url = self.input_text(
-                intro=(
-                    "What is the website URL for this application? If you don't have a website set\n"
-                    "up yet, you can put in a dummy URL.\n"
-                    "\n"
-                    f"We found this url in the PEP621 formatted pyproject.toml: {options[0]}"
-                ),
-                variable="application URL",
-                default=options[0],
+                default=default,
                 validator=self.validate_url,
                 override_value=override_value,
             )
 
-        else:
+        options.append("Other")
+        url = self.select_option(
+            intro=(
+                "What website URL do you want to use for this application? The "
+                "following URLs are defined in your existing pyproject.toml; "
+                "select 'Other' to provide a different URL."
+            ),
+            variable="application URL",
+            default=None,
+            options=options,
+            override_value=override_value,
+        )
+
+        if url == "Other" and not override_value:
             url = self.input_text(
-                intro=(
-                    "What is the website URL for this application? If you don't have a website set\n"
-                    "up yet, you can put in a dummy URL."
-                ),
+                intro="\nWhat website URL do you want to use for the application?",
                 variable="application URL",
                 default=self.make_project_url("com.example", app_name),
                 validator=self.validate_url,
-                override_value=override_value,
             )
 
         return url
@@ -354,18 +337,17 @@ class ConvertCommand(NewCommand):
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
         return self.input_text(
             intro=(
-                "Now we need a bundle identifier for your application. App stores need to\n"
-                "protect against having multiple applications with the same name; the bundle\n"
-                "identifier is the namespace they use to identify applications that come from\n"
-                "you. The bundle identifier is usually the domain name of your company or\n"
-                "project, in reverse order.\n"
+                "Now we need a bundle identifier for your application."
                 "\n"
-                "For example, if you are writing an application for Example Corp, whose website\n"
-                "is example.com, your bundle would be ``com.example``. The bundle will be\n"
-                "combined with your application's machine readable name to form a complete\n"
-                f"application identifier (e.g., com.example.{app_name}).\n"
+                "App stores need to protect against having multiple applications with "
+                "the same name; the bundle identifier is the namespace they use to "
+                "identify applications that come from you. The bundle identifier is "
+                "usually the domain name of your company or project, in reverse order."
                 "\n"
-                f"Based on the URL you selected, we believe a reasonable bundle is {default!r}."
+                "Based on the application URL you selected, it looks like your bundle "
+                f"should be {default!r}. The bundle will be combined with your "
+                "application's machine readable name to form a complete application "
+                f"identifier (com.example.{app_name})."
             ),
             variable="bundle identifier",
             default=default,
@@ -390,51 +372,41 @@ class ConvertCommand(NewCommand):
             if "name" in author
         ]
 
-        if not options:
+        if not options or override_value is not None:
             return self.input_text(
                 intro=intro,
                 variable="author",
                 default="Jane Developer",
                 override_value=override_value,
             )
-        elif len(options) == 1:
-            return self.input_text(
-                intro=(
-                    intro
-                    + f"\n\nBased on the PEP621 formatted pyproject.toml file, we believe it might be {options[0]!r}"
-                ),
-                variable="author",
-                default=options[0],
-                override_value=override_value,
-            )
+        elif len(options) > 1:
+            # Add a line with all authors joined: E.g. 'Jane Developer & Joe Developer'
+            # and a line with Other
+            options.append(", ".join(options[:-1]) + f" & {options[-1]}")
 
-        # Add a line with all authors joined: E.g. 'Jane Developer & Joe Developer'
-        # and a line with Other
-        options.append(", ".join(options[:-1]) + f" & {options[-1]}")
         options.append("Other")
 
         # We want to use the input_text-function if override_value is provided or if the selected author is "Other"
         # However, since we don't want the select_option prompt if an override value is provided, we need to
         # initialise the author variable here.
-        author = None
-        if override_value is None:
-            author = self.select_option(
-                intro=(
-                    intro
-                    + "\n\n"
-                    + "We found these author names in the PEP621 formatted pyproject.toml. Who do you "
-                    + "want to be credited as the author of this application?"
-                ),
-                variable="Author",
-                options=options,
-                default=None,
-            )
-        if author == "Other" or override_value:
+        author = self.select_option(
+            intro=(
+                intro
+                + "\n\n"
+                + "We found these author names in the PEP621 formatted pyproject.toml. Who do you "
+                + "want to be credited as the author of this application?"
+            ),
+            variable="Author",
+            options=options,
+            default=None,
+            override_value=None,
+        )
+        if author == "Other":
             author = self.input_text(
                 intro="Write the name(s)",
                 variable="author",
                 default="Jane Developer",
-                override_value=override_value,
+                override_value=None,
             )
 
         return author
@@ -450,9 +422,7 @@ class ConvertCommand(NewCommand):
         for author_info in self.pep621_data.get("authors", []):
             if author_info.get("name") == author and author_info.get("email"):
                 default = author_info["email"]
-                default_source = (
-                    "the PEP621 formatted pyproject.toml and your selected author name"
-                )
+                default_source = "the selected author name"
 
         intro = (
             "What email address should people use to contact the developers of this\n"
@@ -695,11 +665,6 @@ class ConvertCommand(NewCommand):
         else:
             copytree(project_dir / "tests", test_path)
 
-    def show_welcome_prompt(self) -> None:
-        """Show a welcome prompt that describes what this command will do."""
-        self.input.prompt()
-        self.input.prompt("Let's setup an existing project as a Briefcase app!")
-
     def convert_app(
         self,
         tmp_path: Path,
@@ -719,7 +684,10 @@ class ConvertCommand(NewCommand):
         version, template, branch = self.get_version_and_template_info(
             template, template_branch
         )
+        self.input.prompt()
+        self.input.prompt("Let's setup an existing project as a Briefcase app!")
         context = self.build_context(template, branch, version, project_overrides)
+        self.prompt_divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 
@@ -730,12 +698,12 @@ class ConvertCommand(NewCommand):
         )
 
         # Create the project files
-        self.safe_generate_template(
+        self.generate_template(
             template=template,
             branch=branch,
             output_path=tmp_path,
             extra_context=context,
-            version=version,
+            allow_fallback=version.dev is not None,
         )
 
         app_path = context["app_name"]

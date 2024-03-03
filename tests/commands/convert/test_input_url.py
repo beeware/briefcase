@@ -41,19 +41,6 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
     assert m_input_text.call_args.kwargs["default"] == "https://example.com/some-name"
 
 
-def test_single_pep621_option(convert_command, monkeypatch):
-    m_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
-
-    (convert_command.base_path / "pyproject.toml").write_text(
-        "[project.urls]\n" 'Documentation="https://some_other_url.com/"',
-        encoding="utf-8",
-    )
-    convert_command.input_url("some-name", None)
-    m_input_text.assert_called_once()
-    assert m_input_text.call_args.kwargs["default"] == "https://some_other_url.com/"
-
-
 def test_no_pep621_options(convert_command, monkeypatch):
     m_input_text = MagicMock()
     monkeypatch.setattr(convert_command, "input_text", m_input_text)

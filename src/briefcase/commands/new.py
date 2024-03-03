@@ -6,7 +6,6 @@ import unicodedata
 from collections import OrderedDict
 from collections.abc import Sequence
 from email.utils import parseaddr
-from pathlib import Path
 from typing import Iterable
 from urllib.parse import urlparse
 
@@ -19,15 +18,15 @@ else:  # pragma: no-cover-if-gte-py310
     # so, the backport package must be used on older versions.
     from importlib_metadata import entry_points
 
-import briefcase
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
 )
-from briefcase.console import MAX_TEXT_WIDTH, select_option
-from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
+from briefcase.console import MAX_TEXT_WIDTH
+from briefcase.console import select_option as _select_option
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.git import Git
 
 from .base import BaseCommand
@@ -116,6 +115,7 @@ class NewCommand(BaseCommand):
     platform = "all"
     output_format = None
     description = "Create a new Briefcase project."
+    app_template_url = "https://github.com/beeware/briefcase-template"
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
@@ -389,33 +389,12 @@ class NewCommand(BaseCommand):
             default = "1"
 
         self.prompt_intro(intro=intro)
-        return select_option(
+        return _select_option(
             prompt=f"{variable} [{default}]:",
             input=self.input,
             default=default,
             options=list(zip(options, options)),
         )
-
-    def show_welcome_prompt(self) -> None:
-        """Show a welcome prompt that describes what this command will do."""
-        self.input.prompt()
-        self.input.prompt("Let's build a new Briefcase app!")
-
-    def get_version_and_template_info(self, template, template_branch):
-        """The briefcase version and which template to use."""
-        # If the template wasn't specified with --template, we use the default briefcase template
-        if template is None:
-            template = "https://github.com/beeware/briefcase-template"
-
-        # If a branch wasn't supplied through the --template-branch argument,
-        # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
-        if template_branch is None:
-            branch = f"v{version.base_version}"
-        else:
-            branch = template_branch
-
-        return version, template, branch
 
     def input_project_name(self, formal_name, override_value):
         return self.input_text(
@@ -459,10 +438,6 @@ class NewCommand(BaseCommand):
         project_overrides: dict[str, str],
     ) -> dict[str, str]:
         """Builds the cookiecutter context dict for the new project."""
-        self.show_welcome_prompt()
-        if template_source is None:
-            template_source = "https://github.com/beeware/briefcase-template"
-
         context = self.build_app_context(project_overrides)
         # Additional context for the Briefcase template pyproject.toml header to
         # include the version of Briefcase as well as the source of the template.
@@ -475,7 +450,6 @@ class NewCommand(BaseCommand):
         )
         context.update(self.build_gui_context(context, project_overrides))
 
-        self.prompt_divider()  # close the prompting section of output
         return context
 
     def build_app_context(self, project_overrides: dict[str, str]) -> dict[str, str]:
@@ -619,22 +593,28 @@ class NewCommand(BaseCommand):
     ) -> dict[str, str]:
         """Build context specific to the GUI toolkit."""
         bootstraps = get_gui_bootstraps()
+        bootstrap_options = self._gui_bootstrap_choices(bootstraps)
 
-        self.prompt_divider(title="GUI Framework")
-
-        bootstrap_class = None
+        # Map the override value to the annotated override value so we can use it with self.select_option
+        # If a user specifies the override value PySide6, then we want it to be mapped to the annotated value
+        # "PySide6       (does not support iOS/Android deployment)"
+        # since that is the option presented to the user. To accomplish this, we map the bootstrap classes
+        # to their annotated names and do a reverse lookup from the override bootstrap class to the annotated name.
+        #
+        # We do it this way to ensure consistent prompting for the user.
         if bootstrap_override := project_overrides.pop("bootstrap", None):
+            reverse_lookup = {v: k for k, v in bootstrap_options.items()}
             if self.validate_selection_override(bootstraps.keys(), bootstrap_override):
-                bootstrap_class = bootstraps[bootstrap_override]
+                bootstrap_override = reverse_lookup[bootstraps[bootstrap_override]]
 
-        if not bootstrap_class:
-            self.prompt_intro("What GUI toolkit do you want to use for this project?")
-            bootstrap_class = select_option(
-                prompt="GUI Framework [1]: ",
-                input=self.input,
-                default="1",
-                options=self._gui_bootstrap_choices(bootstraps),
-            )
+        selected_bootstrap = self.select_option(
+            intro="What GUI toolkit do you want to use for this project?",
+            variable="GUI Framework",
+            default=None,
+            options=bootstrap_options.keys(),
+            override_value=bootstrap_override,
+        )
+        bootstrap_class = bootstrap_options[selected_bootstrap]
 
         gui_context = {}
 
@@ -674,49 +654,14 @@ class NewCommand(BaseCommand):
         # The name of the bootstrap is its registered entry point name. Along with the
         # bootstrap's name, a short message important to a user's choice can be shown
         # also; for instance, several show "does not support iOS/Android deployment".
-        bootstrap_choices = []
+        bootstrap_choices = {}
         max_len = max(map(len, ordered))
         for name, klass in ordered.items():
             if annotation := getattr(klass, "display_name_annotation", ""):
                 annotation = f"{' ' * (max_len - len(name))} ({annotation})"
-            bootstrap_choices.append((klass, f"{name}{annotation or ''}"))
+            bootstrap_choices[f"{name}{annotation or ''}"] = klass
 
         return bootstrap_choices
-
-    def safe_generate_template(
-        self,
-        template: str,
-        branch: str,
-        output_path: str | Path,
-        extra_context: dict[str, str],
-        version: Version,
-    ) -> None:
-        try:
-            self.logger.info(f"Using app template: {template}, branch {branch}")
-            # Unroll the new app template
-            self.generate_template(
-                template=template,
-                branch=branch,
-                output_path=output_path,
-                extra_context=extra_context,
-            )
-        except TemplateUnsupportedVersion:
-            # If we're *not* on a development branch, raise an error about
-            # the missing template branch.
-            if version.dev is None:
-                raise
-
-            # Development branches can use the main template.
-            self.logger.info(
-                f"Template branch {branch} not found; falling back to development template"
-            )
-            branch = "main"
-            self.generate_template(
-                template=template,
-                branch=branch,
-                output_path=output_path,
-                extra_context=extra_context,
-            )
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""
@@ -742,7 +687,10 @@ class NewCommand(BaseCommand):
         version, template, branch = self.get_version_and_template_info(
             template, template_branch
         )
+        self.input.prompt()
+        self.input.prompt("Let's build a new Briefcase app!")
         context = self.build_context(template, branch, version, project_overrides)
+        self.prompt_divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 
@@ -758,12 +706,12 @@ class NewCommand(BaseCommand):
             )
 
         # Create the project files
-        self.safe_generate_template(
+        self.generate_template(
             template=template,
             branch=branch,
             output_path=self.base_path,
             extra_context=context,
-            version=version,
+            allow_fallback=version.dev is not None,
         )
 
         self.logger.info(

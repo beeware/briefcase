@@ -15,6 +15,7 @@ from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
+from packaging.version import Version
 from platformdirs import PlatformDirs
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
@@ -22,6 +23,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+import briefcase
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.console import MAX_TEXT_WIDTH, Console, Log
@@ -146,6 +148,12 @@ class BaseCommand(ABC):
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
     platform_target_version: str | None = None
+
+    # We specify the default app template as a class attribute so that it can be
+    # overwritten by properties of subclasses. This is necessary since if we had it as
+    # an instance attribute, it would cause an AttributeError since the property would
+    # not have a setter.
+    app_template_url = None
 
     def __init__(
         self,
@@ -942,7 +950,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         return cached_template
 
-    def generate_template(self, template, branch, output_path, extra_context):
+    def _generate_template(self, template, branch, output_path, extra_context):
         """Ensure the named template is up-to-date for the given branch, and roll out
         that template.
 
@@ -979,3 +987,54 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist.
             raise TemplateUnsupportedVersion(branch) from e
+
+    def get_version_and_template_info(self, template, template_branch):
+        """The briefcase version and which template to use."""
+        # If the template wasn't specified with --template, we use the default briefcase template
+        if template is None:
+            template = self.app_template_url
+
+        # If a branch wasn't supplied through the --template-branch argument,
+        # use the branch derived from the Briefcase version
+        version = Version(briefcase.__version__)
+        if template_branch is None:
+            branch = f"v{version.base_version}"
+        else:
+            branch = template_branch
+
+        return version, template, branch
+
+    def generate_template(
+        self,
+        template: str,
+        branch: str,
+        output_path: str | Path,
+        extra_context: dict[str, str],
+        allow_fallback: bool = True,
+    ) -> None:
+        try:
+            self.logger.info(f"Using app template: {template}, branch {branch}")
+            # Unroll the new app template
+            self._generate_template(
+                template=template,
+                branch=branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
+        except TemplateUnsupportedVersion:
+            # If we're *not* on a development branch, raise an error about
+            # the missing template branch.
+            if not allow_fallback:
+                raise
+
+            # Development branches can use the main template.
+            self.logger.info(
+                f"Template branch {branch} not found; falling back to development template"
+            )
+            branch = "main"
+            self._generate_template(
+                template=template,
+                branch=branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
