@@ -232,8 +232,6 @@ multi_line_output = 3
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    # suppress until python-dateutil>2.8.2 is released (https://github.com/dateutil/dateutil/issues/1284)
-    "ignore:.*datetime.utcfromtimestamp\\(\\) is deprecated.*:DeprecationWarning:",
 ]
 
 # need to ensure build directories aren't excluded from recursion
