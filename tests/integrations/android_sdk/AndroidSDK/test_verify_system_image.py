@@ -1,4 +1,3 @@
-import os
 import platform
 from subprocess import CalledProcessError
 
@@ -68,7 +67,7 @@ def test_incompatible_abi(mock_tools, android_sdk, capsys):
     # The system image was installed.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.sdkmanager_path),
+            android_sdk.sdkmanager_path,
             "system-images;android-31;default;anything",
         ],
         env=android_sdk.env,
@@ -105,7 +104,7 @@ def test_new_system_image(mock_tools, android_sdk):
     # The system image was installed.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.sdkmanager_path),
+            android_sdk.sdkmanager_path,
             "system-images;android-31;default;x86_64",
         ],
         env=android_sdk.env,
@@ -135,7 +134,7 @@ def test_problem_downloading_system_image(mock_tools, android_sdk):
     # An attempt to install the system image was made
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.sdkmanager_path),
+            android_sdk.sdkmanager_path,
             "system-images;android-31;default;x86_64",
         ],
         env=android_sdk.env,

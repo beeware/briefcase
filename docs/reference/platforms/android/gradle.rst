@@ -15,7 +15,24 @@ Gradle project
 
 When generating an Android project, Briefcase produces a Gradle project.
 
-Gradle requires an install of the Android SDK and a Java 17 JDK.
+Environment
+===========
+
+Gradle requires an install of a Java 17 JDK and the Android SDK.
+
+If the methods below fail to find an Android SDK or Java JDK, Briefcase will
+download and install an isolated copy in its data directory.
+
+Java JDK
+--------
+
+If you have an existing install of a Java 17 JDK, it will be used by Briefcase
+if the ``JAVA_HOME`` environment variable is set. On macOS, if ``JAVA_HOME`` is
+not set, Briefcase will use the ``/usr/libexec/java_home`` tool to find an
+existing JDK install.
+
+Android SDK
+-----------
 
 If you have an existing install of the Android SDK, it will be used by Briefcase
 if the ``ANDROID_HOME`` environment variable is set. If ``ANDROID_HOME`` is not
@@ -24,13 +41,16 @@ present in the environment, Briefcase will honor the deprecated
 must have version 9.0 of Command-line Tools installed; this version can be
 installed in the SDK Manager in Android Studio.
 
-If you have an existing install of a Java 17 JDK, it will be used by Briefcase
-if the ``JAVA_HOME`` environment variable is set. On macOS, if ``JAVA_HOME`` is
-not set, Briefcase will use the ``/usr/libexec/java_home`` tool to find an
-existing JDK install.
+Android Emulator
+----------------
 
-If the above methods fail to find an Android SDK or Java JDK, Briefcase will
-download and install an isolated copy in its data directory.
+By default, the Android emulator creates Android Virtual Devices (AVD) in the
+``.android`` directory in your user's home directory. As the AVDs can consume
+large amounts of disk space, they can be stored in an arbitrary directory via
+the ``ANDROID_USER_HOME`` and ``ANDROID_AVD_HOME`` environment variables.
+
+Packaging format
+================
 
 Briefcase supports three packaging formats for an Android app:
 
@@ -114,6 +134,61 @@ Android allows for some customization of the colors used by your app:
   status bar at the top of the screen.
 * ``splash_background_color`` is the color of the splash background that
   displays while an app is loading.
+
+Additional options
+==================
+
+The following options can be provided at the command line when producing
+Android projects:
+
+run
+---
+
+``-d <device>`` / ``--device <device>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The device or emulator to target. Can be specified as:
+
+* ``@`` followed by an AVD name (e.g., ``@beePhone``); or
+* a device ID (a hexadecimal identifier associated with a specific hardware device);
+  or
+* a JSON dictionary specifying the properties of a device that will be created.
+  This dictionary must have, at a minimum, an AVD name:
+
+.. code-block:: console
+
+     $ briefcase run -d '{"avd":"new-device"}'
+
+  You may also specify:
+
+  - ``device_type`` (e.g., ``pixel``) - the type of device to emulate
+  - ``skin`` (e.g., ``pixel_3a``) - the skin to apply to the emulator
+  - ``system_image`` (e.g., ``system-images;android-31;default;arm64-v8a``) - the Android
+    system image to use in the emulator.
+
+  If any of these attributes are *not* specified, they will fall back
+  to reasonable defaults.
+
+``--Xemulator=<value>``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A configuration argument to be passed to the emulator on startup. For example,
+to start the emulator in "headless" mode (i.e., without a display window),
+specify ``--Xemulator=-no-window``. See `the Android documentation
+<https://developer.android.com/studio/run/emulator-commandline>`__ for details
+on the full list of options that can be provided.
+
+You may specify multiple ``--Xemulator`` arguments; each one specifies a
+single argument to pass to the emulator, in the order they are specified.
+
+``--shutdown-on-exit``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Instruct Briefcase to shut down the emulator when the run finishes. This is
+especially useful if you are running in headless mode, as the emulator will
+continue to run in the background, but there will be no visual manifestation
+that it is running. It may also be useful as a cleanup mechanism when running
+in a CI configuration.
 
 Application configuration
 =========================
@@ -234,61 +309,6 @@ significant digits of the final version code:
 If you want to manually specify a version code by defining ``version_code`` in
 your application configuration. If provided, this value will override any
 auto-generated value.
-
-Additional options
-==================
-
-The following options can be provided at the command line when producing
-Android projects:
-
-run
----
-
-``-d <device>`` / ``--device <device>``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The device or emulator to target. Can be specified as:
-
-* ``@`` followed by an AVD name (e.g., ``@beePhone``); or
-* a device ID (a hexadecimal identifier associated with a specific hardware device);
-  or
-* a JSON dictionary specifying the properties of a device that will be created.
-  This dictionary must have, at a minimum, an AVD name:
-
-.. code-block:: console
-
-     $ briefcase run -d '{"avd":"new-device"}'
-
-  You may also specify:
-
-  - ``device_type`` (e.g., ``pixel``) - the type of device to emulate
-  - ``skin`` (e.g., ``pixel_3a``) - the skin to apply to the emulator
-  - ``system_image`` (e.g., ``system-images;android-31;default;arm64-v8a``) - the Android
-    system image to use in the emulator.
-
-  If any of these attributes are *not* specified, they will fall back
-  to reasonable defaults.
-
-``--Xemulator=<value>``
-~~~~~~~~~~~~~~~~~~~~~~~
-
-A configuration argument to be passed to the emulator on startup. For example,
-to start the emulator in "headless" mode (i.e., without a display window),
-specify ``--Xemulator=-no-window``. See `the Android documentation
-<https://developer.android.com/studio/run/emulator-commandline>`__ for details
-on the full list of options that can be provided.
-
-You may specify multiple ``--Xemulator`` arguments; each one specifies a
-single argument to pass to the emulator, in the order they are specified.
-
-``--shutdown-on-exit``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Instruct Briefcase to shut down the emulator when the run finishes. This is
-especially useful if you are running in headless mode, as the emulator will
-continue to run in the background, but there will be no visual manifestation
-that it is running. It may also be useful as a cleanup mechanism when running
-in a CI configuration.
 
 .. _android-permissions:
 

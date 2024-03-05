@@ -1,4 +1,3 @@
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,17 +14,14 @@ def test_simple_command(mock_tools, adb, tmp_path):
     # Check that adb was invoked with the expected commands
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(
-                tmp_path
-                / "sdk"
-                / "platform-tools"
-                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
-            ),
+            tmp_path
+            / f"sdk/platform-tools/adb{'.exe' if sys.platform == 'win32' else ''}",
             "-s",
             "exampleDevice",
             "example",
             "command",
         ],
+        env=mock_tools.android_sdk.env,
         quiet=False,
     )
 
@@ -37,17 +33,14 @@ def test_quiet_command(mock_tools, adb, tmp_path):
     # Check that adb was invoked with the expected commands
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(
-                tmp_path
-                / "sdk"
-                / "platform-tools"
-                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
-            ),
+            tmp_path
+            / f"sdk/platform-tools/adb{'.exe' if sys.platform == 'win32' else ''}",
             "-s",
             "exampleDevice",
             "example",
             "command",
         ],
+        env=mock_tools.android_sdk.env,
         quiet=True,
     )
 
@@ -86,17 +79,14 @@ def test_error_handling(mock_tools, adb, name, exception, tmp_path):
     # Check that adb was invoked as expected
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(
-                tmp_path
-                / "sdk"
-                / "platform-tools"
-                / f"adb{'.exe' if sys.platform == 'win32' else ''}"
-            ),
+            tmp_path
+            / f"sdk/platform-tools/adb{'.exe' if sys.platform == 'win32' else ''}",
             "-s",
             "exampleDevice",
             "example",
             "command",
         ],
+        env=mock_tools.android_sdk.env,
         quiet=False,
     )
 
