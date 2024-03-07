@@ -1,14 +1,22 @@
 import subprocess
 from datetime import datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_logcat_tail(mock_tools, adb):
+@pytest.mark.parametrize("is_color_enabled", [True, False])
+def test_logcat_tail(mock_tools, adb, is_color_enabled, monkeypatch):
     """Invoking `logcat_tail()` calls `run()` with the appropriate parameters."""
+    # Mock whether color is enabled for the console
+    monkeypatch.setattr(
+        type(mock_tools.input),
+        "is_color_enabled",
+        PropertyMock(return_value=is_color_enabled),
+    )
+
     # Invoke logcat_tail with a specific timestamp
     adb.logcat_tail(since=datetime(2022, 11, 10, 9, 8, 7))
 
@@ -27,7 +35,8 @@ def test_logcat_tail(mock_tools, adb):
             "stdio:*",
             "python.stdout:*",
             "AndroidRuntime:*",
-        ],
+        ]
+        + (["--format=color"] if is_color_enabled else []),
         env=mock_tools.android_sdk.env,
         check=True,
         encoding="UTF-8",
