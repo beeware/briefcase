@@ -520,6 +520,20 @@ class Console:
         # `sys.__stdout__` is used because Rich captures and redirects `sys.stdout`
         return sys.__stdout__.isatty()
 
+    @property
+    def is_color_enabled(self):
+        """Is the underlying Rich console using color?
+
+        Rich can be explicitly configured to not use color at Console initialization or
+        the NO_COLOR environment variable; alternatively, the derived color system for
+        the terminal is influenced by attributes of the platform as well as FORCE_COLOR.
+        """
+        # no_color has precedence since color_system can be set even if color is disabled
+        if self.print.console.no_color:
+            return False
+        else:
+            return self.print.console.color_system is not None
+
     def progress_bar(self):
         """Returns a progress bar as a context manager."""
         return Progress(

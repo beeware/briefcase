@@ -1606,12 +1606,12 @@ Activity class not found while starting app.
                 self.device,
                 "logcat",
                 "--format=tag",
-                "--format=color",
                 "--pid",  # This option is available since API level 24.
                 pid,
             ]
             # Filter out some noisy and useless tags.
-            + [f"{tag}:S" for tag in ["EGL_emulation"]],
+            + [f"{tag}:S" for tag in ["EGL_emulation"]]
+            + (["--format=color"] if self.tools.input.is_color_enabled else []),
             env=self.tools.android_sdk.env,
             encoding="UTF-8",
             stdout=subprocess.PIPE,
@@ -1635,7 +1635,6 @@ Activity class not found while starting app.
                     self.device,
                     "logcat",
                     "--format=tag",
-                    "--format=color",
                     "-t",
                     since.strftime("%m-%d %H:%M:%S.000000"),
                     "-s",
@@ -1645,7 +1644,8 @@ Activity class not found while starting app.
                     "stdio:*",
                     "python.stdout:*",
                     "AndroidRuntime:*",
-                ],
+                ]
+                + (["--format=color"] if self.tools.input.is_color_enabled else []),
                 env=self.tools.android_sdk.env,
                 check=True,
                 encoding="UTF-8",
