@@ -1,0 +1,1 @@
+Support for ``ANDROID_USER_HOME`` and ``ANDROID_AVD_HOME`` was removed after issues with running AVDs created by non-Briefcase-managed Android SDKs were discovered.
