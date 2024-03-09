@@ -95,7 +95,7 @@ jobs:
         RUNNER_OS=$(cut -d- -f1 <<< ${{ matrix.platform }})
         RUNNER_VERSION=$(cut -d- -f2 <<< ${{ matrix.platform }})
         COVERAGE_FILE=".coverage.${RUNNER_OS}.${RUNNER_VERSION}.${{ matrix.python-version }}" \
-          tox -e py --installpkg dist/briefcase-*.whl
+          tox -e py-cov --installpkg dist/briefcase-*.whl
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
