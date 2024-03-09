@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import pytest
@@ -10,7 +11,7 @@ def test_list_packages(mock_tools, android_sdk):
     android_sdk.list_packages()
 
     mock_tools.subprocess.check_output.assert_called_once_with(
-        [android_sdk.sdkmanager_path, "--list_installed"],
+        [os.fsdecode(android_sdk.sdkmanager_path), "--list_installed"],
         env=android_sdk.env,
     )
 
@@ -24,6 +25,6 @@ def test_list_packages_failure(mock_tools, android_sdk):
         android_sdk.list_packages()
 
     mock_tools.subprocess.check_output.assert_called_once_with(
-        [android_sdk.sdkmanager_path, "--list_installed"],
+        [os.fsdecode(android_sdk.sdkmanager_path), "--list_installed"],
         env=android_sdk.env,
     )

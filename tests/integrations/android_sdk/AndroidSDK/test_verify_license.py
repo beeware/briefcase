@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import pytest
@@ -34,7 +35,7 @@ def test_verify_license_prompts_for_licenses_and_exits_if_you_agree(
     mock_tools.subprocess.run.side_effect = accept_license
     android_sdk.verify_license()
     mock_tools.subprocess.run.assert_called_once_with(
-        [android_sdk.sdkmanager_path, "--licenses"],
+        [os.fsdecode(android_sdk.sdkmanager_path), "--licenses"],
         env=android_sdk.env,
         check=True,
         stream_output=False,
@@ -49,7 +50,7 @@ def test_verify_license_handles_sdkmanager_crash(mock_tools, android_sdk):
         android_sdk.verify_license()
 
     mock_tools.subprocess.run.assert_called_once_with(
-        [android_sdk.sdkmanager_path, "--licenses"],
+        [os.fsdecode(android_sdk.sdkmanager_path), "--licenses"],
         env=android_sdk.env,
         check=True,
         stream_output=False,
@@ -65,7 +66,7 @@ def test_verify_license_insists_on_agreement(mock_tools, android_sdk):
         android_sdk.verify_license()
 
     mock_tools.subprocess.run.assert_called_once_with(
-        [android_sdk.sdkmanager_path, "--licenses"],
+        [os.fsdecode(android_sdk.sdkmanager_path), "--licenses"],
         env=android_sdk.env,
         check=True,
         stream_output=False,
