@@ -104,7 +104,7 @@ dev = [
     "pytest == 8.0.2",
     "pytest-xdist == 3.5.0",
     "setuptools_scm == 8.0.4",
-    "tox == 4.13.0",
+    "tox == 4.14.1",
 ]
 docs = [
     "furo == 2024.1.29",
