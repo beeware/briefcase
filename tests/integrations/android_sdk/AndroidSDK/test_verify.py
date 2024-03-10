@@ -1,7 +1,6 @@
 import os
 import platform
 import shutil
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -321,7 +320,7 @@ def test_user_provided_sdk_wrong_cmdline_tools_ver(
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools/android_sdk"
-    tools_bin = android_sdk_root_path / f"cmdline-tools/{SDK_MGR_VER}/bin"
+    tools_bin = android_sdk_root_path / "cmdline-tools" / SDK_MGR_VER / "bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     (tools_bin / SDKMANAGER_FILENAME).touch(mode=0o755)
 
@@ -344,16 +343,14 @@ def test_user_provided_sdk_wrong_cmdline_tools_ver(
     # Required Command-line Tools installed
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            tmp_path / f"other_sdk/cmdline-tools/latest/bin/{SDKMANAGER_FILENAME}",
+            tmp_path
+            / "other_sdk"
+            / "cmdline-tools"
+            / "latest"
+            / "bin"
+            / SDKMANAGER_FILENAME,
             f"cmdline-tools;{SDK_MGR_VER}",
         ],
-        env={
-            "ANDROID_HOME": f"{tmp_path / 'other_sdk'}",
-            "ANDROID_SDK_ROOT": f"{tmp_path / 'other_sdk'}",
-            "ANDROID_USER_HOME": f"{tmp_path / 'home/.android'}",
-            "ANDROID_AVD_HOME": f"{tmp_path / 'home/.android/avd'}",
-            "JAVA_HOME": str(Path("/path/to/jdk")),
-        },
         check=True,
         stream_output=False,
     )
@@ -398,10 +395,14 @@ def test_user_provided_sdk_with_latest_cmdline_tools(
     # Required Command-line Tools installed
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            tmp_path / f"other_sdk/cmdline-tools/latest/bin/{SDKMANAGER_FILENAME}",
+            tmp_path
+            / "other_sdk"
+            / "cmdline-tools"
+            / "latest"
+            / "bin"
+            / SDKMANAGER_FILENAME,
             f"cmdline-tools;{SDK_MGR_VER}",
         ],
-        env=sdk.env,
         check=True,
         stream_output=False,
     )

@@ -12,7 +12,6 @@ Gradle project
 | |f|    | |y|   |     | |f|    |       | |v| | |f|    | |v| | |v|   |
 +--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
-
 When generating an Android project, Briefcase produces a Gradle project.
 
 Environment
@@ -40,14 +39,6 @@ present in the environment, Briefcase will honor the deprecated
 ``ANDROID_SDK_ROOT`` environment variable. Additionally, an existing SDK install
 must have version 9.0 of Command-line Tools installed; this version can be
 installed in the SDK Manager in Android Studio.
-
-Android Emulator
-----------------
-
-By default, the Android emulator creates Android Virtual Devices (AVD) in the
-``.android`` directory in your user's home directory. As the AVDs can consume
-large amounts of disk space, they can be stored in an arbitrary directory via
-the ``ANDROID_USER_HOME`` and ``ANDROID_AVD_HOME`` environment variables.
 
 Packaging format
 ================
