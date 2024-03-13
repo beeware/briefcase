@@ -1,4 +1,3 @@
-import os
 import subprocess
 import sys
 
@@ -62,7 +61,7 @@ def test_installs_android_emulator(mock_tools, android_sdk):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.sdkmanager_path),
+            android_sdk.sdkmanager_path,
             "platform-tools",
             "emulator",
         ],
@@ -84,7 +83,7 @@ def test_partial_android_emulator_install(mock_tools, android_sdk):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.sdkmanager_path),
+            android_sdk.sdkmanager_path,
             "platform-tools",
             "emulator",
         ],

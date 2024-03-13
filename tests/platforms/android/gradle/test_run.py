@@ -3,7 +3,6 @@ import os
 import platform
 import sys
 import time
-from os.path import normpath
 from pathlib import Path
 from unittest import mock
 
@@ -545,11 +544,12 @@ def test_log_file_extra(run_command, monkeypatch):
     run_command.tools.logger.save_log = True
     run_command.tools.logger.save_log_to_file(run_command)
 
-    sdk_manager = f"/path/to/android_sdk/cmdline-tools/{AndroidSDK.SDK_MANAGER_VER}/bin/sdkmanager"
-    if platform.system() == "Windows":
-        sdk_manager += ".bat"
+    sdk_manager = Path(
+        f"/path/to/android_sdk/cmdline-tools/{AndroidSDK.SDK_MANAGER_VER}"
+        f"/bin/sdkmanager{'.bat' if platform.system() == 'Windows' else ''}"
+    )
     run_command.tools.subprocess.check_output.assert_called_once_with(
-        [normpath(sdk_manager), "--list_installed"],
+        [sdk_manager, "--list_installed"],
         env={
             "ANDROID_HOME": str(run_command.tools.android_sdk.root_path),
             "ANDROID_SDK_ROOT": str(run_command.tools.android_sdk.root_path),

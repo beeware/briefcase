@@ -1,4 +1,3 @@
-import os
 import subprocess
 from unittest.mock import MagicMock
 
@@ -15,7 +14,7 @@ def test_kill(mock_tools, adb):
     # Validate call parameters.
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(mock_tools.android_sdk.adb_path),
+            mock_tools.android_sdk.adb_path,
             "-s",
             "exampleDevice",
             "emu",

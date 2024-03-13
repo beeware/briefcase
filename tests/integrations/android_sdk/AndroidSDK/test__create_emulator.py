@@ -1,4 +1,3 @@
-import os
 import subprocess
 from unittest.mock import ANY, MagicMock
 
@@ -88,7 +87,7 @@ def test_create_emulator(
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.avdmanager_path),
+            android_sdk.avdmanager_path,
             "--verbose",
             "create",
             "avd",
@@ -161,7 +160,7 @@ def test_create_emulator_with_defaults(
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.avdmanager_path),
+            android_sdk.avdmanager_path,
             "--verbose",
             "create",
             "avd",
@@ -208,7 +207,7 @@ def test_create_failure(mock_tools, android_sdk):
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         [
-            os.fsdecode(android_sdk.avdmanager_path),
+            android_sdk.avdmanager_path,
             "--verbose",
             "create",
             "avd",

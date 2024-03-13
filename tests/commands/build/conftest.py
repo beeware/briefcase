@@ -4,7 +4,6 @@ from briefcase.commands import BuildCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 from briefcase.console import Console, Log
-
 from ...utils import create_file
 
 

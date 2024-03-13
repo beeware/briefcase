@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import gzip
-import os
 import re
 import subprocess
 import sys
@@ -807,7 +806,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
         with self.tools[app].app_context.run_app_context(kwargs) as kwargs:
             # Start the app in a way that lets us stream the logs
             app_popen = self.tools[app].app_context.Popen(
-                [os.fsdecode(self.binary_path(app))] + passthrough,
+                [self.binary_path(app)] + passthrough,
                 cwd=self.tools.home_path,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
