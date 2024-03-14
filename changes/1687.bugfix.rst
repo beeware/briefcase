@@ -1,0 +1,1 @@
+On Windows, the Android emulator will always open without needing to press CTRL-C.

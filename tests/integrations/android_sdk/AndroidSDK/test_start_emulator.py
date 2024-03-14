@@ -120,6 +120,12 @@ def test_start_emulator(mock_tools, android_sdk):
         start_new_session=True,
     )
 
+    mock_tools.subprocess.stream_output_non_blocking.assert_called_with(
+        label="Android emulator",
+        popen_process=emu_popen,
+        capture_output=True,
+    )
+
     # There were 5 calls to run
     android_sdk.mock_run.assert_has_calls(
         [
@@ -199,6 +205,12 @@ def test_start_emulator_fast_start(mock_tools, android_sdk):
         stderr=subprocess.STDOUT,
         bufsize=1,
         start_new_session=True,
+    )
+
+    mock_tools.subprocess.stream_output_non_blocking.assert_called_with(
+        label="Android emulator",
+        popen_process=emu_popen,
+        capture_output=True,
     )
 
     # There were 3 calls to run
@@ -294,6 +306,12 @@ def test_emulator_fail_to_start(mock_tools, android_sdk):
         stderr=subprocess.STDOUT,
         bufsize=1,
         start_new_session=True,
+    )
+
+    mock_tools.subprocess.stream_output_non_blocking.assert_called_with(
+        label="Android emulator",
+        popen_process=emu_popen,
+        capture_output=True,
     )
 
     # There were 2 calls to run, both to get AVD name
@@ -400,6 +418,12 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
         start_new_session=True,
     )
 
+    mock_tools.subprocess.stream_output_non_blocking.assert_called_with(
+        label="Android emulator",
+        popen_process=emu_popen,
+        capture_output=True,
+    )
+
     # There were 6 calls to run before failure
     android_sdk.mock_run.assert_has_calls(
         [
@@ -422,20 +446,7 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
     assert "Android emulator was unable to boot!" in exc_info.value.msg
 
 
-@pytest.mark.parametrize(
-    "emulator_comm, expected_log",
-    [
-        (
-            ("This is stdout", "this is stderr"),
-            "Emulator output log for startup failure\nThis is stdout",
-        ),
-        (
-            subprocess.TimeoutExpired(cmd="emulator", timeout=1),
-            "Emulator output log for startup failure\nBriefcase failed",
-        ),
-    ],
-)
-def test_emulator_ctrl_c(mock_tools, android_sdk, emulator_comm, expected_log, capsys):
+def test_emulator_ctrl_c(mock_tools, android_sdk, capsys):
     """If emulator startup is interrupted by the user, an error is displayed."""
     # Short circuit device loop by returning no devices
     android_sdk.devices = MagicMock(side_effect=[{}, {}])
@@ -448,7 +459,11 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, emulator_comm, expected_log, c
     mock_tools.subprocess.Popen.return_value = emu_popen
 
     # Mock emulator output
-    emu_popen.communicate.side_effect = [emulator_comm]
+    emu_streamer = MagicMock()
+    mock_tools.subprocess.stream_output_non_blocking = MagicMock(
+        return_value=emu_streamer
+    )
+    emu_streamer.captured_output = "This is stdout"
 
     # Start the emulator
     with pytest.raises(KeyboardInterrupt):
@@ -469,13 +484,19 @@ def test_emulator_ctrl_c(mock_tools, android_sdk, emulator_comm, expected_log, c
         start_new_session=True,
     )
 
+    mock_tools.subprocess.stream_output_non_blocking.assert_called_with(
+        label="Android emulator",
+        popen_process=emu_popen,
+        capture_output=True,
+    )
+
     # Took a total of 2 naps before KeyboardInterrupt.
     assert android_sdk.sleep.call_count == 2
 
     output = capsys.readouterr().out
 
     # Emulator's log was printed.
-    assert expected_log in output
+    assert "Emulator output log for startup failure\nThis is stdout" in output
 
     # Expected error message was printed.
     assert "Is the Android emulator not starting up properly?" in output
@@ -535,6 +556,12 @@ def test_start_emulator_extra_args(mock_tools, android_sdk):
         stderr=subprocess.STDOUT,
         bufsize=1,
         start_new_session=True,
+    )
+
+    mock_tools.subprocess.stream_output_non_blocking.assert_called_with(
+        label="Android emulator",
+        popen_process=emu_popen,
+        capture_output=True,
     )
 
     # There were 2 calls to run

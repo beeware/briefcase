@@ -1281,6 +1281,7 @@ In future, you can specify this device by running:
         if extra_args is None:
             extra_args = []
 
+        # Start the emulator
         emulator_popen = self.tools.subprocess.Popen(
             [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8"] + extra_args,
             env=self.env,
@@ -1288,6 +1289,17 @@ In future, you can specify this device by running:
             stderr=subprocess.STDOUT,
             bufsize=1,
             start_new_session=True,
+        )
+
+        # Start capturing the emulator's output
+        # On Windows, the emulator can block until stdout is read and the emulator will
+        # not actually run until the user sends CTRL+C to Briefcase (#1573). This
+        # avoids that scenario while also ensuring emulator output is always available
+        # to print in the console if other issues occur.
+        emulator_streamer = self.tools.subprocess.stream_output_non_blocking(
+            label="Android emulator",
+            popen_process=emulator_popen,
+            capture_output=True,
         )
 
         # wrap AVD name in quotes since '@' is a special char in PowerShell
@@ -1317,12 +1329,11 @@ You can also start the emulator manually by running:
         failed_startup_error_msg = f"{{prologue}}\n{general_error_msg}"
 
         # The boot process happens in 2 phases.
-        # First, the emulator appears in the device list. However, it's
-        # not ready until the boot process has finished. To determine
-        # the boot status, we need the device ID, and an ADB connection.
+        # First, the emulator appears in the device list. However, it's not ready until
+        # the boot process has finished. To determine the boot status, we need the
+        # device ID, and an ADB connection.
 
-        # Phase 1: Wait for the device to appear so we can get an
-        # ADB instance for the new device.
+        # Phase 1: Wait for the device to appear so we can get an ADB instance for it.
         try:
             with self.tools.input.wait_bar("Starting emulator...") as keep_alive:
                 adb = None
@@ -1375,14 +1386,7 @@ You can also start the emulator manually by running:
                 "Emulator output log for startup failure",
                 prefix=self.name,
             )
-            try:
-                # if the emulator exited, this should return its output immediately
-                self.tools.logger.info(emulator_popen.communicate(timeout=1)[0])
-            except subprocess.TimeoutExpired:
-                self.tools.logger.info(
-                    "Briefcase failed to retrieve emulator output "
-                    "(this is expected if the emulator is running)"
-                )
+            self.tools.logger.info(emulator_streamer.captured_output)
 
             # Provide troubleshooting steps if user gives up on the emulator starting
             if isinstance(e, KeyboardInterrupt):
@@ -1399,6 +1403,8 @@ run Briefcase again. The running emulator can then be selected from the list.
                 self.tools.logger.info(general_error_msg)
 
             raise
+        finally:
+            emulator_streamer.request_stop()
 
         # Return the device ID and full name.
         return device, full_name
