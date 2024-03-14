@@ -69,9 +69,29 @@ def test_readline_raises_exception(streamer, monkeypatch, capsys):
     )
 
 
-def test_stop_flag_set_immediately(streamer, capsys):
+def test_request_stop(streamer, capsys):
+    """Requesting the streamer to stop sets the stop flag."""
+    streamer.start()
+    streamer.join(timeout=5)
+
+    # fmt: off
+    assert capsys.readouterr().out == (
+        "output line 1\n"
+        "\n"
+        "output line 3\n"
+    )
+    # fmt: on
+
+    assert not streamer.stop_flag.is_set()
+
+    streamer.request_stop()
+
+    assert streamer.stop_flag.is_set()
+
+
+def test_request_stop_set_immediately(streamer, capsys):
     """Nothing is printed if stop flag is immediately set."""
-    streamer.stop_flag.set()
+    streamer.request_stop()
 
     streamer.start()
     streamer.join(timeout=5)
@@ -79,12 +99,12 @@ def test_stop_flag_set_immediately(streamer, capsys):
     assert capsys.readouterr().out == ""
 
 
-def test_stop_flag_set_during_output(streamer, monkeypatch, capsys):
+def test_request_stop_set_during_output(streamer, monkeypatch, capsys):
     """Streamer prints nothing more after stop flag is set."""
 
     def filter_func(value):
         """Simulate stop flag set while output is being read."""
-        streamer.stop_flag.set()
+        streamer.request_stop()
         yield value
 
     streamer.filter_func = filter_func

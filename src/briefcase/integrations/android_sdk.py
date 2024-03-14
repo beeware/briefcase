@@ -1411,7 +1411,7 @@ run Briefcase again. The running emulator can then be selected from the list.
 
             raise
         finally:
-            emulator_streamer.stop_flag.set()
+            emulator_streamer.request_stop()
 
         # Return the device ID and full name.
         return device, full_name

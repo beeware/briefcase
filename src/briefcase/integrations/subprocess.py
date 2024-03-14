@@ -180,6 +180,11 @@ class PopenOutputStreamer(threading.Thread):
         """Stream output for a Popen process."""
         try:
             while output_line := self._readline():
+                # The stop_flag is intentionally checked both at the top and bottom of
+                # this loop; if the flag was set during the call to readline(), then
+                # processing the output is skipped altogether. And if the flag is set
+                # as a consequence of filter_func(), the streamer still exits before
+                # calling readline() again and potentially blocking indefinitely.
                 if not self.stop_flag.is_set():
                     filtered_output, stop_streaming = self._filter(output_line)
 
@@ -197,6 +202,15 @@ class PopenOutputStreamer(threading.Thread):
         except Exception as e:
             self.logger.error(f"Error while streaming output: {type(e).__name__}: {e}")
             self.logger.capture_stacktrace("Output thread")
+
+    def request_stop(self):
+        """Set the stop flag to cause the streamer to exit.
+
+        If the streamer is currently blocking on `readline()` because the process'
+        stdout buffer is empty, then the streamer will not exit until `readline()`
+        returns or until Briefcase exits.
+        """
+        self.stop_flag.set()
 
     @property
     def captured_output(self) -> str:
@@ -772,7 +786,7 @@ class Subprocess(Tool):
         :param label: A description of the content being streamed; used for to provide
             context in logging messages.
         :param popen_process: A running Popen process with output to print
-        :param capture_output:
+        :param capture_output: Retain process output instead of printing to the console
         :param filter_func: A callable that will be invoked on every line of output that
             is streamed. The function accepts the "raw" line of input (stripped of any
             trailing newline); it returns a generator that yields the filtered output
