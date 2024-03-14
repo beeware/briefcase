@@ -1,0 +1,1 @@
+The documentation contribution guide was updated to use a more authoritative reStructuredText reference.
