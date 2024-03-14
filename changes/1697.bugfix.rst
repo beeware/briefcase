@@ -1,0 +1,1 @@
+A spurious Android emulator named ``@INFO`` will no longer be included in the list of available emulators.
