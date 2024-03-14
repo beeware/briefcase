@@ -814,10 +814,10 @@ connection.
                     extract_dir=skin_path,
                     **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
                 )
-            except (shutil.ReadError, EOFError) as err:
+            except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(
                     f"Unable to unpack {skin} device skin."
-                ) from err
+                ) from e
 
             # Delete the downloaded file.
             skin_tgz_path.unlink()
@@ -825,17 +825,18 @@ connection.
     def emulators(self) -> list[str]:
         """Find the list of emulators that are available."""
         try:
-            # Capture `stderr` so that if the process exits with failure, the
-            # stderr data is in `e.output`.
-            output = self.tools.subprocess.check_output(
+            emulators = self.tools.subprocess.check_output(
                 [self.emulator_path, "-list-avds"]
             ).strip()
-            # AVD names are returned one per line.
-            if len(output) == 0:
-                return []
-            return output.split("\n")
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Unable to obtain Android emulator list") from e
+        else:
+            return [
+                emu
+                for emu in emulators.split("\n")
+                # ignore any logging output included in output list
+                if emu and not emu.startswith(("INFO    |", "WARNING |", "ERROR   |"))
+            ]
 
     def devices(self) -> dict[str, dict[str, str | bool]]:
         """Find the devices that are attached and available to ADB."""

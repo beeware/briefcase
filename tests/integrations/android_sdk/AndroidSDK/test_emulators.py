@@ -5,32 +5,35 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
-def test_no_emulators(mock_tools, android_sdk):
-    """If there are no emulators, an empty list is returned."""
-    mock_tools.subprocess.check_output.return_value = ""
+@pytest.mark.parametrize(
+    "output, expected_list",
+    [
+        ("", []),
+        ("first\n", ["first"]),
+        ("first\nsecond\nthird\n", ["first", "second", "third"]),
+        ("first\n\nsecond", ["first", "second"]),
+        (
+            "first\nINFO    | Storing crashdata in\nsecond\nWARNING | nothing to see\n"
+            "third\nERROR   | lot to see here",
+            ["first", "second", "third"],
+        ),
+    ],
+)
+def test_no_emulators(mock_tools, android_sdk, output, expected_list):
+    """The returned list of emulators is properly parsed."""
+    mock_tools.subprocess.check_output.return_value = output
 
-    assert android_sdk.emulators() == []
+    assert android_sdk.emulators() == expected_list
 
 
-def test_one_emulator(mock_tools, android_sdk):
-    """If there is a single emulator, it is returned."""
-    mock_tools.subprocess.check_output.return_value = "first\n"
-
-    assert android_sdk.emulators() == ["first"]
-
-
-def test_multiple_emulators(mock_tools, android_sdk):
-    """If there are multiple emulators, they are all returned."""
-    mock_tools.subprocess.check_output.return_value = "first\nsecond\nthird\n"
-
-    assert android_sdk.emulators() == ["first", "second", "third"]
-
-
-def test_adb_error(mock_tools, android_sdk):
-    """If there is a problem invoking adb, an error is returned."""
+def test_emulator_error(mock_tools, android_sdk):
+    """If there is a problem invoking emulator, an error is returned."""
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=69, cmd="adb devices -l"
+        returncode=69, cmd="emulator -list-avd"
     )
 
-    with pytest.raises(BriefcaseCommandError):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to obtain Android emulator list",
+    ):
         android_sdk.emulators()
