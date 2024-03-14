@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 import pytest
@@ -11,7 +10,7 @@ def test_upgrade(mock_tools, android_sdk):
     android_sdk.upgrade()
 
     mock_tools.subprocess.run.assert_called_once_with(
-        [os.fsdecode(android_sdk.sdkmanager_path), "--update"],
+        [android_sdk.sdkmanager_path, "--update"],
         env=android_sdk.env,
         check=True,
         stream_output=False,
@@ -25,7 +24,7 @@ def test_upgrade_failure(mock_tools, android_sdk):
         android_sdk.upgrade()
 
     mock_tools.subprocess.run.assert_called_once_with(
-        [os.fsdecode(android_sdk.sdkmanager_path), "--update"],
+        [android_sdk.sdkmanager_path, "--update"],
         env=android_sdk.env,
         check=True,
         stream_output=False,

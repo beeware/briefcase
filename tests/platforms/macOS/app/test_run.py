@@ -1,4 +1,3 @@
-import os
 import subprocess
 from signal import SIGTERM
 from unittest import mock
@@ -67,7 +66,7 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)],
+        ["open", "-n", bin_path],
         cwd=tmp_path / "home",
         check=True,
     )
@@ -130,7 +129,7 @@ def test_run_app_with_passthrough(
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path), "--args", "foo", "--bar"],
+        ["open", "-n", bin_path, "--args", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
     )
@@ -154,7 +153,7 @@ def test_run_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
     """If there's a problem started the app, an exception is raised."""
     # Mock a failure opening the app
     run_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd=["open", "-n", os.fsdecode(run_command.binary_path(first_app_config))],
+        cmd=["open", "-n", run_command.binary_path(first_app_config)],
         returncode=1,
     )
 
@@ -180,7 +179,7 @@ def test_run_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)],
+        ["open", "-n", bin_path],
         cwd=tmp_path / "home",
         check=True,
     )
@@ -227,7 +226,7 @@ def test_run_app_find_pid_failed(
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)],
+        ["open", "-n", bin_path],
         cwd=tmp_path / "home",
         check=True,
     )
@@ -278,7 +277,7 @@ def test_run_app_test_mode(
         bufsize=1,
     )
     run_command.tools.subprocess.run.assert_called_with(
-        ["open", "-n", os.fsdecode(bin_path)],
+        ["open", "-n", bin_path],
         cwd=tmp_path / "home",
         check=True,
         env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},

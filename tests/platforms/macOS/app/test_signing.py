@@ -1,4 +1,3 @@
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -56,7 +55,7 @@ def sign_call(
     on a file."""
     args = [
         "codesign",
-        os.fsdecode(filepath),
+        filepath,
         "--sign",
         identity,
         "--force",
@@ -65,15 +64,7 @@ def sign_call(
         args.extend(
             [
                 "--entitlements",
-                os.fsdecode(
-                    tmp_path
-                    / "base_path"
-                    / "build"
-                    / "first-app"
-                    / "macos"
-                    / "app"
-                    / "Entitlements.plist"
-                ),
+                tmp_path / "base_path/build/first-app/macos/app/Entitlements.plist",
             ]
         )
     if runtime:

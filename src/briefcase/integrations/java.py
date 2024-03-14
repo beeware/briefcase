@@ -77,10 +77,7 @@ class JDK(ManagedTool):
         :return: JDK release version; e.g. "17.0.X"
         """
         output = tools.subprocess.check_output(
-            [
-                os.fsdecode(Path(java_path) / "bin/javac"),
-                "-version",
-            ],
+            [Path(java_path) / "bin/javac", "-version"]
         )
         # javac's output should look like "javac 17.0.X\n"
         return output.strip("\n").split(" ")[1]

@@ -451,7 +451,7 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
             self.tools.subprocess.run(
-                [os.fsdecode(self.sdkmanager_path), "--update"],
+                [self.sdkmanager_path, "--update"],
                 env=self.env,
                 check=True,
                 stream_output=False,
@@ -557,7 +557,7 @@ its output for errors.
         try:
             # check_output always writes its output to debug
             self.tools.subprocess.check_output(
-                [os.fsdecode(self.sdkmanager_path), "--list_installed"],
+                [self.sdkmanager_path, "--list_installed"],
                 env=self.env,
             )
         except subprocess.CalledProcessError as e:
@@ -593,7 +593,7 @@ before you may use those tools.
             # Using subprocess.run() with no I/O redirection so the user sees
             # the full output and can send input.
             self.tools.subprocess.run(
-                [os.fsdecode(self.sdkmanager_path), "--licenses"],
+                [self.sdkmanager_path, "--licenses"],
                 env=self.env,
                 check=True,
                 stream_output=False,
@@ -641,11 +641,7 @@ connection.
         self.tools.logger.info("Downloading the Android emulator...")
         try:
             self.tools.subprocess.run(
-                [
-                    os.fsdecode(self.sdkmanager_path),
-                    "platform-tools",
-                    "emulator",
-                ],
+                [self.sdkmanager_path, "platform-tools", "emulator"],
                 env=self.env,
                 check=True,
                 stream_output=False,
@@ -771,10 +767,7 @@ connection.
         )
         try:
             self.tools.subprocess.run(
-                [
-                    os.fsdecode(self.sdkmanager_path),
-                    system_image,
-                ],
+                [self.sdkmanager_path, system_image],
                 env=self.env,
                 check=True,
                 stream_output=False,
@@ -835,7 +828,7 @@ connection.
             # Capture `stderr` so that if the process exits with failure, the
             # stderr data is in `e.output`.
             output = self.tools.subprocess.check_output(
-                [os.fsdecode(self.emulator_path), "-list-avds"]
+                [self.emulator_path, "-list-avds"]
             ).strip()
             # AVD names are returned one per line.
             if len(output) == 0:
@@ -848,7 +841,7 @@ connection.
         """Find the devices that are attached and available to ADB."""
         try:
             output = self.tools.subprocess.check_output(
-                [os.fsdecode(self.adb_path), "devices", "-l"]
+                [self.adb_path, "devices", "-l"]
             ).strip()
             # Process the output of `adb devices -l`.
             # The first line is header information.
@@ -1197,7 +1190,7 @@ In future, you can specify this device by running:
             try:
                 self.tools.subprocess.check_output(
                     [
-                        os.fsdecode(self.avdmanager_path),
+                        self.avdmanager_path,
                         "--verbose",
                         "create",
                         "avd",
@@ -1289,13 +1282,7 @@ In future, you can specify this device by running:
             extra_args = []
 
         emulator_popen = self.tools.subprocess.Popen(
-            [
-                os.fsdecode(self.emulator_path),
-                f"@{avd}",
-                "-dns-server",
-                "8.8.8.8",
-            ]
-            + extra_args,
+            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8"] + extra_args,
             env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1479,15 +1466,7 @@ class ADB:
         # This keeps performance good in the success case.
         try:
             output = self.tools.subprocess.check_output(
-                [
-                    os.fsdecode(self.tools.android_sdk.adb_path),
-                    "-s",
-                    self.device,
-                ]
-                + [
-                    (os.fsdecode(arg) if isinstance(arg, Path) else arg)
-                    for arg in arguments
-                ],
+                [self.tools.android_sdk.adb_path, "-s", self.device] + list(arguments),
                 quiet=quiet,
             )
             # add returns status code 0 in the case of failure. The only tangible evidence
@@ -1594,7 +1573,7 @@ Activity class not found while starting app.
         # See #1425 for details.
         return self.tools.subprocess.Popen(
             [
-                os.fsdecode(self.tools.android_sdk.adb_path),
+                self.tools.android_sdk.adb_path,
                 "-s",
                 self.device,
                 "logcat",
@@ -1623,7 +1602,7 @@ Activity class not found while starting app.
             # See #1425 for details.
             self.tools.subprocess.run(
                 [
-                    os.fsdecode(self.tools.android_sdk.adb_path),
+                    self.tools.android_sdk.adb_path,
                     "-s",
                     self.device,
                     "logcat",

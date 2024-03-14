@@ -1,4 +1,3 @@
-import os
 import subprocess
 from unittest import mock
 
@@ -25,7 +24,7 @@ def test_logcat(mock_tools, adb, is_color_enabled, monkeypatch):
     # Validate call parameters.
     mock_tools.subprocess.Popen.assert_called_once_with(
         [
-            os.fsdecode(mock_tools.android_sdk.adb_path),
+            mock_tools.android_sdk.adb_path,
             "-s",
             "exampleDevice",
             "logcat",

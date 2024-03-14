@@ -1,4 +1,3 @@
-import os
 import re
 import subprocess
 import uuid
@@ -141,7 +140,7 @@ class WindowsRunCommand(RunCommand):
 
         # Start the app in a way that lets us stream the logs
         app_popen = self.tools.subprocess.Popen(
-            [os.fsdecode(self.binary_path(app))] + passthrough,
+            [self.binary_path(app)] + passthrough,
             cwd=self.tools.home_path,
             encoding="UTF-8",
             stdout=subprocess.PIPE,
@@ -367,7 +366,7 @@ class WindowsPackageCommand(PackageCommand):
                     [
                         self.tools.wix.heat_exe,
                         "dir",
-                        os.fsdecode(self.packaging_root),
+                        self.packaging_root,
                         "-nologo",  # Don't display startup text
                         "-gg",  # Generate GUIDs
                         "-sfrag",  # Suppress fragment generation for directories

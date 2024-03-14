@@ -38,7 +38,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 [
                     tmp_path / "wix/bin/heat.exe",
                     "dir",
-                    os.fsdecode(Path("x64/Release")),
+                    Path("x64/Release"),
                     "-nologo",
                     "-gg",
                     "-sfrag",

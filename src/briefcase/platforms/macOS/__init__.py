@@ -251,11 +251,8 @@ class macOSRunMixin:
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
-                [
-                    "open",
-                    "-n",  # Force a new app to be launched
-                    os.fsdecode(self.binary_path(app)),
-                ]
+                # Force a new app to be launched
+                ["open", "-n", self.binary_path(app)]
                 + ((["--args"] + passthrough) if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
@@ -394,16 +391,11 @@ or
         :param entitlements: The path to the entitlements file to use.
         """
         options = "runtime" if identity != "-" else None
-        process_command = [
-            "codesign",
-            os.fsdecode(path),
-            "--sign",
-            identity,
-            "--force",
-        ]
+        process_command = ["codesign", path, "--sign", identity, "--force"]
+
         if entitlements:
             process_command.append("--entitlements")
-            process_command.append(os.fsdecode(entitlements))
+            process_command.append(entitlements)
         if options:
             process_command.append("--options")
             process_command.append(options)
@@ -676,7 +668,7 @@ password:
                             "xcrun",
                             "notarytool",
                             "submit",
-                            os.fsdecode(archive_filename),
+                            archive_filename,
                             "--keychain-profile",
                             profile,
                             "--wait",
@@ -707,12 +699,7 @@ password:
                 f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
             )
             self.tools.subprocess.run(
-                [
-                    "xcrun",
-                    "stapler",
-                    "staple",
-                    os.fsdecode(filename),
-                ],
+                ["xcrun", "stapler", "staple", filename],
                 check=True,
             )
         except subprocess.CalledProcessError:

@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import os
 import subprocess
-from typing import List
 
 from briefcase.commands import (
     BuildCommand,
@@ -338,11 +339,9 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         self.tools.linuxdeploy.file_path
                         / self.tools.linuxdeploy.file_name,
                         "--appdir",
-                        os.fsdecode(self.appdir_path(app)),
+                        self.appdir_path(app),
                         "--desktop-file",
-                        os.fsdecode(
-                            self.appdir_path(app) / f"{app.bundle_identifier}.desktop"
-                        ),
+                        self.appdir_path(app) / f"{app.bundle_identifier}.desktop",
                         "--output",
                         "appimage",
                         "-v0" if self.logger.is_deep_debug else "-v1",
@@ -370,7 +369,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
@@ -384,7 +383,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
 
         # Start the app in a way that lets us stream the logs
         app_popen = self.tools.subprocess.Popen(
-            [os.fsdecode(self.binary_path(app))] + passthrough,
+            [self.binary_path(app)] + passthrough,
             cwd=self.tools.home_path,
             **kwargs,
             stdout=subprocess.PIPE,

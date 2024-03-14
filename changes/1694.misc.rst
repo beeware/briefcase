@@ -1,0 +1,1 @@
+Since ``subprocess`` already calls ``fsdecode()`` for command arguments, it was removed for calls to ``subprocess`` in Briefcase.

@@ -1,3 +1,4 @@
+from pathlib import Path
 from subprocess import CalledProcessError
 from unittest import mock
 from zipfile import ZipFile
@@ -213,7 +214,7 @@ def test_package_msi(package_command, first_app_config, kwargs, tmp_path):
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                "src",
+                Path("src"),
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -389,7 +390,7 @@ def test_package_msi_with_codesigning(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                "src",
+                Path("src"),
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -530,14 +531,7 @@ def test_package_zip_with_codesigning(
             ]
             + additional_args
             + [
-                tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "windows"
-                / "app"
-                / "src"
-                / "First App.exe"
+                tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
             ],
             check=True,
         ),
@@ -595,14 +589,7 @@ def test_package_msi_failed_sign_app(package_command, first_app_config, tmp_path
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-                tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "windows"
-                / "app"
-                / "src"
-                / "First App.exe",
+                tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
             ],
             check=True,
         )
@@ -628,7 +615,7 @@ def test_package_msi_failed_manifest(package_command, first_app_config, tmp_path
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                "src",
+                Path("src"),
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -670,7 +657,7 @@ def test_package_msi_failed_compile(package_command, first_app_config, tmp_path)
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                "src",
+                Path("src"),
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -731,7 +718,7 @@ def test_package_msi_failed_link(package_command, first_app_config, tmp_path):
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                "src",
+                Path("src"),
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -836,14 +823,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-                tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "windows"
-                / "app"
-                / "src"
-                / "First App.exe",
+                tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
             ],
             check=True,
         ),
@@ -852,7 +832,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                "src",
+                Path("src"),
                 "-nologo",
                 "-gg",
                 "-sfrag",
