@@ -14,7 +14,7 @@ def test_copy_pyproject_toml(convert_command, tmp_path_generator):
     convert_command.merge_or_copy_pyproject(briefcase_config_file)
 
     assert base_config_file.is_file()
-    with open(base_config_file) as file:
+    with open(base_config_file, encoding="utf-8") as file:
         assert file.read() == "placeholder"
 
 
@@ -34,5 +34,5 @@ def test_merge_pyproject(convert_command, tmp_path_generator):
 
     convert_command.merge_or_copy_pyproject(briefcase_config_file)
 
-    merged_content = base_config_file.read_text()
+    merged_content = base_config_file.read_text(encoding="utf-8")
     assert merged_dict == tomllib.loads(merged_content)

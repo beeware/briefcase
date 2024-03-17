@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from difflib import SequenceMatcher
+import sys
 from functools import cached_property, partial
 from pathlib import Path
 from shutil import copy2, copytree
@@ -13,34 +13,13 @@ from packaging.utils import canonicalize_name
 from ..config import is_valid_app_name
 from .new import NewCommand, parse_project_overrides, titlecase
 
-try:
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
-except ModuleNotFoundError:
+else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 from briefcase.config import make_class_name
 from briefcase.exceptions import BriefcaseCommandError
-
-
-def find_most_similar_path_by_name(paths: list[Path], name: str) -> Path:
-    """Given a list of paths and a name, find the path with the most similar name.
-
-    Ties are resolved by selecting the first entry in the paths list.
-
-    :param paths: List of paths to search in
-    :param name: Name to compare the path names with
-    """
-    if not paths:
-        raise ValueError("Cannot find most similar path with no paths.")
-
-    max_similarity = float("-inf")
-
-    for path in paths:
-        similarity = SequenceMatcher(None, name, path.name).ratio()
-        if similarity > max_similarity:
-            max_similarity, most_similar = similarity, path
-
-    return most_similar
 
 
 class ConvertCommand(NewCommand):
@@ -68,7 +47,7 @@ class ConvertCommand(NewCommand):
         """
         return self.pyproject.get("project", {})
 
-    def validate_test_source_dir(self, app_name: str, test_source_dir: str) -> bool:
+    def validate_test_source_dir(self, module_name: str, test_source_dir: str) -> bool:
         """Determine if the test_source_dir is valid.
 
         :param test_source_dir: The candidate test source directory
@@ -76,7 +55,7 @@ class ConvertCommand(NewCommand):
             diagnostic message.
         """
         test_path = self.base_path / test_source_dir
-        if (test_entry := test_path / f"{app_name}.py").exists():
+        if (test_entry := test_path / f"{module_name}.py").exists():
             raise ValueError(
                 f"{test_entry} is reserved for the briefcase test entry script, but it already exists.\n"
                 "\n"
@@ -87,13 +66,19 @@ class ConvertCommand(NewCommand):
 
         return True
 
-    def validate_source_dir(self, source_dir: str) -> bool:
+    def validate_source_dir(self, module_name: str, source_dir: str) -> bool:
         """Determine if the source_dir is valid.
 
         :param source_dir: The candidate source directory
         :returns: True. If there are any validation problems, raises ValueError with a
             diagnostic message.
         """
+        if (self.base_path / source_dir).name != module_name:
+            raise ValueError(
+                f"The source directory {self.base_path / source_dir} must have the same name as the app, but"
+                f"with underscores instead of dashes ({module_name}), not {(self.base_path / source_dir).name}."
+            )
+
         if not (self.base_path / source_dir).is_dir():
             raise ValueError(
                 "The source directory must exist and be a directory with a ``__main__.py`` file."
@@ -171,32 +156,26 @@ class ConvertCommand(NewCommand):
             override_value=override_value,
         )
 
-    def get_source_dir_hint(self, app_name: str) -> tuple[str, str]:
+    def get_source_dir_hint(self, app_name: str, module_name: str) -> tuple[str, str]:
         """Parse folder layout to get hint for the source directory.
 
         :returns: The source directory hint
         :returns: The description text for the source dir prompt.
         """
-        valid_src_children = [
-            p for p in (self.base_path / "src").glob("*/") if p.name.isidentifier()
-        ]
-        valid_root_children = [
-            p for p in self.base_path.glob("*/") if p.name.isidentifier()
-        ]
-
-        module_name_guess = app_name.replace("-", "_")
-
-        if (self.base_path / f"src/{module_name_guess}").is_dir():
-            default = self.base_path / f"src/{module_name_guess}"
-        elif (self.base_path / module_name_guess).is_dir():
-            default = self.base_path / module_name_guess
-        elif valid_src_children:
-            default = find_most_similar_path_by_name(
-                valid_src_children, module_name_guess
+        if (self.base_path / f"src/{module_name}").is_dir():
+            default = self.base_path / f"src/{module_name}"
+        elif (self.base_path / module_name).is_dir():
+            default = self.base_path / module_name
+        elif possible_src_dirs := list(self.base_path.glob(f"**/{module_name}/")):
+            default = min(
+                possible_src_dirs, key=lambda p: (len(p.parents), len(str(p)))
             )
         else:  # We have already checked that there are directories in the project root
-            default = find_most_similar_path_by_name(
-                valid_root_children, module_name_guess
+            raise BriefcaseCommandError(
+                "Cannot find a suitable source directory for the app.\n"
+                f"Based on your app name, {app_name!r}, you must have a directory named {module_name!r} "
+                f"either in your project root or a subdirectory (e.g. 'src/{module_name}').\n"
+                f"Specifically, you need a directory that matches the glob pattern '**/{module_name}/'"
             )
 
         default = str(default.relative_to(self.base_path)).replace("\\", "/")
@@ -212,21 +191,23 @@ class ConvertCommand(NewCommand):
         )
         return default, intro
 
-    def input_source_dir(self, app_name: str, override_value: str | None) -> str:
+    def input_source_dir(
+        self, app_name: str, module_name: str, override_value: str | None
+    ) -> str:
         """Ask about the source dir, using hints from the project folder layout.
 
         :returns: The source directory
         """
-        default, intro = self.get_source_dir_hint(app_name)
+        default, intro = self.get_source_dir_hint(app_name, module_name)
         return self.input_text(
             intro=intro,
             variable="source directory",
             default=default,
-            validator=self.validate_source_dir,
+            validator=partial(self.validate_source_dir, module_name),
             override_value=override_value,
         )
 
-    def input_test_source_dir(self, app_name, override_value) -> str:
+    def input_test_source_dir(self, module_name, override_value) -> str:
         """Ask about the test source dir, using hints from the project folder layout.
 
         :returns: The test source directory
@@ -257,7 +238,7 @@ class ConvertCommand(NewCommand):
             intro=intro,
             variable="test source directory",
             default=default,
-            validator=partial(self.validate_test_source_dir, app_name),
+            validator=partial(self.validate_test_source_dir, module_name),
             override_value=override_value,
         )
 
@@ -491,11 +472,11 @@ class ConvertCommand(NewCommand):
         elif "file" in self.pep621_data.get("license", {}):
             license_text = (
                 self.base_path / self.pep621_data["license"]["file"]
-            ).read_text()
+            ).read_text(encoding="utf-8")
             default = self.get_license_from_text(license_text)
             default_source = "the license file"
         elif (self.base_path / "LICENSE").exists():
-            license_text = (self.base_path / "LICENSE").read_text()
+            license_text = (self.base_path / "LICENSE").read_text(encoding="utf-8")
             default = self.get_license_from_text(license_text)
             default_source = "the license file"
         else:
@@ -545,12 +526,14 @@ class ConvertCommand(NewCommand):
         # The class name can be completely derived from the formal name.
         class_name = make_class_name(formal_name)
         # The module name can be completely derived from the app name.
+        module_name = self.make_module_name(app_name)
         source_dir = self.input_source_dir(
-            app_name, override_value=project_overrides.pop("source_dir", None)
+            app_name,
+            module_name,
+            override_value=project_overrides.pop("source_dir", None),
         )
-        module_name = Path(source_dir).name
         test_source_dir = self.input_test_source_dir(
-            app_name, override_value=project_overrides.pop("test_source_dir", None)
+            module_name, override_value=project_overrides.pop("test_source_dir", None)
         )
         project_name = self.input_project_name(
             formal_name, override_value=project_overrides.pop("project_name", None)
@@ -603,9 +586,9 @@ class ConvertCommand(NewCommand):
         """
         pyproject_file = self.base_path / "pyproject.toml"
 
-        briefcase_pyproject = briefcase_config_file.read_text()
+        briefcase_pyproject = briefcase_config_file.read_text(encoding="utf-8")
         if pyproject_file.exists():
-            pep621_pyproject = pyproject_file.read_text()
+            pep621_pyproject = pyproject_file.read_text(encoding="utf-8")
 
             # The pyproject.toml file in the target directory has no briefcase keys, so it's
             # safe to copy-paste the text, and that way also keep formatting and comments.
@@ -617,7 +600,7 @@ class ConvertCommand(NewCommand):
         else:
             merged_pyproject = briefcase_pyproject
 
-        with open(pyproject_file, "w") as file:
+        with open(pyproject_file, "w", encoding="utf-8") as file:
             file.write(merged_pyproject)
 
     def migrate_necessary_files(self, project_dir, test_source_dir, module_name):

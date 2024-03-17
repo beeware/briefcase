@@ -10,7 +10,7 @@ def test_default_and_intro_is_used(convert_command, monkeypatch):
 
     monkeypatch.setattr(convert_command, "get_source_dir_hint", get_source_dir_hint)
 
-    convert_command.input_source_dir("app-name", None)
+    convert_command.input_source_dir("app-name", "app_name", None)
     m_input_text.assert_called_once()
     assert m_input_text.call_args.kwargs["intro"] == "SOME_DESCRIPTION"
     assert m_input_text.call_args.kwargs["default"] == "SOME_DIRECTORY"
@@ -21,11 +21,13 @@ def test_default_and_intro_uses_override(convert_command, monkeypatch):
         return "SOME_DIRECTORY", "SOME_DESCRIPTION"
 
     monkeypatch.setattr(convert_command, "get_source_dir_hint", get_source_dir_hint)
-    (convert_command.base_path / "OVERRIDE_VALUE").mkdir()
-    (convert_command.base_path / "OVERRIDE_VALUE" / "__main__.py").write_text(
-        "", encoding="utf-8"
-    )
+    (convert_command.base_path / "OVERRIDE_VALUE" / "app_name").mkdir(parents=True)
+    (
+        convert_command.base_path / "OVERRIDE_VALUE" / "app_name" / "__main__.py"
+    ).write_text("", encoding="utf-8")
     assert (
-        convert_command.input_source_dir("app-name", "OVERRIDE_VALUE")
-        == "OVERRIDE_VALUE"
+        convert_command.input_source_dir(
+            "app-name", "app_name", "OVERRIDE_VALUE/app_name"
+        )
+        == "OVERRIDE_VALUE/app_name"
     )
