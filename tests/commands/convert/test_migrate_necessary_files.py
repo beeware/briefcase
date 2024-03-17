@@ -37,11 +37,11 @@ def test_empty_test_source_dir(convert_command, project_dir_with_files, dummy_ap
 
     dummy_tests = convert_command.base_path / "test/test_dummy.py"
     assert dummy_tests.is_file()
-    assert dummy_tests.read_text() == "tests"
+    assert dummy_tests.read_text(encoding="utf-8") == "tests"
 
     test_entry_script = convert_command.base_path / f"test/{dummy_app_name}.py"
     assert test_entry_script.is_file()
-    assert test_entry_script.read_text() == "test entry script"
+    assert test_entry_script.read_text(encoding="utf-8") == "test entry script"
 
 
 def test_provided_test_source_dir(
@@ -60,7 +60,7 @@ def test_provided_test_source_dir(
 
     test_entry_script = full_test_path / f"{dummy_app_name}.py"
     assert test_entry_script.is_file()
-    assert test_entry_script.read_text() == "test entry script"
+    assert test_entry_script.read_text(encoding="utf-8") == "test entry script"
 
 
 def test_nondefault_test_source_dir(
@@ -81,7 +81,7 @@ def test_nondefault_test_source_dir(
 
     test_entry_script = full_test_path / f"{project_dir_with_files.name}.py"
     assert test_entry_script.is_file()
-    assert test_entry_script.read_text() == "test entry script"
+    assert test_entry_script.read_text(encoding="utf-8") == "test entry script"
 
 
 def test_warning_without_license_file(
