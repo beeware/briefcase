@@ -1,4 +1,5 @@
 from .build import BuildCommand  # noqa: F401
+from .convert import ConvertCommand  # noqa: F401
 from .create import CreateCommand  # noqa: F401
 from .dev import DevCommand  # noqa: F401
 from .new import NewCommand  # noqa: F401
