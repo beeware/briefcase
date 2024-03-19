@@ -5,9 +5,9 @@ import pytest
 
 def test_multiple_pep621_authors(convert_command, monkeypatch):
     """All authors are added to the options in addition to an option for Other."""
-    m_select_option = MagicMock()
-    m_select_option.return_value = "Firstname Firstauthor"
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+    mock_select_option = MagicMock()
+    mock_select_option.return_value = "Firstname Firstauthor"
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n"
@@ -20,8 +20,8 @@ def test_multiple_pep621_authors(convert_command, monkeypatch):
         encoding="utf-8",
     )
     convert_command.input_author(None)
-    m_select_option.assert_called_once()
-    assert m_select_option.call_args.kwargs["options"] == [
+    mock_select_option.assert_called_once()
+    assert mock_select_option.call_args.kwargs["options"] == [
         "Firstname Firstauthor",
         "Name Thirdauthor",
         "Firstname Fourthauthor",
@@ -32,9 +32,9 @@ def test_multiple_pep621_authors(convert_command, monkeypatch):
 
 def test_single_pep621_author(convert_command, monkeypatch):
     """If there is only one author, then you don't get the joined authors-option."""
-    m_select_option = MagicMock()
-    m_select_option.return_value = "Firstname Firstauthor"
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+    mock_select_option = MagicMock()
+    mock_select_option.return_value = "Firstname Firstauthor"
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n"
@@ -44,8 +44,8 @@ def test_single_pep621_author(convert_command, monkeypatch):
         encoding="utf-8",
     )
     convert_command.input_author(None)
-    m_select_option.assert_called_once()
-    assert m_select_option.call_args.kwargs["options"] == [
+    mock_select_option.assert_called_once()
+    assert mock_select_option.call_args.kwargs["options"] == [
         "Firstname Firstauthor",
         "Other",
     ]
@@ -53,12 +53,12 @@ def test_single_pep621_author(convert_command, monkeypatch):
 
 def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
     """If you select "Other", then you can type in a name."""
-    m_select_option = MagicMock()
-    m_select_option.return_value = "Other"
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
-    m_input_text = MagicMock()
-    m_input_text.return_value = "Some Name"
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
+    mock_select_option = MagicMock()
+    mock_select_option.return_value = "Other"
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_input_text = MagicMock()
+    mock_input_text.return_value = "Some Name"
+    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n"
@@ -71,16 +71,16 @@ def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
         encoding="utf-8",
     )
     assert convert_command.input_author(None) == "Some Name"
-    m_select_option.assert_called_once()
-    m_input_text.assert_called_once()
+    mock_select_option.assert_called_once()
+    mock_input_text.assert_called_once()
 
 
 @pytest.mark.parametrize("write_empty_pyproject", [True, False])
 def test_no_pep621_author(convert_command, monkeypatch, write_empty_pyproject):
     """If there is no author names in the pyproject.toml, then you're asked to write the
     name."""
-    m_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
+    mock_input_text = MagicMock()
+    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
 
     if write_empty_pyproject:
         (convert_command.base_path / "pyproject.toml").write_text(
@@ -88,8 +88,8 @@ def test_no_pep621_author(convert_command, monkeypatch, write_empty_pyproject):
             encoding="utf-8",
         )
     convert_command.input_author(None)
-    m_input_text.assert_called_once()
-    assert m_input_text.call_args.kwargs["default"] == "Jane Developer"
+    mock_input_text.assert_called_once()
+    assert mock_input_text.call_args.kwargs["default"] == "Jane Developer"
 
 
 def test_override(convert_command):

@@ -168,7 +168,8 @@ class ConvertCommand(NewCommand):
             default = self.base_path / module_name
         elif possible_src_dirs := list(self.base_path.glob(f"**/{module_name}/")):
             default = min(
-                possible_src_dirs, key=lambda p: (len(p.parents), len(str(p)))
+                possible_src_dirs,
+                key=lambda p: (len(p.parents), len(str(p))),
             )
         else:  # We have already checked that there are directories in the project root
             raise BriefcaseCommandError(
@@ -192,7 +193,10 @@ class ConvertCommand(NewCommand):
         return default, intro
 
     def input_source_dir(
-        self, app_name: str, module_name: str, override_value: str | None
+        self,
+        app_name: str,
+        module_name: str,
+        override_value: str | None,
     ) -> str:
         """Ask about the source dir, using hints from the project folder layout.
 
@@ -219,17 +223,17 @@ class ConvertCommand(NewCommand):
             "If the provided directory doesn't exist, it will be created and populated with\n"
             "some default test files."
         )
-        if (self.base_path / "test").exists():
-            default = "test"
-            intro += (
-                "\n\nBased on your project's folder structure, we believe "
-                "'test' might be your test directory"
-            )
-        elif (self.base_path / "tests").exists():
+        if (self.base_path / "tests").exists():
             default = "tests"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
                 + "'tests' might be your test directory"
+            )
+        elif (self.base_path / "test").exists():
+            default = "test"
+            intro += (
+                "\n\nBased on your project's folder structure, we believe "
+                "'test' might be your test directory"
             )
         else:
             default = "tests"
@@ -301,7 +305,7 @@ class ConvertCommand(NewCommand):
             override_value=override_value,
         )
 
-        if url == "Other" and not override_value:
+        if url == "Other":
             url = self.input_text(
                 intro="\nWhat website URL do you want to use for the application?",
                 variable="application URL",
@@ -312,9 +316,6 @@ class ConvertCommand(NewCommand):
         return url
 
     def input_bundle(self, url, app_name, override_value: str | None) -> str:
-        if not (url.startswith("https://") or url.startswith("http://")):
-            url = f"https://{url}"
-
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
         return self.input_text(
             intro=(
@@ -328,7 +329,7 @@ class ConvertCommand(NewCommand):
                 "Based on the application URL you selected, it looks like your bundle "
                 f"should be {default!r}. The bundle will be combined with your "
                 "application's machine readable name to form a complete application "
-                f"identifier (com.example.{app_name})."
+                f"identifier ({default}.{app_name})."
             ),
             variable="bundle identifier",
             default=default,
@@ -384,7 +385,7 @@ class ConvertCommand(NewCommand):
         )
         if author == "Other":
             author = self.input_text(
-                intro="Write the name(s)",
+                intro="Who do you want to be credited as the author of this application?",
                 variable="author",
                 default="Jane Developer",
                 override_value=None,
@@ -572,6 +573,11 @@ class ConvertCommand(NewCommand):
         context: dict[str, str],
         project_overrides: dict[str, str],
     ) -> dict[str, str]:
+        # We must set the GUI-framework to None here since the convert-command uses the new-command
+        # template. This template includes dependencies for the GUI-frameworks. However, if a project
+        # already is set up for a GUI-framework, then those dependencies should already be listed.
+        # To prevent the same dependency being listed twice (once in the PEP621-section and once in the
+        # briefcase-section), possibly with different versions, we set the GUI-framework to None here.
         return {"gui_framework": "None"}
 
     def merge_or_copy_pyproject(self, briefcase_config_file: Path) -> None:

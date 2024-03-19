@@ -2,41 +2,55 @@ from unittest.mock import MagicMock
 
 
 def test_no_test_dir(convert_command, monkeypatch):
-    m_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
+    mock_input_text = MagicMock()
+    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
 
     convert_command.input_test_source_dir("app_name", None)
-    m_input_text.assert_called_once()
-    assert m_input_text.call_args.kwargs["default"] == "tests"
+    mock_input_text.assert_called_once()
+    assert mock_input_text.call_args.kwargs["default"] == "tests"
 
     info_content = "\n\nBased on your project's folder structure, we believe 'test' might be your test directory"
-    assert info_content not in m_input_text.call_args.kwargs["intro"]
+    assert info_content not in mock_input_text.call_args.kwargs["intro"]
 
 
 def test_test_dir(convert_command, monkeypatch):
-    m_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
+    mock_input_text = MagicMock()
+    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
 
     (convert_command.base_path / "test").mkdir()
     convert_command.input_test_source_dir("app_name", None)
-    m_input_text.assert_called_once()
-    assert m_input_text.call_args.kwargs["default"] == "test"
+    mock_input_text.assert_called_once()
+    assert mock_input_text.call_args.kwargs["default"] == "test"
 
     info_content = "\n\nBased on your project's folder structure, we believe 'test' might be your test directory"
-    assert info_content in m_input_text.call_args.kwargs["intro"]
+    assert info_content in mock_input_text.call_args.kwargs["intro"]
 
 
 def test_tests_dir(convert_command, monkeypatch):
-    m_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", m_input_text)
+    mock_input_text = MagicMock()
+    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
 
     (convert_command.base_path / "tests").mkdir()
     convert_command.input_test_source_dir("app_name", None)
-    m_input_text.assert_called_once()
-    assert m_input_text.call_args.kwargs["default"] == "tests"
+    mock_input_text.assert_called_once()
+    assert mock_input_text.call_args.kwargs["default"] == "tests"
 
     info_content = "\n\nBased on your project's folder structure, we believe 'tests' might be your test directory"
-    assert info_content in m_input_text.call_args.kwargs["intro"]
+    assert info_content in mock_input_text.call_args.kwargs["intro"]
+
+
+def test_tests_dir_is_prefered_over_test_dir(convert_command, monkeypatch):
+    mock_input_text = MagicMock()
+    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+
+    (convert_command.base_path / "tests").mkdir()
+    (convert_command.base_path / "test").mkdir()
+    convert_command.input_test_source_dir("app_name", None)
+    mock_input_text.assert_called_once()
+    assert mock_input_text.call_args.kwargs["default"] == "tests"
+
+    info_content = "\n\nBased on your project's folder structure, we believe 'tests' might be your test directory"
+    assert info_content in mock_input_text.call_args.kwargs["intro"]
 
 
 def test_override_is_used(convert_command):
