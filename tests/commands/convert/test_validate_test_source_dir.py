@@ -4,7 +4,7 @@ from ...utils import create_file
 
 
 def test_valid_test_source_dir(convert_command):
-    """Valid source_dir raises no errors and returns True."""
+    """Valid test_source_dir raises no errors and returns True."""
     app_name = "newtarget"
     test_source_dir = "tests"
 

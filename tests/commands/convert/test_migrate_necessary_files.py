@@ -24,7 +24,7 @@ placeholder = "abc"
     create_file(out_dir / "CHANGELOG", "CHANGELOG")
     create_file(out_dir / "LICENSE", "LICENSE")
     create_file(out_dir / f"tests/{dummy_app_name}.py", "test entry script")
-    create_file(out_dir / "tests/test_dummy.py", "tests")
+    create_file(out_dir / "tests/test_dummy.py", "dummy tests")
     create_file(out_dir / f"src/{dummy_app_name}/{dummy_app_name}.py", "entry point")
     return out_dir
 
@@ -37,7 +37,7 @@ def test_empty_test_source_dir(convert_command, project_dir_with_files, dummy_ap
 
     dummy_tests = convert_command.base_path / "test/test_dummy.py"
     assert dummy_tests.is_file()
-    assert dummy_tests.read_text(encoding="utf-8") == "tests"
+    assert dummy_tests.read_text(encoding="utf-8") == "dummy tests"
 
     test_entry_script = convert_command.base_path / f"test/{dummy_app_name}.py"
     assert test_entry_script.is_file()
@@ -45,7 +45,9 @@ def test_empty_test_source_dir(convert_command, project_dir_with_files, dummy_ap
 
 
 def test_provided_test_source_dir(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     """Only the test_entry_script is copied if test_source_dir is given."""
     test_source_dir = "tests"
@@ -64,7 +66,9 @@ def test_provided_test_source_dir(
 
 
 def test_nondefault_test_source_dir(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     """The test_entry_script is copied to the correct directory if test_source_dir is
     given."""
@@ -85,7 +89,9 @@ def test_nondefault_test_source_dir(
 
 
 def test_warning_without_license_file(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     """A single warning is raised if changelog file is present but not license file."""
     convert_command.logger.warning = mock.MagicMock()
@@ -102,7 +108,9 @@ def test_warning_without_license_file(
 
 
 def test_pep621_wrong_license_filename(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     convert_command.logger.warning = mock.MagicMock()
     test_source_dir = ""
@@ -123,7 +131,9 @@ def test_pep621_wrong_license_filename(
 
 
 def test_warning_without_changelog_file(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     """A single warning is raised if license file is present but not changelog file."""
     convert_command.logger.warning = mock.MagicMock()
@@ -142,7 +152,9 @@ def test_warning_without_changelog_file(
 
 
 def test_no_warning_with_license_and_changelog_file(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     """No warning is raised if both license file and changelog file is present."""
     convert_command.logger.warning = mock.MagicMock()
@@ -159,7 +171,9 @@ def test_no_warning_with_license_and_changelog_file(
 
 
 def test_two_warnings_without_license_and_changelog_file(
-    convert_command, project_dir_with_files, dummy_app_name
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
 ):
     """Two warnings are raised if both license file and changelog file are missing."""
     convert_command.logger.warning = mock.MagicMock()

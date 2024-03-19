@@ -17,6 +17,7 @@ import pytest
 def test_convert_app(convert_command, cmdline, overrides, patch_tempdir):
     """An application can be set up for briefcase created."""
     (convert_command.base_path / "app_name").mkdir()
+    (convert_command.base_path / "pyproject.toml").write_text("", encoding="utf-8")
     (convert_command.base_path / "app_name/__main__.py").write_text(
         "", encoding="utf-8"
     )

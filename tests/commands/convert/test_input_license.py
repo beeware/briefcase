@@ -2,7 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from .utils import PartialMatchString
 
+
+@pytest.mark.parametrize("license_file_name", ["LICENSE", "LICENCE"])
 @pytest.mark.parametrize(
     "license_text, license",
     [
@@ -36,17 +39,37 @@ import pytest
         ("Some text", "Other"),
     ],
 )
-def test_get_license_from_file(convert_command, license_text, license, monkeypatch):
-    m_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+def test_get_license_from_file(
+    convert_command, license_text, license, license_file_name, monkeypatch
+):
+    mock_select_option = MagicMock()
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
 
-    (convert_command.base_path / "LICENSE").write_text(license_text, encoding="utf-8")
+    dummy_license_text = (
+        "some leading text\neven_more_text" + license_text + "some_ending_text\n"
+    )
+    (convert_command.base_path / license_file_name).write_text(
+        dummy_license_text, encoding="utf-8"
+    )
 
     convert_command.input_license(None)
-    m_select_option.assert_called_once()
-    assert m_select_option.call_args.kwargs["default"] == license
-    assert "the license file" in m_select_option.call_args.kwargs["intro"]
-    assert license in m_select_option.call_args.kwargs["options"]
+    mock_select_option.assert_called_once_with(
+        intro=PartialMatchString("the license file"),
+        variable="Project License",
+        options=[
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ],
+        default=license,
+        override_value=None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -83,22 +106,43 @@ def test_get_license_from_file(convert_command, license_text, license, monkeypat
     ],
 )
 def test_get_license_from_pep621_license_file(
-    convert_command, license_text, license, monkeypatch
+    convert_command,
+    license_text,
+    license,
+    monkeypatch,
 ):
-    m_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+    mock_select_option = MagicMock()
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+
+    dummy_license_text = (
+        "some leading text\neven_more_text" + license_text + "some_ending_text\n"
+    )
     (convert_command.base_path / "LICENSE.txt").write_text(
-        license_text, encoding="utf-8"
+        dummy_license_text, encoding="utf-8"
     )
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n" 'license = {file = "LICENSE.txt"}', encoding="utf-8"
     )
 
     convert_command.input_license(None)
-    m_select_option.assert_called_once()
-    assert m_select_option.call_args.kwargs["default"] == license
-    assert "the license file" in m_select_option.call_args.kwargs["intro"]
-    assert license in m_select_option.call_args.kwargs["options"]
+
+    mock_select_option.assert_called_once_with(
+        intro=PartialMatchString("the license file"),
+        variable="Project License",
+        options=[
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ],
+        default=license,
+        override_value=None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -116,33 +160,60 @@ def test_get_license_from_pep621_license_file(
     ],
 )
 def test_get_license_from_pyproject(
-    convert_command, license_text, license, monkeypatch
+    convert_command,
+    license_text,
+    license,
+    monkeypatch,
 ):
-    m_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+    mock_select_option = MagicMock()
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n" f'license = {{text = "{license_text}"}}', encoding="utf-8"
     )
 
     convert_command.input_license(None)
-    m_select_option.assert_called_once()
-    assert m_select_option.call_args.kwargs["default"] == license
-    assert (
-        "the PEP621 formatted pyproject.toml"
-        in m_select_option.call_args.kwargs["intro"]
+    mock_select_option.assert_called_once_with(
+        intro=PartialMatchString("the PEP621 formatted pyproject.toml"),
+        variable="Project License",
+        options=[
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ],
+        default=license,
+        override_value=None,
     )
-    assert license in m_select_option.call_args.kwargs["options"]
 
 
 def test_no_license_hint(convert_command, monkeypatch):
-    m_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", m_select_option)
+    mock_select_option = MagicMock()
+    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
 
     convert_command.input_license(None)
-    m_select_option.assert_called_once()
-    assert m_select_option.call_args.kwargs["default"] is None
-    assert "the license file" not in m_select_option.call_args.kwargs["intro"]
-    assert (
-        "the PEP621 formatted pyproject.toml"
-        not in m_select_option.call_args.kwargs["intro"]
+    mock_select_option.assert_called_once_with(
+        intro="What license do you want to use for this project's code? ",
+        variable="Project License",
+        options=[
+            "BSD license",
+            "MIT license",
+            "Apache Software License",
+            "GNU General Public License v2 (GPLv2)",
+            "GNU General Public License v2 or later (GPLv2+)",
+            "GNU General Public License v3 (GPLv3)",
+            "GNU General Public License v3 or later (GPLv3+)",
+            "Proprietary",
+            "Other",
+        ],
+        default=None,
+        override_value=None,
     )
+
+
+def test_override_is_used(convert_command):
+    assert convert_command.input_license("Proprietary") == "Proprietary"
