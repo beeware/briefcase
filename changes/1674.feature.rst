@@ -1,0 +1,1 @@
+The contents of ``pyproject.toml`` is now included in the log file.
