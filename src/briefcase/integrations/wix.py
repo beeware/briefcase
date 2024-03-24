@@ -37,7 +37,7 @@ class WiX(ManagedTool):
 
     @property
     def download_url(self) -> str:
-        return "https://github.com/wixtoolset/wix3/releases/download/wix314rtm/wix314-binaries.zip"
+        return "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip"
 
     @property
     def heat_exe(self) -> Path:
