@@ -398,9 +398,9 @@ class Log:
                 self.warning(f"Log saved to {log_filepath}")
             self.print.to_console()
 
-    def _build_log(self, command):
+    def _build_log(self, command) -> str:
         """Accumulate all information to include in the log file."""
-        # add the exception stacktrace to end of log if one was captured
+        # Add the exception stacktraces to end of log if any were captured
         if self.stacktraces:
             # using print.log.print() instead of print.to_log() to avoid
             # timestamp and code location inclusion for the stacktrace box.
@@ -415,6 +415,7 @@ class Log:
                     new_line_start=True,
                 )
 
+        # Retrieve additional logging added by the Command
         if self.log_file_extras:
             with command.input.wait_bar(
                 "Collecting extra information for log...",
@@ -428,21 +429,30 @@ class Log:
                     except Exception:
                         self.error(traceback.format_exc())
 
-        # build log header and export buffered log from Rich
-        uname = platform.uname()
+        # Capture env vars removing any potentially sensitive information
         sanitized_env_vars = "\n".join(
             f"\t{env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
             for env_var, value in sorted(command.tools.os.environ.items())
         )
+
+        # Capture pyproject.toml if one exists in the current directory
+        try:
+            with open(Path.cwd() / "pyproject.toml", encoding="utf-8") as f:
+                pyproject_toml = f.read().strip()
+        except OSError as e:
+            pyproject_toml = str(e)
+
+        # Build log with buffered log from Rich
+        uname = platform.uname()
         return (
             f"Date/Time:       {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}\n"
             f"Command line:    {' '.join(sys.argv)}\n"
-            f"\n"
+            "\n"
             f"OS Release:      {uname.system} {uname.release}\n"
             f"OS Version:      {uname.version}\n"
             f"Architecture:    {uname.machine}\n"
             f"Platform:        {platform.platform(aliased=True)}\n"
-            f"\n"
+            "\n"
             f"Python exe:      {sys.executable}\n"
             # replace line breaks with spaces (use chr(10) since '\n' isn't allowed in f-strings...)
             f"Python version:  {sys.version.replace(chr(10), ' ')}\n"
@@ -452,15 +462,18 @@ class Log:
             f"Virtual env:     {hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix}\n"
             # for conda, prefix and base_prefix are likely the same but contain a conda-meta dir.
             f"Conda env:       {(Path(sys.prefix) / 'conda-meta').exists()}\n"
-            f"\n"
+            "\n"
             f"Briefcase:       {__version__}\n"
             f"Target platform: {command.platform}\n"
             f"Target format:   {command.output_format}\n"
-            f"\n"
-            f"Environment Variables:\n"
+            "\n"
+            "Environment Variables:\n"
             f"{sanitized_env_vars}\n"
-            f"\n"
-            f"Briefcase Log:\n"
+            "\n"
+            "pyproject.toml:\n"
+            f"{pyproject_toml}\n"
+            "\n"
+            "Briefcase Log:\n"
             f"{self.print.export_log()}"
         )
 

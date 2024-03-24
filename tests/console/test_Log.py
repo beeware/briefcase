@@ -2,6 +2,7 @@ import contextlib
 import datetime
 import logging
 from io import TextIOBase
+from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, call
 
 import pytest
@@ -162,7 +163,7 @@ def test_save_log_to_file_do_not_log(command):
     assert len(logger.stacktraces) == 0
 
 
-def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
+def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch):
     """Log file contains everything printed to log; env vars are sanitized; no
     stacktrace if one is not captured."""
     command.tools.os.environ = {
@@ -203,13 +204,18 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
         with command.tools.input.wait_bar("abort message..."):
             raise KeyboardInterrupt
 
+    project_root = tmp_path / "project_root"
+    project_root.mkdir(exist_ok=True)
+    monkeypatch.chdir(project_root)
+    with open("pyproject.toml", "w", encoding="utf-8") as f:
+        f.writelines(["[section]\n", "name = 'project'\n\n\n\n\n"])
+
     logger.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
-    with open(log_filepath, encoding="utf-8") as log:
-        log_contents = log.read()
+    log_contents = log_filepath.read_text(encoding="utf-8")
 
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert "this is debug output" in log_contents
@@ -235,6 +241,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path):
     assert "wait message... done" in log_contents
     assert "abort message... started" in log_contents
     assert "abort message... aborted" in log_contents
+    assert "pyproject.toml:\n[section]\nname = 'project'\n\nBriefcase" in log_contents
 
     assert TRACEBACK_HEADER not in log_contents
     assert EXTRA_HEADER not in log_contents
@@ -253,8 +260,7 @@ def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
-    with open(log_filepath, encoding="utf-8") as log:
-        log_contents = log.read()
+    log_contents = log_filepath.read_text(encoding="utf-8")
 
     assert len(logger.stacktraces) == 1
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
@@ -277,8 +283,7 @@ def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
-    with open(log_filepath, encoding="utf-8") as log:
-        log_contents = log.read()
+    log_contents = log_filepath.read_text(encoding="utf-8")
 
     assert len(logger.stacktraces) == 4
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
@@ -306,8 +311,7 @@ def test_save_log_to_file_extra(mock_now, command, tmp_path):
         logger.add_log_file_extra(extra)
     logger.save_log_to_file(command=command)
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
-    with open(log_filepath, encoding="utf-8") as log:
-        log_contents = log.read()
+    log_contents = log_filepath.read_text(encoding="utf-8")
 
     assert EXTRA_HEADER in log_contents
     assert "Log extra 1" in log_contents
@@ -332,6 +336,25 @@ def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
     extra2.assert_not_called()
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
     assert log_filepath.stat().st_size == 0
+
+
+def test_save_log_to_file_missing_pyproject(mock_now, command, tmp_path, monkeypatch):
+    """Log file contains pyproject read exception if it's missing."""
+    logger = Log()
+    logger.save_log = True
+
+    # ensure in a directory without a pyproject.toml
+    monkeypatch.chdir(tmp_path)
+    Path(tmp_path / "pyproject.toml").unlink(missing_ok=True)
+
+    logger.save_log_to_file(command=command)
+
+    log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
+
+    assert log_filepath.exists()
+    log_contents = log_filepath.read_text(encoding="utf-8")
+
+    assert "pyproject.toml:\n[Errno 2] No such file or directory" in log_contents
 
 
 def test_save_log_to_file_fail_to_make_logs_dir(
