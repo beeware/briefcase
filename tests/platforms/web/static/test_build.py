@@ -10,7 +10,7 @@ else:  # pragma: no-cover-if-gte-py311
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.web.static import StaticWebBuildCommand
@@ -32,8 +32,12 @@ def build_command(tmp_path):
     return command
 
 
-def test_build_app(build_command, first_app_generated, tmp_path):
+@pytest.mark.parametrize("logging_level", [LogLevel.INFO, LogLevel.DEEP_DEBUG])
+def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
     """An app can be built."""
+    # Configure logging level
+    build_command.logger.verbosity = logging_level
+
     bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
     # Invoking build will create wheels as a side effect.
@@ -110,7 +114,8 @@ def test_build_app(build_command, first_app_generated, tmp_path):
                 bundle_path / "www/static/wheels",
                 "-r",
                 bundle_path / "requirements.txt",
-            ],
+            ]
+            + (["-vv"] if logging_level == LogLevel.DEEP_DEBUG else []),
             check=True,
             encoding="UTF-8",
         ),

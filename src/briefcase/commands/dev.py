@@ -99,6 +99,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                             "install",
                             "--upgrade",
                         ]
+                        + (["-vv"] if self.logger.is_deep_debug else [])
                         + requires,
                         check=True,
                         encoding="UTF-8",

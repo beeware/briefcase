@@ -169,7 +169,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         self.wheel_path(app),
                         "-r",
                         self.bundle_path(app) / "requirements.txt",
-                    ],
+                    ]
+                    + (["-vv"] if self.logger.is_deep_debug else []),
                     check=True,
                     encoding="UTF-8",
                 )

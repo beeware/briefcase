@@ -7,6 +7,7 @@ import pytest
 import tomli_w
 
 from briefcase.commands.create import _is_local_requirement
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 
@@ -285,13 +286,17 @@ def test_app_packages_offline(
     assert myapp.test_requires is None
 
 
+@pytest.mark.parametrize("logging_level", [LogLevel.INFO, LogLevel.DEEP_DEBUG])
 def test_app_packages_install_requirements(
     create_command,
     myapp,
     app_packages_path,
     app_packages_path_index,
+    logging_level,
 ):
     """Requirements can be installed."""
+    # Configure logging level
+    create_command.logger.verbosity = logging_level
 
     # Set up the app requirements
     myapp.requires = ["first", "second", "third"]
@@ -319,10 +324,9 @@ def test_app_packages_install_requirements(
             "--upgrade",
             "--no-user",
             f"--target={app_packages_path}",
-            "first",
-            "second",
-            "third",
-        ],
+        ]
+        + (["-vv"] if logging_level == LogLevel.DEEP_DEBUG else [])
+        + ["first", "second", "third"],
         check=True,
         encoding="UTF-8",
     )

@@ -1,0 +1,1 @@
+When deep debug is activated via ``-vv``, ``pip`` now installs requirements for the app with verbose logging.
