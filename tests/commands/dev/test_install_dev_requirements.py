@@ -3,11 +3,16 @@ from subprocess import CalledProcessError
 
 import pytest
 
+from briefcase.console import LogLevel
 from briefcase.exceptions import RequirementsInstallError
 
 
-def test_install_requirements_no_error(dev_command, first_app):
+@pytest.mark.parametrize("logging_level", [LogLevel.INFO, LogLevel.DEEP_DEBUG])
+def test_install_requirements_no_error(dev_command, first_app, logging_level):
     """Ensure run is executed properly to install requirements."""
+    # Configure logging level
+    dev_command.logger.verbosity = logging_level
+
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
     dev_command.install_dev_requirements(app=first_app)
@@ -22,10 +27,9 @@ def test_install_requirements_no_error(dev_command, first_app):
             "pip",
             "install",
             "--upgrade",
-            "package-one",
-            "package_two",
-            "packagethree",
-        ],
+        ]
+        + (["-vv"] if logging_level == LogLevel.DEEP_DEBUG else [])
+        + ["package-one", "package_two", "packagethree"],
         check=True,
         encoding="UTF-8",
     )

@@ -524,6 +524,7 @@ class CreateCommand(BaseCommand):
                     "--no-user",
                     f"--target={app_packages_path}",
                 ]
+                + (["-vv"] if self.logger.is_deep_debug else [])
                 + self._extra_pip_args(app)
                 + pip_args,
                 check=True,
