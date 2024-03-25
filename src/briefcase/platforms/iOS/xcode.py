@@ -271,20 +271,23 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             info["NSMicrophoneUsageDescription"] = x_permissions["microphone"]
 
         if x_permissions["fine_location"]:
-            info["NSLocationDefaultAccuracyReduced"] = False
-        elif x_permissions["coarse_location"]:
-            info["NSLocationDefaultAccuracyReduced"] = True
-
-        if x_permissions["background_location"]:
-            info["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
-                "background_location"
-            ]
-        elif x_permissions["fine_location"]:
             info["NSLocationWhenInUseUsageDescription"] = x_permissions["fine_location"]
+            info["NSLocationDefaultAccuracyReduced"] = False
         elif x_permissions["coarse_location"]:
             info["NSLocationWhenInUseUsageDescription"] = x_permissions[
                 "coarse_location"
             ]
+            info["NSLocationDefaultAccuracyReduced"] = True
+
+        if x_permissions["background_location"]:
+            if "NSLocationWhenInUseUsageDescription" not in info:
+                info["NSLocationWhenInUseUsageDescription"] = x_permissions[
+                    "background_location"
+                ]
+            info["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
+                "background_location"
+            ]
+            info["UIBackgroundModes"] = ["processing", "location"]
 
         if x_permissions["photo_library"]:
             info["NSPhotoLibraryAddUsageDescription"] = x_permissions["photo_library"]
