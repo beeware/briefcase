@@ -203,7 +203,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {},
             {
                 "info": {
+                    "NSLocationWhenInUseUsageDescription": "I always need to know where you are",
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "UIBackgroundModes": ["processing", "location"],
                 }
             },
         ),
@@ -217,7 +219,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
+                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "UIBackgroundModes": ["processing", "location"],
                 }
             },
         ),
@@ -231,7 +235,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "UIBackgroundModes": ["processing", "location"],
                 }
             },
         ),
@@ -260,7 +266,9 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
                     "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "UIBackgroundModes": ["processing", "location"],
                 }
             },
         ),
