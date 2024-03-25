@@ -89,6 +89,15 @@ class PListExtension(Extension):
                     return "<true/>"
                 else:
                     return "<false/>"
+            elif isinstance(obj, list):
+                children = "\n        ".join(plist_value(value) for value in obj)
+                return f"<array>\n        {children}\n    </array>"
+            elif isinstance(obj, dict):
+                children = "\n        ".join(
+                    f"<key>{key}</key>\n        {plist_value(value)}"
+                    for key, value in obj.items()
+                )
+                return f"<dict>\n        {children}\n    </dict>"
             else:
                 return f"<string>{obj}</string>"
 
