@@ -762,8 +762,8 @@ To run your application, type:
         project_overrides: list[str] = None,
         **options,
     ):
-        # Confirm host compatibility, and that all required tools are available.
-        # There are no apps, so finalize() will be a no op on app configurations.
+        # Finish preparing the AppConfigs and run final checks required to for command
+        # (There are no apps, so finalize() will be a no op on app configurations)
         self.finalize()
 
         return self.new_app(

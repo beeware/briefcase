@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import importlib.metadata
 import inspect
@@ -8,22 +9,26 @@ import os
 import platform
 import subprocess
 import sys
+import time
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
+from collections.abc import Iterable
+from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+import tomli_w
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
 from packaging.version import Version
 from platformdirs import PlatformDirs
+from watchdog.utils.dirsnapshot import DirectorySnapshot
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
-import briefcase
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.console import MAX_TEXT_WIDTH, Console, Log
@@ -40,6 +45,27 @@ from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms import get_output_formats, get_platforms
+
+if TYPE_CHECKING:
+    from briefcase.commands import (
+        BuildCommand,
+        CreateCommand,
+        PackageCommand,
+        PublishCommand,
+        RunCommand,
+        UpdateCommand,
+    )
+
+
+def timeit(func):  # TODO:PR: remove
+    def wrapper(*a, **kw):
+        start_time = time.time()
+        try:
+            return func(*a, **kw)
+        finally:
+            Log().warning(f"{func.__name__}: {round(time.time() - start_time, 3)}s")
+
+    return wrapper
 
 
 def create_config(klass, config, msg):
@@ -134,16 +160,33 @@ class BaseCommand(ABC):
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
     platform_target_version: str | None = None
+    # platform-specific project metadata fields tracked for changes
+    tracking_metadata_fields: list[str] = []
+    # platform-agnostic project metadata fields tracked for changes
+    _tracking_base_metadata_fields: list[str] = [
+        "author",
+        "author_email",
+        "bundle",
+        "description",
+        "document_types",
+        "formal_name",
+        "license",
+        "permission",
+        "project_name",
+        "url",
+        "version",
+    ]
 
     def __init__(
         self,
         logger: Log,
         console: Console,
-        tools: ToolCache = None,
-        apps: dict = None,
-        base_path: Path = None,
-        data_path: Path = None,
+        tools: ToolCache | None = None,
+        apps: dict[str, AppConfig] | None = None,
+        base_path: Path | None = None,
+        data_path: Path | None = None,
         is_clone: bool = False,
+        tracking: dict[AppConfig, dict[str, ...]] = None,
     ):
         """Base for all Commands.
 
@@ -157,10 +200,7 @@ class BaseCommand(ABC):
             Command; for instance, RunCommand can invoke UpdateCommand and/or
             BuildCommand.
         """
-        if base_path is None:
-            self.base_path = Path.cwd()
-        else:
-            self.base_path = base_path
+        self.base_path = Path.cwd() if base_path is None else base_path
         self.data_path = self.validate_data_path(data_path)
         self.apps = {} if apps is None else apps
         self.is_clone = is_clone
@@ -180,6 +220,9 @@ class BaseCommand(ABC):
 
         self.global_config = None
         self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
+        self._tracking: dict[AppConfig, dict[str, ...]] = (
+            {} if tracking is None else tracking
+        )
 
     @property
     def logger(self):
@@ -305,41 +348,57 @@ a custom location for Briefcase's tools.
             console=self.input,
             tools=self.tools,
             is_clone=True,
+            tracking=self._tracking,
         )
         command.clone_options(self)
         return command
 
     @property
-    def create_command(self):
+    def create_command(self) -> CreateCommand:
         """Create Command factory for the same platform and format."""
         return self._command_factory("create")
 
     @property
-    def update_command(self):
+    def update_command(self) -> UpdateCommand:
         """Update Command factory for the same platform and format."""
         return self._command_factory("update")
 
     @property
-    def build_command(self):
+    def build_command(self) -> BuildCommand:
         """Build Command factory for the same platform and format."""
         return self._command_factory("build")
 
     @property
-    def run_command(self):
+    def run_command(self) -> RunCommand:
         """Run Command factory for the same platform and format."""
         return self._command_factory("run")
 
     @property
-    def package_command(self):
+    def package_command(self) -> PackageCommand:
         """Package Command factory for the same platform and format."""
         return self._command_factory("package")
 
     @property
-    def publish_command(self):
+    def publish_command(self) -> PublishCommand:
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
 
-    def template_cache_path(self, template) -> Path:
+    @property
+    @lru_cache
+    def briefcase_version(self) -> Version:
+        """Parsed Briefcase version."""
+        return Version(__version__)
+
+    @property
+    @lru_cache
+    def briefcase_project_cache_path(self) -> Path:
+        """The path for project-specific information cache."""
+        path = self.base_path / ".briefcase"
+        # TODO:PR: should we go through the trouble to mark hidden on Windows?
+        path.mkdir(exist_ok=True)
+        return path
+
+    def template_cache_path(self, template: str) -> Path:
         """The path where Briefcase keeps template checkouts.
 
         :param template: The URL for the template that will be cached locally.
@@ -410,6 +469,10 @@ a custom location for Briefcase's tools.
             "Stub" + self.binary_executable_path(app).suffix
         )
 
+    def briefcase_toml_path(self, app: AppConfig) -> Path:
+        """Path to ``briefcase.toml`` for output format bundle."""
+        return self.bundle_path(app) / "briefcase.toml"
+
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
         """Load the ``briefcase.toml`` file provided by the app template.
 
@@ -420,11 +483,11 @@ a custom location for Briefcase's tools.
             return self._briefcase_toml[app]
         except KeyError:
             try:
-                with (self.bundle_path(app) / "briefcase.toml").open("rb") as f:
-                    self._briefcase_toml[app] = tomllib.load(f)
+                toml = self.briefcase_toml_path(app).read_text(encoding="utf-8")
             except OSError as e:
                 raise MissingAppMetadata(self.bundle_path(app)) from e
             else:
+                self._briefcase_toml[app] = tomllib.loads(toml)
                 return self._briefcase_toml[app]
 
     def path_index(self, app: AppConfig, path_name: str) -> str | dict | list:
@@ -516,26 +579,30 @@ a custom location for Briefcase's tools.
         """Find the path for the application module for an app.
 
         :param app: The config object for the app
-        :returns: The Path to the dist-info folder.
+        :returns: The Path to the app module
         """
         app_home = [
             path.split("/")
-            for path in app.sources
+            for path in app.sources()
             if path.rsplit("/", 1)[-1] == app.module_name
         ]
 
-        if len(app_home) == 0:
+        if len(app_home) == 1:
+            path = Path(self.base_path, *app_home[0])
+        elif len(app_home) == 0:
             raise BriefcaseCommandError(
                 f"Unable to find code for application {app.app_name!r}"
             )
-        elif len(app_home) == 1:
-            path = Path(str(self.base_path), *app_home[0])
         else:
             raise BriefcaseCommandError(
                 f"Multiple paths in sources found for application {app.app_name!r}"
             )
 
         return path
+
+    def dist_info_path(self, app: AppConfig) -> Path:
+        """Path to dist-info for the app in the output format build."""
+        return self.app_path(app) / f"{app.module_name}-{app.version}.dist-info"
 
     @property
     def briefcase_required_python_version(self):
@@ -783,12 +850,7 @@ any compatibility problems, and then add the compatibility declaration.
             help="Save a detailed log to file. By default, this log file is only created for critical errors",
         )
 
-    def _add_update_options(
-        self,
-        parser,
-        context_label="",
-        update=True,
-    ):
+    def _add_update_options(self, parser, context_label="", update=True):
         """Internal utility method for adding common update options.
 
         :param parser: The parser to which options should be added.
@@ -1069,9 +1131,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
         if branch is None:
-            template_branch = f"v{version.base_version}"
+            template_branch = f"v{self.briefcase_version.base_version}"
         else:
             template_branch = branch
 
@@ -1082,7 +1143,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             {
                 "template_source": template,
                 "template_branch": template_branch,
-                "briefcase_version": str(version),
+                "briefcase_version": str(self.briefcase_version.base_version),
             }
         )
 
@@ -1100,7 +1161,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except TemplateUnsupportedVersion:
             # Only use the main template if we're on a development branch of briefcase
             # and the user didn't explicitly specify which branch to use.
-            if version.dev is None or branch is not None:
+            if self.briefcase_version.dev is None or branch is not None:
                 raise
 
             # Development branches can use the main template.
@@ -1115,3 +1176,399 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 output_path=output_path,
                 extra_context=extra_context,
             )
+
+    # ------------------------------
+    # Tracking
+    # ------------------------------
+    def tracking_database_path(self, app: AppConfig) -> Path:
+        """Path to tracking database for the app.
+
+        For most commands, the database lives in the bundle directory for the output
+        format. Certain commands, such as DevCommand, will store the database elsewhere
+        since a relevant build directory will not be available.
+
+        Some Commands may raise AttributeError or NotImplementedError.
+        """
+        return self.bundle_path(app) / "tracking.toml"
+
+    def tracking(self, app: AppConfig) -> dict[str, ...]:
+        """Load the tracking database for the app."""
+        try:
+            return self._tracking[app]["briefcase"]["app"][app.app_name]
+        except KeyError:
+            try:
+                toml = self.tracking_database_path(app).read_text(encoding="utf-8")
+            except (OSError, AttributeError):
+                toml = ""
+
+            self._tracking[app] = tomllib.loads(toml)
+            # ensure [briefcase.app.<app name>] table exists
+            self._tracking[app].setdefault("briefcase", {})
+            self._tracking[app]["briefcase"].setdefault("app", {})
+            self._tracking[app]["briefcase"]["app"].setdefault(app.app_name, {})
+            # return tracking data just for the current app
+            return self._tracking[app]["briefcase"]["app"][app.app_name]
+
+    def tracking_save(self) -> None:
+        """Update the persistent tracking database for each app."""
+        for app in self.apps.values():
+            # skip saving tracking if the command doesn't support it or
+            # cannot currently define the database path
+            try:
+                app_tracking_db_path = self.tracking_database_path(app)
+            except (AttributeError, NotImplementedError):
+                continue
+            # assume significant command failure if the path doesn't
+            # exist and just skip saving/updating tracking
+            if not app_tracking_db_path.parent.exists():
+                continue
+
+            try:
+                toml = tomli_w.dumps(self._tracking[app])
+            except KeyError:
+                # skip saving tracking for apps that never loaded it
+                pass
+            else:
+                try:
+                    self.tracking_database_path(app).write_text(toml, encoding="utf-8")
+                except OSError as e:
+                    self.logger.warning(
+                        f"Failed to update build tracking for {app.app_name!r}: "
+                        f"{type(e).__name__}: {e}"
+                    )
+
+    def tracking_set(self, app: AppConfig, key: str, value: object) -> None:
+        """Set a key/value pair in the tracking database for an app."""
+        self.tracking(app)[key] = value
+
+    def tracking_get(self, app: AppConfig, key: str) -> Any:
+        """Retrieve a value for a key from the tracking database for an app."""
+        return self.tracking(app)[key]
+
+    @property
+    @lru_cache
+    def _tracking_briefcase_version(self):
+        """The version of Briefcase for tracking.
+
+        This version captures the tagged versions of Briefcase as well as whether a
+        version of Briefcase is under development.
+        """
+        return (
+            f"{self.briefcase_version.base_version}"
+            f"{'.dev' if self.briefcase_version.dev is not None else ''}"
+        )
+
+    def tracking_add_briefcase_version(self, app: AppConfig) -> None:
+        """Track the version of Briefcase that created an app bundle."""
+        self.tracking_set(
+            app, key="briefcase-version", value=self._tracking_briefcase_version
+        )
+
+    def tracking_is_briefcase_version_updated(self, app: AppConfig) -> bool:
+        """Has the version of Briefcase changed since the app was created?"""
+        try:
+            tracked_briefcase_version = self.tracking_get(app, key="briefcase-version")
+        except KeyError:
+            return True
+        else:
+            return tracked_briefcase_version != self._tracking_briefcase_version
+
+    @property
+    @lru_cache
+    def _tracking_python_exe_mtime(self) -> float:
+        """The modified datetime for the Python interpreter executable.
+
+        Since virtual environments will often symlink the Python exe to the Python that
+        created the virtual environment, following symlinks is disabled. This allows the
+        modified datetime to proxy the creation datetime of the virtual environment.
+        """
+        return self.tools.os.stat(sys.executable, follow_symlinks=False).st_mtime
+
+    def tracking_add_python_env(self, app: AppConfig) -> None:
+        """Track the Python environment used for the app."""
+        self.tracking_set(
+            app, key="python-exe-mtime", value=self._tracking_python_exe_mtime
+        )
+        self.tracking_set(app, key="python-version", value=self.python_version_tag)
+
+    def tracking_is_python_env_updated(self, app: AppConfig) -> bool:
+        """Has the Python environment changed for the app?"""
+        try:
+            tracked_python_mtime = self.tracking_get(app, key="python-exe-mtime")
+            tracked_python_version = self.tracking_get(app, key="python-version")
+        except KeyError:
+            return True
+        else:
+            return (
+                tracked_python_mtime != self._tracking_python_exe_mtime
+                or tracked_python_version != self.python_version_tag
+            )
+
+    def _tracking_metadata(self, app: AppConfig, field: str) -> object:
+        """Resolve app metadata field to a value.
+
+        This approach coerces app fields that are explicitly set to None to "" since
+        None cannot be stored in TOML. It also always stores a value for a metadata
+        field so there is something to compare against later when evaluating for
+        changes.
+        """
+        if (value := getattr(app, field, None)) is None:
+            value = ""
+        return value
+
+    def tracking_is_metadata_changed(self, app: AppConfig) -> bool:
+        """Has the project's metadata changed for the app?"""
+        try:
+            for field in (
+                self.tracking_metadata_fields + self._tracking_base_metadata_fields
+            ):
+                current_value = self._tracking_metadata(app, field)
+                if self.tracking_get(app, key=field) != current_value:
+                    return True
+        except (KeyError, AttributeError):
+            return True
+
+    def tracking_add_metadata(self, app: AppConfig):
+        """Track the project's metadata."""
+        for field in (
+            self.tracking_metadata_fields + self._tracking_base_metadata_fields
+        ):
+            self.tracking_set(app, key=field, value=self._tracking_metadata(app, field))
+
+    def _tracking_add_instant(self, app: AppConfig, key: str):
+        """Track a time instant for a specified key."""
+        self.tracking_set(app, key=f"{key}-instant", value=time.time())
+
+    def tracking_add_created_instant(self, app: AppConfig) -> None:
+        """Track the instant when an app bundle was created."""
+        self._tracking_add_instant(app, key="created")
+
+    def tracking_is_created(self, app: AppConfig) -> bool:
+        """Has the app bundle been created?"""
+        try:
+            return self.tracking_get(app, key="created") is not None
+        except KeyError:
+            return False
+
+    def tracking_add_built_instant(self, app: AppConfig) -> None:
+        """Track the instant when an app bundle was built."""
+        self._tracking_add_instant(app, key="built")
+
+    def tracking_is_built(self, app: AppConfig) -> bool:
+        """Has the app bundle been built?"""
+        try:
+            return self.tracking_get(app, key="built") is not None
+        except KeyError:
+            return False
+
+    @timeit
+    def tracking_add_requirements(
+        self,
+        app: AppConfig,
+        requires: Iterable[str],
+    ) -> None:
+        """Track the requirements installed for the app."""
+        requires_hash = self._tracking_fs_hash(filter(is_local_requirement, requires))
+        self.tracking_set(app, key="requires-files-hash", value=requires_hash)
+        self.tracking_set(app, key="requires", value=list(requires))
+
+    @timeit
+    def tracking_is_requirements_updated(
+        self,
+        app: AppConfig,
+        requires: Iterable[str],
+    ) -> bool:
+        """Have the app's requirements changed since last run?"""
+        try:
+            tracked_requires = self.tracking_get(app, key="requires")
+        except KeyError:
+            return True
+        else:
+            is_requires_changed = tracked_requires != list(requires)
+
+        try:
+            tracked_requires_hash = self.tracking_get(app, key="requires-files-hash")
+        except KeyError:
+            tracked_requires_hash = ""
+
+        requires_hash = self._tracking_fs_hash(filter(is_local_requirement, requires))
+        is_hash_changed = tracked_requires_hash != requires_hash
+
+        return is_requires_changed or is_hash_changed
+
+    def _tracking_fs_hash(self, filepaths: Iterable[str | os.PathLike]) -> str:
+        """Return a hash representing the current state of the filepaths."""
+        if not (filepaths := list(filepaths)):
+            return ""
+
+        h = hashlib.new("md5", usedforsecurity=False)
+        for filepath in map(os.fsdecode, filepaths):
+            snapshot = DirectorySnapshot(path=filepath, recursive=True)
+            # the paths must be added in the same order each time so the same
+            # hash is produced for the same set of files/dirs
+            for path in sorted(snapshot.paths):
+                h.update(
+                    (
+                        f"{snapshot.inode(path)}"
+                        f"{snapshot.mtime(path)}"
+                        f"{snapshot.size(path)}"
+                    ).encode()
+                )
+        return h.hexdigest()
+
+    @timeit
+    def tracking_add_sources(
+        self,
+        app: AppConfig,
+        sources: Iterable[str | os.PathLike],
+    ) -> None:
+        """Track the sources installed for the app."""
+        self.tracking_set(
+            app, key="sources-files-hash", value=self._tracking_fs_hash(sources)
+        )
+
+    @timeit
+    def tracking_is_source_modified(
+        self,
+        app: AppConfig,
+        sources: Iterable[str | os.PathLike],
+    ) -> bool:
+        """Has the app's source been modified since last run?"""
+        try:
+            tracked_hash = self.tracking_get(app, key="sources-files-hash")
+        except KeyError:
+            return True
+        else:
+            return tracked_hash != self._tracking_fs_hash(sources)
+
+    def _tracking_url_file_hash(self, url: str) -> str:
+        """Generates a hash for a URL if it resolves to a local file path.
+
+        A hash is only calculated if `url` is a filepath. Otherwise, it is assumed the
+        URL is an HTTP resource and an empty string is returned to be tracked.
+        """
+        if url and (file_path := Path(url)).exists():
+            return self._tracking_fs_hash([file_path])
+        else:
+            return ""
+
+    @timeit
+    def tracking_add_support_package(self, app: AppConfig, support_url: str) -> None:
+        """Track the support package installed for the app."""
+        self.tracking_set(app, key="support-package-url", value=support_url)
+        self.tracking_set(
+            app,
+            key="support-package-hash",
+            value=self._tracking_url_file_hash(support_url),
+        )
+
+    @timeit
+    def tracking_is_support_package_updated(
+        self, app: AppConfig, support_url: str
+    ) -> bool:
+        """Has the app's support package changed since last run?"""
+        try:
+            tracked_support_url = self.tracking_get(app, key="support-package-url")
+        except KeyError:
+            return True
+
+        try:
+            tracked_support_package_hash = self.tracking_get(
+                app, key="support-package-hash"
+            )
+        except KeyError:
+            return True
+
+        return (
+            tracked_support_url != support_url
+            or tracked_support_package_hash != self._tracking_url_file_hash(support_url)
+        )
+
+    @timeit
+    def tracking_add_stub_binary(self, app: AppConfig, stub_binary_url: str) -> None:
+        """Track the stub binary installed for the app."""
+        self.tracking_set(app, key="stub-binary-url", value=stub_binary_url)
+        self.tracking_set(
+            app,
+            key="stub-binary-hash",
+            value=self._tracking_url_file_hash(stub_binary_url),
+        )
+
+    @timeit
+    def tracking_is_stub_binary_updated(self, app: AppConfig, stub_url: str) -> bool:
+        """Has the app's stub binary changed since last run?"""
+        try:
+            tracked_stub_url = self.tracking_get(app, key="stub-binary-url")
+        except KeyError:
+            return True
+
+        try:
+            tracked_stub_hash = self.tracking_get(app, key="stub-binary-hash")
+        except KeyError:
+            return True
+
+        return (
+            tracked_stub_url != stub_url
+            or tracked_stub_hash != self._tracking_url_file_hash(stub_url)
+        )
+
+    def tracking_add_resources(
+        self,
+        app: AppConfig,
+        resources: Iterable[str | os.PathLike],
+    ) -> None:
+        """Track the resources installed for the app."""
+        return self.tracking_set(
+            app,
+            key="resources-hash",
+            value=self._tracking_fs_hash(resources),
+        )
+
+    @timeit
+    def tracking_is_resources_updated(
+        self,
+        app: AppConfig,
+        resources: Iterable[str | os.PathLike],
+    ) -> bool:
+        """Has the app's resources changed since last run?"""
+        try:
+            tracked_resources = self.tracking_get(app, key="resources-hash")
+        except KeyError:
+            return True
+        else:
+            return tracked_resources != self._tracking_fs_hash(resources)
+
+
+def _has_url(requirement: str) -> bool:
+    """Determine if the requirement is defined as a URL.
+
+    Detects any of the URL schemes supported by pip
+    (https://pip.pypa.io/en/stable/topics/vcs-support/).
+
+    :param requirement: The requirement to check
+    :returns: True if the requirement is a URL supported by pip.
+    """
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            ["http", "https", "file", "ftp"]
+            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
+            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
+            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
+            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+        )
+    )
+
+
+def is_local_requirement(requirement: str) -> bool:
+    """Determine if the requirement is a local file path.
+
+    :param requirement: The requirement to check
+    :returns: True if the requirement is a local file path
+    """
+    # Windows allows both / and \ as a path separator in requirements.
+    separators = [os.sep]
+    if os.altsep:
+        separators.append(os.altsep)
+
+    return any(sep in requirement for sep in separators) and (not _has_url(requirement))

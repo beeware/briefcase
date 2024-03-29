@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import os
 import platform
@@ -10,6 +11,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import briefcase
+from briefcase.commands.base import is_local_requirement
 from briefcase.config import AppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -207,9 +209,6 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-        # If the app config doesn't explicitly define a template,
-        # use a default template.
-
         # Construct a template context from the app configuration.
         extra_context = {
             key: value
@@ -221,7 +220,7 @@ class CreateCommand(BaseCommand):
         extra_context.pop("template")
         extra_context.pop("template_branch")
 
-        # Augment with some extra fields.
+        # Augment with some extra fields
         extra_context.update(
             {
                 # Ensure the output format is in the case we expect
@@ -245,7 +244,7 @@ class CreateCommand(BaseCommand):
         # Add in any extra template context to support permissions
         extra_context.update(self.permissions_context(app, self._x_permissions(app)))
 
-        # Add in any extra template context required by the output format.
+        # Add in any extra template context required by the output format
         extra_context.update(self.output_format_template_context(app))
 
         # Create the platform directory (if it doesn't already exist)
@@ -259,7 +258,7 @@ class CreateCommand(BaseCommand):
             extra_context=extra_context,
         )
 
-    def _unpack_support_package(self, support_file_path, support_path):
+    def _unpack_support_package(self, support_file_path: Path, support_path: Path):
         """Unpack a support package into a specific location.
 
         :param support_file_path: The path to the support file to be unpacked.
@@ -305,23 +304,49 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+        support_install_path, support_url, custom = self._app_support_package(app)
+
+        if support_install_path is None:
+            self.logger.info("No support package required.")
+            self.tracking_add_support_package(app, support_url="")
+        else:
+            self.logger.info(
+                f"Using{' custom' if custom else ''} support package {support_url}"
+            )
+            support_file_path = self._resolve_support_package_url(support_url, custom)
+            self._unpack_support_package(support_file_path, support_install_path)
+            self.tracking_add_support_package(app, support_url=support_url)
+
+    def _app_support_package(
+        self,
+        app: AppConfig,
+        warn_user: bool = True,
+    ) -> tuple[Path | None, str, bool]:
+        """Derive support package download and install locations.
+
+        Raises MissingSupportPackage if app does not define a support package.
+
+        :param app: The config object for the app
+        :param warn_user: Disable warnings for ignored app support configuration
+        :returns: A tuple of the:
+            [0] ``Path`` where the support package should be installed; will be ``None``
+                if the app does not require a support package
+            [1] string for filesystem path or URL for support package archive
+            [2] ``True``/``False`` for whether the support package is custom and not
+                the Briefcase-provided package
+        """
+        # If the app does not define a filesystem location to install the support
+        # package in to the app, one is not required
         try:
             support_path = self.support_path(app)
         except KeyError:
-            self.logger.info("No support package required.")
-        else:
-            support_file_path = self._download_support_package(app)
-            self._unpack_support_package(support_file_path, support_path)
+            return None, "", False
 
-    def _download_support_package(self, app: AppConfig):
         try:
-            # Work out if the app defines a custom override for
-            # the support package URL.
-            try:
-                support_package_url = app.support_package
-                custom_support_package = True
-                self.logger.info(f"Using custom support package {support_package_url}")
-                try:
+            support_url = app.support_package
+            custom_support = True
+            if warn_user:
+                with contextlib.suppress(AttributeError):
                     # If the app has a custom support package *and* a support revision,
                     # that's an error.
                     app.support_revision
@@ -329,66 +354,76 @@ class CreateCommand(BaseCommand):
                         "App specifies both a support package and a support revision; "
                         "support revision will be ignored."
                     )
-                except AttributeError:
-                    pass
+        except AttributeError:
+            # If the app specifies a support revision, use it;
+            # otherwise, use the support revision named by the template
+            try:
+                support_revision = app.support_revision
             except AttributeError:
-                # If the app specifies a support revision, use it;
-                # otherwise, use the support revision named by the template
+                # No support revision specified; use the template-specified version
                 try:
-                    support_revision = app.support_revision
-                except AttributeError:
-                    # No support revision specified; use the template-specified version
-                    try:
-                        support_revision = self.support_revision(app)
-                    except KeyError:
-                        # No template-specified support revision
-                        raise MissingSupportPackage(
-                            python_version_tag=self.python_version_tag,
-                            platform=self.platform,
-                            host_arch=self.tools.host_arch,
-                            is_32bit=self.tools.is_32bit_python,
-                        )
-
-                support_package_url = self.support_package_url(support_revision)
-                custom_support_package = False
-                self.logger.info(f"Using support package {support_package_url}")
-
-            if support_package_url.startswith(("https://", "http://")):
-                if custom_support_package:
-                    # If the support package is custom, cache it using a hash of
-                    # the download URL. This is needed to differentiate to support
-                    # packages with the same filename, served at different URLs.
-                    # (or a custom package that collides with an official package name)
-                    download_path = (
-                        self.data_path
-                        / "support"
-                        / hashlib.sha256(
-                            support_package_url.encode("utf-8")
-                        ).hexdigest()
+                    support_revision = self.support_revision(app)
+                except KeyError:
+                    # No template-specified support revision
+                    raise MissingSupportPackage(
+                        python_version_tag=self.python_version_tag,
+                        platform=self.platform,
+                        host_arch=self.tools.host_arch,
+                        is_32bit=self.tools.is_32bit_python,
                     )
-                else:
-                    download_path = self.data_path / "support"
 
+            support_url = self.support_package_url(support_revision)
+            custom_support = False
+
+        return support_path, support_url, custom_support
+
+    def _resolve_support_package_url(self, support_url: str, custom: bool) -> Path:
+        """Resolve a filesystem location for the support package.
+
+        The support package for an app can be either a remote HTTP resource or a local
+        filesystem path. If the support package is a remote address, the archive is
+        downloaded and cached in the Briefcase data directory.
+
+        :param support_url: URL or filepath to support package
+        :param custom: ``True`` if user is not using a Briefcase-provided support package
+        :returns: ``Path`` for archive of support package to install in to the app
+        """
+        if support_url.startswith(("https://", "http://")):
+            if custom:
+                # If the support package is custom, cache it using a hash of
+                # the download URL. This is needed to differentiate to support
+                # packages with the same filename, served at different URLs.
+                # (or a custom package that collides with an official package name)
+                download_path = (
+                    self.data_path
+                    / "support"
+                    / hashlib.sha256(support_url.encode("utf-8")).hexdigest()
+                )
+            else:
+                download_path = self.data_path / "support"
+
+            try:
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
                 return self.tools.file.download(
-                    url=support_package_url,
+                    url=support_url,
                     download_path=download_path,
                     role="support package",
                 )
-            else:
-                return Path(support_package_url)
-        except MissingNetworkResourceError as e:
-            # If there is a custom support package, report the missing resource as-is.
-            if custom_support_package:
-                raise
-            else:
-                raise MissingSupportPackage(
-                    python_version_tag=self.python_version_tag,
-                    platform=self.platform,
-                    host_arch=self.tools.host_arch,
-                    is_32bit=self.tools.is_32bit_python,
-                ) from e
+            except MissingNetworkResourceError as e:
+                # If there is a custom support package, report the missing resource as-is.
+                if custom:
+                    raise
+                else:
+                    raise MissingSupportPackage(
+                        python_version_tag=self.python_version_tag,
+                        platform=self.platform,
+                        host_arch=self.tools.host_arch,
+                        is_32bit=self.tools.is_32bit_python,
+                    ) from e
+
+        else:
+            return Path(support_url)
 
     def cleanup_stub_binary(self, app: AppConfig):
         """Clean up an existing application support package.
@@ -404,12 +439,23 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-        unbuilt_executable_path = self.unbuilt_executable_path(app)
-        stub_binary_path = self._download_stub_binary(app)
+        # If the platform uses a stub binary, the template will define a binary
+        # revision. If this template configuration item doesn't exist, no stub
+        # binary is required.
+        try:
+            self.stub_binary_revision(app)
+        except KeyError:
+            return
+
+        self.logger.info("Installing stub binary...", prefix=app.app_name)
+
+        stub_install_path, stub_url, custom_stub = self._stub_binary(app)
+        stub_binary_path = self._resolve_stub_binary_url(stub_url, custom_stub)
 
         with self.input.wait_bar("Installing stub binary..."):
+            self.logger.info(f"Using stub binary {stub_url}")
             # Ensure the folder for the stub binary exists
-            unbuilt_executable_path.parent.mkdir(exist_ok=True, parents=True)
+            stub_install_path.parent.mkdir(exist_ok=True, parents=True)
 
             # Install the stub binary into the unbuilt location.
             # Allow for both raw and compressed artefacts.
@@ -417,29 +463,42 @@ class CreateCommand(BaseCommand):
                 if self.tools.file.is_archive(stub_binary_path):
                     self.tools.file.unpack_archive(
                         stub_binary_path,
-                        extract_dir=unbuilt_executable_path.parent,
+                        extract_dir=stub_install_path.parent,
                     )
                 elif stub_binary_path.is_file():
-                    self.tools.shutil.copyfile(
-                        stub_binary_path, unbuilt_executable_path
-                    )
+                    self.tools.shutil.copyfile(stub_binary_path, stub_install_path)
                 else:
                     raise InvalidStubBinary(stub_binary_path)
             except (shutil.ReadError, EOFError, OSError) as e:
                 raise InvalidStubBinary(stub_binary_path) from e
             else:
                 # Ensure the binary is executable
-                self.tools.os.chmod(unbuilt_executable_path, 0o755)
+                self.tools.os.chmod(stub_install_path, 0o755)
 
-    def _download_stub_binary(self, app: AppConfig) -> Path:
+            self.tracking_add_stub_binary(app, stub_binary_url=stub_url)
+
+    def _stub_binary(
+        self,
+        app: AppConfig,
+        warn_user: bool = True,
+    ) -> tuple[Path, str, bool]:
+        """Derive stub binary download and install locations.
+
+        :param app: The config object for the app
+        :param warn_user: Disable warnings for ignored stub binary configuration
+        :returns: A tuple of the:
+            [0] ``Path`` where the stub binary should be installed
+            [1] string for filesystem path or URL for stub binary archive/file
+            [2] ``True``/``False`` for whether the stub binary is custom and not
+                the Briefcase-provided package
+        """
+        stub_install_path = self.unbuilt_executable_path(app)
+
         try:
-            # Work out if the app defines a custom override for
-            # the support package URL.
-            try:
-                stub_binary_url = app.stub_binary
-                custom_stub_binary = True
-                self.logger.info(f"Using custom stub binary {stub_binary_url}")
-                try:
+            stub_url: str = app.stub_binary
+            custom_stub = True
+            if warn_user:
+                with contextlib.suppress(AttributeError):
                     # If the app has a custom stub binary *and* a support revision,
                     # that's an error.
                     app.stub_binary_revision
@@ -447,37 +506,36 @@ class CreateCommand(BaseCommand):
                         "App specifies both a stub binary and a stub binary revision; "
                         "stub binary revision will be ignored."
                     )
-                except AttributeError:
-                    pass
+        except AttributeError:
+            # If the app specifies a support revision, use it; otherwise, use the
+            # support revision named by the template. This value *must* exist, as
+            # stub binary handling won't be triggered at all unless it is present.
+            try:
+                stub_binary_revision = app.stub_binary_revision
             except AttributeError:
-                # If the app specifies a support revision, use it; otherwise, use the
-                # support revision named by the template. This value *must* exist, as
-                # stub binary handling won't be triggered at all unless it is present.
-                try:
-                    stub_binary_revision = app.stub_binary_revision
-                except AttributeError:
-                    stub_binary_revision = self.stub_binary_revision(app)
+                stub_binary_revision = self.stub_binary_revision(app)
 
-                stub_binary_url = self.stub_binary_url(
-                    stub_binary_revision, app.console_app
+            stub_url = self.stub_binary_url(stub_binary_revision, app.console_app)
+            custom_stub = False
+
+        return stub_install_path, stub_url, custom_stub
+
+    def _resolve_stub_binary_url(self, stub_binary_url: str, custom_stub_binary: bool):
+        if stub_binary_url.startswith(("https://", "http://")):
+            if custom_stub_binary:
+                # If the support package is custom, cache it using a hash of
+                # the download URL. This is needed to differentiate to support
+                # packages with the same filename, served at different URLs.
+                # (or a custom package that collides with an official package name)
+                download_path = (
+                    self.data_path
+                    / "stub"
+                    / hashlib.sha256(stub_binary_url.encode("utf-8")).hexdigest()
                 )
-                custom_stub_binary = False
-                self.logger.info(f"Using stub binary {stub_binary_url}")
+            else:
+                download_path = self.data_path / "stub"
 
-            if stub_binary_url.startswith(("https://", "http://")):
-                if custom_stub_binary:
-                    # If the support package is custom, cache it using a hash of
-                    # the download URL. This is needed to differentiate to support
-                    # packages with the same filename, served at different URLs.
-                    # (or a custom package that collides with an official package name)
-                    download_path = (
-                        self.data_path
-                        / "stub"
-                        / hashlib.sha256(stub_binary_url.encode("utf-8")).hexdigest()
-                    )
-                else:
-                    download_path = self.data_path / "stub"
-
+            try:
                 # Download the stub binary, caching the result
                 # in the user's briefcase stub cache directory.
                 return self.tools.file.download(
@@ -485,19 +543,19 @@ class CreateCommand(BaseCommand):
                     download_path=download_path,
                     role="stub binary",
                 )
-            else:
-                return Path(stub_binary_url)
-        except MissingNetworkResourceError as e:
-            # If there is a custom support package, report the missing resource as-is.
-            if custom_stub_binary:
-                raise
-            else:
-                raise MissingStubBinary(
-                    python_version_tag=self.python_version_tag,
-                    platform=self.platform,
-                    host_arch=self.tools.host_arch,
-                    is_32bit=self.tools.is_32bit_python,
-                ) from e
+            except MissingNetworkResourceError as e:
+                # If there is a custom support package, report the missing resource as-is.
+                if custom_stub_binary:
+                    raise
+                else:
+                    raise MissingStubBinary(
+                        python_version_tag=self.python_version_tag,
+                        platform=self.platform,
+                        host_arch=self.tools.host_arch,
+                        is_32bit=self.tools.is_32bit_python,
+                    ) from e
+        else:
+            return Path(stub_binary_url)
 
     def _write_requirements_file(
         self,
@@ -512,7 +570,6 @@ class CreateCommand(BaseCommand):
         :param requirements_path: The full path to a requirements.txt file that will be
             written.
         """
-
         with self.input.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
                 if requires:
@@ -523,7 +580,7 @@ class CreateCommand(BaseCommand):
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file
                         # to a different place before using it.
-                        if _is_local_requirement(requirement):
+                        if is_local_requirement(requirement):
                             # We use os.path.abspath() rather than Path.resolve()
                             # because we *don't* want Path's symlink resolving behavior.
                             requirement = os.path.abspath(self.base_path / requirement)
@@ -608,7 +665,7 @@ class CreateCommand(BaseCommand):
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
-        :param progress_message: The waitbar progress message to display to the user.
+        :param progress_message: The Wait Bar progress message to display to the user.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
         """
@@ -646,22 +703,33 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         :param test_mode: Should the test requirements be installed?
         """
-        requires = app.requires.copy() if app.requires else []
-        if test_mode and app.test_requires:
-            requires.extend(app.test_requires)
+        requires = app.requires(test_mode=test_mode)
 
+        requirements_path = app_packages_path = None
         try:
             requirements_path = self.app_requirements_path(app)
-            self._write_requirements_file(app, requires, requirements_path)
         except KeyError:
             try:
                 app_packages_path = self.app_packages_path(app)
-                self._install_app_requirements(app, requires, app_packages_path)
             except KeyError as e:
                 raise BriefcaseCommandError(
                     "Application path index file does not define "
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
+
+        if requirements_path:
+            self._write_requirements_file(app, requires, requirements_path)
+        else:
+            try:
+                self._install_app_requirements(app, requires, app_packages_path)
+            except BaseException:
+                # Installing the app's requirements will delete any currently installed
+                # requirements; so, if anything goes wrong, clear the tracking info to
+                # ensure the requirements are installed on the next run.
+                self.tracking_add_requirements(app, requires=[])
+                raise
+            else:
+                self.tracking_add_requirements(app, requires=requires)
 
     def install_app_code(self, app: AppConfig, test_mode: bool):
         """Install the application code into the bundle.
@@ -675,9 +743,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.sources(test_mode=test_mode)
 
         # Install app code.
         if sources:
@@ -696,14 +762,83 @@ class CreateCommand(BaseCommand):
         else:
             self.logger.info(f"No sources defined for {app.app_name}.")
 
-        # Write the dist-info folder for the application.
-        write_dist_info(
-            app=app,
-            dist_info_path=self.app_path(app)
-            / f"{app.module_name}-{app.version}.dist-info",
-        )
+        self.tracking_add_sources(app, sources=sources)
 
-    def install_image(self, role, variant, size, source, target):
+        # Write the dist-info folder for the application
+        write_dist_info(app=app, dist_info_path=self.dist_info_path(app))
+
+    def install_app_resources(self, app: AppConfig):
+        """Install the application resources (such as icons and splash screens) into the
+        bundle.
+
+        :param app: The config object for the app
+        """
+        resources = self._resolve_app_resources(app, do_install=True)
+        self.tracking_add_resources(app, resources=resources.values())
+
+    def _resolve_app_resources(
+        self,
+        app: AppConfig,
+        do_install: bool = True,
+    ) -> dict[str, Path]:
+        """Resolve app resource files to their targets."""
+        resource_map = {}
+
+        for variant_or_size, targets in self.icon_targets(app).items():
+            try:
+                # Treat the targets as a dictionary of sizes;
+                # if there's no `items`, then it's an icon without variants.
+                for size, target in targets.items():
+                    resource_map.update(
+                        self._resolve_image(
+                            "application icon",
+                            source=app.icon,
+                            variant=variant_or_size,
+                            size=size,
+                            target=self.bundle_path(app) / target,
+                            do_install=do_install,
+                        )
+                    )
+            except AttributeError:
+                # Either a single variant, or a single size.
+                resource_map.update(
+                    self._resolve_image(
+                        "application icon",
+                        source=app.icon,
+                        variant=None,
+                        size=variant_or_size,
+                        target=self.bundle_path(app) / targets,
+                        do_install=do_install,
+                    )
+                )
+
+        # Briefcase v0.3.18 - splash screens deprecated.
+        if getattr(app, "splash", None) and do_install:
+            self.logger.warning()
+            self.logger.warning(
+                "Splash screens are now configured based on the icon. "
+                "The splash configuration will be ignored."
+            )
+
+        for extension, doctype in self.document_type_icon_targets(app).items():
+            self.logger.info()
+            for size, target in doctype.items():
+                resource_map.update(
+                    self._resolve_image(
+                        f"icon for .{extension} documents",
+                        size=size,
+                        source=app.document_types[extension]["icon"],
+                        variant=None,
+                        target=self.bundle_path(app) / target,
+                        do_install=do_install,
+                    )
+                )
+
+        return resource_map
+
+    def _resolve_image(
+        self, role, variant, size, source, target, do_install=True
+    ) -> dict[str, Path]:
         """Install an icon/image of the requested size at a target location, using the
         source images defined by the app config.
 
@@ -717,7 +852,10 @@ class CreateCommand(BaseCommand):
             modifier; these will be added based on the requested target and
             variant.
         :param target: The full path where the image should be installed.
+        :param do_install: Copy image in to the app bundle
         """
+        image = {}
+
         if source is not None:
             if size is None:
                 if variant is None:
@@ -730,10 +868,10 @@ class CreateCommand(BaseCommand):
                     except TypeError:
                         source_filename = f"{source}-{variant}{target.suffix}"
                     except KeyError:
-                        self.logger.info(
-                            f"Unknown variant {variant!r} for {role}; using default"
-                        )
-                        return
+                        if do_install:
+                            self.logger.info(
+                                f"Unknown variant {variant!r} for {role}; using default"
+                            )
             else:
                 if variant is None:
                     # An annoying edge case is the case of an unsized variant.
@@ -756,71 +894,28 @@ class CreateCommand(BaseCommand):
                     except TypeError:
                         source_filename = f"{source}-{variant}-{size}{target.suffix}"
                     except KeyError:
-                        self.logger.info(
-                            f"Unknown variant {variant!r} for {size}px {role}; using default"
-                        )
-                        return
+                        if do_install:
+                            self.logger.info(
+                                f"Unknown variant {variant!r} for {size}px {role}; using default"
+                            )
 
-            full_source = self.base_path / source_filename
-            if full_source.exists():
-                with self.input.wait_bar(
-                    f"Installing {source_filename} as {full_role}..."
-                ):
-                    # Make sure the target directory exists
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    # Copy the source image to the target location
-                    self.tools.shutil.copy(full_source, target)
+            if (full_source := self.base_path / source_filename).exists():
+                if do_install:
+                    with self.input.wait_bar(
+                        f"Installing {source_filename} as {full_role}..."
+                    ):
+                        # Make sure the target directory exists
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        # Copy the source image to the target location
+                        self.tools.shutil.copy(full_source, target)
+                image[full_role] = full_source
             else:
-                self.logger.info(
-                    f"Unable to find {source_filename} for {full_role}; using default"
-                )
-
-    def install_app_resources(self, app: AppConfig):
-        """Install the application resources (such as icons and splash screens) into the
-        bundle.
-
-        :param app: The config object for the app
-        """
-        for variant_or_size, targets in self.icon_targets(app).items():
-            try:
-                # Treat the targets as a dictionary of sizes;
-                # if there's no `items`, then it's an icon without variants.
-                for size, target in targets.items():
-                    self.install_image(
-                        "application icon",
-                        source=app.icon,
-                        variant=variant_or_size,
-                        size=size,
-                        target=self.bundle_path(app) / target,
+                if do_install:
+                    self.logger.info(
+                        f"Unable to find {source_filename} for {full_role}; using default"
                     )
-            except AttributeError:
-                # Either a single variant, or a single size.
-                self.install_image(
-                    "application icon",
-                    source=app.icon,
-                    variant=None,
-                    size=variant_or_size,
-                    target=self.bundle_path(app) / targets,
-                )
 
-        # Briefcase v0.3.18 - splash screens deprecated.
-        if getattr(app, "splash", None):
-            self.logger.warning()
-            self.logger.warning(
-                "Splash screens are now configured based on the icon. "
-                "The splash configuration will be ignored."
-            )
-
-        for extension, doctype in self.document_type_icon_targets(app).items():
-            self.logger.info()
-            for size, target in doctype.items():
-                self.install_image(
-                    f"icon for .{extension} documents",
-                    size=size,
-                    source=app.document_types[extension]["icon"],
-                    variant=None,
-                    target=self.bundle_path(app) / target,
-                )
+        return image
 
     def cleanup_app_content(self, app: AppConfig):
         """Remove any content not needed by the final app bundle.
@@ -858,26 +953,42 @@ class CreateCommand(BaseCommand):
                         self.logger.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
+    def update_tracking(self, app: AppConfig):
+        """Updates the tracking database when an app is successfully created."""
+        self.tracking_add_created_instant(app)
+        self.tracking_add_briefcase_version(app)
+        self.tracking_add_python_env(app)
+        self.tracking_add_metadata(app)
+
+    def create_app(
+        self,
+        app: AppConfig,
+        test_mode: bool = False,
+        force: bool = False,
+        **options,
+    ):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
+        :param force: Should the app be created if it already exists? (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
 
         bundle_path = self.bundle_path(app)
+
         if bundle_path.exists():
-            self.logger.info()
-            confirm = self.input.boolean_input(
-                f"Application {app.app_name!r} already exists; overwrite", default=False
-            )
-            if not confirm:
-                self.logger.error(
-                    f"Aborting creation of app {app.app_name!r}; existing application will not be overwritten."
-                )
-                return
+            if not force:
+                self.logger.info()
+                if not self.input.boolean_input(
+                    f"Application {app.app_name!r} already exists; overwrite",
+                    default=False,
+                ):
+                    raise BriefcaseCommandError(
+                        f"Aborting re-creation of app {app.app_name!r}",
+                        skip_logfile=True,
+                    )
             self.logger.info("Removing old application bundle...", prefix=app.app_name)
             self.tools.shutil.rmtree(bundle_path)
 
@@ -887,16 +998,7 @@ class CreateCommand(BaseCommand):
         self.logger.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
 
-        try:
-            # If the platform uses a stub binary, the template will define a binary
-            # revision. If this template configuration item doesn't exist, no stub
-            # binary is required.
-            self.stub_binary_revision(app)
-        except KeyError:
-            pass
-        else:
-            self.logger.info("Installing stub binary...", prefix=app.app_name)
-            self.install_stub_binary(app=app)
+        self.install_stub_binary(app=app)
 
         # Verify the app after the app template and support package
         # are in place since the app tools may be dependent on them.
@@ -913,6 +1015,8 @@ class CreateCommand(BaseCommand):
 
         self.logger.info("Removing unneeded app content...", prefix=app.app_name)
         self.cleanup_app_content(app=app)
+
+        self.update_tracking(app=app)
 
         self.logger.info(
             f"Created {bundle_path.relative_to(self.base_path)}",
@@ -937,8 +1041,7 @@ class CreateCommand(BaseCommand):
         app: AppConfig | None = None,
         **options,
     ) -> dict | None:
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
+        # Finish preparing the AppConfigs and run final checks required to for command
         self.finalize(app)
 
         if app:
@@ -949,38 +1052,3 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_options(state, options))
 
         return state
-
-
-def _has_url(requirement):
-    """Determine if the requirement is defined as a URL.
-
-    Detects any of the URL schemes supported by pip
-    (https://pip.pypa.io/en/stable/topics/vcs-support/).
-
-    :param requirement: The requirement to check
-    :returns: True if the requirement is a URL supported by pip.
-    """
-    return any(
-        f"{scheme}:" in requirement
-        for scheme in (
-            ["http", "https", "file", "ftp"]
-            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
-            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
-            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
-            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
-        )
-    )
-
-
-def _is_local_requirement(requirement):
-    """Determine if the requirement is a local file path.
-
-    :param requirement: The requirement to check
-    :returns: True if the requirement is a local file path
-    """
-    # Windows allows both / and \ as a path separator in requirements.
-    separators = [os.sep]
-    if os.altsep:
-        separators.append(os.altsep)
-
-    return any(sep in requirement for sep in separators) and (not _has_url(requirement))

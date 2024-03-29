@@ -50,7 +50,7 @@ def test_no_code(
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.os = mock.MagicMock(spec_set=os)
 
-    myapp.sources = None
+    myapp._sources = None
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -76,7 +76,7 @@ def test_empty_code(
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.os = mock.MagicMock(spec_set=os)
 
-    myapp.sources = []
+    myapp._sources = []
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -98,7 +98,7 @@ def test_source_missing(
 ):
     """If an app defines sources that are missing, an error is raised."""
     # Set the app definition to point at sources that don't exist
-    myapp.sources = ["missing"]
+    myapp._sources = ["missing"]
 
     with pytest.raises(MissingAppSources):
         create_command.install_app_code(myapp, test_mode=False)
@@ -138,7 +138,7 @@ def test_source_dir(
     )
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/first", "src/second"]
+    myapp._sources = ["src/first", "src/second"]
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -156,7 +156,7 @@ def test_source_dir(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["src/first", "src/second"]
+    assert myapp._sources == ["src/first", "src/second"]
     assert myapp.test_sources is None
 
 
@@ -182,7 +182,7 @@ def test_source_file(
     )
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/demo.py", "other.py"]
+    myapp._sources = ["src/demo.py", "other.py"]
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -194,7 +194,7 @@ def test_source_file(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["src/demo.py", "other.py"]
+    assert myapp._sources == ["src/demo.py", "other.py"]
     assert myapp.test_sources is None
 
 
@@ -231,7 +231,7 @@ def test_no_existing_app_folder(
     shutil.rmtree(app_path)
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/first/demo.py", "src/second"]
+    myapp._sources = ["src/first/demo.py", "src/second"]
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -260,7 +260,7 @@ def test_no_existing_app_folder(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["src/first/demo.py", "src/second"]
+    assert myapp._sources == ["src/first/demo.py", "src/second"]
     assert myapp.test_sources is None
 
 
@@ -334,7 +334,7 @@ def test_replace_sources(
     old_dist_info_dir.mkdir()
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/first/demo.py", "src/second"]
+    myapp._sources = ["src/first/demo.py", "src/second"]
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -363,7 +363,7 @@ def test_replace_sources(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["src/first/demo.py", "src/second"]
+    assert myapp._sources == ["src/first/demo.py", "src/second"]
     assert myapp.test_sources is None
 
 
@@ -385,7 +385,7 @@ def test_non_latin_metadata(
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
     create_command.tools.os = mock.MagicMock(spec_set=os)
 
-    myapp.sources = []
+    myapp._sources = []
 
     create_command.install_app_code(myapp, test_mode=False)
 
@@ -471,7 +471,7 @@ def test_test_sources(
     )
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/first", "src/second"]
+    myapp._sources = ["src/first", "src/second"]
     myapp.test_sources = ["tests", "othertests"]
 
     create_command.install_app_code(myapp, test_mode=False)
@@ -491,7 +491,7 @@ def test_test_sources(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["src/first", "src/second"]
+    assert myapp._sources == ["src/first", "src/second"]
     assert myapp.test_sources == ["tests", "othertests"]
 
 
@@ -543,7 +543,7 @@ def test_test_sources_test_mode(
     )
 
     # Set the app definition, and install sources
-    myapp.sources = ["src/first", "src/second"]
+    myapp._sources = ["src/first", "src/second"]
     myapp.test_sources = ["tests", "othertests"]
 
     create_command.install_app_code(myapp, test_mode=True)
@@ -566,7 +566,7 @@ def test_test_sources_test_mode(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["src/first", "src/second"]
+    assert myapp._sources == ["src/first", "src/second"]
     assert myapp.test_sources == ["tests", "othertests"]
 
 
@@ -614,7 +614,7 @@ def test_only_test_sources_test_mode(
     )
 
     # Set the app definition, and install sources
-    myapp.sources = None
+    myapp._sources = None
     myapp.test_sources = ["tests", "othertests"]
 
     create_command.install_app_code(myapp, test_mode=True)
@@ -634,5 +634,5 @@ def test_only_test_sources_test_mode(
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources is None
+    assert myapp._sources is None
     assert myapp.test_sources == ["tests", "othertests"]

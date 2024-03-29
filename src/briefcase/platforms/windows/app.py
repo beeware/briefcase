@@ -18,6 +18,11 @@ from briefcase.platforms.windows import (
 class WindowsAppMixin(WindowsMixin):
     output_format = "app"
     packaging_root = Path("src")
+    tracking_metadata_fields: list[str] = [
+        "guid",
+        "install_scope",
+        "use_full_install_path",
+    ]
 
     def project_path(self, app):
         return self.bundle_path(app)
