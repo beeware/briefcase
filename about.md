@@ -22,7 +22,15 @@ pip install git+https://gitlab.com/GeoPyTool/briefcase.git
 
 ### Clone and Install
 
+
+
+Please notice that the path can be really long, so you may need to set `core.longpaths` to `true` in your git config. But you may still encounter some problems like `No such file or directory` errors on some templates.
+
+To sole this, just go to a directory with a short path, and then clone the repository.
+For example:
+
 ```Bash
+cd D:/
 git clone https://github.com/cycleuser/briefcase.git
 cd briefcase
 pip install .
