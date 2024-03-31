@@ -1,5 +1,3 @@
-[![image](https://beeware.org/project/projects/tools/briefcase/briefcase.png){width="72px"}](https://beeware.org/briefcase)
-
 # Briefcase with Offline Template embedded 
 
 This is a fork of the original briefcase project with several embedded templates.
