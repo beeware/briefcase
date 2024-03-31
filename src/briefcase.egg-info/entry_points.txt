@@ -1,0 +1,38 @@
+[briefcase.bootstraps]
+PursuedPyBear = briefcase.bootstraps.pursuedpybear:PursuedPyBearGuiBootstrap
+PySide6 = briefcase.bootstraps.pyside6:PySide6GuiBootstrap
+Pygame = briefcase.bootstraps.pygame:PygameGuiBootstrap
+Toga = briefcase.bootstraps.toga:TogaGuiBootstrap
+
+[briefcase.formats.android]
+gradle = briefcase.platforms.android.gradle
+
+[briefcase.formats.iOS]
+xcode = briefcase.platforms.iOS.xcode
+
+[briefcase.formats.linux]
+appimage = briefcase.platforms.linux.appimage
+flatpak = briefcase.platforms.linux.flatpak
+system = briefcase.platforms.linux.system
+
+[briefcase.formats.macOS]
+app = briefcase.platforms.macOS.app
+xcode = briefcase.platforms.macOS.xcode
+
+[briefcase.formats.web]
+static = briefcase.platforms.web.static
+
+[briefcase.formats.windows]
+app = briefcase.platforms.windows.app
+visualstudio = briefcase.platforms.windows.visualstudio
+
+[briefcase.platforms]
+android = briefcase.platforms.android
+iOS = briefcase.platforms.iOS
+linux = briefcase.platforms.linux
+macOS = briefcase.platforms.macOS
+web = briefcase.platforms.web
+windows = briefcase.platforms.windows
+
+[console_scripts]
+briefcase = briefcase.__main__:main
