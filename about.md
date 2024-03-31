@@ -4,6 +4,7 @@ This is a fork of the original briefcase project with several embedded templates
 
 ```Bash
 pip install git+https://github.com/cycleuser/briefcase.git
+pip install git+https://gitlab.com/GeoPyTool/briefcase.git
 ```
 
 Then use an `--offline` flag to use the embedded templates.
