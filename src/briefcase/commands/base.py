@@ -134,15 +134,14 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
 
 
 class BaseCommand(ABC):
-    cmd_line = "briefcase {command} {platform} {output_format} {offline}"
+    cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
     # defined by platform-specific subclasses
     command: str
     description: str
     platform: str
-    output_format: str    
-    offline: bool = False
+    output_format: str
     # supports passing extra command line arguments to subprocess
     allows_passthrough = False
     # if specified for a platform, then any template for that platform must declare
@@ -667,7 +666,6 @@ any compatibility problems, and then add the compatibility declaration.
             prog=self.cmd_line.format(
                 command=self.command,
                 platform=self.platform,
-                offline = self.offline,
                 output_format=self.output_format,
             ),
             description=(
@@ -688,7 +686,7 @@ any compatibility problems, and then add the compatibility declaration.
                 dest="passthrough",
                 metavar="ARGS ...",
                 required=False,
-                help="Arguments to pass to the app"
+                help="Arguments to pass to the app",
             )
             args, passthrough = split_passthrough(extra)
         else:
@@ -755,8 +753,7 @@ any compatibility problems, and then add the compatibility declaration.
             action="store_true",
             dest="save_log",
             help="Save a detailed log to file. By default, this log file is only created for critical errors",
-        )    
-
+        )
 
     def _add_update_options(
         self,

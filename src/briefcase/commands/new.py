@@ -113,10 +113,9 @@ def parse_project_overrides(project_overrides: list[str]) -> dict[str, str]:
 
 
 class NewCommand(BaseCommand):
-    cmd_line = "briefcase new {offline}"
+    cmd_line = "briefcase new"
     command = "new"
     platform = "all"
-    offline = False
     output_format = None
     description = "Create a new Briefcase project."
 
@@ -153,13 +152,6 @@ class NewCommand(BaseCommand):
             action="append",
             metavar="KEY=VALUE",
             help="Override the value of the project configuration item KEY with VALUE",
-        )
-        parser.add_argument(
-            '--offline',
-            dest='offline',
-            action='store_true',
-            default=False,
-            help='Use offline mode.'
         )
 
     def make_app_name(self, formal_name):
@@ -633,7 +625,6 @@ class NewCommand(BaseCommand):
         self,
         template: str | None = None,
         template_branch: str | None = None,
-        offline: bool = False,  # 添加这一行
         project_overrides: dict[str, str] | None = None,
         **options,
     ):
@@ -643,20 +634,7 @@ class NewCommand(BaseCommand):
         self.input.prompt("Let's build a new Briefcase app!")
 
         if template is None:
-            pass
-            import os
-            current_file_directory = os.path.dirname(os.path.abspath(__file__))
-            print(template)
-
-            if offline == True:
-                # if offline is True, then use the local template
-                template = os.path.join(current_file_directory, "templates", "briefcase-template")
-
-            else:
-                # if offline is False, then use the online template
-                template = "https://github.com/beeware/briefcase-template"
-
-        self.logger.info(f"offline is {offline}")
+            template = "https://github.com/beeware/briefcase-template"
 
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
@@ -744,21 +722,15 @@ To run your application, type:
         template: str | None = None,
         template_branch: str | None = None,
         project_overrides: list[str] = None,
-        offline: bool = False,  # 添加这一行
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.
         # There are no apps, so finalize() will be a no op on app configurations.
         self.finalize()
-        # 在这里，你可以根据offline的值来改变你的函数的行为
-        if offline:
-            print("Running in offline mode.")
-        else:
-            print("Running in online mode.")
+
         return self.new_app(
             template=template,
             template_branch=template_branch,
-            offline = offline,  # 添加这一行
             project_overrides=parse_project_overrides(project_overrides),
             **options,
         )
