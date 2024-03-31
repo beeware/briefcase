@@ -1,0 +1,18 @@
+{
+    "format": "appimage",
+    "formal_name": "App Name",
+    "app_name": "{{ cookiecutter.formal_name|lower|replace(' ', '-') }}",
+    "module_name": "{{ cookiecutter.app_name|replace('-', '_') }}",
+    "bundle": "com.example",
+    "bundle_identifier": "{{ cookiecutter.bundle }}.{{ cookiecutter.app_name|replace('_', '-') }}",
+    "url": "https://example.com",
+    "description": "Short description of app",
+    "python_version": "3.X.0",
+    "manylinux_image": "",
+    "vendor_base": "debian",
+    "use_non_root_user": true,
+    "dockerfile_extra_content": "",
+    "_extensions": [
+        "briefcase.integrations.cookiecutter.PythonVersionExtension"
+    ]
+}

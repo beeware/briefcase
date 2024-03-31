@@ -1,0 +1,23 @@
+.\" Process this file with
+.\" groff -man -Tascii {{ cookiecutter.app_name }}.1
+.\"
+.TH "{{ cookiecutter.app_name }}" "1" "{% now 'local', '%b %Y' %}" "{{ cookiecutter.formal_name }} {{ cookiecutter.version }}" "{{ cookiecutter.formal_name }} Manual"
+
+.SH NAME
+.PP
+{{ cookiecutter.app_name }} - {{ cookiecutter.description.split("\n")[0] }}
+
+.SH SYNOPSIS
+.PP
+\fB\fC{{ cookiecutter.app_name }}\fR
+
+.SH DESCRIPTION
+.PP
+{{ cookiecutter.long_description }}
+
+.SH COPYRIGHT
+.PP
+Copyright {% now 'local', '%Y' %} {{ cookiecutter.author }}
+
+.fi
+.RE

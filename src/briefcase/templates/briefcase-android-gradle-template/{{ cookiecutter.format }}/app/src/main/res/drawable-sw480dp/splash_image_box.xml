@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:gravity="center"
+        android:width="480dp"
+        android:height="480dp"
+        android:drawable="@drawable/launch"/>
+</layer-list>

@@ -647,11 +647,14 @@ class NewCommand(BaseCommand):
             import os
             current_file_directory = os.path.dirname(os.path.abspath(__file__))
             print(template)
+            import os
+            current_file_directory = os.path.dirname(os.path.abspath(__file__))
+            parent_directory = os.path.dirname(current_file_directory)
+            print(parent_directory)
 
             if offline == True:
                 # if offline is True, then use the local template
-                template = os.path.join(current_file_directory, "templates", "briefcase-template")
-
+                template = os.path.join(parent_directory, "templates", "briefcase-template")
             else:
                 # if offline is False, then use the online template
                 template = "https://github.com/beeware/briefcase-template"

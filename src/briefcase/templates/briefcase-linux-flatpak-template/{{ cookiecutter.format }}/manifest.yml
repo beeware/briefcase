@@ -1,0 +1,93 @@
+app-id: {{ cookiecutter.bundle_identifier }}
+default-branch: {{ cookiecutter.version }}
+runtime: {{ cookiecutter.flatpak_runtime }}
+runtime-version: '{{ cookiecutter.flatpak_runtime_version }}'
+sdk: {{ cookiecutter.flatpak_sdk }}
+command: {{ cookiecutter.app_name }}
+cleanup:
+  - /include
+  - /share/man
+finish-args:
+{%- if cookiecutter.finish_args -%}
+  {%- for arg, enabled in cookiecutter.finish_args.items() -%}
+    {%- if enabled %}
+  - --{{ arg }}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif %}
+modules:
+  - name: cpython
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/bin
+      - cp --archive support/python/bin/* /app/bin
+      - mkdir -p /app/include
+      - cp --archive support/python/include/* /app/include
+      - mkdir -p /app/lib
+      - cp --archive support/python/lib/* /app/lib
+      # Update installation prefix for pip package builds
+      - sed --follow-symlinks -i 's/prefix="\/install"/prefix="\/app"/g' /app/bin/python3-config
+      - sed --follow-symlinks -i 's/prefix=\/install/prefix=\/app/g' /app/lib/pkgconfig/python3.pc /app/lib/pkgconfig/python3-embed.pc
+    sources:
+      - type: dir
+        path: support/python
+        dest: support/python
+    cleanup:
+      - /bin/2to3*
+      - /bin/idle*
+      - /lib/python*/config-*
+  - name: bootstrap
+    no-autogen: true
+    sources:
+      - type: dir
+        path: src/bootstrap/
+  - name: resources
+    buildsystem: simple
+    build-commands:
+      - install -D {{ cookiecutter.bundle_identifier }}.desktop /app/share/applications/{{ cookiecutter.bundle_identifier }}.desktop
+      - cp --archive icons /app/share/icons
+    sources:
+      - type: file
+        path: {{ cookiecutter.bundle_identifier }}.desktop
+      - type: dir
+        path: icons/
+        dest: icons/
+  - name: upgrade_pip
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network  # For downloaded requirements.
+    build-commands:
+      - /app/bin/python3 -m pip install --upgrade pip
+{{ cookiecutter.modules_extra_content }}
+  - name: app_packages
+    buildsystem: simple
+    build-options:
+      strip: false
+      no-debuginfo: true
+      build-args:
+        - --filesystem=host  # For local requirements.
+        - --share=network  # For downloaded requirements.
+    build-commands:
+      - mkdir -p /app/briefcase/app_packages
+      # Python-standalone is configured using clang; but clang isn't in
+      # the Flatpak build environment. However, clang and gcc are (mostly)
+      # command line compatible, and the output objects are compatible,
+      # so we can override the CC build environment variable to force the
+      # use of gcc.
+      - CC="gcc -pthread" /app/bin/python3 -m pip install --no-cache-dir -r requirements.txt --target /app/briefcase/app_packages
+    sources:
+      - type: file
+        path: requirements.txt
+  - name: app
+    buildsystem: simple
+    build-options:
+      strip: false
+      no-debuginfo: true
+    build-commands:
+      - mkdir -p /app/briefcase
+      - cp --archive src/app/ /app/briefcase/app
+    sources:
+      - type: dir
+        path: src/app/
+        dest: src/app/

@@ -1,0 +1,3 @@
+<resources>
+    <string name="main_module">{{ cookiecutter.module_name }}</string>
+</resources>

@@ -1,0 +1,30 @@
+# Generated using Python {{ cookiecutter.python_version }}
+[paths]
+app_path = "{{ cookiecutter.formal_name }}.AppDir/usr/app"
+app_packages_path = "{{ cookiecutter.formal_name }}.AppDir/usr/app_packages"
+support_path = "{{ cookiecutter.formal_name }}.AppDir/usr"
+{{ {
+    "3.8": 'support_revision = "3.8.18+20240224"',
+    "3.9": 'support_revision = "3.9.18+20240224"',
+    "3.10": 'support_revision = "3.10.13+20240224"',
+    "3.11": 'support_revision = "3.11.8+20240224"',
+    "3.12": 'support_revision = "3.12.2+20240224"',
+}.get(cookiecutter.python_version|py_tag, "") }}
+# Remove the pieces of the standalone package that we don't need.
+cleanup_paths = [
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/bin/2to3*",
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/bin/idle3*",
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/bin/pydoc*",
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/lib/itcl*",
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/lib/tcl8*",
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/lib/Tix8*",
+    "{{ cookiecutter.formal_name }}.AppDir/usr/python/lib/tk8*",
+]
+
+icon.16 = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/16x16/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.32 = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/32x32/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.64 = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/64x64/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.128 = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/128x128/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.256 = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/256x256/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.512 = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/512x512/apps/{{ cookiecutter.bundle_identifier }}.png"
+# icon.scalable = "{{ cookiecutter.formal_name }}.AppDir/usr/share/icons/hicolor/scalable/apps/{{ cookiecutter.bundle_identifier }}.png"

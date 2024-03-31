@@ -1,0 +1,12 @@
+# Generated using Briefcase {{ cookiecutter.briefcase_version }} for {{ cookiecutter.docker_base_image }}, Python {{ cookiecutter.python_version|py_tag }}
+[paths]
+app_path = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/{{ cookiecutter.lib_dir }}/{{ cookiecutter.app_name }}/app"
+app_packages_path = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/{{ cookiecutter.lib_dir }}/{{ cookiecutter.app_name }}/app_packages"
+
+icon.16 = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/16x16/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.32 = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/32x32/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.64 = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/64x64/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.128 = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/128x128/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.256 = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/256x256/apps/{{ cookiecutter.bundle_identifier }}.png"
+icon.512 = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/512x512/apps/{{ cookiecutter.bundle_identifier }}.png"
+# icon.scalable = "{{ cookiecutter.app_name }}-{{ cookiecutter.version }}/usr/share/icons/hicolor/scalable/apps/{{ cookiecutter.bundle_identifier }}.png"

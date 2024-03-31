@@ -1,0 +1,9 @@
+[tool.briefcase]
+project_name = "Stub"
+bundle = "org.beeware"
+version = "1.0.0"
+
+[tool.briefcase.app.stub]
+formal_name = "Stub"
+description = "A stub binary that can be integrated into the Windows app template"
+sources = ['src/stub']

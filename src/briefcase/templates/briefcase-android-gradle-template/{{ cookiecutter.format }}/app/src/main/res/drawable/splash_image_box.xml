@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- splash_image_box includes the splash image in a box whose size
+     is appropriate to the screen size. This file is used by default.
+     Other files in the res/ directory override the width and height.
+     The first override occurs when min(height, width) >= 480dp. The
+     most common size < 480dp is 320dp, so this file is written with
+     that screen size in mind.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<item
+    android:gravity="center"
+    android:width="320dp"
+    android:height="320dp"
+    android:drawable="@drawable/launch"/>
+</layer-list>

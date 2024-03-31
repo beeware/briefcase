@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name={{ cookiecutter.formal_name }}
+Exec={{ cookiecutter.bundle_identifier }} %F
+Icon={{ cookiecutter.bundle_identifier }}
+Categories=Utility;
+Comment={{ cookiecutter.description }}
+StartupWMClass={{ cookiecutter.formal_name }}

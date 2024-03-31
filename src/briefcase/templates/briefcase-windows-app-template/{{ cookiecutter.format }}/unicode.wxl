@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Codepage="utf-8" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    <String Id="InstallScopeDlgPerMachineDescription">[ProductName] will be installed in a per-machine folder and be available for all users. You must have local Administrator privileges.</String>
+</WixLocalization>

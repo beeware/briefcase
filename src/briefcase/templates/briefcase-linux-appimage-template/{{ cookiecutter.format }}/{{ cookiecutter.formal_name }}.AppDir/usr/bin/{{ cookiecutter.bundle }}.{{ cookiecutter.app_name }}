@@ -1,0 +1,11 @@
+#!/bin/bash
+export APPDIR=$(dirname "$0")
+# echo "APPDIR=${APPDIR}"
+export PYTHONPATH=${APPDIR}/usr/app:${APPDIR}/usr/app_packages
+# echo "PYTHONPATH=${PYTHONPATH}"
+# echo "PATH=${PATH}"
+if [[ -z "${BRIEFCASE_MAIN_MODULE}" ]]; then
+    BRIEFCASE_MAIN_MODULE="{{ cookiecutter.module_name }}"
+fi
+# echo "BRIEFCASE_MAIN_MODULE=${BRIEFCASE_MAIN_MODULE}"
+"${APPDIR}/usr/python/bin/python3" -u -s -X utf8 -c "import runpy, sys; sys.path.pop(0); runpy.run_module('${BRIEFCASE_MAIN_MODULE}', run_name='__main__', alter_sys=True)" "$@"

@@ -1,0 +1,5 @@
+# {{ cookiecutter.formal_name }} Release Notes
+
+## 0.0.1 ({% now 'local', '%d %b %Y' %})
+
+* Initial release

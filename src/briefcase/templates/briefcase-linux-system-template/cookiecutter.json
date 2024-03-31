@@ -1,0 +1,26 @@
+{
+    "format": "system",
+    "formal_name": "App Name",
+    "app_name": "{{ cookiecutter.formal_name|lower|replace(' ', '-') }}",
+    "module_name": "{{ cookiecutter.app_name|replace('-', '_') }}",
+    "author": "Jane Developer",
+    "author_email": "jane@example.com",
+    "version": "0.0.1",
+    "revision": "1",
+    "arch": "amd64",
+    "bundle": "com.example",
+    "bundle_identifier": "{{ cookiecutter.bundle }}.{{ cookiecutter.app_name|replace('_', '-') }}",
+    "url": "https://example.com",
+    "description": "Short description of app",
+    "long_description": "Long description of app",
+    "briefcase_version": "0.3.X",
+    "python_version": "3.X.0",
+    "docker_base_image": "ubuntu:20.04",
+    "vendor_base": "debian",
+    "dockerfile_extra_content": "",
+    "use_non_root_user": true,
+    "lib_dir": "lib{% if cookiecutter.vendor_base in ('rhel', 'suse') %}64{% endif %}",
+    "_extensions": [
+        "briefcase.integrations.cookiecutter.PythonVersionExtension"
+    ]
+}

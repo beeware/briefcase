@@ -1,0 +1,74 @@
+# Generated using Python {{ cookiecutter.python_version }}
+[briefcase]
+target_version = "0.3.15"
+
+[paths]
+app_path = "app/src/main/python"
+app_requirements_path = "app/requirements.txt"
+metadata_resource_path = "app/src/main/res/values/briefcase.xml"
+
+icon.round.48 = "app/src/main/res/mipmap-mdpi/ic_launcher_round.png"
+icon.round.72 = "app/src/main/res/mipmap-hdpi/ic_launcher_round.png"
+icon.round.96 = "app/src/main/res/mipmap-xhdpi/ic_launcher_round.png"
+icon.round.144 = "app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png"
+icon.round.192 = "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png"
+
+icon.square.48 = "app/src/main/res/mipmap-mdpi/ic_launcher.png"
+icon.square.72 = "app/src/main/res/mipmap-hdpi/ic_launcher.png"
+icon.square.96 = "app/src/main/res/mipmap-xhdpi/ic_launcher.png"
+icon.square.144 = "app/src/main/res/mipmap-xxhdpi/ic_launcher.png"
+icon.square.192 = "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+
+# Square splash screen images
+#
+# At app launch, we try to fill the screen's width with a square image, along
+# with a background color of `splash_background_color`. There will be some
+# padding above/below the image when the phone is in portrait mode (or to the
+# left/right of the image when the phone is in landscape mode). When the app
+# starts, we remove the splash image.
+#
+# We use the "normal" series of images on devices whose smallest dimension
+# ("width") is less than 480 density-independent pixels, typically 320.
+# Denisty-independent pixels are a way to measure physical size of the screen,
+# e.g., a 5" phone. We use the "large" series of images for devices with at
+# least 480 density-independent pixels of width, but smaller than xlarge. We
+# use the "xlarge" series of images for devices at least 720
+# density-independent pixels of width.
+#
+# Normal corresponds to a typical phone. Large corresponds to a large phone, or
+# phone-tablet hybrid (phablet). Xlarge corresponds to a large tablet.
+#
+# In addition to the normal/large/xlarge physical size distinction, we need to
+# choose images appropriate for the device's current DPI. Android defines a
+# variety of screen DPI buckets; we use mdpi (1x), hdpi (1.5x), xhdpi (2x), and
+# xxxhdpi (4x). The device will choose the best image to use based on its
+# actual DPI.
+#
+# The simplest way to create these images is to create the largest one at
+# 2880x2880, then scale down. Create images whose width and height are the
+# number in the splash image name (e.g., 320x320 for splash.normal.320).
+#
+# See also:
+#
+# For definitions of device sizes:
+# https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes#TaskUseSizeQuali
+#
+# For examples of specific devices and their sizes & DPI:
+# https://material.io/blog/device-metrics
+#
+# For the relative frequency of normal vs. large vs. xlarge in real-world
+# devices: https://developer.android.com/about/dashboards/index.html
+splash.normal.320 = "app/src/main/res/drawable/launch.png"
+splash.normal.480 = "app/src/main/res/drawable-hdpi/launch.png"
+splash.normal.640 = "app/src/main/res/drawable-xhdpi/launch.png"
+splash.normal.1280 = "app/src/main/res/drawable-xxxhdpi/launch.png"
+
+splash.large.480 = "app/src/main/res/drawable-sw480dp/launch.png"
+splash.large.720 = "app/src/main/res/drawable-sw480dp-hdpi/launch.png"
+splash.large.960 = "app/src/main/res/drawable-sw480dp-xhdpi/launch.png"
+splash.large.1920 = "app/src/main/res/drawable-sw480dp-xxxhdpi/launch.png"
+
+splash.xlarge.720 = "app/src/main/res/drawable-sw720dp/launch.png"
+splash.xlarge.1080 = "app/src/main/res/drawable-sw720dp-hdpi/launch.png"
+splash.xlarge.1440 = "app/src/main/res/drawable-sw720dp-xhdpi/launch.png"
+splash.xlarge.2880 = "app/src/main/res/drawable-sw720dp-xxxhdpi/launch.png"

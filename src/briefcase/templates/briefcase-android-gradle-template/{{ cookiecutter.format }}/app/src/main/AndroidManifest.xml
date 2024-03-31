@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" {{ cookiecutter.android_manifest_attrs_extra_content }}>
+    {%- for permission in cookiecutter.permissions %}
+    <uses-permission android:name="{{ permission }}" />
+    {%- endfor %}
+    {%- for feature, value in cookiecutter.features.items() %}
+    <uses-feature android:name="{{ feature }}" android:required="{{ value|bool_attr }}" />
+    {%- endfor %}
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/formal_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme.Launcher" {{ cookiecutter.android_manifest_application_attrs_extra_content }}>
+        <!-- https://developer.android.com/guide/topics/resources/runtime-changes#HandlingTheChange -->
+        <activity
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:name="org.beeware.android.MainActivity"
+            android:exported="true" {{ cookiecutter.android_manifest_activity_attrs_extra_content }}>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            {{ cookiecutter.android_manifest_activity_extra_content }}
+        </activity>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="{{ cookiecutter.bundle }}.{{ cookiecutter.app_name }}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths">
+            </meta-data>
+        </provider>
+        {{ cookiecutter.android_manifest_application_extra_content }}
+    </application>
+    {{ cookiecutter.android_manifest_extra_content }}
+</manifest>

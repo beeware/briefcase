@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.chaquo.python'
+
+android {
+    // Android 14 == SDK Level 34. This number should generally be kept up to date with
+    // the most recent supported Android release.
+    compileSdkVersion 34
+
+    namespace "{{ cookiecutter.package_name }}.{{ cookiecutter.module_name }}"
+
+    defaultConfig {
+        applicationId "{{ cookiecutter.package_name }}.{{ cookiecutter.module_name }}"
+        versionCode {{ cookiecutter.version_code }}
+        versionName "{{ cookiecutter.version }}"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Briefcase currently requires API Level 24 for the `pidof` command, and the `--pid`
+        // argument to `adb logcat`. This supports over 90% of active devices
+        // (https://github.com/beeware/rubicon-java/issues/74).
+        minSdkVersion 24
+        // This should gnerally match the compileSDKVersion from above.
+        targetSdkVersion 34
+
+        python {
+            version "{{ cookiecutter.python_version|py_tag }}"
+            pip {
+                install "-r", "requirements.txt"
+            }
+            {%- if cookiecutter.extract_packages %}
+            extractPackages {{ cookiecutter.extract_packages }}
+            {%- endif %}
+        }
+        ndk {
+            {% if cookiecutter.python_version|py_tag in ["3.8", "3.9", "3.10", "3.11"] %}
+            // Chaquopy also supports x86, but it's not very useful anymore, so we'll
+            // disable it to speed up the build.
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86_64"
+            {% else %}
+            // For this Python version, only 64-bit ABIs are available.
+            abiFilters "arm64-v8a", "x86_64"
+            {% endif %}
+        }
+    }
+
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_1_8
+      targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            python.srcDirs = [
+                "src/main/python",  // App code
+                "src/main/python-briefcase",  // Template code
+            ]
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+{%- if cookiecutter.build_gradle_dependencies -%}
+{%- for lib in cookiecutter.build_gradle_dependencies.implementation %}
+    implementation "{{ lib }}"
+{%- endfor %}
+{% endif -%}
+}
+
+// ========== START USER PROVIDED CONTENT ==========
+{{ cookiecutter.build_gradle_extra_content }}

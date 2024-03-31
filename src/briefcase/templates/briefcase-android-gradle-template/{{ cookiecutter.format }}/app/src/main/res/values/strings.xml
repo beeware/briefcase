@@ -1,0 +1,4 @@
+<resources>
+    <string name="formal_name">{{ cookiecutter.formal_name }}</string>
+    <string name="app_name">{{ cookiecutter.app_name }}</string>
+</resources>

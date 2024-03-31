@@ -1,0 +1,18 @@
+{
+    "format": "app",
+    "formal_name": "App Name",
+    "app_name": "{{ cookiecutter.formal_name|lower|replace(' ', '-') }}",
+    "module_name": "{{ cookiecutter.app_name|replace('-', '_') }}",
+    "version_triple": "0.0.1",
+    "author": "Example Corporation",
+    "author_email": "contact@example.com",
+    "url": "http://example.com",
+    "description": "Short description of app",
+    "guid": "1409c8f5-c276-4cf3-a2fd-defcbdfef9a2",
+    "install_scope": "",
+    "use_full_install_path": true,
+    "python_version": "3.X.0",
+    "_extensions": [
+        "briefcase.integrations.cookiecutter.PythonVersionExtension"
+    ]
+}

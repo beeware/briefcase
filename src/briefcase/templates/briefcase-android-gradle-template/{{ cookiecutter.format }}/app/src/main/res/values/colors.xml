@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">{{ cookiecutter.primary_color }}</color>
+    <color name="colorPrimaryDark">{{ cookiecutter.primary_color_dark }}</color>
+    <color name="colorAccent">{{ cookiecutter.accent_color }}</color>
+    <color name="colorSplashScreenBackground">{{ cookiecutter.splash_background_color }}</color>
+</resources>

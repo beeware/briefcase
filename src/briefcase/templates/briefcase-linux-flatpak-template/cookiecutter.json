@@ -1,0 +1,20 @@
+{
+    "format": "flatpak",
+    "formal_name": "App Name",
+    "app_name": "{{ cookiecutter.formal_name|lower|replace(' ', '-') }}",
+    "module_name": "{{ cookiecutter.app_name|replace('-', '_') }}",
+    "version": "1.0",
+    "bundle": "com.example",
+    "bundle_identifier": "{{ cookiecutter.bundle }}.{{ cookiecutter.app_name|replace('_', '-') }}",
+    "url": "https://example.com",
+    "description": "Short description of app",
+    "flatpak_runtime": "org.freedesktop.Platform",
+    "flatpak_runtime_version": "21.08",
+    "flatpak_sdk": "org.freedesktop.Sdk",
+    "finish_args": "",
+    "modules_extra_content": "",
+    "python_version": "3.X.0",
+    "_extensions": [
+        "briefcase.integrations.cookiecutter.PythonVersionExtension"
+    ]
+}

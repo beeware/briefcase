@@ -1,0 +1,16 @@
+# Generated using Python {{ cookiecutter.python_version }}
+[paths]
+app_path = "src/app"
+app_packages_path = "src/app_packages"
+support_path = "src"
+{# Minor versions for 3.8, 3.9, and 3.10 cannot be bumped further -#}
+{# since Python is not hosting embeddable zipped versions of them -#}
+{{ {
+    "3.8": "support_revision = 10",
+    "3.9": "support_revision = 13",
+    "3.10": "support_revision = 11",
+    "3.11": "support_revision = 7",
+    "3.12": "support_revision = 1",
+}.get(cookiecutter.python_version|py_tag, "") }}
+
+icon = "icon.ico"

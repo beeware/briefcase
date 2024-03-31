@@ -1,0 +1,89 @@
+# This project was generated with {{ cookiecutter.briefcase_version }} using template: {{ cookiecutter.template_source }}@{{ cookiecutter.template_branch }}
+[tool.briefcase]
+project_name = "{{ cookiecutter.project_name|escape_toml }}"
+bundle = "{{ cookiecutter.bundle }}"
+version = "0.0.1"
+url = "{{ cookiecutter.url }}"
+license = "{{ cookiecutter.license }}"
+author = "{{ cookiecutter.author }}"
+author_email = "{{ cookiecutter.author_email }}"
+{{- cookiecutter.pyproject_table_briefcase_extra_content }}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}]
+formal_name = "{{ cookiecutter.formal_name|escape_toml }}"
+description = "{{ cookiecutter.description|escape_toml }}"
+long_description = """More details about the app should go here.
+"""
+icon = "src/{{ cookiecutter.module_name }}/resources/{{ cookiecutter.app_name }}"
+sources = [
+    "src/{{ cookiecutter.module_name }}",
+]
+test_sources = [
+    "tests",
+]
+{{- cookiecutter.pyproject_table_briefcase_app_extra_content }}
+{% if cookiecutter.pyproject_table_macOS %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.macOS]
+{{- cookiecutter.pyproject_table_macOS }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux]
+{{- cookiecutter.pyproject_table_linux }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux_system_debian %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.system.debian]
+{{- cookiecutter.pyproject_table_linux_system_debian }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux_system_rhel %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.system.rhel]
+{{- cookiecutter.pyproject_table_linux_system_rhel }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux_system_suse %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.system.suse]
+{{- cookiecutter.pyproject_table_linux_system_suse }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux_system_arch %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.system.arch]
+{{- cookiecutter.pyproject_table_linux_system_arch }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux_appimage %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.appimage]
+{{- cookiecutter.pyproject_table_linux_appimage }}
+{% endif %}
+{% if cookiecutter.pyproject_table_linux_flatpak %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.flatpak]
+{{- cookiecutter.pyproject_table_linux_flatpak }}
+{% endif %}
+{% if cookiecutter.pyproject_table_windows %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.windows]
+{{- cookiecutter.pyproject_table_windows }}
+{% endif %}
+{% if cookiecutter.pyproject_table_iOS or cookiecutter.pyproject_table_android %}
+
+# Mobile deployments
+{% endif %}
+{% if cookiecutter.pyproject_table_iOS %}
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.iOS]
+{{- cookiecutter.pyproject_table_iOS }}
+{% endif %}
+{% if cookiecutter.pyproject_table_android %}
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.android]
+{{- cookiecutter.pyproject_table_android }}
+{% endif %}
+{% if cookiecutter.pyproject_table_web %}
+
+# Web deployments
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.web]
+{{- cookiecutter.pyproject_table_web }}
+{% endif %}
+{{ cookiecutter.pyproject_extra_content }}
