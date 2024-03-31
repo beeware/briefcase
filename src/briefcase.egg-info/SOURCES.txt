@@ -180,6 +180,7 @@ src/briefcase/commands/templates/briefcase-template/hooks/pre_gen_project.py
 src/briefcase/commands/templates/briefcase-template/tests/test_app_template.py
 src/briefcase/commands/templates/briefcase-windows-app-template/hooks/post_gen_project.py
 src/briefcase/commands/templates/briefcase-windows-app-template/stub/src/stub/__init__.py
+src/briefcase/commands/*
 src/briefcase/integrations/__init__.py
 src/briefcase/integrations/android_sdk.py
 src/briefcase/integrations/base.py
