@@ -72,7 +72,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v5.0.0
+      uses: actions/setup-python@v5.1.0
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -123,7 +123,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v5.0.0
+      uses: actions/setup-python@v5.1.0
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
