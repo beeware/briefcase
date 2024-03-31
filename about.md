@@ -4,6 +4,11 @@ This is a fork of the original briefcase project with several embedded templates
 
 ```Bash
 pip install git+https://github.com/cycleuser/briefcase.git
+```
+
+If you can hardly visit GtiHub, please use the commands below:
+
+```Bash
 pip install git+https://gitlab.com/GeoPyTool/briefcase.git
 ```
 
