@@ -1,4 +1,5 @@
 *.pyc
+*.png
 *~
 .*.sw[op]
 *.egg-info
