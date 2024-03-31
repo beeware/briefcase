@@ -2,15 +2,33 @@
 
 This is a fork of the original briefcase project with several embedded templates.
 
+## Installation
+
+### Install with pip
+
+You may directly install it with pip.
+
 ```Bash
+git config --system core.longpaths true
 pip install git+https://github.com/cycleuser/briefcase.git
 ```
 
 If you can hardly visit GtiHub, please use the commands below:
 
 ```Bash
+git config --system core.longpaths true
 pip install git+https://gitlab.com/GeoPyTool/briefcase.git
 ```
+
+### Clone and Install
+
+```Bash
+git clone https://github.com/cycleuser/briefcase.git
+cd briefcase
+pip install .
+```
+
+## Use it
 
 Then use an `--offline` flag to use the embedded templates.
 
