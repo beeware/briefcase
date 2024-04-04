@@ -761,7 +761,7 @@ with details about the release.
                     f"Template does not provide a manpage source file `{app.app_name}.1`"
                 )
 
-        self.logger.info("Update file permissions...")
+        self.logger.verbose("Update file permissions...")
         with self.input.wait_bar("Updating file permissions..."):
             for path in self.project_path(app).glob("**/*"):
                 old_perms = self.tools.os.stat(path).st_mode & 0o777
@@ -775,7 +775,7 @@ with details about the release.
 
                 # If there's been any change in permissions, apply them
                 if new_perms != old_perms:  # pragma: no-cover-if-is-windows
-                    self.logger.info(
+                    self.logger.verbose(
                         "Updating file permissions on "
                         f"{path.relative_to(self.bundle_path(app))} "
                         f"from {oct(old_perms)[2:]} to {oct(new_perms)[2:]}"
