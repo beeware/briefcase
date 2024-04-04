@@ -97,6 +97,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                             "-m",
                             "pip",
                             "install",
+                            "--upgrade-strategy=eager",
                             "--upgrade",
                         ]
                         + (["-vv"] if self.logger.is_deep_debug else [])

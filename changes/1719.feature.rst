@@ -1,0 +1,1 @@
+The transitive requirements for an app are now eagerly updated when an app's requirements are installed for the ``briefcase dev`` command.
