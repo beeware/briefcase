@@ -19,7 +19,7 @@ def main():
     console = Console(printer=printer)
     logger = Log(printer=printer)
     try:
-        Command, extra_cmdline = parse_cmdline(sys.argv[1:])
+        Command, extra_cmdline = parse_cmdline(sys.argv[1:], console=console)
         command = Command(logger=logger, console=console)
         options, overrides = command.parse_options(extra=extra_cmdline)
         command.parse_config(

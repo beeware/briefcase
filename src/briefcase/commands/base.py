@@ -6,10 +6,8 @@ import importlib.metadata
 import inspect
 import os
 import platform
-import shutil
 import subprocess
 import sys
-import textwrap
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
@@ -26,7 +24,7 @@ else:  # pragma: no-cover-if-gte-py311
 
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
-from briefcase.console import Console, Log
+from briefcase.console import MAX_TEXT_WIDTH, Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -655,24 +653,23 @@ any compatibility problems, and then add the compatibility declaration.
             formats = list(get_output_formats(self.platform).keys())
             formats[formats.index(default_format)] = f"{default_format} (default)"
             supported_formats_helptext = (
-                "\nSupported formats:\n"
-                f"  {', '.join(sorted(formats, key=str.lower))}"
+                f"Supported formats:\n  {', '.join(sorted(formats, key=str.lower))}"
             )
         else:
             supported_formats_helptext = ""
 
-        width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
         parser = argparse.ArgumentParser(
             prog=self.cmd_line.format(
                 command=self.command,
                 platform=self.platform,
                 output_format=self.output_format,
             ),
-            description=(
-                f"{textwrap.fill(self.description, width=width)}\n"
-                f"{supported_formats_helptext}"
+            description=self.input.textwrap(
+                f"{self.description}\n\n{supported_formats_helptext}"
             ),
-            formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
+            formatter_class=(
+                lambda prog: RawDescriptionHelpFormatter(prog, width=MAX_TEXT_WIDTH)
+            ),
         )
 
         self.add_default_options(parser)

@@ -1,7 +1,5 @@
 import argparse
-import shutil
 import sys
-import textwrap
 from argparse import RawDescriptionHelpFormatter
 
 from briefcase import __version__
@@ -18,6 +16,7 @@ from briefcase.commands import (
     UpgradeCommand,
 )
 from briefcase.commands.base import split_passthrough
+from briefcase.console import MAX_TEXT_WIDTH, Console
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .exceptions import InvalidFormatError, NoCommandError, UnsupportedCommandError
@@ -36,19 +35,18 @@ COMMANDS = [
 ]
 
 
-def parse_cmdline(args):
+def parse_cmdline(args, console: Console = Console()):
     """Parses the command line to determine the Command and its arguments.
 
     :param args: the arguments provided at the command line
+    :param console:
     :return: Command and command-specific arguments
     """
     platforms = get_platforms()
-    width = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
 
-    briefcase_description = textwrap.fill(
+    briefcase_description = (
         "Briefcase is a tool for converting a Python project "
-        "into a standalone native application for distribution.",
-        width=width,
+        "into a standalone native application for distribution."
     )
 
     description_max_pad_len = max(len(cmd.command) for cmd in COMMANDS) + 2
@@ -59,15 +57,14 @@ def parse_cmdline(args):
 
     platform_list = ", ".join(sorted(platforms, key=str.lower))
 
-    additional_instruction = textwrap.fill(
+    additional_instruction = (
         "Each command, platform, and format has additional options. "
-        "Use the -h option on a specific command for more details.",
-        width=width,
+        "Use the -h option on a specific command for more details."
     )
 
     parser = argparse.ArgumentParser(
         prog="briefcase",
-        description=(
+        description=console.textwrap(
             f"{briefcase_description}\n"
             "\n"
             "Commands:\n"
@@ -80,7 +77,9 @@ def parse_cmdline(args):
         ),
         usage="briefcase [-h] <command> [<platform>] [<format>] ...",
         add_help=False,
-        formatter_class=lambda prog: RawDescriptionHelpFormatter(prog, width=width),
+        formatter_class=(
+            lambda prog: RawDescriptionHelpFormatter(prog, width=MAX_TEXT_WIDTH)
+        ),
     )
     parser.add_argument("-V", "--version", action="version", version=__version__)
 
