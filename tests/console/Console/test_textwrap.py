@@ -55,9 +55,29 @@ def test_textwrap(in_text, out_text):
     assert Console().textwrap(in_text) == out_text
 
 
-def test_textwrap_width_override():
+@pytest.mark.parametrize(
+    "width, in_text, out_text",
+    [
+        (20, "This is 27 characters long.", "This is 27\ncharacters long."),
+        (
+            50,
+            "This is 57 characters long. This is 57 characters long.",
+            "This is 57 characters long. This is 57 characters\nlong.",
+        ),
+        (
+            80,
+            "This is 83 characters long. This is 83 characters long. This is 83 characters long.",
+            "This is 83 characters long. This is 83 characters long. This is 83 characters\nlong.",
+        ),
+        (
+            120,
+            "This is 144 characters long. This is 144 characters long. This is 144 characters long. "
+            "This is 144 characters long. This is 144 characters long.",
+            "This is 144 characters long. This is 144 characters long. "
+            "This is 144 characters long. This is 144 characters long. This\nis 144 characters long.",
+        ),
+    ],
+)
+def test_textwrap_width_override(width, in_text, out_text):
     """Width override is respected."""
-    in_text = "This is 27 characters long."
-    out_text = "This is 27\ncharacters long."
-
-    assert Console().textwrap(in_text, width=20) == out_text
+    assert Console().textwrap(in_text, width=width) == out_text

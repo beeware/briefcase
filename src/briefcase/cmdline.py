@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import sys
 from argparse import RawDescriptionHelpFormatter
@@ -35,13 +37,16 @@ COMMANDS = [
 ]
 
 
-def parse_cmdline(args, console: Console = Console()):
+def parse_cmdline(args, console: Console | None = None):
     """Parses the command line to determine the Command and its arguments.
 
     :param args: the arguments provided at the command line
-    :param console:
+    :param console: interface for interacting with the console
     :return: Command and command-specific arguments
     """
+    if console is None:
+        console = Console()
+
     platforms = get_platforms()
 
     briefcase_description = (
