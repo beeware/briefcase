@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import re
-import shutil
 import sys
-import textwrap
 import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
@@ -26,13 +24,11 @@ from briefcase.config import (
     is_valid_bundle_identifier,
     make_class_name,
 )
-from briefcase.console import select_option
+from briefcase.console import MAX_TEXT_WIDTH, select_option
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
 from briefcase.integrations.git import Git
 
 from .base import BaseCommand
-
-MAX_TEXT_WIDTH = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
 
 
 def titlecase(s):
@@ -178,17 +174,24 @@ class NewCommand(BaseCommand):
         """
         if not is_valid_app_name(candidate):
             raise ValueError(
-                f"{candidate!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
-                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
-                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+                self.input.textwrap(
+                    f"{candidate!r} is not a valid app name.\n"
+                    "\n"
+                    "App names must not be reserved keywords such as 'and', 'for' and "
+                    "'while'. They must also be PEP508 compliant (i.e., they can only "
+                    "include letters, numbers, '-' and '_'; must start with a letter; "
+                    "and cannot end with '-' or '_')."
+                )
             )
 
         if (self.base_path / candidate).exists():
             raise ValueError(
-                f"A {candidate!r} directory already exists. Select a different "
-                "name, move to a different parent directory, or delete the "
-                "existing folder."
+                self.input.textwrap(
+                    f"A {candidate!r} directory already exists.\n"
+                    f"\n"
+                    f"Select a different name, move to a different parent directory, or "
+                    f"delete the existing folder."
+                )
             )
 
         return True
@@ -210,11 +213,14 @@ class NewCommand(BaseCommand):
         """
         if not is_valid_bundle_identifier(candidate):
             raise ValueError(
-                f"{candidate!r} is not a valid bundle identifier.\n\n"
-                "The bundle should be a reversed domain name. It must contain at least 2\n"
-                "dot-separated sections; each section may only include letters, numbers,\n"
-                "and hyphens; and each section may not contain any reserved words (like\n"
-                "'switch', or 'while')."
+                self.input.textwrap(
+                    f"{candidate!r} is not a valid bundle identifier.\n"
+                    "\n"
+                    "The bundle should be a reversed domain name. It must contain at "
+                    "least 2 dot-separated sections; each section may only include "
+                    "letters, numbers, and hyphens; and each section may not contain any "
+                    "reserved words (like 'switch', or 'while')."
+                )
             )
 
         return True
@@ -289,14 +295,7 @@ class NewCommand(BaseCommand):
     def prompt_intro(self, intro: str):
         """Write the introduction for a prompt."""
         self.input.prompt()
-        # textwrap isn't really designed to format text that already contains newlines.
-        # So, instead, break the intro by newlines and format each line individually.
-        self.input.prompt(
-            "\n".join(
-                "\n".join(textwrap.wrap(line, MAX_TEXT_WIDTH))
-                for line in intro.splitlines()
-            )
-        )
+        self.input.prompt(self.input.textwrap(intro))
         self.input.prompt()
 
     def validate_user_input(self, validator, answer) -> bool:
@@ -438,7 +437,7 @@ class NewCommand(BaseCommand):
                 "usually the domain name of your company or project, in reverse order.\n"
                 "\n"
                 "For example, if you are writing an application for Example Corp, "
-                "whose website is example.com, your bundle would be ``com.example``. "
+                "whose website is example.com, your bundle would be 'com.example'. "
                 "The bundle will be combined with your application's machine readable "
                 "name to form a complete application identifier (e.g., "
                 f"com.example.{app_name})."
