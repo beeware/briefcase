@@ -80,7 +80,7 @@ dependencies = [
     # If the package uses calver, we don't pin the upper version, as the upper version
     # provides no basis for determining API stability.
     #
-    "cookiecutter >= 2.3.1, < 2.6.0",  # See beeware/briefcase#1663 to bump <2.6.0 pin
+    "cookiecutter >= 2.6.0, < 3.0",
     "dmgbuild >= 1.6, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",

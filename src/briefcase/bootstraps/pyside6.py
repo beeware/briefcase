@@ -46,20 +46,19 @@ def main():
 
     def pyproject_table_briefcase_app_extra_content(self):
         return """
-
 requires = [
     "PySide6-Essentials~=6.5",
     # "PySide6-Addons~=6.5",
 ]
 test_requires = [
-{%- if cookiecutter.test_framework == "pytest" %}
+{% if cookiecutter.test_framework == "pytest" %}
     "pytest",
-{%- endif %}
+{% endif %}
 ]
 """
 
     def pyproject_table_macOS(self):
-        return """
+        return """\
 universal_build = true
 requires = [
     "std-nslog~=1.0.0",
@@ -67,13 +66,13 @@ requires = [
 """
 
     def pyproject_table_linux(self):
-        return """
+        return """\
 requires = [
 ]
 """
 
     def pyproject_table_linux_system_debian(self):
-        return """
+        return """\
 system_requires = [
 ]
 
@@ -102,7 +101,7 @@ system_runtime_requires = [
 """
 
     def pyproject_table_linux_system_rhel(self):
-        return """
+        return """\
 system_requires = [
 ]
 
@@ -112,7 +111,7 @@ system_runtime_requires = [
 """
 
     def pyproject_table_linux_system_suse(self):
-        return """
+        return """\
 system_requires = [
 ]
 
@@ -123,7 +122,7 @@ system_runtime_requires = [
 """
 
     def pyproject_table_linux_system_arch(self):
-        return """
+        return """\
 system_requires = [
 ]
 
@@ -133,7 +132,7 @@ system_runtime_requires = [
 """
 
     def pyproject_table_linux_appimage(self):
-        return """
+        return """\
 manylinux = "manylinux_2_28"
 
 system_requires = [
@@ -145,29 +144,29 @@ linuxdeploy_plugins = [
 """
 
     def pyproject_table_linux_flatpak(self):
-        return """
+        return """\
 flatpak_runtime = "org.kde.Platform"
 flatpak_runtime_version = "6.6"
 flatpak_sdk = "org.kde.Sdk"
 """
 
     def pyproject_table_windows(self):
-        return """
+        return """\
 requires = [
 ]
 """
 
     def pyproject_table_iOS(self):
-        return """
+        return """\
 supported = false
 """
 
     def pyproject_table_android(self):
-        return """
+        return """\
 supported = false
 """
 
     def pyproject_table_web(self):
-        return """
+        return """\
 supported = false
 """
