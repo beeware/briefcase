@@ -728,6 +728,7 @@ password:
         :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity
             of "-", and the resulting app will not be re-distributable.
         """
+        self.logger.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
             identity = "-"
             identity_name = ADHOC_IDENTITY_NAME
@@ -739,21 +740,33 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.logger.info("Signing app with ad-hoc identity...", prefix=app.app_name)
             self.logger.warning(
-                "Because you are signing with the ad-hoc identity, this "
-                "app will run, but cannot be re-distributed."
+                """
+*************************************************************************
+** WARNING: Signing with an ad-hoc identity                            **
+*************************************************************************
+
+    This app is being signed with an ad-hoc identity. The resulting
+    app will run on this computer, but will not run on anyone else's
+    computer.
+
+    To generate an app that can be distributed to others, you must
+    obtain an application distribution certificate from Apple, and
+    select the developer identity associated with that certificate
+    when running 'briefcase package'.
+
+*************************************************************************
+
+"""
             )
+            self.logger.info("Signing app with ad-hoc identity...")
         else:
             # If we're signing, and notarization isn't explicitly disabled,
             # notarize by default.
             if notarize_app is None:
                 notarize_app = True
 
-            self.logger.info(
-                f"Signing app with identity {identity_name}...",
-                prefix=app.app_name,
-            )
+            self.logger.info(f"Signing app with identity {identity_name}...")
 
             if notarize_app:
                 team_id = self.team_id_from_identity(identity_name)
