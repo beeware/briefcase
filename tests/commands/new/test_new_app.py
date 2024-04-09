@@ -238,7 +238,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     # should now also contain the
                     # default template and branch
                     "template_source": "https://github.com/beeware/briefcase-template",
-                    "template_branch": "v37.42.7",
+                    "template_branch": "main",
                     "briefcase_version": briefcase_version,
                     "app_source": "main()",
                     "pyproject_requires": "toga",

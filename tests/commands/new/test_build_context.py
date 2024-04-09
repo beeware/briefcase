@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from packaging.version import Version
 
 import briefcase.commands.new
 from briefcase.bootstraps import (
@@ -40,9 +39,6 @@ def test_question_sequence_toga(new_command):
     ]
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides={},
     )
 
@@ -60,9 +56,6 @@ def test_question_sequence_toga(new_command):
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         app_source='''\
 import toga
 from toga.style import Pack
@@ -275,9 +268,6 @@ def test_question_sequence_pyside6(new_command):
     ]
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides={},
     )
 
@@ -295,9 +285,6 @@ def test_question_sequence_pyside6(new_command):
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         app_source="""\
 import importlib.metadata
 import sys
@@ -458,9 +445,6 @@ def test_question_sequence_pursuedpybear(new_command):
     ]
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides={},
     )
 
@@ -478,9 +462,6 @@ def test_question_sequence_pursuedpybear(new_command):
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         app_source="""\
 import importlib.metadata
 import os
@@ -640,9 +621,6 @@ def test_question_sequence_pygame(new_command):
     ]
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides={},
     )
 
@@ -660,9 +638,6 @@ def test_question_sequence_pygame(new_command):
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         app_source="""\
 import importlib.metadata
 import os
@@ -810,9 +785,6 @@ def test_question_sequence_none(new_command):
     ]
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides={},
     )
 
@@ -830,9 +802,6 @@ def test_question_sequence_none(new_command):
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
     )
 
 
@@ -864,9 +833,6 @@ def test_question_sequence_with_overrides(
     )
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides=dict(
             formal_name="My Override App",
             app_name="myoverrideapp",
@@ -895,9 +861,6 @@ def test_question_sequence_with_overrides(
         test_source_dir="tests",
         project_name="My Override Project",
         url="https://override.example.com",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
     )
 
 
@@ -931,9 +894,6 @@ def test_question_sequence_with_bad_license_override(
     )
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides=dict(
             formal_name="My Override App",
             app_name="myoverrideapp",
@@ -962,9 +922,6 @@ def test_question_sequence_with_bad_license_override(
         test_source_dir="tests",
         project_name="My Override Project",
         url="https://override.example.com",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
     )
 
 
@@ -1000,9 +957,6 @@ def test_question_sequence_with_bad_bootstrap_override(
     )
 
     context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
         project_overrides=dict(
             formal_name="My Override App",
             app_name="myoverrideapp",
@@ -1031,9 +985,6 @@ def test_question_sequence_with_bad_bootstrap_override(
         test_source_dir="tests",
         project_name="My Override Project",
         url="https://override.example.com",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
     )
 
 
@@ -1042,12 +993,7 @@ def test_question_sequence_with_no_user_input(new_command):
 
     new_command.input.enabled = False
 
-    context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
-        project_overrides={},
-    )
+    context = new_command.build_context(project_overrides={})
 
     assert context == dict(
         app_name="helloworld",
@@ -1063,9 +1009,6 @@ def test_question_sequence_with_no_user_input(new_command):
         test_source_dir="tests",
         project_name="Hello World",
         url="https://example.com/helloworld",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         app_source='''\
 import toga
 from toga.style import Pack
@@ -1307,12 +1250,7 @@ def test_question_sequence_custom_bootstrap(
         "5",  # Custom GUI bootstrap
     ]
 
-    context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
-        project_overrides={},
-    )
+    context = new_command.build_context(project_overrides={})
 
     assert context == dict(
         app_name="myapplication",
@@ -1328,9 +1266,6 @@ def test_question_sequence_custom_bootstrap(
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         custom_context="value",
         requires="toga",
         platform="bsd",
@@ -1381,12 +1316,7 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
         "5",  # Custom GUI bootstrap
     ]
 
-    context = new_command.build_context(
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version=Version("1.1.1.post1"),
-        project_overrides={},
-    )
+    context = new_command.build_context(project_overrides={})
 
     assert context == dict(
         app_name="myapplication",
@@ -1402,9 +1332,6 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
-        template_source="https://example.com/beeware/briefcase-template",
-        template_branch="my-branch",
-        briefcase_version="1.1.1.post1",
         requires="toga",
         platform="bsd",
     )

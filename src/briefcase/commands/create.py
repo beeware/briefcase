@@ -212,9 +212,6 @@ class CreateCommand(BaseCommand):
         """
         # If the app config doesn't explicitly define a template,
         # use a default template.
-        version, template, template_branch = self.get_version_and_template_info(
-            template=app.template, template_branch=app.template_branch
-        )
 
         # Construct a template context from the app configuration.
         extra_context = {
@@ -261,11 +258,12 @@ class CreateCommand(BaseCommand):
         output_path.mkdir(parents=True, exist_ok=True)
 
         self.generate_template(
-            template=template,
-            branch=template_branch,
+            template=app.template,
+            branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
-            allow_fallback=version.dev is not None and app.template_branch is None,
+            fallback_template=self.app_template_url,
+            add_template_information=False,
         )
 
     def _unpack_support_package(self, support_file_path, support_path):

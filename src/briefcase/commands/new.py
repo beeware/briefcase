@@ -9,8 +9,6 @@ from email.utils import parseaddr
 from typing import Iterable
 from urllib.parse import urlparse
 
-from packaging.version import Version
-
 if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     from importlib.metadata import entry_points
 else:  # pragma: no-cover-if-gte-py310
@@ -115,7 +113,6 @@ class NewCommand(BaseCommand):
     platform = "all"
     output_format = None
     description = "Create a new Briefcase project."
-    app_template_url = "https://github.com/beeware/briefcase-template"
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
@@ -430,24 +427,9 @@ class NewCommand(BaseCommand):
             override_value=override_value,
         )
 
-    def build_context(
-        self,
-        template_source: str,
-        template_branch: str,
-        briefcase_version: Version,
-        project_overrides: dict[str, str],
-    ) -> dict[str, str]:
+    def build_context(self, project_overrides: dict[str, str]) -> dict[str, str]:
         """Builds the cookiecutter context dict for the new project."""
         context = self.build_app_context(project_overrides)
-        # Additional context for the Briefcase template pyproject.toml header to
-        # include the version of Briefcase as well as the source of the template.
-        context.update(
-            {
-                "template_source": template_source,
-                "template_branch": template_branch,
-                "briefcase_version": str(briefcase_version),
-            }
-        )
         context.update(self.build_gui_context(context, project_overrides))
 
         return context
@@ -684,12 +666,10 @@ class NewCommand(BaseCommand):
     ):
         """Ask questions to generate a new application, and generate a stub project from
         the briefcase-template."""
-        version, template, branch = self.get_version_and_template_info(
-            template, template_branch
-        )
         self.input.prompt()
         self.input.prompt("Let's build a new Briefcase app!")
-        context = self.build_context(template, branch, version, project_overrides)
+
+        context = self.build_context(project_overrides=project_overrides)
         self.prompt_divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
@@ -708,10 +688,11 @@ class NewCommand(BaseCommand):
         # Create the project files
         self.generate_template(
             template=template,
-            branch=branch,
+            branch=template_branch,
             output_path=self.base_path,
             extra_context=context,
-            allow_fallback=version.dev is not None,
+            fallback_template="https://github.com/beeware/briefcase-template",
+            add_template_information=True,
         )
 
         self.logger.info(

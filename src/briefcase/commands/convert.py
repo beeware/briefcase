@@ -678,12 +678,9 @@ class ConvertCommand(NewCommand):
         :param template: The cookiecutter template to use.
         :param template_branch: The git branch that the template should use.
         """
-        version, template, branch = self.get_version_and_template_info(
-            template, template_branch
-        )
         self.input.prompt()
         self.input.prompt("Let's setup an existing project as a Briefcase app!")
-        context = self.build_context(template, branch, version, project_overrides)
+        context = self.build_context(project_overrides)
         self.prompt_divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
@@ -697,10 +694,11 @@ class ConvertCommand(NewCommand):
         # Create the project files
         self.generate_template(
             template=template,
-            branch=branch,
+            branch=template_branch,
             output_path=tmp_path,
             extra_context=context,
-            allow_fallback=version.dev is not None,
+            fallback_template="https://github.com/beeware/briefcase-template",
+            add_template_information=True,
         )
 
         app_path = context["app_name"]

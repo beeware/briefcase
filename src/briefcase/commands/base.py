@@ -149,12 +149,6 @@ class BaseCommand(ABC):
     # introduced for a platform such that older versions of a template are incompatible
     platform_target_version: str | None = None
 
-    # We specify the default app template as a class attribute so that it can be
-    # overwritten by properties of subclasses. This is necessary since if we had it as
-    # an instance attribute, it would cause an AttributeError since the property would
-    # not have a setter.
-    app_template_url = None
-
     def __init__(
         self,
         logger: Log,
@@ -988,53 +982,66 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # Branch does not exist.
             raise TemplateUnsupportedVersion(branch) from e
 
-    def get_version_and_template_info(self, template, template_branch):
-        """The briefcase version and which template to use."""
-        # If the template wasn't specified with --template, we use the default briefcase template
-        if template is None:
-            template = self.app_template_url
-
+    def generate_template(
+        self,
+        template: str | None,
+        branch: str | None,
+        output_path: str | Path,
+        extra_context: dict[str, str],
+        fallback_template: str,
+        add_template_information: bool,
+    ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
         version = Version(briefcase.__version__)
-        if template_branch is None:
-            branch = f"v{version.base_version}"
+        if branch is None:
+            template_branch = f"v{version.base_version}"
         else:
-            branch = template_branch
+            template_branch = branch
 
-        return version, template, branch
+        if not template:
+            template = fallback_template
 
-    def generate_template(
-        self,
-        template: str,
-        branch: str,
-        output_path: str | Path,
-        extra_context: dict[str, str],
-        allow_fallback: bool = True,
-    ) -> None:
+        if add_template_information:
+            extra_context = extra_context.copy()
+            # Additional context that can be used for the Briefcase template pyproject.toml
+            # header to include the version of Briefcase as well as the source of the template.
+            extra_context.update(
+                {
+                    "template_source": template,
+                    "template_branch": template_branch,
+                    "briefcase_version": str(version),
+                }
+            )
         try:
-            self.logger.info(f"Using app template: {template}, branch {branch}")
+            self.logger.info(
+                f"Using app template: {template}, branch {template_branch}"
+            )
             # Unroll the new app template
             self._generate_template(
                 template=template,
-                branch=branch,
+                branch=template_branch,
                 output_path=output_path,
                 extra_context=extra_context,
             )
         except TemplateUnsupportedVersion:
-            # If we're *not* on a development branch, raise an error about
-            # the missing template branch.
-            if not allow_fallback:
+            # Only use the main template if we're on a development branch of briefcase
+            # and the user didn't explicitly specify which branch to use.
+            if version.dev is None or branch is not None:
                 raise
 
             # Development branches can use the main template.
             self.logger.info(
                 f"Template branch {branch} not found; falling back to development template"
             )
-            branch = "main"
+            if add_template_information:
+                # Make copy of the context to facilitate testing. This way, we can check that the context
+                # has the correct branch information in the test, if we didn't take a copy here, then the
+                # the test would see the same value for the template_branch key for both calls to _generate_template.
+                extra_context = {**extra_context, "template_branch": "main"}
             self._generate_template(
                 template=template,
-                branch=branch,
+                branch="main",
                 output_path=output_path,
                 extra_context=extra_context,
             )

@@ -94,7 +94,6 @@ def test_default_template(
 
     # Generate the template.
     create_command.generate_app_template(myapp)
-
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
         "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
