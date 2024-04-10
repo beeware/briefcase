@@ -36,8 +36,6 @@ def test_convert_app(convert_command, cmdline, overrides, patch_tempdir):
         ("verify-tools",),
         # Pyproject doesn't contain Briefcase config
         ("validate-pyproject-file",),
-        # There are (non-log) directories in the project we are setting up for Briefcase
-        ("validate-not-empty-project",),
         # Run the first app
         (
             "new",

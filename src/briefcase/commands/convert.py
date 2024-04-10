@@ -730,27 +730,6 @@ class ConvertCommand(NewCommand):
                 " Cannot initialise briefcase for an application that already is packaged with briefcase."
             )
 
-    def validate_not_empty_project(self) -> None:
-        """Cannot setup new app for a project containing only a child directory with log
-        files or no child directories."""
-        # Check first for no child directories
-        directories = (p for p in self.base_path.iterdir() if p.is_dir())
-        if not (log_dir_candidate := next(directories, None)):
-            raise BriefcaseCommandError(
-                "Cannot automatically set up briefcase for a project with no directories"
-            )
-
-        # If we already failed at setting up this app since it was empty, then there will be a log folder.
-        # We still want briefcase to fail so users don't get confused by running the wizard twice and getting
-        # different behaviour the second time.
-        is_log_dir = log_dir_candidate.is_dir() and all(
-            file.suffix == ".log" for file in log_dir_candidate.iterdir()
-        )
-        if is_log_dir and next(directories, None) is None:
-            raise BriefcaseCommandError(
-                "Cannot automatically set up briefcase for a project that only contains a log file directory"
-            )
-
     def __call__(
         self,
         template: str | None = None,
@@ -763,7 +742,6 @@ class ConvertCommand(NewCommand):
         self.finalize()
 
         self.validate_pyproject_file()
-        self.validate_not_empty_project()
 
         # Setup the app for briefcase
         with TemporaryDirectory() as tmp_path:
