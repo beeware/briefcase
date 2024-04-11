@@ -177,10 +177,9 @@ class ConvertCommand(NewCommand):
         else:  # We have already checked that there are directories in the project root
             raise BriefcaseCommandError(
                 "Cannot find a suitable source directory for the app.\n"
-                f"Based on your app name, {app_name!r}, you must have a directory named {module_name!r} "
-                f"either in your project root or a subdirectory (e.g. 'src/{module_name}').\n"
-                "Specifically, you need a directory with a '__main__.py'-file that matches the glob "
-                f"pattern '**/{module_name}/__main__.py'"
+                f"Based on your app name, {app_name!r}, you must have a directory\n"
+                f"named {module_name!r}, either in your project root or a subdirectory\n"
+                f"(e.g. 'src/{module_name}'), that contains a '__main__.py'.\n"
             )
 
         default = str(default.relative_to(self.base_path)).replace("\\", "/")
