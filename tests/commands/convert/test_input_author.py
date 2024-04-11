@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from .utils import NoMatchString, PartialMatchString
+from ...utils import NoMatchString, PartialMatchString
 
 
 def test_multiple_pep621_authors(convert_command, monkeypatch):

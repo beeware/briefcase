@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from .utils import PartialMatchString
+from ...utils import PartialMatchString
 
 
 def test_app_name_is_formatted(convert_command, monkeypatch):

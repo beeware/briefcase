@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from .utils import PartialMatchString
+from ...utils import PartialMatchString
 
 
 @pytest.mark.parametrize("license_file_name", ["LICENSE", "LICENCE"])

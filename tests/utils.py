@@ -16,6 +16,20 @@ from urllib3.util.retry import Retry
 from briefcase.console import Console, InputDisabled
 
 
+class PartialMatchString(str):
+    "A string-like class that has equality on a partial match"
+
+    def __eq__(self, other):
+        return self in other
+
+
+class NoMatchString(str):
+    "A string-like class that has equality when there is no match"
+
+    def __eq__(self, other):
+        return self not in other
+
+
 class DummyConsole(Console):
     def __init__(self, *values, enabled=True):
         super().__init__(enabled=enabled)

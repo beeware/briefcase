@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from .utils import PartialMatchString
+from ...utils import PartialMatchString
 
 
 def test_pep621_author(convert_command, monkeypatch):

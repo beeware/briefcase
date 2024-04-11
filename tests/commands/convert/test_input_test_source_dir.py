@@ -1,6 +1,6 @@
 from unittest.mock import ANY, MagicMock
 
-from .utils import NoMatchString, PartialMatchString
+from ...utils import NoMatchString, PartialMatchString
 
 
 def test_no_test_dir(convert_command, monkeypatch):

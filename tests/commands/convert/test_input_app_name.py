@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from .utils import NoMatchString, PartialMatchString
+from ...utils import NoMatchString, PartialMatchString
 
 
 def test_override_is_used(convert_command):

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from .utils import PartialMatchString
+from ...utils import PartialMatchString
 
 
 def test_default_without_http_protocol(convert_command, monkeypatch):
