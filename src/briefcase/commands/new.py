@@ -282,6 +282,8 @@ class NewCommand(BaseCommand):
         result = urlparse(candidate)
         if not all([result.scheme, result.netloc]):
             raise ValueError("Not a valid URL!")
+        if result.scheme not in {"http", "https"}:
+            raise ValueError("Not a valid website URL!")
         return True
 
     def prompt_divider(self, title: str = ""):
