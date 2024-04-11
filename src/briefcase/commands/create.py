@@ -234,8 +234,6 @@ class CreateCommand(BaseCommand):
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
-                # The Briefcase version
-                "briefcase_version": briefcase.__version__,
                 # Transformations of explicit properties into useful forms
                 "class_name": app.class_name,
                 "module_name": app.module_name,
@@ -258,12 +256,10 @@ class CreateCommand(BaseCommand):
         output_path.mkdir(parents=True, exist_ok=True)
 
         self.generate_template(
-            template=app.template,
+            template=app.template if app.template else self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
-            fallback_template=self.app_template_url,
-            add_template_information=False,
         )
 
     def _unpack_support_package(self, support_file_path, support_path):

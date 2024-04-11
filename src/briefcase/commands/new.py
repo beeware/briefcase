@@ -687,12 +687,14 @@ class NewCommand(BaseCommand):
 
         # Create the project files
         self.generate_template(
-            template=template,
+            template=(
+                template
+                if template
+                else "https://github.com/beeware/briefcase-template"
+            ),
             branch=template_branch,
             output_path=self.base_path,
             extra_context=context,
-            fallback_template="https://github.com/beeware/briefcase-template",
-            add_template_information=True,
         )
 
         self.logger.info(

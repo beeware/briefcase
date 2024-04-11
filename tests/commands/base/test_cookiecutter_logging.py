@@ -33,8 +33,6 @@ def test_git_stdlib_logging(base_command, logging_level, handler_expected):
         branch="",
         output_path="",
         extra_context={},
-        fallback_template="",
-        add_template_information=False,
     )
 
     assert handler_expected is any(

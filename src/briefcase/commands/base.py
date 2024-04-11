@@ -962,13 +962,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         self.logger.configure_stdlib_logging("cookiecutter")
 
         try:
-            # Unroll the template
+            # Unroll the template. Use a copy of the context to ensure that any
+            # mocked calls have an unmodified copy.
             self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=branch,
-                extra_context=extra_context,
+                extra_context=extra_context.copy(),
             )
         except subprocess.CalledProcessError as e:
             # Computer is offline
@@ -988,8 +989,6 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         branch: str | None,
         output_path: str | Path,
         extra_context: dict[str, str],
-        fallback_template: str,
-        add_template_information: bool,
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
@@ -999,20 +998,17 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         else:
             template_branch = branch
 
-        if not template:
-            template = fallback_template
+        extra_context = extra_context.copy()
+        # Additional context that can be used for the Briefcase template pyproject.toml
+        # header to include the version of Briefcase as well as the source of the template.
+        extra_context.update(
+            {
+                "template": template,
+                "template_branch": template_branch,
+                "briefcase_version": str(version),
+            }
+        )
 
-        if add_template_information:
-            extra_context = extra_context.copy()
-            # Additional context that can be used for the Briefcase template pyproject.toml
-            # header to include the version of Briefcase as well as the source of the template.
-            extra_context.update(
-                {
-                    "template_source": template,
-                    "template_branch": template_branch,
-                    "briefcase_version": str(version),
-                }
-            )
         try:
             self.logger.info(
                 f"Using app template: {template}, branch {template_branch}"
@@ -1034,11 +1030,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             self.logger.info(
                 f"Template branch {branch} not found; falling back to development template"
             )
-            if add_template_information:
-                # Make copy of the context to facilitate testing. This way, we can check that the context
-                # has the correct branch information in the test, if we didn't take a copy here, then the
-                # the test would see the same value for the template_branch key for both calls to _generate_template.
-                extra_context = {**extra_context, "template_branch": "main"}
+
+            extra_context["template_branch"] = "main"
             self._generate_template(
                 template=template,
                 branch="main",

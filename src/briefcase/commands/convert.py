@@ -693,12 +693,14 @@ class ConvertCommand(NewCommand):
 
         # Create the project files
         self.generate_template(
-            template=template,
+            template=(
+                template
+                if template
+                else "https://github.com/beeware/briefcase-template"
+            ),
             branch=template_branch,
             output_path=tmp_path,
             extra_context=context,
-            fallback_template="https://github.com/beeware/briefcase-template",
-            add_template_information=True,
         )
 
         app_path = context["app_name"]
