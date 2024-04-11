@@ -71,7 +71,7 @@ def test_convert_app_unused_project_overrides(
             "test_source_dir": "test_files",
             # The expected app context should now also contain the default template,
             # branch, and Briefcase version.
-            "template": "https://github.com/beeware/briefcase-template",
+            "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
             "gui_framework": "None",

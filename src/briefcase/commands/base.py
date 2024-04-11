@@ -1003,7 +1003,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         # header to include the version of Briefcase as well as the source of the template.
         extra_context.update(
             {
-                "template": template,
+                "template_source": template,
                 "template_branch": template_branch,
                 "briefcase_version": str(version),
             }

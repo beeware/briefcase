@@ -47,7 +47,7 @@ def full_context():
         "host_arch": "gothic",
         "briefcase_version": briefcase.__version__,
         # Properties of the template
-        "template": "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        "template_source": "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
         "template_branch": f"v{briefcase.__version__}",
         # Fields generated from other properties
         "module_name": "my_app",
@@ -321,8 +321,9 @@ def test_explicit_repo_template(
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
-    myapp.template = "https://example.com/magic/special-template.git"
-    full_context["template"] = "https://example.com/magic/special-template.git"
+    template = "https://example.com/magic/special-template.git"
+    myapp.template = template
+    full_context["template_source"] = template
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -354,8 +355,9 @@ def test_explicit_repo_template_and_branch(
     full_context["briefcase_version"] = "37.42.7"
 
     # Set an explicit template and branch
-    myapp.template = "https://example.com/magic/special-template.git"
-    full_context["template"] = "https://example.com/magic/special-template.git"
+    template = "https://example.com/magic/special-template.git"
+    myapp.template = template
+    full_context["template_source"] = template
 
     branch = "some_branch"
     myapp.template_branch = branch
@@ -387,8 +389,9 @@ def test_explicit_local_template(
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
-    myapp.template = "/path/to/special-template"
-    full_context["template"] = "/path/to/special-template"
+    template = "/path/to/special-template"
+    myapp.template = template
+    full_context["template_source"] = template
 
     # Generate the template.
     create_command.generate_app_template(myapp)
@@ -419,8 +422,9 @@ def test_explicit_local_template_and_branch(
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
 
-    myapp.template = "/path/to/special-template"
-    full_context["template"] = "/path/to/special-template"
+    template = "/path/to/special-template"
+    myapp.template = template
+    full_context["template_source"] = template
 
     branch = "some_branch"
     myapp.template_branch = branch
@@ -489,8 +493,9 @@ def test_invalid_repo_template(
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
-    myapp.template = "https://example.com/somewhere/not-a-repo.git"
-    full_context["template"] = "https://example.com/somewhere/not-a-repo.git"
+    template = "https://example.com/somewhere/not-a-repo.git"
+    myapp.template = template
+    full_context["template_source"] = template
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
@@ -525,8 +530,9 @@ def test_missing_branch_template(
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
-    myapp.template = "https://example.com/somewhere/missing-branch.git"
-    full_context["template"] = "https://example.com/somewhere/missing-branch.git"
+    template = "https://example.com/somewhere/missing-branch.git"
+    myapp.template = template
+    full_context["template_source"] = template
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).

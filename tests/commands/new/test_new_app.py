@@ -82,7 +82,7 @@ def test_new_app(
             # The expected app context
             # should now also contain the
             # default template and branch
-            "template": "https://github.com/beeware/briefcase-template",
+            "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": expected_branch,
             "briefcase_version": briefcase_version,
             "app_source": "main()",
@@ -143,7 +143,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # default template and branch
-            "template": "https://github.com/beeware/briefcase-template",
+            "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
             "app_source": "main()",
@@ -215,10 +215,9 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "formal_name": "My Application",
                     "class_name": "MyApplication",
                     "app_name": "myapplication",
-                    # The expected app context
-                    # should now also contain the
-                    # default template and branch
-                    "template": "https://github.com/beeware/briefcase-template",
+                    # The expected app context should now also contain the default
+                    # template and branch
+                    "template_source": "https://github.com/beeware/briefcase-template",
                     "template_branch": "v37.42.7",
                     "briefcase_version": briefcase_version,
                     "app_source": "main()",
@@ -234,10 +233,9 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "formal_name": "My Application",
                     "class_name": "MyApplication",
                     "app_name": "myapplication",
-                    # The expected app context
-                    # should now also contain the
-                    # default template and branch
-                    "template": "https://github.com/beeware/briefcase-template",
+                    # The expected app context should now also contain the default
+                    # template and branch
+                    "template_source": "https://github.com/beeware/briefcase-template",
                     "template_branch": "main",
                     "briefcase_version": briefcase_version,
                     "app_source": "main()",
@@ -293,7 +291,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://example.com/other.git",
+            "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
             "app_source": "main()",
@@ -352,7 +350,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://example.com/other.git",
+            "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
             "app_source": "main()",
@@ -414,7 +412,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://example.com/other.git",
+            "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
             "app_source": "main()",
@@ -467,7 +465,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             # The expected app context
             # should now also contain the
             # template and branch
-            "template": "https://github.com/beeware/briefcase-template",
+            "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "experimental",
             "briefcase_version": "37.42.7",
             "app_source": "main()",
@@ -527,7 +525,7 @@ def test_new_app_unused_project_overrides(
             # The expected app context
             # should now also contain the
             # default template and branch
-            "template": "https://github.com/beeware/briefcase-template",
+            "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
             "app_source": "main()",

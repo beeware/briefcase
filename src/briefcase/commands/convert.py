@@ -60,7 +60,7 @@ class ConvertCommand(NewCommand):
                 f"{test_entry} is reserved for the briefcase test entry script, but it already exists.\n"
                 "\n"
                 "Briefcase expects this file to contain the test entry script, so if "
-                f"{self.base_path / test_source_dir} is your test directory, then you must"
+                f"{self.base_path / test_source_dir} is your test directory, you must "
                 f"rename {test_entry} before setting up your project for briefcase."
             )
 
@@ -75,18 +75,21 @@ class ConvertCommand(NewCommand):
         """
         if (self.base_path / source_dir).name != module_name:
             raise ValueError(
-                f"The source directory {self.base_path / source_dir} must have the same name as the app, but"
-                f"with underscores instead of dashes ({module_name}), not {(self.base_path / source_dir).name}."
+                f"The source directory {self.base_path / source_dir} must have "
+                f"the same name as the app, but with underscores instead of dashes "
+                f"({module_name}), not {(self.base_path / source_dir).name}."
             )
 
         if not (self.base_path / source_dir).is_dir():
             raise ValueError(
-                "The source directory must exist and be a directory with a ``__main__.py`` file."
+                "The source directory must exist and be a directory with a "
+                "``__main__.py`` file."
             )
 
         if not (self.base_path / source_dir / "__main__.py").is_file():
             raise ValueError(
-                f"The source directory ({self.base_path / source_dir}) should contain a ``__main__.py`` file"
+                f"The source directory ({self.base_path / source_dir}) should "
+                "contain a ``__main__.py`` file"
             )
 
         return True
@@ -125,8 +128,8 @@ class ConvertCommand(NewCommand):
             default = canonicalize_name(self.base_path.name)
             intro += (
                 "\n"
-                f"Based on your PEP508 formatted directory name, we suggest an app name of {default!r},\n"
-                "but you can use another name if you want."
+                f"Based on your PEP508 formatted directory name, we suggest an "
+                f"app name of {default!r}, but you can use another name if you want."
             )
 
         return self.input_text(
@@ -187,7 +190,7 @@ class ConvertCommand(NewCommand):
             "To set up an existing project for Briefcase, we need to know the path of the\n"
             "application entry point relative to the project root (the current working directory).\n"
             "\n"
-            "For example, if you have an existing project, myapp, and you can start myapp by\n"
+            "For example, if you have an existing project 'myapp', and you can start 'myapp' by\n"
             "running ``src/myapp/__main__.py``, then you should set the source directory to\n"
             "``src/myapp``.\n"
             "\n"
