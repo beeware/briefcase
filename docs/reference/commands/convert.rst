@@ -2,10 +2,11 @@
 convert
 =======
 
-Set up an existing project for briefcase. Runs a wizard to ask questions about
-your existing application (reading from the ``pyproject.toml``-file where
-applicable), adds the necessary files to the project, and updates the
-``pyproject.toml``-file to include the ``briefcase`` section.
+Convert an existing project with a ``pyproject.toml`` configuration into a project that
+can be deployed with Briefcase. Runs a wizard to ask questions about your existing
+application (reading from the ``pyproject.toml``-file where applicable), adds the
+necessary files to the project, and updates the ``pyproject.toml``-file to include the
+``briefcase`` section.
 
 Usage
 =====
