@@ -55,24 +55,9 @@ class DummyConvertCommand(ConvertCommand):
 
 
 @pytest.fixture
-def tmp_path_generator(tmp_path):
-    """Generator that creates and returns a new temporary directory when next is called
-    on it."""
-
-    def gen():
-        i = 0
-        while True:
-            out = tmp_path / str(hash(str(i)))
-            out.mkdir()
-            yield out
-            i += 1
-
-    return gen()
-
-
-@pytest.fixture
-def convert_command(tmp_path_generator):
-    return DummyConvertCommand(base_path=next(tmp_path_generator))
+def convert_command(tmp_path):
+    (tmp_path / "project").mkdir()
+    return DummyConvertCommand(base_path=tmp_path / "project")
 
 
 @pytest.fixture

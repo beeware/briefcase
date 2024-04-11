@@ -10,20 +10,19 @@ from briefcase.console import Console, Log
 
 
 @pytest.fixture
-def convert_command(tmp_path_generator):
+def convert_command(tmp_path):
     return ConvertCommand(
-        base_path=next(tmp_path_generator), logger=Log(), console=Console()
+        base_path=tmp_path / "project", logger=Log(), console=Console()
     )
 
 
 def test_convert_app_unused_project_overrides(
     monkeypatch,
     convert_command,
-    tmp_path_generator,
+    tmp_path,
     capsys,
 ):
     """The user is informed of unused project configuration overrides."""
-    tmp_path = next(tmp_path_generator)
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     app_context = {
         "formal_name": "My Application",
@@ -44,7 +43,8 @@ def test_convert_app_unused_project_overrides(
 
     # Create the new app, using the default template.
     convert_command.convert_app(
-        tmp_path=tmp_path, project_overrides={"unused": "override"}
+        tmp_path=tmp_path / "working",
+        project_overrides={"unused": "override"},
     )
 
     # App context is constructed
@@ -61,7 +61,7 @@ def test_convert_app_unused_project_overrides(
     convert_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "working"),
         checkout="v37.42.7",
         extra_context={
             "formal_name": "My Application",
@@ -78,7 +78,9 @@ def test_convert_app_unused_project_overrides(
         },
     )
     convert_command.migrate_necessary_files.assert_called_once_with(
-        tmp_path / app_context["app_name"], app_context["test_source_dir"], "mymodule"
+        tmp_path / "working" / app_context["app_name"],
+        app_context["test_source_dir"],
+        "mymodule",
     )
 
     unused_project_override_warning = (

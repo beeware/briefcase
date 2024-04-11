@@ -6,10 +6,11 @@ except ModuleNotFoundError:
     import tomli as tomllib
 
 
-def test_copy_pyproject_toml(convert_command, tmp_path_generator):
+def test_copy_pyproject_toml(convert_command, tmp_path):
     base_config_file = convert_command.base_path / "pyproject.toml"
-    briefcase_config_file = next(tmp_path_generator) / "pyproject.toml"
+    briefcase_config_file = tmp_path / "input" / "pyproject.toml"
 
+    briefcase_config_file.parent.mkdir(parents=True)
     briefcase_config_file.write_text("placeholder", encoding="utf-8")
     convert_command.merge_or_copy_pyproject(briefcase_config_file)
 
@@ -18,9 +19,9 @@ def test_copy_pyproject_toml(convert_command, tmp_path_generator):
         assert file.read() == "placeholder"
 
 
-def test_merge_pyproject(convert_command, tmp_path_generator):
+def test_merge_pyproject(convert_command, tmp_path):
     base_config_file = convert_command.base_path / "pyproject.toml"
-    briefcase_config_file = next(tmp_path_generator) / "pyproject.toml"
+    briefcase_config_file = tmp_path / "input" / "pyproject.toml"
 
     base_config_content = {"placeholder1": "a"}
     briefcase_config_content = {"placeholder2": "b"}
@@ -29,6 +30,7 @@ def test_merge_pyproject(convert_command, tmp_path_generator):
     with open(base_config_file, "wb") as file:
         tomli_w.dump(base_config_content, file)
 
+    briefcase_config_file.parent.mkdir(parents=True)
     with open(briefcase_config_file, "wb") as file:
         tomli_w.dump(briefcase_config_content, file)
 
