@@ -16,7 +16,7 @@ def test_multiple_pep621_options(convert_command, monkeypatch):
     mock_select_option.assert_called_once_with(
         intro=(
             "What website URL do you want to use for this application? The "
-            "following URLs are defined in your existing pyproject.toml; "
+            "following URLs are defined in your existing 'pyproject.toml'; "
             "select 'Other' to provide a different URL."
         ),
         variable="application URL",
@@ -48,7 +48,7 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
     mock_select_option.assert_called_once_with(
         intro=(
             "What website URL do you want to use for this application? The "
-            "following URLs are defined in your existing pyproject.toml; "
+            "following URLs are defined in your existing 'pyproject.toml'; "
             "select 'Other' to provide a different URL."
         ),
         variable="application URL",
@@ -61,7 +61,7 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
         override_value=None,
     )
     mock_input_text.assert_called_once_with(
-        intro="\nWhat website URL do you want to use for the application?",
+        intro="What website URL do you want to use for the application?",
         variable="application URL",
         default="https://example.com/some-name",
         validator=convert_command.validate_url,
@@ -77,7 +77,7 @@ def test_no_pep621_options(convert_command, monkeypatch):
     mock_input_text.assert_called_once_with(
         intro=(
             "What website URL do you want to use for this application? Based "
-            f"on your existing pyproject.toml, this might be {default}"
+            f"on your existing 'pyproject.toml', this might be {default}"
         ),
         variable="application URL",
         default=default,

@@ -25,7 +25,7 @@ def test_multiple_pep621_authors(convert_command, monkeypatch):
 
     mock_select_option.assert_called_once_with(
         intro=PartialMatchString(
-            "We found these author names in the PEP621 formatted pyproject.toml."
+            "We found these author names in the PEP621 formatted 'pyproject.toml'."
         ),
         variable="Author",
         options=[
@@ -57,7 +57,7 @@ def test_single_pep621_author(convert_command, monkeypatch):
 
     mock_select_option.assert_called_once_with(
         intro=PartialMatchString(
-            "We found these author names in the PEP621 formatted pyproject.toml."
+            "We found these author names in the PEP621 formatted 'pyproject.toml'."
         ),
         variable="Author",
         options=[
@@ -91,7 +91,7 @@ def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
     assert convert_command.input_author(None) == "Some Name"
     mock_select_option.assert_called_once_with(
         intro=PartialMatchString(
-            "We found these author names in the PEP621 formatted pyproject.toml."
+            "We found these author names in the PEP621 formatted 'pyproject.toml'."
         ),
         variable="Author",
         options=[

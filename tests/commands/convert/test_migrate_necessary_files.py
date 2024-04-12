@@ -103,7 +103,8 @@ def test_warning_without_license_file(
     )
 
     convert_command.logger.warning.assert_called_once_with(
-        f"License file not found in {convert_command.base_path}. Creating a template LICENSE file."
+        f"\nLicense file not found in '{convert_command.base_path}'. "
+        "Briefcase will create a template 'LICENSE' file."
     )
 
 
@@ -125,8 +126,9 @@ def test_pep621_wrong_license_filename(
         project_dir_with_files, test_source_dir, dummy_app_name
     )
     convert_command.logger.warning.assert_called_once_with(
-        f"License file found in {convert_command.base_path}, but its name is {license_name} not LICENSE. "
-        "Creating a template LICENSE file, but you might want to consider renaming the file you have."
+        f"\nLicense file found in '{convert_command.base_path}', but its name is "
+        f"'{license_name}', not 'LICENSE'. Briefcase will create a template 'LICENSE' "
+        "file, but you might want to consider renaming the existing file."
     )
 
 
@@ -146,8 +148,9 @@ def test_warning_without_changelog_file(
     )
 
     convert_command.logger.warning.assert_called_once_with(
-        f"Changelog file not found in {convert_command.base_path}. You should either create a new changelog file in"
-        f" {convert_command.base_path} or rename an already existing changelog file to CHANGELOG."
+        f"\nChangelog file not found in '{convert_command.base_path}'. You should either "
+        f"create a new '{convert_command.base_path / 'CHANGELOG'}' file, or rename an "
+        "already existing changelog file to 'CHANGELOG'."
     )
 
 
@@ -183,10 +186,14 @@ def test_two_warnings_without_license_and_changelog_file(
     convert_command.migrate_necessary_files(
         project_dir_with_files, test_source_dir, dummy_app_name
     )
-    license_warning = f"License file not found in {convert_command.base_path}. Creating a template LICENSE file."
+    license_warning = (
+        f"\nLicense file not found in '{convert_command.base_path}'. "
+        "Briefcase will create a template 'LICENSE' file."
+    )
     changelog_warning = (
-        f"Changelog file not found in {convert_command.base_path}. You should either create a new changelog file in"
-        f" {convert_command.base_path} or rename an already existing changelog file to CHANGELOG."
+        f"\nChangelog file not found in '{convert_command.base_path}'. You should either "
+        f"create a new '{convert_command.base_path / 'CHANGELOG'}' file, or rename an "
+        "already existing changelog file to 'CHANGELOG'."
     )
     assert convert_command.logger.warning.mock_calls == [
         mock.call(license_warning),

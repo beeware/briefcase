@@ -57,11 +57,11 @@ class ConvertCommand(NewCommand):
         test_path = self.base_path / test_source_dir
         if (test_entry := test_path / f"{module_name}.py").exists():
             raise ValueError(
-                f"{test_entry} is reserved for the briefcase test entry script, but it already exists.\n"
+                f"'{test_entry}' is reserved for the briefcase test entry script, but it already exists.\n"
                 "\n"
                 "Briefcase expects this file to contain the test entry script, so if "
-                f"{self.base_path / test_source_dir} is your test directory, you must "
-                f"rename {test_entry} before setting up your project for briefcase."
+                f"'{self.base_path / test_source_dir}' is your test directory, you must "
+                f"rename '{test_entry}' before setting up your project for briefcase."
             )
 
         return True
@@ -75,9 +75,9 @@ class ConvertCommand(NewCommand):
         """
         if (self.base_path / source_dir).name != module_name:
             raise ValueError(
-                f"The source directory {self.base_path / source_dir} must have "
+                f"The source directory '{self.base_path / source_dir}' must have "
                 f"the same name as the app, but with underscores instead of dashes "
-                f"({module_name}), not {(self.base_path / source_dir).name}."
+                f"('{module_name}'), not '{(self.base_path / source_dir).name}'."
             )
 
         if not (self.base_path / source_dir).is_dir():
@@ -130,7 +130,7 @@ class ConvertCommand(NewCommand):
             intro += (
                 "\n\n"
                 f"Based on your PEP508 formatted directory name, we suggest an "
-                f"app name of {default!r}, but you can use another name if you want."
+                f"app name of '{default}', but you can use another name if you want."
             )
 
         return self.input_text(
@@ -154,7 +154,7 @@ class ConvertCommand(NewCommand):
                 "displayed. It can include spaces and punctuation, and any "
                 "capitalization will be used as you type it here.\n"
                 "\n"
-                f"Based on the app name, we suggest a formal name of {default!r}, but "
+                f"Based on the app name, we suggest a formal name of '{default}', but "
                 "you can use another name if you want."
             ),
             variable="formal name",
@@ -184,8 +184,8 @@ class ConvertCommand(NewCommand):
             raise BriefcaseCommandError(
                 "Cannot find a suitable source directory for the app.\n"
                 "\n"
-                f"Based on your app name, {app_name!r}, you must have a directory "
-                f"named {module_name!r}, either in your project root or a subdirectory "
+                f"Based on your app name, '{app_name}', you must have a directory "
+                f"named '{module_name}', either in your project root or a subdirectory "
                 f"(e.g. 'src/{module_name}'), that contains a '__main__.py'."
             )
 
@@ -295,7 +295,7 @@ class ConvertCommand(NewCommand):
             return self.input_text(
                 intro=(
                     "What website URL do you want to use for this application? Based "
-                    f"on your existing pyproject.toml, this might be {default}"
+                    f"on your existing 'pyproject.toml', this might be {default}"
                 ),
                 variable="application URL",
                 default=default,
@@ -307,7 +307,7 @@ class ConvertCommand(NewCommand):
         url = self.select_option(
             intro=(
                 "What website URL do you want to use for this application? The "
-                "following URLs are defined in your existing pyproject.toml; "
+                "following URLs are defined in your existing 'pyproject.toml'; "
                 "select 'Other' to provide a different URL."
             ),
             variable="application URL",
@@ -339,9 +339,9 @@ class ConvertCommand(NewCommand):
                 "order.\n"
                 "\n"
                 "Based on the application URL you selected, it looks like your bundle "
-                f"should be {default!r}. The bundle will be combined with your "
+                f"should be '{default}'. The bundle will be combined with your "
                 "application's machine readable name to form a complete application "
-                f"identifier ({default}.{app_name})."
+                f"identifier ('{default}.{app_name}')."
             ),
             variable="bundle identifier",
             default=default,
@@ -423,7 +423,7 @@ class ConvertCommand(NewCommand):
             "What email address should people use to contact the developers of this "
             "application? This might be your own email address, or a generic contact address "
             f"you set up specifically for this application. Based on {default_source}, "
-            f"we believe it could be {default!r}."
+            f"we believe it could be '{default}'."
         )
 
         author_email = self.input_text(
@@ -649,16 +649,17 @@ class ConvertCommand(NewCommand):
         license_file = self.pep621_data.get("license", {}).get("file")
         if license_file is not None and Path(license_file).name != "LICENSE":
             self.logger.warning(
-                "License file found in {self.base_path}, but its name is "
-                f"{Path(license_file).name!r}, not LICENSE. Briefcase will create a "
-                "template LICENSE file, but you might want to consider renaming the "
+                f"\nLicense file found in '{self.base_path}', but its name is "
+                f"'{Path(license_file).name}', not 'LICENSE'. Briefcase will create a "
+                "template 'LICENSE' file, but you might want to consider renaming the "
                 "existing file."
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
         elif not (self.base_path / "LICENSE").exists():
             self.logger.warning(
-                f"License file not found in {self.base_path}. Creating a template LICENSE file."
+                f"\nLicense file not found in '{self.base_path}'. "
+                "Briefcase will create a template 'LICENSE' file."
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
@@ -666,9 +667,9 @@ class ConvertCommand(NewCommand):
         changelog_file = self.base_path / "CHANGELOG"
         if not changelog_file.is_file():
             self.logger.warning(
-                f"Changelog file not found in {self.base_path!r}. You should either "
-                f"create a new changelog file in {self.base_path!r} or rename an "
-                "already existing changelog file to CHANGELOG."
+                f"\nChangelog file not found in '{self.base_path}'. You should either "
+                f"create a new '{self.base_path / 'CHANGELOG'}' file, or rename an "
+                "already existing changelog file to 'CHANGELOG'."
             )
 
         # Copy tests or test entry script
@@ -707,7 +708,7 @@ class ConvertCommand(NewCommand):
 
         self.logger.info()
         self.logger.info(
-            f"Generating required files to set up {context['formal_name']!r} with Briefcase",
+            f"Generating required files to set up '{context['formal_name']}' with Briefcase",
             prefix=context["app_name"],
         )
 
@@ -723,8 +724,13 @@ class ConvertCommand(NewCommand):
             extra_context=context,
         )
 
+        project_dir = tmp_path / context["app_name"]
+        self.migrate_necessary_files(
+            project_dir, context["test_source_dir"], context["module_name"]
+        )
+
         self.logger.info(
-            f"Converted existing application {context['formal_name']!r}",
+            f"Converted existing application '{context['formal_name']}'",
             prefix=context["app_name"],
         )
         self.logger.info(
@@ -732,12 +738,8 @@ class ConvertCommand(NewCommand):
 To run your application, type:
 
     $ briefcase dev
-"""
-        )
 
-        project_dir = tmp_path / context["app_name"]
-        self.migrate_necessary_files(
-            project_dir, context["test_source_dir"], context["module_name"]
+"""
         )
 
     def validate_pyproject_file(self) -> None:

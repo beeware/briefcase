@@ -10,7 +10,7 @@ def test_app_name_is_formatted(convert_command, monkeypatch):
 
     mock_input_text.assert_called_once_with(
         intro=PartialMatchString(
-            "Based on the app name, we suggest a formal name of\n'Test App Name',"
+            "Based on the app name, we suggest a formal name of 'Test App Name',"
         ),
         variable="formal name",
         default="Test App Name",
