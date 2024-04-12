@@ -6,6 +6,7 @@ Command reference
    :maxdepth: 1
 
    new
+   convert
    dev
    create
    update

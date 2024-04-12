@@ -16,6 +16,8 @@ def test_valid_url(new_command, url):
     "url",
     [
         "not a URL!",  # Free text.
+        "file:///usr/local/bin",  # File URL
+        "gopher://example.com",  # URL, but not a webpage.
     ],
 )
 def test_invalid_url(new_command, url):

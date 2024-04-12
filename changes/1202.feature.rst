@@ -1,0 +1,1 @@
+Existing projects with a ``pyproject.toml`` configuration can now be converted into Briefcase apps using the ``briefcase convert`` command.

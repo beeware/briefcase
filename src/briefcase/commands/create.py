@@ -9,8 +9,6 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from packaging.version import Version
-
 import briefcase
 from briefcase.config import AppConfig
 from briefcase.exceptions import (
@@ -20,7 +18,6 @@ from briefcase.exceptions import (
     MissingNetworkResourceError,
     MissingSupportPackage,
     RequirementsInstallError,
-    TemplateUnsupportedVersion,
     UnsupportedPlatform,
 )
 from briefcase.integrations.git import Git
@@ -215,18 +212,6 @@ class CreateCommand(BaseCommand):
         """
         # If the app config doesn't explicitly define a template,
         # use a default template.
-        if app.template is None:
-            template = self.app_template_url
-        else:
-            template = app.template
-
-        # If the app config doesn't explicitly define a template branch,
-        # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
-        if app.template_branch is None:
-            template_branch = f"v{version.base_version}"
-        else:
-            template_branch = app.template_branch
 
         # Construct a template context from the app configuration.
         extra_context = {
@@ -249,8 +234,6 @@ class CreateCommand(BaseCommand):
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
-                # The Briefcase version
-                "briefcase_version": briefcase.__version__,
                 # Transformations of explicit properties into useful forms
                 "class_name": app.class_name,
                 "module_name": app.module_name,
@@ -272,34 +255,12 @@ class CreateCommand(BaseCommand):
         output_path = self.bundle_path(app).parent
         output_path.mkdir(parents=True, exist_ok=True)
 
-        try:
-            self.logger.info(
-                f"Using app template: {template}, branch {template_branch}"
-            )
-            self.generate_template(
-                template=template,
-                branch=template_branch,
-                output_path=output_path,
-                extra_context=extra_context,
-            )
-        except TemplateUnsupportedVersion:
-            # If we're on a development branch, and the template branch was *not*
-            # provided explicitly, we can use a fallback development template.
-            # Otherwise, re-raise the exception about the unsupported template version.
-            if version.dev is not None and app.template_branch is None:
-                # Development branches can use the main template.
-                self.logger.info(
-                    f"Template branch {template_branch} not found; falling back to development template"
-                )
-                template_branch = "main"
-                self.generate_template(
-                    template=template,
-                    branch=template_branch,
-                    output_path=output_path,
-                    extra_context=extra_context,
-                )
-            else:
-                raise
+        self.generate_template(
+            template=app.template if app.template else self.app_template_url,
+            branch=app.template_branch,
+            output_path=output_path,
+            extra_context=extra_context,
+        )
 
     def _unpack_support_package(self, support_file_path, support_path):
         """Unpack a support package into a specific location.

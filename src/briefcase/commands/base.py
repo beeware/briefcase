@@ -15,6 +15,7 @@ from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
+from packaging.version import Version
 from platformdirs import PlatformDirs
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
@@ -22,6 +23,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+import briefcase
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
 from briefcase.console import MAX_TEXT_WIDTH, Console, Log
@@ -942,7 +944,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         return cached_template
 
-    def generate_template(self, template, branch, output_path, extra_context):
+    def _generate_template(self, template, branch, output_path, extra_context):
         """Ensure the named template is up-to-date for the given branch, and roll out
         that template.
 
@@ -960,13 +962,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         self.logger.configure_stdlib_logging("cookiecutter")
 
         try:
-            # Unroll the template
+            # Unroll the template. Use a copy of the context to ensure that any
+            # mocked calls have an unmodified copy.
             self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=branch,
-                extra_context=extra_context,
+                extra_context=extra_context.copy(),
             )
         except subprocess.CalledProcessError as e:
             # Computer is offline
@@ -979,3 +982,59 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist.
             raise TemplateUnsupportedVersion(branch) from e
+
+    def generate_template(
+        self,
+        template: str | None,
+        branch: str | None,
+        output_path: str | Path,
+        extra_context: dict[str, str],
+    ) -> None:
+        # If a branch wasn't supplied through the --template-branch argument,
+        # use the branch derived from the Briefcase version
+        version = Version(briefcase.__version__)
+        if branch is None:
+            template_branch = f"v{version.base_version}"
+        else:
+            template_branch = branch
+
+        extra_context = extra_context.copy()
+        # Additional context that can be used for the Briefcase template pyproject.toml
+        # header to include the version of Briefcase as well as the source of the template.
+        extra_context.update(
+            {
+                "template_source": template,
+                "template_branch": template_branch,
+                "briefcase_version": str(version),
+            }
+        )
+
+        try:
+            self.logger.info(
+                f"Using app template: {template}, branch {template_branch}"
+            )
+            # Unroll the new app template
+            self._generate_template(
+                template=template,
+                branch=template_branch,
+                output_path=output_path,
+                extra_context=extra_context,
+            )
+        except TemplateUnsupportedVersion:
+            # Only use the main template if we're on a development branch of briefcase
+            # and the user didn't explicitly specify which branch to use.
+            if version.dev is None or branch is not None:
+                raise
+
+            # Development branches can use the main template.
+            self.logger.info(
+                f"Template branch {branch} not found; falling back to development template"
+            )
+
+            extra_context["template_branch"] = "main"
+            self._generate_template(
+                template=template,
+                branch="main",
+                output_path=output_path,
+                extra_context=extra_context,
+            )

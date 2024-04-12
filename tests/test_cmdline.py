@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase import __version__, cmdline
-from briefcase.commands import DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import ConvertCommand, DevCommand, NewCommand, UpgradeCommand
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import (
     InvalidFormatError,
@@ -124,6 +124,49 @@ def test_new_command(logger, console, cmdline, expected_options, expected_overri
     cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), logger, console)
 
     assert isinstance(cmd, NewCommand)
+    assert cmd.platform == "all"
+    assert cmd.output_format is None
+    assert cmd.input.enabled
+    assert cmd.logger.verbosity == LogLevel.INFO
+    assert cmd.logger is logger
+    assert cmd.input is console
+    assert options == expected_options
+    assert overrides == expected_overrides
+
+
+@pytest.mark.parametrize(
+    "cmdline, expected_options, expected_overrides",
+    [
+        (
+            "convert",
+            {
+                "template": None,
+                "template_branch": None,
+                "project_overrides": None,
+            },
+            {},
+        ),
+        (
+            "convert --template=path/to/template --template-branch=experiment -C version=\\'1.2.3\\' -C other=42",
+            {
+                "template": "path/to/template",
+                "template_branch": "experiment",
+                "project_overrides": None,
+            },
+            {
+                "version": "1.2.3",
+                "other": 42,
+            },
+        ),
+    ],
+)
+def test_convert_command(
+    logger, console, cmdline, expected_options, expected_overrides
+):
+    """``briefcase convert`` returns the Convert command."""
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), logger, console)
+
+    assert isinstance(cmd, ConvertCommand)
     assert cmd.platform == "all"
     assert cmd.output_format is None
     assert cmd.input.enabled

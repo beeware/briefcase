@@ -29,7 +29,10 @@ def test_git_stdlib_logging(base_command, logging_level, handler_expected):
     base_command.logger.verbosity = logging_level
 
     base_command.generate_template(
-        template="", branch="", output_path="", extra_context={}
+        template="",
+        branch="",
+        output_path="",
+        extra_context={},
     )
 
     assert handler_expected is any(
