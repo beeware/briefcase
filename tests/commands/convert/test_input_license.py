@@ -15,7 +15,12 @@ from ...utils import PartialMatchString
         ("Apache license", "Apache Software License"),
         ("BSD", "BSD license"),
         ("BSD license", "BSD license"),
-        ("Redistribution and use in source and binary forms", "BSD license"),
+        # Includes some extra text to ensure it doesn't get caught as MIT because of
+        # perMITted
+        (
+            "Redistribution and use in source and binary forms, with or without modification, are permitted",
+            "BSD license",
+        ),
         ("GPLv2", "GNU General Public License v2 (GPLv2)"),
         (
             "version 2 of the GNU General Public License",
@@ -81,7 +86,12 @@ def test_get_license_from_file(
         ("Apache license", "Apache Software License"),
         ("BSD", "BSD license"),
         ("BSD license", "BSD license"),
-        ("Redistribution and use in source and binary forms", "BSD license"),
+        # Includes some extra text to ensure it doesn't get caught as MIT because of
+        # perMITted
+        (
+            "Redistribution and use in source and binary forms, with or without modification, are permitted",
+            "BSD license",
+        ),
         ("GPLv2", "GNU General Public License v2 (GPLv2)"),
         (
             "version 2 of the GNU General Public License",

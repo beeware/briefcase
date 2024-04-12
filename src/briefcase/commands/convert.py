@@ -438,13 +438,17 @@ class ConvertCommand(NewCommand):
 
     def get_license_from_text(self, license_text: str) -> str:
         """Infer the license from the license file."""
+        # The order here is quite important. If we have GPLvX+ after GPLvX, then it will
+        # never be matched if the license text is GPLvX+, since it will already have
+        # matched GPLvX. We search for MIT last, because words like PERMITTED and
+        # LIMITED will generate a false match.
 
-        # The order here is quite important, if we have GPLvX+ after GPLvX, then it will never be matched
-        # if the license text is GPLvX+, since it will already have matched GPLvX.
         hint_patterns = {
-            "MIT license": ["Permission is hereby granted, free of charge", "MIT"],
             "Apache Software License": ["Apache"],
-            "BSD license": ["Redistribution and use in source and binary forms", "BSD"],
+            "BSD license": [
+                "Redistribution and use in source and binary forms",
+                "BSD",
+            ],
             "GNU General Public License v2 or later (GPLv2+)": [
                 "Free Software Foundation, either version 2 of the License",
                 "GPLv2+",
@@ -460,6 +464,10 @@ class ConvertCommand(NewCommand):
             "GNU General Public License v3 (GPLv3)": [
                 "version 3 of the GNU General Public License",
                 "GPLv3",
+            ],
+            "MIT license": [
+                "Permission is hereby granted, free of charge",
+                "MIT",
             ],
         }
         for hint, license_patterns in hint_patterns.items():
