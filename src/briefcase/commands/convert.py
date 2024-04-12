@@ -675,13 +675,13 @@ class ConvertCommand(NewCommand):
         # Copy tests or test entry script
         test_path = self.base_path / test_source_dir
         if test_path.exists():
-            test_entry_script = project_dir / "tests" / f"{module_name}.py"
+            test_entry_script = project_dir / test_source_dir / f"{module_name}.py"
             copy2(
                 test_entry_script,
                 test_path / f"{module_name}.py",
             )
         else:
-            copytree(project_dir / "tests", test_path)
+            copytree(project_dir / test_source_dir, test_path)
 
     def convert_app(
         self,
