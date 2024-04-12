@@ -90,6 +90,11 @@ class ConvertCommand(NewCommand):
 
         return True
 
+    def _validate_existing_app_name(self, candidate):
+        """Override default validation to allow app names with a pre-existing
+        directory."""
+        pass
+
     def input_app_name(self, override_value: str | None) -> str:
         """Ask about the app name, using hints from the pyproject.toml file or directory
         name if there are any.

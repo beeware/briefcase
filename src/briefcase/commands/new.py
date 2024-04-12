@@ -164,6 +164,21 @@ class NewCommand(BaseCommand):
             # use a dummy app name as the suggestion.
             return "myapp"
 
+    def _validate_existing_app_name(self, candidate):
+        """Perform internal validation preventing the use of pre-existing app names.
+
+        Invoked by validate_app_name; subclasses may override this behavior.
+        """
+        if (self.base_path / candidate).exists():
+            raise ValueError(
+                self.input.textwrap(
+                    f"A {candidate!r} directory already exists.\n"
+                    f"\n"
+                    f"Select a different name, move to a different parent directory, or "
+                    f"delete the existing folder."
+                )
+            )
+
     def validate_app_name(self, candidate):
         """Determine if the app name is valid.
 
@@ -183,15 +198,8 @@ class NewCommand(BaseCommand):
                 )
             )
 
-        if (self.base_path / candidate).exists():
-            raise ValueError(
-                self.input.textwrap(
-                    f"A {candidate!r} directory already exists.\n"
-                    f"\n"
-                    f"Select a different name, move to a different parent directory, or "
-                    f"delete the existing folder."
-                )
-            )
+        # Validate if the existing app name
+        self._validate_existing_app_name(candidate)
 
         return True
 
