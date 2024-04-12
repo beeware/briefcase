@@ -82,15 +82,11 @@ class ConvertCommand(NewCommand):
 
         if not (self.base_path / source_dir).is_dir():
             raise ValueError(
-                "The source directory must exist and be a directory with a "
-                "``__main__.py`` file."
+                "The source directory must exist and contain a '__main__.py' file."
             )
 
         if not (self.base_path / source_dir / "__main__.py").is_file():
-            raise ValueError(
-                f"The source directory ({self.base_path / source_dir}) should "
-                "contain a ``__main__.py`` file"
-            )
+            raise ValueError("The source directory must contain a '__main__.py' file")
 
         return True
 
@@ -104,9 +100,9 @@ class ConvertCommand(NewCommand):
         :returns: The app name
         """
         intro = (
-            "We need a name that can serve as a machine-readable Python package name for\n"
-            "your application. This name must be PEP508-compliant - that means the name\n"
-            "may only contain letters, numbers, hyphens and underscores; it can't contain\n"
+            "We need a name that can serve as a machine-readable Python package name for "
+            "your application. This name must be PEP508-compliant - that means the name "
+            "may only contain letters, numbers, hyphens and underscores; it can't contain "
             "spaces or punctuation, and it can't start with a hyphen or underscore."
         )
 
@@ -127,7 +123,7 @@ class ConvertCommand(NewCommand):
         if is_valid_app_name(self.base_path.name):  # Directory name is normalised
             default = canonicalize_name(self.base_path.name)
             intro += (
-                "\n"
+                "\n\n"
                 f"Based on your PEP508 formatted directory name, we suggest an "
                 f"app name of {default!r}, but you can use another name if you want."
             )
@@ -148,11 +144,13 @@ class ConvertCommand(NewCommand):
         default = titlecase(" ".join(re.split("[-_]", app_name)))
         return self.input_text(
             intro=(
-                "We need a formal name for your application. This is the name that will be\n"
-                "displayed to humans whenever the name of the application is displayed. It\n"
-                "can include spaces and punctuation, and any capitalization will be used as\n"
-                "you type it here. Based on the app name, we suggest a formal name of\n"
-                f"{default!r}, but you can use another name if you want."
+                "We need a formal name for your application. This is the name that "
+                "will be displayed to humans whenever the name of the application is "
+                "displayed. It can include spaces and punctuation, and any "
+                "capitalization will be used as you type it here.\n"
+                "\n"
+                f"Based on the app name, we suggest a formal name of {default!r}, but "
+                "you can use another name if you want."
             ),
             variable="formal name",
             default=default,
@@ -180,19 +178,21 @@ class ConvertCommand(NewCommand):
         else:  # We have already checked that there are directories in the project root
             raise BriefcaseCommandError(
                 "Cannot find a suitable source directory for the app.\n"
-                f"Based on your app name, {app_name!r}, you must have a directory\n"
-                f"named {module_name!r}, either in your project root or a subdirectory\n"
-                f"(e.g. 'src/{module_name}'), that contains a '__main__.py'.\n"
+                "\n"
+                f"Based on your app name, {app_name!r}, you must have a directory "
+                f"named {module_name!r}, either in your project root or a subdirectory "
+                f"(e.g. 'src/{module_name}'), that contains a '__main__.py'."
             )
 
         default = str(default.relative_to(self.base_path)).replace("\\", "/")
         intro = (
-            "To set up an existing project for Briefcase, we need to know the path of the\n"
-            "application entry point relative to the project root (the current working directory).\n"
+            "To set up an existing project for Briefcase, we need to know the path "
+            "of the application entry point relative to the project root (the current "
+            "working directory).\n"
             "\n"
-            "For example, if you have an existing project 'myapp', and you can start 'myapp' by\n"
-            "running ``src/myapp/__main__.py``, then you should set the source directory to\n"
-            "``src/myapp``.\n"
+            "For example, if you have an existing project 'myapp', and you can start "
+            "'myapp' by running 'src/myapp/__main__.py', then you should set the source "
+            "directory to 'src/myapp'.\n"
             "\n"
             f"Based on your project's folder layout, we believe it might be '{default}'."
         )
@@ -223,19 +223,19 @@ class ConvertCommand(NewCommand):
         :returns: The test source directory
         """
         intro = (
-            "We also need to know the path to the test suite (if it exists). The test path\n"
+            "We also need to know the path to the test suite (if it exists). The test path "
             "should be relative to the project root directory.\n"
             "\n"
-            "If the provided directory doesn't exist, it will be created and populated with\n"
+            "If the provided directory doesn't exist, it will be created and populated with "
             "some default test files."
         )
-        if (self.base_path / "tests").exists():
+        if (self.base_path / "tests").is_dir():
             default = "tests"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
                 + "'tests' might be your test directory"
             )
-        elif (self.base_path / "test").exists():
+        elif (self.base_path / "test").is_dir():
             default = "test"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
@@ -313,7 +313,7 @@ class ConvertCommand(NewCommand):
 
         if url == "Other":
             url = self.input_text(
-                intro="\nWhat website URL do you want to use for the application?",
+                intro="What website URL do you want to use for the application?",
                 variable="application URL",
                 default=self.make_project_url("com.example", app_name),
                 validator=self.validate_url,
@@ -325,12 +325,13 @@ class ConvertCommand(NewCommand):
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
         return self.input_text(
             intro=(
-                "Now we need a bundle identifier for your application."
+                "Now we need a bundle identifier for your application.\n"
                 "\n"
                 "App stores need to protect against having multiple applications with "
                 "the same name; the bundle identifier is the namespace they use to "
                 "identify applications that come from you. The bundle identifier is "
-                "usually the domain name of your company or project, in reverse order."
+                "usually the domain name of your company or project, in reverse "
+                "order.\n"
                 "\n"
                 "Based on the application URL you selected, it looks like your bundle "
                 f"should be {default!r}. The bundle will be combined with your "
@@ -350,8 +351,8 @@ class ConvertCommand(NewCommand):
         :returns: author name
         """
         intro = (
-            "Who do you want to be credited as the author of this application? This could be"
-            "your own name, or the name of your company you work for."
+            "Who do you want to be credited as the author of this application? "
+            "This could be your own name, or the name of your company you work for."
         )
 
         options = [
@@ -381,8 +382,9 @@ class ConvertCommand(NewCommand):
             intro=(
                 intro
                 + "\n\n"
-                + "We found these author names in the PEP621 formatted pyproject.toml. Who do you "
-                + "want to be credited as the author of this application?"
+                + "We found these author names in the PEP621 formatted "
+                + "'pyproject.toml'. Who do you want to be credited as the author of "
+                + "this application?"
             ),
             variable="Author",
             options=options,
@@ -413,9 +415,9 @@ class ConvertCommand(NewCommand):
                 default_source = "the selected author name"
 
         intro = (
-            "What email address should people use to contact the developers of this\n"
-            "application? This might be your own email address, or a generic contact address\n"
-            f"you set up specifically for this application. Based on {default_source},\n"
+            "What email address should people use to contact the developers of this "
+            "application? This might be your own email address, or a generic contact address "
+            f"you set up specifically for this application. Based on {default_source}, "
             f"we believe it could be {default!r}."
         )
 
@@ -634,8 +636,10 @@ class ConvertCommand(NewCommand):
         license_file = self.pep621_data.get("license", {}).get("file")
         if license_file is not None and Path(license_file).name != "LICENSE":
             self.logger.warning(
-                f"License file found in {self.base_path}, but its name is {Path(license_file).name} not LICENSE. "
-                "Creating a template LICENSE file, but you might want to consider renaming the file you have."
+                "License file found in {self.base_path}, but its name is "
+                f"{Path(license_file).name!r}, not LICENSE. Briefcase will create a "
+                "template LICENSE file, but you might want to consider renaming the "
+                "existing file."
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
@@ -649,8 +653,9 @@ class ConvertCommand(NewCommand):
         changelog_file = self.base_path / "CHANGELOG"
         if not changelog_file.is_file():
             self.logger.warning(
-                f"Changelog file not found in {self.base_path}. You should either create a new changelog file in"
-                f" {self.base_path} or rename an already existing changelog file to CHANGELOG."
+                f"Changelog file not found in {self.base_path!r}. You should either "
+                f"create a new changelog file in {self.base_path!r} or rename an "
+                "already existing changelog file to CHANGELOG."
             )
 
         # Copy tests or test entry script
@@ -705,12 +710,16 @@ class ConvertCommand(NewCommand):
             extra_context=context,
         )
 
-        app_path = context["app_name"]
         self.logger.info(
-            f"Application {context['formal_name']!r} has been generated. To run your application, type:\n"
-            "\n"
-            f"cd {app_path}\n"
-            "briefcase dev"
+            f"Converted existing application {context['formal_name']!r}",
+            prefix=context["app_name"],
+        )
+        self.logger.info(
+            """
+To run your application, type:
+
+    $ briefcase dev
+"""
         )
 
         project_dir = tmp_path / context["app_name"]
@@ -722,7 +731,8 @@ class ConvertCommand(NewCommand):
         """Cannot setup new app if it already has briefcase settings in pyproject."""
         if not (self.base_path / "pyproject.toml").exists():
             raise BriefcaseCommandError(
-                "Cannot automatically set up briefcase for a project without a pyproject.toml file."
+                "Cannot automatically set up Briefcase for a project without a "
+                "'pyproject.toml' file."
             )
 
         with open(self.base_path / "pyproject.toml", "rb") as file:
@@ -730,8 +740,7 @@ class ConvertCommand(NewCommand):
 
         if "tool" in pyproject and "briefcase" in pyproject["tool"]:
             raise BriefcaseCommandError(
-                f"[tool.briefcase] already in {self.base_path / 'pyproject.toml'}."
-                " Cannot initialise briefcase for an application that already is packaged with briefcase."
+                "Your 'pyproject.toml' file already contains a Briefcase configuration."
             )
 
     def __call__(
