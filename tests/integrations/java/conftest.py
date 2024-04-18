@@ -6,8 +6,8 @@ from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
 from briefcase.integrations.subprocess import Subprocess
 
-JDK_RELEASE = "17.0.10"
-JDK_BUILD = "7"
+JDK_RELEASE = "17.0.11"
+JDK_BUILD = "9"
 
 
 @pytest.fixture
