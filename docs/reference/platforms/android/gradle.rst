@@ -58,19 +58,19 @@ application must provide the icons in the following sizes, for 2 variants:
 
 * ``round``:
 
-  * 48px
-  * 72px
-  * 96px
-  * 144px
-  * 192px
+  * 48px (``mdpi``; baseline resolution)
+  * 72px (``hdpi``; 1.5x scale)
+  * 96px (``xhdpi``; 2x scale)
+  * 144px (``xxhdpi``; 3x scale)
+  * 192px (``xxxhdpi``; 4x scale)
 
 * ``square``:
 
-  * 48px
-  * 72px
-  * 96px
-  * 144px
-  * 192px
+  * 48px (``mdpi``; baseline resolution)
+  * 72px (``hdpi``; 1.5x scale)
+  * 96px (``xhdpi``; 2x scale)
+  * 144px (``xxhdpi``; 3x scale)
+  * 192px (``xxxhdpi``; 4x scale)
 
 Splash Image format
 ===================
@@ -82,25 +82,28 @@ and device display densities:
 
 * ``normal`` (typical phones; up to 480 density-independent pixels):
 
-  * 320px
-  * 480px (``hdpi``)
-  * 640px (``xhdpi``)
-  * 1280px (``xxxhdpi``)
+  * 320px (``mdpi``; baseline resolution)
+  * 480px (``hdpi``; 1.5x scale)
+  * 640px (``xhdpi``; 2x scale)
+  * 960px (``xxhdpi``; 3x scale)
+  * 1280px (``xxxhdpi``; 4x scale)
 
 * ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
   720 density-independent pixels):
 
-  * 480px
-  * 720px (``hdpi``)
-  * 960px (``xhdpi``)
-  * 1920px (``xxxhdpi``)
+  * 480px (``mdpi``; baseline resolution)
+  * 720px (``hdpi``; 1.5x scale)
+  * 960px (``xhdpi``; 2x scale)
+  * 1440px (``xxhdpi``; 3x scale)
+  * 1920px (``xxxhdpi``; 4x scale)
 
 * ``xlarge`` (tablets; larger than 720 density-independent pixels)
 
-  * 720px
-  * 1080px (``hdpi``)
-  * 1440px (``xhdpi``)
-  * 2880px (``xxxhdpi``)
+  * 720px (``mdpi``; baseline resolution)
+  * 1080px (``hdpi``; 1.5x scale)
+  * 1440px (``xhdpi``; 2x scale)
+  * 2160px (``xxhdpi``; 3x scale)
+  * 2880px (``xxxhdpi``; 4x scale)
 
 Consult `the Android documentation
 <https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes>`__
