@@ -17,10 +17,10 @@ class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
-    # Latest OpenJDK as of September 2023: https://adoptium.net/temurin/releases/
+    # Latest OpenJDK as of April 2024: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.10"
-    JDK_BUILD = "7"
+    JDK_RELEASE = "17.0.11"
+    JDK_BUILD = "9"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
