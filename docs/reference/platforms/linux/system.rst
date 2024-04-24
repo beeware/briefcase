@@ -201,7 +201,7 @@ but non ``-dev`` packages at runtime.
 they can optionally include version pins. Briefcase will automatically include
 the dependencies needed for Python. For example::
 
-    system_runtime_requires = ["libgtk-3-0 (>=3.14)", "libwebkit2gtk-4.0-37"]
+    system_runtime_requires = ["libgtk-3-0 (>=3.14)", "libwebkit2gtk-4.1-0"]
 
 will specify that your app needs Python 3, a version of ``libgtk >= 3.14``, and any
 version of ``libwebkit2gtk``.

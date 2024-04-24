@@ -1,0 +1,1 @@
+New projects for Toga on GTK3 now recommend using ``gir1.2-webkit2-4.1`` instead of ``gir1.2-webkit2-4.0`` for ``WebView`` support.
