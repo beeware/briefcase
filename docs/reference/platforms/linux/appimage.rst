@@ -239,17 +239,6 @@ Packaging on Linux is a difficult problem - especially when it comes to binary
 libraries. The following are some common problems you may see, and ways that
 they can be mitigated.
 
-Missing ``libcrypt.so.1``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The support package used by Briefcase has a `number of runtime requirements
-<https://gregoryszorc.com/docs/python-build-standalone/main/running.html#runtime-requirements>`__.
-One of those requirements is ``libcrypt.so.1``, which *should* be provided by
-most modern Linux distributions, as it is mandated as part of the Linux Standard
-Base Core Specification. However, some Red Hat maintained distributions don't
-include ``libcrypt.so.1`` as part of the base OS configuration. This can usually
-be fixed by installing the ``libxcrypt-compat`` package.
-
 Failure to load ``libpango-1.0-so.0``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
