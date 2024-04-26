@@ -34,11 +34,6 @@ def main():
 
     os.environ["SDL_VIDEO_X11_WMCLASS"] = metadata["Formal-Name"]
 
-    # Set the app's runtime icon
-    pygame.display.set_icon(
-        pygame.image.load(Path(__file__).parent / "resources/{{{{ cookiecutter.app_name }}}}.png")
-    )
-
     pygame.init()
     pygame.display.set_caption(metadata["Formal-Name"])
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))

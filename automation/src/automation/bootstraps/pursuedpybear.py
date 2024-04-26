@@ -17,12 +17,6 @@ class {{{{ cookiecutter.class_name }}}}(ppb.Scene):
         super().__init__(**props)
         self.updates: int = 0
 
-        self.add(
-            ppb.Sprite(
-                image=ppb.Image("{{{{ cookiecutter.module_name }}}}/resources/{{{{ cookiecutter.app_name }}}}.png"),
-            )
-        )
-
     def on_update(self, event, signal):
         self.updates += 1
         # quit after 2 seconds since on_update is run 60 times/second
