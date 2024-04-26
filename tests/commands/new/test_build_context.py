@@ -475,11 +475,7 @@ class {{ cookiecutter.class_name }}(ppb.Scene):
     def __init__(self, **props):
         super().__init__(**props)
 
-        self.add(
-            ppb.Sprite(
-                image=ppb.Image("{{ cookiecutter.module_name }}/resources/{{ cookiecutter.app_name }}.png"),
-            )
-        )
+        # Add sprites and details to your scene here
 
 
 def main():
@@ -668,11 +664,6 @@ def main():
     metadata = importlib.metadata.metadata(app_module)
 
     os.environ["SDL_VIDEO_X11_WMCLASS"] = metadata["Formal-Name"]
-
-    # Set the app's runtime icon
-    pygame.display.set_icon(
-        pygame.image.load(Path(__file__).parent / "resources/{{ cookiecutter.app_name }}.png")
-    )
 
     pygame.init()
     pygame.display.set_caption(metadata["Formal-Name"])

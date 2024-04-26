@@ -17,11 +17,7 @@ class {{ cookiecutter.class_name }}(ppb.Scene):
     def __init__(self, **props):
         super().__init__(**props)
 
-        self.add(
-            ppb.Sprite(
-                image=ppb.Image("{{ cookiecutter.module_name }}/resources/{{ cookiecutter.app_name }}.png"),
-            )
-        )
+        # Add sprites and details to your scene here
 
 
 def main():
