@@ -32,20 +32,14 @@ the following sizes:
 * 152px
 * 167px
 * 180px
+* 640px
 * 1024px
+* 1280px
+* 1920px
 
-Splash Image format
-===================
-
-iOS projects use ``.png`` format splash screen images. A splash screen should
-be a square, transparent image, provided in the following sizes:
-
-* 800px
-* 1600px
-* 2400px
-
-You can specify a background color for the splash screen using the
-``splash_background_color`` configuration setting.
+The icon will also be used to populate the splash screen. You can specify a
+background color for the splash screen using the ``splash_background_color``
+configuration setting.
 
 iOS projects do not support installer images.
 

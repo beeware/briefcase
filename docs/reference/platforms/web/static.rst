@@ -43,9 +43,6 @@ Icon format
 
 Web projects use a single 32px ``.png`` format icon as the site icon.
 
-Splash Image format
-===================
-
 Web projects do not support splash screens or installer images.
 
 Additional options

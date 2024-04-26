@@ -81,9 +81,6 @@ the following sizes:
 * 256px
 * 512px
 
-Splash Image format
-===================
-
 AppImages do not support splash screens or installer images.
 
 Additional options

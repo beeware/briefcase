@@ -35,9 +35,6 @@ Icon format
 
 macOS ``.app`` bundles use ``.icns`` format icons.
 
-Splash Image format
-===================
-
 macOS ``.app`` bundles do not support splash screens or installer images.
 
 Additional options

@@ -287,9 +287,9 @@ be appended when the application is built.
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
-to an image to use as the background for the installer. As with ``splash``, the
-path should *exclude* the extension, and a platform-appropriate extension will
-be appended when the application is built.
+to an image to use as the background for the installer. The path should
+*exclude* the extension, and a platform-appropriate extension will be appended
+when the application is built.
 
 ``long_description``
 ~~~~~~~~~~~~~~~~~~~~
@@ -329,42 +329,6 @@ most specific.
 
 An identifier used to differentiate specific builds of the same version of an
 app. Defaults to ``1`` if not provided.
-
-``splash``
-~~~~~~~~~~
-
-A path, relative to the directory where the ``pyproject.toml`` file is located,
-to an image to use as the splash screen for the application. The path should
-*exclude* the extension; Briefcase will append a platform appropriate extension
-when configuring the application.
-
-Some platforms require multiple splash images, at different sizes; these will
-be handled by appending the required size to the provided icon name. For
-example, iOS requires multiple splash images, (1024px, 2048px and 3072px);
-with a ``splash`` setting of ``resources/my_splash``, Briefcase will look for
-``resources/my_splash-1024.png``, ``resources/my_splash-2045.png``, and
-``resources/my_splash-3072.png``. The sizes that are required are determined
-by the platform template.
-
-Some platforms also require different *variants*. For example, Android requires
-splash screens for ``normal``, ``large`` and ``xlarge`` devices. These variants
-can be specified by qualifying the splash specification::
-
-    splash.normal = "resource/normal-splash"
-    splash.large = "resource/large-splash"
-    splash.xlarge = "resource/xlarge-splash"
-
-These settings can, if you wish, all use the same prefix.
-
-If the platform requires different sizes for each variant (as Android does),
-those size will be appended to path provided by the variant specifier. For
-example, using the previous example, Android would look for
-``resource/normal-splash-320.png``,  ``resource/normal-splash-480.png``,
-``resource/large-splash.480.png``, ``resource/xlarge-splash-720.png``, amongst
-others.
-
-If the platform output format does not use a splash screen, the ``splash``
-setting is ignored.
 
 ``splash_background_color``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

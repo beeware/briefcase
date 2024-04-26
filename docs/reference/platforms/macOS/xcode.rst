@@ -41,9 +41,6 @@ the following sizes:
 * 512px
 * 1024px
 
-Splash Image format
-===================
-
 macOS Xcode projects do not support splash screens.
 
 Additional options

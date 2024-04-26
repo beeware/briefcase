@@ -72,44 +72,9 @@ application must provide the icons in the following sizes, for 2 variants:
   * 144px (``xxhdpi``; 3x scale)
   * 192px (``xxxhdpi``; 4x scale)
 
-Splash Image format
-===================
-
-Android projects use ``.png`` format splash screen images. A splash screen
-should be a square image with a transparent background. It must be specified
-in a range of sizes and variants, to suit different possible device sizes
-and device display densities:
-
-* ``normal`` (typical phones; up to 480 density-independent pixels):
-
-  * 320px (``mdpi``; baseline resolution)
-  * 480px (``hdpi``; 1.5x scale)
-  * 640px (``xhdpi``; 2x scale)
-  * 960px (``xxhdpi``; 3x scale)
-  * 1280px (``xxxhdpi``; 4x scale)
-
-* ``large`` (large format phones, or phone-tablet "phablet" hybrids; up to
-  720 density-independent pixels):
-
-  * 480px (``mdpi``; baseline resolution)
-  * 720px (``hdpi``; 1.5x scale)
-  * 960px (``xhdpi``; 2x scale)
-  * 1440px (``xxhdpi``; 3x scale)
-  * 1920px (``xxxhdpi``; 4x scale)
-
-* ``xlarge`` (tablets; larger than 720 density-independent pixels)
-
-  * 720px (``mdpi``; baseline resolution)
-  * 1080px (``hdpi``; 1.5x scale)
-  * 1440px (``xhdpi``; 2x scale)
-  * 2160px (``xxhdpi``; 3x scale)
-  * 2880px (``xxxhdpi``; 4x scale)
-
-Consult `the Android documentation
-<https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes>`__
-for more details on devices, sizes, and display densities. `This list of common
-devices with their sizes and DPI <https://m2.material.io/resources/devices/>`__
-may also be helpful.
+The icon will also be used to populate the splash screen. You can specify a
+background color for the splash screen using the ``splash_background_color``
+configuration setting.
 
 Android projects do not support installer images.
 
