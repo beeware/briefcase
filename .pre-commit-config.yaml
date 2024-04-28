@@ -23,7 +23,7 @@ repos:
       - id: docformatter
         args: [--in-place, --black]
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.4.0
+    rev: 24.4.2
     hooks:
       - id: black
         language_version: python3
