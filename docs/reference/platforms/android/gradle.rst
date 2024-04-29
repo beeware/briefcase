@@ -85,11 +85,10 @@ application must provide the icons in the following sizes, for 3 variants:
   * 324px (``xxhdpi``; 3x scale; 198px drawable area)
   * 432px (``xxxhdpi``; 4x scale; 264px drawable area)
 
-The ``round`` and ``square`` icons should include their background color in
-the image. The ``adaptive`` icons should have a transparent background; the
-image should be centered in the overall image, and be no larger than the itself
-should not exceed the drawable area. The background color of the adaptive icon
-will be the value specified as the ``splash_background_color``.
+The ``round`` and ``square`` icons should include their background color in the image.
+The ``adaptive`` icons should have a transparent background; the icon image should be
+centered in the overall image, and should not exceed the drawable area. The background
+color of the adaptive icon will be the value specified with ``splash_background_color``.
 
 The icon will also be used to populate the splash screen. You can specify a
 background color for the splash screen using the ``splash_background_color``

@@ -43,6 +43,14 @@ configuration setting.
 
 iOS projects do not support installer images.
 
+Colors
+======
+
+iOS allows for some customization of the colors used by your app:
+
+* ``splash_background_color`` is the color of the splash background that
+  displays while an app is loading.
+
 Additional options
 ==================
 
