@@ -1,0 +1,1 @@
+When creating a new project, the validation for App Name now rejects all non-ASCII values.

@@ -16,7 +16,7 @@ from .constants import RESERVED_WORDS
 from .exceptions import BriefcaseConfigError
 
 # PEP508 provides a basic restriction on naming
-PEP508_NAME_RE = re.compile(r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", re.IGNORECASE)
+PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$")
 
 
 def is_valid_pep508_name(app_name):

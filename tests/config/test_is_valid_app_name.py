@@ -34,6 +34,11 @@ def test_is_valid_app_name(name):
         "main",
         "socket",
         "test",
+        # İ and K (i.e. 0x212a) are valid ASCII when made lowercase and as such are
+        # accepted by the PEP-508 regex...but these should be rejected here to ensure
+        # compliance where app name is used downstream and only ASCII is accepted.
+        "İstanbul",
+        "Kelvin",
     ],
 )
 def test_is_invalid_app_name(name):

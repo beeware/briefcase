@@ -10,7 +10,6 @@ import pytest
         "42helloworld",  # ?? Are we sure this is correct?
         "hello_world",
         "hello-world",
-        "helloworld_ı",
     ],
 )
 def test_valid_app_name(new_command, name):
