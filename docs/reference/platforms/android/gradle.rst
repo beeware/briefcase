@@ -53,8 +53,8 @@ Briefcase supports three packaging formats for an Android app:
 Icon format
 ===========
 
-Android projects use ``.png`` format icons, in round and square variants. An
-application must provide the icons in the following sizes, for 2 variants:
+Android projects use ``.png`` format icons, in round, square and adaptive variants. An
+application must provide the icons in the following sizes, for 3 variants:
 
 * ``round``:
 
@@ -71,6 +71,25 @@ application must provide the icons in the following sizes, for 2 variants:
   * 96px (``xhdpi``; 2x scale)
   * 144px (``xxhdpi``; 3x scale)
   * 192px (``xxxhdpi``; 4x scale)
+  * 320px (``mdpi``; baseline resolution for splash screen)
+  * 480px (``hdpi``; 1.5x scale for splash screen)
+  * 640px (``xhdpi``; 2x scale for splash screen)
+  * 960px (``xxhdpi``; 3x scale for splash screen)
+  * 1280px (``xxxhdpi``; 4x scale for splash screen)
+
+* ``adaptive``:
+
+  * 108px (``mdpi``; baseline resolution; 66px drawable area)
+  * 162px (``hdpi``; 1.5x scale; 99px drawable area)
+  * 216px (``xhdpi``; 2x scale; 132px drawable area)
+  * 324px (``xxhdpi``; 3x scale; 198px drawable area)
+  * 432px (``xxxhdpi``; 4x scale; 264px drawable area)
+
+The ``round`` and ``square`` icons should include their background color in
+the image. The ``adaptive`` icons should have a transparent background; the
+image should be centered in the overall image, and be no larger than the itself
+should not exceed the drawable area. The background color of the adaptive icon
+will be the value specified as the ``splash_background_color``.
 
 The icon will also be used to populate the splash screen. You can specify a
 background color for the splash screen using the ``splash_background_color``

@@ -1,1 +1,1 @@
-iOS apps now require 640px, 1280px and 1920px icon image.
+The ``splash`` configuration option will no longer be honored. Splash screens are now generated based on the icon image.
