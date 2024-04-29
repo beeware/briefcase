@@ -36,7 +36,6 @@ def full_context():
         "author_email": "first@example.com",
         "requires": None,
         "icon": None,
-        "splash": None,
         "supported": True,
         "permissions": {},
         "custom_permissions": {},
