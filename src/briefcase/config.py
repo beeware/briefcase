@@ -15,8 +15,12 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .constants import RESERVED_WORDS
 from .exceptions import BriefcaseConfigError
 
-# PEP508 provides a basic restriction on naming
-PEP508_NAME_RE = re.compile(r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", re.IGNORECASE)
+# PEP 508 restricts the naming of modules. The PEP defines a regex that uses
+# re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
+# case, which has very slightly different semantics with non-ASCII characters. This
+# definition is the one from
+# https://github.com/pypa/packaging/blob/24.0/src/packaging/_tokenizer.py#L80
+PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$")
 
 
 def is_valid_pep508_name(app_name):
