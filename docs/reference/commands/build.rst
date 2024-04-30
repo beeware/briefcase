@@ -66,7 +66,7 @@ Update application requirements before building. Equivalent to running:
 ``--update-resources``
 ----------------------
 
-Update application resources such as icons before running. Equivalent to
+Update application resources such as icons before building. Equivalent to
 running:
 
 .. code-block:: console

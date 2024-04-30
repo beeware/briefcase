@@ -44,7 +44,7 @@ Update application requirements.
 ``--update-resources``
 ----------------------
 
-Update application resources such as icons before running.
+Update application resources such as icons.
 
 ``--update-support``
 ----------------------
