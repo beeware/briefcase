@@ -46,9 +46,6 @@ contain images in the following sizes:
 * 64px
 * 256px
 
-Splash Image format
-===================
-
 Windows Apps do not support splash screens or installer images.
 
 Additional options

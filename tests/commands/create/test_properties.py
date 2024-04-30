@@ -219,60 +219,6 @@ def test_icon_variants(create_command, myapp):
     }
 
 
-def test_no_splash(create_command, myapp):
-    """If no splash target is specified, the splash list is empty."""
-    bundle_path = create_command.bundle_path(myapp)
-    bundle_path.mkdir(parents=True)
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
-            "paths": {
-                "app_path": "path/to/app",
-            }
-        }
-        tomli_w.dump(index, f)
-
-    assert create_command.splash_image_targets(myapp) == {}
-
-
-def test_single_splash(create_command, myapp):
-    """If the splash target is specified as a single string, the splash list has one
-    unsized entry."""
-    bundle_path = create_command.bundle_path(myapp)
-    bundle_path.mkdir(parents=True)
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
-            "paths": {
-                "app_path": "path/to/app",
-                "splash": "path/to/splash.png",
-            }
-        }
-        tomli_w.dump(index, f)
-
-    assert create_command.splash_image_targets(myapp) == {None: "path/to/splash.png"}
-
-
-def test_multiple_splash(create_command, myapp):
-    """If there are multiple splash targets, they're all in the target list."""
-    bundle_path = create_command.bundle_path(myapp)
-    bundle_path.mkdir(parents=True)
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
-            "paths": {
-                "app_path": "path/to/app",
-                "splash": {
-                    "10x20": "path/to/splash-10.png",
-                    "20x30": "path/to/splash-20.png",
-                },
-            }
-        }
-        tomli_w.dump(index, f)
-
-    assert create_command.splash_image_targets(myapp) == {
-        "10x20": "path/to/splash-10.png",
-        "20x30": "path/to/splash-20.png",
-    }
-
-
 def test_no_document_types(create_command, myapp):
     """If no document type targets are specified, the document_type_icons list is
     empty."""

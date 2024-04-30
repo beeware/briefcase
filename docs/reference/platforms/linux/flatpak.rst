@@ -65,9 +65,6 @@ the following sizes:
 * 256px
 * 512px
 
-Splash Image format
-===================
-
 Flatpaks do not support splash screens or installer images.
 
 Application configuration

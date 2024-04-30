@@ -193,7 +193,6 @@ class AppConfig(BaseConfig):
         author_email=None,
         requires=None,
         icon=None,
-        splash=None,
         document_type=None,
         permission=None,
         template=None,
@@ -221,7 +220,6 @@ class AppConfig(BaseConfig):
         self.author_email = author_email
         self.requires = requires
         self.icon = icon
-        self.splash = splash
         self.document_types = {} if document_type is None else document_type
         self.permission = {} if permission is None else permission
         self.template = template

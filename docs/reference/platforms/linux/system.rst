@@ -69,9 +69,6 @@ the following sizes:
 * 256px
 * 512px
 
-Splash Image format
-===================
-
 Linux System packages do not support splash screens or installer images.
 
 Additional files

@@ -28,9 +28,8 @@ def test_minimal_AppConfig():
     assert config.class_name == "myapp"
     assert config.document_types == {}
 
-    # There is no icon or splash of any kind
+    # There is no icon of any kind
     assert config.icon is None
-    assert config.splash is None
 
     # The PYTHONPATH is derived correctly
     assert config.PYTHONPATH(False) == ["src", "somewhere/else", ""]

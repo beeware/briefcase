@@ -44,7 +44,7 @@ Update application requirements.
 ``--update-resources``
 ----------------------
 
-Update application resources (e.g., icons and splash screens).
+Update application resources such as icons.
 
 ``--update-support``
 ----------------------
