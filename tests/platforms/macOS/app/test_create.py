@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 from unittest import mock
 
 import pytest
@@ -293,6 +294,10 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
     initial_timestamp = os.path.getmtime(
         create_command.binary_path(first_app_templated)
     )
+
+    # Add a small sleep to make sure that a touch will definitely result in an updated
+    # modification time
+    time.sleep(0.1)
 
     # Install resources
     create_command.install_app_resources(first_app_templated)
