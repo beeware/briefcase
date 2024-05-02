@@ -691,8 +691,8 @@ class CreateCommand(BaseCommand):
                 "The splash configuration will be ignored."
             )
 
-        self.logger.info()
         for extension, doctype in self.document_type_icon_targets(app).items():
+            self.logger.info()
             for size, target in doctype.items():
                 self.install_image(
                     f"icon for .{extension} documents",
