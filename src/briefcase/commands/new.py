@@ -717,6 +717,7 @@ To run your application, type:
 
     $ cd {context['app_name']}
     $ briefcase dev
+
 """
         )
 
