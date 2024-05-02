@@ -6,7 +6,7 @@ import platform
 import shutil
 import subprocess
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import briefcase
@@ -399,6 +399,9 @@ class CreateCommand(BaseCommand):
         with self.input.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
                 if requires:
+                    # Add timestamp so build systems (such as Gradle) detect a change
+                    # in the file and perform a re-installation of all requirements.
+                    f.write(f"# Generated {datetime.now()}\n")
                     for requirement in requires:
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file

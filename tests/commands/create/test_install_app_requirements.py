@@ -1,3 +1,4 @@
+import datetime
 import os
 import subprocess
 import sys
@@ -6,10 +7,13 @@ from unittest import mock
 import pytest
 import tomli_w
 
+import briefcase
 from briefcase.commands.create import _is_local_requirement
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
+
+GENERATED_DATETIME = "# Generated 2024-05-02 12:00:00.000500"
 
 
 @pytest.fixture
@@ -17,6 +21,19 @@ def create_command(create_command, myapp):
     # mock subprocess app context for this app
     create_command.tools[myapp].app_context = mock.MagicMock(spec_set=Subprocess)
     return create_command
+
+
+@pytest.fixture
+def mock_now(monkeypatch):
+    """Monkeypatch the ``datetime.now`` inside ``briefcase.commands.create``.
+
+    When this fixture is used, the datetime is locked to 2024 May 2 @ 12:00:00:000500.
+    """
+    now = datetime.datetime(2024, 5, 2, 12, 0, 0, 500)
+    datetime_mock = mock.MagicMock(wraps=datetime.datetime)
+    datetime_mock.now.return_value = now
+    monkeypatch.setattr(briefcase.commands.create, "datetime", datetime_mock)
+    return now
 
 
 def create_installation_artefacts(app_packages_path, packages):
@@ -455,6 +472,7 @@ def test_app_requirements_requires(
     myapp,
     app_requirements_path,
     app_requirements_path_index,
+    mock_now,
 ):
     """If an app has an empty requirements list, a requirements file is still
     written."""
@@ -466,7 +484,7 @@ def test_app_requirements_requires(
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
     with app_requirements_path.open(encoding="utf-8") as f:
-        assert f.read() == "first\nsecond==1.2.3\nthird>=3.2.1\n"
+        assert f.read() == f"{GENERATED_DATETIME}\nfirst\nsecond==1.2.3\nthird>=3.2.1\n"
 
     # Original app definitions haven't changed
     assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
@@ -499,7 +517,6 @@ def _test_app_requirements_paths(
     create_command,
     myapp,
     app_requirements_path,
-    app_requirements_path_index,
     tmp_path,
     requirement,
 ):
@@ -515,6 +532,7 @@ def _test_app_requirements_paths(
         assert f.read() == (
             "\n".join(
                 [
+                    GENERATED_DATETIME,
                     "first",
                     converted.format(tmp_path),
                     "third",
@@ -557,13 +575,13 @@ def test_app_requirements_non_paths(
     app_requirements_path_index,
     tmp_path,
     requirement,
+    mock_now,
 ):
     """Requirements which are not paths are left unchanged."""
     _test_app_requirements_paths(
         create_command,
         myapp,
         app_requirements_path,
-        app_requirements_path_index,
         tmp_path,
         requirement,
     )
@@ -588,13 +606,13 @@ def test_app_requirements_paths_unix(
     app_requirements_path_index,
     tmp_path,
     requirement,
+    mock_now,
 ):
     """Requirement paths in Unix format are expanded correctly."""
     _test_app_requirements_paths(
         create_command,
         myapp,
         app_requirements_path,
-        app_requirements_path_index,
         tmp_path,
         requirement,
     )
@@ -625,13 +643,13 @@ def test_app_requirements_paths_windows(
     app_requirements_path_index,
     tmp_path,
     requirement,
+    mock_now,
 ):
     """Requirement paths in Windows format are expanded correctly."""
     _test_app_requirements_paths(
         create_command,
         myapp,
         app_requirements_path,
-        app_requirements_path_index,
         tmp_path,
         requirement,
     )
