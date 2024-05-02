@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from unittest import mock
@@ -283,6 +284,24 @@ def test_permissions_context(
     x_permissions = create_command._x_permissions(first_app)
     # Check that the final platform permissions are rendered as expected.
     assert context == create_command.permissions_context(first_app, x_permissions)
+
+
+def test_install_app_resources(create_command, first_app_templated, tmp_path):
+    """The app bundle's modification time is updated when app resources are
+    installed."""
+    # Get the initial app modification time
+    initial_timestamp = os.path.getmtime(
+        create_command.binary_path(first_app_templated)
+    )
+
+    # Install resources
+    create_command.install_app_resources(first_app_templated)
+
+    # Modification time has been updated, and is newer
+    assert (
+        os.path.getmtime(create_command.binary_path(first_app_templated))
+        > initial_timestamp
+    )
 
 
 @pytest.mark.parametrize(

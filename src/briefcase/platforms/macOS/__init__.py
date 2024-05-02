@@ -42,6 +42,13 @@ class macOSMixin:
 class macOSCreateMixin(AppPackagesMergeMixin):
     hidden_app_properties = {"permission", "entitlement"}
 
+    def install_app_resources(self, app: AppConfig):
+        super().install_app_resources(app)
+
+        # macOS will cache application icons. Touching the .app folder flushes the icon
+        # cache for the app, ensuring the current icon is loaded.
+        self.binary_path(app).touch(exist_ok=True)
+
     def _install_app_requirements(
         self,
         app: AppConfig,
