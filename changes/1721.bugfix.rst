@@ -1,0 +1,1 @@
+When using ``-r/--update-requirements`` for building for Android, the app's requirements are always reinstalled now.
