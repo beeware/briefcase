@@ -686,8 +686,8 @@ class CreateCommand(BaseCommand):
         # Briefcase v0.3.18 - splash screens deprecated.
         if getattr(app, "splash", None):
             self.logger.warning(
-                "Splash screens are now configured based on the icon. "
-                "The splash configuration will be ignored."
+                "\nSplash screens are now configured based on the icon. "
+                "The splash configuration will be ignored.\n"
             )
 
         for extension, doctype in self.document_type_icon_targets(app).items():
