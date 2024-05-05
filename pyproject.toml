@@ -101,7 +101,7 @@ dev = [
     # Pre-commit 3.6.0 deprecated support for Python 3.8
     "pre-commit == 3.5.0 ; python_version < '3.9'",
     "pre-commit == 3.7.0 ; python_version >= '3.9'",
-    "pytest == 8.1.1",
+    "pytest == 8.1.2",
     "pytest-xdist == 3.6.1",
     "setuptools_scm == 8.0.4",
     "tox == 4.15.0",
