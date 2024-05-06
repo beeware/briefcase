@@ -1,0 +1,1 @@
+Packages created for OpenSUSE now depend on ``libcanberra-gtk3-module`` instead of ``libcanberra-gtk3-0``.
