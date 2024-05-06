@@ -1,1 +1,0 @@
-The configuration generated for iOS apps declaring geolocation permissions has been corrected.

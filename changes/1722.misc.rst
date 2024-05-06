@@ -1,1 +1,0 @@
-The support for textwrapping messages printed to the console was consolidated to allow for broader usage.

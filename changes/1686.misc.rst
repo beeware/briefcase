@@ -1,1 +1,0 @@
-All dependencies in tox.ini are now pinned to specific versions.

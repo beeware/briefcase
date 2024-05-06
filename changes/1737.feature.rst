@@ -1,1 +1,0 @@
-When a platform supports a splash screen, that splash screen will be generated automatically based on the app icon, rather than requiring additional configuration.

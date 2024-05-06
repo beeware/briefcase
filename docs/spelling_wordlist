@@ -33,6 +33,7 @@ Flatpak
 Flatpaks
 Freedesktop
 Github
+geolocation
 gradle
 Gradle
 gradlew
@@ -70,6 +71,8 @@ Pyodide
 PyScript
 PySide
 pytest
+reStructuredText
+rpmbuild
 rst
 runtime
 Runtime

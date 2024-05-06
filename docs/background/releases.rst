@@ -4,6 +4,60 @@ Release History
 
 .. towncrier release notes start
 
+0.3.18 (2024-05-06)
+===================
+
+Features
+--------
+
+* Existing projects with a ``pyproject.toml`` configuration can now be converted into Briefcase apps using the ``briefcase convert`` command. (`#1202 <https://github.com/beeware/briefcase/issues/1202>`__)
+* Apps packaged as AppImages are no longer dependent on ``libcrypt.so.1``. (`#1383 <https://github.com/beeware/briefcase/issues/1383>`__)
+* The ``briefcase run`` command now supports the ``--target`` option to run Linux apps from within Docker for other distributions. (`#1603 <https://github.com/beeware/briefcase/issues/1603>`__)
+* The hints and recommendations that Docker prints in the console are now silenced. (`#1635 <https://github.com/beeware/briefcase/issues/1635>`__)
+* In non-interactive environments, such as CI, a message is now printed to signify a task has begun where an animated bar would be displayed in interactive console sessions. (`#1649 <https://github.com/beeware/briefcase/issues/1649>`__)
+* Additional options can now be passed to the ``docker build`` command for building native Linux packages and AppImages via the ``--Xdocker-build`` argument. (`#1661 <https://github.com/beeware/briefcase/issues/1661>`__)
+* The contents of ``pyproject.toml`` is now included in the log file. (`#1674 <https://github.com/beeware/briefcase/issues/1674>`__)
+* When an app runs on an Android device or emulator, the logging output is now colored. (`#1676 <https://github.com/beeware/briefcase/issues/1676>`__)
+* When deep debug is activated via ``-vv``, ``pip`` now installs requirements for the app with verbose logging. (`#1708 <https://github.com/beeware/briefcase/issues/1708>`__)
+* The listing of filenames for updating permissions for building native Linux packages is now only shown when verbose logging is enabled via ``-v``. (`#1720 <https://github.com/beeware/briefcase/issues/1720>`__)
+* When a platform supports a splash screen, that splash screen will be generated automatically based on the app icon, rather than requiring additional configuration. (`#1737 <https://github.com/beeware/briefcase/issues/1737>`__)
+* New projects for Toga on GTK3 now recommend using ``gir1.2-webkit2-4.1`` instead of ``gir1.2-webkit2-4.0`` for ``WebView`` support. (`#1748 <https://github.com/beeware/briefcase/issues/1748>`__)
+
+
+Bugfixes
+--------
+
+* When Briefcase can't find ``rpmbuild`` on an RPM-based system, the message giving install instructions now uses the correct package name. (`#1638 <https://github.com/beeware/briefcase/issues/1638>`__)
+* Creating new projects is now compatible with cookiecutter v2.6.0. (`#1663 <https://github.com/beeware/briefcase/issues/1663>`__)
+* The minimum version of pip was bumped to 23.1.2 to ensure compatibility with Python 3.12. (`#1681 <https://github.com/beeware/briefcase/issues/1681>`__)
+* On Windows, the Android emulator will always open without needing to press CTRL-C. (`#1687 <https://github.com/beeware/briefcase/issues/1687>`__)
+* A spurious Android emulator named ``@INFO`` will no longer be included in the list of available emulators. (`#1697 <https://github.com/beeware/briefcase/issues/1697>`__)
+* The configuration generated for iOS apps declaring geolocation permissions has been corrected. (`#1713 <https://github.com/beeware/briefcase/issues/1713>`__)
+* When using ``-r/--update-requirements`` for building for Android, the app's requirements are always reinstalled now. (`#1721 <https://github.com/beeware/briefcase/issues/1721>`__)
+* When creating a new project, the validation for App Name now rejects all non-ASCII values. (`#1762 <https://github.com/beeware/briefcase/issues/1762>`__)
+* Packages created for OpenSUSE now depend on ``libcanberra-gtk3-module`` instead of ``libcanberra-gtk3-0``. (`#1774 <https://github.com/beeware/briefcase/issues/1774>`__)
+
+
+Backward Incompatible Changes
+-----------------------------
+
+* WiX v3.14.1 is now used to package Windows apps. Run ``briefcase upgrade wix`` to start using this version. (`#1707 <https://github.com/beeware/briefcase/issues/1707>`__)
+* Java JDK 17.0.11+9 is now used to package Android apps. Use ``briefcase upgrade java`` to update your Briefcase-installed JDK instance to this version. (`#1736 <https://github.com/beeware/briefcase/issues/1736>`__)
+* The ``splash`` configuration option will no longer be honored. Splash screens are now generated based on the icon image. (`#1737 <https://github.com/beeware/briefcase/issues/1737>`__)
+* iOS apps now require 640px, 1280px and 1920px icon image. (`#1737 <https://github.com/beeware/briefcase/issues/1737>`__)
+* Android apps now require an ``adaptive`` variant for icons. This requires 108px, 162px, 216px, 324px and 432px images with a transparent background. The Android ``square`` icon variant requires additional 320px, 480px, 640px, 960px and 1280px images. (`#1737 <https://github.com/beeware/briefcase/issues/1737>`__)
+
+Documentation
+-------------
+
+* The documentation contribution guide was updated to use a more authoritative reStructuredText reference. (`#1695 <https://github.com/beeware/briefcase/issues/1695>`__)
+* The README badges were updated to display correctly on GitHub. (`#1763 <https://github.com/beeware/briefcase/issues/1763>`__)
+
+Misc
+----
+
+* `#1428 <https://github.com/beeware/briefcase/issues/1428>`__, `#1495 <https://github.com/beeware/briefcase/issues/1495>`__, `#1637 <https://github.com/beeware/briefcase/issues/1637>`__, `#1639 <https://github.com/beeware/briefcase/issues/1639>`__, `#1642 <https://github.com/beeware/briefcase/issues/1642>`__, `#1643 <https://github.com/beeware/briefcase/issues/1643>`__, `#1644 <https://github.com/beeware/briefcase/issues/1644>`__, `#1645 <https://github.com/beeware/briefcase/issues/1645>`__, `#1646 <https://github.com/beeware/briefcase/issues/1646>`__, `#1652 <https://github.com/beeware/briefcase/issues/1652>`__, `#1653 <https://github.com/beeware/briefcase/issues/1653>`__, `#1656 <https://github.com/beeware/briefcase/issues/1656>`__, `#1657 <https://github.com/beeware/briefcase/issues/1657>`__, `#1658 <https://github.com/beeware/briefcase/issues/1658>`__, `#1659 <https://github.com/beeware/briefcase/issues/1659>`__, `#1660 <https://github.com/beeware/briefcase/issues/1660>`__, `#1666 <https://github.com/beeware/briefcase/issues/1666>`__, `#1671 <https://github.com/beeware/briefcase/issues/1671>`__, `#1672 <https://github.com/beeware/briefcase/issues/1672>`__, `#1679 <https://github.com/beeware/briefcase/issues/1679>`__, `#1683 <https://github.com/beeware/briefcase/issues/1683>`__, `#1684 <https://github.com/beeware/briefcase/issues/1684>`__, `#1686 <https://github.com/beeware/briefcase/issues/1686>`__, `#1689 <https://github.com/beeware/briefcase/issues/1689>`__, `#1690 <https://github.com/beeware/briefcase/issues/1690>`__, `#1691 <https://github.com/beeware/briefcase/issues/1691>`__, `#1692 <https://github.com/beeware/briefcase/issues/1692>`__, `#1694 <https://github.com/beeware/briefcase/issues/1694>`__, `#1699 <https://github.com/beeware/briefcase/issues/1699>`__, `#1700 <https://github.com/beeware/briefcase/issues/1700>`__, `#1701 <https://github.com/beeware/briefcase/issues/1701>`__, `#1702 <https://github.com/beeware/briefcase/issues/1702>`__, `#1710 <https://github.com/beeware/briefcase/issues/1710>`__, `#1711 <https://github.com/beeware/briefcase/issues/1711>`__, `#1712 <https://github.com/beeware/briefcase/issues/1712>`__, `#1716 <https://github.com/beeware/briefcase/issues/1716>`__, `#1717 <https://github.com/beeware/briefcase/issues/1717>`__, `#1722 <https://github.com/beeware/briefcase/issues/1722>`__, `#1723 <https://github.com/beeware/briefcase/issues/1723>`__, `#1725 <https://github.com/beeware/briefcase/issues/1725>`__, `#1730 <https://github.com/beeware/briefcase/issues/1730>`__, `#1731 <https://github.com/beeware/briefcase/issues/1731>`__, `#1732 <https://github.com/beeware/briefcase/issues/1732>`__, `#1741 <https://github.com/beeware/briefcase/issues/1741>`__, `#1742 <https://github.com/beeware/briefcase/issues/1742>`__, `#1743 <https://github.com/beeware/briefcase/issues/1743>`__, `#1744 <https://github.com/beeware/briefcase/issues/1744>`__, `#1745 <https://github.com/beeware/briefcase/issues/1745>`__, `#1752 <https://github.com/beeware/briefcase/issues/1752>`__, `#1753 <https://github.com/beeware/briefcase/issues/1753>`__, `#1754 <https://github.com/beeware/briefcase/issues/1754>`__, `#1756 <https://github.com/beeware/briefcase/issues/1756>`__, `#1757 <https://github.com/beeware/briefcase/issues/1757>`__, `#1758 <https://github.com/beeware/briefcase/issues/1758>`__, `#1759 <https://github.com/beeware/briefcase/issues/1759>`__, `#1760 <https://github.com/beeware/briefcase/issues/1760>`__, `#1761 <https://github.com/beeware/briefcase/issues/1761>`__, `#1766 <https://github.com/beeware/briefcase/issues/1766>`__, `#1769 <https://github.com/beeware/briefcase/issues/1769>`__, `#1775 <https://github.com/beeware/briefcase/issues/1775>`__, `#1776 <https://github.com/beeware/briefcase/issues/1776>`__
+
 0.3.17 (2024-02-06)
 ===================
 

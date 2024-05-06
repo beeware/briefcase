@@ -1,1 +1,0 @@
-Apps packaged as AppImages are no longer dependent on ``libcrypt.so.1``.

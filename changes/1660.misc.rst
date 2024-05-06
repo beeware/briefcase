@@ -1,1 +1,0 @@
-WiX v3.14 is now used to package Windows apps. Run ``briefcase upgrade wix`` to start using this version.

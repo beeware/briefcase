@@ -1,1 +1,0 @@
-Android apps now require an ``adaptive`` variant for icons. This requires 108px, 162px, 216px, 324px and 432px images with a transparent background. The Android ``square`` icon variant requires additional 320px, 480px, 640px, 960px and 1280px images.

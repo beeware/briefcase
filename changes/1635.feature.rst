@@ -1,1 +1,0 @@
-The hints and recommendations that Docker prints in the console are now silenced.

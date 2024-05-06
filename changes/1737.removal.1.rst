@@ -1,1 +1,0 @@
-The ``splash`` configuration option will no longer be honored. Splash screens are now generated based on the icon image.
