@@ -49,6 +49,20 @@ def test_env_overrides(mock_sub):
     }
 
 
+def test_env_overrides_none(mock_sub):
+    """Any overrides set to None are absent in the final kwargs."""
+    assert mock_sub.final_kwargs(env={"NEWVAR": "val", "VAR1": None, "VAR2": None}) == {
+        "env": {
+            "PS1": "\nLine 2\n\nLine 4",
+            "PWD": "/home/user/",
+            "NEWVAR": "val",
+        },
+        "text": True,
+        "encoding": CONSOLE_ENCODING,
+        "errors": "backslashreplace",
+    }
+
+
 def test_cwd_provided(mock_sub):
     """If a cwd is provided, it is reflected in the environment."""
     cwd_override = "/my/current/path"

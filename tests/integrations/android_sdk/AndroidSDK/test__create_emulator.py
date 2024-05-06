@@ -100,7 +100,10 @@ def test_create_emulator(
             "--device",
             "slab",
         ],
-        env=android_sdk.env,
+        env={
+            **android_sdk.env,
+            **{"XDG_CONFIG_HOME": None},
+        },
     )
 
     # Emulator configuration file has been appended.
@@ -173,7 +176,10 @@ def test_create_emulator_with_defaults(
             "--device",
             "pixel",
         ],
-        env=android_sdk.env,
+        env={
+            **android_sdk.env,
+            **{"XDG_CONFIG_HOME": None},
+        },
     )
 
     # Emulator configuration file has been appended.
@@ -220,7 +226,10 @@ def test_create_failure(mock_tools, android_sdk):
             "--device",
             "pixel",
         ],
-        env=android_sdk.env,
+        env={
+            **android_sdk.env,
+            **{"XDG_CONFIG_HOME": None},
+        },
     )
 
 
