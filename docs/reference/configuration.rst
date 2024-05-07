@@ -237,6 +237,12 @@ on an app with a formal name of "My App" would remove:
 3. Any ``.exe`` file in ``path`` or its subdirectories.
 4. The file ``My App/content/extra.doc``.
 
+``console_app``
+~~~~~~~~~~~~~~~
+
+A boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
+(producing as GUI app).
+
 ``exit_regex``
 ~~~~~~~~~~~~~~
 

@@ -201,6 +201,7 @@ class AppConfig(BaseConfig):
         test_requires=None,
         supported=True,
         long_description=None,
+        console_app=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -228,6 +229,7 @@ class AppConfig(BaseConfig):
         self.test_requires = test_requires
         self.supported = supported
         self.long_description = long_description
+        self.console_app = console_app
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
