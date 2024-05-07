@@ -33,6 +33,34 @@ ADHOC_IDENTITY_NAME = (
 )
 
 
+class SigningIdentity:
+    def __init__(self, id="-", name=None):
+        """A wrapper around the various forms of an Apple signing identity."""
+        self.id = id
+        if self.id == "-":
+            self.team_id = None
+            self.name = ADHOC_IDENTITY_NAME
+        else:
+            self.name = name
+            try:
+                self.team_id = re.match(r".*\(([\dA-Z]*)\)", name)[1]
+            except TypeError:
+                raise BriefcaseCommandError(
+                    f"Couldn't extract Team ID from signing identity {name!r}"
+                )
+
+    @property
+    def is_adhoc(self):
+        """Is this the adhoc identity?"""
+        return self.id == "-"
+
+    def __repr__(self):
+        return f"<SigningIdentity id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, SigningIdentity) and self.id == other.id
+
+
 class macOSMixin:
     platform = "macOS"
     supported_host_os = {"Darwin"}
@@ -619,22 +647,6 @@ class macOSPackageMixin(macOSSigningMixin):
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
-
-    def team_id_from_identity(self, identity_name):
-        """Extract the team ID from the full identity name.
-
-        The identity name will be in the form:
-            Some long identifying name (Team ID)
-
-        :param identity_name: The full identity name
-        :returns: The team ID string.
-        """
-        try:
-            return re.match(r".*\(([\dA-Z]*)\)", identity_name)[1]
-        except TypeError:
-            raise BriefcaseCommandError(
-                f"Couldn't extract Team ID from signing identity {identity_name!r}"
-            )
 
     def notarize(self, filename, team_id):
         """Notarize a file.
