@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent.futures
 import itertools
 import os
+import plistlib
 import re
 import subprocess
 import time
@@ -55,10 +56,7 @@ class SigningIdentity:
         return self.id == "-"
 
     def __repr__(self):
-        if self.is_adhoc:
-            return "<AdhocSigningIdentity>"
-        else:
-            return f"<SigningIdentity id={self.id}>"
+        return f"<SigningIdentity id={self.id}>"
 
     def __eq__(self, other):
         return isinstance(other, SigningIdentity) and self.id == other.id
@@ -482,7 +480,7 @@ or
         :param identity: The code signing identity to use.
         :param entitlements: The path to the entitlements file to use.
         """
-        options = "runtime" if not identity.is_adhoc else None
+        options = "runtime" if identity.is_adhoc else None
         process_command = ["codesign", path, "--sign", identity.id, "--force"]
 
         if entitlements:
@@ -615,7 +613,7 @@ class macOSPackageMixin(macOSSigningMixin):
 
     @property
     def packaging_formats(self):
-        return ["zip", "dmg"]
+        return ["zip", "dmg", "pkg"]
 
     @property
     def default_packaging_format(self):
@@ -624,6 +622,8 @@ class macOSPackageMixin(macOSSigningMixin):
     def distribution_path(self, app):
         if app.packaging_format == "zip":
             return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
+        elif app.packaging_format == "pkg":
+            return self.dist_path / f"{app.formal_name}-{app.version}.pkg"
         else:
             return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
 
@@ -655,7 +655,7 @@ class macOSPackageMixin(macOSSigningMixin):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
-    def notarize(self, filename: Path, identity: SigningIdentity):
+    def notarize(self, filename, identity: SigningIdentity):
         """Notarize a file.
 
         Submits the file to Apple for notarization; if successful, staples the
@@ -852,6 +852,13 @@ password:
                 identity=identity,
             )
 
+        elif app.packaging_format == "pkg":
+            self.package_pkg(
+                app,
+                notarize_app=notarize_app,
+                identity=identity,
+            )
+
         else:  # Default packaging format is DMG
             self.package_dmg(
                 app,
@@ -882,6 +889,122 @@ password:
                 root_dir=self.binary_path(app).parent,
                 base_dir=self.binary_path(app).name,
             )
+
+    def package_pkg(
+        self,
+        app: AppConfig,
+        notarize_app: bool,
+        identity: SigningIdentity,
+    ):
+        """Package the app as an installer."""
+        dist_path: Path = self.distribution_path(app)
+
+        self.logger.info("Building PKG...", prefix=app.app_name)
+
+        installer_path = self.bundle_path(app) / "installer"
+
+        with self.input.wait_bar("Installing license..."):
+            license_file = self.base_path / "LICENSE"
+            if license_file.is_file():
+                self.tools.shutil.copy(
+                    license_file,
+                    installer_path / "resources/LICENSE",
+                )
+            else:
+                raise BriefcaseCommandError(
+                    """\
+Your project does not contain a LICENSE file.
+
+Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+with your app's licensing terms.
+"""
+                )
+
+        # pkgbuild's default behavior is to make "relocatable" installs, which means
+        # that if you've ever run the app, the installer will default to updating *that*
+        # version, rather than putting it in the location that the installer specifies.
+        # This means if you've ever used `briefcase run`, that will be the install
+        # location of the "installed" app. To work around this, you have to provide a
+        # plist file - but that requires providing a "root" folder that *only* contains
+        # the products you want to install. So - we need to copy the built app to a
+        # "clean" packaging location.
+        with self.input.wait_bar("Copying app into products folder..."):
+            installed_app_path = installer_path / "root" / self.binary_path(app).name
+            if installed_app_path.exists():
+                self.tools.shutil.rmtree(installed_app_path)
+            self.tools.shutil.copytree(self.binary_path(app), installed_app_path)
+
+        components_plist_path = self.bundle_path(app) / "installer/components.plist"
+
+        with self.input.wait_bar("Writing component manifest..."):
+            with components_plist_path.open("wb") as components_plist:
+                plistlib.dump(
+                    [
+                        {
+                            "BundleHasStrictIdentifier": True,
+                            "BundleIsRelocatable": False,
+                            "BundleIsVersionChecked": True,
+                            "BundleOverwriteAction": "upgrade",
+                            "RootRelativeBundlePath": self.binary_path(app).name,
+                        }
+                    ],
+                    components_plist,
+                )
+
+        # Console apps are installed in /Library/Formal Name, and include the
+        # post-install scripts. Normal apps are installed in /Applications, and don't
+        # include the scripts.
+        if app.console_app:
+            install_args = [
+                "--install-location",
+                f"/Library/{app.formal_name}",
+                "--scripts",
+                installer_path / "scripts",
+            ]
+        else:
+            install_args = ["--install-location", "/Applications"]
+
+        with self.input.wait_bar("Building app package..."):
+            installer_packages_path = installer_path / "packages"
+            if installer_packages_path.exists():
+                self.tools.shutil.rmtree(installer_packages_path)
+            installer_packages_path.mkdir()
+
+            self.tools.subprocess.run(
+                [
+                    "pkgbuild",
+                    "--root",
+                    installer_path / "root",
+                    "--component-plist",
+                    components_plist_path,
+                ]
+                + install_args
+                + [
+                    installer_packages_path / f"{app.app_name}.pkg",
+                ]
+            )
+
+        # Build package
+        with self.input.wait_bar(f"Building {dist_path.name}..."):
+            self.tools.subprocess.run(
+                [
+                    "productbuild",
+                    "--distribution",
+                    installer_path / "Distribution.xml",
+                    "--package-path",
+                    installer_path / "packages",
+                    "--resources",
+                    installer_path / "resources",
+                    dist_path,
+                ]
+            )
+
+        if notarize_app:
+            self.logger.info(
+                f"Notarizing installer using team ID {identity.team_id}...",
+                prefix=app.app_name,
+            )
+            self.notarize(dist_path, identity=identity)
 
     def package_dmg(
         self,

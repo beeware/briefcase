@@ -21,11 +21,14 @@ By default, apps will be both signed and notarized when they are packaged.
 Packaging format
 ================
 
-Briefcase supports two packaging formats for a macOS Xcode project:
+Briefcase supports three packaging formats for a macOS Xcode project:
 
 1. A DMG that contains the ``.app`` bundle (the default output of ``briefcase package
    macOS Xcode``, or by using ``briefcase package macOS Xcode -p dmg``); or
-2. A zipped ``.app`` folder (using ``briefcase package macOS Xcode -p app``).
+2. A zipped ``.app`` folder (using ``briefcase package macOS Xcode -p zip``).
+3. A ``.pkg`` installer (using ``briefcase package macOS Xcode -p pkg``).
+
+The ``.pkg`` format is the *required* format for command line apps.
 
 Icon format
 ===========
