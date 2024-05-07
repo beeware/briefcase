@@ -241,7 +241,7 @@ on an app with a formal name of "My App" would remove:
 ~~~~~~~~~~~~~~~
 
 A boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
-(producing as GUI app).
+(producing a GUI app).
 
 ``exit_regex``
 ~~~~~~~~~~~~~~
