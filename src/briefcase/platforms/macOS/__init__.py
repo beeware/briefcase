@@ -208,6 +208,63 @@ class macOSRunMixin:
         :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
+        # Console apps must operate in non-streaming mode so that console input can
+        # be handled correctly. However, if we're in test mode, we *must* stream so
+        # that we can see the test exit sentinel
+        if app.console_app and not test_mode:
+            self.logger.info("=" * 75)
+            self.run_console_app(
+                app,
+                passthrough=passthrough,
+                **kwargs,
+            )
+        else:
+            self.run_gui_app(
+                app,
+                test_mode=test_mode,
+                passthrough=passthrough,
+                **kwargs,
+            )
+
+    def run_console_app(
+        self,
+        app: AppConfig,
+        passthrough: list[str],
+        **kwargs,
+    ):
+        """Start the console application.
+
+        :param app: The config object for the app
+        :param passthrough: The list of arguments to pass to the app
+        """
+        try:
+            kwargs = self._prepare_app_env(app=app, test_mode=False)
+
+            # Start the app directly
+            self.tools.subprocess.run(
+                [self.binary_path(app) / "Contents" / "MacOS" / f"{app.formal_name}"]
+                + (passthrough if passthrough else []),
+                cwd=self.tools.home_path,
+                check=True,
+                **kwargs,
+            )
+
+        except subprocess.CalledProcessError:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+
+    def run_gui_app(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        passthrough: list[str],
+        **kwargs,
+    ):
+        """Start the GUI application.
+
+        :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
+        """
         # Start log stream for the app.
         # Streaming the system log is... a mess. The system log contains a
         # *lot* of noise from other processes; even if you filter by
