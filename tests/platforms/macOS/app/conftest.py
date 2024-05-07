@@ -3,7 +3,19 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.platforms.macOS import SigningIdentity
+
 from ....utils import create_file, create_plist_file
+
+
+@pytest.fixture
+def sekrit_identity():
+    return SigningIdentity(id="CAFEBEEF", name="Sekrit identity (DEADBEEF)")
+
+
+@pytest.fixture
+def adhoc_identity():
+    return SigningIdentity()
 
 
 @pytest.fixture

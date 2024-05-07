@@ -55,7 +55,10 @@ class SigningIdentity:
         return self.id == "-"
 
     def __repr__(self):
-        return f"<SigningIdentity id={self.id}>"
+        if self.is_adhoc:
+            return "<AdhocSigningIdentity>"
+        else:
+            return f"<SigningIdentity id={self.id}>"
 
     def __eq__(self, other):
         return isinstance(other, SigningIdentity) and self.id == other.id
@@ -409,7 +412,7 @@ class macOSSigningMixin:
     def entitlements_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
-    def select_identity(self, identity=None):
+    def select_identity(self, identity: str | None = None) -> SigningIdentity:
         """Get the codesigning identity to use.
 
         :param identity: A pre-specified identity (either the 40-digit hex checksum, or
@@ -426,13 +429,13 @@ class macOSSigningMixin:
             try:
                 # Try to look up the identity as a hex checksum
                 identity_name = identities[identity]
-                return identity, identity_name
+                return SigningIdentity(id=identity, name=identity_name)
             except KeyError as e:
                 # Try to look up the identity as readable name
                 try:
                     reverse_lookup = {name: ident for ident, name in identities.items()}
                     identity_id = reverse_lookup[identity]
-                    return identity_id, identity
+                    return SigningIdentity(id=identity_id, name=identity)
                 except KeyError:
                     # Not found as an ID or name
                     raise BriefcaseCommandError(
@@ -465,18 +468,22 @@ or
 """
             )
 
-        return identity, identity_name
+        return SigningIdentity(id=identity, name=identity_name)
 
-    def sign_file(self, path, identity, entitlements=None):
+    def sign_file(
+        self,
+        path: Path,
+        identity: SigningIdentity,
+        entitlements: Path | None = None,
+    ):
         """Code sign a file.
 
         :param path: The path to the file to sign.
-        :param identity: The code signing identity to use. Either the 40-digit hex
-            checksum, or the string name of the identity.
+        :param identity: The code signing identity to use.
         :param entitlements: The path to the entitlements file to use.
         """
-        options = "runtime" if identity != "-" else None
-        process_command = ["codesign", path, "--sign", identity, "--force"]
+        options = "runtime" if not identity.is_adhoc else None
+        process_command = ["codesign", path, "--sign", identity.id, "--force"]
 
         if entitlements:
             process_command.append("--entitlements")
@@ -528,7 +535,7 @@ or
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
-    def sign_app(self, app, identity):
+    def sign_app(self, app: AppConfig, identity: SigningIdentity):
         """Sign an entire app with a specific identity.
 
         :param app: The app to sign
@@ -608,17 +615,17 @@ class macOSPackageMixin(macOSSigningMixin):
 
     @property
     def packaging_formats(self):
-        return ["app", "dmg"]
+        return ["zip", "dmg"]
 
     @property
     def default_packaging_format(self):
         return "dmg"
 
     def distribution_path(self, app):
-        if app.packaging_format == "dmg":
-            return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
-        else:
+        if app.packaging_format == "zip":
             return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
+        else:
+            return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -648,7 +655,7 @@ class macOSPackageMixin(macOSSigningMixin):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
-    def notarize(self, filename, team_id):
+    def notarize(self, filename: Path, identity: SigningIdentity):
         """Notarize a file.
 
         Submits the file to Apple for notarization; if successful, staples the
@@ -657,7 +664,7 @@ class macOSPackageMixin(macOSSigningMixin):
         If the file is a .app, it will be archived as a .zip for submission purposes.
 
         :param filename: The file to notarize.
-        :param team_id: The team ID to
+        :param identity: The code signing identity to use
         """
         try:
             if filename.suffix == ".app":
@@ -678,7 +685,7 @@ class macOSPackageMixin(macOSSigningMixin):
                     f"Don't know how to notarize a file of type {filename.suffix}"
                 )
 
-            profile = f"briefcase-macOS-{team_id}"
+            profile = f"briefcase-macOS-{identity.team_id}"
             submitted = False
             store_credentials = False
             while not submitted:
@@ -689,7 +696,7 @@ class macOSPackageMixin(macOSSigningMixin):
 The keychain does not contain credentials for the profile {profile}.
 You can store these credentials by invoking:
 
-    $ xcrun notarytool store-credentials --team-id {team_id} profile
+    $ xcrun notarytool store-credentials --team-id {identity.team_id} profile
 """
                         )
 
@@ -718,7 +725,7 @@ password:
                                 "notarytool",
                                 "store-credentials",
                                 "--team-id",
-                                team_id,
+                                identity.team_id,
                                 profile,
                             ],
                             check=True,
@@ -726,7 +733,7 @@ password:
                         )
                     except subprocess.CalledProcessError as e:
                         raise BriefcaseCommandError(
-                            f"Unable to store credentials for team ID {team_id}."
+                            f"Unable to store credentials for team ID {identity.team_id}."
                         ) from e
 
                 # Attempt the notarization
@@ -799,12 +806,11 @@ password:
         """
         self.logger.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
-            identity = "-"
-            identity_name = ADHOC_IDENTITY_NAME
+            identity = SigningIdentity()
         else:
-            identity, identity_name = self.select_identity(identity=identity)
+            identity = self.select_identity(identity=identity)
 
-        if identity == "-":
+        if identity.is_adhoc:
             if notarize_app:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
@@ -835,93 +841,117 @@ password:
             if notarize_app is None:
                 notarize_app = True
 
-            self.logger.info(f"Signing app with identity {identity_name}...")
-
-            if notarize_app:
-                team_id = self.team_id_from_identity(identity_name)
+            self.logger.info(f"Signing app with identity {identity.name}...")
 
         self.sign_app(app=app, identity=identity)
 
-        dist_path: Path = self.distribution_path(app)
-
-        if app.packaging_format == "app":
-            if notarize_app:
-                self.logger.info(
-                    f"Notarizing app using team ID {team_id}...",
-                    prefix=app.app_name,
-                )
-                self.notarize(self.binary_path(app), team_id=team_id)
-
-            with self.input.wait_bar(f"Archiving {dist_path.name}..."):
-                self.tools.shutil.make_archive(
-                    dist_path.with_suffix(""),
-                    format="zip",
-                    root_dir=self.binary_path(app).parent,
-                    base_dir=self.binary_path(app).name,
-                )
+        if app.packaging_format == "zip":
+            self.package_zip(
+                app,
+                notarize_app=notarize_app,
+                identity=identity,
+            )
 
         else:  # Default packaging format is DMG
-            self.logger.info("Building DMG...", prefix=app.app_name)
+            self.package_dmg(
+                app,
+                notarize_app=notarize_app,
+                identity=identity,
+            )
 
-            with self.input.wait_bar(f"Building {dist_path.name}..."):
-                dmg_settings = {
-                    "files": [os.fsdecode(self.binary_path(app))],
-                    "symlinks": {"Applications": "/Applications"},
-                    "icon_locations": {
-                        f"{app.formal_name}.app": (75, 75),
-                        "Applications": (225, 75),
-                    },
-                    "window_rect": ((600, 600), (350, 150)),
-                    "icon_size": 64,
-                    "text_size": 12,
-                }
+    def package_zip(
+        self,
+        app: AppConfig,
+        notarize_app: bool,
+        identity: SigningIdentity,
+    ):
+        """Package an .app bundle in a zip file."""
+        dist_path: Path = self.distribution_path(app)
 
-                try:
-                    icon_filename = self.base_path / f"{app.installer_icon}.icns"
+        if notarize_app:
+            self.logger.info(
+                f"Notarizing app using team ID {identity.team_id}...",
+                prefix=app.app_name,
+            )
+            self.notarize(self.binary_path(app), identity=identity)
+
+        with self.input.wait_bar(f"Archiving {dist_path.name}..."):
+            self.tools.shutil.make_archive(
+                dist_path.with_suffix(""),
+                format="zip",
+                root_dir=self.binary_path(app).parent,
+                base_dir=self.binary_path(app).name,
+            )
+
+    def package_dmg(
+        self,
+        app: AppConfig,
+        notarize_app: bool,
+        identity: SigningIdentity,
+    ):
+        """Package an app as a DMG installer."""
+        dist_path: Path = self.distribution_path(app)
+        self.logger.info("Building DMG...", prefix=app.app_name)
+
+        with self.input.wait_bar(f"Building {dist_path.name}..."):
+            dmg_settings = {
+                "files": [os.fsdecode(self.binary_path(app))],
+                "symlinks": {"Applications": "/Applications"},
+                "icon_locations": {
+                    f"{app.formal_name}.app": (75, 75),
+                    "Applications": (225, 75),
+                },
+                "window_rect": ((600, 600), (350, 150)),
+                "icon_size": 64,
+                "text_size": 12,
+            }
+
+            try:
+                icon_filename = self.base_path / f"{app.installer_icon}.icns"
+                if not icon_filename.exists():
+                    self.logger.warning(
+                        f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
+                    )
+                    raise AttributeError()
+            except AttributeError:
+                # No installer icon specified. Fall back to the app icon
+                if app.icon:
+                    icon_filename = self.base_path / f"{app.icon}.icns"
                     if not icon_filename.exists():
                         self.logger.warning(
-                            f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
+                            f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
                         )
-                        raise AttributeError()
-                except AttributeError:
-                    # No installer icon specified. Fall back to the app icon
-                    if app.icon:
-                        icon_filename = self.base_path / f"{app.icon}.icns"
-                        if not icon_filename.exists():
-                            self.logger.warning(
-                                f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
-                            )
-                            icon_filename = None
-                    else:
-                        # No app icon specified either
                         icon_filename = None
+                else:
+                    # No app icon specified either
+                    icon_filename = None
 
-                if icon_filename:
-                    dmg_settings["icon"] = os.fsdecode(icon_filename)
+            if icon_filename:
+                dmg_settings["icon"] = os.fsdecode(icon_filename)
 
-                try:
-                    image_filename = self.base_path / f"{app.installer_background}.png"
-                    if image_filename.exists():
-                        dmg_settings["background"] = os.fsdecode(image_filename)
-                    else:
-                        self.logger.warning(
-                            f"Can't find {app.installer_background}.png to use as DMG background"
-                        )
-                except AttributeError:
-                    # No installer background image provided
-                    pass
+            try:
+                image_filename = self.base_path / f"{app.installer_background}.png"
+                if image_filename.exists():
+                    dmg_settings["background"] = os.fsdecode(image_filename)
+                else:
+                    self.logger.warning(
+                        f"Can't find {app.installer_background}.png to use as DMG background"
+                    )
+            except AttributeError:
+                # No installer background image provided
+                pass
 
-                self.dmgbuild.build_dmg(
-                    filename=os.fsdecode(dist_path),
-                    volume_name=f"{app.formal_name} {app.version}",
-                    settings=dmg_settings,
-                )
+            self.dmgbuild.build_dmg(
+                filename=os.fsdecode(dist_path),
+                volume_name=f"{app.formal_name} {app.version}",
+                settings=dmg_settings,
+            )
 
-            self.sign_file(dist_path, identity=identity)
+        self.sign_file(dist_path, identity=identity)
 
-            if notarize_app:
-                self.logger.info(
-                    f"Notarizing DMG with team ID {team_id}...",
-                    prefix=app.app_name,
-                )
-                self.notarize(dist_path, team_id=team_id)
+        if notarize_app:
+            self.logger.info(
+                f"Notarizing DMG with team ID {identity.team_id}...",
+                prefix=app.app_name,
+            )
+            self.notarize(dist_path, identity=identity)

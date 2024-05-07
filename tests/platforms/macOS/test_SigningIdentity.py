@@ -22,6 +22,7 @@ def test_identity(identity_id, identity_name, team_id):
     assert identity.name == identity_name
     assert identity.team_id == team_id
     assert not identity.is_adhoc
+    assert repr(identity) == f"<SigningIdentity id={identity_id}>"
 
 
 @pytest.mark.parametrize(
@@ -49,3 +50,4 @@ def test_adhoc_identity():
         == "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
     )
     assert adhoc.is_adhoc
+    assert repr(adhoc) == "<AdhocSigningIdentity>"

@@ -69,8 +69,8 @@ def test_project_path(create_command, first_app_config, tmp_path):
     assert expected_path == project_path
 
 
-def test_distribution_path_app(package_command, first_app_config, tmp_path):
-    first_app_config.packaging_format = "app"
+def test_distribution_path_zip(package_command, first_app_config, tmp_path):
+    first_app_config.packaging_format = "zip"
     distribution_path = package_command.distribution_path(first_app_config)
 
     expected_path = tmp_path / "base_path/dist/First App-0.0.1.app.zip"
