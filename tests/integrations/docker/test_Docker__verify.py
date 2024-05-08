@@ -65,11 +65,21 @@ def test_docker_install_url(host_os):
     assert host_os in Docker.DOCKER_INSTALL_URL
 
 
-def test_docker_exists(mock_tools, user_mapping_run_calls, capsys):
+@pytest.mark.parametrize(
+    "version_output",
+    [
+        VALID_DOCKER_VERSION,
+        # Docker version format on Ubuntu
+        "Docker version 26.1.1, build 4cf5afa",
+        # Docker version format on OpenSUSE Tumbleweed
+        "Docker version 26.1.0-ce, build c8af8ebe4a89",
+    ],
+)
+def test_docker_exists(mock_tools, user_mapping_run_calls, version_output, capsys):
     """If docker exists, the Docker wrapper is returned."""
     # Mock the return value of Docker Version
     mock_tools.subprocess.check_output.side_effect = [
-        VALID_DOCKER_VERSION,
+        version_output,
         VALID_DOCKER_INFO,
         VALID_BUILDX_VERSION,
         VALID_USER_MAPPING_IMAGE_CACHE,
