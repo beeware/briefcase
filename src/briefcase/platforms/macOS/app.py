@@ -13,6 +13,7 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 from briefcase.platforms.macOS import (
+    SigningIdentity,
     macOSCreateMixin,
     macOSMixin,
     macOSPackageMixin,
@@ -97,7 +98,7 @@ class macOSAppBuildCommand(macOSAppMixin, macOSSigningMixin, BuildCommand):
         # ad-hoc signing identity. Apply an ad-hoc signing identity to the
         # app bundle.
         self.logger.info("Ad-hoc signing app...", prefix=app.app_name)
-        self.sign_app(app=app, identity="-")
+        self.sign_app(app=app, identity=SigningIdentity())
 
 
 class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):

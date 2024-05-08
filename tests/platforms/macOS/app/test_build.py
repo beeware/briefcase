@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.platforms.macOS import SigningIdentity
 from briefcase.platforms.macOS.app import macOSAppBuildCommand
 
 
@@ -30,7 +31,7 @@ def test_build_app(build_command, first_app_with_binaries):
     # A request has been made to sign the app
     build_command.sign_app.assert_called_once_with(
         app=first_app_with_binaries,
-        identity="-",
+        identity=SigningIdentity(),
     )
 
     # No request to select a signing identity was made

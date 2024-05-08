@@ -620,7 +620,8 @@ class macOSPackageMixin(macOSSigningMixin):
 
     @property
     def default_packaging_format(self):
-        return "dmg"
+        # The default changes depending on whether the app is a console app or a GUI app
+        return None
 
     def distribution_path(self, app):
         if app.packaging_format == "zip":
@@ -657,6 +658,19 @@ class macOSPackageMixin(macOSSigningMixin):
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
+
+    def verify_app(self, app):
+        super().verify_app(app)
+
+        if app.console_app:
+            if app.packaging_format is None:
+                app.packaging_format = "pkg"
+            elif app.packaging_format != "pkg":
+                raise BriefcaseCommandError(
+                    "macOS console apps must be distributed in PKG format."
+                )
+        elif app.packaging_format is None:
+            app.packaging_format = "dmg"
 
     def notarize(self, filename, identity: SigningIdentity):
         """Notarize a file.
@@ -1001,13 +1015,6 @@ with your app's licensing terms.
                     dist_path,
                 ]
             )
-
-        if notarize_app:
-            self.logger.info(
-                f"Notarizing installer using team ID {identity.team_id}...",
-                prefix=app.app_name,
-            )
-            self.notarize(dist_path, identity=identity)
 
     def package_dmg(
         self,

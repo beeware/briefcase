@@ -10,7 +10,53 @@ from briefcase.exceptions import BriefcaseCommandError
 def test_package_formats(package_command):
     """Packaging formats are as expected."""
     assert package_command.packaging_formats == ["zip", "dmg", "pkg"]
-    assert package_command.default_packaging_format == "dmg"
+    # The default format is encoded as None, and then updated
+    # as part of app verification.
+    assert package_command.default_packaging_format is None
+
+
+@pytest.mark.parametrize(
+    "is_console_app, packaging_format, actual_format",
+    [
+        (False, None, "dmg"),  # default for GUI app is DMG
+        (False, "dmg", "dmg"),
+        (False, "app", "app"),
+        (False, "pkg", "pkg"),
+        (True, None, "pkg"),  # default for console app is PKG
+        (True, "pkg", "pkg"),
+    ],
+)
+def test_effective_format(
+    package_command,
+    first_app_with_binaries,
+    is_console_app,
+    packaging_format,
+    actual_format,
+):
+    """The packaging format varies depending on the app type."""
+
+    first_app_with_binaries.packaging_format = packaging_format
+    first_app_with_binaries.console_app = is_console_app
+    package_command.verify_app(first_app_with_binaries)
+
+    assert first_app_with_binaries.packaging_format == actual_format
+
+
+@pytest.mark.parametrize("packaging_format", ["zip", "dmg"])
+def test_console_invalid_formats(
+    package_command,
+    first_app_with_binaries,
+    packaging_format,
+):
+    """Some packaging formats are not valid for console apps."""
+
+    first_app_with_binaries.packaging_format = packaging_format
+    first_app_with_binaries.console_app = True
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"macOS console apps must be distributed in PKG format\.",
+    ):
+        package_command.verify_app(first_app_with_binaries)
 
 
 def test_no_notarize_option(package_command):
@@ -21,7 +67,7 @@ def test_no_notarize_option(package_command):
         "adhoc_sign": False,
         "identity": None,
         "notarize_app": False,
-        "packaging_format": "dmg",
+        "packaging_format": None,
         "update": False,
     }
     assert overrides == {}
