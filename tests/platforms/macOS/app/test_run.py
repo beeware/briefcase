@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOS_log_clean_filter
@@ -93,7 +93,9 @@ def test_run_gui_app_with_passthrough(
     tmp_path,
     monkeypatch,
 ):
-    """A macOS app can be started with args."""
+    """A macOS app can be started in debug mode with args."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -132,6 +134,7 @@ def test_run_gui_app_with_passthrough(
         ["open", "-n", bin_path, "--args", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # The log stream was started
@@ -327,7 +330,9 @@ def test_run_console_app_with_passthrough(
     first_app_config,
     tmp_path,
 ):
-    """A macOS console app can be started with args."""
+    """A macOS console app can be started in debug mode with args."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
     # Set the app to be a console app
     first_app_config.console_app = True
 
@@ -344,6 +349,7 @@ def test_run_console_app_with_passthrough(
         [bin_path / "Contents/MacOS/First App", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # The log stream was not started

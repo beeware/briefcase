@@ -255,6 +255,7 @@ flatpak run {bundle_identifier}
         bundle_identifier: str,
         args: list[SubprocessArgT] | None = None,
         main_module: str | None = None,
+        stream_output: bool = True,
     ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.
 
@@ -262,7 +263,9 @@ flatpak run {bundle_identifier}
         :param args: (Optional) The list of arguments to pass to the app
         :param main_module: (Optional) The main module to run. Only required if you want
             to override the default main module for the app.
-        :returns: A Popen object for the running app.
+        :param stream_output: Should output be streamed?
+        :returns: A Popen object for the running app; or ``None`` if the app isn't
+            streaming
         """
         if main_module:
             # Set a BRIEFCASE_MAIN_MODULE environment variable
@@ -278,17 +281,28 @@ flatpak run {bundle_identifier}
         flatpak_run_cmd = ["flatpak", "run", bundle_identifier]
         flatpak_run_cmd.extend([] if args is None else args)
 
+        if self.tools.logger.is_debug:
+            kwargs.setdefault("env", {})["BRIEFCASE_DEBUG"] = "1"
+
         if self.tools.logger.is_deep_debug:
             # Must come before bundle identifier; otherwise, it's passed as an arg to app
             flatpak_run_cmd.insert(2, "--verbose")
 
-        return self.tools.subprocess.Popen(
-            flatpak_run_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-            **kwargs,
-        )
+        if stream_output:
+            return self.tools.subprocess.Popen(
+                flatpak_run_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+                **kwargs,
+            )
+        else:
+            return self.tools.subprocess.run(
+                flatpak_run_cmd,
+                bufsize=1,
+                stream_output=False,
+                **kwargs,
+            )
 
     def bundle(
         self,

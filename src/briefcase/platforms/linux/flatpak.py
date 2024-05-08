@@ -213,7 +213,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
 
         # Starting a flatpak has slightly different startup arguments; however,
         # the rest of the app startup process is the same. Transform the output
@@ -221,20 +221,32 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         if test_mode:
             kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
 
-        # Start the app in a way that lets us stream the logs
-        app_popen = self.tools.flatpak.run(
-            bundle_identifier=app.bundle_identifier,
-            args=passthrough,
-            **kwargs,
-        )
+        # Console apps must operate in non-streaming mode so that console input can
+        # be handled correctly. However, if we're in test mode, we *must* stream so
+        # that we can see the test exit sentinel
+        if app.console_app and not test_mode:
+            self.tools.flatpak.run(
+                bundle_identifier=app.bundle_identifier,
+                args=passthrough,
+                stream_output=False,
+                **kwargs,
+            )
+        else:
+            # Start the app in a way that lets us stream the logs
+            app_popen = self.tools.flatpak.run(
+                bundle_identifier=app.bundle_identifier,
+                args=passthrough,
+                stream_output=True,
+                **kwargs,
+            )
 
-        # Start streaming logs for the app.
-        self._stream_app_logs(
-            app,
-            popen=app_popen,
-            test_mode=test_mode,
-            clean_output=False,
-        )
+            # Start streaming logs for the app.
+            self._stream_app_logs(
+                app,
+                popen=app_popen,
+                test_mode=test_mode,
+                clean_output=False,
+            )
 
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):

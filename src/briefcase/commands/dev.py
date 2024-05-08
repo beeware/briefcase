@@ -188,6 +188,10 @@ class DevCommand(RunAppMixin, BaseCommand):
         if self.platform == "windows":  # pragma: no branch
             env["PYTHONMALLOC"] = "default"  # pragma: no-cover-if-not-windows
 
+        # If we're in verbose mode, put BRIEFCASE_DEBUG into the environment
+        if self.logger.is_debug:
+            env["BRIEFCASE_DEBUG"] = "1"
+
         return env
 
     def __call__(

@@ -220,8 +220,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         self._add_update_options(parser, context_label=" before running")
         self._add_test_options(parser, context_label="Run")
 
-    def _prepare_app_env(self, app: AppConfig, test_mode: bool):
-        """Prepare the environment for running an app as a log stream.
+    def _prepare_app_kwargs(self, app: AppConfig, test_mode: bool):
+        """Prepare the kwargs for running an app as a log stream.
 
         This won't be used by every backend; but it's a sufficiently common default that
         it's been factored out.
@@ -230,18 +230,26 @@ class RunCommand(RunAppMixin, BaseCommand):
         :param test_mode: Are we launching in test mode?
         :returns: A dictionary of additional arguments to pass to the Popen
         """
+        args = {}
+        env = {}
+
+        # If we're in debug mode, put BRIEFCASE_DEBUG into the environment
+        if self.logger.is_debug:
+            env["BRIEFCASE_DEBUG"] = "1"
+
         if test_mode:
             # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
             # to override the module at startup
+            env["BRIEFCASE_MAIN_MODULE"] = app.main_module(test_mode)
             self.logger.info("Starting test_suite...", prefix=app.app_name)
-            return {
-                "env": {
-                    "BRIEFCASE_MAIN_MODULE": app.main_module(test_mode),
-                }
-            }
         else:
             self.logger.info("Starting app...", prefix=app.app_name)
-            return {}
+
+        # If we need any environment variables, add them to the arguments.
+        if env:
+            args["env"] = env
+
+        return args
 
     @abstractmethod
     def run_app(self, app: AppConfig, **options) -> dict | None:
