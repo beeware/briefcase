@@ -56,7 +56,10 @@ class SigningIdentity:
         return self.id == "-"
 
     def __repr__(self):
-        return f"<SigningIdentity id={self.id}>"
+        if self.is_adhoc:
+            return "<AdhocSigningIdentity>"
+        else:
+            return f"<SigningIdentity id={self.id}>"
 
     def __eq__(self, other):
         return isinstance(other, SigningIdentity) and self.id == other.id
@@ -480,7 +483,7 @@ or
         :param identity: The code signing identity to use.
         :param entitlements: The path to the entitlements file to use.
         """
-        options = "runtime" if identity.is_adhoc else None
+        options = "runtime" if not identity.is_adhoc else None
         process_command = ["codesign", path, "--sign", identity.id, "--force"]
 
         if entitlements:

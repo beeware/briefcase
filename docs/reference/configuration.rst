@@ -240,8 +240,9 @@ on an app with a formal name of "My App" would remove:
 ``console_app``
 ~~~~~~~~~~~~~~~
 
-A boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
-(producing a GUI app).
+A Boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
+(producing a GUI app). This setting has no effect on platforms that do not support
+a console mode (e.g., web or mobile platforms).
 
 ``exit_regex``
 ~~~~~~~~~~~~~~
