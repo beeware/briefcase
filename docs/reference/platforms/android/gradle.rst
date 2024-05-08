@@ -132,9 +132,9 @@ The device or emulator to target. Can be specified as:
 * a JSON dictionary specifying the properties of a device that will be created.
   This dictionary must have, at a minimum, an AVD name:
 
-.. code-block:: console
+  .. code-block:: console
 
-     $ briefcase run -d '{"avd":"new-device"}'
+       $ briefcase run -d '{"avd":"new-device"}'
 
   You may also specify:
 
