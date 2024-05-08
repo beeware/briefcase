@@ -136,15 +136,15 @@ The device or emulator to target. Can be specified as:
 
      $ briefcase run -d '{"avd":"new-device"}'
 
-  You may also specify:
+You may also specify:
 
-  - ``device_type`` (e.g., ``pixel``) - the type of device to emulate
-  - ``skin`` (e.g., ``pixel_3a``) - the skin to apply to the emulator
-  - ``system_image`` (e.g., ``system-images;android-31;default;arm64-v8a``) - the Android
-    system image to use in the emulator.
+- ``device_type`` (e.g., ``pixel``) - the type of device to emulate
+- ``skin`` (e.g., ``pixel_3a``) - the skin to apply to the emulator
+- ``system_image`` (e.g., ``system-images;android-31;default;arm64-v8a``) - the Android
+  system image to use in the emulator.
 
-  If any of these attributes are *not* specified, they will fall back
-  to reasonable defaults.
+If any of these attributes are *not* specified, they will fall back
+to reasonable defaults.
 
 ``--Xemulator=<value>``
 ~~~~~~~~~~~~~~~~~~~~~~~
