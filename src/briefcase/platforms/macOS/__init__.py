@@ -457,6 +457,7 @@ class macOSSigningMixin:
 In the future, you could specify this signing identity by running:
 
     $ briefcase {self.command} macOS --adhoc-sign
+
 """
             )
         else:
@@ -469,6 +470,7 @@ In the future, you could specify this signing identity by running:
 or
 
     $ briefcase {self.command} macOS -i "{identity_name}"
+
 """
             )
 
@@ -717,6 +719,7 @@ The keychain does not contain credentials for the profile {profile}.
 You can store these credentials by invoking:
 
     $ xcrun notarytool store-credentials --team-id {identity.team_id} profile
+
 """
                         )
 
