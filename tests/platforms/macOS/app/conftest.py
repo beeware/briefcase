@@ -20,25 +20,11 @@ def adhoc_identity():
 
 @pytest.fixture
 def first_app_templated(first_app_config, tmp_path):
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
+    app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
 
     # Create the briefcase.toml file
     create_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "briefcase.toml",
+        tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
         """
 [paths]
 app_packages_path="First App.app/Contents/Resources/app_packages"
@@ -58,13 +44,7 @@ entitlements_path="Entitlements.plist"
 
     # Create the entitlements file for the app
     create_plist_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "Entitlements.plist",
+        tmp_path / "base_path/build/first-app/macos/app/Entitlements.plist",
         {
             "com.apple.security.cs.allow-unsigned-executable-memory": True,
             "com.apple.security.cs.disable-library-validation": True,
@@ -75,6 +55,12 @@ entitlements_path="Entitlements.plist"
     (app_path / "Contents/Resources/app_packages").mkdir(parents=True)
     (app_path / "Contents/Frameworks").mkdir(parents=True)
 
+    # Create an installer Distribution.xml
+    create_file(
+        tmp_path / "base_path/build/first-app/macos/app/installer/Distribution.xml",
+        """<?xml?>\n<installer-script></installer-script>""",
+    )
+
     # Select dmg packaging by default
     first_app_config.packaging_format = "dmg"
 
@@ -83,15 +69,7 @@ entitlements_path="Entitlements.plist"
 
 @pytest.fixture
 def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
+    app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
 
     # Create some libraries that need to be signed.
     lib_path = app_path / "Contents/Resources/app_packages"
