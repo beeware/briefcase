@@ -244,7 +244,6 @@ class macOSRunMixin:
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
         if app.console_app and not test_mode:
-            self.logger.info("=" * 75)
             self.run_console_app(
                 app,
                 passthrough=passthrough,
@@ -273,16 +272,20 @@ class macOSRunMixin:
             kwargs = self._prepare_app_kwargs(app=app, test_mode=False)
 
             # Start the app directly
+            self.logger.info("=" * 75)
             self.tools.subprocess.run(
                 [self.binary_path(app) / "Contents" / "MacOS" / f"{app.formal_name}"]
                 + (passthrough if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
+                stream_output=False,
                 **kwargs,
             )
 
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+            # The command line app *could* returns an error code, which is entirely legal.
+            # Ignore any subprocess error here.
+            pass
 
     def run_gui_app(
         self,

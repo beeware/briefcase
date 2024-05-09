@@ -319,6 +319,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
         [bin_path / "Contents/MacOS/First App"],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=False,
     )
 
     # The log stream was not started
@@ -349,6 +350,7 @@ def test_run_console_app_with_passthrough(
         [bin_path / "Contents/MacOS/First App", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
+        stream_output=False,
         env={"BRIEFCASE_DEBUG": "1"},
     )
 
@@ -367,14 +369,16 @@ def test_run_console_app_failed(run_command, first_app_config, sleep_zero, tmp_p
         returncode=1,
     )
 
-    with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    # Although the command raises an error, this could be because the script itself
+    # raised an error.
+    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
     run_command.tools.subprocess.run.assert_called_with(
         [bin_path / "Contents/MacOS/First App"],
         cwd=tmp_path / "home",
+        stream_output=False,
         check=True,
     )
 

@@ -385,6 +385,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
         if app.console_app and not test_mode:
+            self.logger.info("=" * 75)
             self.tools.subprocess.run(
                 [self.binary_path(app)] + passthrough,
                 cwd=self.tools.home_path,
