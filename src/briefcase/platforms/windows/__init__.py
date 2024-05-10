@@ -20,7 +20,12 @@ class WindowsMixin:
     supported_host_os_reason = "Windows applications can only be built on Windows."
 
     def binary_path(self, app):
-        return self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
+        if app.console_app:
+            return self.bundle_path(app) / self.packaging_root / f"{app.app_name}.exe"
+        else:
+            return (
+                self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
+            )
 
     def distribution_path(self, app):
         suffix = "zip" if app.packaging_format == "zip" else "msi"

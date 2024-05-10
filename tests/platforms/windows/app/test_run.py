@@ -126,7 +126,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
 
     # The process was started
     run_command.tools.subprocess.run.assert_called_with(
-        [tmp_path / "base_path/build/first-app/windows/app/src/First App.exe"],
+        [tmp_path / "base_path/build/first-app/windows/app/src/first-app.exe"],
         cwd=tmp_path / "home",
         encoding="UTF-8",
         bufsize=1,
@@ -153,7 +153,7 @@ def test_run_console_app_with_passthrough(run_command, first_app_config, tmp_pat
     # The process was started
     run_command.tools.subprocess.run.assert_called_with(
         [
-            tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
+            tmp_path / "base_path/build/first-app/windows/app/src/first-app.exe",
             "foo",
             "--bar",
         ],
@@ -179,7 +179,7 @@ def test_run_console_app_failed(run_command, first_app_config, tmp_path):
 
     # Popen was still invoked, though
     run_command.tools.subprocess.run.assert_called_with(
-        [tmp_path / "base_path/build/first-app/windows/app/src/First App.exe"],
+        [tmp_path / "base_path/build/first-app/windows/app/src/first-app.exe"],
         cwd=tmp_path / "home",
         encoding="UTF-8",
         bufsize=1,
@@ -204,8 +204,9 @@ def test_run_app_test_mode(run_command, first_app_config, is_console_app, tmp_pa
     run_command.run_app(first_app_config, test_mode=True, passthrough=[])
 
     # The process was started
+    exe_name = "first-app" if is_console_app else "First App"
     run_command.tools.subprocess.Popen.assert_called_with(
-        [tmp_path / "base_path/build/first-app/windows/app/src/First App.exe"],
+        [tmp_path / f"base_path/build/first-app/windows/app/src/{exe_name}.exe"],
         cwd=tmp_path / "home",
         encoding="UTF-8",
         stdout=subprocess.PIPE,
@@ -246,9 +247,10 @@ def test_run_app_test_mode_with_passthrough(
     )
 
     # The process was started
+    exe_name = "first-app" if is_console_app else "First App"
     run_command.tools.subprocess.Popen.assert_called_with(
         [
-            tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
+            tmp_path / f"base_path/build/first-app/windows/app/src/{exe_name}.exe",
             "foo",
             "--bar",
         ],
