@@ -220,6 +220,8 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         # of the "default" behavior to be in flatpak format.
         if test_mode:
             kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
+        else:
+            kwargs = {}
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so
