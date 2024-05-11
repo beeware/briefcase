@@ -292,14 +292,14 @@ class RunCommand(RunAppMixin, BaseCommand):
         self.finalize(app)
 
         template_file = self.bundle_path(app)
-        binary_file = self.binary_path(app)
+        exec_file = self.binary_executable_path(app)
         if (
             (not template_file.exists())  # App hasn't been created
             or update  # An explicit update has been requested
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
             or update_support  # An explicit update of support files has been requested
-            or (not binary_file.exists())  # Binary doesn't exist yet
+            or (not exec_file.exists())  # Executable binary doesn't exist yet
             or (
                 test_mode and not no_update
             )  # Test mode, but updates have not been disabled

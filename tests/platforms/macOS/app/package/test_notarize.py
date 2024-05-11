@@ -71,6 +71,8 @@ def test_notarize_app(
             "First App.app/Contents/Frameworks/Extras.framework/Resources/",
             "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
             "First App.app/Contents/Info.plist",
+            "First App.app/Contents/MacOS/",
+            "First App.app/Contents/MacOS/First App",
             "First App.app/Contents/Resources/",
             "First App.app/Contents/Resources/app_packages/",
             "First App.app/Contents/Resources/app_packages/Extras.app/",
