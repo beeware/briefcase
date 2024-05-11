@@ -2,7 +2,7 @@ from briefcase.bootstraps.base import BaseGuiBootstrap
 
 
 class PySide6GuiBootstrap(BaseGuiBootstrap):
-    display_name_annotation = "does not support iOS/Android deployment"
+    display_name_annotation = "does not support iOS/Android/Web deployment"
 
     def app_source(self):
         return """\
