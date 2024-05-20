@@ -466,12 +466,12 @@ Features
 --------
 
 * Apps can be updated as part of a call to package. (#473)
-* The Android emulator can now be used on Apple M1 hardware. (#616)
+* The Android emulator can now be used on Apple Silicon hardware. (#616)
 * Names that are reserved words in Python (or other common programming languages) are now prevented when creating apps. (#617)
 * Names that are invalid on Windows as filenames (such as CON and LPT0) are now invalid as app names. (#685)
 * Verbose logging via ``-v`` and ``-vv`` now includes the return code, output, and environment variables for shell commands (#704)
 * When the output of a wrapped command cannot be parsed, full command output, and failure reason is now logged. (#728)
-* The iOS emulator will now run apps natively on M1 hardware, rather than through Rosetta emulation. (#739)
+* The iOS emulator will now run apps natively on Apple Silicon hardware, rather than through Rosetta emulation. (#739)
 
 
 Bugfixes
@@ -481,7 +481,7 @@ Bugfixes
 * The error reporting when the user is on an unsupported platform or Python version has been improved. (#541)
 * When the formal name uses non-Latin characters, the suggested Class and App names are now valid. (#612)
 * The code signing process for macOS apps has been made more robust. (#652)
-* macOS app binaries are now adhoc signed by default, ensuring they can run on M1 hardware. (#664)
+* macOS app binaries are now adhoc signed by default, ensuring they can run on Apple Silicon hardware. (#664)
 * Xcode version checks are now more robust. (#668)
 * Android projects that have punctuation in their formal names can now build without error. (#696)
 * Bundle name validation no longer excludes valid country identifiers (like ``in.example``). (#709)
