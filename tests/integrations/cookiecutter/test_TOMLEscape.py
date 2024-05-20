@@ -10,7 +10,7 @@ from briefcase.integrations.cookiecutter import TOMLEscape
     [
         # Single digit minor
         ("Hello World", "Hello World"),
-        ('Hello " World', 'Hello " World'),
+        ('Hello " World', 'Hello \\" World'),
         ("Hello \\ World", "Hello \\\\ World"),
     ],
 )
