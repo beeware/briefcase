@@ -339,10 +339,10 @@ Any PEP 508 version specifier is legal. For example:
 
 * Install from source using the ``--no-binary`` entry::
 
-    requires =
-        ["pillow==9.1.0",
+    requires = [
+        "pillow==9.1.0",
         "--no-binary", "pillow",
-        ]
+    ]
 
 * Git repository::
 
