@@ -11,6 +11,7 @@ backported
 BeeWare
 Bugfix
 Bugfixes
+ce
 checkmarks
 codebase
 Cookiecutter
@@ -66,8 +67,8 @@ proxied
 Proxied
 proxying
 px
+pygame
 Pygame
-Pygame-ce
 Pyodide
 PyScript
 PySide
