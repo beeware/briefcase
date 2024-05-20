@@ -378,6 +378,7 @@ class NewCommand(BaseCommand):
         default: str | None,
         options: Sequence[str],
         override_value: str | None,
+        external_hooks: str | None = None,
     ) -> str:
         variable = titlecase(variable)
         self.prompt_divider(title=variable)
@@ -396,6 +397,8 @@ class NewCommand(BaseCommand):
             default = "1"
 
         self.prompt_intro(intro=intro)
+        if external_hooks is not None:
+            self.prompt_intro(intro=external_hooks)
         return _select_option(
             prompt=f"{variable} [{default}]:",
             input=self.input,
@@ -599,12 +602,18 @@ class NewCommand(BaseCommand):
             if self.validate_selection_override(bootstraps.keys(), bootstrap_override):
                 bootstrap_override = reverse_lookup[bootstraps[bootstrap_override]]
 
+        EXTERNAL_HOOKS_SUPPORT = (
+            "Known external entry points documented "
+            "at https://briefcase.readthedocs.io/en/latest/reference/known-external-hooks.html"
+        )
+
         selected_bootstrap = self.select_option(
             intro="What GUI toolkit do you want to use for this project?",
             variable="GUI Framework",
             default=None,
             options=bootstrap_options.keys(),
             override_value=bootstrap_override,
+            external_hooks=EXTERNAL_HOOKS_SUPPORT,
         )
         bootstrap_class = bootstrap_options[selected_bootstrap]
 
