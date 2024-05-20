@@ -384,6 +384,6 @@ us to support, please visit the `issue tracker
 While it is possible to use `briefcase package android` to produce an APK or AAB
 file for distribution, the file is *not* usable as-is. It must be signed
 regardless of whether you're distributing your app through the Play Store, or
-ad-hoc via sideloading an APK. For details on how to manually sign your code,
+via loading the APK directly. For details on how to manually sign your code,
 see the instructions on `signing an Android App Bundle
 <https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.```
