@@ -380,3 +380,9 @@ recipes for building the packages that are stored in the `secondary package repo
 can be submitted as pull requests. Or, if you have a particular package that you'd like
 us to support, please visit the `issue tracker
 <https://github.com/chaquo/chaquopy/issues>`__ and provide details about that package.
+
+Additionally: while it is possible to use `briefcase package android` to produce an APK or
+AAB file for distribution, the file is not usable as-is. It must be manually signed regardless
+of whether you're distributing your app by means of the Play Store or ad-hoc via APK. For details on
+how to manually sign your code, see `Sign the Android App Bundle <https://briefcase.readthedocs.
+io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.
