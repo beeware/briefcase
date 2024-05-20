@@ -313,6 +313,9 @@ A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
 color. This setting is only used if the platform allows color modification,
 otherwise it is ignored.
 
+
+.. _configuration-requires-key:
+
 ``requires``
 ~~~~~~~~~~~~
 
@@ -323,6 +326,35 @@ setting. If an application defines requirements at the global level,
 application level, *and* platform level, the final set of requirements will be
 the *concatenation* of requirements from all levels, starting from least to
 most specific.
+
+Any PEP 508 version specifier is legal. For example:
+
+* Bare package name::
+
+    requires = ["pillow"]
+
+* Package name with version specifier::
+
+    requires = ["pillow==9.1.0"]
+
+* Install from source using the ``--no-binary`` entry::
+
+    requires = [
+        "pillow==9.1.0",
+        "--no-binary", "pillow",
+    ]
+
+* Git repository::
+
+    requires=["git+https://github.com/beeware/briefcase.git"]
+
+* Local directory::
+
+    requires=["mysrc/myapp"]
+
+* Local wheel file::
+
+    requires=["fullpath/wheelfile.whl"]
 
 ``revision``
 ~~~~~~~~~~~~
@@ -401,6 +433,8 @@ Unlike most other keys in a configuration file, ``test_requires`` is a
 level, application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting from least
 to most specific.
+
+See :ref:`requires <configuration-requires-key>` for examples.
 
 ``test_sources``
 ~~~~~~~~~~~~~~~~
