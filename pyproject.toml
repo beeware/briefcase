@@ -135,6 +135,7 @@ Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
 PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
 PursuedPyBear = "briefcase.bootstraps.pursuedpybear:PursuedPyBearGuiBootstrap"
 Pygame = "briefcase.bootstraps.pygame:PygameGuiBootstrap"
+pygame-ce = "briefcase.bootstraps.pygame_ce:PygameCEGuiBootstrap"
 
 [project.entry-points."briefcase.platforms"]
 android = "briefcase.platforms.android"

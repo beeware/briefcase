@@ -632,8 +632,9 @@ class NewCommand(BaseCommand):
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 5 options are: Toga, PySide6, PursuedPyBear, Pygame
+        # Ensure the first 5 options are: Toga, PySide6, PursuedPyBear, Pygame, pygame-ce
         ordered.move_to_end("Pygame", last=False)
+        ordered.move_to_end("pygame-ce", last=False)
         ordered.move_to_end("PursuedPyBear", last=False)
         ordered.move_to_end("PySide6", last=False)
         ordered.move_to_end("Toga", last=False)

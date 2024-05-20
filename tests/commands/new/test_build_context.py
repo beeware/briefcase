@@ -5,6 +5,7 @@ import pytest
 import briefcase.commands.new
 from briefcase.bootstraps import (
     PursuedPyBearGuiBootstrap,
+    PygameCEGuiBootstrap,
     PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
@@ -18,6 +19,7 @@ def mock_builtin_bootstraps():
         "PySide6": PySide6GuiBootstrap,
         "PursuedPyBear": PursuedPyBearGuiBootstrap,
         "Pygame": PygameGuiBootstrap,
+        "pygame-ce": PygameCEGuiBootstrap,
     }
 
 
@@ -684,6 +686,165 @@ def main():
         pyproject_table_briefcase_app_extra_content="""
 requires = [
     "pygame~=2.2",
+]
+test_requires = [
+{% if cookiecutter.test_framework == "pytest" %}
+    "pytest",
+{% endif %}
+]
+""",
+        pyproject_table_macOS="""\
+universal_build = true
+requires = [
+    "std-nslog~=1.0.0",
+]
+""",
+        pyproject_table_linux="""\
+requires = [
+]
+""",
+        pyproject_table_linux_system_debian="""\
+system_requires = [
+]
+
+system_runtime_requires = [
+]
+""",
+        pyproject_table_linux_system_rhel="""\
+system_requires = [
+]
+
+system_runtime_requires = [
+]
+""",
+        pyproject_table_linux_system_suse="""\
+system_requires = [
+]
+
+system_runtime_requires = [
+]
+""",
+        pyproject_table_linux_system_arch="""\
+system_requires = [
+]
+
+system_runtime_requires = [
+]
+""",
+        pyproject_table_linux_appimage="""\
+manylinux = "manylinux_2_28"
+
+system_requires = [
+]
+
+linuxdeploy_plugins = [
+]
+""",
+        pyproject_table_linux_flatpak="""\
+flatpak_runtime = "org.freedesktop.Platform"
+flatpak_runtime_version = "23.08"
+flatpak_sdk = "org.freedesktop.Sdk"
+""",
+        pyproject_table_windows="""\
+requires = [
+]
+""",
+        pyproject_table_iOS="""\
+supported = false
+""",
+        pyproject_table_android="""\
+supported = false
+""",
+        pyproject_table_web="""\
+supported = false
+""",
+    )
+
+
+def test_question_sequence_pygame_ce(new_command):
+    """Questions are asked, a context is constructed."""
+
+    # Prime answers for all the questions.
+    new_command.input.values = [
+        "My Application",  # formal name
+        "",  # app name - accept the default
+        "org.beeware",  # bundle ID
+        "My Project",  # project name
+        "Cool stuff",  # description
+        "Grace Hopper",  # author
+        "grace@navy.mil",  # author email
+        "https://navy.mil/myapplication",  # URL
+        "4",  # license
+        "4",  # pygame-ce GUI toolkit
+    ]
+
+    context = new_command.build_context(
+        project_overrides={},
+    )
+
+    assert context == dict(
+        app_name="myapplication",
+        author="Grace Hopper",
+        author_email="grace@navy.mil",
+        bundle="org.beeware",
+        class_name="MyApplication",
+        description="Cool stuff",
+        formal_name="My Application",
+        license="GNU General Public License v2 (GPLv2)",
+        module_name="myapplication",
+        source_dir="src/myapplication",
+        test_source_dir="tests",
+        project_name="My Project",
+        url="https://navy.mil/myapplication",
+        app_source="""\
+import importlib.metadata
+import os
+import sys
+from pathlib import Path
+
+import pygame
+
+
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+WHITE = (255, 255, 255)
+
+
+def main():
+    # Linux desktop environments use an app's .desktop file to integrate the app
+    # in to their application menus. The .desktop file of this app will include
+    # the StartupWMClass key, set to app's formal name. This helps associate the
+    # app's windows to its menu item.
+    #
+    # For association to work, any windows of the app must have WMCLASS property
+    # set to match the value set in app's desktop file. For PyGame, this is set
+    # using the SDL_VIDEO_X11_WMCLASS environment variable.
+
+    # Find the name of the module that was used to start the app
+    app_module = sys.modules["__main__"].__package__
+    # Retrieve the app's metadata
+    metadata = importlib.metadata.metadata(app_module)
+
+    os.environ["SDL_VIDEO_X11_WMCLASS"] = metadata["Formal-Name"]
+
+    pygame.init()
+    pygame.display.set_caption(metadata["Formal-Name"])
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                break
+
+        screen.fill(WHITE)
+        pygame.display.flip()
+
+    pygame.quit()
+""",
+        pyproject_table_briefcase_app_extra_content="""
+requires = [
+    "pygame-ce",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
