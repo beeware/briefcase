@@ -77,8 +77,8 @@ used as an upload key for the Google Play store, we call the key "upload-key".
 
 We use a password of ``android``. This is the `default password for common
 Android keystores <https://developers.google.com/android/guides/client-auth>`__.
-You can change the password if you like. It is more important to limit who
-has access to the keystore file than to change the password.
+You should change the password. It is most critical to limit who
+has access to the keystore file, but changing the password is also important.
 
 See :doc:`Publishing your app <../publishing/android/>` for instructions
 on using this key to upload an app to the Google Play store.
