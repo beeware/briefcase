@@ -80,10 +80,5 @@ Android keystores <https://developers.google.com/android/guides/client-auth>`__.
 You should change the password. It is most critical to limit who
 has access to the keystore file, but changing the password is also important.
 
-.. admonition:: Android Keystore Password
-
-  Previously, it has been considered safe to use the default password. However,
-  recent advancements in SHA-1 attacks make that inadvisable.
-
 See :doc:`Publishing your app <../publishing/android/>` for instructions
 on using this key to upload an app to the Google Play store.
