@@ -1,0 +1,2 @@
+TOMLEscape class was fixed to properly escape doublequotes and backslash and the test files were corrected accordingly.
+Now author creation can include single and double quotes at the time of creation
