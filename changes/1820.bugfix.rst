@@ -1,0 +1,1 @@
+App will no longer crash on macOS when camera, photo library, or microphone access is requested.
