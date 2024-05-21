@@ -168,6 +168,7 @@ in the macOS configuration section of your pyproject.toml.
 
         if cross_platform["camera"]:
             entitlements["com.apple.security.device.camera"] = True
+            info["NSCameraUsageDescription"] = cross_platform["camera"]
         if cross_platform["microphone"]:
             entitlements["com.apple.security.device.microphone"] = True
 
