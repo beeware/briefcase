@@ -686,7 +686,10 @@ password:
                         store_credentials = True
                     else:
                         raise BriefcaseCommandError(
-                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
+                            f"""Unable to submit {filename.relative_to(self.base_path)} for notarization.
+                                To examine this failure use `xcrun notarytool history` to find the submission-id,
+                                then use `xcrun notarytool log <submission-id>` for a log of the error.
+                            """
                         ) from e
         finally:
             # Clean up house; we don't need the archive anymore.
