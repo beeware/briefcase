@@ -1,0 +1,1 @@
+macOS apps now generate ``info.plist`` entries for camera, photo library and microphone permissions.
