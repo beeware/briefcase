@@ -1,0 +1,1 @@
+Added clarification to the error message when Android SDK command-line tools not found.
