@@ -164,6 +164,25 @@ class NewCommand(BaseCommand):
             # use a dummy app name as the suggestion.
             return "myapp"
 
+    def validate_formal_name(self, candidate):
+        """Determine if the formal name is valid.
+
+        :param candidate: The candidate name
+        :returns: True. If there are any validation problems, raises ValueError with a
+            diagnostic message.
+        """
+        if not make_class_name(candidate):  # Check whether a class name may be derived
+            raise ValueError(
+                self.input.textwrap(
+                    f"{candidate!r} is not a valid formal name.\n"
+                    "\n"
+                    "Formal names must include at least one valid Python identifier character so that "
+                    "a class name may be derived."
+                )
+            )
+
+        return True
+
     def _validate_existing_app_name(self, candidate):
         """Perform internal validation preventing the use of pre-existing app names.
 
@@ -459,6 +478,7 @@ class NewCommand(BaseCommand):
             ),
             variable="formal name",
             default="Hello World",
+            validator=self.validate_formal_name,
             override_value=project_overrides.pop("formal_name", None),
         )
 

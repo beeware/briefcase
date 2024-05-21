@@ -71,9 +71,14 @@ def make_class_name(formal_name):
         if unicodedata.category(ch) in xid_continue or ch in {"_"}
     )
 
+    # If the class name is an empty string, we want to return None to indicate
+    # indicate it is invalid
+    if class_name == "":
+        class_name = None
+
     # If the first character isn't in the 'start' character set,
     # and it isn't already an underscore, prepend an underscore.
-    if unicodedata.category(class_name[0]) not in xid_start and class_name[0] != "_":
+    elif unicodedata.category(class_name[0]) not in xid_start and class_name[0] != "_":
         class_name = f"_{class_name}"
 
     return class_name
