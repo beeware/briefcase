@@ -1,0 +1,7 @@
+Refactored config.py to accept anything but the following below
+
+- Free text.
+- Only one section.
+- underscore
+- comma
+- exclamation point
