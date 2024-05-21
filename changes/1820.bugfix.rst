@@ -1,1 +1,1 @@
-App will no longer crash on macOS when camera, photo library, or microphone access is requested.
+macOS apps now generate ``info.plist`` entries for camera, photo library and microphone permissions.
