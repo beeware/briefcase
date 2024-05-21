@@ -536,7 +536,7 @@ class Console:
         should be specifically disabled in non-interactive sessions.
         """
         # `sys.__stdout__` is used because Rich captures and redirects `sys.stdout`
-        return sys.__stdout__.isatty()
+        return os.isatty(sys.__stdout__.fileno())
 
     @property
     def is_color_enabled(self):
@@ -604,7 +604,9 @@ class Console:
             # message=None is a sentinel the Wait Bar should be inactive
             self._wait_bar.add_task("", start=False, message=None)
 
-        self.print(f"{message} started", markup=markup, show=show_outcome_message)
+        self.print(
+            f"{message} started", markup=markup, show=message and is_wait_bar_disabled
+        )
 
         self.is_console_controlled = True
         wait_bar_task = self._wait_bar.tasks[0]
