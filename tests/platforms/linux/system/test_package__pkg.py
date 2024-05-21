@@ -58,7 +58,6 @@ def first_app_pkg(first_app, tmp_path):
     first_app.packaging_format = "pkg"
     first_app.glibc_version = "2.99"
     first_app.description = "Description for the app"
-    first_app.license = "BSD License"
 
     # Mock the side effects of building the app
     usr_dir = (
@@ -172,7 +171,7 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path):
                 'pkgdesc="Description for the app"',
                 "arch=('wonky')",
                 'url="https://example.com/first-app"',
-                "license=('BSD License')",
+                "license=('Unknown')",
                 "depends=('glibc>=2.99' 'python3')",
                 "changelog=CHANGELOG",
                 'source=("$pkgname-$pkgver.tar.gz")',
@@ -268,7 +267,7 @@ def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
                 'pkgdesc="Description for the app"',
                 "arch=('wonky')",
                 'url="https://example.com/first-app"',
-                "license=('BSD License')",
+                "license=('Unknown')",
                 "depends=('glibc>=2.99' 'python3')",
                 "changelog=CHANGELOG",
                 'source=("$pkgname-$pkgver.tar.gz")',
@@ -359,7 +358,6 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
     # Add system requirements and other optional settings.
     first_app_pkg.system_runtime_requires = ["first", "second"]
     first_app_pkg.revision = 1
-    first_app_pkg.license = "BSD License"
 
     # Package the app
     package_command.package_app(first_app_pkg)
@@ -380,7 +378,7 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
                 'pkgdesc="Description for the app"',
                 "arch=('wonky')",
                 'url="https://example.com/first-app"',
-                "license=('BSD License')",
+                "license=('Unknown')",
                 "depends=('glibc>=2.99' 'python3' 'first' 'second')",
                 "changelog=CHANGELOG",
                 'source=("$pkgname-$pkgver.tar.gz")',

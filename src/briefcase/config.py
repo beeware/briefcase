@@ -154,6 +154,7 @@ class GlobalConfig(BaseConfig):
         project_name,
         version,
         bundle,
+        license=None,
         url=None,
         author=None,
         author_email=None,
@@ -166,6 +167,7 @@ class GlobalConfig(BaseConfig):
         self.url = url
         self.author = author
         self.author_email = author_email
+        self.license = license
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
@@ -187,6 +189,7 @@ class AppConfig(BaseConfig):
         bundle,
         description,
         sources,
+        license,
         formal_name=None,
         url=None,
         author=None,
@@ -228,6 +231,7 @@ class AppConfig(BaseConfig):
         self.test_requires = test_requires
         self.supported = supported
         self.long_description = long_description
+        self.license = license
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -393,7 +397,7 @@ def merge_pep621_config(global_config, pep621_config):
 
     # Keys that map directly
     maybe_update("description", "description")
-    maybe_update("license", "license", "text")
+    maybe_update("license", "license")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
@@ -426,7 +430,7 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
-def parse_config(config_file, platform, output_format):
+def parse_config(config_file, platform, output_format, logger):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
@@ -550,5 +554,18 @@ def parse_config(config_file, platform, output_format):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
+
+    old_license_format = False
+    for config in [global_config, *app_configs.values()]:
+        if isinstance(config.get("license"), str):
+            config["license"] = {"file": "LICENSE"}
+            old_license_format = True
+    if old_license_format:
+        logger.warning(
+            "The license was specified using a string, however Briefcase prefers a PEP621 "
+            "compatible dictionary on the form {'file': '{filename}'} or {'text': '{license_text}'}.\n"
+            "Therefore, when given the license as a string, Briefcase ignores the license string and "
+            "defaults to {'file': 'LICENSE'}."
+        )
 
     return global_config, app_configs

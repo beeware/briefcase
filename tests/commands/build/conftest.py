@@ -95,6 +95,7 @@ def second_app_config():
         version="0.0.2",
         description="The second simple app",
         sources=["src/second"],
+        license={"file": "LICENSE"},
     )
 
 

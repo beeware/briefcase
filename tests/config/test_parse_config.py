@@ -1,4 +1,5 @@
 from io import BytesIO
+from unittest.mock import Mock
 
 import pytest
 
@@ -11,7 +12,9 @@ def test_invalid_toml():
     config_file = BytesIO(b"this is not toml!")
 
     with pytest.raises(BriefcaseConfigError, match="Invalid pyproject.toml"):
-        parse_config(config_file, platform="macOS", output_format="Xcode")
+        parse_config(
+            config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        )
 
 
 def test_no_briefcase_section():
@@ -25,7 +28,9 @@ def test_no_briefcase_section():
     )
 
     with pytest.raises(BriefcaseConfigError, match="No tool.briefcase section"):
-        parse_config(config_file, platform="macOS", output_format="Xcode")
+        parse_config(
+            config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        )
 
 
 def test_no_apps():
@@ -39,7 +44,9 @@ def test_no_apps():
     )
 
     with pytest.raises(BriefcaseConfigError, match="No Briefcase apps defined"):
-        parse_config(config_file, platform="macOS", output_format="Xcode")
+        parse_config(
+            config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        )
 
 
 def test_single_minimal_app():
@@ -48,21 +55,24 @@ def test_single_minimal_app():
         b"""
         [tool.briefcase]
         value = 42
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
         """
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode"
+        config_file, platform="macOS", output_format="Xcode", logger=Mock()
     )
 
     # There's a single global option
-    assert global_options == {"value": 42}
+    assert global_options == {"value": 42, "license": {"file": "LICENSE"}}
 
     # The app gets the name from its header line.
     # It inherits the value from the base definition.
-    assert apps == {"my_app": {"app_name": "my_app", "value": 42}}
+    assert apps == {
+        "my_app": {"app_name": "my_app", "value": 42, "license": {"file": "LICENSE"}}
+    }
 
 
 def test_multiple_minimal_apps():
@@ -71,15 +81,17 @@ def test_multiple_minimal_apps():
         b"""
         [tool.briefcase.app.first]
         number=37
+        license.file = "LICENSE"
 
         [tool.briefcase.app.second]
         app_name="my_app"
         number=42
+        license.file = "LICENSE.txt"
         """
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode"
+        config_file, platform="macOS", output_format="Xcode", logger=Mock()
     )
 
     # There are no global options
@@ -88,13 +100,11 @@ def test_multiple_minimal_apps():
     # The apps get their name from the header lines.
     # The second tool overrides its app name
     assert apps == {
-        "first": {
-            "app_name": "first",
-            "number": 37,
-        },
+        "first": {"app_name": "first", "number": 37, "license": {"file": "LICENSE"}},
         "second": {
             "app_name": "my_app",
             "number": 42,
+            "license": {"file": "LICENSE.txt"},
         },
     }
 
@@ -106,6 +116,7 @@ def test_platform_override():
         [tool.briefcase]
         value = 0
         basevalue = "the base"
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
         value = 1
@@ -126,13 +137,14 @@ def test_platform_override():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode"
+        config_file, platform="macOS", output_format="Xcode", logger=Mock()
     )
 
     # The global options are exactly as specified
     assert global_options == {
         "value": 0,
         "basevalue": "the base",
+        "license": {"file": "LICENSE"},
     }
 
     # Since a macOS app has been requested, the macOS platform values
@@ -148,12 +160,14 @@ def test_platform_override():
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
+            "license": {"file": "LICENSE"},
         },
     }
 
@@ -165,6 +179,7 @@ def test_platform_override_ordering():
         [tool.briefcase]
         value = 0
         basevalue = "the base"
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
         value = 1
@@ -185,11 +200,15 @@ def test_platform_override_ordering():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode"
+        config_file, platform="macOS", output_format="Xcode", logger=Mock()
     )
 
     # The global options are exactly as specified
-    assert global_options == {"value": 0, "basevalue": "the base"}
+    assert global_options == {
+        "value": 0,
+        "basevalue": "the base",
+        "license": {"file": "LICENSE"},
+    }
 
     # Since a macOS app has been requested, the macOS platform values
     # take priority. Linux configuration values are dropped.
@@ -204,12 +223,14 @@ def test_platform_override_ordering():
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
+            "license": {"file": "LICENSE"},
         },
     }
 
@@ -221,6 +242,7 @@ def test_format_override():
         [tool.briefcase]
         value = 0
         basevalue = "the base"
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
         value = 1
@@ -257,11 +279,15 @@ def test_format_override():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app"
+        config_file, platform="macOS", output_format="app", logger=Mock()
     )
 
     # The global options are exactly as specified
-    assert global_options == {"value": 0, "basevalue": "the base"}
+    assert global_options == {
+        "value": 0,
+        "basevalue": "the base",
+        "license": {"file": "LICENSE"},
+    }
 
     # Since a macOS app has been requested, the macOS app format values
     # take priority. Linux configuration values are dropped.
@@ -277,12 +303,14 @@ def test_format_override():
             "appvalue": "the app",
             "platformvalue": "macos platform",
             "formatvalue": "app format",
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
             "value": 41,
             "basevalue": "the base",
             "formatvalue": "other macos app format",
+            "license": {"file": "LICENSE"},
         },
     }
 
@@ -294,6 +322,7 @@ def test_format_override_ordering():
         [tool.briefcase]
         value = 0
         basevalue = "the base"
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
         value = 1
@@ -330,11 +359,15 @@ def test_format_override_ordering():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app"
+        config_file, platform="macOS", output_format="app", logger=Mock()
     )
 
     # The global options are exactly as specified
-    assert global_options == {"value": 0, "basevalue": "the base"}
+    assert global_options == {
+        "value": 0,
+        "basevalue": "the base",
+        "license": {"file": "LICENSE"},
+    }
 
     # Since a macOS dmg has been requested, the macOS dmg format values
     # take priority. Linux configuration values are dropped.
@@ -350,11 +383,13 @@ def test_format_override_ordering():
             "appvalue": "the app",
             "platformvalue": "macos platform",
             "formatvalue": "app format",
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
             "value": 0,
             "basevalue": "the base",
+            "license": {"file": "LICENSE"},
         },
     }
 
@@ -366,6 +401,7 @@ def test_requires():
         [tool.briefcase]
         value = 0
         requires = ["base value"]
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
         requires = ["my_app value"]
@@ -391,13 +427,14 @@ def test_requires():
 
     # Request a macOS app
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app"
+        config_file, platform="macOS", output_format="app", logger=Mock()
     )
 
     # The global options are exactly as specified
     assert global_options == {
         "value": 0,
         "requires": ["base value"],
+        "license": {"file": "LICENSE"},
     }
 
     # The macOS my_app app specifies a full inherited chain.
@@ -412,6 +449,7 @@ def test_requires():
                 "app value",
             ],
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
@@ -419,17 +457,22 @@ def test_requires():
                 "base value",
             ],
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
     }
 
     # Request a macOS xcode project
     config_file.seek(0)
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode"
+        config_file, platform="macOS", output_format="Xcode", logger=Mock()
     )
 
     # The global options are exactly as specified
-    assert global_options == {"value": 0, "requires": ["base value"]}
+    assert global_options == {
+        "value": 0,
+        "requires": ["base value"],
+        "license": {"file": "LICENSE"},
+    }
 
     # The macOS my_app dmg specifies a full inherited chain.
     # The other_app dmg doesn't specify any options.
@@ -443,6 +486,7 @@ def test_requires():
                 "xcode value",
             ],
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
@@ -450,16 +494,21 @@ def test_requires():
                 "base value",
             ],
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
     }
 
     config_file.seek(0)
     global_options, apps = parse_config(
-        config_file, platform="linux", output_format="appimage"
+        config_file, platform="linux", output_format="appimage", logger=Mock()
     )
 
     # The global options are exactly as specified
-    assert global_options == {"value": 0, "requires": ["base value"]}
+    assert global_options == {
+        "value": 0,
+        "requires": ["base value"],
+        "license": {"file": "LICENSE"},
+    }
 
     # The linux my_app appimage overrides the *base* value, but extends for linux.
     assert apps == {
@@ -472,6 +521,7 @@ def test_requires():
                 "appimage value",
             ],
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
@@ -479,6 +529,7 @@ def test_requires():
                 "base value",
             ],
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
     }
 
@@ -489,6 +540,7 @@ def test_document_types():
         b"""
         [tool.briefcase]
         value = 0
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
 
@@ -509,7 +561,7 @@ def test_document_types():
 
     # Request a macOS app
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode"
+        config_file, platform="macOS", output_format="Xcode", logger=Mock()
     )
 
     # The macOS my_app app specifies a full inherited chain.
@@ -528,10 +580,12 @@ def test_document_types():
                 },
             },
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
         "other_app": {
             "app_name": "other_app",
             "value": 0,
+            "license": {"file": "LICENSE"},
         },
     }
 
@@ -578,7 +632,7 @@ def test_pep621_defaults():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app"
+        config_file, platform="macOS", output_format="app", logger=Mock()
     )
 
     awesome = apps["awesome"]
@@ -586,7 +640,7 @@ def test_pep621_defaults():
         "project_name": "Awesome app",
         "bundle": "com.example",
         "version": "1.2.3",
-        "license": "You can use it while standing on one foot",
+        "license": {"text": "You can use it while standing on one foot"},
         "author": "Kim Park",
         "author_email": "kim@example.com",
         "url": "https://example.com/awesome",
@@ -599,3 +653,38 @@ def test_pep621_defaults():
         "formal_name": "Awesome Application",
         "long_description": "The application is very awesome",
     }
+
+
+def test_license_is_string():
+    config_file = BytesIO(
+        b"""
+        [tool.briefcase]
+        value = 0
+        license = "Some license"
+
+        [tool.briefcase.app.my_app]
+        appvalue = "the app"
+        """
+    )
+
+    logger = Mock()
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="app", logger=logger
+    )
+
+    assert global_options == {
+        "value": 0,
+        "license": {"file": "LICENSE"},
+    }
+    assert apps["my_app"] == {
+        "app_name": "my_app",
+        "value": 0,
+        "appvalue": "the app",
+        "license": {"file": "LICENSE"},
+    }
+    logger.warning.assert_called_once_with(
+        "The license was specified using a string, however Briefcase prefers a PEP621 "
+        "compatible dictionary on the form {'file': '{filename}'} or {'text': '{license_text}'}.\n"
+        "Therefore, when given the license as a string, Briefcase ignores the license string and "
+        "defaults to {'file': 'LICENSE'}."
+    )

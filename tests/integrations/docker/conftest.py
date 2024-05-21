@@ -53,6 +53,7 @@ def my_app() -> AppConfig:
         bundle="com.example",
         version="1.2.3",
         description="This is a simple app",
+        license={"file": "LICENSE"},
         sources=["path/to/src/myapp", "other/stuff"],
         system_requires=["things==1.2", "stuff>=3.4"],
         system_runtime_requires=["runtime_things==1.42", "stuff>=3.4"],

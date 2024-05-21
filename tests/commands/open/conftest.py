@@ -89,6 +89,7 @@ def open_command(tmp_path):
                 version="0.0.1",
                 description="The first simple app",
                 sources=["src/first"],
+                license={"file": "LICENSE"},
             ),
             "second": AppConfig(
                 app_name="second",
@@ -96,6 +97,7 @@ def open_command(tmp_path):
                 version="0.0.2",
                 description="The second simple app",
                 sources=["src/second"],
+                license={"file": "LICENSE"},
             ),
         },
     )

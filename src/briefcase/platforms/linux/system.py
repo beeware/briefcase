@@ -704,9 +704,28 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
         doc_folder.mkdir(parents=True, exist_ok=True)
 
         with self.input.wait_bar("Installing license..."):
-            license_file = self.base_path / "LICENSE"
-            if license_file.is_file():
-                self.tools.shutil.copy(license_file, doc_folder / "copyright")
+            if license_file := app.license.get("file"):
+                license_file = self.base_path / license_file
+                if license_file.is_file():
+                    self.tools.shutil.copy(license_file, doc_folder / "copyright")
+                else:
+                    raise BriefcaseCommandError(
+                        f"""\
+You specified that the license file is {license_file}. However, this file does not exist.
+
+Make sure you spelled the name of the license file correctly in `pyproject.toml`.
+"""
+                    )
+            elif license_text := app.license.get("text"):
+                (doc_folder / "copyright").write_text(license_text, encoding="utf-8")
+                if len(license_text.splitlines()) <= 1:
+                    self.logger.warning(
+                        """
+You specified the license using a text string. However, this string is only one line.
+
+Make sure that the license text is a full license (or specify a license file).
+"""
+                    )
             else:
                 raise BriefcaseCommandError(
                     """\
@@ -1037,7 +1056,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
                             f"Summary:        {app.description}",
                             "",
-                            f"License:        {getattr(app, 'license', 'Unknown')}",
+                            "License:        Unknown",  # TODO: Add license information (see #1829)
                             f"URL:            {app.url}",
                             "Source0:        %{name}-%{version}.tar.gz",
                             "",
@@ -1196,7 +1215,7 @@ with details about the release.
                             f'pkgdesc="{app.description}"',
                             f"arch=('{self.pkg_abi(app)}')",
                             f'url="{app.url}"',
-                            f"license=('{app.license}')",
+                            "license=('Unknown')",
                             f"depends=({system_runtime_requires})",
                             "changelog=CHANGELOG",
                             'source=("$pkgname-$pkgver.tar.gz")',

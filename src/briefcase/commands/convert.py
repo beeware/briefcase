@@ -647,16 +647,8 @@ class ConvertCommand(NewCommand):
 
         # Copy license file if not already there
         license_file = self.pep621_data.get("license", {}).get("file")
-        if license_file is not None and Path(license_file).name != "LICENSE":
-            self.logger.warning(
-                f"\nLicense file found in '{self.base_path}', but its name is "
-                f"'{Path(license_file).name}', not 'LICENSE'. Briefcase will create a "
-                "template 'LICENSE' file, but you might want to consider renaming the "
-                "existing file."
-            )
-            copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
-        elif not (self.base_path / "LICENSE").exists():
+        if license_file is None and not (self.base_path / "LICENSE").exists():
             self.logger.warning(
                 f"\nLicense file not found in '{self.base_path}'. "
                 "Briefcase will create a template 'LICENSE' file."
