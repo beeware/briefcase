@@ -306,6 +306,20 @@ a custom location for Briefcase's tools.
 """
             )
 
+    def validate_python_version(self):
+        """Validate the system's python version is not past its EOL date."""
+        python_version = sys.version_info
+        today = date.today()
+        EOL_year = today.year - 2024  # increment this each year past 10-2024
+        if today.month > 10:
+            EOL_year += 1
+        if python_version[0] < 3 or (
+            python_version[0] == 3 and python_version[1] < 8 + EOL_year
+        ):
+            self.logger.warning(
+                f"WARNING: Python version is past its EOL date. Update Python to at least Python 3.{EOL_year+8}."
+            )
+
     def _command_factory(self, command_name: str):
         """Command factory for the current platform and format.
 
@@ -1038,18 +1052,4 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 branch="main",
                 output_path=output_path,
                 extra_context=extra_context,
-            )
-
-    def validate_python_version(self):
-        """Log a warning if the python version in use is past the EOL date."""
-        python_version = sys.version_info
-        today = date.today()
-        EOL_year = today.year - 2024  # increment this each year past 10-2024
-        if today.month > 10:
-            EOL_year += 1
-        if python_version[0] < 3 or (
-            python_version[0] == 3 and python_version[1] < 8 + EOL_year
-        ):
-            self.logger.warning(
-                f"WARNING: Python version is past its EOL date. Update Python to at least Python 3.{EOL_year+8}."
             )
