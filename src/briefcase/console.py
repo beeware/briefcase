@@ -605,7 +605,7 @@ class Console:
             self._wait_bar.add_task("", start=False, message=None)
 
         self.print(
-            f"{message} started", markup=markup, show=message and is_wait_bar_disabled
+            f"{message} started", markup=markup, show=show_outcome_message
         )
 
         self.is_console_controlled = True
