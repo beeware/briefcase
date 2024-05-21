@@ -38,6 +38,7 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.download import Download
+from briefcase.integrations.files import Files
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms import get_output_formats, get_platforms
 
@@ -188,6 +189,7 @@ class BaseCommand(ABC):
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
         Download.verify(tools=self.tools)
+        Files.verify(tools=self.tools)
 
         if not is_clone:
             self.validate_locale()
