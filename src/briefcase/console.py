@@ -604,9 +604,7 @@ class Console:
             # message=None is a sentinel the Wait Bar should be inactive
             self._wait_bar.add_task("", start=False, message=None)
 
-        self.print(
-            f"{message} started", markup=markup, show=show_outcome_message
-        )
+        self.print(f"{message} started", markup=markup, show=show_outcome_message)
 
         self.is_console_controlled = True
         wait_bar_task = self._wait_bar.tasks[0]
