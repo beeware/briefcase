@@ -23,6 +23,7 @@ venv*
 .eggs/
 .tox/
 /local
+__pycache__/
 .ruff_cache/
 
 /pip-wheel-metadata

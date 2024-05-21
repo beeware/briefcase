@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from briefcase.integrations.android_sdk import AndroidSDK
     from briefcase.integrations.docker import Docker, DockerAppContext
     from briefcase.integrations.file import File
+    from briefcase.integrations.files import Files
     from briefcase.integrations.flatpak import Flatpak
     from briefcase.integrations.java import JDK
     from briefcase.integrations.linuxdeploy import LinuxDeploy
@@ -151,6 +152,7 @@ class ToolCache(Mapping):
     app_context: Subprocess | DockerAppContext
     docker: Docker
     file: File
+    files: Files
     flatpak: Flatpak
     git: git_
     java: JDK
