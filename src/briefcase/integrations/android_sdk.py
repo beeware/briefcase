@@ -316,7 +316,7 @@ class AndroidSDK(ManagedTool):
 
     {sdk_root_env}
 
-    doesn't appear to contain an Android SDK.
+    doesn't appear to contain an Android SDK with the Command-line Tools installed.
 
     If {sdk_source_env} is an Android SDK, ensure it is the root directory
     of the Android SDK instance such that
