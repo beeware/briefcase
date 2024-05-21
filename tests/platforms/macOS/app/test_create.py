@@ -73,7 +73,9 @@ def create_command(tmp_path, first_app_templated):
             {},
             {},
             {
-                "info": {},
+                "info": {
+                    "NSCameraUsageDescription": "I need to see you",
+                },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
