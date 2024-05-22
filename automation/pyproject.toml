@@ -19,7 +19,6 @@ dynamic = ["version", "dependencies"]
 "Toga Automation" = "automation.bootstraps.toga:TogaAutomationBootstrap"
 "PySide6 Automation" = "automation.bootstraps.pyside6:PySide6AutomationBootstrap"
 "Pygame Automation" = "automation.bootstraps.pygame:PygameAutomationBootstrap"
-"PursuedPyBear Automation" = "automation.bootstraps.pursuedpybear:PursuedPyBearAutomationBootstrap"
 
 [tool.setuptools_scm]
 root = "../"
