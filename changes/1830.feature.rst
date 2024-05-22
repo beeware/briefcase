@@ -1,0 +1,1 @@
+Add a --clean option to the `briefcase build` command.
