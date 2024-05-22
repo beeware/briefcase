@@ -176,8 +176,7 @@ class NewCommand(BaseCommand):
                 self.input.textwrap(
                     f"{candidate!r} is not a valid formal name.\n"
                     "\n"
-                    "Formal names must include at least one valid Python identifier character so that "
-                    "a class name may be derived."
+                    "Formal names must include at least one valid Python identifier character."
                 )
             )
 
