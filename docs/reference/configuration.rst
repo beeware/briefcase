@@ -73,7 +73,7 @@ Configuration options for a specific application.
 ``[tool.briefcase.app.<app name>.<platform>]``
 ----------------------------------------------
 
-Configuration options for an application that are platform-specific. The
+Configuration options for an application that are platform specific. The
 platform must match a name for a platform supported by Briefcase (e.g.,
 ``macOS`` or ``windows``). A list of the platforms supported by Briefcase can
 be obtained by running ``briefcase -h``, and inspecting the help for the
@@ -182,7 +182,7 @@ Optional values
 
 A hexadecimal RGB color value (e.g., ``#D81B60``) for a subtle secondary color
 to be used throughout an application to call attention to key elements. This
-setting is only used if the platform allows color modification, otherwise, it
+setting is only used if the platform allows color modification, otherwise it
 is ignored.
 
 ``author``
@@ -304,14 +304,14 @@ the ``description``, or include the ``description`` as the first line of the
 
 A hexadecimal RGB color value (e.g., ``#008577``) to use as the primary color
 for the application. This setting is only used if the platform allows color
-modification, otherwise, it is ignored.
+modification, otherwise it is ignored.
 
 ``primary_color_dark``
 ~~~~~~~~~~~~~~~~~~~~~~
 
 A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
 color. This setting is only used if the platform allows color modification,
-otherwise, it is ignored.
+otherwise it is ignored.
 
 
 .. _configuration-requires-key:
@@ -434,7 +434,7 @@ level, application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting from least
 to most specific.
 
-See ref:`requires <configuration-requires-key>` for examples.
+See :ref:`requires <configuration-requires-key>` for examples.
 
 ``test_sources``
 ~~~~~~~~~~~~~~~~
@@ -502,7 +502,7 @@ or, for a platform-specific definition:
 
     ``[tool.briefcase.app.<app name>.<platform>.document_type.<document type id>]``
 
-The ``document type id`` is an identifier represented in **alphanumeric format** appended to the app_id of an application to identify documents of the same type uniquely.
+The ``document type id`` is an identifier, in alphanumeric format. It is appended to the app id of an application to identify documents of the same type.
 
 
 The document type declaration requires the following settings:
