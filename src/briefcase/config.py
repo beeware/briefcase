@@ -4,6 +4,7 @@ import re
 import sys
 import unicodedata
 from types import SimpleNamespace
+from urllib.parse import urlparse
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -81,6 +82,70 @@ def make_class_name(formal_name):
         class_name = f"_{class_name}"
 
     return class_name
+
+
+def validate_document_icon(document_type, document):
+    try:
+        if not isinstance(document["icon"], str):
+            raise BriefcaseConfigError(
+                f"An icon associated with a document type '{document_type}' is invalid."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"An /icon associated with a document type '{document_type}' does not exist."
+        )
+
+
+def validate_document_description(document_type, document):
+    try:
+        if not isinstance(document["description"], str):
+            raise BriefcaseConfigError(
+                f"A description associated with a document type '{document_type}' is invalid."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"A description associated with a document type '{document_type}' does not exist."
+        )
+
+
+def validate_document_ext(document_type, document):
+    try:
+        if not document["extension"].isalnum():
+            raise BriefcaseConfigError(
+                f"An extension associated with a document type '{document_type}' is invalid."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"An extension associated with a document type '{document_type}' does not exist."
+        )
+
+
+def validate_url(candidate):
+    """Determine if the URL is valid.
+
+    :param candidate: The candidate URL
+    :returns: True. If there are any validation problems, raises ValueError with a
+        diagnostic message.
+    """
+    result = urlparse(candidate)
+    if not all([result.scheme, result.netloc]):
+        raise ValueError("Not a valid URL!")
+    if result.scheme not in {"http", "https"}:
+        raise ValueError("Not a valid website URL!")
+    return True
+
+
+def validate_document_url(document_type, document):
+    try:
+        validate_url(document["url"])
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"A URL associated with a document type '{document_type}' does not exist."
+        )
+    except ValueError as e:
+        raise BriefcaseConfigError(
+            f"A URL associated with a document type '{document_type}' is invalid: {e}"
+        )
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
@@ -244,6 +309,12 @@ class AppConfig(BaseConfig):
                 "and hyphens; and each section may not contain any reserved words (like\n"
                 "'switch', or 'while')."
             )
+
+        for document_type, document in self.document_types.items():
+            validate_document_icon(document_type, document)
+            validate_document_description(document_type, document)
+            validate_document_ext(document_type, document)
+            validate_document_url(document_type, document)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
