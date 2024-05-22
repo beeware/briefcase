@@ -413,22 +413,7 @@ or
             )
         except subprocess.CalledProcessError as e:
             errors = e.stderr
-            if "code object is not signed at all" in errors:
-                self.logger.verbose(
-                    f"... {Path(path).relative_to(self.base_path)} requires a deep sign; retrying"
-                )
-                try:
-                    self.tools.subprocess.run(
-                        process_command + ["--deep"],
-                        stderr=subprocess.PIPE,
-                        check=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise BriefcaseCommandError(
-                        f"Unable to deep code sign {path}."
-                    ) from e
-
-            elif any(
+            if any(
                 msg in errors
                 for msg in [
                     # File has a signature matching the Mach-O magic,
