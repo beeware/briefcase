@@ -133,7 +133,6 @@ briefcase = "briefcase.__main__:main"
 [project.entry-points."briefcase.bootstraps"]
 Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
 PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
-PursuedPyBear = "briefcase.bootstraps.pursuedpybear:PursuedPyBearGuiBootstrap"
 Pygame = "briefcase.bootstraps.pygame:PygameGuiBootstrap"
 
 [project.entry-points."briefcase.platforms"]
