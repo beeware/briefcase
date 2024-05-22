@@ -157,13 +157,17 @@ class BuildCommand(BaseCommand):
     def _clean_build_dir(self, app: AppConfig) -> None:
         build_path = self.bundle_path(app)
 
+        if not build_path.exists():
+            self.logger.warning(f"Nothing to clean ('{build_path}' doesn't exist)")
+            return
+
         confirm = self.input.boolean_input(
             f"Will delete '{build_path}'; are you sure", default=False
         )
 
         if not confirm:
             self.logger.warning(
-                f"Aborting cleaning build dir for app {app.app_name!r}; files will remain."
+                f"Aborting deleting build directory."
             )
             return
 
