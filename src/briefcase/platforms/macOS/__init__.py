@@ -691,11 +691,11 @@ Unable to submit {filename.relative_to(self.base_path)} for notarization.
 To find the cause of this failure, get the submission ID by running:
 
     xcrun notarytool history
-    
-Then run: 
+
+Then run:
 
     xcrun notarytool log <submission-id>
-    
+
 to generate a full log of the error.
 """
                         ) from e
