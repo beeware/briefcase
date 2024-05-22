@@ -170,8 +170,8 @@ class NewCommand(BaseCommand):
         A formal name is valid if it contains at least one identifier character.
 
         :param candidate: The candidate name
-        :returns: True. If there are any validation problems, raises ValueError with a
-            diagnostic message.
+        :returns: True the formal name is valid.
+        :raises: ValueError if the name is not a valid formal name.
         """
         if not make_class_name(candidate):  # Check whether a class name may be derived
             raise ValueError(
