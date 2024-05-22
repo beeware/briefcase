@@ -166,7 +166,7 @@ class NewCommand(BaseCommand):
 
     def validate_formal_name(self, candidate):
         """Determine if the formal name is valid.
-        
+
         A formal name is valid if it contains at least one identifier character.
 
         :param candidate: The candidate name

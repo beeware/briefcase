@@ -4,14 +4,23 @@ import pytest
 @pytest.mark.parametrize(
     "name",
     [
+        # Various forms of capitalization and alphanumeric
+        "Hello World",
         "helloworld",
         "helloWorld",
         "hello42world",
         "42helloworld",
+        # Names that include punctuation
         "hello_world",
         "hello-world",
         "_helloworld",
         "/helloworld",
+        "Hello / World!",
+        # Internationalized names that can be unicode-simplified
+        "Hallo Vögel",
+        "Bonjour Garçon",
+        # Internationalized names that cannot be unicode-simplified
+        "你好 世界!",
     ],
 )
 def test_valid_formal_name(new_command, name):
@@ -22,6 +31,9 @@ def test_valid_formal_name(new_command, name):
 @pytest.mark.parametrize(
     "name",
     [
+        "",  # Empty
+        " ",  # Just a space
+        "\t",  # Other whitespace characters
         "/",  # Just a slash
         "'",
         "\\",
