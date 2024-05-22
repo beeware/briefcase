@@ -20,7 +20,7 @@ class BuildCommand(BaseCommand):
         parser.add_argument(
             "--clean",
             action="store_true",
-            help="Delete the build directory for this app and platform",
+            help="Delete the build directory for the specified format",
         )
 
     def build_app(self, app: AppConfig, **options):
