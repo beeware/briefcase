@@ -536,7 +536,7 @@ class Console:
         should be specifically disabled in non-interactive sessions.
         """
         # `sys.__stdout__` is used because Rich captures and redirects `sys.stdout`
-        return sys.__stdout__.isatty()
+        return os.isatty(sys.__stdout__.fileno())
 
     @property
     def is_color_enabled(self):
