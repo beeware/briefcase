@@ -440,7 +440,7 @@ def test_question_sequence_pygame(new_command):
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "4",  # Pygame GUI toolkit
+        "3",  # Pygame GUI toolkit
     ]
 
     context = new_command.build_context(
@@ -599,7 +599,7 @@ def test_question_sequence_none(new_command):
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "5",  # None
+        "4",  # None
     ]
 
     context = new_command.build_context(
@@ -752,7 +752,7 @@ def test_question_sequence_with_bad_bootstrap_override(
 
     # Prime answers for none of the questions.
     new_command.input.values = [
-        "6",  # None
+        "5",  # None
     ]
 
     class GuiBootstrap:
@@ -1066,7 +1066,7 @@ def test_question_sequence_custom_bootstrap(
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "5",  # Custom GUI bootstrap
+        "4",  # Custom GUI bootstrap
     ]
 
     context = new_command.build_context(project_overrides={})
@@ -1132,7 +1132,7 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "5",  # Custom GUI bootstrap
+        "4",  # Custom GUI bootstrap
     ]
 
     context = new_command.build_context(project_overrides={})
