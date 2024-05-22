@@ -1,4 +1,6 @@
 from __future__ import annotations
+from argparse import ArgumentParser
+import shutil
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
@@ -10,9 +12,15 @@ class BuildCommand(BaseCommand):
     command = "build"
     description = "Build an app for a target platform."
 
-    def add_options(self, parser):
+    def add_options(self, parser: ArgumentParser):
         self._add_update_options(parser, context_label=" before building")
         self._add_test_options(parser, context_label="Build")
+
+        parser.add_argument(
+            "--clean",
+            action="store_true",
+            help=f"Delete the build directory for this app and platform",
+        )
 
     def build_app(self, app: AppConfig, **options):
         """Build an application.
@@ -30,6 +38,7 @@ class BuildCommand(BaseCommand):
         update_support: bool,
         no_update: bool,
         test_mode: bool,
+        clean: bool = False,
         **options,
     ) -> dict | None:
         """Internal method to invoke a build on a single app. Ensures the app exists,
@@ -46,6 +55,10 @@ class BuildCommand(BaseCommand):
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
+        if clean:
+            self._clean_build_dir(app)
+            return
+
         if not self.bundle_path(app).exists():
             state = self.create_command(app, test_mode=test_mode, **options)
         elif (
@@ -140,3 +153,19 @@ class BuildCommand(BaseCommand):
                 )
 
         return state
+
+    def _clean_build_dir(self, app: AppConfig) -> None:
+        build_path = self.bundle_path(app)
+
+        confirm = self.input.boolean_input(
+            f"Will delete '{build_path}'; are you sure", default=False
+        )
+
+        if not confirm:
+            self.logger.warning(
+                f"Aborting cleaning build dir for app {app.app_name!r}; files will remain."
+            )
+            return
+
+        shutil.rmtree(build_path)
+        self.logger.info(f"Deleted '{build_path}'")
