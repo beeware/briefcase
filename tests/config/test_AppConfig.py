@@ -170,10 +170,6 @@ def test_valid_bundle(bundle):
         "com.hello_world",  # underscore
         "com.hello,world",  # comma
         "com.hello world!",  # exclamation point
-        "com.pass",  # Python reserved word
-        "com.pass.example",  # Python reserved word
-        "com.switch",  # Java reserved word
-        "com.switch.example",  # Java reserved word
     ],
 )
 def test_invalid_bundle_identifier(bundle):

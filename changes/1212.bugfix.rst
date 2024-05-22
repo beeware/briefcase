@@ -1,0 +1,1 @@
+Validation rules for bundle identifiers have been loosened. App IDs that contain country codes or language reserved words are no longer flagged as invalid.

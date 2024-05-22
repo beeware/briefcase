@@ -28,12 +28,6 @@ def test_valid_bundle(bundle):
         "com.hello_world",  # underscore
         "com.hello,world",  # comma
         "com.hello world!",  # exclamation point
-        "com.pass",  # Python reserved word
-        "com.pass.example",  # Python reserved word
-        "com.switch",  # Java reserved word
-        "com.switch.example",  # Java reserved word
-        "int.example",  # Valid identifier with a reserved word as the TLD
-        "do.example",  # This *should* be valid by the Java spec, but Android chokes.
     ],
 )
 def test_invalid_bundle(bundle):
