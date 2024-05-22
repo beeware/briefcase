@@ -49,7 +49,6 @@ def sign_call(
     identity="Sekrit identity (DEADBEEF)",
     entitlements=True,
     runtime=True,
-    deep=False,
 ):
     """A test utility method to quickly construct a subprocess call to invoke codesign
     on a file."""
@@ -74,8 +73,6 @@ def sign_call(
                 "runtime",
             ]
         )
-    if deep:
-        args.append("--deep")
 
     return mock.call(args, stderr=subprocess.PIPE, check=True)
 
@@ -284,91 +281,6 @@ def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
     # No console output
     output = capsys.readouterr().out
     assert len(output.strip("\n").split("\n")) == 1
-
-
-@pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_deep_sign(dummy_command, verbose, tmp_path, capsys):
-    """A file can be identified as needing a deep sign."""
-    if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
-
-    # First call raises the deep sign warning; second call succeeds
-    dummy_command.tools.subprocess.run.side_effect = mock_codesign(
-        [" code object is not signed at all", None]
-    )
-
-    # Sign the file
-    dummy_command.sign_file(
-        tmp_path / "base_path/random.file", identity="Sekrit identity (DEADBEEF)"
-    )
-
-    # 2 attempt to codesign was made; the second enabled the deep argument.
-    dummy_command.tools.subprocess.run.assert_has_calls(
-        [
-            sign_call(
-                tmp_path,
-                tmp_path / "base_path/random.file",
-                entitlements=False,
-            ),
-            sign_call(
-                tmp_path,
-                tmp_path / "base_path/random.file",
-                entitlements=False,
-                deep=True,
-            ),
-        ],
-        any_order=False,
-    )
-
-    output = capsys.readouterr().out
-    if verbose:
-        # The console includes a warning about the attempt to deep sign
-        assert "... random.file requires a deep sign; retrying\n" in output
-
-    # Output only happens if in debug mode
-    assert len(output.strip("\n").split("\n")) == (2 if verbose else 1)
-
-
-@pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_deep_sign_failure(dummy_command, verbose, tmp_path, capsys):
-    """If deep signing fails, an error is raised."""
-    if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
-
-    # First invocation raises the deep sign error; second invocation raises some other error
-    dummy_command.tools.subprocess.run.side_effect = mock_codesign(
-        [
-            " code object is not signed at all",
-            " something went wrong!",
-        ]
-    )
-
-    # Sign the file
-    with pytest.raises(BriefcaseCommandError, match="Unable to deep code sign "):
-        dummy_command.sign_file(
-            tmp_path / "base_path/random.file",
-            identity="Sekrit identity (DEADBEEF)",
-        )
-
-    # An attempt to codesign was made
-    dummy_command.tools.subprocess.run.assert_has_calls(
-        [
-            sign_call(
-                tmp_path,
-                tmp_path / "base_path/random.file",
-                entitlements=False,
-            ),
-        ],
-        any_order=False,
-    )
-
-    output = capsys.readouterr().out
-    if verbose:
-        # The console includes a warning about the attempt to deep sign
-        assert "... random.file requires a deep sign; retrying\n" in output
-
-    # Output only happens if in debug mode
-    assert len(output.strip("\n").split("\n")) == (2 if verbose else 1)
 
 
 @pytest.mark.parametrize("verbose", [True, False])
