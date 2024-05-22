@@ -73,7 +73,7 @@ Configuration options for a specific application.
 ``[tool.briefcase.app.<app name>.<platform>]``
 ----------------------------------------------
 
-Configuration options for an application that are platform specific. The
+Configuration options for an application that are platform-specific. The
 platform must match a name for a platform supported by Briefcase (e.g.,
 ``macOS`` or ``windows``). A list of the platforms supported by Briefcase can
 be obtained by running ``briefcase -h``, and inspecting the help for the
@@ -182,7 +182,7 @@ Optional values
 
 A hexadecimal RGB color value (e.g., ``#D81B60``) for a subtle secondary color
 to be used throughout an application to call attention to key elements. This
-setting is only used if the platform allows color modification, otherwise it
+setting is only used if the platform allows color modification, otherwise, it
 is ignored.
 
 ``author``
@@ -304,14 +304,14 @@ the ``description``, or include the ``description`` as the first line of the
 
 A hexadecimal RGB color value (e.g., ``#008577``) to use as the primary color
 for the application. This setting is only used if the platform allows color
-modification, otherwise it is ignored.
+modification, otherwise, it is ignored.
 
 ``primary_color_dark``
 ~~~~~~~~~~~~~~~~~~~~~~
 
 A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
 color. This setting is only used if the platform allows color modification,
-otherwise it is ignored.
+otherwise, it is ignored.
 
 
 .. _configuration-requires-key:
@@ -434,7 +434,7 @@ level, application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting from least
 to most specific.
 
-See :ref:`requires <configuration-requires-key>` for examples.
+See ref:`requires <configuration-requires-key>` for examples.
 
 ``test_sources``
 ~~~~~~~~~~~~~~~~
@@ -468,17 +468,17 @@ starting from least to most specific, with the most specific taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
-* ``permission.camera`` - permission to access to the camera to take photos or video.
+* ``permission.camera`` - permission to access the camera to take photos or video.
 * ``permission.microphone`` - permission to access the microphone.
 * ``permission.coarse_location`` - permission to determine a rough GPS location.
 * ``permission.fine_location`` - permission to determine a precise GPS location.
 * ``permission.background_location`` - permission to track GPS location while in the background.
-* ``permission.photo_library`` - permission to access to the user's photo library.
+* ``permission.photo_library`` - permission to access the user's photo library.
 
 If a cross-platform permission is used, it will be mapped to platform-specific values in
 whatever files are used to define permissions on that platform.
 
-Permissions can also be configured by adding platform-specific configuration items. See the documentation for the the platform backends to see the options that are available.
+Permissions can also be configured by adding platform-specific configuration items. See the documentation for the platform backends to see the available options.
 
 The value for each permission is a short description of why that permission is required.
 If the platform requires, the value may be displayed to the user as part of an
@@ -498,7 +498,7 @@ section follows the format:
 
     ``[tool.briefcase.app.<app name>.document_type.<document type id>]``
 
-or, for a platform specific definition:
+or, for a platform-specific definition:
 
     ``[tool.briefcase.app.<app name>.<platform>.document_type.<document type id>]``
 
@@ -524,8 +524,7 @@ section ``[tool.briefcase.app.myapp.document_type.png]``.
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image for an icon to register for use with documents of this type. The
-path should *exclude* the extension; Briefcase will append a platform
-appropriate extension when configuring the application. For example, an icon
+path should *exclude* the extension; Briefcase will append a platform-appropriate extension when configuring the application. For example, an icon
 specification of::
 
     icon = "resources/icon"
