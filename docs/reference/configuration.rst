@@ -496,11 +496,14 @@ handlers for specific document types by adding a ``document_type``
 configuration section for each document type the application can support. This
 section follows the format:
 
-    ``[tool.briefcase.app.<app name>.document_type.<document_id>]``
+    ``[tool.briefcase.app.<app name>.document_type.<document_type_id>]``
 
 or, for a platform specific definition:
 
-    ``[tool.briefcase.app.<app name>.<platform>.document_type.<document_id>]``
+    ``[tool.briefcase.app.<app name>.<platform>.document_type.<document_type_id>]``
+
+The ``document_type_id`` is an identifier represented in **alphanumeric format** appended to the app_id of an application to identify documents of the same type uniquely.
+
 
 The document type declaration requires the following settings:
 
@@ -508,6 +511,13 @@ The document type declaration requires the following settings:
 ---------------
 
 A short, one-line description of the document format.
+
+``extension``
+---------------
+
+The ``extension`` is the file extension to register. For example, ``myapp``
+could register as a handler for PNG image files by defining the configuration
+section ``[tool.briefcase.app.myapp.document_type.png]``.
 
 ``icon``
 --------
