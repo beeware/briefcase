@@ -1,6 +1,7 @@
 from __future__ import annotations
-from argparse import ArgumentParser
+
 import shutil
+from argparse import ArgumentParser
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
@@ -19,7 +20,7 @@ class BuildCommand(BaseCommand):
         parser.add_argument(
             "--clean",
             action="store_true",
-            help=f"Delete the build directory for this app and platform",
+            help="Delete the build directory for this app and platform",
         )
 
     def build_app(self, app: AppConfig, **options):
@@ -166,9 +167,7 @@ class BuildCommand(BaseCommand):
         )
 
         if not confirm:
-            self.logger.warning(
-                f"Aborting deleting build directory."
-            )
+            self.logger.warning("Aborting build cleaning.")
             return
 
         shutil.rmtree(build_path)
