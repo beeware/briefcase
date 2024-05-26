@@ -1,0 +1,1 @@
+Files with non-unique content were made unique so the packaged wheel passes ``check-wheel-contents``.

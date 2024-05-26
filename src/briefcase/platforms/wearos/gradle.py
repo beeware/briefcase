@@ -1,1 +1,1 @@
-# An implementation would go here!
+# A Wear OS implementation would go here!
