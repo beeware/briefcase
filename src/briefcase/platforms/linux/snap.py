@@ -1,1 +1,1 @@
-# An implementation would go here!
+# A Snap implementation would go here!

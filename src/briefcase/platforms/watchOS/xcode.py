@@ -1,1 +1,1 @@
-# An implementation would go here!
+# A watchOS implementation would go here!
