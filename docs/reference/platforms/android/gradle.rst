@@ -37,7 +37,7 @@ If you have an existing install of the Android SDK, it will be used by Briefcase
 if the ``ANDROID_HOME`` environment variable is set. If ``ANDROID_HOME`` is not
 present in the environment, Briefcase will honor the deprecated
 ``ANDROID_SDK_ROOT`` environment variable. Additionally, an existing SDK install
-must have version 9.0 of Command-line Tools installed; this version can be
+must have version 12.0 of Command-line Tools installed; this version can be
 installed in the SDK Manager in Android Studio.
 
 Packaging format
@@ -132,9 +132,9 @@ The device or emulator to target. Can be specified as:
 * a JSON dictionary specifying the properties of a device that will be created.
   This dictionary must have, at a minimum, an AVD name:
 
-.. code-block:: console
+  .. code-block:: console
 
-     $ briefcase run -d '{"avd":"new-device"}'
+       $ briefcase run -d '{"avd":"new-device"}'
 
   You may also specify:
 
@@ -380,3 +380,10 @@ recipes for building the packages that are stored in the `secondary package repo
 can be submitted as pull requests. Or, if you have a particular package that you'd like
 us to support, please visit the `issue tracker
 <https://github.com/chaquo/chaquopy/issues>`__ and provide details about that package.
+
+While it is possible to use `briefcase package android` to produce an APK or AAB
+file for distribution, the file is *not* usable as-is. It must be signed
+regardless of whether you're distributing your app through the Play Store, or
+via loading the APK directly. For details on how to manually sign your code,
+see the instructions on `signing an Android App Bundle
+<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.```

@@ -73,7 +73,11 @@ def make_class_name(formal_name):
 
     # If the first character isn't in the 'start' character set,
     # and it isn't already an underscore, prepend an underscore.
-    if unicodedata.category(class_name[0]) not in xid_start and class_name[0] != "_":
+    if (
+        class_name
+        and unicodedata.category(class_name[0]) not in xid_start
+        and class_name[0] != "_"
+    ):
         class_name = f"_{class_name}"
 
     return class_name
@@ -86,15 +90,6 @@ def is_valid_bundle_identifier(bundle):
     # Ensure the bundle identifier follows the basi
     if not VALID_BUNDLE_RE.match(bundle):
         return False
-
-    for part in bundle.split("."):
-        # *Some* 2-letter country codes are valid identifiers,
-        # even though they're reserved words; see:
-        #    https://www.oracle.com/java/technologies/javase/codeconventions-namingconventions.html
-        # `.do` *should* be on this list, but as of Apr 2022, `.do` breaks
-        # the Android build tooling.
-        if is_reserved_keyword(part) and part not in {"in", "is"}:
-            return False
 
     return True
 
@@ -154,6 +149,7 @@ class GlobalConfig(BaseConfig):
         project_name,
         version,
         bundle,
+        license=None,
         url=None,
         author=None,
         author_email=None,
@@ -166,6 +162,7 @@ class GlobalConfig(BaseConfig):
         self.url = url
         self.author = author
         self.author_email = author_email
+        self.license = license
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
@@ -187,6 +184,7 @@ class AppConfig(BaseConfig):
         bundle,
         description,
         sources,
+        license,
         formal_name=None,
         url=None,
         author=None,
@@ -229,6 +227,7 @@ class AppConfig(BaseConfig):
         self.test_requires = test_requires
         self.supported = supported
         self.long_description = long_description
+        self.license = license
         self.console_app = console_app
 
         if not is_valid_app_name(self.app_name):
@@ -395,7 +394,7 @@ def merge_pep621_config(global_config, pep621_config):
 
     # Keys that map directly
     maybe_update("description", "description")
-    maybe_update("license", "license", "text")
+    maybe_update("license", "license")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
@@ -428,7 +427,7 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
-def parse_config(config_file, platform, output_format):
+def parse_config(config_file, platform, output_format, logger):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
@@ -552,5 +551,18 @@ def parse_config(config_file, platform, output_format):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
+
+    old_license_format = False
+    for config in [global_config, *app_configs.values()]:
+        if isinstance(config.get("license"), str):
+            config["license"] = {"file": "LICENSE"}
+            old_license_format = True
+
+    if old_license_format:
+        logger.warning(
+            "Your app configuration has a `license` field that is specified as a string. "
+            "Briefcase now uses PEP 621 format for license definitions. To silence this "
+            'warning, replace the `license` declaration with `license.file = "LICENSE".'
+        )
 
     return global_config, app_configs

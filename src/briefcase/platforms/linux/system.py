@@ -704,16 +704,38 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
         doc_folder.mkdir(parents=True, exist_ok=True)
 
         with self.input.wait_bar("Installing license..."):
-            license_file = self.base_path / "LICENSE"
-            if license_file.is_file():
-                self.tools.shutil.copy(license_file, doc_folder / "copyright")
+            if license_file := app.license.get("file"):
+                license_file = self.base_path / license_file
+                if license_file.is_file():
+                    self.tools.shutil.copy(license_file, doc_folder / "copyright")
+                else:
+                    raise BriefcaseCommandError(
+                        f"""\
+Your `pyproject.toml` specifies a license file of {str(license_file.relative_to(self.base_path))!r}.
+However, this file does not exist.
+
+Ensure you have correctly spelled the filename in your `license.file` setting.
+
+"""
+                    )
+            elif license_text := app.license.get("text"):
+                (doc_folder / "copyright").write_text(license_text, encoding="utf-8")
+                if len(license_text.splitlines()) <= 1:
+                    self.logger.warning(
+                        """
+Your app specifies a license using `license.text`, but the value doesn't appear to be a
+full license. Briefcase will generate a `copyright` file for your project; you should
+ensure that the contents of this file is adequate.
+"""
+                    )
             else:
                 raise BriefcaseCommandError(
                     """\
-Your project does not contain a LICENSE file.
+Your project does not contain a LICENSE definition.
 
 Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms.
+with your app's licensing terms, and set `license.file = 'LICENSE'` in your
+app's configuration.
 """
                 )
 
@@ -1054,7 +1076,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                             f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
                             f"Summary:        {app.description}",
                             "",
-                            f"License:        {getattr(app, 'license', 'Unknown')}",
+                            "License:        Unknown",  # TODO: Add license information (see #1829)
                             f"URL:            {app.url}",
                             "Source0:        %{name}-%{version}.tar.gz",
                             "",
@@ -1213,7 +1235,7 @@ with details about the release.
                             f'pkgdesc="{app.description}"',
                             f"arch=('{self.pkg_abi(app)}')",
                             f'url="{app.url}"',
-                            f"license=('{app.license}')",
+                            "license=('Unknown')",
                             f"depends=({system_runtime_requires})",
                             "changelog=CHANGELOG",
                             'source=("$pkgname-$pkgver.tar.gz")',

@@ -115,7 +115,7 @@ def test_supported_os_arch(mock_tools, host_os, host_arch, tmp_path):
 
     # Create `sdkmanager` and the license file.
     android_sdk_root_path = tmp_path / "tools/android_sdk"
-    tools_bin = android_sdk_root_path / "cmdline-tools/9.0/bin"
+    tools_bin = android_sdk_root_path / f"cmdline-tools/{SDK_MGR_VER}/bin"
     tools_bin.mkdir(parents=True, mode=0o755)
     if host_os == "Windows":
         sdk_manager = tools_bin / "sdkmanager.bat"

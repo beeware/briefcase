@@ -1,0 +1,1 @@
+The Docker version on OpenSUSE Tumbleweed is now accepted and no longer triggers a warning message.

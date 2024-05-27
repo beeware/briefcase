@@ -23,6 +23,7 @@ def test_incomplete_global_config(base_command):
         [tool.briefcase]
         version = "1.2.3"
         description = "A sample app"
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my-app]
     """,
@@ -47,6 +48,7 @@ def test_incomplete_config(base_command):
         version = "1.2.3"
         bundle = "com.example"
         description = "A sample app"
+        license.file = "LICENSE"
 
         [tool.briefcase.app.my-app]
     """,
@@ -71,6 +73,7 @@ def test_parse_config(base_command):
         description = "A sample app"
         bundle = "org.beeware"
         mystery = 'default'
+        license.file = "LICENSE"
 
         [tool.briefcase.app.firstapp]
         sources = ['src/firstapp']
@@ -127,6 +130,7 @@ def test_parse_config_with_overrides(base_command):
         description = "A sample app"
         bundle = "org.beeware"
         mystery = 'default'
+        license.file = "LICENSE"
 
         [tool.briefcase.app.firstapp]
         sources = ['src/firstapp']
@@ -197,6 +201,7 @@ def test_parse_config_with_invalid_override(base_command):
         description = "A sample app"
         bundle = "org.beeware"
         mystery = 'default'
+        license.file = "LICENSE"
 
         [tool.briefcase.app.firstapp]
         sources = ['src/firstapp']

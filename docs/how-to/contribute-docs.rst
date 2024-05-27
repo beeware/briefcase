@@ -34,7 +34,7 @@ You'll also need to install the Enchant spell checking library.
 
       (venv) $ brew install enchant
 
-    If you're on an M1 machine, you'll also need to manually set the location
+    If you're on an Apple Silicon machine, you'll also need to manually set the location
     of the Enchant library:
 
     .. code-block:: console

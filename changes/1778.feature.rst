@@ -1,0 +1,1 @@
+Android SDK Commandline Tools 12.0 is now used to build Android apps.

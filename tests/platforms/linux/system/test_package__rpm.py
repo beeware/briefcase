@@ -453,7 +453,6 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
     # Add system requirements and other optional settings.
     first_app_rpm.system_runtime_requires = ["first", "second"]
     first_app_rpm.revision = 42
-    first_app_rpm.license = "BSD License"
 
     # Package the app
     package_command.package_app(first_app_rpm)
@@ -486,7 +485,7 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
                 "Release:        42%{?dist}",
                 "Summary:        The first simple app \\ demonstration",
                 "",
-                "License:        BSD License",
+                "License:        Unknown",
                 "URL:            https://example.com/first-app",
                 "Source0:        %{name}-%{version}.tar.gz",
                 "",

@@ -200,8 +200,10 @@ in the macOS configuration section of your pyproject.toml.
 
         if cross_platform["camera"]:
             entitlements["com.apple.security.device.camera"] = True
+            info["NSCameraUsageDescription"] = cross_platform["camera"]
         if cross_platform["microphone"]:
             entitlements["com.apple.security.device.microphone"] = True
+            info["NSMicrophoneUsageDescription"] = cross_platform["microphone"]
 
         if cross_platform["background_location"]:
             info["NSLocationUsageDescription"] = cross_platform["background_location"]
@@ -214,6 +216,7 @@ in the macOS configuration section of your pyproject.toml.
             entitlements["com.apple.security.personal-information.location"] = True
 
         if cross_platform["photo_library"]:
+            info["NSPhotoLibraryUsageDescription"] = cross_platform["photo_library"]
             entitlements["com.apple.security.personal-information.photo_library"] = True
 
         # Override any info and entitlement definitions with the platform specific definitions
@@ -508,22 +511,7 @@ or
             )
         except subprocess.CalledProcessError as e:
             errors = e.stderr
-            if "code object is not signed at all" in errors:
-                self.logger.verbose(
-                    f"... {Path(path).relative_to(self.base_path)} requires a deep sign; retrying"
-                )
-                try:
-                    self.tools.subprocess.run(
-                        process_command + ["--deep"],
-                        stderr=subprocess.PIPE,
-                        check=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise BriefcaseCommandError(
-                        f"Unable to deep code sign {path}."
-                    ) from e
-
-            elif any(
+            if any(
                 msg in errors
                 for msg in [
                     # File has a signature matching the Mach-O magic,
@@ -785,7 +773,18 @@ password:
                         store_credentials = True
                     else:
                         raise BriefcaseCommandError(
-                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
+                            f"""\
+Unable to submit {filename.relative_to(self.base_path)} for notarization.
+To find the cause of this failure, get the submission ID by running:
+
+    xcrun notarytool history
+
+Then run:
+
+    xcrun notarytool log <submission-id>
+
+to generate a full log of the error.
+"""
                         ) from e
         finally:
             # Clean up house; we don't need the archive anymore.

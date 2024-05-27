@@ -1,0 +1,1 @@
+Added xcrun debugging tips to error message for failed signing attempts

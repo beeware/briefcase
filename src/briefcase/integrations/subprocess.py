@@ -302,8 +302,11 @@ class Subprocess(Tool):
         # This is a no-op; the native subprocess environment is ready-to-use.
         yield subprocess_kwargs
 
-    def full_env(self, overrides: dict[str, str]) -> dict[str, str]:
+    def full_env(self, overrides: dict[str, str | None] | None) -> dict[str, str]:
         """Generate the full environment in which the command will run.
+
+        If an env var in `overrides` is set to `None`, then that env var
+        will be altogether absent in the returned environment.
 
         :param overrides: The environment passed to the subprocess call;
             can be `None` if there are no explicit environment changes.
@@ -311,6 +314,7 @@ class Subprocess(Tool):
         env = self.tools.os.environ.copy()
         if overrides:
             env.update(overrides)
+            env = {k: v for k, v in env.items() if v is not None}
         return env
 
     def final_kwargs(self, **kwargs) -> dict[str, str]:

@@ -95,6 +95,7 @@ def first_app_config():
         version="0.0.1",
         description="The first simple app",
         sources=["src/first"],
+        license={"file": "LICENSE"},
     )
 
 

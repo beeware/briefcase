@@ -842,6 +842,7 @@ any compatibility problems, and then add the compatibility declaration.
                     config_file,
                     platform=self.platform,
                     output_format=self.output_format,
+                    logger=self.logger,
                 )
 
                 # Create the global config

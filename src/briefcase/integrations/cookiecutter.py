@@ -64,7 +64,7 @@ class TOMLEscape(Extension):
 
         def escape_toml(obj):
             """Escapes double quotes and backslashes."""
-            return obj.replace('"', '"').replace("\\", "\\\\")
+            return obj.replace("\\", "\\\\").replace('"', '\\"')
 
         def escape_non_ascii(obj):
             """Quotes obj if non ascii characters are present."""

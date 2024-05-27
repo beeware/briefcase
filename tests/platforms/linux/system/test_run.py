@@ -306,7 +306,7 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
         **sub_kw,
     )
     # As we're adding to the environment, all the local values will be present.
-    # Check that we've definitley set the values we care about
+    # Check that we've definitely set the values we care about
     env = run_command.tools.subprocess._subprocess.Popen.call_args.kwargs["env"]
     assert env["BRIEFCASE_DEBUG"] == "1"
 

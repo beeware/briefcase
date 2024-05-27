@@ -42,6 +42,7 @@ def full_context():
         "custom_permissions": {},
         "requests": {},
         "document_types": {},
+        "license": {"file": "LICENSE"},
         # Properties of the generating environment
         "python_version": platform.python_version(),
         "host_arch": "gothic",

@@ -121,8 +121,10 @@ Permissions
 Briefcase cross platform permissions map to a combination of ``info`` and ``entitlement``
 keys:
 
-* ``microphone``: an ``entitlement`` of ``com.apple.security.device.audio-input``
-* ``camera``: an ``entitlement`` of ``com.apple.security.device.camera``
+* ``microphone``: an ``info`` entry for ``NSMicrophoneUsageDescription``; and
+  an ``entitlement`` of ``com.apple.security.device.audio-input``
+* ``camera``: an ``info`` entry for ``NSCameraUsageDescription``; and
+  an ``entitlement`` of ``com.apple.security.device.camera``
 * ``coarse_location``: an ``info`` entry for ``NSLocationUsageDescription``
   (ignored if ``background_location`` or ``fine_location`` is defined); plus an
   entitlement of ``com.apple.security.personal-information.location``
@@ -131,7 +133,9 @@ keys:
   ``com.apple.security.personal-information.location``
 * ``background_location``: an ``info`` entry for ``NSLocationUsageDescription``;
   plus an ``entitlement`` of ``com.apple.security.personal-information.location``
-* ``photo_library``: an ``entitlement`` of ``com.apple.security.personal-information.photos-library``
+* ``photo_library``: an ``info`` entry for ``NSPhotoLibraryUsageDescription``;
+  plus an ``entitlement`` of
+  ``com.apple.security.personal-information.photos-library``
 
 Platform quirks
 ===============

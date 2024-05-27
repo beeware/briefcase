@@ -1,0 +1,1 @@
+Added documentation for document type id, corrected placement of extension under the Document Types section and fixed typos.

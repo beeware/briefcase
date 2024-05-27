@@ -67,7 +67,7 @@ jobs:
             python-version: "3.8"
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.4
+      uses: actions/checkout@v4.1.6
       with:
         fetch-depth: 0
 
@@ -118,7 +118,7 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.4
+      uses: actions/checkout@v4.1.6
       with:
         fetch-depth: 0
 
@@ -170,7 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+        framework: [ "toga", "pyside6", "pygame" ]
         runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
 
   verify-apps:
@@ -189,5 +189,5 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside6", "ppb", "pygame" ]
+        framework: [ "toga", "pyside6", "pygame" ]
         runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]

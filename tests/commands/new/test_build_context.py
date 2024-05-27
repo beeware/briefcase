@@ -5,7 +5,6 @@ import pytest
 import briefcase.commands.new
 from briefcase.bootstraps import (
     ConsoleBootstrap,
-    PursuedPyBearGuiBootstrap,
     PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
@@ -18,7 +17,6 @@ def mock_builtin_bootstraps():
         "Toga": TogaGuiBootstrap,
         "Console": ConsoleBootstrap,
         "PySide6": PySide6GuiBootstrap,
-        "PursuedPyBear": PursuedPyBearGuiBootstrap,
         "Pygame": PygameGuiBootstrap,
     }
 
@@ -267,7 +265,7 @@ def test_question_sequence_console(new_command):
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "5",  # Console app
+        "4",  # Console app
     ]
 
     context = new_command.build_context(
@@ -554,178 +552,6 @@ supported = false
     )
 
 
-def test_question_sequence_pursuedpybear(new_command):
-    """Questions are asked, a context is constructed."""
-
-    # Prime answers for all the questions.
-    new_command.input.values = [
-        "My Application",  # formal name
-        "",  # app name - accept the default
-        "org.beeware",  # bundle ID
-        "My Project",  # project name
-        "Cool stuff",  # description
-        "Grace Hopper",  # author
-        "grace@navy.mil",  # author email
-        "https://navy.mil/myapplication",  # URL
-        "4",  # license
-        "3",  # PursuedPyBear GUI toolkit
-    ]
-
-    context = new_command.build_context(
-        project_overrides={},
-    )
-
-    assert context == dict(
-        app_name="myapplication",
-        author="Grace Hopper",
-        author_email="grace@navy.mil",
-        bundle="org.beeware",
-        class_name="MyApplication",
-        description="Cool stuff",
-        formal_name="My Application",
-        license="GNU General Public License v2 (GPLv2)",
-        module_name="myapplication",
-        source_dir="src/myapplication",
-        test_source_dir="tests",
-        project_name="My Project",
-        url="https://navy.mil/myapplication",
-        app_source="""\
-import importlib.metadata
-import os
-import sys
-
-import ppb
-
-
-class {{ cookiecutter.class_name }}(ppb.Scene):
-    def __init__(self, **props):
-        super().__init__(**props)
-
-        # Add sprites and details to your scene here
-
-
-def main():
-    # Linux desktop environments use an app's .desktop file to integrate the app
-    # in to their application menus. The .desktop file of this app will include
-    # the StartupWMClass key, set to app's formal name. This helps associate the
-    # app's windows to its menu item.
-    #
-    # For association to work, any windows of the app must have WMCLASS property
-    # set to match the value set in app's desktop file. For PPB, this is set
-    # using the SDL_VIDEO_X11_WMCLASS environment variable.
-
-    # Find the name of the module that was used to start the app
-    app_module = sys.modules["__main__"].__package__
-    # Retrieve the app's metadata
-    metadata = importlib.metadata.metadata(app_module)
-
-    os.environ["SDL_VIDEO_X11_WMCLASS"] = metadata["Formal-Name"]
-
-    ppb.run(
-        starting_scene={{ cookiecutter.class_name }},
-        title=metadata["Formal-Name"],
-    )
-""",
-        pyproject_table_briefcase_app_extra_content="""
-requires = [
-    "ppb~=3.2.0",
-]
-test_requires = [
-{% if cookiecutter.test_framework == "pytest" %}
-    "pytest",
-{% endif %}
-]
-""",
-        pyproject_table_macOS="""\
-universal_build = true
-requires = [
-    "std-nslog~=1.0.0",
-]
-""",
-        pyproject_table_linux="""\
-requires = [
-]
-""",
-        pyproject_table_linux_system_debian="""\
-system_requires = [
-]
-
-system_runtime_requires = [
-    "libsdl2-2.0-0",
-    "libsdl2-mixer-2.0-0",
-    "libsdl2-image-2.0-0",
-    "libsdl2-gfx-1.0-0",
-    "libsdl2-ttf-2.0-0",
-]
-""",
-        pyproject_table_linux_system_rhel="""\
-system_requires = [
-]
-
-system_runtime_requires = [
-    "SDL2",
-    "SDL2_ttf",
-    "SDL2_image",
-    "SDL2_gfx",
-    "SDL2_mixer",
-    "libmodplug",
-]
-""",
-        pyproject_table_linux_system_suse="""\
-system_requires = [
-]
-
-system_runtime_requires = [
-    "SDL2",
-    "SDL2_gfx",
-    "SDL2_ttf",
-    "SDL2_image",
-    "SDL2_mixer",
-    "libmodplug1",
-]
-""",
-        pyproject_table_linux_system_arch="""\
-system_requires = [
-]
-
-system_runtime_requires = [
-    "sdl2",
-    "sdl2_ttf",
-    "sdl2_image",
-    "sdl2_gfx",
-    "sdl2_mixer",
-]
-""",
-        pyproject_table_linux_appimage="""\
-manylinux = "manylinux_2_28"
-
-system_requires = [
-]
-
-linuxdeploy_plugins = [
-]
-""",
-        pyproject_table_linux_flatpak="""\
-flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "23.08"
-flatpak_sdk = "org.freedesktop.Sdk"
-""",
-        pyproject_table_windows="""\
-requires = [
-]
-""",
-        pyproject_table_iOS="""\
-supported = false
-""",
-        pyproject_table_android="""\
-supported = false
-""",
-        pyproject_table_web="""\
-supported = false
-""",
-    )
-
-
 def test_question_sequence_pygame(new_command):
     """Questions are asked, a context is constructed."""
 
@@ -740,7 +566,7 @@ def test_question_sequence_pygame(new_command):
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "4",  # Pygame GUI toolkit
+        "3",  # Pygame GUI toolkit
     ]
 
     context = new_command.build_context(
@@ -899,7 +725,7 @@ def test_question_sequence_none(new_command):
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "6",  # None
+        "5",  # None
     ]
 
     context = new_command.build_context(
@@ -1052,7 +878,7 @@ def test_question_sequence_with_bad_bootstrap_override(
 
     # Prime answers for none of the questions.
     new_command.input.values = [
-        "7",  # None
+        "6",  # None
     ]
 
     class GuiBootstrap:
@@ -1366,7 +1192,7 @@ def test_question_sequence_custom_bootstrap(
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "6",  # Custom GUI bootstrap
+        "5",  # Custom GUI bootstrap
     ]
 
     context = new_command.build_context(project_overrides={})
@@ -1432,7 +1258,7 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "6",  # Custom GUI bootstrap
+        "5",  # Custom GUI bootstrap
     ]
 
     context = new_command.build_context(project_overrides={})

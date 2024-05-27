@@ -173,6 +173,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                 )
                 .split("Docker version ")[1]
                 .split(",")[0]
+                .split("-")[0]
             )
 
             # Ensure Docker version is compatible

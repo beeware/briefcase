@@ -113,7 +113,7 @@ class macOSAppBuildCommand(
                 )
 
         # macOS apps don't have anything to compile, but they do need to be
-        # signed to be able to execute on M1 hardware - even if it's only an
+        # signed to be able to execute on Apple Silicon hardware - even if it's only an
         # ad-hoc signing identity. Apply an ad-hoc signing identity to the
         # app bundle.
         self.logger.info("Ad-hoc signing app...", prefix=app.app_name)

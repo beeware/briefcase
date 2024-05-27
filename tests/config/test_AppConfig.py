@@ -12,6 +12,7 @@ def test_minimal_AppConfig():
         bundle="org.beeware",
         description="A simple app",
         sources=["src/myapp", "somewhere/else/interesting", "local_app"],
+        license={"file": "LICENSE"},
     )
 
     # The basic properties have been set.
@@ -49,6 +50,7 @@ def test_extra_attrs():
         bundle="org.beeware",
         description="A simple app",
         long_description="A longer description\nof the app",
+        license={"file": "LICENSE"},
         template="/path/to/template",
         sources=["src/myapp"],
         requires=["first", "second", "third"],
@@ -111,6 +113,7 @@ def test_valid_app_name(name):
             bundle="org.beeware",
             description="A simple app",
             sources=["src/" + name.replace("-", "_")],
+            license={"file": "LICENSE"},
         )
     except BriefcaseConfigError:
         pytest.fail(f"{name} should be valid")
@@ -137,6 +140,7 @@ def test_invalid_app_name(name):
             bundle="org.beeware",
             description="A simple app",
             sources=["src/invalid"],
+            license={"file": "LICENSE"},
         )
 
 
@@ -157,6 +161,7 @@ def test_valid_bundle(bundle):
             bundle=bundle,
             description="A simple app",
             sources=["src/myapp"],
+            license={"file": "LICENSE"},
         )
     except BriefcaseConfigError:
         pytest.fail(f"{bundle} should be valid")
@@ -170,10 +175,6 @@ def test_valid_bundle(bundle):
         "com.hello_world",  # underscore
         "com.hello,world",  # comma
         "com.hello world!",  # exclamation point
-        "com.pass",  # Python reserved word
-        "com.pass.example",  # Python reserved word
-        "com.switch",  # Java reserved word
-        "com.switch.example",  # Java reserved word
     ],
 )
 def test_invalid_bundle_identifier(bundle):
@@ -186,6 +187,7 @@ def test_invalid_bundle_identifier(bundle):
             bundle=bundle,
             description="A simple app",
             sources=["src/invalid"],
+            license={"file": "LICENSE"},
         )
 
 
@@ -197,6 +199,7 @@ def test_valid_app_version():
             bundle="org.beeware",
             description="A simple app",
             sources=["src/myapp"],
+            license={"file": "LICENSE"},
         )
     except BriefcaseConfigError:
         pytest.fail("1.2.3 should be a valid version number")
@@ -213,6 +216,7 @@ def test_invalid_app_version():
             bundle="org.beeware",
             description="A simple app",
             sources=["src/invalid"],
+            license={"file": "LICENSE"},
         )
 
 
@@ -230,6 +234,7 @@ def test_module_name(name, module_name):
         bundle="org.beeware",
         description="A simple app",
         sources=["src/" + module_name],
+        license={"file": "LICENSE"},
     )
 
     assert config.module_name == module_name
@@ -249,6 +254,7 @@ def test_package_name(bundle, package_name):
         bundle=bundle,
         description="A simple app",
         sources=["src/myapp"],
+        license={"file": "LICENSE"},
     )
 
     assert config.package_name == package_name
@@ -268,6 +274,7 @@ def test_bundle_name(app_name, bundle_name):
         bundle="com.example",
         description="A simple app",
         sources=["src/my_app"],
+        license={"file": "LICENSE"},
     )
 
     assert config.bundle_name == bundle_name
@@ -289,6 +296,7 @@ def test_bundle_identifier(app_name, bundle_name):
         bundle=bundle,
         description="A simple app",
         sources=["src/my_app"],
+        license={"file": "LICENSE"},
     )
 
     assert config.bundle_identifier == f"{bundle}.{bundle_name}"
@@ -313,6 +321,7 @@ def test_duplicated_source(sources):
             bundle="org.beeware",
             description="A simple app",
             sources=sources,
+            license={"file": "LICENSE"},
         )
 
 
@@ -326,4 +335,5 @@ def test_no_source_for_app():
             bundle="org.beeware",
             description="A simple app",
             sources=["src/something", "src/other"],
+            license={"file": "LICENSE"},
         )

@@ -8,6 +8,10 @@ import pytest
         "com.example.more",
         "com.example42.more",
         "com.example-42.more",
+        "ca.example.issue1212",
+        "au.example.issue1212",
+        "in.example.issue1212",
+        "im.glyph.and.this.is.1212",
     ],
 )
 def test_valid_bundle(new_command, bundle):
@@ -23,7 +27,6 @@ def test_valid_bundle(new_command, bundle):
         "com.hello_world",  # underscore
         "com.hello,world",  # comma
         "com.hello world!",  # exclamation point
-        "com.pass.example",  # Reserved word
     ],
 )
 def test_invalid_bundle(new_command, bundle):

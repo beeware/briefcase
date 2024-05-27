@@ -15,6 +15,7 @@ focuses on how to distribute a BeeWare app on the Google Play Store.
 Build the app in release mode
 -----------------------------
 
+To build the app, you must start from the directory containing the `pyproject.toml` file.
 Use Briefcase to build a release bundle for your application:
 
 .. tabs::

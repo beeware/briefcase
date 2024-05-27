@@ -320,6 +320,9 @@ A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
 color. This setting is only used if the platform allows color modification,
 otherwise it is ignored.
 
+
+.. _configuration-requires-key:
+
 ``requires``
 ~~~~~~~~~~~~
 
@@ -330,6 +333,35 @@ setting. If an application defines requirements at the global level,
 application level, *and* platform level, the final set of requirements will be
 the *concatenation* of requirements from all levels, starting from least to
 most specific.
+
+Any PEP 508 version specifier is legal. For example:
+
+* Bare package name::
+
+    requires = ["pillow"]
+
+* Package name with version specifier::
+
+    requires = ["pillow==9.1.0"]
+
+* Install from source using the ``--no-binary`` entry::
+
+    requires = [
+        "pillow==9.1.0",
+        "--no-binary", "pillow",
+    ]
+
+* Git repository::
+
+    requires=["git+https://github.com/beeware/briefcase.git"]
+
+* Local directory::
+
+    requires=["mysrc/myapp"]
+
+* Local wheel file::
+
+    requires=["fullpath/wheelfile.whl"]
 
 ``revision``
 ~~~~~~~~~~~~
@@ -409,6 +441,8 @@ level, application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting from least
 to most specific.
 
+See :ref:`requires <configuration-requires-key>` for examples.
+
 ``test_sources``
 ~~~~~~~~~~~~~~~~
 
@@ -441,17 +475,17 @@ starting from least to most specific, with the most specific taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
-* ``permission.camera`` - permission to access to the camera to take photos or video.
+* ``permission.camera`` - permission to access the camera to take photos or video.
 * ``permission.microphone`` - permission to access the microphone.
 * ``permission.coarse_location`` - permission to determine a rough GPS location.
 * ``permission.fine_location`` - permission to determine a precise GPS location.
 * ``permission.background_location`` - permission to track GPS location while in the background.
-* ``permission.photo_library`` - permission to access to the user's photo library.
+* ``permission.photo_library`` - permission to access the user's photo library.
 
 If a cross-platform permission is used, it will be mapped to platform-specific values in
 whatever files are used to define permissions on that platform.
 
-Permissions can also be configured by adding platform-specific configuration items. See the documentation for the the platform backends to see the options that are available.
+Permissions can also be configured by adding platform-specific configuration items. See the documentation for the platform backends to see the available options.
 
 The value for each permission is a short description of why that permission is required.
 If the platform requires, the value may be displayed to the user as part of an
@@ -469,15 +503,14 @@ handlers for specific document types by adding a ``document_type``
 configuration section for each document type the application can support. This
 section follows the format:
 
-    ``[tool.briefcase.app.<app name>.document_type.<extension>]``
+    ``[tool.briefcase.app.<app name>.document_type.<document type id>]``
 
-or, for a platform specific definition:
+or, for a platform-specific definition:
 
-    ``[tool.briefcase.app.<app name>.<platform>.document_type.<extension>]``
+    ``[tool.briefcase.app.<app name>.<platform>.document_type.<document type id>]``
 
-where ``extension`` is the file extension to register. For example, ``myapp``
-could register as a handler for PNG image files by defining the configuration
-section ``[tool.briefcase.app.myapp.document_type.png]``.
+The ``document type id`` is an identifier, in alphanumeric format. It is appended to the app id of an application to identify documents of the same type.
+
 
 The document type declaration requires the following settings:
 
@@ -486,13 +519,19 @@ The document type declaration requires the following settings:
 
 A short, one-line description of the document format.
 
+``extension``
+---------------
+
+The ``extension`` is the file extension to register. For example, ``myapp``
+could register as a handler for PNG image files by defining the configuration
+section ``[tool.briefcase.app.myapp.document_type.png]``.
+
 ``icon``
 --------
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image for an icon to register for use with documents of this type. The
-path should *exclude* the extension; Briefcase will append a platform
-appropriate extension when configuring the application. For example, an icon
+path should *exclude* the extension; Briefcase will append a platform-appropriate extension when configuring the application. For example, an icon
 specification of::
 
     icon = "resources/icon"

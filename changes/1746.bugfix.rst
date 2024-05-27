@@ -1,0 +1,1 @@
+Escaping of quotation marks in TOML templates was corrected.

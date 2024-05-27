@@ -164,6 +164,26 @@ class NewCommand(BaseCommand):
             # use a dummy app name as the suggestion.
             return "myapp"
 
+    def validate_formal_name(self, candidate):
+        """Determine if the formal name is valid.
+
+        A formal name is valid if it contains at least one identifier character.
+
+        :param candidate: The candidate name
+        :returns: True the formal name is valid.
+        :raises: ValueError if the name is not a valid formal name.
+        """
+        if not make_class_name(candidate):  # Check whether a class name may be derived
+            raise ValueError(
+                self.input.textwrap(
+                    f"{candidate!r} is not a valid formal name.\n"
+                    "\n"
+                    "Formal names must include at least one valid Python identifier character."
+                )
+            )
+
+        return True
+
     def _validate_existing_app_name(self, candidate):
         """Perform internal validation preventing the use of pre-existing app names.
 
@@ -459,6 +479,7 @@ class NewCommand(BaseCommand):
             ),
             variable="formal name",
             default="Hello World",
+            validator=self.validate_formal_name,
             override_value=project_overrides.pop("formal_name", None),
         )
 
@@ -632,9 +653,8 @@ class NewCommand(BaseCommand):
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 5 options are: Toga, PySide6, PursuedPyBear, Pygame
+        # Ensure the first 5 options are: Toga, PySide6, Pygame
         ordered.move_to_end("Pygame", last=False)
-        ordered.move_to_end("PursuedPyBear", last=False)
         ordered.move_to_end("PySide6", last=False)
         ordered.move_to_end("Toga", last=False)
 
