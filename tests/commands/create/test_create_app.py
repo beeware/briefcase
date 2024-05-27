@@ -155,6 +155,7 @@ def test_create_app_not_supported(tracking_create_command, tmp_path):
                 description="The third simple app",
                 sources=["src/third"],
                 supported=False,
+                license={"file": "LICENSE"},
             )
         )
 

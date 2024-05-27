@@ -28,7 +28,7 @@ def test_base_keys():
         "key": "value",
         "description": "It's cool",
         "version": "1.2.3",
-        "license": "BSD License",
+        "license": {"text": "BSD License"},
         "url": "https://example.com",
     }
 
@@ -70,13 +70,24 @@ def test_missing_subkeys():
         briefcase_config,
         {
             "urls": {"Sponsorship": "https://example.com"},
+        },
+    )
+
+    assert briefcase_config == {"key": "value"}
+
+
+def test_specified_license_file():
+    "The license file is included in the briefcase config if specified in the PEP621 config"
+    briefcase_config = {"key": "value"}
+
+    merge_pep621_config(
+        briefcase_config,
+        {
             "license": {"file": "license.txt"},
         },
     )
 
-    assert briefcase_config == {
-        "key": "value",
-    }
+    assert briefcase_config == {"key": "value", "license": {"file": "license.txt"}}
 
 
 def test_empty_authors():

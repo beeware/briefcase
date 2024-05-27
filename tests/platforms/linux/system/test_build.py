@@ -10,6 +10,8 @@ from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
+from ....utils import create_file
+
 
 @pytest.fixture
 def build_command(tmp_path, first_app):
@@ -116,7 +118,7 @@ def test_missing_license(build_command, first_app, tmp_path):
     # Build the app; it will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Your project does not contain a LICENSE file.",
+        match=r"Your `pyproject.toml` specifies a license file of 'LICENSE'",
     ):
         build_command.build_app(first_app)
 
@@ -126,6 +128,92 @@ def test_missing_license(build_command, first_app, tmp_path):
         check=True,
         cwd=bundle_path,
     )
+
+
+def test_specified_license_file_is_copied(build_command, first_app, tmp_path):
+    """The specified license file is copied if a license file is specified."""
+    create_file(tmp_path / "base_path/LICENSE.txt", "The Actual First App License")
+    first_app.license["file"] = "LICENSE.txt"
+
+    # Build the app
+    build_command.build_app(first_app)
+
+    # The correct license file has been copied
+    doc_folder = (
+        build_command.bundle_path(first_app)
+        / f"{first_app.app_name}-{first_app.version}"
+        / "usr"
+        / "share"
+        / "doc"
+        / first_app.app_name
+    )
+    assert (doc_folder / "copyright").read_text(
+        encoding="utf-8"
+    ) == "The Actual First App License"
+
+
+def test_license_text_is_saved(build_command, first_app):
+    """The license text is saved as a file in the bundle."""
+    first_app.license = {"text": "Some license text"}
+
+    # Build the app
+    build_command.build_app(first_app)
+
+    # The license text has been saved
+    doc_folder = (
+        build_command.bundle_path(first_app)
+        / f"{first_app.app_name}-{first_app.version}"
+        / "usr"
+        / "share"
+        / "doc"
+        / first_app.app_name
+    )
+
+    assert (doc_folder / "copyright").read_text(encoding="utf-8") == "Some license text"
+
+
+def test_license_text_warns_with_single_line_license(build_command, first_app):
+    """A warning is logged if the license text is a single line."""
+
+    first_app.license = {"text": "Some license text"}
+    build_command.logger.warning = mock.MagicMock()
+
+    # Build the app
+    build_command.build_app(first_app)
+
+    build_command.logger.warning.assert_called_once_with(
+        """
+Your app specifies a license using `license.text`, but the value doesn't appear to be a
+full license. Briefcase will generate a `copyright` file for your project; you should
+ensure that the contents of this file is adequate.
+"""
+    )
+
+
+def test_exception_with_no_license(build_command, first_app):
+    """An exception is raised if there is no license defined."""
+
+    first_app.license = {}
+    build_command.logger.warning = mock.MagicMock()
+
+    # Build the app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Your project does not contain a LICENSE definition.",
+    ):
+        build_command.build_app(first_app)
+
+
+def test_license_text_doesnt_warn_with_multi_line_license(
+    build_command, first_app, tmp_path
+):
+    """No warning is logged if the license text is multi-line."""
+    first_app.license = {"text": "Some license text\nsome more text"}
+    build_command.logger.warning = mock.MagicMock()
+
+    # Build the app
+    build_command.build_app(first_app)
+    build_command.logger.warning.assert_not_called()
 
 
 def test_missing_changelog(build_command, first_app, tmp_path):

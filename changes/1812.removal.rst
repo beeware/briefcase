@@ -1,0 +1,1 @@
+The format for the ``license`` field has been converted to PEP 621 format. Existing projects that specify ``license`` as a string should update their configurations to point at the generated license file using ``license.file = "LICENSE"``.

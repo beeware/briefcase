@@ -28,6 +28,7 @@ def first_app_uninstalled(tmp_path):
         version="0.0.1",
         description="The first simple app",
         sources=["src/first"],
+        license={"file": "LICENSE"},
     )
 
 
@@ -55,6 +56,7 @@ def second_app(tmp_path):
         version="0.0.2",
         description="The second simple app",
         sources=["src/second"],
+        license={"file": "LICENSE"},
     )
 
 
@@ -75,4 +77,5 @@ def third_app(tmp_path):
         description="The third simple app",
         sources=["src/third", "src/common", "other"],
         test_sources=["tests", "path/to/other"],
+        license={"file": "LICENSE"},
     )

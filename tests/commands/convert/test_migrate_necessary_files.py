@@ -102,12 +102,31 @@ def test_warning_without_license_file(
 
 
 @pytest.mark.parametrize("test_source_dir", ["tests"])
-def test_pep621_wrong_license_filename(
+def test_file_is_copied_if_no_license_file_specified(
     convert_command,
     project_dir_with_files,
     dummy_app_name,
     test_source_dir,
 ):
+    """A license file is copied if no license file is specified in pyproject.toml."""
+    create_file(convert_command.base_path / "CHANGELOG", "")
+    assert not (convert_command.base_path / "LICENSE").exists()
+    convert_command.migrate_necessary_files(
+        project_dir_with_files,
+        test_source_dir,
+        dummy_app_name,
+    )
+    assert (convert_command.base_path / "LICENSE").exists()
+
+
+@pytest.mark.parametrize("test_source_dir", ["tests"])
+def test_pep621_specified_license_filename(
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
+    test_source_dir,
+):
+    """No license file is copied if a license file is specified in pyproject.toml."""
     convert_command.logger.warning = mock.MagicMock()
     license_name = "LICENSE.txt"
     create_file(convert_command.base_path / license_name, "")
@@ -121,10 +140,34 @@ def test_pep621_wrong_license_filename(
         test_source_dir,
         dummy_app_name,
     )
+    assert not (convert_command.base_path / "LICENSE").exists()
+
+
+@pytest.mark.parametrize("test_source_dir", ["tests"])
+def test_pep621_specified_license_text(
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
+    test_source_dir,
+):
+    """A license file is copied if the license is specified as text and no LICENSE file
+    exists."""
+    convert_command.logger.warning = mock.MagicMock()
+    create_file(
+        convert_command.base_path / "pyproject.toml",
+        '[project]\nlicense = { text = "New BSD" }',
+    )
+    create_file(convert_command.base_path / "CHANGELOG", "")
+    convert_command.migrate_necessary_files(
+        project_dir_with_files,
+        test_source_dir,
+        dummy_app_name,
+    )
+    assert (convert_command.base_path / "LICENSE").exists()
+
     convert_command.logger.warning.assert_called_once_with(
-        f"\nLicense file found in '{convert_command.base_path}', but its name is "
-        f"'{license_name}', not 'LICENSE'. Briefcase will create a template 'LICENSE' "
-        "file, but you might want to consider renaming the existing file."
+        f"\nLicense file not found in '{convert_command.base_path}'. "
+        "Briefcase will create a template 'LICENSE' file."
     )
 
 
@@ -162,7 +205,11 @@ def test_no_warning_with_license_and_changelog_file(
     """No warning is raised if both license file and changelog file is present."""
     convert_command.logger.warning = mock.MagicMock()
 
-    create_file(convert_command.base_path / "LICENSE", "")
+    create_file(
+        convert_command.base_path / "pyproject.toml",
+        '[project]\nlicense = { file = "LICENSE.txt" }',
+    )
+    create_file(convert_command.base_path / "LICENSE.txt", "")
     create_file(convert_command.base_path / "CHANGELOG", "")
     convert_command.migrate_necessary_files(
         project_dir_with_files,
