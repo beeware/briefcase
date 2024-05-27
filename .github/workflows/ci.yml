@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_call:
+    inputs:
+      attest-package:
+        description: "Create GitHub provenance attestation for the package."
+        default: "false"
+        type: string
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact; use for artifact retrieval."
@@ -32,10 +37,26 @@ jobs:
     uses: beeware/.github/.github/workflows/towncrier-run.yml@main
 
   package:
-    name: Python package
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    name: Package Briefcase
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+#    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/python-package-create.yml@hynek-build
     with:
-      tox-factors: -with-automation
+      attest: ${{ inputs.attest-package }}
+
+  package-automation:
+    name: Package Automation
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+#    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/python-package-create.yml@hynek-build
+    with:
+      build-subdirectory: "automation"
 
   unit-tests:
     name: Unit tests
@@ -160,8 +181,9 @@ jobs:
 
   verify-projects:
     name: Verify project
-    needs: unit-tests
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    needs: [ package, package-automation, unit-tests ]
+#    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/app-create-verify.yml@hynek-build
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -173,8 +195,9 @@ jobs:
 
   verify-apps:
     name: Build app
-    needs: unit-tests
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    needs: [ package, package-automation, unit-tests ]
+#    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@hynek-build
     with:
       # This *must* be the version of Python that is the system Python on the
       # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
