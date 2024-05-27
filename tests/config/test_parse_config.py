@@ -13,7 +13,10 @@ def test_invalid_toml():
 
     with pytest.raises(BriefcaseConfigError, match="Invalid pyproject.toml"):
         parse_config(
-            config_file, platform="macOS", output_format="Xcode", logger=Mock()
+            config_file,
+            platform="macOS",
+            output_format="Xcode",
+            logger=Mock(),
         )
 
 
@@ -29,7 +32,10 @@ def test_no_briefcase_section():
 
     with pytest.raises(BriefcaseConfigError, match="No tool.briefcase section"):
         parse_config(
-            config_file, platform="macOS", output_format="Xcode", logger=Mock()
+            config_file,
+            platform="macOS",
+            output_format="Xcode",
+            logger=Mock(),
         )
 
 
@@ -45,7 +51,10 @@ def test_no_apps():
 
     with pytest.raises(BriefcaseConfigError, match="No Briefcase apps defined"):
         parse_config(
-            config_file, platform="macOS", output_format="Xcode", logger=Mock()
+            config_file,
+            platform="macOS",
+            output_format="Xcode",
+            logger=Mock(),
         )
 
 
@@ -62,7 +71,10 @@ def test_single_minimal_app():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        logger=Mock(),
     )
 
     # There's a single global option
@@ -71,7 +83,11 @@ def test_single_minimal_app():
     # The app gets the name from its header line.
     # It inherits the value from the base definition.
     assert apps == {
-        "my_app": {"app_name": "my_app", "value": 42, "license": {"file": "LICENSE"}}
+        "my_app": {
+            "app_name": "my_app",
+            "value": 42,
+            "license": {"file": "LICENSE"},
+        }
     }
 
 
@@ -91,7 +107,10 @@ def test_multiple_minimal_apps():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        logger=Mock(),
     )
 
     # There are no global options
@@ -137,7 +156,10 @@ def test_platform_override():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -200,7 +222,10 @@ def test_platform_override_ordering():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -279,7 +304,10 @@ def test_format_override():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="app",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -359,7 +387,10 @@ def test_format_override_ordering():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="app",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -427,7 +458,10 @@ def test_requires():
 
     # Request a macOS app
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="app",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -464,7 +498,10 @@ def test_requires():
     # Request a macOS xcode project
     config_file.seek(0)
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -500,7 +537,10 @@ def test_requires():
 
     config_file.seek(0)
     global_options, apps = parse_config(
-        config_file, platform="linux", output_format="appimage", logger=Mock()
+        config_file,
+        platform="linux",
+        output_format="appimage",
+        logger=Mock(),
     )
 
     # The global options are exactly as specified
@@ -561,7 +601,10 @@ def test_document_types():
 
     # Request a macOS app
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="Xcode", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        logger=Mock(),
     )
 
     # The macOS my_app app specifies a full inherited chain.
@@ -632,7 +675,10 @@ def test_pep621_defaults():
     )
 
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app", logger=Mock()
+        config_file,
+        platform="macOS",
+        output_format="app",
+        logger=Mock(),
     )
 
     awesome = apps["awesome"]
@@ -683,8 +729,7 @@ def test_license_is_string():
         "license": {"file": "LICENSE"},
     }
     logger.warning.assert_called_once_with(
-        "The license was specified using a string, however Briefcase prefers a PEP621 "
-        "compatible dictionary on the form {'file': '{filename}'} or {'text': '{license_text}'}.\n"
-        "Therefore, when given the license as a string, Briefcase ignores the license string and "
-        "defaults to {'file': 'LICENSE'}."
+        "Your app configuration has a `license` field that is specified as a string. "
+        "Briefcase now uses PEP 621 format for license definitions. To silence this "
+        'warning, replace the `license` declaration with `license.file = "LICENSE".'
     )

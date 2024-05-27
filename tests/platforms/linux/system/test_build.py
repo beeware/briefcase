@@ -118,7 +118,7 @@ def test_missing_license(build_command, first_app, tmp_path):
     # Build the app; it will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"You specified that the license file is ",
+        match=r"Your `pyproject.toml` specifies a license file of 'LICENSE'",
     ):
         build_command.build_app(first_app)
 
@@ -183,22 +183,23 @@ def test_license_text_warns_with_single_line_license(build_command, first_app):
 
     build_command.logger.warning.assert_called_once_with(
         """
-You specified the license using a text string. However, this string is only one line.
-
-Make sure that the license text is a full license (or specify a license file).
+Your app specifies a license using `license.text`, but the value doesn't appear to be a
+full license. Briefcase will generate a `copyright` file for your project; you should
+ensure that the contents of this file is adequate.
 """
     )
 
 
 def test_exception_with_no_license(build_command, first_app):
-    """An exception is raised if there is no license."""
+    """An exception is raised if there is no license defined."""
 
     first_app.license = {}
     build_command.logger.warning = mock.MagicMock()
 
     # Build the app
     with pytest.raises(
-        BriefcaseCommandError, match="Your project does not contain a LICENSE file."
+        BriefcaseCommandError,
+        match="Your project does not contain a LICENSE definition.",
     ):
         build_command.build_app(first_app)
 

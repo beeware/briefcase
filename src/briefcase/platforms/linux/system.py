@@ -711,9 +711,11 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
                 else:
                     raise BriefcaseCommandError(
                         f"""\
-You specified that the license file is {license_file}. However, this file does not exist.
+Your `pyproject.toml` specifies a license file of {str(license_file.relative_to(self.base_path))!r}.
+However, this file does not exist.
 
-Make sure you spelled the name of the license file correctly in `pyproject.toml`.
+Ensure you have correctly spelled the filename in your `license.file` setting.
+
 """
                     )
             elif license_text := app.license.get("text"):
@@ -721,18 +723,19 @@ Make sure you spelled the name of the license file correctly in `pyproject.toml`
                 if len(license_text.splitlines()) <= 1:
                     self.logger.warning(
                         """
-You specified the license using a text string. However, this string is only one line.
-
-Make sure that the license text is a full license (or specify a license file).
+Your app specifies a license using `license.text`, but the value doesn't appear to be a
+full license. Briefcase will generate a `copyright` file for your project; you should
+ensure that the contents of this file is adequate.
 """
                     )
             else:
                 raise BriefcaseCommandError(
                     """\
-Your project does not contain a LICENSE file.
+Your project does not contain a LICENSE definition.
 
 Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms.
+with your app's licensing terms, and set `license.file = 'LICENSE'` in your
+app's configuration.
 """
                 )
 
@@ -811,7 +814,11 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
     supported_host_os_reason = "Linux system projects can only be executed on Linux."
 
     def run_app(
-        self, app: AppConfig, test_mode: bool, passthrough: list[str], **kwargs
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        passthrough: list[str],
+        **kwargs,
     ):
         """Start the application.
 

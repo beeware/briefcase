@@ -560,12 +560,12 @@ def parse_config(config_file, platform, output_format, logger):
         if isinstance(config.get("license"), str):
             config["license"] = {"file": "LICENSE"}
             old_license_format = True
+
     if old_license_format:
         logger.warning(
-            "The license was specified using a string, however Briefcase prefers a PEP621 "
-            "compatible dictionary on the form {'file': '{filename}'} or {'text': '{license_text}'}.\n"
-            "Therefore, when given the license as a string, Briefcase ignores the license string and "
-            "defaults to {'file': 'LICENSE'}."
+            "Your app configuration has a `license` field that is specified as a string. "
+            "Briefcase now uses PEP 621 format for license definitions. To silence this "
+            'warning, replace the `license` declaration with `license.file = "LICENSE".'
         )
 
     return global_config, app_configs

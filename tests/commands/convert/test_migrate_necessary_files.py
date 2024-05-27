@@ -144,6 +144,34 @@ def test_pep621_specified_license_filename(
 
 
 @pytest.mark.parametrize("test_source_dir", ["tests"])
+def test_pep621_specified_license_text(
+    convert_command,
+    project_dir_with_files,
+    dummy_app_name,
+    test_source_dir,
+):
+    """A license file is copied if the license is specified as text and no LICENSE file
+    exists."""
+    convert_command.logger.warning = mock.MagicMock()
+    create_file(
+        convert_command.base_path / "pyproject.toml",
+        '[project]\nlicense = { text = "New BSD" }',
+    )
+    create_file(convert_command.base_path / "CHANGELOG", "")
+    convert_command.migrate_necessary_files(
+        project_dir_with_files,
+        test_source_dir,
+        dummy_app_name,
+    )
+    assert (convert_command.base_path / "LICENSE").exists()
+
+    convert_command.logger.warning.assert_called_once_with(
+        f"\nLicense file not found in '{convert_command.base_path}'. "
+        "Briefcase will create a template 'LICENSE' file."
+    )
+
+
+@pytest.mark.parametrize("test_source_dir", ["tests"])
 def test_warning_without_changelog_file(
     convert_command,
     project_dir_with_files,
