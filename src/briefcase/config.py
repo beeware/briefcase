@@ -100,7 +100,7 @@ def validate_document_description(document_type, document):
     try:
         if not isinstance(document["description"], str):
             raise BriefcaseConfigError(
-                f"A description associated with a document type '{document_type}' is invalid."
+                f"The description associated with document type {document_type!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
