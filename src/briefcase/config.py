@@ -92,7 +92,7 @@ def validate_document_icon(document_type, document):
             )
     except KeyError:
         raise BriefcaseConfigError(
-            f"An /icon associated with a document type '{document_type}' does not exist."
+            f"Document type {document_type!r} does not define an icon."
         )
 
 
