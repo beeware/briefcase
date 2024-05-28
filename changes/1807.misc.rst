@@ -1,1 +1,0 @@
-Added documentation for externally supported entry points

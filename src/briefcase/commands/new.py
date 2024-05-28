@@ -599,13 +599,14 @@ class NewCommand(BaseCommand):
             if self.validate_selection_override(bootstraps.keys(), bootstrap_override):
                 bootstrap_override = reverse_lookup[bootstraps[bootstrap_override]]
 
-        EXTERNAL_HOOKS_SUPPORT = (
-            "Known external entry points documented "
-            "at https://briefcase.readthedocs.io/en/latest/reference/known-external-hooks.html"
-        )
-
         selected_bootstrap = self.select_option(
-            intro=f"What GUI toolkit do you want to use for this project?\n{EXTERNAL_HOOKS_SUPPORT}",
+            intro=(
+                "What GUI toolkit do you want to use for this project?\n"
+                "\n"
+                "Additional GUI bootstraps are available; visit "
+                "https://beeware.org/bee/briefcase-bootstraps "
+                "for a full list of known GUI bootstraps."
+            ),
             variable="GUI Framework",
             default=None,
             options=bootstrap_options.keys(),

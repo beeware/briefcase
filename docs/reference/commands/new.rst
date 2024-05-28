@@ -49,3 +49,31 @@ The expected keys are specified by the cookiecutter template being used to
 create the new project. Therefore, the set of possible keys is not listed here
 but should be expected to remain consistent for any specific version of
 Briefcase; with version changes, though, the keys may change.
+
+Third-party Bootstraps
+======================
+
+When you run new project wizard, you are asked to select a GUI toolkit. Briefcase
+includes bootstraps for `Toga <https://toga.readthedocs.io>`__ (BeeWare's cross-platform
+GUI framework), `PySide6 <https://wiki.qt.io/Qt_for_Python>`__ (Python bindings for the
+Qt GUI toolkit) and `Pygame <https://www.pygame.org/news>`__ (a common Python game
+development toolkit), as well as an "empty" bootstrap that doesn't include any GUI code.
+However, Briefcase provides a :ref:`plug-in interface <bootstrap-interface>` that allows
+GUI toolkits to provide a their own bootstrap implementation.
+
+The following third-party bootstraps are known to exist:
+
+=================================== ============== ===================================================
+Bootstrap                           Package name   Description
+=================================== ============== ===================================================
+`PursuedPyBear <https://ppb.dev>`__ ``ppb``        "Unbearably fun game development". A game toolkit
+                                                   with a focus on being education friendly and
+                                                   exposing an idiomatic Python interface.
+----------------------------------- -------------- ---------------------------------------------------
+`Pygame-ce <https://pyga.me>`__     ``pygame-ce``  A fork of pygame, the classic library for making
+                                                   games in Python.
+=================================== ============== ===================================================
+
+To add a third-party bootstrap, ``pip install`` the named package into the virtual
+environment that contains Briefcase, then run ``briefcase new``. The new bootstrap
+option should be added to the list of GUI toolkits.
