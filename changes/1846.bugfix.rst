@@ -1,0 +1,1 @@
+Created validation for document types with error handling.
