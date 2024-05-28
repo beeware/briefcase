@@ -237,7 +237,9 @@ build_gradle_dependencies = [
     "androidx.appcompat:appcompat:1.6.1",
     "com.google.android.material:material:1.11.0",
     # Needed for DetailedList
-    "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # Needed for MapView
+    # "org.osmdroid:osmdroid-android:6.1.0",
 ]
 """,
         pyproject_table_web="""\
@@ -1010,7 +1012,9 @@ build_gradle_dependencies = [
     "androidx.appcompat:appcompat:1.6.1",
     "com.google.android.material:material:1.11.0",
     # Needed for DetailedList
-    "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # Needed for MapView
+    # "org.osmdroid:osmdroid-android:6.1.0",
 ]
 """,
         pyproject_table_web="""\
