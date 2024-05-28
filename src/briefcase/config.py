@@ -88,7 +88,7 @@ def validate_document_icon(document_type, document):
     try:
         if not isinstance(document["icon"], str):
             raise BriefcaseConfigError(
-                f"An icon associated with a document type '{document_type}' is invalid."
+                f"The icon definition associated with document type {document_type!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
