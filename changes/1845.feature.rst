@@ -1,0 +1,1 @@
+The default Gradle dependenencies for a Toga project no longer includes SwipeRefreshLayout.
