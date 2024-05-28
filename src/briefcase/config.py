@@ -140,7 +140,7 @@ def validate_document_url(document_type, document):
         validate_url(document["url"])
     except KeyError:
         raise BriefcaseConfigError(
-            f"A URL associated with a document type '{document_type}' does not exist."
+            f"Document type {document_type!r} does not provide a URL."
         )
     except ValueError as e:
         raise BriefcaseConfigError(
