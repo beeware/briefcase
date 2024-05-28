@@ -144,7 +144,7 @@ def validate_document_url(document_type, document):
         )
     except ValueError as e:
         raise BriefcaseConfigError(
-            f"A URL associated with a document type '{document_type}' is invalid: {e}"
+            f"The URL associated with document type {document_type!r} is invalid: {e}"
         )
 
 
