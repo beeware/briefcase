@@ -42,8 +42,7 @@ jobs:
       id-token: write
       contents: read
       attestations: write
-#    uses: beeware/.github/.github/workflows/python-package-create.yml@main
-    uses: rmartin16/.github-beeware/.github/workflows/python-package-create.yml@hynek-build
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
     with:
       attest: ${{ inputs.attest-package }}
 
@@ -53,8 +52,7 @@ jobs:
       id-token: write
       contents: read
       attestations: write
-#    uses: beeware/.github/.github/workflows/python-package-create.yml@main
-    uses: rmartin16/.github-beeware/.github/workflows/python-package-create.yml@hynek-build
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
     with:
       build-subdirectory: "automation"
 
@@ -182,8 +180,7 @@ jobs:
   verify-projects:
     name: Verify project
     needs: [ package, package-automation, unit-tests ]
-#    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
-    uses: rmartin16/.github-beeware/.github/workflows/app-create-verify.yml@hynek-build
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -196,8 +193,7 @@ jobs:
   verify-apps:
     name: Build app
     needs: [ package, package-automation, unit-tests ]
-#    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
-    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@hynek-build
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # This *must* be the version of Python that is the system Python on the
       # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
