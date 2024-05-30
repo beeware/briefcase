@@ -265,6 +265,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         update_requirements: bool = False,
         update_resources: bool = False,
         update_support: bool = False,
+        update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
         passthrough: list[str] | None = None,
@@ -299,6 +300,7 @@ class RunCommand(RunAppMixin, BaseCommand):
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
             or update_support  # An explicit update of support files has been requested
+            or update_stub  # An explicit update of the stub binary has been requested
             or (not exec_file.exists())  # Executable binary doesn't exist yet
             or (
                 test_mode and not no_update
@@ -310,6 +312,7 @@ class RunCommand(RunAppMixin, BaseCommand):
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 update_support=update_support,
+                update_stub=update_stub,
                 no_update=no_update,
                 test_mode=test_mode,
                 **options,

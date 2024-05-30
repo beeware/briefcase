@@ -137,6 +137,8 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
+    exe_extension = ""
+
     # defined by platform-specific subclasses
     command: str
     description: str
@@ -400,6 +402,22 @@ a custom location for Briefcase's tools.
         """
         return self.binary_path(app)
 
+    def unbuilt_executable_path(self, app) -> Path:
+        """The path to the unbuilt form of the binary object for the app.
+
+        The pre-built stub binary may need to undergo some manipulation before it can be
+        used; to mark that this manipulation is required, the "unbuilt" binary has a
+        "raw" name that doesn't involve any app details. The build step moves the binary
+        to the final name.
+
+        :param app: The app config
+        """
+        return self.binary_executable_path(app).parent / (
+            ("Console" if app.console_app else "GUI")
+            + "-Stub"
+            + self.binary_executable_path(app).suffix
+        )
+
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
         """Load the ``briefcase.toml`` file provided by the app template.
 
@@ -443,6 +461,14 @@ a custom location for Briefcase's tools.
             return self.briefcase_toml(app)["briefcase"]["target_version"]
         except KeyError:
             return None
+
+    def stub_binary_revision(self, app: AppConfig) -> str:
+        """Obtain the stub binary revision that the template requires.
+
+        :param app: The config object for the app
+        :return: The stub binary revision required by the template.
+        """
+        return self.path_index(app, "stub_binary_revision")
 
     def support_path(self, app: AppConfig) -> Path:
         """Obtain the path into which the support package should be unpacked.
@@ -797,6 +823,12 @@ any compatibility problems, and then add the compatibility declaration.
             "--update-support",
             action="store_true",
             help=f"Update support package for the app{context_label}",
+        )
+
+        parser.add_argument(
+            "--update-stub",
+            action="store_true",
+            help=f"Update stub binary for the app{context_label}",
         )
 
         parser.add_argument(

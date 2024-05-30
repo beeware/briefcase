@@ -97,11 +97,11 @@ class macOSAppBuildCommand(
         """
         self.logger.info("Building App...", prefix=app.app_name)
 
-        # Move the stub binary in to the final executable location
-        stub_path = self.binary_path(app) / "Contents/MacOS/Stub"
-        if stub_path.exists():
+        # Move the unbuilt binary in to the final executable location
+        unbuilt_path = self.unbuilt_executable_path(app)
+        if unbuilt_path.exists():
             with self.input.wait_bar("Renaming stub binary..."):
-                stub_path.rename(self.binary_executable_path(app))
+                unbuilt_path.rename(self.binary_executable_path(app))
 
         if not getattr(app, "universal_build", True):
             with self.input.wait_bar("Ensuring stub binary is thin..."):
