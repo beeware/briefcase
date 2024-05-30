@@ -381,6 +381,26 @@ color for splash screens.
 If the platform output format does not use a splash screen, this setting is
 ignored.
 
+``stub_binary``
+~~~~~~~~~~~~~~~
+
+A file path or URL pointing at a pre-compiled binary (or a zip/tarball of a binary) that
+can be used as an entry point for a bundled application.
+
+If this setting is not provided, and a stub binary is required by the platform,
+Briefcase will use the default stub binary for the platform.
+
+``stub_binary_revision``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The specific revision of the stub binary that should be used. By default, Briefcase will
+use the stub binary revision nominated by the application template. If you specify a
+stub binary revision, that will override the revision nominated by the application
+template.
+
+If you specify an explicit stub binary (using the ``stub_binary`` setting), this
+argument is ignored.
+
 ``support_package``
 ~~~~~~~~~~~~~~~~~~~
 
