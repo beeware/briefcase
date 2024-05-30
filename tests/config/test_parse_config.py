@@ -1,5 +1,5 @@
 from io import BytesIO
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -701,7 +701,8 @@ def test_pep621_defaults():
     }
 
 
-def test_license_is_string():
+def test_license_is_string_project():
+    """The project definition contains a string definition for 'license'."""
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -729,7 +730,115 @@ def test_license_is_string():
         "license": {"file": "LICENSE"},
     }
     logger.warning.assert_called_once_with(
-        "Your app configuration has a `license` field that is specified as a string. "
-        "Briefcase now uses PEP 621 format for license definitions. To silence this "
-        'warning, replace the `license` declaration with `license.file = "LICENSE".'
+        """
+*************************************************************************
+** WARNING: License Definition for the Project is Deprecated           **
+*************************************************************************
+
+    Briefcase now uses PEP 621 format for license definitions.
+
+    Previously, the name of the license was assigned to the 'license'
+    field in pyproject.toml. For PEP 621, the name of the license is
+    assigned to 'license.text' or the name of the file containing the
+    license is assigned to 'license.file'.
+
+    The current configuration for the Project has a 'license' field
+    that is specified as a string:
+
+        license = "Some license"
+
+    To use the PEP 621 format (and to remove this warning), specify that
+    the LICENSE file contains the license for the Project:
+
+        license.file = "LICENSE"
+
+*************************************************************************
+"""
+    )
+
+
+def test_license_is_string_project_and_app():
+    """The project and app definition contain a string definition for 'license'."""
+    config_file = BytesIO(
+        b"""
+        [tool.briefcase]
+        value = 0
+        license = "Some license"
+
+        [tool.briefcase.app.my_app]
+        appvalue = "the app"
+        license = "Another license"
+        """
+    )
+
+    logger = Mock()
+    global_options, apps = parse_config(
+        config_file, platform="macOS", output_format="app", logger=logger
+    )
+
+    assert global_options == {
+        "value": 0,
+        "license": {"file": "LICENSE"},
+    }
+    assert apps["my_app"] == {
+        "app_name": "my_app",
+        "value": 0,
+        "appvalue": "the app",
+        "license": {"file": "LICENSE"},
+    }
+    logger.warning.assert_has_calls(
+        [
+            call(
+                """
+*************************************************************************
+** WARNING: License Definition for the Project is Deprecated           **
+*************************************************************************
+
+    Briefcase now uses PEP 621 format for license definitions.
+
+    Previously, the name of the license was assigned to the 'license'
+    field in pyproject.toml. For PEP 621, the name of the license is
+    assigned to 'license.text' or the name of the file containing the
+    license is assigned to 'license.file'.
+
+    The current configuration for the Project has a 'license' field
+    that is specified as a string:
+
+        license = "Some license"
+
+    To use the PEP 621 format (and to remove this warning), specify that
+    the LICENSE file contains the license for the Project:
+
+        license.file = "LICENSE"
+
+*************************************************************************
+"""
+            ),
+            call(
+                """
+*************************************************************************
+** WARNING: License Definition for 'my_app' is Deprecated              **
+*************************************************************************
+
+    Briefcase now uses PEP 621 format for license definitions.
+
+    Previously, the name of the license was assigned to the 'license'
+    field in pyproject.toml. For PEP 621, the name of the license is
+    assigned to 'license.text' or the name of the file containing the
+    license is assigned to 'license.file'.
+
+    The current configuration for 'my_app' has a 'license' field
+    that is specified as a string:
+
+        license = "Another license"
+
+    To use the PEP 621 format (and to remove this warning), specify that
+    the LICENSE file contains the license for 'my_app':
+
+        license.file = "LICENSE"
+
+*************************************************************************
+"""
+            ),
+        ]
     )
