@@ -1,0 +1,1 @@
+Run tests in CI.
