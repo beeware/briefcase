@@ -1,0 +1,1 @@
+Documentation on Briefcase's plug-in interfaces was added.

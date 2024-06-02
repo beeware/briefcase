@@ -11,6 +11,7 @@ backported
 BeeWare
 Bugfix
 Bugfixes
+ce
 checkmarks
 codebase
 Cookiecutter
@@ -66,6 +67,7 @@ proxied
 Proxied
 proxying
 px
+pygame
 Pygame
 Pyodide
 PyScript
@@ -87,6 +89,7 @@ submodule
 subprocesses
 tl
 toml
+toolkits
 towncrier
 tox
 TTY

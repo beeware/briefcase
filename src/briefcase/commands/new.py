@@ -621,7 +621,13 @@ class NewCommand(BaseCommand):
                 bootstrap_override = reverse_lookup[bootstraps[bootstrap_override]]
 
         selected_bootstrap = self.select_option(
-            intro="What GUI toolkit do you want to use for this project?",
+            intro=(
+                "What GUI toolkit do you want to use for this project?\n"
+                "\n"
+                "Additional GUI bootstraps are available; visit "
+                "https://beeware.org/bee/briefcase-bootstraps "
+                "for a full list of known GUI bootstraps."
+            ),
             variable="GUI Framework",
             default=None,
             options=bootstrap_options.keys(),

@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_call:
+    inputs:
+      attest-package:
+        description: "Create GitHub provenance attestation for the package."
+        default: "false"
+        type: string
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact; use for artifact retrieval."
@@ -32,10 +37,24 @@ jobs:
     uses: beeware/.github/.github/workflows/towncrier-run.yml@main
 
   package:
-    name: Python package
+    name: Package Briefcase
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     uses: beeware/.github/.github/workflows/python-package-create.yml@main
     with:
-      tox-factors: -with-automation
+      attest: ${{ inputs.attest-package }}
+
+  package-automation:
+    name: Package Automation
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    with:
+      build-subdirectory: "automation"
 
   unit-tests:
     name: Unit tests
@@ -82,12 +101,11 @@ jobs:
         name: ${{ needs.package.outputs.artifact-name }}
         path: dist
 
-    - name: Install dev Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools build wheel
-        # Utility script installs tox as defined in pyproject.toml
-        python -m install_requirement tox --extra dev
+    - name: Install Tox
+      uses: beeware/.github/.github/actions/install-requirement@main
+      with:
+        requirements: tox
+        extra: dev
 
     - name: Test
       id: test
@@ -129,12 +147,11 @@ jobs:
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
         python-version: "3.8"
 
-    - name: Install dev Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade setuptools build wheel
-        # Utility script installs tox as defined in pyproject.toml
-        python -m install_requirement tox --extra dev
+    - name: Install Tox
+      uses: beeware/.github/.github/actions/install-requirement@main
+      with:
+        requirements: tox
+        extra: dev
 
     - name: Retrieve Coverage Data
       uses: actions/download-artifact@v4.1.7
@@ -162,7 +179,7 @@ jobs:
 
   verify-projects:
     name: Verify project
-    needs: unit-tests
+    needs: [ package, package-automation, unit-tests ]
     uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
       runner-os: ${{ matrix.runner-os }}
@@ -175,7 +192,7 @@ jobs:
 
   verify-apps:
     name: Build app
-    needs: unit-tests
+    needs: [ package, package-automation, unit-tests ]
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # This *must* be the version of Python that is the system Python on the
