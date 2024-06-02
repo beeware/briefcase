@@ -1,5 +1,7 @@
 """Jinja2 extensions."""
 
+import uuid
+
 from jinja2.ext import Extension
 
 
@@ -116,3 +118,17 @@ class XMLExtension(Extension):
             return "true" if obj else "false"
 
         environment.filters["bool_attr"] = bool_attr
+
+
+class UUIDExtension(Extension):
+    """Extensions for generating UUIDs."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def dns_uuid5(obj):
+            """A DNS-based UUID5 object generated from the provided content."""
+            return str(uuid.uuid5(uuid.NAMESPACE_DNS, obj))
+
+        environment.filters["dns_uuid5"] = dns_uuid5
