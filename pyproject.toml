@@ -102,6 +102,7 @@ dev = [
     "pre-commit == 3.5.0 ; python_version < '3.9'",
     "pre-commit == 3.7.1 ; python_version >= '3.9'",
     "pytest == 8.2.1",
+    "pytest-xdist == 3.5.0",
     "setuptools_scm == 8.1.0",
     "tox == 4.15.0",
 ]
