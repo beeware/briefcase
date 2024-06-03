@@ -24,12 +24,12 @@ Packaging format
 Briefcase supports three packaging formats for a macOS Xcode project:
 
 1. A DMG that contains the ``.app`` bundle (using ``briefcase package macOS Xcode -p
-   dmg``); or
+   dmg``).
 2. A zipped ``.app`` folder (using ``briefcase package macOS Xcode -p zip``).
 3. A ``.pkg`` installer (using ``briefcase package macOS Xcode -p pkg``).
 
-The ``.pkg`` format is the *required* format for console apps. ``.dmg`` format is the
-default format GUI apps.
+``.pkg`` is the *required* format for console apps. ``.dmg`` is the
+default format for GUI apps.
 
 Icon format
 ===========
