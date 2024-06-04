@@ -96,13 +96,14 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.5.2",
+    "coverage[toml] == 7.5.3",
     "coverage-conditional-plugin == 0.9.0",
     # Pre-commit 3.6.0 deprecated support for Python 3.8
     "pre-commit == 3.5.0 ; python_version < '3.9'",
     "pre-commit == 3.7.1 ; python_version >= '3.9'",
     "pytest == 8.2.1",
-    "pytest-xdist == 3.6.1",
+    # Having xdist in the pytest environment causes some weird failures on Windows with Py3.13
+    "pytest-xdist == 3.6.1 ; python_version < '3.13'",
     "setuptools_scm == 8.1.0",
     "tox == 4.15.0",
 ]
