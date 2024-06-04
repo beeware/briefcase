@@ -3,7 +3,6 @@ from unittest import mock
 import pytest
 from git import exc as git_exceptions
 
-from briefcase.commands.base import cookiecutter_cache_path
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
 
 
@@ -21,57 +20,59 @@ def test_non_url(base_command, mock_git):
     assert base_command.tools.git.Repo.call_count == 0
 
 
-def test_explicit_new_repo_template(base_command, mock_git):
+def test_new_repo_template(base_command, mock_git):
     """If a previously unknown URL template is specified it is used."""
     base_command.tools.git = mock_git
 
     # There won't be a cookiecutter cache, so there won't be
     # a repo path (yet).
-    base_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
-    cached_path = cookiecutter_cache_path(
-        "https://example.com/magic/special-template.git"
-    )
-
-    # Update the cache
     cached_template = base_command.update_cookiecutter_cache(
         template="https://example.com/magic/special-template.git",
         branch="special",
     )
 
     # The template that will be used is the original URL
-    assert cached_template == "https://example.com/magic/special-template.git"
+    assert cached_template == base_command.data_path / "templates" / "special-template"
 
-    # The cookiecutter cache location will be interrogated.
-    base_command.tools.git.Repo.assert_called_once_with(cached_path)
+    # A shallow clone is performed.
+    base_command.tools.git.Repo.clone_from.assert_called_once_with(
+        url="https://example.com/magic/special-template.git",
+        to_path=cached_template,
+        depth=1,
+    )
 
 
-def test_explicit_invalid_repo_template(base_command, mock_git):
-    """If a previously known URL template is cached, but isn't a git repository, it is
-    used as-is."""
+def test_new_repo_invalid_template_url(base_command, mock_git):
+    """If a previously unknown URL template is specified it is used."""
     base_command.tools.git = mock_git
 
-    # Return an error from updating the template
-    base_command.tools.git.Repo.side_effect = git_exceptions.InvalidGitRepositoryError
-
-    cached_path = cookiecutter_cache_path(
-        "https://example.com/magic/special-template.git"
+    # Prime the error when the repo doesn't exist
+    base_command.tools.git.Repo.clone_from.side_effect = git_exceptions.GitCommandError(
+        "git", 128
     )
 
-    # Update the cache
-    cached_template = base_command.update_cookiecutter_cache(
-        template="https://example.com/magic/special-template.git",
-        branch="special",
-    )
-
-    # The template that will be used is the original URL
-    assert cached_template == "https://example.com/magic/special-template.git"
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Unable to clone repository 'https://example.com/magic/special-template.git'\. "
+            "This may be because your computer is offline, or because the repository URL is incorrect."
+        ),
+    ):
+        base_command.update_cookiecutter_cache(
+            template="https://example.com/magic/special-template.git",
+            branch="special",
+        )
 
     # The cookiecutter cache location will be interrogated.
-    base_command.tools.git.Repo.assert_called_once_with(cached_path)
+    base_command.tools.git.Repo.clone_from.assert_called_once_with(
+        url="https://example.com/magic/special-template.git",
+        to_path=base_command.data_path / "templates" / "special-template",
+        depth=1,
+    )
 
 
-def test_explicit_cached_repo_template(base_command, mock_git):
+def test_existing_repo_template(base_command, mock_git):
     """If a previously known URL template is specified it is used."""
     base_command.tools.git = mock_git
 
@@ -86,9 +87,10 @@ def test_explicit_cached_repo_template(base_command, mock_git):
     mock_remote.refs.__getitem__.return_value = mock_remote_head
     mock_remote.url = "https://example.com/magic/special-template.git"
 
-    cached_path = cookiecutter_cache_path(
+    cached_path = base_command.template_cache_path(
         "https://example.com/magic/special-template.git"
     )
+    cached_path.mkdir(parents=True)
 
     # Update the cache
     cached_template = base_command.update_cookiecutter_cache(
@@ -117,7 +119,33 @@ def test_explicit_cached_repo_template(base_command, mock_git):
     assert cached_template == cached_path
 
 
-def test_explicit_cached_repo_template_with_diff_url(base_command, mock_git):
+def test_existing_repo_template_corrupted(base_command, mock_git):
+    """If a previously cached URL template is in a corrupted state, an error is
+    raised."""
+    # Git returns an exception wrapping the given URL.
+    base_command.tools.git = mock_git
+    base_command.tools.git.Repo.side_effect = git_exceptions.GitCommandError("git", 128)
+
+    cached_path = base_command.template_cache_path(
+        "https://example.com/magic/special-template.git"
+    )
+    cached_path.mkdir(parents=True)
+
+    # Update the cache; this will raise an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Template repository is in a weird state\.",
+    ):
+        base_command.update_cookiecutter_cache(
+            template="https://example.com/magic/special-template.git",
+            branch="special",
+        )
+
+    # The cookiecutter cache location will be interrogated.
+    base_command.tools.git.Repo.assert_called_once_with(cached_path)
+
+
+def test_existing_repo_template_with_different_url(base_command, mock_git):
     """If a previously known URL template is specified but uses a different remote URL,
     the repo's origin URL is updated and is used."""
     base_command.tools.git = mock_git
@@ -133,9 +161,10 @@ def test_explicit_cached_repo_template_with_diff_url(base_command, mock_git):
     mock_remote.refs.__getitem__.return_value = mock_remote_head
     mock_remote.url = "https://example.com/existing/special-template.git"
 
-    cached_path = cookiecutter_cache_path(
+    cached_path = base_command.template_cache_path(
         "https://example.com/magic/special-template.git"
     )
+    cached_path.mkdir(parents=True)
 
     # Update the cache
     cached_template = base_command.update_cookiecutter_cache(
@@ -164,9 +193,9 @@ def test_explicit_cached_repo_template_with_diff_url(base_command, mock_git):
     assert cached_template == cached_path
 
 
-def test_offline_repo_template(base_command, mock_git):
-    """If the user is offline the first time a repo template is requested, an error is
-    raised."""
+def test_offline_repo_template(base_command, mock_git, capsys):
+    """If the user is offline the when a repo template is requested, but the branch
+    exists, the command continues with a warning."""
     base_command.tools.git = mock_git
 
     mock_repo = mock.MagicMock()
@@ -182,9 +211,10 @@ def test_offline_repo_template(base_command, mock_git):
     mock_remote.refs.__getitem__.return_value = mock_remote_head
     mock_remote.fetch.side_effect = git_exceptions.GitCommandError("git", 128)
 
-    cached_path = cookiecutter_cache_path(
+    cached_path = base_command.template_cache_path(
         "https://example.com/magic/special-template.git"
     )
+    cached_path.mkdir(parents=True)
 
     # Update the cache
     cached_template = base_command.update_cookiecutter_cache(
@@ -211,6 +241,9 @@ def test_offline_repo_template(base_command, mock_git):
     # The template that will be used is the original URL
     assert cached_template == cached_path
 
+    # A warning was raised about the template possibly being stale.
+    assert "WARNING: Unable to update template" in capsys.readouterr().out
+
 
 def test_cached_missing_branch_template(base_command, mock_git):
     """If the cached repo doesn't have the requested branch, an error is raised."""
@@ -227,9 +260,10 @@ def test_cached_missing_branch_template(base_command, mock_git):
     mock_remote.url = "https://example.com/magic/special-template.git"
     mock_remote.refs.__getitem__.side_effect = IndexError
 
-    cached_path = cookiecutter_cache_path(
+    cached_path = base_command.template_cache_path(
         "https://example.com/magic/special-template.git"
     )
+    cached_path.mkdir(parents=True)
 
     # Generating the template under there conditions raises an error
     with pytest.raises(TemplateUnsupportedVersion):
@@ -265,12 +299,16 @@ def test_git_repo_with_missing_origin_remote(base_command, mock_git):
     base_command.tools.git.Repo.return_value = mock_repo
     mock_repo.remote.side_effect = ValueError("Remote named origin did not exist")
 
-    cached_path = cookiecutter_cache_path(
+    cached_path = base_command.template_cache_path(
         "https://example.com/magic/special-template.git"
     )
+    cached_path.mkdir(parents=True)
 
     # Update the cache
-    with pytest.raises(BriefcaseCommandError, match="Git repository in a weird state"):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="Template repository is in a weird state.",
+    ):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git", branch="special"
         )

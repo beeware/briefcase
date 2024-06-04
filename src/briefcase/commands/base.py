@@ -58,21 +58,6 @@ def create_config(klass, config, msg):
         raise BriefcaseConfigError(f"{msg} is incomplete (missing {missing})") from e
 
 
-def cookiecutter_cache_path(template):
-    """Determine the cookiecutter template cache directory given a template URL.
-
-    This will return a valid path, regardless of whether `template`
-
-    :param template: The template to use. This can be a filesystem path or
-        a URL.
-    :returns: The path that cookiecutter would use for the given template name.
-    """
-    template = template.rstrip("/")
-    tail = template.split("/")[-1]
-    cache_name = tail.rsplit(".git")[0]
-    return Path.home() / ".cookiecutters" / cache_name
-
-
 def full_options(state, options):
     """Merge command state with keyword arguments.
 
@@ -352,6 +337,16 @@ a custom location for Briefcase's tools.
     def publish_command(self):
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
+
+    def template_cache_path(self, template) -> Path:
+        """The path where Briefcase keeps template checkouts.
+
+        :param template: The URL for the template that will be cached locally.
+        """
+        template = template.rstrip("/")
+        tail = template.split("/")[-1]
+        cache_name = tail.rsplit(".git")[0]
+        return self.data_path / "templates" / cache_name
 
     def build_path(self, app) -> Path:
         """The path in which all platform artefacts for the app will be built.
@@ -876,16 +871,39 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         if is_repo_url(template):
             # The app template is a repository URL.
             #
-            # When in `no_input=True` mode, cookiecutter deletes and reclones
-            # a template directory, rather than updating the existing repo.
+            # When in `no_input=True` mode, cookiecutter deletes and reclones a template
+            # directory, rather than updating the existing repo.
             #
-            # Look for a cookiecutter cache of the template; if one exists,
-            # try to update it using git. If no cache exists, or if the cache
-            # directory isn't a git directory, or git fails for some reason,
-            # fall back to using the specified template directly.
-            cached_template = cookiecutter_cache_path(template)
+            # Look for a Briefcase cache of the template.
+            cached_template = self.template_cache_path(template)
+
+            if cached_template.exists():
+                # There is a pre-existing cache of the template. Attempt to update it;
+                # if the fetch fails, use the existing state of the cache. Any other
+                # failure is surfaced to the user.
+                try:
+                    repo = self.tools.git.Repo(cached_template)
+                except self.tools.git.exc.GitError as e:
+                    raise BriefcaseCommandError(
+                        f"Template repository is in a weird state. Delete {cached_template} and retry."
+                    ) from e
+            else:
+                # This is the first time seeing this template. Perform a shallow clone.
+                try:
+                    self.logger.info(f"Cloning template {template!r}...")
+                    cached_template.mkdir(exist_ok=True, parents=True)
+                    repo = self.tools.git.Repo.clone_from(
+                        url=template,
+                        to_path=cached_template,
+                        depth=1,
+                    )
+                except self.tools.git.exc.GitError as e:
+                    raise BriefcaseCommandError(
+                        f"Unable to clone repository {template!r}. This may be because "
+                        "your computer is offline, or because the repository URL is incorrect."
+                    ) from e
+
             try:
-                repo = self.tools.git.Repo(cached_template)
                 # Raises ValueError if "origin" isn't a valid remote
                 remote = repo.remote(name="origin")
                 # Ensure the existing repo's origin URL points to the location
@@ -896,10 +914,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # Attempt to update the repository
                     remote.fetch()
                 except self.tools.git.exc.GitCommandError as e:
-                    # We are offline, or otherwise unable to contact
-                    # the origin git repo. It's OK to continue; but
-                    # capture the error in the log and warn the user
-                    # that the template may be stale.
+                    # We are offline, or otherwise unable to contact the origin git
+                    # repo. It's OK to continue; but capture the error in the log and
+                    # warn the user that the template may be stale.
                     self.logger.debug(str(e))
                     self.logger.warning(
                         """
@@ -927,17 +944,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 except IndexError as e:
                     # No branch exists for the requested version.
                     raise TemplateUnsupportedVersion(branch) from e
-            except self.tools.git.exc.NoSuchPathError:
-                # Template cache path doesn't exist.
-                # Just use the template directly, rather than attempting an update.
-                cached_template = template
-            except self.tools.git.exc.InvalidGitRepositoryError:
-                # Template cache path exists, but isn't a git repository
-                # Just use the template directly, rather than attempting an update.
-                cached_template = template
-            except ValueError as e:
+            except (ValueError, self.tools.git.exc.GitError) as e:
                 raise BriefcaseCommandError(
-                    f"Git repository in a weird state, delete {cached_template} and try briefcase create again"
+                    f"Template repository is in a weird state. Delete {cached_template} and retry."
                 ) from e
         else:
             # If this isn't a repository URL, treat it as a local directory
@@ -957,7 +966,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
-            template=template, branch=branch
+            template=template,
+            branch=branch,
         )
 
         self.logger.configure_stdlib_logging("cookiecutter")
@@ -1029,7 +1039,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
             # Development branches can use the main template.
             self.logger.info(
-                f"Template branch {branch} not found; falling back to development template"
+                f"Template branch {template_branch} not found; falling back to development template"
             )
 
             extra_context["template_branch"] = "main"

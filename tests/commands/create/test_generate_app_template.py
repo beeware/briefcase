@@ -2,7 +2,6 @@ import os
 import platform
 import subprocess
 from datetime import date
-from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -11,7 +10,7 @@ from git import exc as git_exceptions
 
 import briefcase
 from briefcase.exceptions import (
-    InvalidTemplateRepository,
+    BriefcaseCommandError,
     NetworkFailure,
     TemplateUnsupportedVersion,
 )
@@ -92,18 +91,16 @@ def test_default_template(
     full_context["briefcase_version"] = briefcase_version
     full_context["template_branch"] = expected_branch
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    # There won't be a cookiecutter cache, so there won't be a cache path (yet).
 
     # Generate the template.
     create_command.generate_app_template(myapp)
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout=expected_branch,
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
+        output_dir=str(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -134,9 +131,7 @@ def test_default_template_dev(
     full_context2 = full_context.copy()
     full_context2["template_branch"] = "main"
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    # There won't be a cookiecutter cache, so there won't be a cache path (yet).
 
     # There will be two calls to cookiecutter; one on the versioned branch,
     # and one on the `main` branch. The first call will fail because the
@@ -152,14 +147,14 @@ def test_default_template_dev(
     # Cookiecutter was invoked with the expected template name and context.
     assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
-            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
             no_input=True,
             checkout="v37.42.7",
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
         ),
         mock.call(
-            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
             no_input=True,
             checkout="main",
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -200,7 +195,7 @@ def test_default_template_dev_explicit_branch(
     # Cookiecutter was invoked (once) with the expected template name and context.
     assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
-            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
             no_input=True,
             checkout=branch,
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -248,7 +243,7 @@ def test_default_template_dev_explicit_invalid_branch(
     # Cookiecutter was invoked (once) with the expected template name and context.
     assert create_command.tools.cookiecutter.mock_calls == [
         mock.call(
-            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
             no_input=True,
             checkout=branch,
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -277,7 +272,7 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_p
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout=branch,
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -304,7 +299,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -313,7 +308,11 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
 
 
 def test_explicit_repo_template(
-    monkeypatch, create_command, myapp, full_context, tmp_path
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
 ):
     """If a template is specified in the app config, it is used."""
     # Set the Briefcase version
@@ -325,16 +324,14 @@ def test_explicit_repo_template(
     myapp.template = template
     full_context["template_source"] = template
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a repo path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    # There won't be a cookiecutter cache, so there won't be a repo path (yet).
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://example.com/magic/special-template.git",
+        str(create_command.data_path / "templates/special-template"),
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -363,16 +360,14 @@ def test_explicit_repo_template_and_branch(
     myapp.template_branch = branch
     full_context["template_branch"] = branch
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a repo path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    # There won't be a cookiecutter cache, so there won't be a repo path (yet).
 
     # Generate the template.
     create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://example.com/magic/special-template.git",
+        str(create_command.data_path / "templates/special-template"),
         no_input=True,
         checkout=branch,
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -381,7 +376,11 @@ def test_explicit_repo_template_and_branch(
 
 
 def test_explicit_local_template(
-    monkeypatch, create_command, myapp, full_context, tmp_path
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
 ):
     """If a local template path is specified in the app config, it is used."""
     # Set the Briefcase version
@@ -447,7 +446,11 @@ def test_explicit_local_template_and_branch(
 
 
 def test_offline_repo_template(
-    monkeypatch, create_command, myapp, full_context, tmp_path
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
 ):
     """If the user is offline the first time a repo template is requested, an error is
     raised."""
@@ -456,16 +459,14 @@ def test_offline_repo_template(
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a repo path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    # There won't be a cookiecutter cache, so there won't be a repo path (yet).
 
     # Calling cookiecutter on a repository while offline causes a CalledProcessError
     create_command.tools.cookiecutter.side_effect = subprocess.CalledProcessError(
         cmd=[
             "git",
             "clone",
-            "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         ],
         returncode=128,
     )
@@ -476,7 +477,7 @@ def test_offline_repo_template(
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -485,7 +486,11 @@ def test_offline_repo_template(
 
 
 def test_invalid_repo_template(
-    monkeypatch, create_command, myapp, full_context, tmp_path
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
 ):
     """If the provided template URL isn't valid, an error is raised."""
     # Set the Briefcase version
@@ -497,69 +502,26 @@ def test_invalid_repo_template(
     myapp.template = template
     full_context["template_source"] = template
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a repo path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
-
-    # Calling cookiecutter on a URL that isn't a valid repository causes an error
-    create_command.tools.cookiecutter.side_effect = (
-        cookiecutter_exceptions.RepositoryNotFound
+    # Prime git to respond to a bad URL.
+    create_command.tools.git.Repo.clone_from.side_effect = (
+        git_exceptions.GitCommandError("git", 128)
     )
 
     # Generating the template under there conditions raises an error
-    with pytest.raises(InvalidTemplateRepository):
+    with pytest.raises(BriefcaseCommandError, match=r"..."):
         create_command.generate_app_template(myapp)
 
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        "https://example.com/somewhere/not-a-repo.git",
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-    )
-
-
-def test_missing_branch_template(
-    monkeypatch, create_command, myapp, full_context, tmp_path
-):
-    """If the repo at the provided template URL doesn't have a branch for this Briefcase
-    version, an error is raised."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    template = "https://example.com/somewhere/missing-branch.git"
-    myapp.template = template
-    full_context["template_source"] = template
-
-    # There won't be a cookiecutter cache, so there won't be
-    # a repo path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
-
-    # Calling cookiecutter on a URL that doesn't have the requested branch
-    # causes an error
-    create_command.tools.cookiecutter.side_effect = (
-        cookiecutter_exceptions.RepositoryCloneFailed
-    )
-
-    # Generating the template under there conditions raises an error
-    with pytest.raises(TemplateUnsupportedVersion):
-        create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        "https://example.com/somewhere/missing-branch.git",
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-    )
+    # No attempt is made to create a template.
+    create_command.tools.cookiecutter.assert_not_called()
 
 
 def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_path):
     """If a template has already been used, the cached version will be used."""
+    # Set up a pre-cached template directory
+    (create_command.data_path / "templates/briefcase-Tester-Dummy-template").mkdir(
+        parents=True
+    )
+
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
@@ -587,7 +549,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(
-        os.fsdecode(Path.home() / ".cookiecutters/briefcase-Tester-Dummy-template"),
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
@@ -605,6 +567,11 @@ def test_cached_template_offline(
 ):
     """If the user is offline, a cached template won't be updated, but will still
     work."""
+    # Set up a pre-cached template directory
+    (create_command.data_path / "templates/briefcase-Tester-Dummy-template").mkdir(
+        parents=True
+    )
+
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
@@ -638,10 +605,10 @@ def test_cached_template_offline(
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(
-        os.fsdecode(Path.home() / ".cookiecutters/briefcase-Tester-Dummy-template"),
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
+        output_dir=str(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
     )
 
@@ -649,6 +616,11 @@ def test_cached_template_offline(
 def test_cached_missing_branch_template(monkeypatch, create_command, myapp):
     """If the cached repo doesn't have a branch for this Briefcase version, an error is
     raised."""
+    # Set up a pre-cached template directory
+    (create_command.data_path / "templates/briefcase-Tester-Dummy-template").mkdir(
+        parents=True
+    )
+
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
@@ -728,7 +700,7 @@ def test_x_permissions(
 
     # Cookiecutter was invoked with the expected template name and context.
     create_command.tools.cookiecutter.assert_called_once_with(
-        "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
         no_input=True,
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
