@@ -1004,7 +1004,8 @@ with your app's licensing terms.
                 + install_args
                 + [
                     installer_packages_path / f"{app.app_name}.pkg",
-                ]
+                ],
+                check=True,
             )
 
         # Build package
@@ -1019,7 +1020,8 @@ with your app's licensing terms.
                     "--resources",
                     installer_path / "resources",
                     dist_path,
-                ]
+                ],
+                check=True,
             )
 
     def package_dmg(

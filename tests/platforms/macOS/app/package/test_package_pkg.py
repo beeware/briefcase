@@ -90,7 +90,8 @@ def test_gui_app(
                 "--install-location",
                 "/Applications",
                 bundle_path / "installer/packages/first-app.pkg",
-            ]
+            ],
+            check=True,
         ),
         mock.call(
             [
@@ -102,7 +103,8 @@ def test_gui_app(
                 "--resources",
                 bundle_path / "installer/resources",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
-            ]
+            ],
+            check=True,
         ),
     ]
 
@@ -183,7 +185,8 @@ def test_gui_app_adhoc_identity(
                 "--install-location",
                 "/Applications",
                 bundle_path / "installer/packages/first-app.pkg",
-            ]
+            ],
+            check=True,
         ),
         mock.call(
             [
@@ -195,7 +198,8 @@ def test_gui_app_adhoc_identity(
                 "--resources",
                 bundle_path / "installer/resources",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
-            ]
+            ],
+            check=True,
         ),
     ]
 
@@ -260,7 +264,8 @@ def test_console_app(
                 "--scripts",
                 bundle_path / "installer/scripts",
                 bundle_path / "installer/packages/first-app.pkg",
-            ]
+            ],
+            check=True,
         ),
         mock.call(
             [
@@ -272,7 +277,8 @@ def test_console_app(
                 "--resources",
                 bundle_path / "installer/resources",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
-            ]
+            ],
+            check=True,
         ),
     ]
 
@@ -338,7 +344,8 @@ def test_console_app_adhoc_signed(
                 "--scripts",
                 bundle_path / "installer/scripts",
                 bundle_path / "installer/packages/first-app.pkg",
-            ]
+            ],
+            check=True,
         ),
         mock.call(
             [
@@ -350,7 +357,8 @@ def test_console_app_adhoc_signed(
                 "--resources",
                 bundle_path / "installer/resources",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
-            ]
+            ],
+            check=True,
         ),
     ]
 
@@ -466,7 +474,8 @@ def test_package_pkg_previously_built(
                 "--install-location",
                 "/Applications",
                 bundle_path / "installer/packages/first-app.pkg",
-            ]
+            ],
+            check=True,
         ),
         mock.call(
             [
@@ -478,6 +487,7 @@ def test_package_pkg_previously_built(
                 "--resources",
                 bundle_path / "installer/resources",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
-            ]
+            ],
+            check=True,
         ),
     ]
