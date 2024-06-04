@@ -102,6 +102,7 @@ def test_default_template(
         checkout=expected_branch,
         output_dir=str(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -152,6 +153,7 @@ def test_default_template_dev(
             checkout="v37.42.7",
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
+            replay=False,
         ),
         mock.call(
             str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
@@ -159,6 +161,7 @@ def test_default_template_dev(
             checkout="main",
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context2,
+            replay=False,
         ),
     ]
 
@@ -200,6 +203,7 @@ def test_default_template_dev_explicit_branch(
             checkout=branch,
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
+            replay=False,
         ),
     ]
 
@@ -248,6 +252,7 @@ def test_default_template_dev_explicit_invalid_branch(
             checkout=branch,
             output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
             extra_context=full_context,
+            replay=False,
         ),
     ]
 
@@ -277,6 +282,7 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_p
         checkout=branch,
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -304,6 +310,7 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -336,6 +343,7 @@ def test_explicit_repo_template(
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -372,6 +380,7 @@ def test_explicit_repo_template_and_branch(
         checkout=branch,
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -402,6 +411,7 @@ def test_explicit_local_template(
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
     # The template is a local directory, so there won't be any calls on git.
@@ -439,6 +449,7 @@ def test_explicit_local_template_and_branch(
         checkout=branch,
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
     # The template is a local directory, so there won't be any calls on git.
@@ -482,6 +493,7 @@ def test_offline_repo_template(
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -554,6 +566,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -610,6 +623,7 @@ def test_cached_template_offline(
         checkout="v37.42.7",
         output_dir=str(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )
 
 
@@ -705,4 +719,5 @@ def test_x_permissions(
         checkout="v37.42.7",
         output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
         extra_context=full_context,
+        replay=False,
     )

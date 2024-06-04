@@ -88,6 +88,7 @@ def test_new_app(
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
 
@@ -149,6 +150,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
 
@@ -223,6 +225,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "app_source": "main()",
                     "pyproject_requires": "toga",
                 },
+                replay=False,
             ),
             mock.call(
                 "~/.cookiecutters/briefcase-template",
@@ -241,6 +244,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "app_source": "main()",
                     "pyproject_requires": "toga",
                 },
+                replay=False,
             ),
         ]
     )
@@ -297,6 +301,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
 
@@ -356,6 +361,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
 
@@ -418,6 +424,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
 
@@ -471,6 +478,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
 
@@ -531,6 +539,7 @@ def test_new_app_unused_project_overrides(
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
+        replay=False,
     )
 
     unused_project_override_warning = (

@@ -76,6 +76,7 @@ def test_convert_app_unused_project_overrides(
             "briefcase_version": "37.42.7",
             "gui_framework": "None",
         },
+        replay=False,
     )
     convert_command.migrate_necessary_files.assert_called_once_with(
         tmp_path / "working" / app_context["app_name"],
