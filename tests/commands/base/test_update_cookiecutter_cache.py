@@ -39,7 +39,7 @@ def test_new_repo_template(base_command, mock_git):
     base_command.tools.git.Repo.clone_from.assert_called_once_with(
         url="https://example.com/magic/special-template.git",
         to_path=cached_template,
-        depth=1,
+        filter=["blob:none"],
     )
 
 
@@ -68,7 +68,7 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
     base_command.tools.git.Repo.clone_from.assert_called_once_with(
         url="https://example.com/magic/special-template.git",
         to_path=base_command.data_path / "templates" / "special-template",
-        depth=1,
+        filter=["blob:none"],
     )
 
 

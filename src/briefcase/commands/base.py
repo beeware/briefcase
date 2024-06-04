@@ -895,7 +895,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     repo = self.tools.git.Repo.clone_from(
                         url=template,
                         to_path=cached_template,
-                        depth=1,
+                        filter=["blob:none"],
                     )
                 except self.tools.git.exc.GitError as e:
                     raise BriefcaseCommandError(
@@ -974,13 +974,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         try:
             # Unroll the template. Use a copy of the context to ensure that any
-            # mocked calls have an unmodified copy.
+            # mocked calls have an unmodified copy. Disable the use of replay.
             self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=branch,
                 extra_context=extra_context.copy(),
+                replay=False,
             )
         except subprocess.CalledProcessError as e:
             # Computer is offline
