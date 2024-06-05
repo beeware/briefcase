@@ -498,15 +498,16 @@ def get_device_state(tools: ToolCache, udid: str) -> str:
 IDENTITY_RE = re.compile(r"\s*\d+\) ([0-9A-F]{40}) \"(.*)\"")
 
 
-def get_identities(tools: ToolCache, policy: str) -> dict[str, str]:
+def get_identities(tools: ToolCache, policy: str | None = None) -> dict[str, str]:
     """Obtain a set of valid identities for the given policy.
 
     :param tools: ToolCache of available tools
-    :param policy: The identity policy to evaluate (e.g., ``codesigning``)
+    :param policy: The identity policy to evaluate (e.g., ``codesigning``).
+        If None, no policy filtering is applied.
     """
     try:
         output = tools.subprocess.check_output(
-            ["security", "find-identity", "-v", "-p", policy],
+            ["security", "find-identity", "-v"] + (["-p", policy] if policy else []),
         )
 
         return dict(
