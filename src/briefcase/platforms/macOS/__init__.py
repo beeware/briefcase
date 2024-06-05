@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent.futures
 import itertools
 import os
+import plistlib
 import re
 import subprocess
 import time
@@ -31,6 +32,37 @@ DEFAULT_OUTPUT_FORMAT = "app"
 ADHOC_IDENTITY_NAME = (
     "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
 )
+
+
+class SigningIdentity:
+    def __init__(self, id="-", name=None):
+        """A wrapper around the various forms of an Apple signing identity."""
+        self.id = id
+        if self.id == "-":
+            self.team_id = None
+            self.name = ADHOC_IDENTITY_NAME
+        else:
+            self.name = name
+            try:
+                self.team_id = re.match(r".*\(([\dA-Z]*)\)", name)[1]
+            except TypeError:
+                raise BriefcaseCommandError(
+                    f"Couldn't extract Team ID from signing identity {name!r}"
+                )
+
+    @property
+    def is_adhoc(self):
+        """Is this the adhoc identity?"""
+        return self.id == "-"
+
+    def __repr__(self):
+        if self.is_adhoc:
+            return "<AdhocSigningIdentity>"
+        else:
+            return f"<SigningIdentity id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, SigningIdentity) and self.id == other.id
 
 
 class macOSMixin:
@@ -211,6 +243,66 @@ class macOSRunMixin:
         :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
+        # Console apps must operate in non-streaming mode so that console input can
+        # be handled correctly. However, if we're in test mode, we *must* stream so
+        # that we can see the test exit sentinel
+        if app.console_app and not test_mode:
+            self.run_console_app(
+                app,
+                passthrough=passthrough,
+                **kwargs,
+            )
+        else:
+            self.run_gui_app(
+                app,
+                test_mode=test_mode,
+                passthrough=passthrough,
+                **kwargs,
+            )
+
+    def run_console_app(
+        self,
+        app: AppConfig,
+        passthrough: list[str],
+        **kwargs,
+    ):
+        """Start the console application.
+
+        :param app: The config object for the app
+        :param passthrough: The list of arguments to pass to the app
+        """
+        try:
+            kwargs = self._prepare_app_kwargs(app=app, test_mode=False)
+
+            # Start the app directly
+            self.logger.info("=" * 75)
+            self.tools.subprocess.run(
+                [self.binary_path(app) / "Contents" / "MacOS" / f"{app.formal_name}"]
+                + (passthrough if passthrough else []),
+                cwd=self.tools.home_path,
+                check=True,
+                stream_output=False,
+                **kwargs,
+            )
+
+        except subprocess.CalledProcessError:
+            # The command line app *could* returns an error code, which is entirely legal.
+            # Ignore any subprocess error here.
+            pass
+
+    def run_gui_app(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        passthrough: list[str],
+        **kwargs,
+    ):
+        """Start the GUI application.
+
+        :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
+        :param passthrough: The list of arguments to pass to the app
+        """
         # Start log stream for the app.
         # Streaming the system log is... a mess. The system log contains a
         # *lot* of noise from other processes; even if you filter by
@@ -250,7 +342,7 @@ class macOSRunMixin:
         app_pid = None
         try:
             # Set up the log stream
-            kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
+            kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
@@ -327,7 +419,7 @@ class macOSSigningMixin:
     def entitlements_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
-    def select_identity(self, identity=None):
+    def select_identity(self, identity: str | None = None) -> SigningIdentity:
         """Get the codesigning identity to use.
 
         :param identity: A pre-specified identity (either the 40-digit hex checksum, or
@@ -344,13 +436,13 @@ class macOSSigningMixin:
             try:
                 # Try to look up the identity as a hex checksum
                 identity_name = identities[identity]
-                return identity, identity_name
+                return SigningIdentity(id=identity, name=identity_name)
             except KeyError as e:
                 # Try to look up the identity as readable name
                 try:
                     reverse_lookup = {name: ident for ident, name in identities.items()}
                     identity_id = reverse_lookup[identity]
-                    return identity_id, identity
+                    return SigningIdentity(id=identity_id, name=identity)
                 except KeyError:
                     # Not found as an ID or name
                     raise BriefcaseCommandError(
@@ -368,6 +460,7 @@ class macOSSigningMixin:
 In the future, you could specify this signing identity by running:
 
     $ briefcase {self.command} macOS --adhoc-sign
+
 """
             )
         else:
@@ -380,21 +473,26 @@ In the future, you could specify this signing identity by running:
 or
 
     $ briefcase {self.command} macOS -i "{identity_name}"
+
 """
             )
 
-        return identity, identity_name
+        return SigningIdentity(id=identity, name=identity_name)
 
-    def sign_file(self, path, identity, entitlements=None):
+    def sign_file(
+        self,
+        path: Path,
+        identity: SigningIdentity,
+        entitlements: Path | None = None,
+    ):
         """Code sign a file.
 
         :param path: The path to the file to sign.
-        :param identity: The code signing identity to use. Either the 40-digit hex
-            checksum, or the string name of the identity.
+        :param identity: The code signing identity to use.
         :param entitlements: The path to the entitlements file to use.
         """
-        options = "runtime" if identity != "-" else None
-        process_command = ["codesign", path, "--sign", identity, "--force"]
+        options = "runtime" if not identity.is_adhoc else None
+        process_command = ["codesign", path, "--sign", identity.id, "--force"]
 
         if entitlements:
             process_command.append("--entitlements")
@@ -431,7 +529,7 @@ or
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
-    def sign_app(self, app, identity):
+    def sign_app(self, app: AppConfig, identity: SigningIdentity):
         """Sign an entire app with a specific identity.
 
         :param app: The app to sign
@@ -511,17 +609,20 @@ class macOSPackageMixin(macOSSigningMixin):
 
     @property
     def packaging_formats(self):
-        return ["app", "dmg"]
+        return ["zip", "dmg", "pkg"]
 
     @property
     def default_packaging_format(self):
-        return "dmg"
+        # The default changes depending on whether the app is a console app or a GUI app
+        return None
 
     def distribution_path(self, app):
-        if app.packaging_format == "dmg":
-            return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
-        else:
+        if app.packaging_format == "zip":
             return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
+        elif app.packaging_format == "pkg":
+            return self.dist_path / f"{app.formal_name}-{app.version}.pkg"
+        else:
+            return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -551,23 +652,20 @@ class macOSPackageMixin(macOSSigningMixin):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
-    def team_id_from_identity(self, identity_name):
-        """Extract the team ID from the full identity name.
+    def verify_app(self, app):
+        super().verify_app(app)
 
-        The identity name will be in the form:
-            Some long identifying name (Team ID)
+        if app.console_app:
+            if app.packaging_format is None:
+                app.packaging_format = "pkg"
+            elif app.packaging_format != "pkg":
+                raise BriefcaseCommandError(
+                    "macOS console apps must be distributed in PKG format."
+                )
+        elif app.packaging_format is None:
+            app.packaging_format = "dmg"
 
-        :param identity_name: The full identity name
-        :returns: The team ID string.
-        """
-        try:
-            return re.match(r".*\(([\dA-Z]*)\)", identity_name)[1]
-        except TypeError:
-            raise BriefcaseCommandError(
-                f"Couldn't extract Team ID from signing identity {identity_name!r}"
-            )
-
-    def notarize(self, filename, team_id):
+    def notarize(self, filename, identity: SigningIdentity):
         """Notarize a file.
 
         Submits the file to Apple for notarization; if successful, staples the
@@ -576,7 +674,7 @@ class macOSPackageMixin(macOSSigningMixin):
         If the file is a .app, it will be archived as a .zip for submission purposes.
 
         :param filename: The file to notarize.
-        :param team_id: The team ID to
+        :param identity: The code signing identity to use
         """
         try:
             if filename.suffix == ".app":
@@ -597,7 +695,7 @@ class macOSPackageMixin(macOSSigningMixin):
                     f"Don't know how to notarize a file of type {filename.suffix}"
                 )
 
-            profile = f"briefcase-macOS-{team_id}"
+            profile = f"briefcase-macOS-{identity.team_id}"
             submitted = False
             store_credentials = False
             while not submitted:
@@ -608,7 +706,8 @@ class macOSPackageMixin(macOSSigningMixin):
 The keychain does not contain credentials for the profile {profile}.
 You can store these credentials by invoking:
 
-    $ xcrun notarytool store-credentials --team-id {team_id} profile
+    $ xcrun notarytool store-credentials --team-id {identity.team_id} profile
+
 """
                         )
 
@@ -637,7 +736,7 @@ password:
                                 "notarytool",
                                 "store-credentials",
                                 "--team-id",
-                                team_id,
+                                identity.team_id,
                                 profile,
                             ],
                             check=True,
@@ -645,7 +744,7 @@ password:
                         )
                     except subprocess.CalledProcessError as e:
                         raise BriefcaseCommandError(
-                            f"Unable to store credentials for team ID {team_id}."
+                            f"Unable to store credentials for team ID {identity.team_id}."
                         ) from e
 
                 # Attempt the notarization
@@ -729,12 +828,11 @@ to generate a full log of the error.
         """
         self.logger.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
-            identity = "-"
-            identity_name = ADHOC_IDENTITY_NAME
+            identity = SigningIdentity()
         else:
-            identity, identity_name = self.select_identity(identity=identity)
+            identity = self.select_identity(identity=identity)
 
-        if identity == "-":
+        if identity.is_adhoc:
             if notarize_app:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
@@ -765,93 +863,236 @@ to generate a full log of the error.
             if notarize_app is None:
                 notarize_app = True
 
-            self.logger.info(f"Signing app with identity {identity_name}...")
-
-            if notarize_app:
-                team_id = self.team_id_from_identity(identity_name)
+            self.logger.info(f"Signing app with identity {identity.name}...")
 
         self.sign_app(app=app, identity=identity)
 
-        dist_path: Path = self.distribution_path(app)
+        if app.packaging_format == "zip":
+            self.package_zip(
+                app,
+                notarize_app=notarize_app,
+                identity=identity,
+            )
 
-        if app.packaging_format == "app":
-            if notarize_app:
-                self.logger.info(
-                    f"Notarizing app using team ID {team_id}...",
-                    prefix=app.app_name,
-                )
-                self.notarize(self.binary_path(app), team_id=team_id)
-
-            with self.input.wait_bar(f"Archiving {dist_path.name}..."):
-                self.tools.shutil.make_archive(
-                    dist_path.with_suffix(""),
-                    format="zip",
-                    root_dir=self.binary_path(app).parent,
-                    base_dir=self.binary_path(app).name,
-                )
+        elif app.packaging_format == "pkg":
+            self.package_pkg(
+                app,
+                notarize_app=notarize_app,
+                identity=identity,
+            )
 
         else:  # Default packaging format is DMG
-            self.logger.info("Building DMG...", prefix=app.app_name)
+            self.package_dmg(
+                app,
+                notarize_app=notarize_app,
+                identity=identity,
+            )
 
-            with self.input.wait_bar(f"Building {dist_path.name}..."):
-                dmg_settings = {
-                    "files": [os.fsdecode(self.binary_path(app))],
-                    "symlinks": {"Applications": "/Applications"},
-                    "icon_locations": {
-                        f"{app.formal_name}.app": (75, 75),
-                        "Applications": (225, 75),
-                    },
-                    "window_rect": ((600, 600), (350, 150)),
-                    "icon_size": 64,
-                    "text_size": 12,
-                }
+    def package_zip(
+        self,
+        app: AppConfig,
+        notarize_app: bool,
+        identity: SigningIdentity,
+    ):
+        """Package an .app bundle in a zip file."""
+        dist_path: Path = self.distribution_path(app)
 
-                try:
-                    icon_filename = self.base_path / f"{app.installer_icon}.icns"
+        if notarize_app:
+            self.logger.info(
+                f"Notarizing app using team ID {identity.team_id}...",
+                prefix=app.app_name,
+            )
+            self.notarize(self.binary_path(app), identity=identity)
+
+        with self.input.wait_bar(f"Archiving {dist_path.name}..."):
+            self.tools.shutil.make_archive(
+                dist_path.with_suffix(""),
+                format="zip",
+                root_dir=self.binary_path(app).parent,
+                base_dir=self.binary_path(app).name,
+            )
+
+    def package_pkg(
+        self,
+        app: AppConfig,
+        notarize_app: bool,
+        identity: SigningIdentity,
+    ):
+        """Package the app as an installer."""
+        dist_path: Path = self.distribution_path(app)
+
+        self.logger.info("Building PKG...", prefix=app.app_name)
+
+        installer_path = self.bundle_path(app) / "installer"
+
+        with self.input.wait_bar("Installing license..."):
+            license_file = self.base_path / "LICENSE"
+            if license_file.is_file():
+                (installer_path / "resources").mkdir(exist_ok=True)
+                self.tools.shutil.copy(
+                    license_file,
+                    installer_path / "resources/LICENSE",
+                )
+            else:
+                raise BriefcaseCommandError(
+                    """\
+Your project does not contain a LICENSE file.
+
+Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+with your app's licensing terms.
+"""
+                )
+
+        # pkgbuild's default behavior is to make "relocatable" installs, which means
+        # that if you've ever run the app, the installer will default to updating *that*
+        # version, rather than putting it in the location that the installer specifies.
+        # This means if you've ever used `briefcase run`, that will be the install
+        # location of the "installed" app. To work around this, you have to provide a
+        # plist file - but that requires providing a "root" folder that *only* contains
+        # the products you want to install. So - we need to copy the built app to a
+        # "clean" packaging location.
+        with self.input.wait_bar("Copying app into products folder..."):
+            installed_app_path = installer_path / "root" / self.binary_path(app).name
+            if installed_app_path.exists():
+                self.tools.shutil.rmtree(installed_app_path)
+            self.tools.shutil.copytree(self.binary_path(app), installed_app_path)
+
+        components_plist_path = self.bundle_path(app) / "installer/components.plist"
+
+        with self.input.wait_bar("Writing component manifest..."):
+            with components_plist_path.open("wb") as components_plist:
+                plistlib.dump(
+                    [
+                        {
+                            "BundleHasStrictIdentifier": True,
+                            "BundleIsRelocatable": False,
+                            "BundleIsVersionChecked": True,
+                            "BundleOverwriteAction": "upgrade",
+                            "RootRelativeBundlePath": self.binary_path(app).name,
+                        }
+                    ],
+                    components_plist,
+                )
+
+        # Console apps are installed in /Library/Formal Name, and include the
+        # post-install scripts. Normal apps are installed in /Applications, and don't
+        # include the scripts.
+        if app.console_app:
+            install_args = [
+                "--install-location",
+                f"/Library/{app.formal_name}",
+                "--scripts",
+                installer_path / "scripts",
+            ]
+        else:
+            install_args = ["--install-location", "/Applications"]
+
+        with self.input.wait_bar("Building app package..."):
+            installer_packages_path = installer_path / "packages"
+            if installer_packages_path.exists():
+                self.tools.shutil.rmtree(installer_packages_path)
+            installer_packages_path.mkdir()
+
+            self.tools.subprocess.run(
+                [
+                    "pkgbuild",
+                    "--root",
+                    installer_path / "root",
+                    "--component-plist",
+                    components_plist_path,
+                ]
+                + install_args
+                + [
+                    installer_packages_path / f"{app.app_name}.pkg",
+                ],
+                check=True,
+            )
+
+        # Build package
+        with self.input.wait_bar(f"Building {dist_path.name}..."):
+            self.tools.subprocess.run(
+                [
+                    "productbuild",
+                    "--distribution",
+                    installer_path / "Distribution.xml",
+                    "--package-path",
+                    installer_path / "packages",
+                    "--resources",
+                    installer_path / "resources",
+                    dist_path,
+                ],
+                check=True,
+            )
+
+    def package_dmg(
+        self,
+        app: AppConfig,
+        notarize_app: bool,
+        identity: SigningIdentity,
+    ):
+        """Package an app as a DMG installer."""
+        dist_path: Path = self.distribution_path(app)
+        self.logger.info("Building DMG...", prefix=app.app_name)
+
+        with self.input.wait_bar(f"Building {dist_path.name}..."):
+            dmg_settings = {
+                "files": [os.fsdecode(self.binary_path(app))],
+                "symlinks": {"Applications": "/Applications"},
+                "icon_locations": {
+                    f"{app.formal_name}.app": (75, 75),
+                    "Applications": (225, 75),
+                },
+                "window_rect": ((600, 600), (350, 150)),
+                "icon_size": 64,
+                "text_size": 12,
+            }
+
+            try:
+                icon_filename = self.base_path / f"{app.installer_icon}.icns"
+                if not icon_filename.exists():
+                    self.logger.warning(
+                        f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
+                    )
+                    raise AttributeError()
+            except AttributeError:
+                # No installer icon specified. Fall back to the app icon
+                if app.icon:
+                    icon_filename = self.base_path / f"{app.icon}.icns"
                     if not icon_filename.exists():
                         self.logger.warning(
-                            f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
+                            f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
                         )
-                        raise AttributeError()
-                except AttributeError:
-                    # No installer icon specified. Fall back to the app icon
-                    if app.icon:
-                        icon_filename = self.base_path / f"{app.icon}.icns"
-                        if not icon_filename.exists():
-                            self.logger.warning(
-                                f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
-                            )
-                            icon_filename = None
-                    else:
-                        # No app icon specified either
                         icon_filename = None
+                else:
+                    # No app icon specified either
+                    icon_filename = None
 
-                if icon_filename:
-                    dmg_settings["icon"] = os.fsdecode(icon_filename)
+            if icon_filename:
+                dmg_settings["icon"] = os.fsdecode(icon_filename)
 
-                try:
-                    image_filename = self.base_path / f"{app.installer_background}.png"
-                    if image_filename.exists():
-                        dmg_settings["background"] = os.fsdecode(image_filename)
-                    else:
-                        self.logger.warning(
-                            f"Can't find {app.installer_background}.png to use as DMG background"
-                        )
-                except AttributeError:
-                    # No installer background image provided
-                    pass
+            try:
+                image_filename = self.base_path / f"{app.installer_background}.png"
+                if image_filename.exists():
+                    dmg_settings["background"] = os.fsdecode(image_filename)
+                else:
+                    self.logger.warning(
+                        f"Can't find {app.installer_background}.png to use as DMG background"
+                    )
+            except AttributeError:
+                # No installer background image provided
+                pass
 
-                self.dmgbuild.build_dmg(
-                    filename=os.fsdecode(dist_path),
-                    volume_name=f"{app.formal_name} {app.version}",
-                    settings=dmg_settings,
-                )
+            self.dmgbuild.build_dmg(
+                filename=os.fsdecode(dist_path),
+                volume_name=f"{app.formal_name} {app.version}",
+                settings=dmg_settings,
+            )
 
-            self.sign_file(dist_path, identity=identity)
+        self.sign_file(dist_path, identity=identity)
 
-            if notarize_app:
-                self.logger.info(
-                    f"Notarizing DMG with team ID {team_id}...",
-                    prefix=app.app_name,
-                )
-                self.notarize(dist_path, team_id=team_id)
+        if notarize_app:
+            self.logger.info(
+                f"Notarizing DMG with team ID {identity.team_id}...",
+                prefix=app.app_name,
+            )
+            self.notarize(dist_path, identity=identity)

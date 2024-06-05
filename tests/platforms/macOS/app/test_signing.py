@@ -9,7 +9,7 @@ from briefcase.commands.base import BaseCommand
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.macOS import macOSSigningMixin
+from briefcase.platforms.macOS import SigningIdentity, macOSSigningMixin
 from briefcase.platforms.macOS.app import macOSAppMixin
 from tests.utils import DummyConsole
 
@@ -46,7 +46,7 @@ def dummy_command(tmp_path):
 def sign_call(
     tmp_path,
     filepath,
-    identity="Sekrit identity (DEADBEEF)",
+    identity,
     entitlements=True,
     runtime=True,
 ):
@@ -56,7 +56,7 @@ def sign_call(
         "codesign",
         filepath,
         "--sign",
-        identity,
+        identity.id,
         "--force",
     ]
     if entitlements:
@@ -110,9 +110,9 @@ def test_explicit_identity_checksum(dummy_command):
     # The identity will be the one the user specified as an option.
     result = dummy_command.select_identity("11E77FB58F13F6108B38110D5D92233C58ED38C5")
 
-    assert result == (
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
-        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    assert result == SigningIdentity(
+        id="11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        name="iPhone Developer: Jane Smith (BXAH5H869S)",
     )
 
     # User input was not solicited
@@ -130,9 +130,9 @@ def test_explicit_identity_name(dummy_command):
     # The identity will be the one the user specified as an option.
     result = dummy_command.select_identity("iPhone Developer: Jane Smith (BXAH5H869S)")
 
-    assert result == (
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
-        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    assert result == SigningIdentity(
+        id="11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        name="iPhone Developer: Jane Smith (BXAH5H869S)",
     )
 
     # User input was not solicited
@@ -168,9 +168,9 @@ def test_implied_identity(dummy_command):
 
     result = dummy_command.select_identity()
 
-    assert result == (
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
-        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    assert result == SigningIdentity(
+        id="11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        name="iPhone Developer: Jane Smith (BXAH5H869S)",
     )
 
     # User input was solicited
@@ -188,13 +188,8 @@ def test_no_identities(dummy_command):
 
     result = dummy_command.select_identity()
 
-    assert result == (
-        "-",
-        (
-            "Ad-hoc identity. The resulting package will run but cannot be "
-            "re-distributed."
-        ),
-    )
+    # Result is the adhoc identity
+    assert result == SigningIdentity()
 
     # User input was solicited
     assert dummy_command.input.prompts
@@ -214,9 +209,9 @@ def test_selected_identity(dummy_command):
     result = dummy_command.select_identity()
 
     # The identity will be the only option available.
-    assert result == (
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5",
-        "iPhone Developer: Jane Smith (BXAH5H869S)",
+    assert result == SigningIdentity(
+        id="11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        name="iPhone Developer: Jane Smith (BXAH5H869S)",
     )
 
     # User input was solicited once
@@ -224,13 +219,19 @@ def test_selected_identity(dummy_command):
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_adhoc_identity(dummy_command, verbose, tmp_path, capsys):
+def test_sign_file_adhoc_identity(
+    dummy_command,
+    adhoc_identity,
+    verbose,
+    tmp_path,
+    capsys,
+):
     """If an ad-hoc identity is used, the runtime option isn't used."""
     if verbose:
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Sign the file with an ad-hoc identity
-    dummy_command.sign_file(tmp_path / "base_path/random.file", identity="-")
+    dummy_command.sign_file(tmp_path / "base_path/random.file", identity=adhoc_identity)
 
     # An attempt to codesign was made without the runtime option
     dummy_command.tools.subprocess.run.assert_has_calls(
@@ -238,7 +239,7 @@ def test_sign_file_adhoc_identity(dummy_command, verbose, tmp_path, capsys):
             sign_call(
                 tmp_path,
                 tmp_path / "base_path/random.file",
-                identity="-",
+                identity=adhoc_identity,
                 entitlements=False,
                 runtime=False,
             ),
@@ -252,7 +253,13 @@ def test_sign_file_adhoc_identity(dummy_command, verbose, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
+def test_sign_file_entitlements(
+    dummy_command,
+    sekrit_identity,
+    verbose,
+    tmp_path,
+    capsys,
+):
     """Entitlements can be included in a signing call."""
     if verbose:
         dummy_command.logger.verbosity = LogLevel.VERBOSE
@@ -260,7 +267,7 @@ def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
         tmp_path / "base_path/random.file",
-        identity="Sekrit identity (DEADBEEF)",
+        identity=sekrit_identity,
         entitlements=tmp_path
         / "base_path"
         / "build"
@@ -273,7 +280,11 @@ def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
     # An attempt to codesign was made without the runtime option
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, tmp_path / "base_path/random.file"),
+            sign_call(
+                tmp_path,
+                tmp_path / "base_path/random.file",
+                identity=sekrit_identity,
+            ),
         ],
         any_order=False,
     )
@@ -284,7 +295,13 @@ def test_sign_file_entitlements(dummy_command, verbose, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_unsupported_format(dummy_command, verbose, tmp_path, capsys):
+def test_sign_file_unsupported_format(
+    dummy_command,
+    sekrit_identity,
+    verbose,
+    tmp_path,
+    capsys,
+):
     """If codesign reports an unsupported format, the signing attempt is ignored with a
     warning."""
     if verbose:
@@ -298,7 +315,7 @@ def test_sign_file_unsupported_format(dummy_command, verbose, tmp_path, capsys):
     # Sign the file
     dummy_command.sign_file(
         tmp_path / "base_path/random.file",
-        identity="Sekrit identity (DEADBEEF)",
+        identity=sekrit_identity,
     )
 
     # An attempt to codesign was made
@@ -307,6 +324,7 @@ def test_sign_file_unsupported_format(dummy_command, verbose, tmp_path, capsys):
             sign_call(
                 tmp_path,
                 tmp_path / "base_path/random.file",
+                identity=sekrit_identity,
                 entitlements=False,
             ),
         ],
@@ -323,7 +341,13 @@ def test_sign_file_unsupported_format(dummy_command, verbose, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_unknown_bundle_format(dummy_command, verbose, tmp_path, capsys):
+def test_sign_file_unknown_bundle_format(
+    dummy_command,
+    sekrit_identity,
+    verbose,
+    tmp_path,
+    capsys,
+):
     """If a folder happens to have a .framework extension, the signing attempt is
     ignored with a warning."""
     if verbose:
@@ -337,7 +361,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, verbose, tmp_path, capsy
     # Sign the file
     dummy_command.sign_file(
         tmp_path / "base_path/random.file",
-        identity="Sekrit identity (DEADBEEF)",
+        identity=sekrit_identity,
     )
 
     # An attempt to codesign was made
@@ -346,6 +370,7 @@ def test_sign_file_unknown_bundle_format(dummy_command, verbose, tmp_path, capsy
             sign_call(
                 tmp_path,
                 tmp_path / "base_path/random.file",
+                identity=sekrit_identity,
                 entitlements=False,
             ),
         ],
@@ -362,7 +387,13 @@ def test_sign_file_unknown_bundle_format(dummy_command, verbose, tmp_path, capsy
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_file_unknown_error(dummy_command, verbose, tmp_path, capsys):
+def test_sign_file_unknown_error(
+    dummy_command,
+    sekrit_identity,
+    verbose,
+    tmp_path,
+    capsys,
+):
     """Any other codesigning error raises an error."""
     if verbose:
         dummy_command.logger.verbosity = LogLevel.VERBOSE
@@ -373,7 +404,7 @@ def test_sign_file_unknown_error(dummy_command, verbose, tmp_path, capsys):
     with pytest.raises(BriefcaseCommandError, match="Unable to code sign "):
         dummy_command.sign_file(
             tmp_path / "base_path/random.file",
-            identity="Sekrit identity (DEADBEEF)",
+            identity=sekrit_identity,
         )
 
     # An attempt to codesign was made
@@ -382,6 +413,7 @@ def test_sign_file_unknown_error(dummy_command, verbose, tmp_path, capsys):
             sign_call(
                 tmp_path,
                 tmp_path / "base_path/random.file",
+                identity=sekrit_identity,
                 entitlements=False,
             ),
         ],
@@ -394,14 +426,22 @@ def test_sign_file_unknown_error(dummy_command, verbose, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_app(dummy_command, first_app_with_binaries, verbose, tmp_path, capsys):
+def test_sign_app(
+    dummy_command,
+    sekrit_identity,
+    first_app_with_binaries,
+    verbose,
+    tmp_path,
+    capsys,
+):
     """An app bundle can be signed."""
     if verbose:
         dummy_command.logger.verbosity = LogLevel.VERBOSE
 
     # Sign the app
     dummy_command.sign_app(
-        first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+        first_app_with_binaries,
+        identity=sekrit_identity,
     )
 
     # A request has been made to sign all the so and dylib files
@@ -425,20 +465,61 @@ def test_sign_app(dummy_command, first_app_with_binaries, verbose, tmp_path, cap
     frameworks_path = app_path / "Contents/Frameworks"
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
-            sign_call(tmp_path, lib_path / "subfolder/second_so.so"),
-            sign_call(tmp_path, lib_path / "subfolder/second_dylib.dylib"),
-            sign_call(tmp_path, lib_path / "special.binary"),
-            sign_call(tmp_path, lib_path / "other_binary"),
-            sign_call(tmp_path, lib_path / "first_so.so"),
-            sign_call(tmp_path, lib_path / "first_dylib.dylib"),
-            sign_call(tmp_path, lib_path / "Extras.app/Contents/MacOS/Extras"),
-            sign_call(tmp_path, lib_path / "Extras.app"),
+            sign_call(
+                tmp_path,
+                lib_path / "subfolder/second_so.so",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "subfolder/second_dylib.dylib",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "special.binary",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "other_binary",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "first_so.so",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "first_dylib.dylib",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "Extras.app/Contents/MacOS/Extras",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                lib_path / "Extras.app",
+                identity=sekrit_identity,
+            ),
             sign_call(
                 tmp_path,
                 frameworks_path / "Extras.framework/Resources/extras.dylib",
+                identity=sekrit_identity,
             ),
-            sign_call(tmp_path, frameworks_path / "Extras.framework"),
-            sign_call(tmp_path, app_path),
+            sign_call(
+                tmp_path,
+                frameworks_path / "Extras.framework",
+                identity=sekrit_identity,
+            ),
+            sign_call(
+                tmp_path,
+                app_path,
+                identity=sekrit_identity,
+            ),
         ],
         any_order=True,
     )
@@ -470,7 +551,13 @@ def test_sign_app(dummy_command, first_app_with_binaries, verbose, tmp_path, cap
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_sign_app_with_failure(dummy_command, first_app_with_binaries, verbose, capsys):
+def test_sign_app_with_failure(
+    dummy_command,
+    sekrit_identity,
+    first_app_with_binaries,
+    verbose,
+    capsys,
+):
     """If signing a single file in the app fails, the error is surfaced."""
     if verbose:
         dummy_command.logger.verbosity = LogLevel.VERBOSE
@@ -490,7 +577,8 @@ def test_sign_app_with_failure(dummy_command, first_app_with_binaries, verbose, 
         BriefcaseCommandError, match=r"Unable to code sign .*first_dylib\.dylib"
     ):
         dummy_command.sign_app(
-            first_app_with_binaries, identity="Sekrit identity (DEADBEEF)"
+            first_app_with_binaries,
+            identity=sekrit_identity,
         )
 
     # There has been at least 1 call to sign files. We can't know how many are

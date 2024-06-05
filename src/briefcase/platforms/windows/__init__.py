@@ -20,7 +20,12 @@ class WindowsMixin:
     supported_host_os_reason = "Windows applications can only be built on Windows."
 
     def binary_path(self, app):
-        return self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
+        if app.console_app:
+            return self.bundle_path(app) / self.packaging_root / f"{app.app_name}.exe"
+        else:
+            return (
+                self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
+            )
 
     def distribution_path(self, app):
         suffix = "zip" if app.packaging_format == "zip" else "msi"
@@ -136,26 +141,40 @@ class WindowsRunCommand(RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
 
-        # Start the app in a way that lets us stream the logs
-        app_popen = self.tools.subprocess.Popen(
-            [self.binary_path(app)] + passthrough,
-            cwd=self.tools.home_path,
-            encoding="UTF-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-            **kwargs,
-        )
+        # Console apps must operate in non-streaming mode so that console input can
+        # be handled correctly. However, if we're in test mode, we *must* stream so
+        # that we can see the test exit sentinel
+        if app.console_app and not test_mode:
+            self.logger.info("=" * 75)
+            self.tools.subprocess.run(
+                [self.binary_path(app)] + passthrough,
+                cwd=self.tools.home_path,
+                encoding="UTF-8",
+                bufsize=1,
+                stream_output=False,
+                **kwargs,
+            )
+        else:
+            # Start the app in a way that lets us stream the logs
+            app_popen = self.tools.subprocess.Popen(
+                [self.binary_path(app)] + passthrough,
+                cwd=self.tools.home_path,
+                encoding="UTF-8",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+                **kwargs,
+            )
 
-        # Start streaming logs for the app.
-        self._stream_app_logs(
-            app,
-            popen=app_popen,
-            test_mode=test_mode,
-            clean_output=False,
-        )
+            # Start streaming logs for the app.
+            self._stream_app_logs(
+                app,
+                popen=app_popen,
+                test_mode=test_mode,
+                clean_output=False,
+            )
 
 
 class WindowsPackageCommand(PackageCommand):

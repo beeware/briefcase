@@ -389,6 +389,17 @@ a custom location for Briefcase's tools.
         :param app: The app config
         """
 
+    def binary_executable_path(self, app) -> Path:
+        """The path to the actual binary object for the app in the output format.
+
+        For most platforms, this will be the same as the binary path. However, for
+        platforms that use an "executable bundle" (e.g., macOS), this will be actual
+        binary that is embedded in the bundle.
+
+        :param app: The app config
+        """
+        return self.binary_path(app)
+
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
         """Load the ``briefcase.toml`` file provided by the app template.
 
