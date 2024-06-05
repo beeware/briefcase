@@ -14,6 +14,11 @@ def sekrit_identity():
 
 
 @pytest.fixture
+def sekrit_installer_identity():
+    return SigningIdentity(id="CAFEFACE", name="Sekrit Installer identity (DEADBEEF)")
+
+
+@pytest.fixture
 def adhoc_identity():
     return SigningIdentity()
 
