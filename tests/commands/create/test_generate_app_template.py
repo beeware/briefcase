@@ -36,6 +36,7 @@ def full_context():
         "requires": None,
         "icon": None,
         "supported": True,
+        "console_app": False,
         "permissions": {},
         "custom_permissions": {},
         "requests": {},

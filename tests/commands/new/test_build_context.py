@@ -4,6 +4,7 @@ import pytest
 
 import briefcase.commands.new
 from briefcase.bootstraps import (
+    ConsoleBootstrap,
     PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
@@ -14,6 +15,7 @@ from briefcase.bootstraps import (
 def mock_builtin_bootstraps():
     return {
         "Toga": TogaGuiBootstrap,
+        "Console": ConsoleBootstrap,
         "PySide6": PySide6GuiBootstrap,
         "Pygame": PygameGuiBootstrap,
     }
@@ -245,6 +247,130 @@ requires = [
     "toga-web~=0.4.0",
 ]
 style_framework = "Shoelace v2.3"
+""",
+    )
+
+
+def test_question_sequence_console(new_command):
+    """A console app can be constructed."""
+
+    # Prime answers for all the questions.
+    new_command.input.values = [
+        "My Application",  # formal name
+        "",  # app name - accept the default
+        "org.beeware",  # bundle ID
+        "My Project",  # project name
+        "Cool stuff",  # description
+        "Grace Hopper",  # author
+        "grace@navy.mil",  # author email
+        "https://navy.mil/myapplication",  # URL
+        "4",  # license
+        "4",  # Console app
+    ]
+
+    context = new_command.build_context(
+        project_overrides={},
+    )
+
+    assert context == dict(
+        app_name="myapplication",
+        author="Grace Hopper",
+        author_email="grace@navy.mil",
+        bundle="org.beeware",
+        class_name="MyApplication",
+        description="Cool stuff",
+        formal_name="My Application",
+        license="GNU General Public License v2 (GPLv2)",
+        module_name="myapplication",
+        source_dir="src/myapplication",
+        test_source_dir="tests",
+        project_name="My Project",
+        url="https://navy.mil/myapplication",
+        app_source="""\
+
+def main():
+    # Your app logic goes here
+    print("Hello, World.")
+
+""",
+        app_start_source="""\
+from {{ cookiecutter.module_name }}.app import main
+
+if __name__ == "__main__":
+    main()
+""",
+        pyproject_table_briefcase_app_extra_content="""
+console_app = true
+requires = [
+]
+test_requires = [
+{% if cookiecutter.test_framework == "pytest" %}
+    "pytest",
+{% endif %}
+]
+""",
+        pyproject_table_macOS="""\
+universal_build = true
+requires = [
+]
+""",
+        pyproject_table_linux="""\
+requires = [
+]
+""",
+        pyproject_table_linux_system_debian="""\
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+""",
+        pyproject_table_linux_system_rhel="""\
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+""",
+        pyproject_table_linux_system_suse="""\
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+""",
+        pyproject_table_linux_system_arch="""\
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+""",
+        pyproject_table_linux_flatpak="""\
+flatpak_runtime = "org.freedesktop.Platform"
+flatpak_runtime_version = "23.08"
+flatpak_sdk = "org.freedesktop.Sdk"
+""",
+        pyproject_table_windows="""\
+requires = [
+]
+""",
+        pyproject_table_iOS="""\
+supported = false
+""",
+        pyproject_table_android="""\
+supported = false
+""",
+        pyproject_table_web="""\
+supported = false
 """,
     )
 
@@ -599,7 +725,7 @@ def test_question_sequence_none(new_command):
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "4",  # None
+        "5",  # None
     ]
 
     context = new_command.build_context(
@@ -752,7 +878,7 @@ def test_question_sequence_with_bad_bootstrap_override(
 
     # Prime answers for none of the questions.
     new_command.input.values = [
-        "5",  # None
+        "6",  # None
     ]
 
     class GuiBootstrap:
@@ -1066,7 +1192,7 @@ def test_question_sequence_custom_bootstrap(
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "4",  # Custom GUI bootstrap
+        "5",  # Custom GUI bootstrap
     ]
 
     context = new_command.build_context(project_overrides={})
@@ -1132,7 +1258,7 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
         "grace@navy.mil",  # author email
         "https://navy.mil/myapplication",  # URL
         "4",  # license
-        "4",  # Custom GUI bootstrap
+        "5",  # Custom GUI bootstrap
     ]
 
     context = new_command.build_context(project_overrides={})

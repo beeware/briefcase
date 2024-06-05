@@ -709,25 +709,16 @@ def test_install_app_packages_non_universal(
     create_command.merge_app_packages.assert_not_called()
 
 
-@pytest.mark.parametrize("universal_build", [True, False])
 @pytest.mark.parametrize("pre_existing", [True, False])
 def test_install_support_package(
     create_command,
     first_app_templated,
     tmp_path,
     pre_existing,
-    universal_build,
 ):
     """The standard library is copied out of the support package into the app bundle."""
     # Hard code the support revision
     first_app_templated.support_revision = "37"
-
-    first_app_templated.universal_build = universal_build
-
-    create_command.tools.host_arch = "gothic"
-
-    # Mock the thin command so we can confirm if it was invoked.
-    create_command.ensure_thin_binary = mock.Mock()
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
     runtime_support_path = bundle_path / "First App.app/Contents/Resources/support"
@@ -783,12 +774,3 @@ def test_install_support_package(
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-stdlib").exists()
-
-    # Only thin if this is a non-universal app
-    if universal_build:
-        create_command.ensure_thin_binary.assert_not_called()
-    else:
-        create_command.ensure_thin_binary.assert_called_once_with(
-            bundle_path / "First App.app/Contents/MacOS/First App",
-            arch="gothic",
-        )

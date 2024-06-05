@@ -1,0 +1,1 @@
+macOS now supports the generation of ``.pkg`` installers as a packaging format.

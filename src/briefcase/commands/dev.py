@@ -129,33 +129,49 @@ class DevCommand(RunAppMixin, BaseCommand):
         # Add in the environment settings to get Python in the state we want.
         env.update(self.DEV_ENVIRONMENT)
 
-        app_popen = self.tools.subprocess.Popen(
-            [
-                # Do not add additional switches for sys.executable; see DEV_ENVIRONMENT
-                sys.executable,
-                "-c",
-                (
-                    "import runpy, sys;"
-                    "sys.path.pop(0);"
-                    f"sys.argv.extend({passthrough!r});"
-                    f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
-                ),
-            ],
-            env=env,
-            encoding="UTF-8",
-            cwd=self.tools.home_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-        )
+        cmdline = [
+            # Do not add additional switches for sys.executable; see DEV_ENVIRONMENT
+            sys.executable,
+            "-c",
+            (
+                "import runpy, sys;"
+                "sys.path.pop(0);"
+                f"sys.argv.extend({passthrough!r});"
+                f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
+            ),
+        ]
 
-        # Start streaming logs for the app.
-        self._stream_app_logs(
-            app,
-            popen=app_popen,
-            test_mode=test_mode,
-            clean_output=False,
-        )
+        # Console apps must operate in non-streaming mode so that console input can
+        # be handled correctly. However, if we're in test mode, we *must* stream so
+        # that we can see the test exit sentinel
+        if app.console_app and not test_mode:
+            self.logger.info("=" * 75)
+            self.tools.subprocess.run(
+                cmdline,
+                env=env,
+                encoding="UTF-8",
+                cwd=self.tools.home_path,
+                bufsize=1,
+                stream_output=False,
+            )
+        else:
+            app_popen = self.tools.subprocess.Popen(
+                cmdline,
+                env=env,
+                encoding="UTF-8",
+                cwd=self.tools.home_path,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            )
+
+            # Start streaming logs for the app.
+            self._stream_app_logs(
+                app,
+                popen=app_popen,
+                test_mode=test_mode,
+                clean_output=False,
+            )
 
     def get_environment(self, app, test_mode: bool):
         # Create a shell environment where PYTHONPATH points to the source
@@ -171,6 +187,10 @@ class DevCommand(RunAppMixin, BaseCommand):
         # https://github.com/pythonnet/pythonnet/issues/1977 for details.
         if self.platform == "windows":  # pragma: no branch
             env["PYTHONMALLOC"] = "default"  # pragma: no-cover-if-not-windows
+
+        # If we're in verbose mode, put BRIEFCASE_DEBUG into the environment
+        if self.logger.is_debug:
+            env["BRIEFCASE_DEBUG"] = "1"
 
         return env
 

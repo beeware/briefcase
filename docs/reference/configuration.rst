@@ -237,6 +237,16 @@ on an app with a formal name of "My App" would remove:
 3. Any ``.exe`` file in ``path`` or its subdirectories.
 4. The file ``My App/content/extra.doc``.
 
+``console_app``
+~~~~~~~~~~~~~~~
+
+A Boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
+(producing a GUI app). This setting has no effect on platforms that do not support a
+console mode (e.g., web or mobile platforms). On platforms that do support console apps,
+the resulting app will write output directly to ``stdout``/``stderr`` (rather than
+writing to a system log), creating a terminal window to display this output (if the
+platform allows).
+
 ``exit_regex``
 ~~~~~~~~~~~~~~
 

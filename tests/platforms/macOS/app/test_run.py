@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOS_log_clean_filter
@@ -34,8 +34,8 @@ def run_command(tmp_path):
     return command
 
 
-def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatch):
-    """A macOS app can be started."""
+def test_run_gui_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatch):
+    """A macOS GUI app can be started."""
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -86,14 +86,16 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
     run_command.tools.os.kill.assert_called_with(100, SIGTERM)
 
 
-def test_run_app_with_passthrough(
+def test_run_gui_app_with_passthrough(
     run_command,
     first_app_config,
     sleep_zero,
     tmp_path,
     monkeypatch,
 ):
-    """A macOS app can be started with args."""
+    """A macOS app can be started in debug mode with args."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -132,6 +134,7 @@ def test_run_app_with_passthrough(
         ["open", "-n", bin_path, "--args", "foo", "--bar"],
         cwd=tmp_path / "home",
         check=True,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # The log stream was started
@@ -149,7 +152,7 @@ def test_run_app_with_passthrough(
     run_command.tools.os.kill.assert_called_with(100, SIGTERM)
 
 
-def test_run_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
+def test_run_gui_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
     """If there's a problem started the app, an exception is raised."""
     # Mock a failure opening the app
     run_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
@@ -189,7 +192,7 @@ def test_run_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
     run_command.tools.os.kill.assert_not_called()
 
 
-def test_run_app_find_pid_failed(
+def test_run_gui_app_find_pid_failed(
     run_command,
     first_app_config,
     sleep_zero,
@@ -239,14 +242,19 @@ def test_run_app_find_pid_failed(
     run_command.tools.os.kill.assert_not_called()
 
 
+@pytest.mark.parametrize("is_console_app", [True, False])
 def test_run_app_test_mode(
     run_command,
     first_app_config,
+    is_console_app,
     sleep_zero,
     tmp_path,
     monkeypatch,
 ):
     """A macOS app can be started in test mode."""
+    # Test mode is the same regardless of whether it's test mode or not.
+    first_app_config.console_app = is_console_app
+
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -296,3 +304,83 @@ def test_run_app_test_mode(
 
     # The app process was killed on exit.
     run_command.tools.os.kill.assert_called_with(100, SIGTERM)
+
+
+def test_run_console_app(run_command, first_app_config, tmp_path):
+    """A macOS console app can be started."""
+    # Set the app to be a console app
+    first_app_config.console_app = True
+
+    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+
+    # Calls were made to start the app and to start a log stream.
+    bin_path = run_command.binary_path(first_app_config)
+    run_command.tools.subprocess.run.assert_called_with(
+        [bin_path / "Contents/MacOS/First App"],
+        cwd=tmp_path / "home",
+        check=True,
+        stream_output=False,
+    )
+
+    # The log stream was not started
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_console_app_with_passthrough(
+    run_command,
+    first_app_config,
+    tmp_path,
+):
+    """A macOS console app can be started in debug mode with args."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
+    # Set the app to be a console app
+    first_app_config.console_app = True
+
+    # Run the app with args
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        passthrough=["foo", "--bar"],
+    )
+
+    # Calls were made to start the app and to start a log stream.
+    bin_path = run_command.binary_path(first_app_config)
+    run_command.tools.subprocess.run.assert_called_with(
+        [bin_path / "Contents/MacOS/First App", "foo", "--bar"],
+        cwd=tmp_path / "home",
+        check=True,
+        stream_output=False,
+        env={"BRIEFCASE_DEBUG": "1"},
+    )
+
+    # The log stream was not started
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_console_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
+    """If there's a problem started a console app, an exception is raised."""
+    # Set the app to be a console app
+    first_app_config.console_app = True
+
+    # Mock a failure opening the app
+    run_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
+        cmd=[run_command.binary_path(first_app_config) / "Contents/MacOS/First App"],
+        returncode=1,
+    )
+
+    # Although the command raises an error, this could be because the script itself
+    # raised an error.
+    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+
+    # Calls were made to start the app and to start a log stream.
+    bin_path = run_command.binary_path(first_app_config)
+    run_command.tools.subprocess.run.assert_called_with(
+        [bin_path / "Contents/MacOS/First App"],
+        cwd=tmp_path / "home",
+        stream_output=False,
+        check=True,
+    )
+
+    # No attempt was made to stream the log or cleanup
+    run_command._stream_app_logs.assert_not_called()
