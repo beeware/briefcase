@@ -46,12 +46,7 @@ Additional options
 The following options can be provided at the command line when packaging
 macOS apps.
 
-``--no-notarize``
-~~~~~~~~~~~~~~~~~
-
-Do not submit the application for notarization. By default, apps will be
-submitted for notarization unless they have been signed with an ad-hoc
-signing identity.
+.. include:: signing_options.rst
 
 Application configuration
 =========================
