@@ -679,7 +679,6 @@ class macOSPackageMixin(macOSSigningMixin):
             action="store_false",
         )
         installer_signing_group.add_argument(
-            "-y",
             "--installer-identity",
             dest="installer_identity",
             help=(
