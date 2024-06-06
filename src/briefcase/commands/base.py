@@ -1010,7 +1010,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     "\n"
                     f"    {cached_template}\n"
                     "\n"
-                    "retrying your command."
+                    "and retrying your command."
                 ) from e
         else:
             # If this isn't a repository URL, treat it as a local directory
