@@ -42,10 +42,9 @@ def test_build_app(
     build_command.tools.host_arch = "gothic"
 
     exec_path = bundle_path / "First App.app/Contents/MacOS"
-    exe_name = f"{'Console' if console_app else 'GUI'}-Stub"
     if not pre_existing:
         # If this not a pre-existing app, the stub has the original name
-        (exec_path / "First App").rename(exec_path / exe_name)
+        (exec_path / "First App").rename(exec_path / "Stub")
 
     # Mock the thin command so we can confirm if it was invoked.
     build_command.ensure_thin_binary = mock.Mock()
@@ -54,7 +53,7 @@ def test_build_app(
     build_command.build_app(first_app_with_binaries, test_mode=False)
 
     # The stub binary has been renamed
-    assert not (exec_path / exe_name).is_file()
+    assert not (exec_path / "Stub").is_file()
     assert (exec_path / "First App").is_file()
 
     # Only thin if this is a non-universal app

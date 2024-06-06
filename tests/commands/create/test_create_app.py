@@ -26,7 +26,7 @@ def test_create_app(tracking_create_command, tmp_path):
     # New app content has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     # A stub binary has *not* been created
-    assert not (tmp_path / "base_path/build/first/tester/dummy/first.bin").exists()
+    assert not (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()
 
 
 def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
@@ -192,4 +192,4 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
 
     # New app content and stub binary has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
-    assert (tmp_path / "base_path/build/first/tester/dummy/first.bin").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()

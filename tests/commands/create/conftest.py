@@ -176,7 +176,7 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_stub_binary(self, app):
         self.actions.append(("stub", app.app_name))
         # A mock version of a stub binary
-        create_file(self.bundle_path(app) / f"{app.app_name}.bin", "stub binary")
+        create_file(self.bundle_path(app) / "Stub.bin", "stub binary")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))

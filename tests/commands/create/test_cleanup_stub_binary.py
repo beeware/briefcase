@@ -18,7 +18,7 @@ def test_cleanup_stubs(create_command, unbuilt, built, myapp, tmp_path):
     # Mock a existing stubs
     if unbuilt:
         create_file(
-            tmp_path / "base_path/build/my-app/tester/dummy/GUI-Stub.bin",
+            tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin",
             "Unbuilt stub",
         )
     if built:
@@ -31,5 +31,5 @@ def test_cleanup_stubs(create_command, unbuilt, built, myapp, tmp_path):
     create_command.cleanup_stub_binary(myapp)
 
     # No matter the starting state, the stubs don't exist after cleanup.
-    assert not (tmp_path / "base_path/build/my-app/tester/dummy/GUI-Stub.bin").exists()
+    assert not (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
     assert not (tmp_path / "base_path/build/my-app/tester/dummy/my-app.bin").exists()

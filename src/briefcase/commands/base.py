@@ -412,9 +412,7 @@ a custom location for Briefcase's tools.
         :param app: The app config
         """
         return self.binary_executable_path(app).parent / (
-            ("Console" if app.console_app else "GUI")
-            + "-Stub"
-            + self.binary_executable_path(app).suffix
+            "Stub" + self.binary_executable_path(app).suffix
         )
 
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:

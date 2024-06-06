@@ -31,7 +31,7 @@ def test_install_stub_binary(
     create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b37.zip",
-            [(f"{stub_name}.bin", "stub binary")],
+            [("Stub.bin", "stub binary")],
         )
     )
 
@@ -57,7 +57,7 @@ def test_install_stub_binary(
     )
 
     # Confirm that the full path to the support file has been unpacked.
-    assert (tmp_path / f"base_path/build/my-app/tester/dummy/{stub_name}.bin").exists()
+    assert (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
 
 
 @pytest.mark.parametrize("console_app", [True, False])
@@ -80,7 +80,7 @@ def test_install_pinned_stub_binary(
     create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b42.zip",
-            [(f"{stub_name}.bin", "stub binary")],
+            [("Stub.bin", "stub binary")],
         )
     )
 
@@ -106,7 +106,7 @@ def test_install_pinned_stub_binary(
     )
 
     # Confirm that the full path to the support file has been unpacked.
-    assert (tmp_path / f"base_path/build/my-app/tester/dummy/{stub_name}.bin").exists()
+    assert (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
 
 
 def test_install_stub_binary_missing(
@@ -145,7 +145,7 @@ def test_install_custom_stub_binary_url(
     create_command.tools.download.file = mock.MagicMock(
         side_effect=mock_zip_download(
             "My-Stub.zip",
-            [("GUI-Stub.bin", "stub binary")],
+            [("Stub.bin", "stub binary")],
         )
     )
 
@@ -173,7 +173,7 @@ def test_install_custom_stub_binary_url(
     )
 
     # Confirm that the full path to the support file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy/GUI-Stub.bin").exists()
+    assert (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
 
 
 def test_install_custom_stub_binary_file(
@@ -208,7 +208,7 @@ def test_install_custom_stub_binary_file(
     create_command.tools.shutil.unpack_archive.assert_not_called()
 
     # Confirm that the full path to the support file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy/GUI-Stub.bin").exists()
+    assert (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
 
 
 def test_install_custom_stub_binary_archive(
@@ -224,7 +224,7 @@ def test_install_custom_stub_binary_archive(
     # Write a temporary support zip file
     support_file = create_zip_file(
         tmp_path / "custom/support.zip",
-        [("GUI-Stub.bin", "Custom stub")],
+        [("Stub.bin", "Custom stub")],
     )
 
     # Modify download.file to return the temp zipfile
@@ -249,7 +249,7 @@ def test_install_custom_stub_binary_archive(
     )
 
     # Confirm that the full path to the support file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy/GUI-Stub.bin").exists()
+    assert (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
 
 
 def test_install_custom_stub_binary_with_revision(
@@ -268,7 +268,7 @@ def test_install_custom_stub_binary_with_revision(
     # Write a temporary support zip file
     support_file = create_zip_file(
         tmp_path / "custom/support.zip",
-        [("GUI-Stub.bin", "Custom stub")],
+        [("Stub.bin", "Custom stub")],
     )
 
     # Modify download.file to return the temp zipfile
@@ -293,7 +293,7 @@ def test_install_custom_stub_binary_with_revision(
     )
 
     # Confirm that the full path to the support file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy/GUI-Stub.bin").exists()
+    assert (tmp_path / "base_path/build/my-app/tester/dummy/Stub.bin").exists()
 
     # A warning about the support revision was generated.
     assert "stub binary revision will be ignored." in capsys.readouterr().out
