@@ -175,29 +175,43 @@ def test_existing_repo_template(base_command, mock_git):
 
 
 def test_existing_repo_template_corrupted(base_command, mock_git):
-    """If a previously cached URL template is in a corrupted state, an error is
-    raised."""
+    """If a previously cached URL template is in a corrupted state, it is deleted and
+    re-cloned."""
     # Git returns an exception wrapping the given URL.
     base_command.tools.git = mock_git
-    base_command.tools.git.Repo.side_effect = git_exceptions.GitCommandError("git", 128)
+    base_command.tools.git.Repo.side_effect = [
+        git_exceptions.GitCommandError("git", 128),
+        None,
+    ]
 
     cached_path = base_command.template_cache_path(
         "https://example.com/magic/special-template.git"
     )
-    cached_path.mkdir(parents=True)
 
-    # Update the cache; this will raise an error
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Template repository is in a weird state\.",
-    ):
-        base_command.update_cookiecutter_cache(
-            template="https://example.com/magic/special-template.git",
-            branch="special",
-        )
+    # Create a bad cached template
+    create_file(cached_path / "bad-template", "Bad template")
 
-    # The cookiecutter cache location will be interrogated.
+    cached_template = base_command.update_cookiecutter_cache(
+        template="https://example.com/magic/special-template.git",
+        branch="special",
+    )
+
+    # The template that will be used is the original URL
+    assert cached_template == base_command.data_path / "templates" / "special-template"
+
+    # An attempt was made to wrap the old repo
     base_command.tools.git.Repo.assert_called_once_with(cached_path)
+
+    # A shallow clone is performed.
+    base_command.tools.git.Repo.clone_from.assert_called_once_with(
+        url="https://example.com/magic/special-template.git",
+        to_path=base_command.data_path / "templates" / "special-template",
+        filter=["blob:none"],
+        no_checkout=True,
+    )
+
+    # The old template content has been deleted
+    assert not (cached_path / "bad-template").exists()
 
 
 def test_existing_repo_template_with_different_url(base_command, mock_git):

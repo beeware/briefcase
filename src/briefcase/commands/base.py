@@ -894,12 +894,17 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 # failure is surfaced to the user.
                 try:
                     repo = self.tools.git.Repo(cached_template)
-                except self.tools.git.exc.GitError as e:
-                    raise BriefcaseCommandError(
-                        f"Template repository is in a weird state. Delete {cached_template} and retry."
-                    ) from e
-            else:
-                # This is the first time seeing this template. Perform a blobless clone.
+                except self.tools.git.exc.GitError:
+                    # Template repository is in a weird state. Delete it
+                    self.logger.warning(
+                        "Template cache is in a weird state. Getting a clean clone."
+                    )
+                    self.tools.shutil.rmtree(cached_template)
+
+            if not cached_template.exists():
+                # There's no pre-existing template. It's either the first time seeing
+                # the template, or the template was in a weird state. Perform a blobless
+                # clone.
                 try:
                     self.logger.info(f"Cloning template {template!r}...")
                     cached_template.mkdir(exist_ok=True, parents=True)
