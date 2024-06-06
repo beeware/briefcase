@@ -44,6 +44,7 @@ def test_device_option(run_command):
         "update_requirements": False,
         "update_resources": False,
         "update_support": False,
+        "update_stub": False,
         "no_update": False,
         "test_mode": False,
         "passthrough": [],

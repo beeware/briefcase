@@ -196,6 +196,7 @@ def test_create_app_before_start(run_command, first_app_config):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -243,6 +244,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -290,6 +292,7 @@ def test_update_app(run_command, first_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -337,6 +340,7 @@ def test_update_app_requirements(run_command, first_app):
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -384,6 +388,103 @@ def test_update_app_resources(run_command, first_app):
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
+                "update_stub": False,
+                "no_update": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": False, "passthrough": []},
+        ),
+    ]
+
+
+def test_update_app_support(run_command, first_app):
+    """The run command can request that the app support is updated first."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure an update option
+    options, _ = run_command.parse_options(["--update-support"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # A build with an explicit update was requested
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": True,
+                "update_stub": False,
+                "no_update": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            {"build_state": "first", "test_mode": False, "passthrough": []},
+        ),
+    ]
+
+
+def test_update_app_stub(run_command, first_app):
+    """The run command can request that the app stub is updated first."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure an update option
+    options, _ = run_command.parse_options(["--update-stub"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # A build with an explicit update was requested
+        (
+            "build",
+            "first",
+            {
+                "test_mode": False,
+                "update": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": True,
                 "no_update": False,
             },
         ),
@@ -432,6 +533,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -480,6 +582,7 @@ def test_update_non_existent(run_command, first_app_config):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -527,6 +630,7 @@ def test_test_mode_existing_app(run_command, first_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -574,6 +678,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -660,6 +765,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -707,6 +813,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -754,6 +861,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
@@ -801,6 +909,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
                 "no_update": False,
             },
         ),
