@@ -899,7 +899,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                         f"Template repository is in a weird state. Delete {cached_template} and retry."
                     ) from e
             else:
-                # This is the first time seeing this template. Perform a shallow clone.
+                # This is the first time seeing this template. Perform a blobless clone.
                 try:
                     self.logger.info(f"Cloning template {template!r}...")
                     cached_template.mkdir(exist_ok=True, parents=True)
@@ -907,6 +907,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                         url=template,
                         to_path=cached_template,
                         filter=["blob:none"],
+                        no_checkout=True,
                     )
                 except self.tools.git.exc.GitError as e:
                     raise BriefcaseCommandError(
