@@ -911,9 +911,6 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         if is_repo_url(template):
             # The app template is a repository URL.
             #
-            # When in `no_input=True` mode, cookiecutter deletes and reclones a template
-            # directory, rather than updating the existing repo.
-            #
             # Look for a Briefcase cache of the template.
             cached_template = self.template_cache_path(template)
 
@@ -957,8 +954,10 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # If we're getting a GitError, we know the directory must exist.
                     self.tools.shutil.rmtree(cached_template)
                     raise BriefcaseCommandError(
-                        f"Unable to clone repository {template!r}.\n\nThis may be because "
-                        "your computer is offline, or because the repository URL is incorrect."
+                        f"Unable to clone repository {template!r}.\n"
+                        "\n"
+                        "This may be because your computer is offline, or "
+                        "because the repository URL is incorrect."
                     ) from e
 
             try:
@@ -1004,7 +1003,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     raise TemplateUnsupportedVersion(branch) from e
             except (ValueError, self.tools.git.exc.GitError) as e:
                 raise BriefcaseCommandError(
-                    f"Template repository is in a weird state. Delete {cached_template} and retry."
+                    "Unable to check out template branch.\n"
+                    "\n"
+                    "This may be because your computer is offline, or because the template repository\n"
+                    "is in a weird state. If you have a stable network connection, try deleting:\n"
+                    "\n"
+                    f"    {cached_template}\n"
+                    "\n"
+                    "retrying your command."
                 ) from e
         else:
             # If this isn't a repository URL, treat it as a local directory

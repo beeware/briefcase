@@ -106,8 +106,7 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"Unable to clone repository 'https://example.com/magic/special-template.git'\. "
-            "This may be because your computer is offline, or because the repository URL is incorrect."
+            r"Unable to clone repository 'https://example.com/magic/special-template.git'"
         ),
     ):
         base_command.update_cookiecutter_cache(
@@ -376,7 +375,7 @@ def test_git_repo_with_missing_origin_remote(base_command, mock_git):
     # Update the cache
     with pytest.raises(
         BriefcaseCommandError,
-        match="Template repository is in a weird state.",
+        match="Unable to check out template branch.",
     ):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git", branch="special"
