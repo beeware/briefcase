@@ -158,14 +158,17 @@ def test_build_app_without_windows_sdk(
     )
 
 
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_with_windows_sdk(
     build_command,
     windows_sdk,
     first_app_templated,
+    console_app,
     tmp_path,
 ):
     """The stub binary will be updated when a Windows app is built."""
     build_command.tools.windows_sdk = windows_sdk
+    first_app_templated.console_app = console_app
 
     build_command.build_app(first_app_templated)
 
@@ -175,7 +178,7 @@ def test_build_app_with_windows_sdk(
             tmp_path / "win_sdk/bin/86.1.1/x64/signtool.exe",
             "remove",
             "-s",
-            Path("src/First App.exe"),
+            Path("src/first-app.exe") if console_app else Path("src/First App.exe"),
         ],
         cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
@@ -183,7 +186,7 @@ def test_build_app_with_windows_sdk(
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             tmp_path / "briefcase/tools/rcedit-x64.exe",
-            Path("src/First App.exe"),
+            Path("src/first-app.exe") if console_app else Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
             "Megacorp",
@@ -198,7 +201,7 @@ def test_build_app_with_windows_sdk(
             "first_app",
             "--set-version-string",
             "OriginalFilename",
-            "First App.exe",
+            "first-app.exe" if console_app else "First App.exe",
             "--set-version-string",
             "ProductName",
             "First App",
@@ -323,7 +326,7 @@ def test_build_app_error_remove_signature(
     build_command.tools.subprocess.run.assert_not_called()
 
 
-def test_build_app_failure(build_command, first_app_templated, tmp_path):
+def test_build_app_failure(build_command, first_app_templated):
     """If the stub binary cannot be updated, an error is raised."""
 
     build_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(

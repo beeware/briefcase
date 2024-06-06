@@ -16,6 +16,7 @@ from briefcase.exceptions import (
     InvalidSupportPackage,
     MissingAppSources,
     MissingNetworkResourceError,
+    MissingStubBinary,
     MissingSupportPackage,
     RequirementsInstallError,
     UnsupportedPlatform,
@@ -98,6 +99,18 @@ class CreateCommand(BaseCommand):
         return (
             f"https://briefcase-support.s3.amazonaws.com/python/{self.python_version_tag}/{self.platform}/"
             + self.support_package_filename(support_revision)
+        )
+
+    def stub_binary_filename(self, support_revision, is_console_app):
+        """The filename for the stub binary."""
+        stub_type = "Console" if is_console_app else "GUI"
+        return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
+
+    def stub_binary_url(self, support_revision, is_console_app):
+        """The URL of the stub binary to use for apps of this type."""
+        return (
+            f"https://briefcase-support.s3.amazonaws.com/python/{self.python_version_tag}/{self.platform}/"
+            + self.stub_binary_filename(support_revision, is_console_app)
         )
 
     def icon_targets(self, app: AppConfig):
@@ -376,6 +389,111 @@ class CreateCommand(BaseCommand):
                 raise
             else:
                 raise MissingSupportPackage(
+                    python_version_tag=self.python_version_tag,
+                    platform=self.platform,
+                    host_arch=self.tools.host_arch,
+                    is_32bit=self.tools.is_32bit_python,
+                ) from e
+
+    def cleanup_stub_binary(self, app: AppConfig):
+        """Clean up an existing application support package.
+
+        :param app: The config object for the app
+        """
+        with self.input.wait_bar("Removing existing stub binary..."):
+            binary_executable_path = self.binary_executable_path(app)
+            if binary_executable_path.exists():
+                binary_executable_path.unlink()
+
+            unbuilt_executable_path = self.unbuilt_executable_path(app)
+            if unbuilt_executable_path.exists():
+                unbuilt_executable_path.unlink()
+
+    def install_stub_binary(self, app: AppConfig):
+        """Install the application stub binary into the "unbuilt" location.
+
+        :param app: The config object for the app
+        """
+        unbuilt_executable_path = self.unbuilt_executable_path(app)
+        stub_binary_path = self._download_stub_binary(app)
+
+        with self.input.wait_bar("Installing stub binary..."):
+            # Ensure the folder for the stub binary exists
+            unbuilt_executable_path.parent.mkdir(exist_ok=True, parents=True)
+            # Install the stub binary into the unbuilt location. Allow for both raw
+            # and compressed artefacts.
+            if stub_binary_path.suffix in {".zip", ".tar.gz", ".tgz"}:
+                self.tools.shutil.unpack_archive(
+                    stub_binary_path,
+                    extract_dir=unbuilt_executable_path.parent,
+                )
+            else:
+                self.tools.shutil.copyfile(stub_binary_path, unbuilt_executable_path)
+            # Ensure the binary is executable
+            self.tools.os.chmod(unbuilt_executable_path, 0o755)
+
+    def _download_stub_binary(self, app: AppConfig):
+        try:
+            # Work out if the app defines a custom override for
+            # the support package URL.
+            try:
+                stub_binary_url = app.stub_binary
+                custom_stub_binary = True
+                self.logger.info(f"Using custom stub binary {stub_binary_url}")
+                try:
+                    # If the app has a custom stub binary *and* a support revision,
+                    # that's an error.
+                    app.stub_binary_revision
+                    self.logger.warning(
+                        "App specifies both a stub binary and a stub binary revision; "
+                        "stub binary revision will be ignored."
+                    )
+                except AttributeError:
+                    pass
+            except AttributeError:
+                # If the app specifies a support revision, use it; otherwise, use the
+                # support revision named by the template. This value *must* exist, as
+                # stub binary handling won't be triggered at all unless it is present.
+                try:
+                    stub_binary_revision = app.stub_binary_revision
+                except AttributeError:
+                    stub_binary_revision = self.stub_binary_revision(app)
+
+                stub_binary_url = self.stub_binary_url(
+                    stub_binary_revision, app.console_app
+                )
+                custom_stub_binary = False
+                self.logger.info(f"Using stub binary {stub_binary_url}")
+
+            if stub_binary_url.startswith(("https://", "http://")):
+                if custom_stub_binary:
+                    # If the support package is custom, cache it using a hash of
+                    # the download URL. This is needed to differentiate to support
+                    # packages with the same filename, served at different URLs.
+                    # (or a custom package that collides with an official package name)
+                    download_path = (
+                        self.data_path
+                        / "stub"
+                        / hashlib.sha256(stub_binary_url.encode("utf-8")).hexdigest()
+                    )
+                else:
+                    download_path = self.data_path / "stub"
+
+                # Download the stub binary, caching the result
+                # in the user's briefcase stub cache directory.
+                return self.tools.download.file(
+                    url=stub_binary_url,
+                    download_path=download_path,
+                    role="stub binary",
+                )
+            else:
+                return Path(stub_binary_url)
+        except MissingNetworkResourceError as e:
+            # If there is a custom support package, report the missing resource as-is.
+            if custom_stub_binary:
+                raise
+            else:
+                raise MissingStubBinary(
                     python_version_tag=self.python_version_tag,
                     platform=self.platform,
                     host_arch=self.tools.host_arch,
@@ -769,6 +887,17 @@ class CreateCommand(BaseCommand):
 
         self.logger.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
+
+        try:
+            # If the platform uses a stub binary, the template will define a binary
+            # revision. If this template configuration item doesn't exist, no stub
+            # binary is required.
+            self.stub_binary_revision(app)
+        except KeyError:
+            pass
+        else:
+            self.logger.info("Installing stub binary...", prefix=app.app_name)
+            self.install_stub_binary(app=app)
 
         # Verify the app after the app template and support package
         # are in place since the app tools may be dependent on them.

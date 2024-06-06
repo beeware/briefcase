@@ -183,6 +183,25 @@ supported on {platform_name}. You will need to:
         )
 
 
+class MissingStubBinary(BriefcaseCommandError):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
+        self.python_version_tag = python_version_tag
+        self.platform = platform
+        self.host_arch = host_arch
+        self.is_32bit = is_32bit
+        platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
+        super().__init__(
+            f"""\
+Unable to download {platform_name} stub binary for Python {self.python_version_tag} on {self.host_arch}.
+
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
+supported on {platform_name}. You will need to:
+    * Use an older version of Python; or
+    * Compile your own stub binary.
+"""
+        )
+
+
 class RequirementsInstallError(BriefcaseCommandError):
     def __init__(self, install_hint=""):
         super().__init__(
