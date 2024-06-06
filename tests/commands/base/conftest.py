@@ -47,7 +47,10 @@ class DummyCommand(BaseCommand):
 
 @pytest.fixture
 def base_command(tmp_path):
-    command = DummyCommand(base_path=tmp_path / "base_path")
+    command = DummyCommand(
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "data_path",
+    )
     command.parse_options(["-r", "default"])
     return command
 
