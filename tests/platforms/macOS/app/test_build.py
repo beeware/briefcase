@@ -25,9 +25,11 @@ def build_command(tmp_path):
 
 @pytest.mark.parametrize("universal_build", [True, False])
 @pytest.mark.parametrize("pre_existing", [True, False])
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app(
     build_command,
     first_app_with_binaries,
+    console_app,
     universal_build,
     pre_existing,
     tmp_path,
@@ -36,11 +38,12 @@ def test_build_app(
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
     first_app_with_binaries.universal_build = universal_build
+    first_app_with_binaries.console_app = console_app
     build_command.tools.host_arch = "gothic"
 
     exec_path = bundle_path / "First App.app/Contents/MacOS"
     if not pre_existing:
-        # If this is a pre-existing app, the stub has already been renamed
+        # If this not a pre-existing app, the stub has the original name
         (exec_path / "First App").rename(exec_path / "Stub")
 
     # Mock the thin command so we can confirm if it was invoked.
