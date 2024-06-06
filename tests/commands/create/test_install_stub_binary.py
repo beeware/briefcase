@@ -1,6 +1,5 @@
 import os
 import shutil
-import sys
 from unittest import mock
 
 import pytest
@@ -55,7 +54,6 @@ def test_install_stub_binary(
     create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path / f"data/stub/{stub_name}-3.X-b37.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
-        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file has been unpacked.
@@ -105,7 +103,6 @@ def test_install_pinned_stub_binary(
     create_command.tools.shutil.unpack_archive.assert_called_with(
         tmp_path / f"data/stub/{stub_name}-3.X-b42.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
-        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file has been unpacked.
@@ -173,7 +170,6 @@ def test_install_custom_stub_binary_url(
         tmp_path
         / "data/stub/986428ef9d5a1852fc15d4367f19aa328ad530686056e9d83cdde03407c0bceb/My-Stub.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
-        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file has been unpacked.
@@ -250,7 +246,6 @@ def test_install_custom_stub_binary_archive(
     create_command.tools.shutil.unpack_archive.assert_called_with(
         support_file,
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
-        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file has been unpacked.
@@ -295,7 +290,6 @@ def test_install_custom_stub_binary_with_revision(
     create_command.tools.shutil.unpack_archive.assert_called_with(
         support_file,
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
-        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # Confirm that the full path to the support file has been unpacked.

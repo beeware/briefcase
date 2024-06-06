@@ -137,7 +137,6 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
-    exe_extension = ""
 
     # defined by platform-specific subclasses
     command: str
