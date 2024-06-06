@@ -909,7 +909,19 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                         filter=["blob:none"],
                         no_checkout=True,
                     )
+                except KeyboardInterrupt:
+                    # The user has aborted the initial clone. Git is fairly resilient to
+                    # being interrupted, but if the *initial* clone fails, it's very
+                    # hard to recover. To avoid problems on the next run, remove the
+                    # partial repo clone.
+                    if cached_template.exists():
+                        self.tools.shutil.rmtree(cached_template)
+                    raise
                 except self.tools.git.exc.GitError as e:
+                    # The clone failed; to make sure the repo is in a clean state, clean up
+                    # any partial remnants of this initial clone.
+                    # If we're getting a GitError, we know the directory must exist.
+                    self.tools.shutil.rmtree(cached_template)
                     raise BriefcaseCommandError(
                         f"Unable to clone repository {template!r}. This may be because "
                         "your computer is offline, or because the repository URL is incorrect."

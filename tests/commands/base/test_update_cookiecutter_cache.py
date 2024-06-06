@@ -1,9 +1,12 @@
+import shutil
 from unittest import mock
 
 import pytest
 from git import exc as git_exceptions
 
 from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
+
+from ...utils import create_file
 
 
 def test_non_url(base_command, mock_git):
@@ -38,9 +41,57 @@ def test_new_repo_template(base_command, mock_git):
     # A shallow clone is performed.
     base_command.tools.git.Repo.clone_from.assert_called_once_with(
         url="https://example.com/magic/special-template.git",
-        to_path=cached_template,
+        to_path=base_command.data_path / "templates" / "special-template",
         filter=["blob:none"],
+        no_checkout=True,
     )
+
+
+def test_new_repo_template_interrupt(base_command, mock_git):
+    """If the user raises a keyboard interrupt while cloning, the template is cleaned
+    up."""
+    base_command.tools.git = mock_git
+
+    # Raise a KeyboardInterrupt during a the clone, having written the git config file.
+    def clone_failure(to_path, **kwargs):
+        create_file(to_path / ".git" / "config", "git config")
+        raise KeyboardInterrupt()
+
+    # Prime the error when the clone is interrupted
+    base_command.tools.git.Repo.clone_from.side_effect = clone_failure
+
+    with pytest.raises(KeyboardInterrupt):
+        base_command.update_cookiecutter_cache(
+            template="https://example.com/magic/special-template.git",
+            branch="special",
+        )
+
+    # The template directory should be cleaned up
+    assert not (base_command.data_path / "templates" / "special-template").exists()
+
+
+def test_new_repo_template_mkdir_interrupt(base_command, mock_git):
+    """A really early interrupt will occur before the template dir is created."""
+    base_command.tools.git = mock_git
+
+    # We don't have a convenient point to insert a KeyboardInterrupt *before* creating the
+    # directory, so we fake the effect - make the side effect of the clone deletion of
+    # the entire folder; then raise the KeyboardInterrupt.
+    def clone_failure(to_path, **kwargs):
+        shutil.rmtree(to_path)
+        raise KeyboardInterrupt()
+
+    # Prime the error when the clone is interrupted
+    base_command.tools.git.Repo.clone_from.side_effect = clone_failure
+
+    with pytest.raises(KeyboardInterrupt):
+        base_command.update_cookiecutter_cache(
+            template="https://example.com/magic/special-template.git",
+            branch="special",
+        )
+
+    # The template directory shouldn't exist
+    assert not (base_command.data_path / "templates" / "special-template").exists()
 
 
 def test_new_repo_invalid_template_url(base_command, mock_git):
@@ -69,7 +120,11 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
         url="https://example.com/magic/special-template.git",
         to_path=base_command.data_path / "templates" / "special-template",
         filter=["blob:none"],
+        no_checkout=True,
     )
+
+    # The template directory should be cleaned up
+    assert not (base_command.data_path / "templates" / "special-template").exists()
 
 
 def test_existing_repo_template(base_command, mock_git):
