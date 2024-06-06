@@ -108,17 +108,19 @@ def test_build_app_without_windows_sdk(
     first_app_templated.console_app = console_app
 
     exec_path = tmp_path / "base_path/build/first-app/windows/app/src"
+    exe_name = f"{'Console' if console_app else 'GUI'}-Stub.exe"
+
     if pre_existing:
         # If this is a pre-existing app, the stub has already been renamed
         if console_app:
-            (exec_path / "Stub.exe").rename(exec_path / "first-app.exe")
+            (exec_path / exe_name).rename(exec_path / "first-app.exe")
         else:
-            (exec_path / "Stub.exe").rename(exec_path / "First App.exe")
+            (exec_path / exe_name).rename(exec_path / "First App.exe")
 
     build_command.build_app(first_app_templated)
 
     # The stub binary has been renamed
-    assert not (exec_path / "Stub.exe").is_file()
+    assert not (exec_path / exe_name).is_file()
     if console_app:
         assert (exec_path / "first-app.exe").is_file()
     else:
@@ -158,10 +160,12 @@ def test_build_app_without_windows_sdk(
     )
 
 
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_with_windows_sdk(
     build_command,
     windows_sdk,
     first_app_templated,
+    console_app,
     tmp_path,
 ):
     """The stub binary will be updated when a Windows app is built."""
@@ -213,10 +217,12 @@ def test_build_app_with_windows_sdk(
     )
 
 
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_without_any_digital_signatures(
     build_command,
     windows_sdk,
     first_app_templated,
+    console_app,
     tmp_path,
 ):
     """If the app binary is not already signed, then attempt to remove signatures fails
@@ -279,10 +285,12 @@ def test_build_app_without_any_digital_signatures(
     )
 
 
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_error_remove_signature(
     build_command,
     windows_sdk,
     first_app_templated,
+    console_app,
     tmp_path,
 ):
     """If the attempt to remove any exist digital signatures fails because signtool
@@ -323,7 +331,8 @@ def test_build_app_error_remove_signature(
     build_command.tools.subprocess.run.assert_not_called()
 
 
-def test_build_app_failure(build_command, first_app_templated, tmp_path):
+@pytest.mark.parametrize("console_app", [True, False])
+def test_build_app_failure(build_command, first_app_templated, console_app, tmp_path):
     """If the stub binary cannot be updated, an error is raised."""
 
     build_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
@@ -338,9 +347,11 @@ def test_build_app_failure(build_command, first_app_templated, tmp_path):
         build_command.build_app(first_app_templated)
 
 
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_with_support_package_update(
     build_command,
     first_app_templated,
+    console_app,
     tmp_path,
     windows_sdk,
     capsys,

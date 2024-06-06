@@ -22,9 +22,6 @@ def adhoc_identity():
 def first_app_templated(first_app_config, tmp_path):
     app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
 
-    # Create the stub binary
-    create_file(app_path / "Contents/MacOS/Stub", "Stub binary")
-
     # Create the briefcase.toml file
     create_file(
         tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
@@ -74,8 +71,8 @@ entitlements_path="Entitlements.plist"
 def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
 
-    # Move the stub binary to the final location
-    (app_path / "Contents/MacOS/Stub").rename(app_path / "Contents/MacOS/First App")
+    # Create the stub binary
+    create_file(app_path / "Contents/MacOS/First App", "Stub binary")
 
     # Create some libraries that need to be signed.
     lib_path = app_path / "Contents/Resources/app_packages"

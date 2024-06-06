@@ -25,6 +25,8 @@ def test_create_app(tracking_create_command, tmp_path):
 
     # New app content has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
+    # A stub binary has *not* been created
+    assert not (tmp_path / "base_path/build/first/tester/dummy/first.bin").exists()
 
 
 def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
@@ -161,3 +163,33 @@ def test_create_app_not_supported(tracking_create_command, tmp_path):
 
     # No actions carried out
     assert tracking_create_command.actions == []
+
+
+def test_create_app_with_stub(tracking_create_command, tmp_path):
+    """If an app template defines a stub revision, the stub will be created."""
+    # Add an entry to the path index indicating a stub is required
+    tracking_create_command._briefcase_toml[tracking_create_command.apps["first"]] = {
+        "paths": {"stub_binary_revision": "b1"}
+    }
+
+    tracking_create_command.create_app(tracking_create_command.apps["first"])
+
+    # Input wasn't required by the user
+    assert tracking_create_command.input.prompts == []
+
+    # The right sequence of things will be done
+    assert tracking_create_command.actions == [
+        ("generate", "first"),
+        ("support", "first"),
+        ("stub", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("requirements", "first", False),
+        ("resources", "first"),
+        ("cleanup", "first"),
+    ]
+
+    # New app content and stub binary has been created
+    assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy/first.bin").exists()

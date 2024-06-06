@@ -451,22 +451,13 @@ class CreateCommand(BaseCommand):
                 except AttributeError:
                     pass
             except AttributeError:
-                # If the app specifies a support revision, use it;
-                # otherwise, use the support revision named by the template
+                # If the app specifies a support revision, use it; otherwise, use the
+                # support revision named by the template. This value *must* exist, as
+                # stub binary handling won't be triggered at all unless it is present.
                 try:
                     stub_binary_revision = app.stub_binary_revision
                 except AttributeError:
-                    # No support revision specified; use the template-specified version
-                    try:
-                        stub_binary_revision = self.stub_binary_revision(app)
-                    except KeyError:
-                        # No template-specified stub binary
-                        raise MissingStubBinary(
-                            python_version_tag=self.python_version_tag,
-                            platform=self.platform,
-                            host_arch=self.tools.host_arch,
-                            is_32bit=self.tools.is_32bit_python,
-                        )
+                    stub_binary_revision = self.stub_binary_revision(app)
 
                 stub_binary_url = self.stub_binary_url(
                     stub_binary_revision, app.console_app
