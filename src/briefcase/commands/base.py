@@ -928,7 +928,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # If we're getting a GitError, we know the directory must exist.
                     self.tools.shutil.rmtree(cached_template)
                     raise BriefcaseCommandError(
-                        f"Unable to clone repository {template!r}. This may be because "
+                        f"Unable to clone repository {template!r}.\n\nThis may be because "
                         "your computer is offline, or because the repository URL is incorrect."
                     ) from e
 
