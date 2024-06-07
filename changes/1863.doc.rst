@@ -1,1 +1,0 @@
-Fix documentation of macOS entitlements configuration to make it clear that lists and dictionaries are also valid.
