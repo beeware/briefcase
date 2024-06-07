@@ -72,9 +72,9 @@ will result in an ``Entitlements.plist`` declaration of::
 
     <key>com.apple.vm.networking</key><true/>
 
-Any Boolean, string, or list value can be used for an entitlement value.
+Any Boolean, string, list, or dictionary value can be used as an entitlement value.
 
-All macOS apps are automatically granted the following entitlements:
+All macOS apps are automatically granted the following entitlements by default:
 
 * ``com.apple.security.cs.allow-unsigned-executable-memory``
 * ``com.apple.security.cs.disable-library-validation``
