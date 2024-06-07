@@ -72,7 +72,7 @@ will result in an ``Entitlements.plist`` declaration of::
 
     <key>com.apple.vm.networking</key><true/>
 
-Any Boolean or string value can be used for an entitlement value.
+Any Boolean, string, or list value can be used for an entitlement value.
 
 All macOS apps are automatically granted the following entitlements:
 
