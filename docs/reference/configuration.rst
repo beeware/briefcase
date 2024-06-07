@@ -207,8 +207,8 @@ to identify a specific compiled version of an application.
 
 A list of strings describing paths that will be *removed* from the project after
 the installation of the support package and app code. The paths provided will be
-interpreted relative to the app bundle folder (e.g., the ``macOS/app/My App``
-folder in the case of a macOS app).
+interpreted relative to the platform-specific build folder generated for the app
+(e.g., the ``build/my-app/macOS/app`` folder in the case of a macOS app).
 
 Paths can be:
  * An explicit reference to a single file
