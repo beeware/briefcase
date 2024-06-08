@@ -1,0 +1,1 @@
+Cookiecutter now stores replay data in the Briefcase cache.
