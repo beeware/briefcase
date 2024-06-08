@@ -17,7 +17,12 @@ from briefcase.exceptions import (
 
 @pytest.fixture
 def new_command(tmp_path):
-    return NewCommand(base_path=tmp_path, logger=Log(), console=Console())
+    return NewCommand(
+        base_path=tmp_path / "base",
+        data_path=tmp_path / "data",
+        logger=Log(),
+        console=Console(),
+    )
 
 
 @pytest.mark.parametrize(
@@ -73,7 +78,7 @@ def test_new_app(
     new_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout=expected_branch,
         extra_context={
             "formal_name": "My Application",
@@ -88,7 +93,7 @@ def test_new_app(
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
 
@@ -135,7 +140,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     new_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout="v37.42.7",
         extra_context={
             "formal_name": "My Application",
@@ -150,7 +155,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
 
@@ -211,7 +216,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
             mock.call(
                 "~/.cookiecutters/briefcase-template",
                 no_input=True,
-                output_dir=os.fsdecode(tmp_path),
+                output_dir=os.fsdecode(tmp_path / "base"),
                 checkout="v37.42.7",
                 extra_context={
                     "formal_name": "My Application",
@@ -225,12 +230,12 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "app_source": "main()",
                     "pyproject_requires": "toga",
                 },
-                replay=False,
+                default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
             ),
             mock.call(
                 "~/.cookiecutters/briefcase-template",
                 no_input=True,
-                output_dir=os.fsdecode(tmp_path),
+                output_dir=os.fsdecode(tmp_path / "base"),
                 checkout="main",
                 extra_context={
                     "formal_name": "My Application",
@@ -244,7 +249,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "app_source": "main()",
                     "pyproject_requires": "toga",
                 },
-                replay=False,
+                default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
             ),
         ]
     )
@@ -286,7 +291,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout="v37.42.7",
         extra_context={
             "formal_name": "My Application",
@@ -301,7 +306,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
 
@@ -346,7 +351,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
     new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout="v37.42.7",
         extra_context={
             "formal_name": "My Application",
@@ -361,7 +366,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
 
@@ -409,7 +414,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout="v37.42.7",
         extra_context={
             "formal_name": "My Application",
@@ -424,7 +429,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
 
@@ -463,7 +468,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
     new_command.tools.cookiecutter.assert_called_once_with(
         "https://example.com/other.git",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout="experimental",
         extra_context={
             "formal_name": "My Application",
@@ -478,7 +483,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
 
@@ -524,7 +529,7 @@ def test_new_app_unused_project_overrides(
     new_command.tools.cookiecutter.assert_called_once_with(
         "~/.cookiecutters/briefcase-template",
         no_input=True,
-        output_dir=os.fsdecode(tmp_path),
+        output_dir=os.fsdecode(tmp_path / "base"),
         checkout="v37.42.7",
         extra_context={
             "formal_name": "My Application",
@@ -539,7 +544,7 @@ def test_new_app_unused_project_overrides(
             "app_source": "main()",
             "pyproject_requires": "toga",
         },
-        replay=False,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
     unused_project_override_warning = (
@@ -554,7 +559,7 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
 
     # Create a colliding app name.
-    (tmp_path / "myapplication").mkdir()
+    (tmp_path / "base/myapplication").mkdir(parents=True)
 
     app_context = {
         "formal_name": "My Application",

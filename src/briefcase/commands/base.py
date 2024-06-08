@@ -1037,15 +1037,16 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         self.logger.configure_stdlib_logging("cookiecutter")
 
         try:
-            # Unroll the template. Use a copy of the context to ensure that any
-            # mocked calls have an unmodified copy. Disable the use of replay.
+            # Unroll the template.
             self.tools.cookiecutter(
                 str(cached_template),
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=branch,
+                # Use a copy to prevent changes propagating among tests while test suite is running
                 extra_context=extra_context.copy(),
-                replay=False,
+                # Store replay data in the Briefcase template cache instead of ~/.cookiecutter_replay
+                default_config={"replay_dir": str(self.template_cache_path(".replay"))},
             )
         except subprocess.CalledProcessError as e:
             # Computer is offline
