@@ -234,6 +234,20 @@ class ToolCache(Mapping):
 
         return encoding.upper()
 
+    def unpack_archive_kwargs(self, archive_path: str | os.PathLike) -> dict[str, str]:
+        """Additional options for unpacking archives based on its type.
+
+        Additional protections for unpacking tar files were introduced in Python 3.12.
+        This enables the behavior that will be the default in Python 3.14.
+        However, the protections can only be enabled for tar files...not zip files.
+        """
+        is_zip = Path(archive_path).suffix == ".zip"
+        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
+            unpack_kwargs = {"filter": "data"}
+        else:
+            unpack_kwargs = {}
+        return unpack_kwargs
+
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]
 

@@ -156,7 +156,13 @@ requirements (e.g., the GUI library) doesn't support {platform}.
 class InvalidSupportPackage(BriefcaseCommandError):
     def __init__(self, filename):
         self.filename = filename
-        super().__init__(f"Unable to unpack support package {filename!r}")
+        super().__init__(f"Unable to unpack support package '{filename}'.")
+
+
+class InvalidStubBinary(BriefcaseCommandError):
+    def __init__(self, filename):
+        self.filename = filename
+        super().__init__(f"Unable to unpack or copy stub binary '{filename}'.")
 
 
 class MissingAppMetadata(BriefcaseCommandError):

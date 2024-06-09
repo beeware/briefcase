@@ -13,6 +13,7 @@ import briefcase
 from briefcase.config import AppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    InvalidStubBinary,
     InvalidSupportPackage,
     MissingAppSources,
     MissingNetworkResourceError,
@@ -86,31 +87,35 @@ class CreateCommand(BaseCommand):
     hidden_app_properties = {"permission"}
 
     @property
-    def app_template_url(self):
+    def app_template_url(self) -> str:
         """The URL for a cookiecutter repository to use when creating apps."""
         return f"https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git"
 
-    def support_package_filename(self, support_revision):
+    def support_package_filename(self, support_revision: str) -> str:
         """The query arguments to use in a support package query request."""
         return f"Python-{self.python_version_tag}-{self.platform}-support.b{support_revision}.tar.gz"
 
-    def support_package_url(self, support_revision):
+    def support_package_url(self, support_revision: str) -> str:
         """The URL of the support package to use for apps of this type."""
         return (
-            f"https://briefcase-support.s3.amazonaws.com/python/{self.python_version_tag}/{self.platform}/"
-            + self.support_package_filename(support_revision)
+            "https://briefcase-support.s3.amazonaws.com/python/"
+            f"{self.python_version_tag}/"
+            f"{self.platform}/"
+            f"{self.support_package_filename(support_revision)}"
         )
 
-    def stub_binary_filename(self, support_revision, is_console_app):
+    def stub_binary_filename(self, support_revision: str, is_console_app: bool) -> str:
         """The filename for the stub binary."""
         stub_type = "Console" if is_console_app else "GUI"
         return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
 
-    def stub_binary_url(self, support_revision, is_console_app):
+    def stub_binary_url(self, support_revision: str, is_console_app: bool) -> str:
         """The URL of the stub binary to use for apps of this type."""
         return (
-            f"https://briefcase-support.s3.amazonaws.com/python/{self.python_version_tag}/{self.platform}/"
-            + self.stub_binary_filename(support_revision, is_console_app)
+            "https://briefcase-support.s3.amazonaws.com/python/"
+            f"{self.python_version_tag}/"
+            f"{self.platform}/"
+            f"{self.stub_binary_filename(support_revision, is_console_app)}"
         )
 
     def icon_targets(self, app: AppConfig):
@@ -260,22 +265,13 @@ class CreateCommand(BaseCommand):
         :param support_file_path: The path to the support file to be unpacked.
         :param support_path: The path where support files should be unpacked.
         """
-        # Additional protections for unpacking tar files were introduced in Python 3.12.
-        # This enables the behavior that will be the default in Python 3.14.
-        # However, the protections can only be enabled for tar files...not zip files.
-        is_zip = support_file_path.name.endswith("zip")
-        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
-            tarfile_kwargs = {"filter": "data"}
-        else:
-            tarfile_kwargs = {}
-
         try:
             with self.input.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
                 self.tools.shutil.unpack_archive(
                     support_file_path,
                     extract_dir=support_path,
-                    **tarfile_kwargs,
+                    **self.tools.unpack_archive_kwargs(support_file_path),
                 )
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e
@@ -401,13 +397,8 @@ class CreateCommand(BaseCommand):
         :param app: The config object for the app
         """
         with self.input.wait_bar("Removing existing stub binary..."):
-            binary_executable_path = self.binary_executable_path(app)
-            if binary_executable_path.exists():
-                binary_executable_path.unlink()
-
-            unbuilt_executable_path = self.unbuilt_executable_path(app)
-            if unbuilt_executable_path.exists():
-                unbuilt_executable_path.unlink()
+            self.binary_executable_path(app).unlink(missing_ok=True)
+            self.unbuilt_executable_path(app).unlink(missing_ok=True)
 
     def install_stub_binary(self, app: AppConfig):
         """Install the application stub binary into the "unbuilt" location.
@@ -420,19 +411,41 @@ class CreateCommand(BaseCommand):
         with self.input.wait_bar("Installing stub binary..."):
             # Ensure the folder for the stub binary exists
             unbuilt_executable_path.parent.mkdir(exist_ok=True, parents=True)
-            # Install the stub binary into the unbuilt location. Allow for both raw
-            # and compressed artefacts.
-            if stub_binary_path.suffix in {".zip", ".tar.gz", ".tgz"}:
-                self.tools.shutil.unpack_archive(
-                    stub_binary_path,
-                    extract_dir=unbuilt_executable_path.parent,
-                )
-            else:
-                self.tools.shutil.copyfile(stub_binary_path, unbuilt_executable_path)
-            # Ensure the binary is executable
-            self.tools.os.chmod(unbuilt_executable_path, 0o755)
 
-    def _download_stub_binary(self, app: AppConfig):
+            # Determine if stub binary is a packed archive
+            supported_archive_extensions = {
+                ext for format in shutil.get_unpack_formats() for ext in format[1]
+            }
+            stub_path_exts = {
+                # captures extensions like .tar.gz, .tar.bz2, etc.
+                "".join(stub_binary_path.suffixes[-2:]),
+                # as well as .tar, .zip, etc.
+                stub_binary_path.suffix,
+            }
+            is_archive = not stub_path_exts.isdisjoint(supported_archive_extensions)
+
+            # Install the stub binary into the unbuilt location.
+            # Allow for both raw and compressed artefacts.
+            try:
+                if is_archive:
+                    self.tools.shutil.unpack_archive(
+                        stub_binary_path,
+                        extract_dir=unbuilt_executable_path.parent,
+                        **self.tools.unpack_archive_kwargs(stub_binary_path),
+                    )
+                elif stub_binary_path.is_file():
+                    self.tools.shutil.copyfile(
+                        stub_binary_path, unbuilt_executable_path
+                    )
+                else:
+                    raise InvalidStubBinary(stub_binary_path)
+            except (shutil.ReadError, EOFError, OSError) as e:
+                raise InvalidStubBinary(stub_binary_path) from e
+            else:
+                # Ensure the binary is executable
+                self.tools.os.chmod(unbuilt_executable_path, 0o755)
+
+    def _download_stub_binary(self, app: AppConfig) -> Path:
         try:
             # Work out if the app defines a custom override for
             # the support package URL.

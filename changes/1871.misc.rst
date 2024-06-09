@@ -1,0 +1,1 @@
+Updated error handling and archive unpacking for the stub binary.

@@ -6,7 +6,6 @@ import re
 import shlex
 import shutil
 import subprocess
-import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -812,7 +811,7 @@ connection.
                 self.tools.shutil.unpack_archive(
                     skin_tgz_path,
                     extract_dir=skin_path,
-                    **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
+                    **self.tools.unpack_archive_kwargs(skin_tgz_path),
                 )
             except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(

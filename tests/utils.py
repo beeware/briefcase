@@ -115,7 +115,7 @@ def create_tgz_file(tgzpath, content):
     Ensures that the directory for the file exists, and writes a file with specific
     content.
 
-    :param tgzpath: The path for the ZIP file to create
+    :param tgzpath: The path for the gzipped tarfile file to create
     :param content: A list of pairs; each pair is (path, data) describing an item to be
         added to the zip file.
     :returns: The path to the file that was created.
