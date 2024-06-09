@@ -10,7 +10,6 @@ class ConsoleBootstrap(BaseGuiBootstrap):
 def main():
     # Your app logic goes here
     print("Hello, World.")
-
 """
 
     def app_start_source(self):

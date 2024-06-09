@@ -12,5 +12,4 @@ def main():
     time.sleep(2)
     print("{EXIT_SUCCESS_NOTIFY}")
     print("{BRIEFCASE_EXIT_SUCCESS_SIGNAL}")
-
 """

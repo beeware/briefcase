@@ -291,7 +291,6 @@ def test_question_sequence_console(new_command):
 def main():
     # Your app logic goes here
     print("Hello, World.")
-
 """,
         app_start_source="""\
 from {{ cookiecutter.module_name }}.app import main
