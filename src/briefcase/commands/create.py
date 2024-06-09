@@ -89,6 +89,13 @@ class CreateCommand(BaseCommand):
     def app_template_url(self):
         """The URL for a cookiecutter repository to use when creating apps."""
         return f"https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git"
+    
+    def add_options(self, parser):
+        parser.add_argument(
+            "--auto-overwrite",
+            action="store_true",
+            help="Automatically confirm overwriting existing scaffold",
+        )
 
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
@@ -859,11 +866,12 @@ class CreateCommand(BaseCommand):
                         self.logger.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
+    def create_app(self, app: AppConfig, test_mode: bool = False, auto_confirm: bool = False, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
+        :param auto_confirm: Should any existing scaffold be automatically overwritten? (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -871,7 +879,7 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             self.logger.info()
-            confirm = self.input.boolean_input(
+            confirm = auto_confirm or self.input.boolean_input(
                 f"Application {app.app_name!r} already exists; overwrite", default=False
             )
             if not confirm:
@@ -936,6 +944,7 @@ class CreateCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        auto_overwrite: bool = False,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
@@ -943,11 +952,11 @@ class CreateCommand(BaseCommand):
         self.finalize(app)
 
         if app:
-            state = self.create_app(app, **options)
+            state = self.create_app(app, auto_overwrite, **options)
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(app, **full_options(state, options))
+                state = self.create_app(app, auto_overwrite, **full_options(state, options))
 
         return state
 
