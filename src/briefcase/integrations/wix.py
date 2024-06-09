@@ -134,7 +134,7 @@ does not point to an install of the WiX Toolset.
 
     def install(self):
         """Download and install WiX."""
-        wix_zip_path = self.tools.download.file(
+        wix_zip_path = self.tools.file.download(
             url=self.download_url,
             download_path=self.tools.base_path,
             role="WiX",
@@ -142,7 +142,7 @@ does not point to an install of the WiX Toolset.
 
         try:
             with self.tools.input.wait_bar("Installing WiX..."):
-                self.tools.shutil.unpack_archive(
+                self.tools.file.unpack_archive(
                     os.fsdecode(wix_zip_path),
                     extract_dir=os.fsdecode(self.wix_home),
                 )

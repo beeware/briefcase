@@ -30,23 +30,21 @@ def test_install_stub_binary(
     stub_name = "Console-Stub" if console_app else "GUI-Stub"
 
     # Mock download.file to return a stub binary
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b37.zip",
             [("Stub.bin", "stub binary")],
         )
     )
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # Confirm the right URL was used
-    create_command.tools.download.file.assert_called_with(
+    create_command.tools.file.download.assert_called_with(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b37.zip",
         role="stub binary",
@@ -54,7 +52,7 @@ def test_install_stub_binary(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path / f"data/stub/{stub_name}-3.X-b37.zip",
+        filename=tmp_path / f"data/stub/{stub_name}-3.X-b37.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
 
@@ -76,16 +74,15 @@ def test_install_stub_binary_unpack_failure(
     stub_name = "Console-Stub" if console_app else "GUI-Stub"
 
     # Mock download.file to return a stub binary
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b37.zip",
             [("Stub.bin", "stub binary")],
         )
     )
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
     create_command.tools.shutil.unpack_archive.side_effect = shutil.ReadError
 
     # Install the stub binary
@@ -93,7 +90,7 @@ def test_install_stub_binary_unpack_failure(
         create_command.install_stub_binary(myapp)
 
     # Confirm the right URL was used
-    create_command.tools.download.file.assert_called_with(
+    create_command.tools.file.download.assert_called_with(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b37.zip",
         role="stub binary",
@@ -101,7 +98,7 @@ def test_install_stub_binary_unpack_failure(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path / f"data/stub/{stub_name}-3.X-b37.zip",
+        filename=tmp_path / f"data/stub/{stub_name}-3.X-b37.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
 
@@ -123,23 +120,21 @@ def test_install_pinned_stub_binary(
     stub_name = "Console-Stub" if console_app else "GUI-Stub"
 
     # Mock download.file to return a stub binary
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b42.zip",
             [("Stub.bin", "stub binary")],
         )
     )
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # Confirm the right URL was used
-    create_command.tools.download.file.assert_called_with(
+    create_command.tools.file.download.assert_called_with(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b42.zip",
         role="stub binary",
@@ -147,7 +142,7 @@ def test_install_pinned_stub_binary(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path / f"data/stub/{stub_name}-3.X-b42.zip",
+        filename=tmp_path / f"data/stub/{stub_name}-3.X-b42.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
 
@@ -163,7 +158,7 @@ def test_install_stub_binary_missing(
 ):
     """If the system-nominated stub binary doesn't exist, a specific error is raised."""
     # Modify download.file to raise an exception
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=MissingNetworkResourceError(
             "https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/GUI-Stub-3.X-b37.zip"
         )
@@ -188,23 +183,21 @@ def test_install_custom_stub_binary_url(
     myapp.stub_binary = "https://example.com/custom/My-Stub.zip"
 
     # Mock download.file to return a stub binary
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             "My-Stub.zip",
             [("Stub.bin", "stub binary")],
         )
     )
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # Confirm the right URL was used
-    create_command.tools.download.file.assert_called_with(
+    create_command.tools.file.download.assert_called_with(
         download_path=create_command.data_path
         / "stub/986428ef9d5a1852fc15d4367f19aa328ad530686056e9d83cdde03407c0bceb",
         url="https://example.com/custom/My-Stub.zip",
@@ -213,7 +206,7 @@ def test_install_custom_stub_binary_url(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        tmp_path
+        filename=tmp_path
         / "data/stub/986428ef9d5a1852fc15d4367f19aa328ad530686056e9d83cdde03407c0bceb/My-Stub.zip",
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
@@ -236,19 +229,17 @@ def test_install_custom_stub_binary_file(
     create_file(tmp_path / "custom/My-Stub", "Custom stub")
 
     # Modify download.file to return the temp zipfile
-    create_command.tools.download.file = mock.MagicMock()
+    create_command.tools.file.download = mock.MagicMock()
 
-    # Mock shutil so we can confirm that unpack isn't called,
-    # but we still want the side effect of calling
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.copyfile.side_effect = shutil.copyfile
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.tools.download.file.assert_not_called()
+    create_command.tools.file.download.assert_not_called()
 
     # The file isn't an archive, so it hasn't been unpacked.
     create_command.tools.shutil.unpack_archive.assert_not_called()
@@ -274,23 +265,21 @@ def test_install_custom_stub_binary_zip(
     )
 
     # Modify download.file to return the temp zipfile
-    create_command.tools.download.file = mock.MagicMock()
+    create_command.tools.file.download = mock.MagicMock()
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.tools.download.file.assert_not_called()
+    create_command.tools.file.download.assert_not_called()
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        stub_file,
+        filename=stub_file,
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
 
@@ -317,23 +306,21 @@ def test_install_custom_stub_binary_tar(
     )
 
     # Modify download.file to return the temp zipfile
-    create_command.tools.download.file = mock.MagicMock()
+    create_command.tools.file.download = mock.MagicMock()
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.tools.download.file.assert_not_called()
+    create_command.tools.file.download.assert_not_called()
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        stub_file,
+        filename=stub_file,
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
         **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
@@ -362,23 +349,21 @@ def test_install_custom_stub_binary_with_revision(
     )
 
     # Modify download.file to return the temp zipfile
-    create_command.tools.download.file = mock.MagicMock()
+    create_command.tools.file.download = mock.MagicMock()
 
-    # Mock shutil so we can confirm that unpack is called,
-    # but we still want the side effect of calling it
-    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+    # Wrap shutil so we can confirm that unpack is called
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
 
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.tools.download.file.assert_not_called()
+    create_command.tools.file.download.assert_not_called()
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        stub_file,
+        filename=stub_file,
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
 
@@ -401,7 +386,7 @@ def test_install_custom_stub_binary_with_invalid_url(
     myapp.stub_binary = url
 
     # Modify download.file to raise an exception
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=MissingNetworkResourceError(url)
     )
 
@@ -410,7 +395,7 @@ def test_install_custom_stub_binary_with_invalid_url(
         create_command.install_stub_binary(myapp)
 
     # However, there will have been a download attempt
-    create_command.tools.download.file.assert_called_with(
+    create_command.tools.file.download.assert_called_with(
         download_path=(
             create_command.data_path
             / "stub"
@@ -447,7 +432,7 @@ def test_install_custom_stub_binary_with_invalid_filepath(
     myapp.stub_binary = os.fsdecode(tmp_path / "custom/My-Stub")
 
     # Modify download.file to return the temp zipfile
-    create_command.tools.download.file = mock.MagicMock()
+    create_command.tools.file.download = mock.MagicMock()
 
     # Mock shutil so we can confirm that unpack isn't called,
     # but we still want the side effect of calling
@@ -460,7 +445,7 @@ def test_install_custom_stub_binary_with_invalid_filepath(
 
     # There should have been no download attempt,
     # as the resource is local.
-    create_command.tools.download.file.assert_not_called()
+    create_command.tools.file.download.assert_not_called()
 
     # The file isn't an archive, so it hasn't been unpacked.
     create_command.tools.shutil.unpack_archive.assert_not_called()

@@ -15,7 +15,7 @@ def test_upgrade_exists(mock_tools, rcedit, tmp_path):
         rcedit_path.touch()
         return "new-downloaded-file"
 
-    mock_tools.download.file.side_effect = side_effect_create_mock_appimage
+    mock_tools.file.download.side_effect = side_effect_create_mock_appimage
 
     # Do upgrade
     rcedit.upgrade()
@@ -24,7 +24,7 @@ def test_upgrade_exists(mock_tools, rcedit, tmp_path):
     assert rcedit_path.exists()
 
     # A download is invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/electron/rcedit/"
         "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
@@ -39,7 +39,7 @@ def test_upgrade_does_not_exist(mock_tools, rcedit, tmp_path):
         rcedit.upgrade()
 
     # The tool wasn't already installed, so an error is raised.
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
@@ -48,7 +48,7 @@ def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
     rcedit_path = tmp_path / "tools/rcedit-x64.exe"
     rcedit_path.touch()
 
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download.side_effect = NetworkFailure("mock")
 
     # The upgrade will fail
     with pytest.raises(NetworkFailure, match="Unable to mock"):
@@ -58,7 +58,7 @@ def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
     assert not rcedit_path.exists()
 
     # A download was invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/electron/rcedit/"
         "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",

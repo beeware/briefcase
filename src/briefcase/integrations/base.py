@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from briefcase.integrations.android_sdk import AndroidSDK
     from briefcase.integrations.docker import Docker, DockerAppContext
-    from briefcase.integrations.download import Download
+    from briefcase.integrations.file import File
     from briefcase.integrations.flatpak import Flatpak
     from briefcase.integrations.java import JDK
     from briefcase.integrations.linuxdeploy import LinuxDeploy
@@ -148,7 +148,7 @@ class ToolCache(Mapping):
     android_sdk: AndroidSDK
     app_context: Subprocess | DockerAppContext
     docker: Docker
-    download: Download
+    file: File
     flatpak: Flatpak
     git: git_
     java: JDK
@@ -233,20 +233,6 @@ class ToolCache(Mapping):
             encoding = DEFAULT_SYSTEM_ENCODING
 
         return encoding.upper()
-
-    def unpack_archive_kwargs(self, archive_path: str | os.PathLike) -> dict[str, str]:
-        """Additional options for unpacking archives based on its type.
-
-        Additional protections for unpacking tar files were introduced in Python 3.12.
-        This enables the behavior that will be the default in Python 3.14.
-        However, the protections can only be enabled for tar files...not zip files.
-        """
-        is_zip = Path(archive_path).suffix == ".zip"
-        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
-            unpack_kwargs = {"filter": "data"}
-        else:
-            unpack_kwargs = {}
-        return unpack_kwargs
 
     def __getitem__(self, app: AppConfig) -> ToolCache:
         return self.app_tools[app]

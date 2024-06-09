@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import shutil
+import sys
 import tempfile
 from contextlib import suppress
 from email.message import Message
@@ -18,21 +20,87 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import Tool, ToolCache
 
 
-class Download(Tool):
-    name = "download"
-    full_name = "Download"
+class File(Tool):
+    name = "file"
+    full_name = "File"
 
     @classmethod
-    def verify_install(cls, tools: ToolCache, **kwargs) -> Download:
-        """Make downloader available in tool cache."""
+    def verify_install(cls, tools: ToolCache, **kwargs) -> File:
+        """Make File available in tool cache."""
         # short circuit since already verified and available
-        if hasattr(tools, "download"):
-            return tools.download
+        if hasattr(tools, "file"):
+            return tools.file
 
-        tools.download = Download(tools=tools)
-        return tools.download
+        tools.file = File(tools=tools)
+        return tools.file
 
-    def file(self, url: str, download_path: Path, role: str | None = None) -> Path:
+    def is_archive(self, filename: str | os.PathLike) -> bool:
+        """Can a file be unpacked via `shutil.unpack_archive()`?
+
+        The evaluation is based purely on the name of the file. A more robust
+        implementation may actually interrogate the file itself.
+
+        Notably, the types of archives that can be unpacked will vary based on the types
+        of compression the current Python supports. So, for example, if LZMA is not
+        available, then tar.xz archives cannot be unpacked.
+
+        :param filename: path to file to evaluate as an archive
+        """
+        filename = Path(filename)
+        file_extensions = {
+            # captures extensions like .tar.gz, .tar.bz2, etc.
+            "".join(filename.suffixes[-2:]),
+            # as well as .tar, .zip, etc.
+            filename.suffix,
+        }
+        return not file_extensions.isdisjoint(self.supported_archive_extensions)
+
+    @property
+    def supported_archive_extensions(self) -> set[str]:
+        return {
+            extension
+            for archive_format in shutil.get_unpack_formats()
+            for extension in archive_format[1]
+        }
+
+    def unpack_archive(
+        self,
+        filename: str | os.PathLike,
+        extract_dir: str | os.PathLike,
+        **kwargs,
+    ):
+        """Unpack an archive file in to a destination directory.
+
+        :param filename: File path for the archive
+        :param extract_dir: Target file path for where to unpack archive
+        :param kwargs: additional arguments for shutil.unpack_archive
+        """
+        self.tools.shutil.unpack_archive(
+            filename=filename,
+            extract_dir=extract_dir,
+            **{
+                **self._unpack_archive_kwargs(filename),
+                **kwargs,
+            },
+        )
+
+    def _unpack_archive_kwargs(self, archive_path: str | os.PathLike) -> dict[str, str]:
+        """Additional options for unpacking archives based on the archive's type.
+
+        Additional protections for unpacking tar files were introduced in Python 3.12.
+        Since tarballs can contain anything valid in a UNIX file system, these
+        protections prevent unpacking potentially dangerous files. This behavior will be
+        the default in Python 3.14. However, the protections can only be enabled for tar
+        files...not zip files.
+        """
+        is_zip = Path(archive_path).suffix == ".zip"
+        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
+            unpack_kwargs = {"filter": "data"}
+        else:
+            unpack_kwargs = {}
+        return unpack_kwargs
+
+    def download(self, url: str, download_path: Path, role: str | None = None) -> Path:
         """Download a given URL, caching it. If it has already been downloaded, return
         the value that has been cached.
 

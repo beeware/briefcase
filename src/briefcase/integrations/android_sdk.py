@@ -386,7 +386,7 @@ class AndroidSDK(ManagedTool):
 
     def install(self):
         """Download and install the Android SDK."""
-        cmdline_tools_zip_path = self.tools.download.file(
+        cmdline_tools_zip_path = self.tools.file.download(
             url=self.cmdline_tools_url,
             download_path=self.tools.base_path,
             role="Android SDK Command-Line Tools",
@@ -407,7 +407,7 @@ class AndroidSDK(ManagedTool):
         ):
             self.cmdline_tools_path.parent.mkdir(parents=True, exist_ok=True)
             try:
-                self.tools.shutil.unpack_archive(
+                self.tools.file.unpack_archive(
                     cmdline_tools_zip_path, extract_dir=self.cmdline_tools_path.parent
                 )
             except (shutil.ReadError, EOFError) as e:
@@ -799,7 +799,7 @@ connection.
             f"artwork/resources/device-art-resources/{skin}.tar.gz"
         )
 
-        skin_tgz_path = self.tools.download.file(
+        skin_tgz_path = self.tools.file.download(
             url=skin_url,
             download_path=self.root_path,
             role=f"{skin} device skin",
@@ -808,10 +808,9 @@ connection.
         # Unpack skin archive
         with self.tools.input.wait_bar("Installing device skin..."):
             try:
-                self.tools.shutil.unpack_archive(
+                self.tools.file.unpack_archive(
                     skin_tgz_path,
                     extract_dir=skin_path,
-                    **self.tools.unpack_archive_kwargs(skin_tgz_path),
                 )
             except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(

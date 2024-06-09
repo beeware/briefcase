@@ -730,7 +730,7 @@ def test_install_support_package(
         )
 
     # Mock download.file to return a support package
-    create_command.tools.download.file = mock.MagicMock(
+    create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_tgz_download(
             f"Python-3.{sys.version_info.minor}-macOS-support.b37.tar.gz",
             [

@@ -141,7 +141,7 @@ def mock_file_download(filename, content, mode="w", role=None):
         use `wb` and provide content as a bitstring if you need to
         write a binary file.
     :param role: The role played by the content being downloaded
-    :returns: a function that can act as a mock side effect for `download.file()`
+    :returns: a function that can act as a mock side effect for `file.download()`
     """
 
     def _download_file(url, download_path, role):
@@ -157,7 +157,7 @@ def mock_zip_download(filename, content, role=None):
         create as a side effect
     :param content: A string containing the content to write.
     :param role: The role played by the content being downloaded
-    :returns: a function that can act as a mock side effect for `download.file()`
+    :returns: a function that can act as a mock side effect for `file.download()`
     """
 
     def _download_file(url, download_path, role):
@@ -170,7 +170,7 @@ def mock_tgz_download(filename, content, role=None):
     """Create a side effect function that mocks the download of a .tar.gz file.
 
     :param content: A string containing the content to write.
-    :returns: a function that can act as a mock side effect for `download.file()`
+    :returns: a function that can act as a mock side effect for `file.download()`
     """
 
     def _download_file(url, download_path, role):

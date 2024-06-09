@@ -268,10 +268,9 @@ class CreateCommand(BaseCommand):
         try:
             with self.input.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
-                self.tools.shutil.unpack_archive(
+                self.tools.file.unpack_archive(
                     support_file_path,
                     extract_dir=support_path,
-                    **self.tools.unpack_archive_kwargs(support_file_path),
                 )
         except (shutil.ReadError, EOFError) as e:
             raise InvalidSupportPackage(support_file_path) from e
@@ -372,7 +371,7 @@ class CreateCommand(BaseCommand):
 
                 # Download the support file, caching the result
                 # in the user's briefcase support cache directory.
-                return self.tools.download.file(
+                return self.tools.file.download(
                     url=support_package_url,
                     download_path=download_path,
                     role="support package",
@@ -412,26 +411,13 @@ class CreateCommand(BaseCommand):
             # Ensure the folder for the stub binary exists
             unbuilt_executable_path.parent.mkdir(exist_ok=True, parents=True)
 
-            # Determine if stub binary is a packed archive
-            supported_archive_extensions = {
-                ext for format in shutil.get_unpack_formats() for ext in format[1]
-            }
-            stub_path_exts = {
-                # captures extensions like .tar.gz, .tar.bz2, etc.
-                "".join(stub_binary_path.suffixes[-2:]),
-                # as well as .tar, .zip, etc.
-                stub_binary_path.suffix,
-            }
-            is_archive = not stub_path_exts.isdisjoint(supported_archive_extensions)
-
             # Install the stub binary into the unbuilt location.
             # Allow for both raw and compressed artefacts.
             try:
-                if is_archive:
-                    self.tools.shutil.unpack_archive(
+                if self.tools.file.is_archive(stub_binary_path):
+                    self.tools.file.unpack_archive(
                         stub_binary_path,
                         extract_dir=unbuilt_executable_path.parent,
-                        **self.tools.unpack_archive_kwargs(stub_binary_path),
                     )
                 elif stub_binary_path.is_file():
                     self.tools.shutil.copyfile(
@@ -494,7 +480,7 @@ class CreateCommand(BaseCommand):
 
                 # Download the stub binary, caching the result
                 # in the user's briefcase stub cache directory.
-                return self.tools.download.file(
+                return self.tools.file.download(
                     url=stub_binary_url,
                     download_path=download_path,
                     role="stub binary",

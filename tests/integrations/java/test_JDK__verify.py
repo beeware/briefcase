@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from unittest import mock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -15,10 +15,10 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.java import JDK
 
-from ...utils import assert_url_resolvable
+from ...utils import assert_url_resolvable, create_zip_file
 from .conftest import JDK_BUILD, JDK_RELEASE
 
-CALL_JAVA_HOME = mock.call(["/usr/libexec/java_home"])
+CALL_JAVA_HOME = call(["/usr/libexec/java_home"])
 
 
 def test_short_circuit(mock_tools):
@@ -73,7 +73,7 @@ def test_macos_tool_java_home(mock_tools, capsys):
     assert mock_tools.subprocess.check_output.mock_calls == [
         CALL_JAVA_HOME,
         # Second is a call to verify a valid Java version
-        mock.call([Path("/path/to/java/bin/javac"), "-version"]),
+        call([Path("/path/to/java/bin/javac"), "-version"]),
     ]
 
     # No console output
@@ -132,7 +132,7 @@ def test_macos_wrong_jdk_version(mock_tools, tmp_path, capsys):
 
     assert mock_tools.subprocess.check_output.mock_calls == [
         CALL_JAVA_HOME,
-        mock.call([Path("/path/to/java/bin/javac"), "-version"]),
+        call([Path("/path/to/java/bin/javac"), "-version"]),
     ]
 
     # No console output
@@ -164,7 +164,7 @@ def test_macos_invalid_jdk_path(mock_tools, tmp_path, capsys):
 
     assert mock_tools.subprocess.check_output.mock_calls == [
         CALL_JAVA_HOME,
-        mock.call([Path("/path/to/java/bin/javac"), "-version"]),
+        call([Path("/path/to/java/bin/javac"), "-version"]),
     ]
 
     # No console output
@@ -490,9 +490,8 @@ def test_successful_jdk_download(
     mock_tools.os.environ = {"JAVA_HOME": "/does/not/exist"}
 
     # Mock the cached download path
-    archive = mock.MagicMock()
-    archive.__fspath__.return_value = "/path/to/download.zip"
-    mock_tools.download.file.return_value = archive
+    jdk_zip_path = create_zip_file(tmp_path / "download.zip", content=[("jdk", "jdk")])
+    mock_tools.file.download = MagicMock(return_value=jdk_zip_path)
 
     # Create a directory to make it look like Java was downloaded and unpacked.
     (tmp_path / "tools" / f"jdk-{JDK_RELEASE}+{JDK_BUILD}").mkdir(parents=True)
@@ -508,17 +507,17 @@ def test_successful_jdk_download(
     assert "** WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
 
     # Download was invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=jdk_url,
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
     )
     # The archive was unpacked
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
+        filename=os.fsdecode(jdk_zip_path), extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
-    archive.unlink.assert_called_once_with()
+    assert not jdk_zip_path.exists()
     # The download URL for JDK exists
     assert_url_resolvable(mock_tools.java.OpenJDK_download_url)
 
@@ -533,7 +532,7 @@ def test_not_installed(mock_tools, tmp_path):
         JDK.verify(mock_tools, install=False)
 
     # Download was not invoked
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_jdk_download_failure(mock_tools, tmp_path):
@@ -543,14 +542,14 @@ def test_jdk_download_failure(mock_tools, tmp_path):
     mock_tools.host_arch = "x86_64"
 
     # Mock a failure on download
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download = MagicMock(side_effect=NetworkFailure("mock"))
 
     # Invoking verify_jdk causes a network failure.
     with pytest.raises(NetworkFailure, match="Unable to mock"):
         JDK.verify(mock_tools)
 
     # That download was attempted
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
@@ -567,9 +566,8 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
     mock_tools.host_arch = "x86_64"
 
     # Mock the cached download path
-    archive = mock.MagicMock()
-    archive.__fspath__.return_value = "/path/to/download.zip"
-    mock_tools.download.file.return_value = archive
+    jdk_zip_path = create_zip_file(tmp_path / "download.zip", content=[("jdk", "jdk")])
+    mock_tools.file.download = MagicMock(return_value=jdk_zip_path)
 
     # Mock an unpack failure due to an invalid archive
     mock_tools.shutil.unpack_archive.side_effect = shutil.ReadError
@@ -578,7 +576,7 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
         JDK.verify(mock_tools)
 
     # The download occurred
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
@@ -586,8 +584,8 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
     )
     # An attempt was made to unpack the archive.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip",
+        filename=os.fsdecode(jdk_zip_path),
         extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
-    assert archive.unlink.call_count == 0
+    assert jdk_zip_path.exists()
