@@ -426,8 +426,9 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.cmdline_tools_path)
 
             # Rename the top level zip content to the final name
-            (self.cmdline_tools_path.parent / "cmdline-tools").rename(
-                self.cmdline_tools_path
+            self.tools.files.path_rename(
+                old_path=(self.cmdline_tools_path.parent / "cmdline-tools"),
+                new_path=self.cmdline_tools_path,
             )
 
             # Zip file no longer needed once unpacked.

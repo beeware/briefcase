@@ -18,6 +18,7 @@ venv*/
 .eggs/
 .tox/
 /local
+__pycache__/
 
 /pip-wheel-metadata
 # IntelliJ Idea family of suites
