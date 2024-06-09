@@ -22,7 +22,7 @@ Options
 
 The following options can be provided at the command line.
 
-``-a <app name>`` / ``--app <app name``
+``-a <app name>`` / ``--app <app name>``
 ---------------------------------------
 
 Run a specific application target in your project. This argument is only
