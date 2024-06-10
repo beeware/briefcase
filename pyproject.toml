@@ -105,7 +105,7 @@ dev = [
     # Having xdist in the pytest environment causes some weird failures on Windows with Py3.13
     "pytest-xdist == 3.6.1 ; python_version < '3.13'",
     "setuptools_scm == 8.1.0",
-    "tox == 4.15.0",
+    "tox == 4.15.1",
 ]
 docs = [
     "furo == 2024.5.6",
