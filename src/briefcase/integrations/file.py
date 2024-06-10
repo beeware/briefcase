@@ -71,34 +71,30 @@ class File(Tool):
     ):
         """Unpack an archive file in to a destination directory.
 
-        :param filename: File path for the archive
-        :param extract_dir: Target file path for where to unpack archive
-        :param kwargs: additional arguments for shutil.unpack_archive
-        """
-        self.tools.shutil.unpack_archive(
-            filename=filename,
-            extract_dir=extract_dir,
-            **{
-                **self._unpack_archive_kwargs(filename),
-                **kwargs,
-            },
-        )
-
-    def _unpack_archive_kwargs(self, archive_path: str | os.PathLike) -> dict[str, str]:
-        """Additional options for unpacking archives based on the archive's type.
-
         Additional protections for unpacking tar files were introduced in Python 3.12.
         Since tarballs can contain anything valid in a UNIX file system, these
         protections prevent unpacking potentially dangerous files. This behavior will be
         the default in Python 3.14. However, the protections can only be enabled for tar
         files...not zip files.
+
+        :param filename: File path for the archive
+        :param extract_dir: Target file path for where to unpack archive
+        :param kwargs: additional arguments for shutil.unpack_archive
         """
-        is_zip = Path(archive_path).suffix == ".zip"
-        if sys.version_info >= (3, 12) and not is_zip:  # pragma: no-cover-if-lt-py312
-            unpack_kwargs = {"filter": "data"}
-        else:
+        is_zip = Path(filename).suffix == ".zip"
+        if sys.version_info >= (3, 12):  # pragma: no-cover-if-lt-py312
+            unpack_kwargs = {"filter": "data"} if not is_zip else {}
+        else:  # pragma: no-cover-if-gte-py312
             unpack_kwargs = {}
-        return unpack_kwargs
+
+        self.tools.shutil.unpack_archive(
+            filename=filename,
+            extract_dir=extract_dir,
+            **{
+                **unpack_kwargs,
+                **kwargs,
+            },
+        )
 
     def download(self, url: str, download_path: Path, role: str | None = None) -> Path:
         """Download a given URL, caching it. If it has already been downloaded, return
