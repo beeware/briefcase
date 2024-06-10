@@ -54,7 +54,7 @@ class RCEdit(ManagedTool):
 
     def install(self):
         """Download and install RCEdit."""
-        self.tools.download.file(
+        self.tools.file.download(
             url=self.download_url,
             download_path=self.tools.base_path,
             role="RCEdit",

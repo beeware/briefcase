@@ -30,7 +30,7 @@ def build_command(tmp_path):
     command.tools.host_arch = "AMD64"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    command.tools.download = mock.MagicMock()
+    command.tools.file.download = mock.MagicMock()
     command.tools.rcedit = RCEdit(command.tools)
     return command
 

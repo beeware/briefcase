@@ -6,9 +6,9 @@ from ...utils import create_file
 
 def test_no_support_path(create_command, myapp, no_support_path_index):
     """If support_path is not listed in briefcase.toml, no cleanup will be performed."""
-    create_command.tools.download.file = mock.MagicMock()
+    create_command.tools.file.download = mock.MagicMock()
     create_command.cleanup_app_support_package(myapp)
-    create_command.tools.download.file.assert_not_called()
+    create_command.tools.file.download.assert_not_called()
 
 
 def test_support_path_does_not_exist(

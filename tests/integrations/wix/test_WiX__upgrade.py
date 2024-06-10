@@ -11,6 +11,7 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.wix import WiX
 
+from ...utils import create_zip_file
 from .conftest import WIX_DOWNLOAD_URL
 
 
@@ -25,7 +26,7 @@ def test_non_managed_install(mock_tools, tmp_path, capsys):
         wix.upgrade()
 
     # No download was attempted
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_non_existing_wix_install(mock_tools, tmp_path):
@@ -37,7 +38,7 @@ def test_non_existing_wix_install(mock_tools, tmp_path):
         wix.upgrade()
 
     # No download was attempted
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_existing_wix_install(mock_tools, tmp_path):
@@ -52,11 +53,9 @@ def test_existing_wix_install(mock_tools, tmp_path):
     # Mock the download
     wix_path = tmp_path / "tools/wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
-    wix_zip = MagicMock()
-    wix_zip.__fspath__.return_value = wix_zip_path
+    wix_zip_path = create_zip_file(tmp_path / "tools/wix.zip", content=[("wix", "wix")])
 
-    mock_tools.download.file.return_value = wix_zip
+    mock_tools.file.download = MagicMock(return_value=wix_zip_path)
 
     # Create an SDK wrapper
     wix = WiX(mock_tools, wix_home=wix_path, bin_install=True)
@@ -68,7 +67,7 @@ def test_existing_wix_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.assert_called_with(wix_path)
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
@@ -76,11 +75,11 @@ def test_existing_wix_install(mock_tools, tmp_path):
 
     # The download was unpacked
     mock_tools.shutil.unpack_archive.assert_called_with(
-        os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
+        filename=os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was removed
-    wix_zip.unlink.assert_called_with()
+    assert not wix_zip_path.exists()
 
 
 def test_download_fail(mock_tools, tmp_path):
@@ -93,7 +92,7 @@ def test_download_fail(mock_tools, tmp_path):
     (wix_path / "candle.exe").touch()
 
     # Mock the download failure
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download = MagicMock(side_effect=NetworkFailure("mock"))
 
     # Create an SDK wrapper
     wix = WiX(mock_tools, wix_home=wix_path, bin_install=True)
@@ -103,7 +102,7 @@ def test_download_fail(mock_tools, tmp_path):
         wix.upgrade()
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
@@ -123,11 +122,9 @@ def test_unpack_fail(mock_tools, tmp_path):
     (wix_path / "candle.exe").touch()
 
     # Mock the download
-    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
-    wix_zip = MagicMock()
-    wix_zip.__fspath__.return_value = wix_zip_path
+    wix_zip_path = create_zip_file(tmp_path / "tools/wix.zip", content=[("wix", "wix")])
 
-    mock_tools.download.file.return_value = wix_zip
+    mock_tools.file.download = MagicMock(return_value=wix_zip_path)
 
     # Mock an unpack failure
     mock_tools.shutil.unpack_archive.side_effect = EOFError
@@ -141,7 +138,7 @@ def test_unpack_fail(mock_tools, tmp_path):
         wix.upgrade()
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
@@ -149,8 +146,8 @@ def test_unpack_fail(mock_tools, tmp_path):
 
     # The download was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
+        filename=os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was not removed
-    assert wix_zip.unlink.call_count == 0
+    assert wix_zip_path.exists()

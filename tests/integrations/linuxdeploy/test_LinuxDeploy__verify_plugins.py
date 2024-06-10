@@ -23,7 +23,7 @@ def test_no_plugins(linuxdeploy, mock_tools, tmp_path):
 
     plugins = linuxdeploy.verify_plugins([], bundle_path=tmp_path / "bundle")
 
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
 
     assert plugins == {}
 
@@ -32,7 +32,7 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
     """The GTK plugin can be verified."""
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_tool(
+    mock_tools.file.download.side_effect = side_effect_create_mock_tool(
         tmp_path / "tools/linuxdeploy_plugins/gtk/linuxdeploy-plugin-gtk.sh"
     )
 
@@ -41,7 +41,7 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
     assert plugins.keys() == {"gtk"}
     assert isinstance(plugins["gtk"], LinuxDeployGtkPlugin)
 
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools/linuxdeploy_plugins/gtk",
         role="linuxdeploy GTK plugin",
@@ -52,7 +52,7 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
     """The Qt plugin can be verified."""
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         tmp_path
         / "tools"
         / "linuxdeploy_plugins"
@@ -65,7 +65,7 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
     assert plugins.keys() == {"qt"}
     assert isinstance(plugins["qt"], LinuxDeployQtPlugin)
 
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=(
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
             "releases/download/continuous/linuxdeploy-plugin-qt-i386.AppImage"
@@ -79,7 +79,7 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom URL plugin can be verified."""
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         tmp_path
         / "tools"
         / "linuxdeploy_plugins"
@@ -96,7 +96,7 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
     assert plugins.keys() == {"sometool"}
     assert isinstance(plugins["sometool"], LinuxDeployURLPlugin)
 
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-plugin-sometool-i386.AppImage",
         download_path=tmp_path
         / "tools"
@@ -127,7 +127,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     assert isinstance(plugins["sometool"], LinuxDeployLocalFilePlugin)
 
     # No download happened
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     # But a copy happened
     assert (tmp_path / "bundle/linuxdeploy-plugin-sometool-i386.AppImage").exists()
 
@@ -226,7 +226,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
         else:
             raise Exception("Unexpected download")
 
-    mock_tools.download.file.side_effect = mock_downloads
+    mock_tools.file.download.side_effect = mock_downloads
 
     # Local file tool is a local file.
     local_plugin_path = tmp_path / "path/to/linuxdeploy-plugin-sometool-i386.AppImage"

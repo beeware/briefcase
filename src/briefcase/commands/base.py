@@ -37,7 +37,7 @@ from briefcase.exceptions import (
     UnsupportedHostError,
 )
 from briefcase.integrations.base import ToolCache
-from briefcase.integrations.download import Download
+from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms import get_output_formats, get_platforms
 
@@ -173,7 +173,7 @@ class BaseCommand(ABC):
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
-        Download.verify(tools=self.tools)
+        File.verify(tools=self.tools)
 
         if not is_clone:
             self.validate_locale()

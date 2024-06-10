@@ -12,7 +12,7 @@ def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
     appimage_path.touch()
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         appimage_path
     )
 
@@ -23,7 +23,7 @@ def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
     assert appimage_path.exists()
 
     # A download is invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-i386.AppImage",
         download_path=tmp_path / "tools",
         role="linuxdeploy",
@@ -39,7 +39,7 @@ def test_upgrade_does_not_exist(linuxdeploy, mock_tools):
         linuxdeploy.upgrade()
 
     # The tool wasn't already installed, so an error is raised.
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path):
@@ -50,7 +50,7 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path)
     # Mock the existence of an install
     appimage_path.touch()
 
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download.side_effect = NetworkFailure("mock")
 
     # Updated the linuxdeploy wrapper; the upgrade will fail
     with pytest.raises(NetworkFailure, match="Unable to mock"):
@@ -60,7 +60,7 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path)
     assert not appimage_path.exists()
 
     # A download was invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-i386.AppImage",
         download_path=tmp_path / "tools",
         role="linuxdeploy",
