@@ -99,11 +99,11 @@ def mock_codesign(results):
     return _codesign
 
 
-def test_explicit_identity_checksum(dummy_command):
-    """If the user nominates an identity by checksum, it is used."""
+def test_explicit_app_identity_checksum(dummy_command):
+    """If the user nominates an app identity by checksum, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
@@ -119,11 +119,11 @@ def test_explicit_identity_checksum(dummy_command):
     assert dummy_command.input.prompts == []
 
 
-def test_explicit_identity_name(dummy_command):
-    """If the user nominates an identity by name, it is used."""
+def test_explicit_app_identity_name(dummy_command):
+    """If the user nominates an app identity by name, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
@@ -139,11 +139,11 @@ def test_explicit_identity_name(dummy_command):
     assert dummy_command.input.prompts == []
 
 
-def test_invalid_identity_name(dummy_command):
-    """If the user nominates an identity by name, it is used."""
+def test_invalid_app_identity_name(dummy_command):
+    """If the user nominates an app identity by name, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
@@ -155,8 +155,8 @@ def test_invalid_identity_name(dummy_command):
     assert dummy_command.input.prompts == []
 
 
-def test_implied_identity(dummy_command):
-    """If there is only one identity, it will still prompt with ad-hoc as a second
+def test_implied_app_identity(dummy_command):
+    """If there is only one app identity, it will still prompt with ad-hoc as a second
     option."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
@@ -177,7 +177,7 @@ def test_implied_identity(dummy_command):
     assert dummy_command.input.prompts
 
 
-def test_no_identities(dummy_command):
+def test_no_app_identities(dummy_command):
     """If there are no identities the user will be prompted to select with only ad-hoc
     as an option."""
     # get_identities will return some options.
@@ -195,11 +195,11 @@ def test_no_identities(dummy_command):
     assert dummy_command.input.prompts
 
 
-def test_selected_identity(dummy_command):
-    """If there is only one identity, it is automatically picked."""
+def test_select_app_identity(dummy_command):
+    """The user can select from a list of app identities."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
         "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
     }
 
@@ -208,7 +208,7 @@ def test_selected_identity(dummy_command):
 
     result = dummy_command.select_identity()
 
-    # The identity will be the only option available.
+    # The identity will be second of the returned values
     assert result == SigningIdentity(
         id="11E77FB58F13F6108B38110D5D92233C58ED38C5",
         name="iPhone Developer: Jane Smith (BXAH5H869S)",
@@ -216,6 +216,127 @@ def test_selected_identity(dummy_command):
 
     # User input was solicited once
     assert dummy_command.input.prompts == ["> "]
+
+
+def test_select_installer_identity(dummy_command):
+    """The user can select from a list of installer identities."""
+    # get_identities is invoked twice - once with app identities, and once with all identities.
+    dummy_command.get_identities.side_effect = [
+        {
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        },
+        {
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            "4C1067833814CE4738EBD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            "8903EC63C238B04C138EBD6F067833814CE47CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+        },
+    ]
+
+    # Return option 2
+    dummy_command.input.values = ["2"]
+
+    result = dummy_command.select_identity(
+        app_identity=SigningIdentity(
+            id="38EBD6F8903EC63C238B04C1067833814CE47CA3",
+            name="Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+        )
+    )
+
+    # The identity will be the second of the returned options; ad-hoc won't be added
+    assert result == SigningIdentity(
+        id="8903EC63C238B04C138EBD6F067833814CE47CA3",
+        name="Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+    )
+
+    # User input was solicited once
+    assert dummy_command.input.prompts == ["> "]
+
+
+def test_installer_identity_matching_app(dummy_command):
+    """The list of possible installer identities includes non-app identities from the
+    same team."""
+    # get_identities is invoked twice - once with app identities, and once with all identities.
+    dummy_command.get_identities.side_effect = [
+        {
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        },
+        {
+            # The app identity that will be selected
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            # A different app identity
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
+            # An installer identity that doesn't match the selected app identity
+            "1067833814CE4738EB4CD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (83DLEZ2K43)",
+            # An installer identity that *does* match the selected app identity
+            "4C1067833814CE4738EBD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+            # A different app identity
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            # Another installer identity that match the selected app identity
+            "8903EC63C238B04C138EBD6F067833814CE47CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+        },
+    ]
+
+    # Return option 2
+    dummy_command.input.values = ["2"]
+
+    result = dummy_command.select_identity(
+        app_identity=SigningIdentity(
+            id="38EBD6F8903EC63C238B04C1067833814CE47CA3",
+            name="Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+        )
+    )
+
+    # The identity will be the second of the returned options; ad-hoc won't be added,
+    # and the installer identity for the other app identity won't be included
+    assert result == SigningIdentity(
+        id="8903EC63C238B04C138EBD6F067833814CE47CA3",
+        name="Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+    )
+
+    # User input was solicited once
+    assert dummy_command.input.prompts == ["> "]
+
+
+def test_installer_identity_no_match(dummy_command):
+    """The list of possible installer identities includes non-app identities from the
+    same team."""
+    # get_identities is invoked twice - once with app identities, and once with all identities.
+    dummy_command.get_identities.side_effect = [
+        {
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        },
+        {
+            # The app identity that will be selected
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            # A different app identity
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
+            # An installer identity that doesn't match the selected app identity
+            "1067833814CE4738EB4CD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (83DLEZ2K43)",
+            # A different app identity
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        },
+    ]
+
+    # As there are no viable installer certificates, an error is raised.
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"No installer signing identities for team Z2K4383DLE could be found.",
+    ):
+        dummy_command.select_identity(
+            app_identity=SigningIdentity(
+                id="38EBD6F8903EC63C238B04C1067833814CE47CA3",
+                name="Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            )
+        )
+
+    # User input was never solicited once
+    assert dummy_command.input.prompts == []
 
 
 @pytest.mark.parametrize("verbose", [True, False])

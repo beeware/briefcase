@@ -1,0 +1,1 @@
+The ability to sign and notarize macOS .pkg installers was added.

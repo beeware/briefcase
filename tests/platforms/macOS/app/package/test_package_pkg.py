@@ -20,13 +20,20 @@ def test_gui_app(
     first_app_with_binaries,
     license_file,
     sekrit_identity,
+    sekrit_installer_identity,
     tmp_path,
 ):
     """A macOS GUI app can be packaged as a .pkg installer."""
     first_app_with_binaries.packaging_format = "pkg"
 
     # Select a codesigning identity
-    package_command.select_identity.return_value = sekrit_identity
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
@@ -50,6 +57,12 @@ def test_gui_app(
 
     # Re-package the app
     package_command.package_app(first_app_with_binaries)
+
+    # Two signing identities were selected; the second is an installer identity
+    package_command.select_identity.mock_calls == [
+        mock.call(identity=None),
+        mock.call(identity=None, app_identity=sekrit_identity),
+    ]
 
     # The app has been signed
     package_command.sign_app.assert_called_once_with(
@@ -102,11 +115,19 @@ def test_gui_app(
                 bundle_path / "installer/packages",
                 "--resources",
                 bundle_path / "installer/resources",
+                "--sign",
+                "CAFEFACE",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
             ],
             check=True,
         ),
     ]
+
+    # Notarization was performed with the installer identity
+    package_command.notarize.assert_called_once_with(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        identity=sekrit_installer_identity,
+    )
 
 
 def test_gui_app_adhoc_identity(
@@ -120,6 +141,9 @@ def test_gui_app_adhoc_identity(
     first_app_with_binaries.packaging_format = "pkg"
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
 
     # Create a pre-existing app bundle.
     create_file(
@@ -142,7 +166,6 @@ def test_gui_app_adhoc_identity(
     # Re-package the app
     package_command.package_app(
         first_app_with_binaries,
-        notarize_app=False,
         adhoc_sign=True,
     )
 
@@ -203,12 +226,16 @@ def test_gui_app_adhoc_identity(
         ),
     ]
 
+    # No notarization was performed
+    package_command.notarize.assert_not_called()
+
 
 def test_console_app(
     package_command,
     first_app_with_binaries,
     license_file,
     sekrit_identity,
+    sekrit_installer_identity,
     tmp_path,
 ):
     """A macOS console app can be packaged as a .pkg installer."""
@@ -216,12 +243,24 @@ def test_console_app(
     first_app_with_binaries.console_app = True
 
     # Select a codesigning identity
-    package_command.select_identity.return_value = sekrit_identity
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
     # Package the app
     package_command.package_app(first_app_with_binaries)
+
+    # Two signing identities were selected; the second is an installer identity
+    package_command.select_identity.mock_calls == [
+        mock.call(identity=None),
+        mock.call(identity=None, app_identity=sekrit_identity),
+    ]
 
     # The app has been signed
     package_command.sign_app.assert_called_once_with(
@@ -276,11 +315,19 @@ def test_console_app(
                 bundle_path / "installer/packages",
                 "--resources",
                 bundle_path / "installer/resources",
+                "--sign",
+                "CAFEFACE",
                 tmp_path / "base_path/dist/First App-0.0.1.pkg",
             ],
             check=True,
         ),
     ]
+
+    # Notarization was performed with the installer identity
+    package_command.notarize.assert_called_once_with(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        identity=sekrit_installer_identity,
+    )
 
 
 def test_console_app_adhoc_signed(
@@ -296,10 +343,12 @@ def test_console_app_adhoc_signed(
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
+
     # Package the app
     package_command.package_app(
         first_app_with_binaries,
-        notarize_app=False,
         adhoc_sign=True,
     )
 
@@ -362,6 +411,9 @@ def test_console_app_adhoc_signed(
         ),
     ]
 
+    # No notarization was performed
+    package_command.notarize.assert_not_called()
+
 
 def test_no_license(package_command, first_app_with_binaries, adhoc_identity, tmp_path):
     """If the project has no license file, an error is raised."""
@@ -373,7 +425,6 @@ def test_no_license(package_command, first_app_with_binaries, adhoc_identity, tm
     ):
         package_command.package_app(
             first_app_with_binaries,
-            notarize_app=False,
             adhoc_sign=True,
         )
 
@@ -425,7 +476,6 @@ def test_package_pkg_previously_built(
     # Re-package the app
     package_command.package_app(
         first_app_with_binaries,
-        notarize_app=False,
         adhoc_sign=True,
     )
 

@@ -67,6 +67,42 @@ def test_no_notarize_option(package_command):
         "adhoc_sign": False,
         "identity": None,
         "notarize_app": False,
+        "installer_identity": None,
+        "sign_installer": True,
+        "packaging_format": None,
+        "update": False,
+    }
+    assert overrides == {}
+
+
+def test_installer_identity_option(package_command):
+    """The --installer_identity option can be parsed."""
+    options, overrides = package_command.parse_options(
+        ["--installer-identity", "DEADBEEF"]
+    )
+
+    assert options == {
+        "adhoc_sign": False,
+        "identity": None,
+        "notarize_app": None,
+        "installer_identity": "DEADBEEF",
+        "sign_installer": True,
+        "packaging_format": None,
+        "update": False,
+    }
+    assert overrides == {}
+
+
+def test_no_sign_installer(package_command):
+    """The --no-sign-installer option can be parsed."""
+    options, overrides = package_command.parse_options(["--no-sign-installer"])
+
+    assert options == {
+        "adhoc_sign": False,
+        "identity": None,
+        "notarize_app": None,
+        "installer_identity": None,
+        "sign_installer": False,
         "packaging_format": None,
         "update": False,
     }
