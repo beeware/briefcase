@@ -66,7 +66,7 @@ def test_verify_exists(mock_tools, tmp_path):
     linuxdeploy = LinuxDeployDummy.verify(mock_tools)
 
     # No download occurred
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
     assert mock_tools.os.chmod.call_count == 0
 
     # The build command retains the path to the downloaded file.
@@ -81,7 +81,7 @@ def test_verify_does_not_exist_dont_install(mock_tools):
         LinuxDeployDummy.verify(mock_tools, install=False)
 
     # No download occurred
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
     assert mock_tools.os.chmod.call_count == 0
 
 
@@ -90,7 +90,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
     appimage_path = tmp_path / "tools/somewhere/linuxdeploy-dummy-wonky.AppImage"
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         appimage_path
     )
 
@@ -105,7 +105,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
     }
 
     # A download is invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
@@ -123,13 +123,13 @@ def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
     tool_path = tmp_path / "tools/somewhere/linuxdeploy-dummy.sh"
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_tool(tool_path)
+    mock_tools.file.download.side_effect = side_effect_create_mock_tool(tool_path)
 
     # Create a linuxdeploy wrapper by verification
     linuxdeploy = LinuxDeployDummy.verify(mock_tools, file_name=tool_path.name)
 
     # A download is invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy.sh",
         download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
@@ -148,13 +148,13 @@ def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
 def test_verify_linuxdeploy_download_failure(mock_tools, tmp_path):
     """If a tool/plugin doesn't exist, and a download failure occurs, an error is
     raised."""
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download.side_effect = NetworkFailure("mock")
 
     with pytest.raises(NetworkFailure, match="Unable to mock"):
         LinuxDeployDummy.verify(mock_tools)
 
     # A download was invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",

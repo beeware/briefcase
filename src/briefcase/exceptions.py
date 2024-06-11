@@ -34,7 +34,7 @@ class InvalidFormatError(BriefcaseError):
 
     def __str__(self):
         choices = ", ".join(sorted(self.choices, key=str.lower))
-        return f"Invalid format '{self.requested}'; (choose from: {choices})"
+        return f"Invalid format {self.requested!r}; (choose from: {choices})"
 
 
 class UnsupportedCommandError(BriefcaseError):
@@ -156,12 +156,18 @@ requirements (e.g., the GUI library) doesn't support {platform}.
 class InvalidSupportPackage(BriefcaseCommandError):
     def __init__(self, filename):
         self.filename = filename
-        super().__init__(f"Unable to unpack support package {filename!r}")
+        super().__init__(f"Unable to unpack support package {str(filename)!r}.")
+
+
+class InvalidStubBinary(BriefcaseCommandError):
+    def __init__(self, filename):
+        self.filename = filename
+        super().__init__(f"Unable to unpack or copy stub binary {str(filename)!r}.")
 
 
 class MissingAppMetadata(BriefcaseCommandError):
     def __init__(self, app_bundle_path):
-        super().__init__(f"Unable to find '{app_bundle_path / 'briefcase.toml'}'")
+        super().__init__(f"Unable to find {str(app_bundle_path / 'briefcase.toml')!r}")
 
 
 class MissingSupportPackage(BriefcaseCommandError):
@@ -179,6 +185,25 @@ This is likely because either Python {self.python_version_tag} and/or {self.host
 supported on {platform_name}. You will need to:
     * Use an older version of Python; or
     * Compile your own custom support package.
+"""
+        )
+
+
+class MissingStubBinary(BriefcaseCommandError):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
+        self.python_version_tag = python_version_tag
+        self.platform = platform
+        self.host_arch = host_arch
+        self.is_32bit = is_32bit
+        platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
+        super().__init__(
+            f"""\
+Unable to download {platform_name} stub binary for Python {self.python_version_tag} on {self.host_arch}.
+
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
+supported on {platform_name}. You will need to:
+    * Use an older version of Python; or
+    * Compile your own stub binary.
 """
         )
 
@@ -204,7 +229,7 @@ class InvalidDeviceError(BriefcaseCommandError):
     def __init__(self, id_type, device):
         self.id_type = id_type
         self.device = device
-        super().__init__(msg=f"Invalid device {id_type} '{device}'")
+        super().__init__(msg=f"Invalid device {id_type} {device!r}")
 
 
 class CorruptToolError(BriefcaseCommandError):

@@ -37,7 +37,22 @@ def first_app_dmg(tmp_path):
     return dmg_path
 
 
-def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
+@pytest.fixture
+def first_app_pkg(tmp_path):
+    dmg_path = tmp_path / "base_path/dist/First App-0.0.1.pkg"
+    dmg_path.parent.mkdir(parents=True)
+    with dmg_path.open("w", encoding="utf-8") as f:
+        f.write("PKG content here")
+
+    return dmg_path
+
+
+def test_notarize_app(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
     """An app can be notarized."""
     app_path = (
         tmp_path
@@ -49,7 +64,7 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
         / "First App.app"
     )
     archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
-    package_command.notarize(app_path, team_id="DEADBEEF")
+    package_command.notarize(app_path, identity=sekrit_identity)
 
     # As a result of mocking os.unlink, the zip archive won't be
     # cleaned up, so we can test for its existence, but also
@@ -66,6 +81,8 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
             "First App.app/Contents/Frameworks/Extras.framework/Resources/",
             "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
             "First App.app/Contents/Info.plist",
+            "First App.app/Contents/MacOS/",
+            "First App.app/Contents/MacOS/First App",
             "First App.app/Contents/Resources/",
             "First App.app/Contents/Resources/app_packages/",
             "First App.app/Contents/Resources/app_packages/Extras.app/",
@@ -114,10 +131,14 @@ def test_notarize_app(package_command, first_app_with_binaries, tmp_path):
     )
 
 
-def test_notarize_dmg(package_command, first_app_dmg):
+def test_notarize_dmg(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
     """A DMG can be notarized."""
 
-    package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+    package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()
@@ -152,21 +173,67 @@ def test_notarize_dmg(package_command, first_app_dmg):
     )
 
 
-def test_notarize_unknown_format(package_command, tmp_path):
+def test_notarize_pkg(
+    package_command,
+    first_app_pkg,
+    sekrit_identity,
+):
+    """A PKG can be notarized."""
+
+    package_command.notarize(first_app_pkg, identity=sekrit_identity)
+
+    # The PKG didn't require an archive file, so unlink wasn't invoked.
+    package_command.tools.os.unlink.assert_not_called()
+
+    # The calls to notarize were made
+    package_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Submit for notarization
+            mock.call(
+                [
+                    "xcrun",
+                    "notarytool",
+                    "submit",
+                    first_app_pkg,
+                    "--keychain-profile",
+                    "briefcase-macOS-DEADBEEF",
+                    "--wait",
+                ],
+                check=True,
+            ),
+            # Staple the result
+            mock.call(
+                [
+                    "xcrun",
+                    "stapler",
+                    "staple",
+                    first_app_pkg,
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+
+def test_notarize_unknown_format(package_command, sekrit_identity, tmp_path):
     """Attempting to notarize a file of unknown format raises an error."""
-    pkg_path = tmp_path / "base_path/dist/First App.pkg"
+    pkg_path = tmp_path / "base_path/dist/First App.foo"
 
     # The notarization call will fail with an error
     with pytest.raises(
         RuntimeError,
-        match=r"Don't know how to notarize a file of type .pkg",
+        match=r"Don't know how to notarize a file of type .foo",
     ):
-        package_command.notarize(pkg_path, team_id="DEADBEEF")
+        package_command.notarize(pkg_path, identity=sekrit_identity)
 
 
-def test_notarize_dmg_unknown_credentials(package_command, first_app_dmg):
-    """When notarizing a DMG, if credentials haven't been stored, the user will be
-    prompted to store them."""
+def test_notarize_unknown_credentials(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
+    """When notarizing, if credentials haven't been stored, the user will be prompted to
+    store them."""
     # Set up subprocess to fail on the first notarization attempt
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
@@ -178,7 +245,7 @@ def test_notarize_dmg_unknown_credentials(package_command, first_app_dmg):
         None,  # Successful stapling
     ]
 
-    package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+    package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()
@@ -242,6 +309,7 @@ def test_notarize_dmg_unknown_credentials(package_command, first_app_dmg):
 def test_credential_storage_failure_app(
     package_command,
     first_app_with_binaries,
+    sekrit_identity,
     tmp_path,
 ):
     """When submitting an app, if credentials haven't been stored, and storage fails, an
@@ -275,7 +343,7 @@ def test_credential_storage_failure_app(
         BriefcaseCommandError,
         match=r"Unable to store credentials for team ID DEADBEEF.",
     ):
-        package_command.notarize(app_path, team_id="DEADBEEF")
+        package_command.notarize(app_path, identity=sekrit_identity)
 
     # As a result of mocking os.unlink, the zip archive won't be
     # cleaned up, so we can test for its existence, but also
@@ -316,7 +384,11 @@ def test_credential_storage_failure_app(
     )
 
 
-def test_credential_storage_failure_dmg(package_command, first_app_dmg):
+def test_credential_storage_failure_dmg(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
     """If credentials haven't been stored, and storage fails, an error is raised."""
     # Set up subprocess to fail on the first notarization attempt,
     # then fail on the storage of credentials
@@ -336,7 +408,7 @@ def test_credential_storage_failure_dmg(package_command, first_app_dmg):
         BriefcaseCommandError,
         match=r"Unable to store credentials for team ID DEADBEEF.",
     ):
-        package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()
@@ -375,7 +447,10 @@ def test_credential_storage_failure_dmg(package_command, first_app_dmg):
 
 
 def test_credential_storage_disabled_input_app(
-    package_command, first_app_with_binaries, tmp_path
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
 ):
     """When packaging an app, if credentials haven't been stored, and input is disabled,
     an error is raised."""
@@ -405,7 +480,7 @@ def test_credential_storage_disabled_input_app(
         BriefcaseCommandError,
         match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
     ):
-        package_command.notarize(app_path, team_id="DEADBEEF")
+        package_command.notarize(app_path, identity=sekrit_identity)
 
     # As a result of mocking os.unlink, the zip archive won't be
     # cleaned up, so we can test for its existence, but also
@@ -433,7 +508,11 @@ def test_credential_storage_disabled_input_app(
     )
 
 
-def test_credential_storage_disabled_input_dmg(package_command, first_app_dmg):
+def test_credential_storage_disabled_input_dmg(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
     """When packaging a DMG, if credentials haven't been stored, and input is disabled,
     an error is raised."""
     # Set up subprocess to fail on the first notarization attempt.
@@ -451,7 +530,7 @@ def test_credential_storage_disabled_input_dmg(package_command, first_app_dmg):
         BriefcaseCommandError,
         match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
     ):
-        package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()
@@ -476,7 +555,11 @@ def test_credential_storage_disabled_input_dmg(package_command, first_app_dmg):
     )
 
 
-def test_notarize_unknown_credentials_after_storage(package_command, first_app_dmg):
+def test_notarize_unknown_credentials_after_storage(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
     """If we get a credential failure after an attempt to store, an error is raised."""
     # Set up subprocess to fail on the second notarization attempt
     package_command.tools.subprocess.run.side_effect = [
@@ -497,7 +580,7 @@ def test_notarize_unknown_credentials_after_storage(package_command, first_app_d
         BriefcaseCommandError,
         match=r"Unable to submit dist[/\\]First App.dmg for notarization.",
     ):
-        package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()
@@ -551,6 +634,7 @@ def test_notarize_unknown_credentials_after_storage(package_command, first_app_d
 def test_app_notarization_failure_with_credentials(
     package_command,
     first_app_with_binaries,
+    sekrit_identity,
     tmp_path,
 ):
     """If the notarization process for an app fails for a reason other than credentials,
@@ -580,7 +664,7 @@ def test_app_notarization_failure_with_credentials(
         BriefcaseCommandError,
         match=r"Unable to submit build[/\\]first-app[/\\]macos[/\\]app[/\\]First App.app for notarization.",
     ):
-        package_command.notarize(app_path, team_id="DEADBEEF")
+        package_command.notarize(app_path, identity=sekrit_identity)
 
     # As a result of mocking os.unlink, the zip archive won't be
     # cleaned up, so we can test for its existence, but also
@@ -608,7 +692,11 @@ def test_app_notarization_failure_with_credentials(
     )
 
 
-def test_dmg_notarization_failure_with_credentials(package_command, first_app_dmg):
+def test_dmg_notarization_failure_with_credentials(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
     """If the notarization process for a DMG fails for a reason other than credentials,
     an error is raised."""
     # Set up subprocess to fail on the first notarization attempt
@@ -625,7 +713,7 @@ def test_dmg_notarization_failure_with_credentials(package_command, first_app_dm
         BriefcaseCommandError,
         match=r"Unable to submit dist[/\\]First App.dmg for notarization.",
     ):
-        package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()
@@ -650,7 +738,11 @@ def test_dmg_notarization_failure_with_credentials(package_command, first_app_dm
     )
 
 
-def test_stapling_failure(package_command, first_app_dmg):
+def test_stapling_failure(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+):
     """If the stapling process fails, an error is raised."""
     # Set up a failure in the stapling process
     package_command.tools.subprocess.run.side_effect = [
@@ -665,7 +757,7 @@ def test_stapling_failure(package_command, first_app_dmg):
         BriefcaseCommandError,
         match=r"Unable to staple notarization onto dist[/\\]First App.dmg",
     ):
-        package_command.notarize(first_app_dmg, team_id="DEADBEEF")
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
     # The DMG didn't require an archive file, so unlink wasn't invoked.
     package_command.tools.os.unlink.assert_not_called()

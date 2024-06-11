@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
@@ -160,7 +160,11 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
 def test_supported_host_os_docker(
-    run_command, first_app, sub_kw, tmp_path, monkeypatch
+    run_command,
+    first_app,
+    sub_kw,
+    tmp_path,
+    monkeypatch,
 ):
     """A supported OS (linux) can invoke run in Docker."""
     # This also verifies that Run will call Create and Build commands
@@ -229,8 +233,8 @@ def test_supported_host_os_docker(
     )
 
 
-def test_run_app(run_command, first_app, sub_kw, tmp_path):
-    """A bootstrap binary can be started."""
+def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
+    """A bootstrap binary for a GUI app can be started."""
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -266,6 +270,171 @@ def test_run_app(run_command, first_app, sub_kw, tmp_path):
         test_mode=False,
         clean_output=False,
     )
+
+
+def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
+    """A bootstrap binary for a GUI app can be started in debug mode with arguments."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
+    # Set up tool cache
+    run_command.verify_app_tools(app=first_app)
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.subprocess._subprocess.Popen = mock.MagicMock(
+        return_value=log_popen
+    )
+
+    # Run the app
+    run_command.run_app(first_app, test_mode=False, passthrough=["foo", "--bar"])
+
+    # The process was started
+    run_command.tools.subprocess._subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+            ),
+            "foo",
+            "--bar",
+        ],
+        cwd=os.fsdecode(tmp_path / "home"),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        env=mock.ANY,
+        **sub_kw,
+    )
+    # As we're adding to the environment, all the local values will be present.
+    # Check that we've definitely set the values we care about
+    env = run_command.tools.subprocess._subprocess.Popen.call_args.kwargs["env"]
+    assert env["BRIEFCASE_DEBUG"] == "1"
+
+    # The streamer was started
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app,
+        popen=log_popen,
+        test_mode=False,
+        clean_output=False,
+    )
+
+
+def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
+    """If there's a problem starting the GUI app, an exception is raised."""
+
+    # Set up tool cache
+    run_command.verify_app_tools(app=first_app)
+
+    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
+
+    with pytest.raises(OSError):
+        run_command.run_app(first_app, test_mode=False, passthrough=[])
+
+    # The run command was still invoked
+    run_command.tools.subprocess._subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+            )
+        ],
+        cwd=os.fsdecode(tmp_path / "home"),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        **sub_kw,
+    )
+
+    # No attempt to stream was made
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_console_app(run_command, first_app, tmp_path):
+    """A bootstrap binary for a console app can be started."""
+    first_app.console_app = True
+
+    # Set up tool cache
+    run_command.verify_app_tools(app=first_app)
+
+    # Run the app
+    run_command.run_app(first_app, test_mode=False, passthrough=[])
+
+    # The process was started
+    run_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                tmp_path
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+            ],
+            cwd=tmp_path / "home",
+            bufsize=1,
+            stream_output=False,
+        )
+    ]
+
+    # No attempt to stream was made
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_console_app_passthrough(run_command, first_app, tmp_path):
+    """A console app can be started in debug mode with command line arguments."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
+    first_app.console_app = True
+
+    # Set up tool cache
+    run_command.verify_app_tools(app=first_app)
+
+    # Run the app
+    run_command.run_app(first_app, test_mode=False, passthrough=["foo", "--bar"])
+
+    # The process was started
+    run_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                tmp_path
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app",
+                "foo",
+                "--bar",
+            ],
+            cwd=tmp_path / "home",
+            bufsize=1,
+            stream_output=False,
+            env={"BRIEFCASE_DEBUG": "1"},
+        )
+    ]
+
+    # No attempt to stream was made
+    run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
+    """If there's a problem starting the console app, an exception is raised."""
+    first_app.console_app = True
+
+    # Set up tool cache
+    run_command.verify_app_tools(app=first_app)
+
+    run_command.tools.subprocess.run.side_effect = OSError
+
+    with pytest.raises(OSError):
+        run_command.run_app(first_app, test_mode=False, passthrough=[])
+
+    # The run command was still invoked
+    run_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                tmp_path
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+            ],
+            cwd=tmp_path / "home",
+            bufsize=1,
+            stream_output=False,
+        )
+    ]
+
+    # No attempt to stream was made
+    run_command._stream_app_logs.assert_not_called()
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
@@ -332,36 +501,6 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     )
 
 
-def test_run_app_failed(run_command, first_app, sub_kw, tmp_path):
-    """If there's a problem starting the app, an exception is raised."""
-
-    # Set up tool cache
-    run_command.verify_app_tools(app=first_app)
-
-    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
-
-    with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
-
-    # The run command was still invoked
-    run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [
-            os.fsdecode(
-                tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
-            )
-        ],
-        cwd=os.fsdecode(tmp_path / "home"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        **sub_kw,
-    )
-
-    # No attempt to stream was made
-    run_command._stream_app_logs.assert_not_called()
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
 def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     """If there's a problem starting the app in Docker, an exception is raised."""
@@ -418,8 +557,18 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
     run_command._stream_app_logs.assert_not_called()
 
 
-def test_run_app_test_mode(run_command, first_app, sub_kw, tmp_path, monkeypatch):
+@pytest.mark.parametrize("is_console_app", [True, False])
+def test_run_app_test_mode(
+    run_command,
+    first_app,
+    is_console_app,
+    sub_kw,
+    tmp_path,
+    monkeypatch,
+):
     """A linux App can be started in test mode."""
+    # Test mode apps are always streamed
+    first_app.console_app = is_console_app
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -460,14 +609,18 @@ def test_run_app_test_mode(run_command, first_app, sub_kw, tmp_path, monkeypatch
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
+@pytest.mark.parametrize("is_console_app", [True, False])
 def test_run_app_test_mode_docker(
     run_command,
     first_app,
+    is_console_app,
     sub_kw,
     tmp_path,
     monkeypatch,
 ):
     """A linux App can be started in Docker in test mode."""
+    # Test mode apps are always streamed
+    first_app.console_app = is_console_app
 
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
@@ -530,14 +683,18 @@ def test_run_app_test_mode_docker(
     )
 
 
+@pytest.mark.parametrize("is_console_app", [True, False])
 def test_run_app_test_mode_with_args(
     run_command,
     first_app,
+    is_console_app,
     sub_kw,
     tmp_path,
     monkeypatch,
 ):
     """A linux App can be started in test mode with args."""
+    # Test mode apps are always streamed
+    first_app.console_app = is_console_app
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -584,14 +741,18 @@ def test_run_app_test_mode_with_args(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
+@pytest.mark.parametrize("is_console_app", [True, False])
 def test_run_app_test_mode_with_args_docker(
     run_command,
     first_app,
+    is_console_app,
     sub_kw,
     tmp_path,
     monkeypatch,
 ):
     """A linux App can be started in Docker in test mode with args."""
+    # Test mode apps are always streamed
+    first_app.console_app = is_console_app
 
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"

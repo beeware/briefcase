@@ -28,6 +28,7 @@ class BuildCommand(BaseCommand):
         update_requirements: bool,
         update_resources: bool,
         update_support: bool,
+        update_stub: bool,
         no_update: bool,
         test_mode: bool,
         **options,
@@ -43,6 +44,7 @@ class BuildCommand(BaseCommand):
         :param update_resources: Should the application resources be updated before
             building?
         :param update_support: Should the application support be updated?
+        :param update_stub: Should the stub binary be updated?
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
@@ -53,6 +55,7 @@ class BuildCommand(BaseCommand):
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
             or update_support  # An explicit update of app support has been requested
+            or update_stub  # An explicit update of the stub binary has been requested
             or (
                 test_mode and not no_update
             )  # Test mode, but updates have not been disabled
@@ -62,6 +65,7 @@ class BuildCommand(BaseCommand):
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 update_support=update_support,
+                update_stub=update_stub,
                 test_mode=test_mode,
                 **options,
             )
@@ -86,6 +90,7 @@ class BuildCommand(BaseCommand):
         update_requirements: bool = False,
         update_resources: bool = False,
         update_support: bool = False,
+        update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
         **options,
@@ -109,6 +114,10 @@ class BuildCommand(BaseCommand):
                 raise BriefcaseCommandError(
                     "Cannot specify both --update-support and --no-update"
                 )
+            if update_stub:
+                raise BriefcaseCommandError(
+                    "Cannot specify both --update-stub and --no-update"
+                )
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
@@ -121,6 +130,7 @@ class BuildCommand(BaseCommand):
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 update_support=update_support,
+                update_stub=update_stub,
                 no_update=no_update,
                 test_mode=test_mode,
                 **options,
@@ -134,6 +144,7 @@ class BuildCommand(BaseCommand):
                     update_requirements=update_requirements,
                     update_resources=update_resources,
                     update_support=update_support,
+                    update_stub=update_stub,
                     no_update=no_update,
                     test_mode=test_mode,
                     **full_options(state, options),

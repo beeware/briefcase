@@ -1,0 +1,1 @@
+A reference to old-style app bundle paths was updated.

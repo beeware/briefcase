@@ -1,6 +1,7 @@
 import os
 import platform
 import shutil
+import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -45,7 +46,7 @@ def mock_tools(mock_tools) -> ToolCache:
     return mock_tools
 
 
-def mock_unpack(filename, extract_dir):
+def mock_unpack(filename, extract_dir, filter=None):
     # Create a file that would have been created by unpacking the archive
     # This includes the duplicated "cmdline-tools" folder name
     (extract_dir / "cmdline-tools/bin").mkdir(parents=True)
@@ -149,7 +150,7 @@ def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.subprocess.run.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
@@ -179,7 +180,7 @@ def test_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
@@ -221,7 +222,7 @@ def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
@@ -259,7 +260,7 @@ def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
     # The returned SDK has the expected root path.
@@ -291,7 +292,7 @@ def test_invalid_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.subprocess.run.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
@@ -337,7 +338,7 @@ def test_user_provided_sdk_wrong_cmdline_tools_ver(
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download and nothing unpacked
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
     # Required Command-line Tools installed
@@ -389,7 +390,7 @@ def test_user_provided_sdk_with_latest_cmdline_tools(
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download and nothing unpacked
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
     # Required Command-line Tools installed
@@ -435,7 +436,7 @@ def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.subprocess.run.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
@@ -470,7 +471,7 @@ def test_inconsistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     sdk = AndroidSDK.verify(mock_tools)
 
     # No calls to download, run or unpack anything.
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
     mock_tools.subprocess.run.assert_not_called()
     mock_tools.shutil.unpack_archive.assert_not_called()
 
@@ -490,7 +491,7 @@ def test_download_sdk(mock_tools, tmp_path, capsys):
 
     # The download will produce a cached file.
     cache_file = MagicMock()
-    mock_tools.download.file.return_value = cache_file
+    mock_tools.file.download = MagicMock(return_value=cache_file)
 
     # Calling unpack will create files
     mock_tools.shutil.unpack_archive.side_effect = mock_unpack
@@ -506,14 +507,16 @@ def test_download_sdk(mock_tools, tmp_path, capsys):
         "https://dl.google.com/android/repository/"
         f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
-    mock_tools.download.file.assert_called_once_with(
+    mock_tools.file.download.assert_called_once_with(
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
-        cache_file, extract_dir=cmdline_tools_base_path
+        filename=cache_file,
+        extract_dir=cmdline_tools_base_path,
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # The cached file will be deleted
@@ -550,7 +553,7 @@ def test_upgrade_existing_sdk(mock_tools, tmp_path, capsys):
 
     # The download will produce a cached file.
     cache_file = MagicMock()
-    mock_tools.download.file.return_value = cache_file
+    mock_tools.file.download = MagicMock(return_value=cache_file)
 
     # Calling unpack will create files
     mock_tools.shutil.unpack_archive.side_effect = mock_unpack
@@ -566,14 +569,16 @@ def test_upgrade_existing_sdk(mock_tools, tmp_path, capsys):
         "https://dl.google.com/android/repository/"
         f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
-    mock_tools.download.file.assert_called_once_with(
+    mock_tools.file.download.assert_called_once_with(
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
-        cache_file, extract_dir=cmdline_tools_base_path
+        filename=cache_file,
+        extract_dir=cmdline_tools_base_path,
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # The cached file will be deleted
@@ -621,7 +626,7 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
 
     # The download will produce a cached file.
     cache_file = MagicMock()
-    mock_tools.download.file.return_value = cache_file
+    mock_tools.file.download = MagicMock(return_value=cache_file)
 
     # Calling unpack will create files
     mock_tools.shutil.unpack_archive.side_effect = mock_unpack
@@ -637,14 +642,16 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
         "https://dl.google.com/android/repository/"
         f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
-    mock_tools.download.file.assert_called_once_with(
+    mock_tools.file.download.assert_called_once_with(
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
-        cache_file, extract_dir=cmdline_tools_base_path
+        filename=cache_file,
+        extract_dir=cmdline_tools_base_path,
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # The cached file will be deleted
@@ -677,7 +684,7 @@ def test_no_install(mock_tools, tmp_path):
     with pytest.raises(MissingToolError):
         AndroidSDK.verify(mock_tools, install=False)
 
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
@@ -693,7 +700,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
 
     # The download will produce a cached file
     cache_file = MagicMock()
-    mock_tools.download.file.return_value = cache_file
+    mock_tools.file.download = MagicMock(return_value=cache_file)
 
     # Calling unpack will create files
     mock_tools.shutil.unpack_archive.side_effect = mock_unpack
@@ -709,15 +716,16 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
         "https://dl.google.com/android/repository/"
         f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
-    mock_tools.download.file.assert_called_once_with(
+    mock_tools.file.download.assert_called_once_with(
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
-        cache_file,
+        filename=cache_file,
         extract_dir=cmdline_tools_base_path,
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )
 
     # The cached file will be deleted
@@ -732,7 +740,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
 
 def test_raises_networkfailure_on_connectionerror(mock_tools):
     """If an error occurs downloading the ZIP file, and error is raised."""
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download = MagicMock(side_effect=NetworkFailure("mock"))
 
     with pytest.raises(NetworkFailure, match="Unable to mock"):
         AndroidSDK.verify(mock_tools)
@@ -742,7 +750,7 @@ def test_raises_networkfailure_on_connectionerror(mock_tools):
         "https://dl.google.com/android/repository/"
         f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
-    mock_tools.download.file.assert_called_once_with(
+    mock_tools.file.download.assert_called_once_with(
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
@@ -756,7 +764,7 @@ def test_detects_bad_zipfile(mock_tools, tmp_path):
     android_sdk_root_path = tmp_path / "tools/android_sdk"
 
     cache_file = MagicMock()
-    mock_tools.download.file.return_value = cache_file
+    mock_tools.file.download = MagicMock(return_value=cache_file)
 
     # But the unpack will fail.
     mock_tools.shutil.unpack_archive.side_effect = shutil.ReadError
@@ -769,11 +777,13 @@ def test_detects_bad_zipfile(mock_tools, tmp_path):
         "https://dl.google.com/android/repository/"
         f"commandlinetools-{mock_tools._test_download_tag}-{SDK_MGR_DL_VER}_latest.zip"
     )
-    mock_tools.download.file.assert_called_once_with(
+    mock_tools.file.download.assert_called_once_with(
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
     )
     mock_tools.shutil.unpack_archive.assert_called_once_with(
-        cache_file, extract_dir=android_sdk_root_path / "cmdline-tools"
+        filename=cache_file,
+        extract_dir=android_sdk_root_path / "cmdline-tools",
+        **({"filter": "data"} if sys.version_info >= (3, 12) else {}),
     )

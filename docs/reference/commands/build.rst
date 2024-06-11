@@ -75,13 +75,23 @@ running:
     $ briefcase build
 
 ``--update-support``
-----------------------
+--------------------
 
 Update application support package before building. Equivalent to running:
 
 .. code-block:: console
 
     $ briefcase update --update-resources
+    $ briefcase build
+
+``--update-stub``
+-----------------
+
+Update stub binary before building. Equivalent to running:
+
+.. code-block:: console
+
+    $ briefcase update --update-stub
     $ briefcase build
 
 ``--test``

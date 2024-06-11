@@ -3,30 +3,33 @@ from pathlib import Path
 
 import pytest
 
+from briefcase.platforms.macOS import SigningIdentity
+
 from ....utils import create_file, create_plist_file
 
 
 @pytest.fixture
+def sekrit_identity():
+    return SigningIdentity(id="CAFEBEEF", name="Sekrit identity (DEADBEEF)")
+
+
+@pytest.fixture
+def sekrit_installer_identity():
+    return SigningIdentity(id="CAFEFACE", name="Sekrit Installer identity (DEADBEEF)")
+
+
+@pytest.fixture
+def adhoc_identity():
+    return SigningIdentity()
+
+
+@pytest.fixture
 def first_app_templated(first_app_config, tmp_path):
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
+    app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
 
     # Create the briefcase.toml file
     create_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "briefcase.toml",
+        tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
         """
 [paths]
 app_packages_path="First App.app/Contents/Resources/app_packages"
@@ -46,13 +49,7 @@ entitlements_path="Entitlements.plist"
 
     # Create the entitlements file for the app
     create_plist_file(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "Entitlements.plist",
+        tmp_path / "base_path/build/first-app/macos/app/Entitlements.plist",
         {
             "com.apple.security.cs.allow-unsigned-executable-memory": True,
             "com.apple.security.cs.disable-library-validation": True,
@@ -63,6 +60,12 @@ entitlements_path="Entitlements.plist"
     (app_path / "Contents/Resources/app_packages").mkdir(parents=True)
     (app_path / "Contents/Frameworks").mkdir(parents=True)
 
+    # Create an installer Distribution.xml
+    create_file(
+        tmp_path / "base_path/build/first-app/macos/app/installer/Distribution.xml",
+        """<?xml?>\n<installer-script></installer-script>""",
+    )
+
     # Select dmg packaging by default
     first_app_config.packaging_format = "dmg"
 
@@ -71,15 +74,10 @@ entitlements_path="Entitlements.plist"
 
 @pytest.fixture
 def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
+    app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
+
+    # Create the stub binary
+    create_file(app_path / "Contents/MacOS/First App", "Stub binary")
 
     # Create some libraries that need to be signed.
     lib_path = app_path / "Contents/Resources/app_packages"

@@ -33,7 +33,7 @@ def test_succeeds_immediately_if_emulator_installed(mock_tools, android_sdk):
 
     # No extra calls made
     mock_tools.subprocess.run.assert_not_called()
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
 
 
 def test_creates_platforms_folder(mock_tools, android_sdk):
@@ -49,7 +49,7 @@ def test_creates_platforms_folder(mock_tools, android_sdk):
 
     # No extra calls made
     mock_tools.subprocess.run.assert_not_called()
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
 
 
 def test_installs_android_emulator(mock_tools, android_sdk):

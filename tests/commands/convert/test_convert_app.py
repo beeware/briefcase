@@ -12,7 +12,10 @@ from briefcase.console import Console, Log
 @pytest.fixture
 def convert_command(tmp_path):
     return ConvertCommand(
-        base_path=tmp_path / "project", logger=Log(), console=Console()
+        base_path=tmp_path / "project",
+        data_path=tmp_path / "data",
+        logger=Log(),
+        console=Console(),
     )
 
 
@@ -76,6 +79,7 @@ def test_convert_app_unused_project_overrides(
             "briefcase_version": "37.42.7",
             "gui_framework": "None",
         },
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
     convert_command.migrate_necessary_files.assert_called_once_with(
         tmp_path / "working" / app_context["app_name"],

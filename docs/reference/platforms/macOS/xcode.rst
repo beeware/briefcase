@@ -21,11 +21,15 @@ By default, apps will be both signed and notarized when they are packaged.
 Packaging format
 ================
 
-Briefcase supports two packaging formats for a macOS Xcode project:
+Briefcase supports three packaging formats for a macOS Xcode project:
 
-1. A DMG that contains the ``.app`` bundle (the default output of ``briefcase package
-   macOS Xcode``, or by using ``briefcase package macOS Xcode -p dmg``); or
-2. A zipped ``.app`` folder (using ``briefcase package macOS Xcode -p app``).
+1. A DMG that contains the ``.app`` bundle (using ``briefcase package macOS Xcode -p
+   dmg``).
+2. A zipped ``.app`` folder (using ``briefcase package macOS Xcode -p zip``).
+3. A ``.pkg`` installer (using ``briefcase package macOS Xcode -p pkg``).
+
+``.pkg`` is the *required* format for console apps. ``.dmg`` is the
+default format for GUI apps.
 
 Icon format
 ===========
@@ -49,12 +53,7 @@ Additional options
 The following options can be provided at the command line when packaging
 macOS apps.
 
-``--no-notarize``
-~~~~~~~~~~~~~~~~~
-
-Do not submit the application for notarization. By default, apps will be
-submitted for notarization unless they have been signed with an ad-hoc
-signing identity.
+.. include:: signing_options.rst
 
 Application configuration
 =========================

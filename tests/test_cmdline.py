@@ -262,6 +262,7 @@ def test_dev_command(
         ("run --update", {"update": True}, {}),
         ("run --update-resources", {"update_resources": True}, {}),
         ("run --update-support", {"update_support": True}, {}),
+        ("run --update-stub", {"update_stub": True}, {}),
         ("run --no-update", {"no_update": True}, {}),
     ],
 )
@@ -292,6 +293,7 @@ def test_run_command(
         "update_requirements": False,
         "update_resources": False,
         "update_support": False,
+        "update_stub": False,
         "no_update": False,
         "test_mode": False,
         "passthrough": [],

@@ -207,8 +207,8 @@ to identify a specific compiled version of an application.
 
 A list of strings describing paths that will be *removed* from the project after
 the installation of the support package and app code. The paths provided will be
-interpreted relative to the app bundle folder (e.g., the ``macOS/app/My App``
-folder in the case of a macOS app).
+interpreted relative to the platform-specific build folder generated for the app
+(e.g., the ``build/my-app/macOS/app`` folder in the case of a macOS app).
 
 Paths can be:
  * An explicit reference to a single file
@@ -236,6 +236,16 @@ on an app with a formal name of "My App" would remove:
 2. The directory ``path/to/unneeded_directory``
 3. Any ``.exe`` file in ``path`` or its subdirectories.
 4. The file ``My App/content/extra.doc``.
+
+``console_app``
+~~~~~~~~~~~~~~~
+
+A Boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
+(producing a GUI app). This setting has no effect on platforms that do not support a
+console mode (e.g., web or mobile platforms). On platforms that do support console apps,
+the resulting app will write output directly to ``stdout``/``stderr`` (rather than
+writing to a system log), creating a terminal window to display this output (if the
+platform allows).
 
 ``exit_regex``
 ~~~~~~~~~~~~~~
@@ -370,6 +380,26 @@ color for splash screens.
 
 If the platform output format does not use a splash screen, this setting is
 ignored.
+
+``stub_binary``
+~~~~~~~~~~~~~~~
+
+A file path or URL pointing at a pre-compiled binary (or a zip/tarball of a binary) that
+can be used as an entry point for a bundled application.
+
+If this setting is not provided, and a stub binary is required by the platform,
+Briefcase will use the default stub binary for the platform.
+
+``stub_binary_revision``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The specific revision of the stub binary that should be used. By default, Briefcase will
+use the stub binary revision nominated by the application template. If you specify a
+stub binary revision, that will override the revision nominated by the application
+template.
+
+If you specify an explicit stub binary (using the ``stub_binary`` setting), this
+argument is ignored.
 
 ``support_package``
 ~~~~~~~~~~~~~~~~~~~
