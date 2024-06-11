@@ -51,7 +51,7 @@ test_requires = [
         return """\
 universal_build = true
 requires = [
-    "toga-cocoa~=0.4.0",
+    "toga-cocoa~=0.4.5",
     "std-nslog~=1.0.0",
 ]
 """
@@ -59,7 +59,7 @@ requires = [
     def pyproject_table_linux(self):
         return """\
 requires = [
-    "toga-gtk~=0.4.0",
+    "toga-gtk~=0.4.5",
 ]
 """
 
@@ -188,14 +188,14 @@ flatpak_sdk = "org.gnome.Sdk"
     def pyproject_table_windows(self):
         return """\
 requires = [
-    "toga-winforms~=0.4.0",
+    "toga-winforms~=0.4.5",
 ]
 """
 
     def pyproject_table_iOS(self):
         return """\
 requires = [
-    "toga-iOS~=0.4.0",
+    "toga-iOS~=0.4.5",
     "std-nslog~=1.0.0",
 ]
 """
@@ -203,23 +203,24 @@ requires = [
     def pyproject_table_android(self):
         return """\
 requires = [
-    "toga-android~=0.4.0",
+    "toga-android~=0.4.5",
 ]
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
 build_gradle_dependencies = [
-    "androidx.appcompat:appcompat:1.6.1",
     "com.google.android.material:material:1.11.0",
     # Needed for DetailedList
-    "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+    # Needed for MapView
+    # "org.osmdroid:osmdroid-android:6.1.0",
 ]
 """
 
     def pyproject_table_web(self):
         return """\
 requires = [
-    "toga-web~=0.4.0",
+    "toga-web~=0.4.5",
 ]
 style_framework = "Shoelace v2.3"
 """
