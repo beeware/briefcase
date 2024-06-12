@@ -1,1 +1,0 @@
-The formal name of an app is now validated.

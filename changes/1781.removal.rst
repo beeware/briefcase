@@ -1,1 +1,0 @@
-The macOS ``app`` packaging format has been renamed ``zip`` for consistency with Windows, and to reflect the format of the output artefact.

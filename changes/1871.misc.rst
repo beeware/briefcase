@@ -1,1 +1,0 @@
-Consolidated file-oriented operations under a new File tool and updated error handling for stub binary.

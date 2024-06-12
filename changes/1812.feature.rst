@@ -1,1 +1,0 @@
-The name of the license file can now be specified using a PEP 621-compliant format for the ``license`` setting.

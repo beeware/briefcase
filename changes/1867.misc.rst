@@ -1,1 +1,0 @@
-Console app testing was added to CI.
