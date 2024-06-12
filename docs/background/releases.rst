@@ -14,10 +14,10 @@ Features
 * Templates that use pre-compiled stub binaries can now manage that artefact as an independent resource, rather than needing to include the binary in the template repository. This significantly reduces the size of the macOS and Windows app templates. (`#933 <https://github.com/beeware/briefcase/issues/933>`__)
 * Template repositories are now fetched as blobless partial Git clones, reducing the size of initial downloads. (`#933 <https://github.com/beeware/briefcase/issues/933>`__)
 * macOS now supports the generation of ``.pkg`` installers as a packaging format. (`#1184 <https://github.com/beeware/briefcase/issues/1184>`__)
-* Android SDK Commandline Tools 12.0 is now used to build Android apps. (`#1778 <https://github.com/beeware/briefcase/issues/1778>`__)
+* Android SDK Command Line Tools 12.0 is now used to build Android apps. (`#1778 <https://github.com/beeware/briefcase/issues/1778>`__)
 * The new project wizard now includes links to known third-party GUI bootstraps. (`#1807 <https://github.com/beeware/briefcase/issues/1807>`__)
 * The name of the license file can now be specified using a PEP 621-compliant format for the ``license`` setting. (`#1812 <https://github.com/beeware/briefcase/issues/1812>`__)
-* The default Gradle dependenencies for a Toga project no longer includes ``SwipeRefreshLayout``. (`#1845 <https://github.com/beeware/briefcase/issues/1845>`__)
+* The default Gradle dependencies for a Toga project no longer includes ``SwipeRefreshLayout``. (`#1845 <https://github.com/beeware/briefcase/issues/1845>`__)
 
 Bugfixes
 --------
