@@ -84,39 +84,39 @@ def make_class_name(formal_name):
     return class_name
 
 
-def validate_document_icon(document_type, document):
+def validate_document_icon(document_type_id, document_type):
     try:
-        if not isinstance(document["icon"], str):
+        if not isinstance(document_type["icon"], str):
             raise BriefcaseConfigError(
-                f"The icon definition associated with document type {document_type!r} is not a string."
+                f"The icon definition associated with document type {document_type_id!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
-            f"Document type {document_type!r} does not define an icon."
+            f"Document type {document_type_id!r} does not define an icon."
         )
 
 
-def validate_document_description(document_type, document):
+def validate_document_description(document_type_id, document_type):
     try:
-        if not isinstance(document["description"], str):
+        if not isinstance(document_type["description"], str):
             raise BriefcaseConfigError(
-                f"The description associated with document type {document_type!r} is not a string."
+                f"The description associated with document type {document_type_id!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
-            f"A description associated with a document type '{document_type}' does not exist."
+            f"A description associated with a document type '{document_type_id}' does not exist."
         )
 
 
-def validate_document_ext(document_type, document):
+def validate_document_ext(document_type_id, document_type):
     try:
-        if not document["extension"].isalnum():
+        if not document_type["extension"].isalnum():
             raise BriefcaseConfigError(
-                f"An extension associated with a document type '{document_type}' is invalid."
+                f"An extension associated with a document type '{document_type_id}' is invalid."
             )
     except KeyError:
         raise BriefcaseConfigError(
-            f"An extension associated with a document type '{document_type}' does not exist."
+            f"An extension associated with a document type '{document_type_id}' does not exist."
         )
 
 
@@ -135,16 +135,16 @@ def validate_url(candidate):
     return True
 
 
-def validate_document_url(document_type, document):
+def validate_document_url(document_type_id, document_type):
     try:
-        validate_url(document["url"])
+        validate_url(document_type["url"])
     except KeyError:
         raise BriefcaseConfigError(
-            f"Document type {document_type!r} does not provide a URL."
+            f"Document type {document_type_id!r} does not provide a URL."
         )
     except ValueError as e:
         raise BriefcaseConfigError(
-            f"The URL associated with document type {document_type!r} is invalid: {e}"
+            f"The URL associated with document type {document_type_id!r} is invalid: {e}"
         )
 
 
@@ -310,11 +310,11 @@ class AppConfig(BaseConfig):
                 "'switch', or 'while')."
             )
 
-        for document_type, document in self.document_types.items():
-            validate_document_icon(document_type, document)
-            validate_document_description(document_type, document)
-            validate_document_ext(document_type, document)
-            validate_document_url(document_type, document)
+        for document_type_id, document_type in self.document_types.items():
+            validate_document_icon(document_type_id, document_type)
+            validate_document_description(document_type_id, document_type)
+            validate_document_ext(document_type_id, document_type)
+            validate_document_url(document_type_id, document_type)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
