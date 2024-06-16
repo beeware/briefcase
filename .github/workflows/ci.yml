@@ -86,7 +86,7 @@ jobs:
             python-version: "3.8"
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.6
+      uses: actions/checkout@v4.1.7
       with:
         fetch-depth: 0
 
@@ -136,7 +136,7 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.6
+      uses: actions/checkout@v4.1.7
       with:
         fetch-depth: 0
 
