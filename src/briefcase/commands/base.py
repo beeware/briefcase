@@ -1035,7 +1035,6 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         )
 
         self.logger.configure_stdlib_logging("cookiecutter")
-
         try:
             # Unroll the template.
             self.tools.cookiecutter(
@@ -1059,6 +1058,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist.
             raise TemplateUnsupportedVersion(branch) from e
+        except cookiecutter_exceptions.UndefinedVariableInTemplate as e:
+            raise BriefcaseConfigError(e.message) from e
 
     def generate_template(
         self,

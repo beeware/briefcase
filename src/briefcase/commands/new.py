@@ -7,7 +7,6 @@ from collections import OrderedDict
 from collections.abc import Sequence
 from email.utils import parseaddr
 from typing import Iterable
-from urllib.parse import urlparse
 
 if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     from importlib.metadata import entry_points
@@ -21,6 +20,7 @@ from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
+    validate_url,
 )
 from briefcase.console import MAX_TEXT_WIDTH
 from briefcase.console import select_option as _select_option
@@ -307,12 +307,7 @@ class NewCommand(BaseCommand):
         :returns: True. If there are any validation problems, raises ValueError with a
             diagnostic message.
         """
-        result = urlparse(candidate)
-        if not all([result.scheme, result.netloc]):
-            raise ValueError("Not a valid URL!")
-        if result.scheme not in {"http", "https"}:
-            raise ValueError("Not a valid website URL!")
-        return True
+        return validate_url(candidate)
 
     def prompt_divider(self, title: str = ""):
         """Writes a divider with an optional title."""
