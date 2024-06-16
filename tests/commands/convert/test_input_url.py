@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+from briefcase.config import validate_url
+
 
 def test_multiple_pep621_options(convert_command, monkeypatch):
     mock_select_option = MagicMock()
@@ -64,7 +66,7 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
         intro="What website URL do you want to use for the application?",
         variable="application URL",
         default="https://example.com/some-name",
-        validator=convert_command.validate_url,
+        validator=validate_url,
     )
 
 
@@ -81,7 +83,7 @@ def test_no_pep621_options(convert_command, monkeypatch):
         ),
         variable="application URL",
         default=default,
-        validator=convert_command.validate_url,
+        validator=validate_url,
         override_value=None,
     )
 

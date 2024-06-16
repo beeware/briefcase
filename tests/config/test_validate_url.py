@@ -1,5 +1,7 @@
 import pytest
 
+from briefcase.config import validate_url
+
 
 @pytest.mark.parametrize(
     "url",
@@ -7,9 +9,9 @@ import pytest
         "https://example.com",
     ],
 )
-def test_valid_url(new_command, url):
+def test_valid_url(url):
     """Test that valid URLs are accepted."""
-    assert new_command.validate_url(url)
+    assert validate_url(url)
 
 
 @pytest.mark.parametrize(
@@ -20,7 +22,7 @@ def test_valid_url(new_command, url):
         "gopher://example.com",  # URL, but not a webpage.
     ],
 )
-def test_invalid_url(new_command, url):
+def test_invalid_url(url):
     """Test that invalid URLs are rejected."""
     with pytest.raises(ValueError):
-        new_command.validate_url(url)
+        validate_url(url)
