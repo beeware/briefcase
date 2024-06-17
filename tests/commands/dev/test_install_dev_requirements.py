@@ -26,6 +26,7 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
             "-m",
             "pip",
             "install",
+            "--upgrade-strategy=eager",
             "--upgrade",
         ]
         + (["-vv"] if logging_level == LogLevel.DEEP_DEBUG else [])
@@ -58,6 +59,7 @@ def test_install_requirements_error(dev_command, first_app):
             "-m",
             "pip",
             "install",
+            "--upgrade-strategy=eager",
             "--upgrade",
             "package-one",
             "package_two",
@@ -93,6 +95,7 @@ def test_install_requirements_test_mode(dev_command, first_app):
             "-m",
             "pip",
             "install",
+            "--upgrade-strategy=eager",
             "--upgrade",
             "package-one",
             "package_two",
@@ -121,6 +124,7 @@ def test_only_test_requirements(dev_command, first_app):
             "-m",
             "pip",
             "install",
+            "--upgrade-strategy=eager",
             "--upgrade",
             "test-one",
             "test_two",
