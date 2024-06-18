@@ -89,10 +89,10 @@ class CreateCommand(BaseCommand):
     def app_template_url(self):
         """The URL for a cookiecutter repository to use when creating apps."""
         return f"https://github.com/beeware/briefcase-{self.platform}-{self.output_format}-template.git"
-    
+
     def add_options(self, parser):
         parser.add_argument(
-            "--auto-overwrite",
+            "--force",
             action="store_true",
             help="Automatically confirm overwriting existing scaffold",
         )
@@ -866,12 +866,19 @@ class CreateCommand(BaseCommand):
                         self.logger.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, auto_confirm: bool = False, **options):
+    def create_app(
+        self,
+        app: AppConfig,
+        test_mode: bool = False,
+        auto_confirm: bool = False,
+        **options,
+    ):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
-        :param auto_confirm: Should any existing scaffold be automatically overwritten? (default: False)
+        :param auto_confirm: Should any existing scaffold be automatically overwritten?
+            (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -956,7 +963,9 @@ class CreateCommand(BaseCommand):
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(app, auto_overwrite, **full_options(state, options))
+                state = self.create_app(
+                    app, auto_overwrite, **full_options(state, options)
+                )
 
         return state
 

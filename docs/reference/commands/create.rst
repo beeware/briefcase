@@ -34,7 +34,7 @@ Options
 
 The following options can be provided at the command line.
 
-``--auto-overwrite``
+``--force``
 ---------------------------------------
 
 Automatically overwrite any existing scaffold for the nominated platform instead of asking for confirmation.
