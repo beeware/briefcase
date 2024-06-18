@@ -11,7 +11,7 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.wix import WiX
 
-from ...utils import assert_url_resolvable
+from ...utils import assert_url_resolvable, create_zip_file
 from .conftest import WIX_DOWNLOAD_URL
 
 
@@ -90,7 +90,7 @@ def test_existing_wix_install(mock_tools, tmp_path):
     mock_tools.os.environ.get.assert_called_with("WIX")
 
     # No download was attempted
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
     # The returned paths are as expected
     assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
@@ -106,11 +106,9 @@ def test_download_wix(mock_tools, tmp_path):
     # Mock the download
     wix_path = tmp_path / "tools/wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
-    wix_zip = MagicMock()
-    wix_zip.__fspath__.return_value = wix_zip_path
+    wix_zip_path = create_zip_file(tmp_path / "tools/wix.zip", content=[("wix", "wix")])
 
-    mock_tools.download.file.return_value = wix_zip
+    mock_tools.file.download = MagicMock(return_value=wix_zip_path)
 
     # Verify the install. This will trigger a download
     wix = WiX.verify(mock_tools)
@@ -119,7 +117,7 @@ def test_download_wix(mock_tools, tmp_path):
     mock_tools.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
@@ -127,11 +125,11 @@ def test_download_wix(mock_tools, tmp_path):
 
     # The download was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
+        filename=os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was removed
-    wix_zip.unlink.assert_called_with()
+    assert not wix_zip_path.exists()
 
     # The returned paths are as expected
     assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
@@ -156,7 +154,7 @@ def test_dont_install(mock_tools, tmp_path):
     mock_tools.os.environ.get.assert_called_with("WIX")
 
     # No download was initiated
-    mock_tools.download.file.assert_not_called()
+    mock_tools.file.download.assert_not_called()
 
 
 def test_download_fail(mock_tools, tmp_path):
@@ -165,7 +163,7 @@ def test_download_fail(mock_tools, tmp_path):
     mock_tools.os.environ.get.return_value = None
 
     # Mock the download failure
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download = MagicMock(side_effect=NetworkFailure("mock"))
 
     # Verify the install. This will trigger a download
     with pytest.raises(NetworkFailure, match="Unable to mock"):
@@ -175,7 +173,7 @@ def test_download_fail(mock_tools, tmp_path):
     mock_tools.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
@@ -193,11 +191,9 @@ def test_unpack_fail(mock_tools, tmp_path):
     # Mock the download
     wix_path = tmp_path / "tools/wix"
 
-    wix_zip_path = os.fsdecode(tmp_path / "tools/wix.zip")
-    wix_zip = MagicMock()
-    wix_zip.__fspath__.return_value = wix_zip_path
+    wix_zip_path = create_zip_file(tmp_path / "tools/wix.zip", content=[("wix", "wix")])
 
-    mock_tools.download.file.return_value = wix_zip
+    mock_tools.file.download = MagicMock(return_value=wix_zip_path)
 
     # Mock an unpack failure
     mock_tools.shutil.unpack_archive.side_effect = EOFError
@@ -211,7 +207,7 @@ def test_unpack_fail(mock_tools, tmp_path):
     mock_tools.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
@@ -219,8 +215,8 @@ def test_unpack_fail(mock_tools, tmp_path):
 
     # The download was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
+        filename=os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
     )
 
     # The zip file was not removed
-    assert wix_zip.unlink.call_count == 0
+    assert wix_zip_path.exists()

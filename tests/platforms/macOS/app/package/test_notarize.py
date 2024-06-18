@@ -37,6 +37,16 @@ def first_app_dmg(tmp_path):
     return dmg_path
 
 
+@pytest.fixture
+def first_app_pkg(tmp_path):
+    dmg_path = tmp_path / "base_path/dist/First App-0.0.1.pkg"
+    dmg_path.parent.mkdir(parents=True)
+    with dmg_path.open("w", encoding="utf-8") as f:
+        f.write("PKG content here")
+
+    return dmg_path
+
+
 def test_notarize_app(
     package_command,
     first_app_with_binaries,
@@ -163,25 +173,67 @@ def test_notarize_dmg(
     )
 
 
+def test_notarize_pkg(
+    package_command,
+    first_app_pkg,
+    sekrit_identity,
+):
+    """A PKG can be notarized."""
+
+    package_command.notarize(first_app_pkg, identity=sekrit_identity)
+
+    # The PKG didn't require an archive file, so unlink wasn't invoked.
+    package_command.tools.os.unlink.assert_not_called()
+
+    # The calls to notarize were made
+    package_command.tools.subprocess.run.assert_has_calls(
+        [
+            # Submit for notarization
+            mock.call(
+                [
+                    "xcrun",
+                    "notarytool",
+                    "submit",
+                    first_app_pkg,
+                    "--keychain-profile",
+                    "briefcase-macOS-DEADBEEF",
+                    "--wait",
+                ],
+                check=True,
+            ),
+            # Staple the result
+            mock.call(
+                [
+                    "xcrun",
+                    "stapler",
+                    "staple",
+                    first_app_pkg,
+                ],
+                check=True,
+            ),
+        ]
+    )
+
+
 def test_notarize_unknown_format(package_command, sekrit_identity, tmp_path):
     """Attempting to notarize a file of unknown format raises an error."""
-    pkg_path = tmp_path / "base_path/dist/First App.pkg"
+    pkg_path = tmp_path / "base_path/dist/First App.foo"
 
     # The notarization call will fail with an error
     with pytest.raises(
         RuntimeError,
-        match=r"Don't know how to notarize a file of type .pkg",
+        match=r"Don't know how to notarize a file of type .foo",
     ):
         package_command.notarize(pkg_path, identity=sekrit_identity)
 
 
-def test_notarize_dmg_unknown_credentials(
+def test_notarize_unknown_credentials(
     package_command,
     first_app_dmg,
     sekrit_identity,
 ):
-    """When notarizing a DMG, if credentials haven't been stored, the user will be
-    prompted to store them."""
+    """When notarizing, if credentials haven't been stored, the user will be prompted to
+    store them."""
     # Set up subprocess to fail on the first notarization attempt
     package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(

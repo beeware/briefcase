@@ -1,1 +1,0 @@
-Templates that use pre-compiled stub binaries can now manage that artefact as an independent resource, rather than needing to include the binary in the template repository. This significantly reduces the size of the macOS and Windows app templates.

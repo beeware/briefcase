@@ -1,1 +1,0 @@
-The warning for specifying the license in pyproject.toml was updated to include additional information.

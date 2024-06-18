@@ -1,1 +1,0 @@
-Template repositories are now fetched as blobless partial Git clones, reducing the size of initial downloads.

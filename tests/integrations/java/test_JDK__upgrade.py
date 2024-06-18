@@ -13,6 +13,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.java import JDK
 
+from ...utils import create_zip_file
 from .conftest import JDK_BUILD, JDK_RELEASE
 
 
@@ -34,7 +35,7 @@ def test_non_managed_install(mock_tools, tmp_path, capsys):
         jdk.upgrade()
 
     # No download was attempted
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_non_existing_install(mock_tools, tmp_path):
@@ -46,7 +47,7 @@ def test_non_existing_install(mock_tools, tmp_path):
         jdk.upgrade()
 
     # No download was attempted
-    assert mock_tools.download.file.call_count == 0
+    assert mock_tools.file.download.call_count == 0
 
 
 def test_existing_install(mock_tools, tmp_path):
@@ -62,9 +63,8 @@ def test_existing_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path.
-    archive = MagicMock()
-    archive.__fspath__.return_value = "/path/to/download.zip"
-    mock_tools.download.file.return_value = archive
+    jdk_zip_path = create_zip_file(tmp_path / "download.zip", content=[("jdk", "jdk")])
+    mock_tools.file.download = MagicMock(return_value=jdk_zip_path)
 
     # Create a directory to make it look like Java was downloaded and unpacked.
     (tmp_path / "tools" / f"jdk-{JDK_RELEASE}+{JDK_BUILD}").mkdir(parents=True)
@@ -79,7 +79,7 @@ def test_existing_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.assert_called_with(java_home)
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
@@ -88,10 +88,10 @@ def test_existing_install(mock_tools, tmp_path):
 
     # The archive was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip", extract_dir=os.fsdecode(tmp_path / "tools")
+        filename=os.fsdecode(jdk_zip_path), extract_dir=os.fsdecode(tmp_path / "tools")
     )
     # The original archive was deleted
-    archive.unlink.assert_called_once_with()
+    assert not jdk_zip_path.exists()
 
 
 def test_macOS_existing_install(mock_tools, tmp_path):
@@ -111,9 +111,8 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path.
-    archive = MagicMock()
-    archive.__fspath__.return_value = "/path/to/download.zip"
-    mock_tools.download.file.return_value = archive
+    jdk_zip_path = create_zip_file(tmp_path / "download.zip", content=[("jdk", "jdk")])
+    mock_tools.file.download = MagicMock(return_value=jdk_zip_path)
 
     # Create a directory to make it look like Java was downloaded and unpacked.
     (tmp_path / "tools" / f"jdk-{JDK_RELEASE}+{JDK_BUILD}").mkdir(parents=True)
@@ -128,7 +127,7 @@ def test_macOS_existing_install(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.assert_called_with(tmp_path / "tools/java")
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
@@ -137,11 +136,12 @@ def test_macOS_existing_install(mock_tools, tmp_path):
 
     # The archive was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip",
+        filename=os.fsdecode(jdk_zip_path),
         extract_dir=os.fsdecode(tmp_path / "tools"),
     )
+
     # The original archive was deleted
-    archive.unlink.assert_called_once_with()
+    assert not jdk_zip_path.exists()
 
 
 def test_download_fail(mock_tools, tmp_path):
@@ -157,7 +157,7 @@ def test_download_fail(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock a failure on download
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download = MagicMock(side_effect=NetworkFailure("mock"))
 
     # Create an SDK wrapper
     jdk = JDK(mock_tools, java_home=java_home)
@@ -170,7 +170,7 @@ def test_download_fail(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.assert_called_with(java_home)
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
@@ -194,9 +194,8 @@ def test_unpack_fail(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.side_effect = rmtree
 
     # Mock the cached download path
-    archive = MagicMock()
-    archive.__fspath__.return_value = "/path/to/download.zip"
-    mock_tools.download.file.return_value = archive
+    jdk_zip_path = create_zip_file(tmp_path / "download.zip", content=[("jdk", "jdk")])
+    mock_tools.file.download = MagicMock(return_value=jdk_zip_path)
 
     # Mock an unpack failure due to an invalid archive
     mock_tools.shutil.unpack_archive.side_effect = shutil.ReadError
@@ -212,7 +211,7 @@ def test_unpack_fail(mock_tools, tmp_path):
     mock_tools.shutil.rmtree.assert_called_with(java_home)
 
     # A download was initiated
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://github.com/adoptium/temurin17-binaries/releases/download/"
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
@@ -221,8 +220,8 @@ def test_unpack_fail(mock_tools, tmp_path):
 
     # The archive was unpacked.
     mock_tools.shutil.unpack_archive.assert_called_with(
-        "/path/to/download.zip",
+        filename=os.fsdecode(jdk_zip_path),
         extract_dir=os.fsdecode(tmp_path / "tools"),
     )
     # The original archive was not deleted
-    assert archive.unlink.call_count == 0
+    assert jdk_zip_path.exists()

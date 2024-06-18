@@ -3,7 +3,7 @@ macOS
 =====
 
 Overview
---------
+========
 
 In this tutorial, we'll learn how to generate a macOS code signing identity,
 which is required to distribute your application across MacOS and iOS devices.
@@ -13,7 +13,10 @@ We will specifically focus on generating a `Developer ID Application identity
 *macOS application outside of the Mac App store*. However, the procedure for
 creating all other types of identities is exactly the same. Once you familiarize
 yourself with the general process, you'll be able to create identities required
-to upload applications to the Mac or iOS App stores without much trouble.
+to upload applications to the Mac or iOS App stores.
+
+Generating a Code Signing identity
+==================================
 
 Getting the code signing identity will require five main steps, which you will
 be guided through in this tutorial:
@@ -118,9 +121,9 @@ generate. In the Software section, choose the option of **"Developer ID
 Application"**. **It's very important you choose the right type of
 certificate**.
 
-Later on, if you want to generate another code signing certificate for other
-purposes, such as uploading your application the App store, you'll simply have
-to choose a different type of a certificate on this page.
+Later on, if you want to generate another code signing certificate for other purposes,
+such as uploading your application the App store, you'll choose a different type of a
+certificate on this page.
 
 .. image:: images/Choose_developerID_application.png
    :width: 500
@@ -184,8 +187,35 @@ certificate.
    Apple
    <https://support.apple.com/guide/keychain-access/import-and-export-keychain-items-kyca35961/mac>`__.
 
+Other types of Code Signing identities
+======================================
+
+If you want to distribute a macOS application outside the macOS App Store, a Developer
+ID Application Certificate is all you require. However, there are other types of
+certificates for other types of apps, and other modes of app distribution:
+
+* A **Developer ID Installer** certificate is needed if you're going to distribute a
+  ``.pkg`` installer of your application.
+
+* A **Mac App Distribution** certificate is used to sign your app when it's going to be
+  submitted to the Mac App Store.
+
+* A **Mac Installer Distribution** certificate is used to sign the installer package you
+  submit to the Mac App Store.
+
+The process for generating these certificates is the same as the process used to
+generate a Developer ID Application Certificate; select the appropriate option
+when generating the certificate on the Apple Developer website.
+
+When a certificate is generated, it is associated with a Team ID, representing the
+organization or individual that requested the certificate. If you need to use multiple
+certificates when signing an app (for example, when signing a ``.pkg`` installer), you
+must ensure that the certificates all come from the same Team ID - you can't sign an app
+with a certificate from one team, then sign the installer with a certificate for a
+different team.
+
 Next steps
-----------
+==========
 
 Now you can use the certificate to sign and notarize your application with the
 :doc:`briefcase package </reference/commands/package>` command.

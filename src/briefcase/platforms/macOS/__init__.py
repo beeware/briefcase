@@ -43,12 +43,16 @@ class SigningIdentity:
             self.name = ADHOC_IDENTITY_NAME
         else:
             self.name = name
-            try:
-                self.team_id = re.match(r".*\(([\dA-Z]*)\)", name)[1]
-            except TypeError:
-                raise BriefcaseCommandError(
-                    f"Couldn't extract Team ID from signing identity {name!r}"
-                )
+            self.team_id = self.team_id_from_name(name)
+
+    @classmethod
+    def team_id_from_name(cls, name):
+        try:
+            return re.match(r".*\(([\dA-Z]*)\)", name)[1]
+        except TypeError:
+            raise BriefcaseCommandError(
+                f"Couldn't extract Team ID from signing identity {name!r}"
+            )
 
     @property
     def is_adhoc(self):
@@ -419,18 +423,57 @@ class macOSSigningMixin:
     def entitlements_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
-    def select_identity(self, identity: str | None = None) -> SigningIdentity:
+    def select_identity(
+        self,
+        identity: str | None = None,
+        app_identity: SigningIdentity | None = None,
+    ) -> SigningIdentity:
         """Get the codesigning identity to use.
+
+        This can be either an application codesigning identity, or an installer
+        identity. An installer identity must be from the same Team ID as the application
+        identity.
 
         :param identity: A pre-specified identity (either the 40-digit hex checksum, or
             the string name of the identity). If provided, it will be validated against
             the list of available identities to confirm that it is a valid codesigning
             identity.
+        :param app_identity: The application signing identity to match when producing an
+            installer identity. Only non-app signing identities that match the team ID
+            for the ``app_identity`` will be presented as options. Omit this value to
+            select an app signing identity.
         :returns: The final identity to use
         """
-        # Obtain the valid codesigning identities.
+        # Obtain the valid codesigning identities. These are the identities that could
+        # be used for app signing.
         identities = self.get_identities(self.tools, "codesigning")
-        identities["-"] = ADHOC_IDENTITY_NAME
+
+        if app_identity:
+            ident_type = "installer"
+            ident_option = "--installer-identity"
+            # There's no way to explicitly request a list of installer identities. As a
+            # workaround, get the full, unfiltered list of all signing identities; then
+            # remove any identity that:
+            # 1. From a different team to the provided app identity; or
+            # 2. Appears on the list of app signing identities.
+            app_identities = identities
+            identities = {
+                key: name
+                for key, name in self.get_identities(self.tools).items()
+                if SigningIdentity.team_id_from_name(name) == app_identity.team_id
+                and key not in app_identities
+            }
+
+            if not identities:
+                raise BriefcaseCommandError(
+                    f"No installer signing identities for team {app_identity.team_id} could be found."
+                )
+        else:
+            ident_type = "application"
+            ident_option = "--identity"
+
+            # App signing also allows for the adhoc identity
+            identities["-"] = ADHOC_IDENTITY_NAME
 
         if identity:
             try:
@@ -446,11 +489,11 @@ class macOSSigningMixin:
                 except KeyError:
                     # Not found as an ID or name
                     raise BriefcaseCommandError(
-                        f"Invalid code signing identity {identity}"
+                        f"Invalid {ident_type} signing identity {identity}"
                     ) from e
 
         self.input.prompt()
-        self.input.prompt("Select code signing identity to use:")
+        self.input.prompt(f"Select {ident_type} signing identity to use:")
         self.input.prompt()
         identity = select_option(identities, input=self.input)
         identity_name = identities[identity]
@@ -468,11 +511,11 @@ In the future, you could specify this signing identity by running:
                 f"""
 In the future, you could specify this signing identity by running:
 
-    $ briefcase {self.command} macOS -i {identity}
+    $ briefcase {self.command} macOS {ident_option} {identity}
 
 or
 
-    $ briefcase {self.command} macOS -i "{identity_name}"
+    $ briefcase {self.command} macOS {ident_option} "{identity_name}"
 
 """
             )
@@ -626,6 +669,25 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def add_options(self, parser):
         super().add_options(parser)
+
+        # --no-sign-installer and --installer-identity are mutually exclusive
+        installer_signing_group = parser.add_mutually_exclusive_group()
+        installer_signing_group.add_argument(
+            "--no-sign-installer",
+            dest="sign_installer",
+            help="Do not sign the installer. Ignored unless using PKG format",
+            action="store_false",
+        )
+        installer_signing_group.add_argument(
+            "--installer-identity",
+            dest="installer_identity",
+            help=(
+                "The code signing identity to use for signing the installer. "
+                "Ignored unless using PKG format"
+            ),
+            required=False,
+        )
+
         # We use store_const:False rather than store_false so that the
         # "unspecified" value is None, rather than True, allowing for
         # a "default behavior" interpretation when `--adhoc-sign` is specified
@@ -687,7 +749,7 @@ class macOSPackageMixin(macOSSigningMixin):
                         root_dir=filename.parent,
                         base_dir=filename.name,
                     )
-            elif filename.suffix == ".dmg":
+            elif filename.suffix in {".dmg", ".pkg"}:
                 archive_filename = filename
             else:
                 archive_filename = filename
@@ -811,20 +873,26 @@ to generate a full log of the error.
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
+        sign_installer=True,
+        installer_identity=None,
         **kwargs,
     ):
         """Package an app bundle.
 
         :param app: The application to package
-        :param notarize_app: Should the app be notarized? Default: ``True`` if the
-            app has been signed with a real identity; ``False`` if the app is
-            unsigned, or an ad-hoc signing identity has been used.
-        :param identity: The code signing identity to use. This can be either
-            the 40-digit hex checksum, or the string name of the identity.
-            If unspecified, the user will be prompted for a code signing
-            identity. Ignored if ``adhoc_sign`` is ``True``.
-        :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity
-            of "-", and the resulting app will not be re-distributable.
+        :param notarize_app: Should the app be notarized? Default: ``True`` if the app
+            has been signed with a real identity; ``False`` if the app is unsigned, or
+            an ad-hoc signing identity has been used.
+        :param identity: The signing identity to use to sign the app. This can be either
+            the 40-digit hex checksum, or the string name of the identity. If
+            unspecified, the user will be prompted for an app signing identity. Ignored
+            if ``adhoc_sign`` is ``True``.
+        :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity of "-",
+            and the resulting app will not be re-distributable.
+        :param sign_installer: Should the installer be signed? Ignored unless the
+            packaging format is ``pkg``.
+        :param installer_identity: The signing identity to use when signing the
+            installer. Ignored unless the packaging format is ``pkg``.
         """
         self.logger.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
@@ -875,10 +943,22 @@ to generate a full log of the error.
             )
 
         elif app.packaging_format == "pkg":
+            # If the user has indicated they want to sign the installer (the default),
+            # and the signing identity for the app *isn't* the adhoc identity, select an
+            # identity for signing the installer.
+            if sign_installer and not identity.is_adhoc:
+                installer_identity = self.select_identity(
+                    identity=installer_identity,
+                    app_identity=identity,
+                )
+            else:
+                installer_identity = None
+
             self.package_pkg(
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                installer_identity=installer_identity,
             )
 
         else:  # Default packaging format is DMG
@@ -917,6 +997,7 @@ to generate a full log of the error.
         app: AppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        installer_identity: SigningIdentity | None,
     ):
         """Package the app as an installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1010,6 +1091,11 @@ with your app's licensing terms.
 
         # Build package
         with self.input.wait_bar(f"Building {dist_path.name}..."):
+            if installer_identity:
+                signing_options = ["--sign", installer_identity.id]
+            else:
+                signing_options = []
+
             self.tools.subprocess.run(
                 [
                     "productbuild",
@@ -1019,10 +1105,20 @@ with your app's licensing terms.
                     installer_path / "packages",
                     "--resources",
                     installer_path / "resources",
+                ]
+                + signing_options
+                + [
                     dist_path,
                 ],
                 check=True,
             )
+
+        if notarize_app:
+            self.logger.info(
+                f"Notarizing PKG with team ID {installer_identity.team_id}...",
+                prefix=app.app_name,
+            )
+            self.notarize(dist_path, identity=installer_identity)
 
     def package_dmg(
         self,

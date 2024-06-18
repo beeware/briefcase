@@ -99,14 +99,14 @@ def test_verify_tools_wrong_platform(build_command):
 
     build_command.tools.host_os = "TestOS"
     build_command.build_app = mock.MagicMock()
-    build_command.tools.download.file = mock.MagicMock()
+    build_command.tools.file.download = mock.MagicMock()
 
     # Try to invoke the build
     with pytest.raises(UnsupportedHostError):
         build_command()
 
     # The download was not attempted
-    assert build_command.tools.download.file.call_count == 0
+    assert build_command.tools.file.download.call_count == 0
 
     # But it failed, so the file won't be made executable...
     assert build_command.tools.os.chmod.call_count == 0
@@ -121,7 +121,7 @@ def test_verify_tools_download_failure(build_command):
     delattr(build_command.tools, "linuxdeploy")
 
     build_command.build_app = mock.MagicMock()
-    build_command.tools.download.file = mock.MagicMock(
+    build_command.tools.file.download = mock.MagicMock(
         side_effect=NetworkFailure("mock")
     )
 
@@ -130,7 +130,7 @@ def test_verify_tools_download_failure(build_command):
         build_command()
 
     # The download was attempted
-    build_command.tools.download.file.assert_called_with(
+    build_command.tools.file.download.assert_called_with(
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage",
         download_path=build_command.tools.base_path,
         role="linuxdeploy",
@@ -542,7 +542,7 @@ def test_build_appimage_with_support_package_update(
     build_command.tools.shutil = mock.MagicMock(spec_set=shutil)
 
     # Mock downloads so we don't hit the network
-    build_command.tools.download = mock.MagicMock()
+    build_command.tools.file.download = mock.MagicMock()
 
     # Hard code a support revision so that the download support package is fixed,
     # and no linuxdeploy plugins.

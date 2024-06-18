@@ -97,7 +97,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     mock_tools.requests.get.return_value = response
 
     # Download the file
-    filename = mock_tools.download.file(
+    filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
         download_path=mock_tools.base_path / "downloads",
     )
@@ -147,7 +147,7 @@ def test_new_download_chunked(mock_tools, file_perms):
     mock_tools.requests.get.return_value = response
 
     # Download the file
-    filename = mock_tools.download.file(
+    filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
         download_path=mock_tools.base_path,
     )
@@ -196,7 +196,7 @@ def test_already_downloaded(mock_tools):
     mock_tools.requests.get.return_value = response
 
     # Download the file
-    filename = mock_tools.download.file(
+    filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
         download_path=mock_tools.base_path,
     )
@@ -230,7 +230,7 @@ def test_missing_resource(mock_tools):
 
     # Download the file
     with pytest.raises(MissingNetworkResourceError):
-        mock_tools.download.file(
+        mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
@@ -259,7 +259,7 @@ def test_bad_resource(mock_tools):
 
     # Download the file
     with pytest.raises(BadNetworkResourceError):
-        mock_tools.download.file(
+        mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
@@ -289,7 +289,7 @@ def test_get_connection_error(mock_tools):
         NetworkFailure,
         match=r"Unable to download https\:\/\/example.com\/something\.zip\?useful=Yes",
     ):
-        mock_tools.download.file(
+        mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
@@ -320,7 +320,7 @@ def test_iter_content_connection_error(mock_tools):
 
     # Download the file
     with pytest.raises(NetworkFailure, match="Unable to download something.zip"):
-        mock_tools.download.file(
+        mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )
@@ -360,7 +360,7 @@ def test_content_connection_error(mock_tools):
 
     # Download the file
     with pytest.raises(NetworkFailure, match="Unable to download something.zip"):
-        mock_tools.download.file(
+        mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,
         )

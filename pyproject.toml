@@ -101,11 +101,11 @@ dev = [
     # Pre-commit 3.6.0 deprecated support for Python 3.8
     "pre-commit == 3.5.0 ; python_version < '3.9'",
     "pre-commit == 3.7.1 ; python_version >= '3.9'",
-    "pytest == 8.2.1",
+    "pytest == 8.2.2",
     # Having xdist in the pytest environment causes some weird failures on Windows with Py3.13
     "pytest-xdist == 3.6.1 ; python_version < '3.13'",
     "setuptools_scm == 8.1.0",
-    "tox == 4.15.0",
+    "tox == 4.15.1",
 ]
 docs = [
     "furo == 2024.5.6",
@@ -212,6 +212,7 @@ no-cover-if-is-macos = "'darwin' == os_environ.get('COVERAGE_PLATFORM', sys_plat
 no-cover-if-not-macos = "'darwin' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
 no-cover-if-is-windows = "'win32' == os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
 no-cover-if-not-windows = "'win32' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-gte-py312 = "sys_version_info > (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-is-py312 = "python_version == '3.12' and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py312 = "sys_version_info < (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py311 = "sys_version_info < (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"

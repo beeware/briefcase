@@ -1,1 +1,0 @@
-A UUID cookiecutter extension was added to support Windows MSI templating.
