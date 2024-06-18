@@ -1,0 +1,1 @@
+Added force flag to create command to overwrite existing scaffolds
