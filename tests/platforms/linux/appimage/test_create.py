@@ -23,7 +23,7 @@ def test_default_options(create_command):
     """The default options are as expected."""
     options, overrides = create_command.parse_options([])
 
-    assert options == {}
+    assert options == {"force": False}
     assert overrides == {}
 
     assert create_command.use_docker
@@ -33,7 +33,7 @@ def test_options(create_command):
     """The extra options can be parsed."""
     options, overrides = create_command.parse_options(["--no-docker"])
 
-    assert options == {}
+    assert options == {"force": False}
     assert overrides == {}
 
     assert not create_command.use_docker
