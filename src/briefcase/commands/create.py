@@ -869,14 +869,14 @@ class CreateCommand(BaseCommand):
         self,
         app: AppConfig,
         test_mode: bool = False,
-        auto_confirm: bool = False,
+        force: bool = False,
         **options,
     ):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
-        :param auto_confirm: Should any existing scaffold be automatically overwritten?
+        :param force: Should any existing scaffold be automatically overwritten?
             (default: False)
         """
         if not app.supported:
@@ -885,7 +885,7 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             self.logger.info()
-            confirm = auto_confirm or self.input.boolean_input(
+            confirm = force or self.input.boolean_input(
                 f"Application {app.app_name!r} already exists; overwrite", default=False
             )
             if not confirm:
@@ -950,7 +950,7 @@ class CreateCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
-        auto_overwrite: bool = False,
+        force: bool = False,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
@@ -958,13 +958,11 @@ class CreateCommand(BaseCommand):
         self.finalize(app)
 
         if app:
-            state = self.create_app(app, auto_overwrite, **options)
+            state = self.create_app(app, force, **options)
         else:
             state = None
             for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(
-                    app, auto_overwrite, **full_options(state, options)
-                )
+                state = self.create_app(app, force, **full_options(state, options))
 
         return state
 
