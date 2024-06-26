@@ -68,6 +68,22 @@ class GradleMixin:
     output_format = "gradle"
     platform = "android"
     platform_target_version = "0.3.15"
+    tracking_metadata_fields: list[str] = [
+        "primary_color",
+        "primary_color_dark",
+        "accent_color",
+        "splash_background_color",
+        "base_theme",
+        "version_code",
+        "build_gradle_dependencies",
+        "build_gradle_extra_content",
+        "android_manifest_attrs_extra_content",
+        "android_manifest_extra_content",
+        "android_manifest_application_attrs_extra_content",
+        "android_manifest_application_extra_content",
+        "android_manifest_activity_attrs_extra_content",
+        "android_manifest_activity_extra_content",
+    ]
 
     @property
     def packaging_formats(self):

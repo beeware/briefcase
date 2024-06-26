@@ -74,16 +74,26 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_requirements(self, app: AppConfig, **options):
+    def dist_info_path(self, app: AppConfig) -> Path:
+        """Path to dist-info for the app where the app source lives."""
+        return self.app_module_path(app).parent / f"{app.module_name}.dist-info"
+
+    def tracking_database_path(self, app: AppConfig) -> Path:
+        """Path to tracking database when running in dev mode."""
+        return self.briefcase_project_cache_path / "tracking.toml"
+
+    def update_tracking(self, app: AppConfig) -> None:
+        self.tracking_add_python_env(app)
+
+    def install_dev_requirements(self, app: AppConfig, test_mode: bool, **options):
         """Install the requirements for the app dev.
 
         This will always include test requirements, if specified.
 
         :param app: The config object for the app
+        :param test_mode: Whether the test suite is being run, rather than the app?
         """
-        requires = app.requires if app.requires else []
-        if app.test_requires:
-            requires.extend(app.test_requires)
+        requires = app.requires(test_mode=test_mode)
 
         if requires:
             with self.input.wait_bar("Installing dev requirements..."):
@@ -106,6 +116,8 @@ class DevCommand(RunAppMixin, BaseCommand):
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
+                else:
+                    self.tracking_add_requirements(app, requires=requires)
         else:
             self.logger.info("No application requirements.")
 
@@ -173,6 +185,8 @@ class DevCommand(RunAppMixin, BaseCommand):
                 clean_output=False,
             )
 
+        self.update_tracking(app)
+
     def get_environment(self, app, test_mode: bool):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
@@ -215,31 +229,35 @@ class DevCommand(RunAppMixin, BaseCommand):
                 raise BriefcaseCommandError(
                     f"Project doesn't define an application named '{appname}'"
                 ) from e
-
         else:
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."
             )
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
+
+        # Finish preparing the AppConfigs and run final checks required to for command
         self.finalize(app)
 
         self.verify_app(app)
 
-        # Look for the existence of a dist-info file.
-        # If one exists, assume that the requirements have already been
-        # installed. If a dependency update has been manually requested,
-        # do it regardless.
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
-        if not run_app:
-            # If we are not running the app, it means we should update requirements.
-            update_requirements = True
-        if update_requirements or not dist_info_path.exists():
+        # If we are not running the app, it means we should update requirements.
+        update_requirements |= not run_app
+
+        if not update_requirements:
+            update_requirements = self.tracking_is_python_env_updated(app)
+            if update_requirements:  # TODO:PR: delete
+                self.logger.warning("Python environment change detected")
+
+        if not update_requirements:
+            update_requirements = self.tracking_is_requirements_updated(
+                app, requires=app.requires(test_mode=test_mode)
+            )
+            if update_requirements:  # TODO:PR: delete
+                self.logger.warning("Requirements change detected")
+
+        if update_requirements:
             self.logger.info("Installing requirements...", prefix=app.app_name)
-            self.install_dev_requirements(app, **options)
-            write_dist_info(app, dist_info_path)
+            self.install_dev_requirements(app, test_mode, **options)
+            write_dist_info(app, self.dist_info_path(app))
 
         if run_app:
             if test_mode:
@@ -248,10 +266,10 @@ class DevCommand(RunAppMixin, BaseCommand):
                 )
             else:
                 self.logger.info("Starting in dev mode...", prefix=app.app_name)
-            env = self.get_environment(app, test_mode=test_mode)
+
             return self.run_dev_app(
                 app,
-                env,
+                env=self.get_environment(app, test_mode=test_mode),
                 test_mode=test_mode,
                 passthrough=[] if passthrough is None else passthrough,
                 **options,

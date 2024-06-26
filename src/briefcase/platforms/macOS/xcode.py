@@ -29,6 +29,12 @@ class macOSXcodeMixin(macOSMixin):
         "macOS applications require the Xcode command line "
         "tools, which are only available on macOS."
     )
+    tracking_metadata_fields: list[str] = [
+        "info",
+        "entitlements",
+        "build",
+        "universal_build",
+    ]
 
     def verify_tools(self):
         Xcode.verify(self.tools, min_version=(13, 0, 0))

@@ -32,6 +32,10 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 class StaticWebMixin:
     output_format = "static"
     platform = "web"
+    tracking_metadata_fields: list[str] = [
+        "splash_background_color",
+        "build",
+    ]
 
     def project_path(self, app):
         return self.bundle_path(app) / "www"

@@ -49,8 +49,7 @@ class OpenCommand(BaseCommand):
         app: AppConfig | None = None,
         **options,
     ):
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
+        # Finish preparing the AppConfigs and run final checks required to for command
         self.finalize(app)
 
         if app:

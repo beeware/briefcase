@@ -39,6 +39,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     supported_host_os_reason = (
         "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
+    tracking_metadata_fields: list[str] = [
+        "revision",
+        "long_description",
+        "dockerfile_extra_content",
+    ]
 
     @property
     def use_docker(self):

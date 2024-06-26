@@ -19,6 +19,13 @@ class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Flatpaks can only be built on Linux."
+    tracking_metadata_fields: list[str] = [
+        "flatpak_runtime",
+        "flatpak_runtime_version",
+        "flatpak_sdk",
+        "finish_args",
+        "finish_args",
+    ]
 
     def binary_path(self, app):
         # Flatpak doesn't really produce an identifiable "binary" as part of its
@@ -160,10 +167,11 @@ class LinuxFlatpakOpenCommand(LinuxFlatpakMixin, OpenCommand):
 class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
     description = "Build a Linux Flatpak."
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: AppConfig, test_mode: bool, **kwargs):
         """Build an application.
 
         :param app: The application to build
+        :param test_mode: Is the app being build in test mode?
         """
         self.logger.info(
             "Ensuring Flatpak runtime for the app is available...",

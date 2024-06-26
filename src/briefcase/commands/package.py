@@ -58,28 +58,16 @@ class PackageCommand(BaseCommand):
         :param update: Should the application be updated (and rebuilt) first?
         :param packaging_format: The format of the packaging artefact to create.
         """
-
-        template_file = self.bundle_path(app)
-        binary_file = self.binary_path(app)
-        if not template_file.exists():
-            state = self.create_command(app, **options)
-            state = self.build_command(app, **full_options(state, options))
-        elif update:
-            # If we're updating for packaging, update everything.
-            # This ensures everything in the packaged artefact is up to date,
-            # and is in a production state
-            state = self.update_command(
-                app,
-                update_resources=True,
-                update_requirements=True,
-                update_support=True,
-                **options,
-            )
-            state = self.build_command(app, **full_options(state, options))
-        elif not binary_file.exists():
-            state = self.build_command(app, **options)
-        else:
-            state = None
+        # Update and build the app if necessary
+        state = self.build_command(
+            app,
+            build=not self.tracking_is_built,
+            update=update,
+            update_resources=update,
+            update_requirements=update,
+            update_support=update,
+            **options,
+        )
 
         # Annotate the packaging format onto the app
         app.packaging_format = packaging_format
@@ -100,6 +88,7 @@ class PackageCommand(BaseCommand):
 
         filename = self.distribution_path(app).relative_to(self.base_path)
         self.logger.info(f"Packaged {filename}", prefix=app.app_name)
+
         return state
 
     def add_options(self, parser):
@@ -139,8 +128,7 @@ class PackageCommand(BaseCommand):
         update: bool = False,
         **options,
     ) -> dict | None:
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
+        # Finish preparing the AppConfigs and run final checks required to for command
         self.finalize(app)
 
         if app:

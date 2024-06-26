@@ -8,7 +8,7 @@ import pytest
 import tomli_w
 
 import briefcase
-from briefcase.commands.create import _is_local_requirement
+from briefcase.commands.create import is_local_requirement
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
@@ -73,7 +73,7 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
         tomli_w.dump(index, f)
 
     # Set up requirements for the app
-    myapp.requires = ["first", "second", "third"]
+    myapp._requires = ["first", "second", "third"]
 
     # Install requirements
     with pytest.raises(
@@ -89,7 +89,7 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
     assert not app_requirements_path.exists()
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second", "third"]
+    assert myapp._requires == ["first", "second", "third"]
     assert myapp.test_requires is None
 
 
@@ -100,7 +100,7 @@ def test_app_packages_no_requires(
     app_packages_path_index,
 ):
     """If an app has no requirements, install_app_requirements is a no-op."""
-    myapp.requires = None
+    myapp._requires = None
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -115,7 +115,7 @@ def test_app_packages_empty_requires(
     app_packages_path_index,
 ):
     """If an app has an empty requirements list, install_app_requirements is a no-op."""
-    myapp.requires = []
+    myapp._requires = []
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -130,7 +130,7 @@ def test_app_packages_valid_requires(
     app_packages_path_index,
 ):
     """If an app has a valid list of requirements, pip is invoked."""
-    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp._requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -158,7 +158,7 @@ def test_app_packages_valid_requires(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp._requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires is None
 
 
@@ -170,7 +170,7 @@ def test_app_packages_valid_requires_no_support_package(
 ):
     """If the template doesn't specify a support package, the cross-platform site isn't
     specified."""
-    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp._requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Override the cache of paths to specify an app packages path, but no support package path
     create_command._briefcase_toml[myapp] = {
@@ -203,7 +203,7 @@ def test_app_packages_valid_requires_no_support_package(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp._requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires is None
 
 
@@ -214,7 +214,7 @@ def test_app_packages_invalid_requires(
     app_packages_path_index,
 ):
     """If an app has a valid list of requirements, pip is invoked."""
-    myapp.requires = ["does-not-exist"]
+    myapp._requires = ["does-not-exist"]
 
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
@@ -250,7 +250,7 @@ def test_app_packages_invalid_requires(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["does-not-exist"]
+    assert myapp._requires == ["does-not-exist"]
     assert myapp.test_requires is None
 
 
@@ -261,7 +261,7 @@ def test_app_packages_offline(
     app_packages_path_index,
 ):
     """If user is offline, pip fails."""
-    myapp.requires = ["first", "second", "third"]
+    myapp._requires = ["first", "second", "third"]
 
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
@@ -299,7 +299,7 @@ def test_app_packages_offline(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second", "third"]
+    assert myapp._requires == ["first", "second", "third"]
     assert myapp.test_requires is None
 
 
@@ -316,11 +316,11 @@ def test_app_packages_install_requirements(
     create_command.logger.verbosity = logging_level
 
     # Set up the app requirements
-    myapp.requires = ["first", "second", "third"]
+    myapp._requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
     create_command.tools[myapp].app_context.run.side_effect = (
-        create_installation_artefacts(app_packages_path, myapp.requires)
+        create_installation_artefacts(app_packages_path, myapp._requires)
     )
 
     # Install the requirements
@@ -357,7 +357,7 @@ def test_app_packages_install_requirements(
     assert (app_packages_path / "third/__main__.py").exists()
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second", "third"]
+    assert myapp._requires == ["first", "second", "third"]
     assert myapp.test_requires is None
 
 
@@ -372,11 +372,11 @@ def test_app_packages_replace_existing_requirements(
     create_installation_artefacts(app_packages_path, ["old", "ancient"])()
 
     # Set up the app requirements
-    myapp.requires = ["first", "second", "third"]
+    myapp._requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
     create_command.tools[myapp].app_context.run.side_effect = (
-        create_installation_artefacts(app_packages_path, myapp.requires)
+        create_installation_artefacts(app_packages_path, myapp._requires)
     )
 
     # Install the requirements
@@ -418,7 +418,7 @@ def test_app_packages_replace_existing_requirements(
     assert not (app_packages_path / "ancient").exists()
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second", "third"]
+    assert myapp._requires == ["first", "second", "third"]
     assert myapp.test_requires is None
 
 
@@ -429,7 +429,7 @@ def test_app_requirements_no_requires(
     app_requirements_path_index,
 ):
     """If an app has no requirements, a requirements file is still written."""
-    myapp.requires = None
+    myapp._requires = None
 
     # Install requirements into the bundle
     create_command.install_app_requirements(myapp, test_mode=False)
@@ -440,7 +440,7 @@ def test_app_requirements_no_requires(
         assert f.read() == ""
 
     # Original app definitions haven't changed
-    assert myapp.requires is None
+    assert myapp._requires is None
     assert myapp.test_requires is None
 
 
@@ -452,7 +452,7 @@ def test_app_requirements_empty_requires(
 ):
     """If an app has an empty requirements list, a requirements file is still
     written."""
-    myapp.requires = []
+    myapp._requires = []
 
     # Install requirements into the bundle
     create_command.install_app_requirements(myapp, test_mode=False)
@@ -463,7 +463,7 @@ def test_app_requirements_empty_requires(
         assert f.read() == ""
 
     # Original app definitions haven't changed
-    assert myapp.requires == []
+    assert myapp._requires == []
     assert myapp.test_requires is None
 
 
@@ -476,7 +476,7 @@ def test_app_requirements_requires(
 ):
     """If an app has an empty requirements list, a requirements file is still
     written."""
-    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp._requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Install requirements into the bundle
     create_command.install_app_requirements(myapp, test_mode=False)
@@ -487,7 +487,7 @@ def test_app_requirements_requires(
         assert f.read() == f"{GENERATED_DATETIME}\nfirst\nsecond==1.2.3\nthird>=3.2.1\n"
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp._requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires is None
 
 
@@ -501,7 +501,7 @@ def test_app_requirements_requires(
         (">", "asdf+xcvb", False),
     ],
 )
-def test__is_local_requirement_altsep_respected(
+def test_is_local_requirement_altsep_respected(
     altsep,
     requirement,
     expected,
@@ -510,7 +510,7 @@ def test__is_local_requirement_altsep_respected(
     """``os.altsep`` is included as a separator when available."""
     monkeypatch.setattr(os, "sep", "/")
     monkeypatch.setattr(os, "altsep", altsep)
-    assert _is_local_requirement(requirement) is expected
+    assert is_local_requirement(requirement) is expected
 
 
 def _test_app_requirements_paths(
@@ -525,7 +525,7 @@ def _test_app_requirements_paths(
         requirement, converted = requirement
     else:
         converted = requirement
-    myapp.requires = ["first", requirement, "third"]
+    myapp._requires = ["first", requirement, "third"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
     with app_requirements_path.open(encoding="utf-8") as f:
@@ -542,7 +542,7 @@ def _test_app_requirements_paths(
         )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", requirement, "third"]
+    assert myapp._requires == ["first", requirement, "third"]
     assert myapp.test_requires is None
 
 
@@ -663,7 +663,7 @@ def test_app_packages_test_requires(
 ):
     """If an app has test requirements, they're not included unless we are in test
     mode."""
-    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp._requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
@@ -692,7 +692,7 @@ def test_app_packages_test_requires(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp._requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires == ["pytest", "pytest-tldr"]
 
 
@@ -703,7 +703,7 @@ def test_app_packages_test_requires_test_mode(
     app_packages_path_index,
 ):
     """If an app has test requirements and we're in test mode, they are installed."""
-    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp._requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
     create_command.install_app_requirements(myapp, test_mode=True)
@@ -734,7 +734,7 @@ def test_app_packages_test_requires_test_mode(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp._requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires == ["pytest", "pytest-tldr"]
 
 
@@ -746,7 +746,7 @@ def test_app_packages_only_test_requires_test_mode(
 ):
     """If an app only has test requirements and we're in test mode, they are
     installed."""
-    myapp.requires = None
+    myapp._requires = None
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
     create_command.install_app_requirements(myapp, test_mode=True)
@@ -774,5 +774,5 @@ def test_app_packages_only_test_requires_test_mode(
     )
 
     # Original app definitions haven't changed
-    assert myapp.requires is None
+    assert myapp._requires is None
     assert myapp.test_requires == ["pytest", "pytest-tldr"]

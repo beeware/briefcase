@@ -20,7 +20,7 @@ def test_minimal_AppConfig():
     assert config.version == "1.2.3"
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
-    assert config.requires is None
+    assert config._requires is None
 
     # Derived properties have been set.
     assert config.bundle_name == "myapp"
@@ -71,7 +71,7 @@ def test_extra_attrs():
     assert config.description == "A simple app"
     assert config.long_description == "A longer description\nof the app"
     assert config.template == "/path/to/template"
-    assert config.requires == ["first", "second", "third"]
+    assert config._requires == ["first", "second", "third"]
 
     # Properties that are derived by default have been set explicitly
     assert config.formal_name == "My App!"

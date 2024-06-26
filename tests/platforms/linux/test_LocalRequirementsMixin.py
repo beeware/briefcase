@@ -267,7 +267,7 @@ def test_install_app_requirements_with_locals(
     """If the app has local requirements, they are compiled into sdists for
     installation."""
     # Add local requirements
-    first_app_config.requires.extend([first_package, second_package, third_package])
+    first_app_config._requires.extend([first_package, second_package, third_package])
 
     # Mock the side effect of building an sdist
     def build_sdist(*args, **kwargs):
@@ -373,7 +373,7 @@ def test_install_app_requirements_with_bad_local(
 ):
     """If the app has local requirement that can't be built, an error is raised."""
     # Add a local requirement
-    first_app_config.requires.append(first_package)
+    first_app_config._requires.append(first_package)
 
     # Mock the building an sdist raising an error
     create_command.tools.subprocess.check_output.side_effect = (
@@ -425,7 +425,7 @@ def test_install_app_requirements_with_missing_local_build(
     """If the app references a requirement that needs to be built, but is missing, an
     error is raised."""
     # Define a local requirement, but don't create the files it points at
-    first_app_config.requires.append(str(tmp_path / "local/first"))
+    first_app_config._requires.append(str(tmp_path / "local/first"))
 
     # Install requirements
     with pytest.raises(
@@ -457,7 +457,7 @@ def test_install_app_requirements_with_bad_local_file(
     """If the app references a local requirement file that doesn't exist, an error is
     raised."""
     # Add a local requirement that doesn't exist
-    first_app_config.requires.append(str(tmp_path / "local/missing-2.3.4.tar.gz"))
+    first_app_config._requires.append(str(tmp_path / "local/missing-2.3.4.tar.gz"))
 
     # Install requirements
     with pytest.raises(

@@ -36,6 +36,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     supported_host_os_reason = (
         "Linux AppImages can only be built on Linux, or on macOS using Docker."
     )
+    tracking_metadata_fields: list[str] = ["manylinux", "dockerfile_extra_content"]
 
     def appdir_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.AppDir"

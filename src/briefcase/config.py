@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import keyword
 import re
@@ -212,12 +214,12 @@ class AppConfig(BaseConfig):
         self.bundle = bundle
         # Description can only be a single line. Ignore everything else.
         self.description = description.split("\n")[0]
-        self.sources = sources
+        self._sources = sources
         self.formal_name = app_name if formal_name is None else formal_name
         self.url = url
         self.author = author
         self.author_email = author_email
-        self.requires = requires
+        self._requires = requires
         self.icon = icon
         self.document_types = {} if document_type is None else document_type
         self.permission = {} if permission is None else permission
@@ -256,8 +258,8 @@ class AppConfig(BaseConfig):
             )
 
         # Sources list doesn't include any duplicates
-        source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
-        if len(self.sources) != len(source_modules):
+        source_modules = {source.rsplit("/", 1)[-1] for source in self._sources}
+        if len(self._sources) != len(source_modules):
             raise BriefcaseConfigError(
                 f"The `sources` list for {self.app_name!r} contains duplicated "
                 "package names."
@@ -270,11 +272,11 @@ class AppConfig(BaseConfig):
                 f"package named {self.module_name!r}."
             )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.bundle_identifier} v{self.version} AppConfig>"
 
     @property
-    def module_name(self):
+    def module_name(self) -> str:
         """The module name for the app.
 
         This is derived from the name, but:
@@ -283,7 +285,7 @@ class AppConfig(BaseConfig):
         return self.app_name.replace("-", "_")
 
     @property
-    def bundle_name(self):
+    def bundle_name(self) -> str:
         """The bundle name for the app.
 
         This is derived from the app name, but:
@@ -292,7 +294,7 @@ class AppConfig(BaseConfig):
         return self.app_name.replace("_", "-")
 
     @property
-    def bundle_identifier(self):
+    def bundle_identifier(self) -> str:
         """The bundle identifier for the app.
 
         This is derived from the bundle and the bundle name, joined by a `.`.
@@ -300,7 +302,7 @@ class AppConfig(BaseConfig):
         return f"{self.bundle}.{self.bundle_name}"
 
     @property
-    def class_name(self):
+    def class_name(self) -> str:
         """The class name for the app.
 
         This is derived from the formal name for the app.
@@ -308,19 +310,19 @@ class AppConfig(BaseConfig):
         return make_class_name(self.formal_name)
 
     @property
-    def package_name(self):
+    def package_name(self) -> str:
         """The bundle name of the app, with `-` replaced with `_` to create something
         that can be used a namespace identifier on Python or Java, similar to
         `module_name`."""
         return self.bundle.replace("-", "_")
 
-    def PYTHONPATH(self, test_mode):
+    def PYTHONPATH(self, test_mode: bool) -> list[str]:
         """The PYTHONPATH modifications needed to run this app.
 
         :param test_mode: Should test_mode sources be included?
         """
         paths = []
-        sources = self.sources
+        sources = self._sources
         if test_mode and self.test_sources:
             sources.extend(self.test_sources)
 
@@ -330,7 +332,7 @@ class AppConfig(BaseConfig):
                 paths.append(path)
         return paths
 
-    def main_module(self, test_mode: bool):
+    def main_module(self, test_mode: bool) -> str:
         """The path to the main module for the app.
 
         In normal operation, this is ``app.module_name``; however,
@@ -342,6 +344,20 @@ class AppConfig(BaseConfig):
             return f"tests.{self.module_name}"
         else:
             return self.module_name
+
+    def requires(self, test_mode: bool = False) -> list[str]:
+        """App requirements incorporating whether test mode is active."""
+        requires = self._requires.copy() if self._requires else []
+        if test_mode and self.test_requires:
+            requires.extend(self.test_requires)
+        return requires
+
+    def sources(self, test_mode: bool = False) -> list[str]:
+        """App sources incorporating whether test mode is active."""
+        sources = self._sources.copy() if self._sources else []
+        if test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
 
 
 def merge_config(config, data):
@@ -467,9 +483,11 @@ def parse_config(config_file, platform, output_format, logger):
 
     # Merge the PEP621 configuration (if it exists)
     try:
-        merge_pep621_config(global_config, pyproject["project"])
+        pep612_config = pyproject["project"]
     except KeyError:
         pass
+    else:
+        merge_pep621_config(global_config, pep612_config)
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())

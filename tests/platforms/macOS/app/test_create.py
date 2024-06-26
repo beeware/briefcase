@@ -333,7 +333,7 @@ def test_install_app_packages(
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
     create_command.tools.host_arch = host_arch
-    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated._requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Mock the result of finding the binary packages - 2 of the packages are binary;
     # the version on the loosely specified package doesn't match the lower bound.
@@ -458,7 +458,7 @@ def test_install_app_packages_no_binary(
     create_installed_package(bundle_path / f"app_packages.{other_arch}", "legacy")
 
     create_command.tools.host_arch = host_arch
-    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated._requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Mock the result of finding no binary packages.
     create_command.find_binary_packages = mock.Mock(return_value=[])
@@ -534,7 +534,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
     create_installed_package(bundle_path / "app_packages.x86_64", "legacy")
 
     create_command.tools.host_arch = "arm64"
-    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated._requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Mock the result of finding the binary packages - 2 of the packages are binary;
     # the version on the loosely specified package doesn't match the lower bound.
@@ -657,7 +657,7 @@ def test_install_app_packages_non_universal(
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
     create_command.tools.host_arch = host_arch
-    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated._requires = ["first", "second==1.2.3", "third>=3.2.1"]
     first_app_templated.universal_build = False
 
     # Mock the find_binary_packages command so we can confirm it wasn't invoked.

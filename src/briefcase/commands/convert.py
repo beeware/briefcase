@@ -690,6 +690,7 @@ class ConvertCommand(NewCommand):
             cookiecutter.
         :param template: The cookiecutter template to use.
         :param template_branch: The git branch that the template should use.
+        :param project_overrides: Project configuration overrides from CLI
         """
         self.input.prompt()
         self.input.prompt("Let's setup an existing project as a Briefcase app!")
@@ -735,7 +736,7 @@ To run your application, type:
         )
 
     def validate_pyproject_file(self) -> None:
-        """Cannot setup new app if it already has briefcase settings in pyproject."""
+        """Cannot set up new app if it already has briefcase settings in pyproject."""
         if not (self.base_path / "pyproject.toml").exists():
             raise BriefcaseCommandError(
                 "Cannot automatically set up Briefcase for a project without a "
@@ -757,13 +758,13 @@ To run your application, type:
         project_overrides: list[str] = None,
         **options,
     ):
-        # Confirm host compatibility, and that all required tools are available.
-        # There are no apps, so finalize() will be a no op on app configurations.
+        # Finish preparing the AppConfigs and run final checks required to for command
+        # (There are no apps, so finalize() will be a no op on app configurations)
         self.finalize()
 
         self.validate_pyproject_file()
 
-        # Setup the app for briefcase
+        # Set up the app for briefcase
         with TemporaryDirectory() as tmp_path:
             tmp_path = Path(tmp_path)
             self.convert_app(
