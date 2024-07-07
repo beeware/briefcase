@@ -96,7 +96,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Get Packages
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4.1.8
       with:
         name: ${{ needs.package.outputs.artifact-name }}
         path: dist
@@ -154,7 +154,7 @@ jobs:
         extra: dev
 
     - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4.1.8
       with:
         pattern: coverage-data-*
         merge-multiple: true
