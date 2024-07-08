@@ -1,2 +1,0 @@
-Changed android/gradle URL to https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
-because the previous location no longer existed
