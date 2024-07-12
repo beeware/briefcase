@@ -50,3 +50,14 @@ def main():
     main_window = {{{{ cookiecutter.class_name }}}}()
     sys.exit(app.exec())
 """
+
+    def pyproject_table_briefcase_app_extra_content(self):
+        # Include PySide6-Addons, even though it isn't used, as a way to exercise
+        # signing of apps that include nested frameworks and apps. See #1891 for
+        # details.
+        return """
+requires = [
+    "PySide6-Essentials~=6.5",
+    "PySide6-Addons~=6.5",
+]
+"""
