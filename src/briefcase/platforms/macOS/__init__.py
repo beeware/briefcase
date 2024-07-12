@@ -602,26 +602,22 @@ or
         sign_targets.append(bundle_path)
 
         # Run signing through a ThreadPoolExecutor so that they run in parallel.
-        # However, we need to ensure that objects are signed from the inside out
-        # (i.e., a folder must be signed *after* all it's contents has been
-        # signed). To do this, we sort the list of signing targets in reverse
-        # lexicographic order, and then group all the signing targets by parent.
-        # This sorts all the signable files into folders; and sign all files in
-        # a folder before sorting the next group. This ensures that longer paths
-        # are signed first, and all files in a folder are signed before the
-        # folder is signed.
+        # However, we need to ensure that objects are signed from the inside out (i.e.,
+        # a folder must be signed *after* all it's contents has been signed, and files
+        # in a folder must be signed *after* all subfolders in that same folder). To do
+        # this, we sort the list of signing targets in depth-first directory order.
         #
-        # NOTE: We are relying on the fact that the final iteration order
-        # produced by groupby() reflects the order in which groups are found in
-        # the input data. The documentation for groupby() says that a new break
-        # is created every time a new group is found in the input data; sorting
-        # the input in reverse order ensures that only one group is found per folder,
-        # and that the deepest folder is found first.
+        # NOTE: We are relying on the fact that the final iteration order produced by
+        # groupby() reflects the order in which groups are found in the input data. The
+        # documentation for groupby() says that a new break is created every time a new
+        # group is found in the input data; sorting the input in reverse order ensures
+        # that only one group is found per folder, and that the deepest folder is found
+        # first.
         progress_bar = self.input.progress_bar()
         task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
         with progress_bar:
             for _, names in itertools.groupby(
-                sorted(sign_targets, reverse=True),
+                self.tools.file.sorted_depth_first(sign_targets),
                 lambda name: name.parent,
             ):
                 with concurrent.futures.ThreadPoolExecutor() as executor:

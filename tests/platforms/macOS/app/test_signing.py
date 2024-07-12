@@ -713,6 +713,6 @@ def test_sign_app_with_failure(
         # coverage we need to. However, win32 doesn't handle executable permissions
         # the same as linux/unix, `unknown.binary` is identified as a signing target.
         # We ignore this discrepancy for testing purposes.
-        assert len(output.strip("\n").split("\n")) == (7 if verbose else 1)
+        assert len(output.strip("\n").split("\n")) == (11 if verbose else 1)
     else:
-        assert len(output.strip("\n").split("\n")) == (6 if verbose else 1)
+        assert len(output.strip("\n").split("\n")) == (10 if verbose else 1)
