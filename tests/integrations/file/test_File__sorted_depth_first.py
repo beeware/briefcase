@@ -55,6 +55,6 @@ def test_sorted_depth_first(files, sorted, tmp_path):
         if file_path.suffix:
             create_file(tmp_path / file_path, content=str(file_path))
 
-    assert [
-        str(path.relative_to(tmp_path)) for path in File.sorted_depth_first(paths)
-    ] == sorted
+    assert File.sorted_depth_first(paths) == [
+        tmp_path / file_path for file_path in sorted
+    ]
