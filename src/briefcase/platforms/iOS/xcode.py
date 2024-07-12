@@ -30,6 +30,11 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_
 
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = "Xcode"
+    tracking_metadata_fields: list[str] = [
+        "splash_background_color",
+        "info",
+        "build",
+    ]
 
     @property
     def packaging_formats(self):

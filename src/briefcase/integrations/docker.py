@@ -925,7 +925,7 @@ class DockerAppContext(Tool):
                             f"HOST_GID={self.tools.os.getgid()}",
                             Path(
                                 self.app_base_path,
-                                *self.app.sources[0].split("/")[:-1],
+                                *self.app.sources()[0].split("/")[:-1],
                             ),
                         ]
                         + (extra_build_args if extra_build_args is not None else []),

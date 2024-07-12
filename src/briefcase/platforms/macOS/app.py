@@ -25,6 +25,11 @@ from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
 
 class macOSAppMixin(macOSMixin):
     output_format = "app"
+    tracking_metadata_fields: list[str] = [
+        "info",
+        "entitlements",
+        "build",
+    ]
 
     def project_path(self, app):
         return self.binary_path(app) / "Contents"

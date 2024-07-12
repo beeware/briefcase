@@ -60,8 +60,7 @@ class PublishCommand(BaseCommand):
         channel: str | None = None,
         **options,
     ):
-        # Confirm host compatibility, that all required tools are available,
-        # and that all app configurations are finalized.
+        # Finish preparing the AppConfigs and run final checks required to for command
         self.finalize()
 
         # Check the apps have been built first.

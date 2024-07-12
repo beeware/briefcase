@@ -37,7 +37,7 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
     # requirements for the current platform.
     create_command.tools.host_arch = "wonky"
 
-    first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+    first_app_generated._requires = ["something==1.2.3", "other>=2.3.4"]
 
     create_command.tools[first_app_generated].app_context = MagicMock(
         spec_set=Subprocess
