@@ -34,6 +34,44 @@ class File(Tool):
         tools.file = File(tools=tools)
         return tools.file
 
+    @classmethod
+    def sorted_depth_first(cls, paths):
+        """Sort a list of paths, so that they appear in lexical order, with
+        subdirectories of a folder sorting before files in the same directory.
+
+        :param paths: The list of paths to sort.
+        :param reverse: Should the list be returned in reverse sorting order
+        :returns: The sorted list of paths
+        """
+
+        # The sort key for a path is is a list of triples. The path is split into
+        # constituent parts; each part is converted into a triple of:
+        #
+        #    (is not a dir, is a leaf, path to this part)
+        #
+        # For example, the path "/foo/bar/whiz.txt" would have the key:
+        #
+        #  [ (0, 0, "/foo"), (0, 0, "/foo/bar"), (1, 1, "/foo/bar/whiz.txt")
+        #
+        # To see how this works, consider a comparison when sorting the contents of the
+        # folder /foo. All subfolders of /foo/bar will return (0, 0, "/foo/bar") as the
+        # second entry in the key, so they'll sort as equal, with ties being resolved by
+        # later elements in the key. The folder /foo/bar itself will have a key of (0,
+        # 1, "/foo/bar"), so it will sort *after* any subfolder content. The file
+        # /foo/something.txt will have the key (1, 1, "foo/something.txt"); this means
+        # that files in foo will come *after* any subfolders.
+        def sort_key(p):
+            return [
+                (
+                    not Path(*p.parts[:t]).is_dir(),
+                    t == len(p.parts),
+                    Path(*p.parts[:t]),
+                )
+                for t in range(len(p.parts) + 1)
+            ]
+
+        return sorted(paths, key=sort_key)
+
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?
 
