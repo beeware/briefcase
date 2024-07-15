@@ -1,9 +1,11 @@
 import logging
+from unittest.mock import PropertyMock
 
+import git
 import pytest
 
 from briefcase.console import LogLevel, RichLoggingHandler
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.git import Git
 
 
@@ -49,3 +51,31 @@ def test_git_stdlib_logging(mock_tools, logging_level, handler_expected):
 
     # reset handlers since they are persistent
     logging.getLogger("git").handlers.clear()
+
+
+@pytest.mark.parametrize("version", [(2, 17, 0), (2, 45, 2), (3, 0, 0)])
+def test_git_version_valid(mock_tools, version, monkeypatch):
+    """A valid Git version is accepted."""
+    monkeypatch.setattr(
+        git.cmd.Git,
+        "version_info",
+        PropertyMock(return_value=version),
+    )
+
+    Git.verify(mock_tools)
+
+
+@pytest.mark.parametrize("version", [(2, 16, 6), (2, 13, 2), (1, 0, 0)])
+def test_git_version_invalid(mock_tools, version, monkeypatch):
+    """An invalid Git version is rejected."""
+    monkeypatch.setattr(
+        git.cmd.Git,
+        "version_info",
+        PropertyMock(return_value=version),
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=f"At least Git v2.17.0 is required; however, v{'.'.join(map(str, version))} is installed.",
+    ):
+        Git.verify(mock_tools)
