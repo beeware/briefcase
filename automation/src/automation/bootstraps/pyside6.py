@@ -51,13 +51,13 @@ def main():
     sys.exit(app.exec())
 """
 
-    def pyproject_table_briefcase_app_extra_content(self):
-        # Include PySide6-Addons, even though it isn't used, as a way to exercise
-        # signing of apps that include nested frameworks and apps. See #1891 for
-        # details.
-        return """
+    def pyproject_table_macOS(self):
+        # Include PySide6-Addons on macOS, even though it isn't used, as a way to
+        # exercise signing of apps that include nested frameworks and apps. See #1891
+        # for details.
+        return """\
+universal_build = true
 requires = [
-    "PySide6-Essentials~=6.5",
     "PySide6-Addons~=6.5",
 ]
 """
