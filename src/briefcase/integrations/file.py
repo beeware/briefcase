@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import os
 import shutil
 import sys
@@ -7,6 +8,7 @@ import tempfile
 from contextlib import suppress
 from email.message import Message
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
@@ -18,6 +20,9 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.base import Tool, ToolCache
+
+if TYPE_CHECKING:
+    from typing import Iterable, Sequence
 
 
 class File(Tool):
@@ -35,12 +40,11 @@ class File(Tool):
         return tools.file
 
     @classmethod
-    def sorted_depth_first(cls, paths):
+    def sorted_depth_first(cls, paths: Sequence[Path]) -> Iterable[Path]:
         """Sort a list of paths, so that they appear in lexical order, with
         subdirectories of a folder sorting before files in the same directory.
 
         :param paths: The list of paths to sort.
-        :param reverse: Should the list be returned in reverse sorting order
         :returns: The sorted list of paths
         """
 
@@ -51,15 +55,15 @@ class File(Tool):
         #
         # For example, the path "/foo/bar/whiz.txt" would have the key:
         #
-        #  [ (0, 0, "/foo"), (0, 0, "/foo/bar"), (1, 1, "/foo/bar/whiz.txt")
+        #  [(0, 0, "/foo"), (0, 0, "/foo/bar"), (1, 1, "/foo/bar/whiz.txt")]
         #
         # To see how this works, consider a comparison when sorting the contents of the
         # folder /foo. All subfolders of /foo/bar will return (0, 0, "/foo/bar") as the
         # second entry in the key, so they'll sort as equal, with ties being resolved by
-        # later elements in the key. The folder /foo/bar itself will have a key of (0,
-        # 1, "/foo/bar"), so it will sort *after* any subfolder content. The file
-        # /foo/something.txt will have the key (1, 1, "foo/something.txt"); this means
-        # that files in foo will come *after* any subfolders.
+        # later elements in the key. The folder /foo/bar itself will have a second key
+        # of (0, 1, "/foo/bar"), so it will sort *after* any subfolder content. The file
+        # /foo/something.txt will have the key entry (1, 1, "foo/something.txt"); this
+        # means that files in foo will come *after* any subfolders.
         def sort_key(p):
             return [
                 (
@@ -71,6 +75,35 @@ class File(Tool):
             ]
 
         return sorted(paths, key=sort_key)
+
+    @classmethod
+    def sorted_depth_first_groups(
+        cls,
+        paths: Sequence[Path],
+    ) -> Iterable[Iterable[Path]]:
+        """Convert a list of paths into a collection of groups that are all at the same
+        "level", grouped depth-first.
+
+        Subfolders in a folder will be in a separate group, returned *before* files in
+        the same folder.
+
+        :param paths: The list of paths return grouped.
+        :returns: A generator returning a iterable groups of paths that are all at the
+            same sorting level.
+        """
+        # The sort function guarantees depth first ordering, with folders before files
+        # at the same level.
+        #
+        # The grouping key is based on the parent of the path (so that all objects in
+        # the same folder group together), with an additional discriminator to ensure
+        # that subfolders are in a different group to files.
+        return (
+            group_paths
+            for _, group_paths in itertools.groupby(
+                cls.sorted_depth_first(paths),
+                lambda path: (path.parent, path.is_dir()),
+            )
+        )
 
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?

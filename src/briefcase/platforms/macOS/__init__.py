@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import concurrent.futures
-import itertools
 import os
 import plistlib
 import re
@@ -601,28 +600,33 @@ or
         # Sign the bundle path itself
         sign_targets.append(bundle_path)
 
-        # Run signing through a ThreadPoolExecutor so that they run in parallel.
-        # However, we need to ensure that objects are signed from the inside out (i.e.,
-        # a folder must be signed *after* all it's contents has been signed, and files
-        # in a folder must be signed *after* all subfolders in that same folder). To do
-        # this, we sort the list of signing targets in depth-first directory order.
+        # Run signing through a ThreadPoolExecutor so that they run in parallel. We need
+        # to ensure that objects are signed from the inside out (i.e., a folder must be
+        # signed *after* all it's contents has been signed; files in a folder must be
+        # signed *after* all subfolders in that same folder); and an app that uses a
+        # library must be signed *after* all the libraries it uses. See
+        # https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac#Determine-the-signing-order
+        # for details.
         #
-        # NOTE: We are relying on the fact that the final iteration order produced by
-        # groupby() reflects the order in which groups are found in the input data. The
-        # documentation for groupby() says that a new break is created every time a new
-        # group is found in the input data; sorting the input in reverse order ensures
-        # that only one group is found per folder, and that the deepest folder is found
-        # first.
+        # To do this, we utilize grouping on a sorted list, and rely on the fact that a
+        # new group is created whenever the grouping key changes. The sorting process
+        # guarantees depth-first ordering; the grouping is applied over the sorted
+        # content, ensuring that that folders are signed before files.
+        #
+        # This approach isn't perfect. It will fail if there's an embedded app that uses
+        # a library in a different framework, and the app is lexically sorted before the
+        # library (e.g. if app_packages/foobar/Alpha.framework/Helpers/My App.app
+        # depends on app_packages/footbar/Beta.framework/libbeta). However, if you're
+        # embedding apps in frameworks in Python libraries that are installed by pip,
+        # you're already making poor life choices; this approach is enough to satisfy
+        # the one use of app-in-framework embedding that we're aware of (PySide).
         progress_bar = self.input.progress_bar()
         task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
         with progress_bar:
-            for _, names in itertools.groupby(
-                self.tools.file.sorted_depth_first(sign_targets),
-                lambda name: name.parent,
-            ):
+            for group in self.tools.file.sorted_depth_first_groups(sign_targets):
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     futures = []
-                    for path in names:
+                    for path in group:
                         future = executor.submit(
                             self.sign_file,
                             path,

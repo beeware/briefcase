@@ -44,6 +44,19 @@ from ...utils import create_file
                 "foo/bar/e.txt",
             ],
         ),
+        # If a folder contains both folders and files, the folders are returned first.
+        (
+            [
+                "foo/bar/a",
+                "foo/bar/b.txt",
+                "foo/bar/c",
+            ],
+            [
+                "foo/bar/a",
+                "foo/bar/c",
+                "foo/bar/b.txt",
+            ],
+        ),
     ],
 )
 def test_sorted_depth_first(files, sorted, tmp_path):
@@ -54,6 +67,8 @@ def test_sorted_depth_first(files, sorted, tmp_path):
     for file_path in paths:
         if file_path.suffix:
             create_file(tmp_path / file_path, content=str(file_path))
+        else:
+            file_path.mkdir(parents=True, exist_ok=True)
 
     assert File.sorted_depth_first(paths) == [
         tmp_path / file_path for file_path in sorted
