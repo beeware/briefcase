@@ -1493,14 +1493,20 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: str | Path):
+    def install_apk(self, apk_path: str | Path, no_streaming=False):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
+        :param no_streaming: Whether to push APK to device and invoke Package Manager as separate steps.
         :returns: `None` on success; raises an exception on failure.
         """
+        command = (
+            ["install", "-r"]
+            + (["--no-streaming"] if no_streaming else [])
+            + [apk_path]
+        )
         try:
-            self.run("install", "-r", apk_path)
+            self.run(*command)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Unable to install APK {apk_path} on {self.device}"

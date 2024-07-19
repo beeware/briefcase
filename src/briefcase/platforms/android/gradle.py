@@ -354,6 +354,12 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
         parser.add_argument(
+            "--no-streaming",
+            action="store_true",
+            help="Push APK to device and invoke Package Manager as separate steps",
+            required=False,
+        )
+        parser.add_argument(
             "--shutdown-on-exit",
             action="store_true",
             help="Shutdown the emulator on exit",
@@ -367,6 +373,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
+        no_streaming=False,
         shutdown_on_exit=False,
         **kwargs,
     ):
@@ -378,6 +385,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
+        :param no_streaming: Whether to push APK to device and invoke Package Manager as separate steps.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
         """
         device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
@@ -425,7 +433,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Install the latest APK file onto the device.
             with self.input.wait_bar("Installing new app version..."):
-                adb.install_apk(self.binary_path(app))
+                adb.install_apk(self.binary_path(app), no_streaming=no_streaming)
 
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.input.wait_bar(f"Launching {label}..."):
