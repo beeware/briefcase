@@ -1500,11 +1500,10 @@ class ADB:
         :param extra_args: Any additional arguments to pass to adb install.
         :returns: `None` on success; raises an exception on failure.
         """
-        if extra_args is None:
-            extra_args = []
+        command = ["install", "-r"] + (extra_args if extra_args else []) + [apk_path]
 
         try:
-            self.run("install", "-r", *extra_args, apk_path)
+            self.run(*command)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Unable to install APK {apk_path} on {self.device}"
