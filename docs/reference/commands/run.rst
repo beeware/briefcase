@@ -108,7 +108,7 @@ Update application support package before running. Equivalent to running:
 
 .. code-block:: console
 
-    $ briefcase update --update-resources
+    $ briefcase update --update-support
     $ briefcase build
     $ briefcase run
 
