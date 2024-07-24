@@ -47,34 +47,23 @@ class File(Tool):
         :param paths: The list of paths to sort.
         :returns: The sorted list of paths
         """
-
-        # The sort key for a path is is a list of triples. The path is split into
-        # constituent parts; each part is converted into a triple of:
+        # The sort key for a path is a triple - the parent of the path; whether the path
+        # is a directory or not; and finally, the actual path. We then sort this in
+        # reverse order.
         #
-        #    (is not a dir, is a leaf, path to this part)
+        # Sorting by the parent of the path first (in reverse order) guarantees that
+        # long paths are sorted first; so a file in a folder will come *after* the
+        # folder it is in.
         #
-        # For example, the path "/foo/bar/whiz.txt" would have the key:
+        # The second term (parent.is_dir()) guarantees that subfolders in a folder are
+        # found before files in the same folder (because in reverse order, booleans sort
+        # True before False).
         #
-        #  [(0, 0, "/foo"), (0, 0, "/foo/bar"), (1, 1, "/foo/bar/whiz.txt")]
-        #
-        # To see how this works, consider a comparison when sorting the contents of the
-        # folder /foo. All subfolders of /foo/bar will return (0, 0, "/foo/bar") as the
-        # second entry in the key, so they'll sort as equal, with ties being resolved by
-        # later elements in the key. The folder /foo/bar itself will have a second key
-        # of (0, 1, "/foo/bar"), so it will sort *after* any subfolder content. The file
-        # /foo/something.txt will have the key entry (1, 1, "foo/something.txt"); this
-        # means that files in foo will come *after* any subfolders.
-        def sort_key(p):
-            return [
-                (
-                    not Path(*p.parts[:t]).is_dir(),
-                    t == len(p.parts),
-                    Path(*p.parts[:t]),
-                )
-                for t in range(len(p.parts) + 1)
-            ]
-
-        return sorted(paths, key=sort_key)
+        # Lastly, we sort on the actual path itself. This provide a guaranteed lexical
+        # ordering inside any given folder. This isn't strictly required, but it's
+        # helpful for testing and reproducibility that the sort order is reliable and
+        # repeatable.
+        return sorted(paths, key=lambda p: (p.parent, p.is_dir(), p), reverse=True)
 
     @classmethod
     def sorted_depth_first_groups(
@@ -97,6 +86,10 @@ class File(Tool):
         # The grouping key is based on the parent of the path (so that all objects in
         # the same folder group together), with an additional discriminator to ensure
         # that subfolders are in a different group to files.
+        #
+        # itertools.groupby guarantees a new group whenever the key changes; and the
+        # input sort order guarantees that directories come before files, so we get
+        # our desired sort grouping and ordering.
         return (
             group_paths
             for _, group_paths in itertools.groupby(

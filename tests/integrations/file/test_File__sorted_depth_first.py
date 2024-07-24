@@ -11,7 +11,7 @@ from ...utils import create_file
         # Files in a directory are sorted lexically
         (
             ["foo/bar/a.txt", "foo/bar/c.txt", "foo/bar/b.txt"],
-            ["foo/bar/a.txt", "foo/bar/b.txt", "foo/bar/c.txt"],
+            ["foo/bar/c.txt", "foo/bar/b.txt", "foo/bar/a.txt"],
         ),
         # Subfolders are sorted before files in that directory; but sorted lexically in themselves
         (
@@ -30,18 +30,18 @@ from ...utils import create_file
                 "foo/bar/d/deep_d1.txt",
             ],
             [
-                "foo/bar/b/deeper/deeper_db1.txt",
-                "foo/bar/b/deeper/deeper_db2.txt",
-                "foo/bar/b/deeper",
-                "foo/bar/b/aaa.txt",
-                "foo/bar/b/zzz.txt",
-                "foo/bar/d/deep_d1.txt",
                 "foo/bar/d/deep_d2.txt",
-                "foo/bar/b",
+                "foo/bar/d/deep_d1.txt",
+                "foo/bar/b/deeper/deeper_db2.txt",
+                "foo/bar/b/deeper/deeper_db1.txt",
+                "foo/bar/b/deeper",
+                "foo/bar/b/zzz.txt",
+                "foo/bar/b/aaa.txt",
                 "foo/bar/d",
-                "foo/bar/a.txt",
-                "foo/bar/c.txt",
+                "foo/bar/b",
                 "foo/bar/e.txt",
+                "foo/bar/c.txt",
+                "foo/bar/a.txt",
             ],
         ),
         # If a folder contains both folders and files, the folders are returned first.
@@ -52,8 +52,8 @@ from ...utils import create_file
                 "foo/bar/c",
             ],
             [
-                "foo/bar/a",
                 "foo/bar/c",
+                "foo/bar/a",
                 "foo/bar/b.txt",
             ],
         ),
