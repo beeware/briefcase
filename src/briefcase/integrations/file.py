@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import os
 import shutil
 import sys
@@ -7,6 +8,7 @@ import tempfile
 from contextlib import suppress
 from email.message import Message
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
@@ -18,6 +20,9 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.base import Tool, ToolCache
+
+if TYPE_CHECKING:
+    from typing import Iterable, Sequence
 
 
 class File(Tool):
@@ -33,6 +38,65 @@ class File(Tool):
 
         tools.file = File(tools=tools)
         return tools.file
+
+    @classmethod
+    def sorted_depth_first(cls, paths: Sequence[Path]) -> Iterable[Path]:
+        """Sort a list of paths, so that they appear in lexical order, with
+        subdirectories of a folder sorting before files in the same directory.
+
+        :param paths: The list of paths to sort.
+        :returns: The sorted list of paths
+        """
+        # The sort key for a path is a triple - the parent of the path; whether the path
+        # is a directory or not; and finally, the actual path. We then sort this in
+        # reverse order.
+        #
+        # Sorting by the parent of the path first (in reverse order) guarantees that
+        # long paths are sorted first; so a file in a folder will come *after* the
+        # folder it is in.
+        #
+        # The second term (parent.is_dir()) guarantees that subfolders in a folder are
+        # found before files in the same folder (because in reverse order, booleans sort
+        # True before False).
+        #
+        # Lastly, we sort on the actual path itself. This provide a guaranteed lexical
+        # ordering inside any given folder. This isn't strictly required, but it's
+        # helpful for testing and reproducibility that the sort order is reliable and
+        # repeatable.
+        return sorted(paths, key=lambda p: (p.parent, p.is_dir(), p), reverse=True)
+
+    @classmethod
+    def sorted_depth_first_groups(
+        cls,
+        paths: Sequence[Path],
+    ) -> Iterable[Iterable[Path]]:
+        """Convert a list of paths into a collection of groups that are all at the same
+        "level", grouped depth-first.
+
+        Subfolders in a folder will be in a separate group, returned *before* files in
+        the same folder.
+
+        :param paths: The list of paths return grouped.
+        :returns: A generator returning a iterable groups of paths that are all at the
+            same sorting level.
+        """
+        # The sort function guarantees depth first ordering, with folders before files
+        # at the same level.
+        #
+        # The grouping key is based on the parent of the path (so that all objects in
+        # the same folder group together), with an additional discriminator to ensure
+        # that subfolders are in a different group to files.
+        #
+        # itertools.groupby guarantees a new group whenever the key changes; and the
+        # input sort order guarantees that directories come before files, so we get
+        # our desired sort grouping and ordering.
+        return (
+            group_paths
+            for _, group_paths in itertools.groupby(
+                cls.sorted_depth_first(paths),
+                lambda path: (path.parent, path.is_dir()),
+            )
+        )
 
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?
