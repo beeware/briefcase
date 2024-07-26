@@ -51,12 +51,6 @@ def build_command(tmp_path, first_app_config):
     command.tools.host_arch = "x86_64"
     command.use_docker = False
     command.extra_docker_build_args = []
-    command._briefcase_toml[first_app_config] = {
-        "paths": {
-            "app_path": "First App.AppDir/usr/app",
-            "app_packages_path": "First App.AppDir/usr/app_packages",
-        }
-    }
 
     # Reset `os` mock without `spec` so tests can run on Windows where os.getuid doesn't exist.
     command.tools.os = mock.MagicMock()
@@ -558,11 +552,12 @@ def test_build_appimage_with_support_package_update(
     # Populate a briefcase.toml that mirrors a real Windows app
     with (build_command.bundle_path(first_app) / "briefcase.toml").open("wb") as f:
         index = {
+            "briefcase": {"target_version": "0.3.20"},
             "paths": {
                 "app_path": "First App.AppDir/usr/app",
                 "app_package_path": "First App.AppDir/usr/app_packages",
                 "support_path": "First App.AppDir/usr",
-            }
+            },
         }
         tomli_w.dump(index, f)
 

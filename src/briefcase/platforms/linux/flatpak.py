@@ -19,6 +19,7 @@ class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Flatpaks can only be built on Linux."
+    platform_target_version = "0.3.20"
 
     def binary_path(self, app):
         # Flatpak doesn't really produce an identifiable "binary" as part of its
