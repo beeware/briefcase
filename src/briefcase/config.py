@@ -104,19 +104,22 @@ def validate_document_description(document_type_id, document_type):
             )
     except KeyError:
         raise BriefcaseConfigError(
-            f"A description associated with a document type '{document_type_id}' does not exist."
+            f"Document type {document_type_id!r} does not provide a description."
         )
 
 
 def validate_document_ext(document_type_id, document_type):
     try:
-        if not document_type["extension"].isalnum():
+        if not (
+            isinstance(document_type["extension"], str)
+            and document_type["extension"].isalnum()
+        ):
             raise BriefcaseConfigError(
-                f"An extension associated with a document type '{document_type_id}' is invalid."
+                f"The extension provided for document type {document_type_id!r} is not alphanumeric."
             )
     except KeyError:
         raise BriefcaseConfigError(
-            f"An extension associated with a document type '{document_type_id}' does not exist."
+            f"Document type {document_type_id!r} does not provide an extension."
         )
 
 

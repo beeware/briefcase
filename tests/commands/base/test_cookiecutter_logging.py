@@ -1,11 +1,8 @@
 import logging
-from unittest.mock import patch
 
 import pytest
-from cookiecutter import exceptions as cookiecutter_exceptions
 
 from briefcase.console import LogLevel, RichLoggingHandler
-from briefcase.exceptions import BriefcaseConfigError
 
 cookiecutter_logger = logging.getLogger("cookiecutter")
 
@@ -45,20 +42,3 @@ def test_git_stdlib_logging(base_command, logging_level, handler_expected):
 
     # reset handlers since they are persistent
     logging.getLogger("cookiecutter").handlers.clear()
-
-
-def test_cookiecutter_undefined_variable_in_template(base_command):
-    with patch.object(base_command.tools, "cookiecutter") as cookiecutter_mock:
-        cookiecutter_mock.side_effect = (
-            cookiecutter_exceptions.UndefinedVariableInTemplate(
-                "message", "error", "context"
-            )
-        )
-
-        with pytest.raises(BriefcaseConfigError):
-            base_command.generate_template(
-                template="",
-                branch="",
-                output_path="",
-                extra_context={},
-            )
