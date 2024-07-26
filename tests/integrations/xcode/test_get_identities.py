@@ -23,6 +23,11 @@ def test_security_missing(mock_tools):
     with pytest.raises(BriefcaseCommandError):
         get_identities(mock_tools, "codesigning")
 
+    # The filter is passed through
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["security", "find-identity", "-v", "-p", "codesigning"]
+    )
+
 
 def test_invalid_profile(mock_tools):
     """If the requested profile is invalid, an exception is raised."""
@@ -31,7 +36,12 @@ def test_invalid_profile(mock_tools):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        get_identities(mock_tools, "codesigning")
+        get_identities(mock_tools, "jabberwock")
+
+    # The filter is passed through
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["security", "find-identity", "-v", "-p", "jabberwock"]
+    )
 
 
 def test_no_identities(mock_tools):
@@ -39,6 +49,11 @@ def test_no_identities(mock_tools):
     mock_tools.subprocess.check_output.return_value = security_result("no-identities")
 
     simulators = get_identities(mock_tools, "codesigning")
+
+    # The filter is passed through
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["security", "find-identity", "-v", "-p", "codesigning"]
+    )
 
     assert simulators == {}
 
@@ -48,6 +63,11 @@ def test_one_identity(mock_tools):
     mock_tools.subprocess.check_output.return_value = security_result("one-identity")
 
     simulators = get_identities(mock_tools, "codesigning")
+
+    # The filter is passed through
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["security", "find-identity", "-v", "-p", "codesigning"]
+    )
 
     assert simulators == {
         "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
@@ -61,6 +81,31 @@ def test_multiple_identities(mock_tools):
     )
 
     simulators = get_identities(mock_tools, "codesigning")
+
+    # The filter is passed through
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["security", "find-identity", "-v", "-p", "codesigning"]
+    )
+
+    assert simulators == {
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "F8903EC63C238B04C1067833814CE47CA338EBD6": "Developer ID Application: Other Corporation Ltd (83DLZ2K43E)",
+    }
+
+
+def test_no_profile(mock_tools):
+    """If no profile is specified, no filtering is done."""
+    mock_tools.subprocess.check_output.return_value = security_result(
+        "multiple-identities"
+    )
+
+    simulators = get_identities(mock_tools)
+
+    # No filter is passed through
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["security", "find-identity", "-v"]
+    )
 
     assert simulators == {
         "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corporation Ltd (Z2K4383DLE)",

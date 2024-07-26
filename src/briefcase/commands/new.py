@@ -403,7 +403,7 @@ class NewCommand(BaseCommand):
 
         self.prompt_intro(intro=intro)
         return _select_option(
-            prompt=f"{variable} [{default}]:",
+            prompt=f"{variable} [{default}]: ",
             input=self.input,
             default=default,
             options=list(zip(options, options)),

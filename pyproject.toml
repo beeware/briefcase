@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==70.0.0",
+    "setuptools==71.1.0",
     "setuptools_scm==8.1.0",
 ]
 build-backend = "setuptools.build_meta"
@@ -84,7 +84,7 @@ dependencies = [
     "dmgbuild >= 1.6, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
-    "psutil >= 5.9, < 6.0",
+    "psutil >= 5.9, < 7.0",
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "requests >= 2.28, < 3.0",
     "rich >= 12.6, < 14.0",
@@ -96,22 +96,23 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.5.2",
+    "coverage[toml] == 7.6.0",
     "coverage-conditional-plugin == 0.9.0",
     # Pre-commit 3.6.0 deprecated support for Python 3.8
     "pre-commit == 3.5.0 ; python_version < '3.9'",
     "pre-commit == 3.7.1 ; python_version >= '3.9'",
-    "pytest == 8.2.1",
-    "pytest-xdist == 3.6.1",
+    "pytest == 8.3.1",
+    # Having xdist in the pytest environment causes some weird failures on Windows with Py3.13
+    "pytest-xdist == 3.6.1 ; python_version < '3.13'",
     "setuptools_scm == 8.1.0",
-    "tox == 4.15.0",
+    "tox == 4.16.0",
 ]
 docs = [
-    "furo == 2024.5.6",
+    "furo == 2024.7.18",
     "pyenchant == 3.2.2",
     # Sphinx 7.2 deprecated support for Python 3.8
     "sphinx == 7.1.2 ; python_version < '3.9'",
-    "sphinx == 7.3.7 ; python_version >= '3.9'",
+    "sphinx == 7.4.7 ; python_version >= '3.9'",
     "sphinx_tabs == 3.4.5",
     # Sphinx 2024.2.4 deprecated support for Python 3.8
     "sphinx-autobuild == 2021.3.14 ; python_version < '3.9'",
@@ -132,6 +133,7 @@ briefcase = "briefcase.__main__:main"
 
 [project.entry-points."briefcase.bootstraps"]
 Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
+Console = "briefcase.bootstraps.console:ConsoleBootstrap"
 PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
 Pygame = "briefcase.bootstraps.pygame:PygameGuiBootstrap"
 
@@ -210,6 +212,7 @@ no-cover-if-is-macos = "'darwin' == os_environ.get('COVERAGE_PLATFORM', sys_plat
 no-cover-if-not-macos = "'darwin' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
 no-cover-if-is-windows = "'win32' == os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
 no-cover-if-not-windows = "'win32' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
+no-cover-if-gte-py312 = "sys_version_info > (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-is-py312 = "python_version == '3.12' and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py312 = "sys_version_info < (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py311 = "sys_version_info < (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"

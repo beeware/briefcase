@@ -4,6 +4,54 @@ Release History
 
 .. towncrier release notes start
 
+0.3.19 (2024-06-12)
+===================
+
+Features
+--------
+
+* Briefcase can now package command line apps. (`#556 <https://github.com/beeware/briefcase/issues/556>`__)
+* Templates that use pre-compiled stub binaries can now manage that artefact as an independent resource, rather than needing to include the binary in the template repository. This significantly reduces the size of the macOS and Windows app templates. (`#933 <https://github.com/beeware/briefcase/issues/933>`__)
+* Template repositories are now fetched as blobless partial Git clones, reducing the size of initial downloads. (`#933 <https://github.com/beeware/briefcase/issues/933>`__)
+* macOS now supports the generation of ``.pkg`` installers as a packaging format. (`#1184 <https://github.com/beeware/briefcase/issues/1184>`__)
+* Android SDK Command Line Tools 12.0 is now used to build Android apps. (`#1778 <https://github.com/beeware/briefcase/issues/1778>`__)
+* The new project wizard now includes links to known third-party GUI bootstraps. (`#1807 <https://github.com/beeware/briefcase/issues/1807>`__)
+* The name of the license file can now be specified using a PEP 621-compliant format for the ``license`` setting. (`#1812 <https://github.com/beeware/briefcase/issues/1812>`__)
+* The default Gradle dependencies for a Toga project no longer includes ``SwipeRefreshLayout``. (`#1845 <https://github.com/beeware/briefcase/issues/1845>`__)
+
+Bugfixes
+--------
+
+* Validation rules for bundle identifiers have been loosened. App IDs that contain country codes or language reserved words are no longer flagged as invalid. (`#1212 <https://github.com/beeware/briefcase/issues/1212>`__)
+* macOS code signing no longer uses the deprecated "deep signing" option. (`#1221 <https://github.com/beeware/briefcase/issues/1221>`__)
+* If ``run`` is executed directly after a ``create`` when using an ``app`` template on macOS or Windows, the implied ``build`` step is now correctly identified. (`#1729 <https://github.com/beeware/briefcase/issues/1729>`__)
+* Escaping of quotation marks in TOML templates was corrected. (`#1746 <https://github.com/beeware/briefcase/issues/1746>`__)
+* The Docker version on OpenSUSE Tumbleweed is now accepted and no longer triggers a warning message. (`#1773 <https://github.com/beeware/briefcase/issues/1773>`__)
+* The formal name of an app is now validated. (`#1810 <https://github.com/beeware/briefcase/issues/1810>`__)
+* macOS apps now generate ``info.plist`` entries for camera, photo library and microphone permissions. (`#1820 <https://github.com/beeware/briefcase/issues/1820>`__)
+
+Backward Incompatible Changes
+-----------------------------
+
+* Briefcase now uses a private cache of Cookiecutter templates, rather than the shared ``~/.cookiecutters`` directory. You can reclaim disk space by deleting ``~/.cookiecutters/briefcase-*`` and ``~/.cookiecutter_replay/briefcase-*`` (or the entire ``~/.cookiecutters`` and ``~/.cookiecutter_replay`` folders if you are not using Cookiecutter for any other purposes). (`#933 <https://github.com/beeware/briefcase/issues/933>`__)
+* The macOS ``app`` packaging format has been renamed ``zip`` for consistency with Windows, and to reflect the format of the output artefact. (`#1781 <https://github.com/beeware/briefcase/issues/1781>`__)
+* The format for the ``license`` field has been converted to PEP 621 format. Existing projects that specify ``license`` as a string should update their configurations to point at the generated license file using ``license.file = "LICENSE"``. (`#1812 <https://github.com/beeware/briefcase/issues/1812>`__)
+* The PursuedPyBear bootstrap has been migrated to be part of the PursuedPyBear project. (`#1834 <https://github.com/beeware/briefcase/issues/1834>`__)
+
+Documentation
+-------------
+
+* Documentation describing manual signing requirement for Android packages has been added. (`#1703 <https://github.com/beeware/briefcase/issues/1703>`__)
+* Documentation of Briefcase's support for document types has been improved. (`#1771 <https://github.com/beeware/briefcase/issues/1771>`__)
+* Documentation on Briefcase's plug-in interfaces was added. (`#1807 <https://github.com/beeware/briefcase/issues/1807>`__)
+* Documentation on the use of passwords in Android publication now encourages users to set non-default passwords. (`#1816 <https://github.com/beeware/briefcase/issues/1816>`__)
+
+Misc
+----
+
+* `#1184 <https://github.com/beeware/briefcase/issues/1184>`__, `#1472 <https://github.com/beeware/briefcase/issues/1472>`__, `#1777 <https://github.com/beeware/briefcase/issues/1777>`__, `#1784 <https://github.com/beeware/briefcase/issues/1784>`__, `#1786 <https://github.com/beeware/briefcase/issues/1786>`__, `#1789 <https://github.com/beeware/briefcase/issues/1789>`__, `#1790 <https://github.com/beeware/briefcase/issues/1790>`__, `#1791 <https://github.com/beeware/briefcase/issues/1791>`__, `#1792 <https://github.com/beeware/briefcase/issues/1792>`__, `#1793 <https://github.com/beeware/briefcase/issues/1793>`__, `#1798 <https://github.com/beeware/briefcase/issues/1798>`__, `#1799 <https://github.com/beeware/briefcase/issues/1799>`__, `#1800 <https://github.com/beeware/briefcase/issues/1800>`__, `#1817 <https://github.com/beeware/briefcase/issues/1817>`__, `#1819 <https://github.com/beeware/briefcase/issues/1819>`__, `#1821 <https://github.com/beeware/briefcase/issues/1821>`__, `#1823 <https://github.com/beeware/briefcase/issues/1823>`__, `#1839 <https://github.com/beeware/briefcase/issues/1839>`__, `#1840 <https://github.com/beeware/briefcase/issues/1840>`__, `#1841 <https://github.com/beeware/briefcase/issues/1841>`__, `#1842 <https://github.com/beeware/briefcase/issues/1842>`__, `#1843 <https://github.com/beeware/briefcase/issues/1843>`__, `#1847 <https://github.com/beeware/briefcase/issues/1847>`__, `#1850 <https://github.com/beeware/briefcase/issues/1850>`__, `#1851 <https://github.com/beeware/briefcase/issues/1851>`__, `#1853 <https://github.com/beeware/briefcase/issues/1853>`__, `#1857 <https://github.com/beeware/briefcase/issues/1857>`__, `#1860 <https://github.com/beeware/briefcase/issues/1860>`__, `#1863 <https://github.com/beeware/briefcase/issues/1863>`__, `#1867 <https://github.com/beeware/briefcase/issues/1867>`__, `#1869 <https://github.com/beeware/briefcase/issues/1869>`__, `#1871 <https://github.com/beeware/briefcase/issues/1871>`__, `#1872 <https://github.com/beeware/briefcase/issues/1872>`__, `#1873 <https://github.com/beeware/briefcase/issues/1873>`__, `#1874 <https://github.com/beeware/briefcase/issues/1874>`__
+
+
 0.3.18 (2024-05-06)
 ===================
 

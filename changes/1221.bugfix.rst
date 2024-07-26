@@ -1,1 +1,0 @@
-Removed deprecated macOS deep signing.

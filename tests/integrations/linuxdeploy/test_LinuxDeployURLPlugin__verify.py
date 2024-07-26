@@ -25,7 +25,7 @@ def test_unsupported_os(mock_tools, host_os):
 def test_verify(mock_tools, tmp_path):
     """URL plugins will be downloaded."""
     # Mock a successful download
-    mock_tools.download.file.side_effect = side_effect_create_mock_appimage(
+    mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         tmp_path
         / "tools"
         / "linuxdeploy_plugins"
@@ -39,7 +39,7 @@ def test_verify(mock_tools, tmp_path):
         url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
     )
 
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url="https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage",
         download_path=tmp_path
         / "tools"
@@ -54,7 +54,7 @@ def test_download_failure(mock_tools, tmp_path):
     """A failure downloading a custom URL plugin raises an error."""
 
     # Mock a successful download
-    mock_tools.download.file.side_effect = NetworkFailure("mock")
+    mock_tools.file.download.side_effect = NetworkFailure("mock")
 
     url = "https://example.com/path/to/linuxdeploy-plugin-sometool-wonky.AppImage"
 
@@ -62,7 +62,7 @@ def test_download_failure(mock_tools, tmp_path):
         LinuxDeployURLPlugin.verify(mock_tools, url=url)
 
     # A download was invoked
-    mock_tools.download.file.assert_called_with(
+    mock_tools.file.download.assert_called_with(
         url=url,
         download_path=mock_tools.base_path
         / "linuxdeploy_plugins"

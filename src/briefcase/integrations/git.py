@@ -10,6 +10,9 @@ class Git(Tool):
     name = "git"
     full_name = "Git"
 
+    MIN_VERSION = (2, 17, 0)
+    GIT_URL = "https://git-scm.com/"
+
     @classmethod
     def verify_install(cls, tools: ToolCache, **kwargs) -> ModuleType:
         """Verify if git is installed.
@@ -42,14 +45,14 @@ class Git(Tool):
             # for this.
             if tools.host_os == "Darwin":
                 raise BriefcaseCommandError(
-                    """\
+                    f"""\
 Briefcase requires git, but it is not installed. Xcode provides git; you should
 be shown a dialog prompting you to install Xcode and the Command Line Developer
 Tools. Select "Install" to install the Command Line Developer Tools.
 
 Alternatively, you can visit:
 
-    https://git-scm.com/
+    {cls.GIT_URL}
 
 to download and install git manually.
 
@@ -60,10 +63,10 @@ need to restart your terminal session.
 
             else:
                 raise BriefcaseCommandError(
-                    """\
+                    f"""\
 Briefcase requires git, but it is not installed (or is not on your PATH). Visit:
 
-    https://git-scm.com/
+    {cls.GIT_URL}
 
 to download and install git manually.
 
@@ -71,6 +74,16 @@ If you have installed git recently and are still getting this error, you may
 need to restart your terminal session.
 """
                 ) from e
+
+        installed_version = git.cmd.Git().version_info
+        if installed_version < cls.MIN_VERSION:
+            raise BriefcaseCommandError(
+                f"At least Git v{'.'.join(map(str, cls.MIN_VERSION))} is required; "
+                f"however, v{'.'.join(map(str, installed_version))} is installed.\n"
+                "\n"
+                f"Please update Git; downloads are available at {cls.GIT_URL}.",
+                skip_logfile=True,
+            )
 
         tools.logger.configure_stdlib_logging("git")
 

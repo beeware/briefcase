@@ -1,1 +1,0 @@
-Android packaging documentation was clarified to describe the working directory.

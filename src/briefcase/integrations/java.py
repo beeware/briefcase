@@ -275,7 +275,7 @@ class JDK(ManagedTool):
 
     def install(self):
         """Download and install a JDK."""
-        jdk_zip_path = self.tools.download.file(
+        jdk_zip_path = self.tools.file.download(
             url=self.OpenJDK_download_url,
             download_path=self.tools.base_path,
             role=f"Java {self.JDK_MAJOR_VER} JDK",
@@ -283,7 +283,7 @@ class JDK(ManagedTool):
 
         with self.tools.input.wait_bar("Installing OpenJDK..."):
             try:
-                self.tools.shutil.unpack_archive(
+                self.tools.file.unpack_archive(
                     os.fsdecode(jdk_zip_path),
                     extract_dir=os.fsdecode(self.tools.base_path),
                 )

@@ -827,26 +827,39 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_env(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
 
         with self.tools[app].app_context.run_app_context(kwargs) as kwargs:
-            # Start the app in a way that lets us stream the logs
-            app_popen = self.tools[app].app_context.Popen(
-                [self.binary_path(app)] + passthrough,
-                cwd=self.tools.home_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-                **kwargs,
-            )
+            # Console apps must operate in non-streaming mode so that console input can
+            # be handled correctly. However, if we're in test mode, we *must* stream so
+            # that we can see the test exit sentinel
+            if app.console_app and not test_mode:
+                self.logger.info("=" * 75)
+                self.tools[app].app_context.run(
+                    [self.binary_path(app)] + passthrough,
+                    cwd=self.tools.home_path,
+                    bufsize=1,
+                    stream_output=False,
+                    **kwargs,
+                )
+            else:
+                # Start the app in a way that lets us stream the logs
+                app_popen = self.tools[app].app_context.Popen(
+                    [self.binary_path(app)] + passthrough,
+                    cwd=self.tools.home_path,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    bufsize=1,
+                    **kwargs,
+                )
 
-            # Start streaming logs for the app.
-            self._stream_app_logs(
-                app,
-                popen=app_popen,
-                test_mode=test_mode,
-                clean_output=False,
-            )
+                # Start streaming logs for the app.
+                self._stream_app_logs(
+                    app,
+                    popen=app_popen,
+                    test_mode=test_mode,
+                    clean_output=False,
+                )
 
 
 def debian_multiline_description(description):

@@ -1,1 +1,0 @@
-Added documentation describing manual signing requirement for Android packages.

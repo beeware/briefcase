@@ -24,11 +24,14 @@ By default, apps will be both signed and notarized when they are packaged.
 Packaging format
 ================
 
-Briefcase supports two packaging formats for a macOS ``.app`` bundle:
+Briefcase supports three packaging formats for a macOS app:
 
-1. A DMG that contains the ``.app`` bundle (the default output of ``briefcase package
-   macOS``, or by using ``briefcase package macOS -p dmg``); or
-2. A zipped ``.app`` folder (using ``briefcase package macOS -p app``).
+1. A DMG that contains the ``.app`` bundle (using ``briefcase package macOS -p dmg``).
+2. A zipped ``.app`` folder (using ``briefcase package macOS -p zip``).
+3. A ``.pkg`` installer (using ``briefcase package macOS -p pkg``).
+
+``.pkg`` is the *required* format for console apps. ``.dmg`` is the
+default format for GUI apps.
 
 Icon format
 ===========
@@ -43,12 +46,7 @@ Additional options
 The following options can be provided at the command line when packaging
 macOS apps.
 
-``--no-notarize``
-~~~~~~~~~~~~~~~~~
-
-Do not submit the application for notarization. By default, apps will be
-submitted for notarization unless they have been signed with an ad-hoc
-signing identity.
+.. include:: signing_options.rst
 
 Application configuration
 =========================
@@ -69,9 +67,9 @@ will result in an ``Entitlements.plist`` declaration of::
 
     <key>com.apple.vm.networking</key><true/>
 
-Any Boolean or string value can be used for an entitlement value.
+Any Boolean, string, list, or dictionary value can be used as an entitlement value.
 
-All macOS apps are automatically granted the following entitlements:
+All macOS apps are automatically granted the following entitlements by default:
 
 * ``com.apple.security.cs.allow-unsigned-executable-memory``
 * ``com.apple.security.cs.disable-library-validation``

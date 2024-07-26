@@ -30,7 +30,7 @@ def build_command(tmp_path):
     command.tools.host_arch = "AMD64"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.shutil = mock.MagicMock(spec_set=shutil)
-    command.tools.download = mock.MagicMock()
+    command.tools.file.download = mock.MagicMock()
     command.tools.rcedit = RCEdit(command.tools)
     return command
 
@@ -67,7 +67,7 @@ def test_verify_without_windows_sdk(build_command, monkeypatch):
     assert not hasattr(build_command.tools, "windows_sdk")
 
 
-def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch, tmp_path):
+def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch):
     """Verifying on Windows creates an RCEdit and Windows SDK wrapper."""
     build_command.tools.windows_sdk = windows_sdk
 
@@ -95,15 +95,40 @@ def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch, tmp_pa
     assert isinstance(build_command.tools.windows_sdk, WindowsSDK)
 
 
-def test_build_app_without_windows_sdk(build_command, first_app_config, tmp_path):
+@pytest.mark.parametrize("pre_existing", [True, False])
+@pytest.mark.parametrize("console_app", [True, False])
+def test_build_app_without_windows_sdk(
+    build_command,
+    first_app_templated,
+    pre_existing,
+    console_app,
+    tmp_path,
+):
     """The stub binary will be updated when a Windows app is built."""
-    build_command.build_app(first_app_config)
+    first_app_templated.console_app = console_app
+
+    exec_path = tmp_path / "base_path/build/first-app/windows/app/src"
+    if pre_existing:
+        # If this is a pre-existing app, the stub has already been renamed
+        if console_app:
+            (exec_path / "Stub.exe").rename(exec_path / "first-app.exe")
+        else:
+            (exec_path / "Stub.exe").rename(exec_path / "First App.exe")
+
+    build_command.build_app(first_app_templated)
+
+    # The stub binary has been renamed
+    assert not (exec_path / "Stub.exe").is_file()
+    if console_app:
+        assert (exec_path / "first-app.exe").is_file()
+    else:
+        assert (exec_path / "First App.exe").is_file()
 
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             tmp_path / "briefcase/tools/rcedit-x64.exe",
-            Path("src/First App.exe"),
+            Path("src/first-app.exe") if console_app else Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
             "Megacorp",
@@ -118,7 +143,7 @@ def test_build_app_without_windows_sdk(build_command, first_app_config, tmp_path
             "first_app",
             "--set-version-string",
             "OriginalFilename",
-            "First App.exe",
+            "first-app.exe" if console_app else "First App.exe",
             "--set-version-string",
             "ProductName",
             "First App",
@@ -133,16 +158,19 @@ def test_build_app_without_windows_sdk(build_command, first_app_config, tmp_path
     )
 
 
+@pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_with_windows_sdk(
     build_command,
     windows_sdk,
-    first_app_config,
+    first_app_templated,
+    console_app,
     tmp_path,
 ):
     """The stub binary will be updated when a Windows app is built."""
     build_command.tools.windows_sdk = windows_sdk
+    first_app_templated.console_app = console_app
 
-    build_command.build_app(first_app_config)
+    build_command.build_app(first_app_templated)
 
     # remove any digital signatures on the app binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
@@ -150,7 +178,7 @@ def test_build_app_with_windows_sdk(
             tmp_path / "win_sdk/bin/86.1.1/x64/signtool.exe",
             "remove",
             "-s",
-            Path("src/First App.exe"),
+            Path("src/first-app.exe") if console_app else Path("src/First App.exe"),
         ],
         cwd=tmp_path / "base_path/build/first-app/windows/app",
     )
@@ -158,7 +186,7 @@ def test_build_app_with_windows_sdk(
     build_command.tools.subprocess.run.assert_called_once_with(
         [
             tmp_path / "briefcase/tools/rcedit-x64.exe",
-            Path("src/First App.exe"),
+            Path("src/first-app.exe") if console_app else Path("src/First App.exe"),
             "--set-version-string",
             "CompanyName",
             "Megacorp",
@@ -173,7 +201,7 @@ def test_build_app_with_windows_sdk(
             "first_app",
             "--set-version-string",
             "OriginalFilename",
-            "First App.exe",
+            "first-app.exe" if console_app else "First App.exe",
             "--set-version-string",
             "ProductName",
             "First App",
@@ -191,7 +219,7 @@ def test_build_app_with_windows_sdk(
 def test_build_app_without_any_digital_signatures(
     build_command,
     windows_sdk,
-    first_app_config,
+    first_app_templated,
     tmp_path,
 ):
     """If the app binary is not already signed, then attempt to remove signatures fails
@@ -208,7 +236,7 @@ def test_build_app_without_any_digital_signatures(
 """,
     )
 
-    build_command.build_app(first_app_config)
+    build_command.build_app(first_app_templated)
 
     # remove any digital signatures on the app binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
@@ -257,7 +285,7 @@ def test_build_app_without_any_digital_signatures(
 def test_build_app_error_remove_signature(
     build_command,
     windows_sdk,
-    first_app_config,
+    first_app_templated,
     tmp_path,
 ):
     """If the attempt to remove any exist digital signatures fails because signtool
@@ -282,7 +310,7 @@ def test_build_app_error_remove_signature(
         "\n"
     )
     with pytest.raises(BriefcaseCommandError, match=re.escape(error_message)):
-        build_command.build_app(first_app_config)
+        build_command.build_app(first_app_templated)
 
     # remove any digital signatures on the app binary
     build_command.tools.subprocess.check_output.assert_called_once_with(
@@ -298,7 +326,7 @@ def test_build_app_error_remove_signature(
     build_command.tools.subprocess.run.assert_not_called()
 
 
-def test_build_app_failure(build_command, first_app_config, tmp_path):
+def test_build_app_failure(build_command, first_app_templated):
     """If the stub binary cannot be updated, an error is raised."""
 
     build_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
@@ -310,12 +338,12 @@ def test_build_app_failure(build_command, first_app_config, tmp_path):
         BriefcaseCommandError,
         match=r"Unable to update details on stub app for first-app.",
     ):
-        build_command.build_app(first_app_config)
+        build_command.build_app(first_app_templated)
 
 
 def test_build_app_with_support_package_update(
     build_command,
-    first_app_config,
+    first_app_templated,
     tmp_path,
     windows_sdk,
     capsys,
@@ -327,10 +355,9 @@ def test_build_app_with_support_package_update(
     # app.
     build_command.tools.host_os = "Windows"
     build_command.tools.windows_sdk = windows_sdk
-    build_command.bundle_path(first_app_config).mkdir(parents=True)
 
     # Hard code a support revision so that the download support package is fixed
-    first_app_config.support_revision = "1"
+    first_app_templated.support_revision = "1"
 
     # Fake the existence of some source files.
     create_file(
@@ -338,11 +365,8 @@ def test_build_app_with_support_package_update(
         "print('an app')",
     )
 
-    # Mock the generated app template
-    (build_command.bundle_path(first_app_config) / "src").mkdir(parents=True)
-
     # Populate a briefcase.toml that mirrors a real Windows app
-    with (build_command.bundle_path(first_app_config) / "briefcase.toml").open(
+    with (build_command.bundle_path(first_app_templated) / "briefcase.toml").open(
         "wb"
     ) as f:
         index = {
@@ -355,7 +379,7 @@ def test_build_app_with_support_package_update(
         tomli_w.dump(index, f)
 
     # Build the app with a support package update
-    build_command(first_app_config, update_support=True)
+    build_command(first_app_templated, update_support=True)
 
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(

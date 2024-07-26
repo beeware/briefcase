@@ -83,7 +83,7 @@ class LinuxDeployBase(ABC):
 
     def install(self):
         """Download and install linuxdeploy or plugin."""
-        self.tools.download.file(
+        self.tools.file.download(
             url=self.download_url,
             download_path=self.file_path,
             role=self.full_name,

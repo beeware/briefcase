@@ -50,3 +50,14 @@ def main():
     main_window = {{{{ cookiecutter.class_name }}}}()
     sys.exit(app.exec())
 """
+
+    def pyproject_table_macOS(self):
+        # Include PySide6-Addons on macOS, even though it isn't used, as a way to
+        # exercise signing of apps that include nested frameworks and apps. See #1891
+        # for details.
+        return """\
+universal_build = true
+requires = [
+    "PySide6-Addons~=6.5",
+]
+"""

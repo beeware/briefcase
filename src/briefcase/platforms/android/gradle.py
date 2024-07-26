@@ -200,7 +200,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     You should add this definition to the Android configuration
     of your project's pyproject.toml file. See:
 
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/android.html#build_gradle-dependencies
+        https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
 
     for more information.
 

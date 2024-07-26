@@ -186,6 +186,7 @@ def test_update_app(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -204,6 +205,7 @@ def test_update_app(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -250,6 +252,7 @@ def test_update_app_requirements(build_command, first_app, second_app):
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -268,6 +271,139 @@ def test_update_app_requirements(build_command, first_app, second_app):
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        (
+            "build",
+            "second",
+            {"update_state": "second", "build_state": "first", "test_mode": False},
+        ),
+    ]
+
+
+def test_update_app_support(build_command, first_app, second_app):
+    """If a support update is requested, support is updated before build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure update command line options
+    options, _ = build_command.parse_options(["--update-support"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # Update then build the first app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": True,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        ("build", "first", {"update_state": "first", "test_mode": False}),
+        # Update then build the second app
+        (
+            "update",
+            "second",
+            {
+                "update_state": "first",
+                "build_state": "first",
+                "test_mode": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": True,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        (
+            "build",
+            "second",
+            {"update_state": "second", "build_state": "first", "test_mode": False},
+        ),
+    ]
+
+
+def test_update_app_stub(build_command, first_app, second_app):
+    """If a stub update is requested, the stub is updated before build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure update command line options
+    options, _ = build_command.parse_options(["--update-stub"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # Update then build the first app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": True,
+            },
+        ),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        ("build", "first", {"update_state": "first", "test_mode": False}),
+        # Update then build the second app
+        (
+            "update",
+            "second",
+            {
+                "update_state": "first",
+                "build_state": "first",
+                "test_mode": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": True,
             },
         ),
         # App template is verified for second app
@@ -314,6 +450,7 @@ def test_update_app_resources(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -332,6 +469,7 @@ def test_update_app_resources(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -387,6 +525,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -438,6 +577,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -456,6 +596,7 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -502,6 +643,7 @@ def test_build_test(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -520,6 +662,7 @@ def test_build_test(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -610,6 +753,7 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -628,6 +772,7 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -675,6 +820,7 @@ def test_build_test_update_resources(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -693,6 +839,141 @@ def test_build_test_update_resources(build_command, first_app, second_app):
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        (
+            "build",
+            "second",
+            {"update_state": "second", "build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_build_test_update_support(build_command, first_app, second_app):
+    """If the user builds a test app with a support update, app code and support are
+    updated before build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--test", "--update-support"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # Update then build the first app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": True,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        ("build", "first", {"update_state": "first", "test_mode": True}),
+        # Update then build the second app
+        (
+            "update",
+            "second",
+            {
+                "update_state": "first",
+                "build_state": "first",
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": True,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        (
+            "build",
+            "second",
+            {"update_state": "second", "build_state": "first", "test_mode": True},
+        ),
+    ]
+
+
+def test_build_test_update_stub(build_command, first_app, second_app):
+    """If the user builds a test app with stub update, app code and stub are updated
+    before build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--test", "--update-stub"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # Update then build the first app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": True,
+            },
+        ),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        ("build", "first", {"update_state": "first", "test_mode": True}),
+        # Update then build the second app
+        (
+            "update",
+            "second",
+            {
+                "update_state": "first",
+                "build_state": "first",
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": True,
             },
         ),
         # App template is verified for second app
@@ -786,6 +1067,26 @@ def test_build_invalid_update_support(build_command, first_app, second_app):
         build_command(**options)
 
 
+def test_build_invalid_update_stub(build_command, first_app, second_app):
+    """If the user requests a build with update-stub and no-update, an error is
+    raised."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--update-stub", "--no-update"])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Cannot specify both --update-stub and --no-update",
+    ):
+        build_command(**options)
+
+
 def test_test_app_non_existent(build_command, first_app_config, second_app):
     """Requesting a test build of a non-existent app causes a create."""
     # Add two apps; use the "config only" version of the first app.
@@ -827,6 +1128,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app
@@ -879,6 +1181,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for first app
@@ -901,6 +1204,7 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
+                "update_stub": False,
             },
         ),
         # App template is verified for second app

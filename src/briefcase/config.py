@@ -267,6 +267,7 @@ class AppConfig(BaseConfig):
         test_requires=None,
         supported=True,
         long_description=None,
+        console_app=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -295,6 +296,7 @@ class AppConfig(BaseConfig):
         self.supported = supported
         self.long_description = long_description
         self.license = license
+        self.console_app = console_app
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -552,6 +554,37 @@ def parse_config(config_file, platform, output_format, logger):
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
+    for name, config in [("project", global_config)] + list(all_apps.items()):
+        if isinstance(config.get("license"), str):
+            section_name = "the Project" if name == "project" else f"{name!r}"
+            logger.warning(
+                f"""
+*************************************************************************
+** {f"WARNING: License Definition for {section_name} is Deprecated":67} **
+*************************************************************************
+
+    Briefcase now uses PEP 621 format for license definitions.
+
+    Previously, the name of the license was assigned to the 'license'
+    field in pyproject.toml. For PEP 621, the name of the license is
+    assigned to 'license.text' or the name of the file containing the
+    license is assigned to 'license.file'.
+
+    The current configuration for {section_name} has a 'license' field
+    that is specified as a string:
+
+        license = "{config['license']}"
+
+    To use the PEP 621 format (and to remove this warning), specify that
+    the LICENSE file contains the license for {section_name}:
+
+        license.file = "LICENSE"
+
+*************************************************************************
+"""
+            )
+            config["license"] = {"file": "LICENSE"}
+
     # Build the flat configuration for each app,
     # based on the requested platform and output format
     app_configs = {}
@@ -623,18 +656,5 @@ def parse_config(config_file, platform, output_format, logger):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
-
-    old_license_format = False
-    for config in [global_config, *app_configs.values()]:
-        if isinstance(config.get("license"), str):
-            config["license"] = {"file": "LICENSE"}
-            old_license_format = True
-
-    if old_license_format:
-        logger.warning(
-            "Your app configuration has a `license` field that is specified as a string. "
-            "Briefcase now uses PEP 621 format for license definitions. To silence this "
-            'warning, replace the `license` declaration with `license.file = "LICENSE".'
-        )
 
     return global_config, app_configs

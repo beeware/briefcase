@@ -1,1 +1,0 @@
-Resolved a typo in the Android reference documentation.

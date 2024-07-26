@@ -42,7 +42,7 @@ def test_override_validation(new_command, mock_select_option, capsys):
         in capsys.readouterr().out
     )
     mock_select_option.assert_called_once_with(
-        prompt="Variable [1]:",
+        prompt="Variable [1]: ",
         input=new_command.input,
         default="1",
         options=[
@@ -63,7 +63,7 @@ def test_default_value_has_correct_index(new_command, mock_select_option):
         override_value=None,
     )
     mock_select_option.assert_called_once_with(
-        prompt="Variable [2]:",
+        prompt="Variable [2]: ",
         input=new_command.input,
         default="2",
         options=[
@@ -84,7 +84,7 @@ def test_default_default_is_one(new_command, mock_select_option):
         override_value=None,
     )
     mock_select_option.assert_called_once_with(
-        prompt="Variable [1]:",
+        prompt="Variable [1]: ",
         input=new_command.input,
         default="1",
         options=[

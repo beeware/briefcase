@@ -54,6 +54,12 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
         """
         self.logger.info("Building App...", prefix=app.app_name)
 
+        # Move the stub binary in to the final executable location
+        unbuilt_binary_path = self.unbuilt_executable_path(app)
+        if unbuilt_binary_path.exists():
+            with self.input.wait_bar("Renaming stub binary..."):
+                unbuilt_binary_path.rename(self.binary_executable_path(app))
+
         if hasattr(self.tools, "windows_sdk"):
             # If an app has been packaged and code signed previously, then the digital
             # signature on the app binary needs to be removed before re-building the app.

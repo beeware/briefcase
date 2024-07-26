@@ -5,7 +5,7 @@ import pytest
 
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.base import ToolCache
-from briefcase.integrations.download import Download
+from briefcase.integrations.file import File
 from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
 
@@ -18,7 +18,7 @@ SDK_MGR_DL_VER = "11076708"
 def mock_tools(mock_tools, tmp_path) -> ToolCache:
     # Mock default tools
     mock_tools.subprocess = MagicMock(spec_set=Subprocess)
-    mock_tools.download = MagicMock(spec_set=Download)
+    mock_tools.file.download = MagicMock(spec_set=File.download)
 
     # Set up a JDK
     mock_tools.java = MagicMock(spec=JDK)
