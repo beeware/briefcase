@@ -11,6 +11,7 @@ from git import exc as git_exceptions
 import briefcase
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    BriefcaseConfigError,
     NetworkFailure,
     TemplateUnsupportedVersion,
 )
@@ -722,3 +723,25 @@ def test_x_permissions(
         extra_context=full_context,
         default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
+
+
+def test_cookiecutter_undefined_variable_in_template(
+    myapp,
+    create_command,
+):
+    """If the cookiecutter template has an undefined variable, a breifcase configuration
+    error is raised."""
+
+    cookiecutter_exception_message = "undefined document type"
+    create_command.tools.cookiecutter.side_effect = (
+        cookiecutter_exceptions.UndefinedVariableInTemplate(
+            cookiecutter_exception_message, "error", "context"
+        )
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=f"Briefcase configuration error: {cookiecutter_exception_message}",
+    ):
+        # Generating the template with an undefined cookiecutter variable generates an error
+        create_command.generate_app_template(myapp)

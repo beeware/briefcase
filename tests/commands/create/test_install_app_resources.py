@@ -254,9 +254,17 @@ def test_doctype_icon_target(create_command, tmp_path):
         description="This is a simple app",
         sources=["src/my_app"],
         document_type={
-            "mydoc": {"icon": "images/mydoc-icon"},
+            "mydoc": {
+                "icon": "images/mydoc-icon",
+                "description": "mydoc image",
+                "url": "https://testexample.com",
+                "extension": "mydoc",
+            },
             "other": {
                 "icon": "images/other-icon",
+                "description": "other image",
+                "url": "https://othertestexample.com",
+                "extension": "other",
             },
         },
         license={"file": "LICENSE"},

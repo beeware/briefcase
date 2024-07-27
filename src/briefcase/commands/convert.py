@@ -18,7 +18,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
-from briefcase.config import make_class_name
+from briefcase.config import make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -299,7 +299,7 @@ class ConvertCommand(NewCommand):
                 ),
                 variable="application URL",
                 default=default,
-                validator=self.validate_url,
+                validator=validate_url,
                 override_value=override_value,
             )
 
@@ -321,7 +321,7 @@ class ConvertCommand(NewCommand):
                 intro="What website URL do you want to use for the application?",
                 variable="application URL",
                 default=self.make_project_url("com.example", app_name),
-                validator=self.validate_url,
+                validator=validate_url,
             )
 
         return url

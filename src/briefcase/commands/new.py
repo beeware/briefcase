@@ -7,7 +7,6 @@ from collections import OrderedDict
 from collections.abc import Sequence
 from email.utils import parseaddr
 from typing import Iterable
-from urllib.parse import urlparse
 
 if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     from importlib.metadata import entry_points
@@ -21,6 +20,7 @@ from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
+    validate_url,
 )
 from briefcase.console import MAX_TEXT_WIDTH
 from briefcase.console import select_option as _select_option
@@ -300,20 +300,6 @@ class NewCommand(BaseCommand):
         """
         return f"https://{self.make_domain(bundle)}/{app_name}"
 
-    def validate_url(self, candidate):
-        """Determine if the URL is valid.
-
-        :param candidate: The candidate URL
-        :returns: True. If there are any validation problems, raises ValueError with a
-            diagnostic message.
-        """
-        result = urlparse(candidate)
-        if not all([result.scheme, result.netloc]):
-            raise ValueError("Not a valid URL!")
-        if result.scheme not in {"http", "https"}:
-            raise ValueError("Not a valid website URL!")
-        return True
-
     def prompt_divider(self, title: str = ""):
         """Writes a divider with an optional title."""
         title = f"-- {title} " if title else ""
@@ -576,7 +562,7 @@ class NewCommand(BaseCommand):
             ),
             variable="application URL",
             default=self.make_project_url(bundle, app_name),
-            validator=self.validate_url,
+            validator=validate_url,
             override_value=project_overrides.pop("url", None),
         )
         project_license = self.input_license(

@@ -4,6 +4,7 @@ import re
 import sys
 import unicodedata
 from types import SimpleNamespace
+from urllib.parse import urlparse
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -81,6 +82,68 @@ def make_class_name(formal_name):
         class_name = f"_{class_name}"
 
     return class_name
+
+
+def validate_url(candidate):
+    """Determine if the URL is valid.
+
+    :param candidate: The candidate URL
+    :returns: True. If there are any validation problems, raises ValueError with a
+        diagnostic message.
+    """
+    result = urlparse(candidate)
+    if not all([result.scheme, result.netloc]):
+        raise ValueError("Not a valid URL!")
+    if result.scheme not in {"http", "https"}:
+        raise ValueError("Not a valid website URL!")
+    return True
+
+
+def validate_document_type_config(document_type_id, document_type):
+
+    try:
+        if not (
+            isinstance(document_type["extension"], str)
+            and document_type["extension"].isalnum()
+        ):
+            raise BriefcaseConfigError(
+                f"The extension provided for document type {document_type_id!r} is not alphanumeric."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not provide an extension."
+        )
+
+    try:
+        if not isinstance(document_type["icon"], str):
+            raise BriefcaseConfigError(
+                f"The icon definition associated with document type {document_type_id!r} is not a string."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not define an icon."
+        )
+
+    try:
+        if not isinstance(document_type["description"], str):
+            raise BriefcaseConfigError(
+                f"The description associated with document type {document_type_id!r} is not a string."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not provide a description."
+        )
+
+    try:
+        validate_url(document_type["url"])
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not provide a URL."
+        )
+    except ValueError as e:
+        raise BriefcaseConfigError(
+            f"The URL associated with document type {document_type_id!r} is invalid: {e}"
+        )
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
@@ -246,6 +309,9 @@ class AppConfig(BaseConfig):
                 "and hyphens; and each section may not contain any reserved words (like\n"
                 "'switch', or 'while')."
             )
+
+        for document_type_id, document_type in self.document_types.items():
+            validate_document_type_config(document_type_id, document_type)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):

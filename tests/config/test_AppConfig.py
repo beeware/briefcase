@@ -56,8 +56,10 @@ def test_extra_attrs():
         requires=["first", "second", "third"],
         document_type={
             "document": {
+                "icon": "icon",
                 "extension": "doc",
                 "description": "A document",
+                "url": "https://testurl.com",
             }
         },
         first="value 1",
@@ -78,8 +80,10 @@ def test_extra_attrs():
     assert config.class_name == "MyApp"
     assert config.document_types == {
         "document": {
+            "icon": "icon",
             "extension": "doc",
             "description": "A document",
+            "url": "https://testurl.com",
         }
     }
 
