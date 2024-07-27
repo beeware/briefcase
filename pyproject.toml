@@ -101,9 +101,8 @@ dev = [
     # Pre-commit 3.6.0 deprecated support for Python 3.8
     "pre-commit == 3.5.0 ; python_version < '3.9'",
     "pre-commit == 3.7.1 ; python_version >= '3.9'",
-    "pytest == 8.3.1",
-    # Having xdist in the pytest environment causes some weird failures on Windows with Py3.13
-    "pytest-xdist == 3.6.1 ; python_version < '3.13'",
+    "pytest == 8.3.2",
+    "pytest-xdist == 3.6.1",
     "setuptools_scm == 8.1.0",
     "tox == 4.16.0",
 ]
