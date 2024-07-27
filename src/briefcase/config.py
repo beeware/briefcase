@@ -84,45 +84,6 @@ def make_class_name(formal_name):
     return class_name
 
 
-def validate_document_icon(document_type_id, document_type):
-    try:
-        if not isinstance(document_type["icon"], str):
-            raise BriefcaseConfigError(
-                f"The icon definition associated with document type {document_type_id!r} is not a string."
-            )
-    except KeyError:
-        raise BriefcaseConfigError(
-            f"Document type {document_type_id!r} does not define an icon."
-        )
-
-
-def validate_document_description(document_type_id, document_type):
-    try:
-        if not isinstance(document_type["description"], str):
-            raise BriefcaseConfigError(
-                f"The description associated with document type {document_type_id!r} is not a string."
-            )
-    except KeyError:
-        raise BriefcaseConfigError(
-            f"Document type {document_type_id!r} does not provide a description."
-        )
-
-
-def validate_document_ext(document_type_id, document_type):
-    try:
-        if not (
-            isinstance(document_type["extension"], str)
-            and document_type["extension"].isalnum()
-        ):
-            raise BriefcaseConfigError(
-                f"The extension provided for document type {document_type_id!r} is not alphanumeric."
-            )
-    except KeyError:
-        raise BriefcaseConfigError(
-            f"Document type {document_type_id!r} does not provide an extension."
-        )
-
-
 def validate_url(candidate):
     """Determine if the URL is valid.
 
@@ -138,7 +99,41 @@ def validate_url(candidate):
     return True
 
 
-def validate_document_url(document_type_id, document_type):
+def validate_document_type_config(document_type_id, document_type):
+
+    try:
+        if not (
+            isinstance(document_type["extension"], str)
+            and document_type["extension"].isalnum()
+        ):
+            raise BriefcaseConfigError(
+                f"The extension provided for document type {document_type_id!r} is not alphanumeric."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not provide an extension."
+        )
+
+    try:
+        if not isinstance(document_type["icon"], str):
+            raise BriefcaseConfigError(
+                f"The icon definition associated with document type {document_type_id!r} is not a string."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not define an icon."
+        )
+
+    try:
+        if not isinstance(document_type["description"], str):
+            raise BriefcaseConfigError(
+                f"The description associated with document type {document_type_id!r} is not a string."
+            )
+    except KeyError:
+        raise BriefcaseConfigError(
+            f"Document type {document_type_id!r} does not provide a description."
+        )
+
     try:
         validate_url(document_type["url"])
     except KeyError:
@@ -316,10 +311,7 @@ class AppConfig(BaseConfig):
             )
 
         for document_type_id, document_type in self.document_types.items():
-            validate_document_icon(document_type_id, document_type)
-            validate_document_description(document_type_id, document_type)
-            validate_document_ext(document_type_id, document_type)
-            validate_document_url(document_type_id, document_type)
+            validate_document_type_config(document_type_id, document_type)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
