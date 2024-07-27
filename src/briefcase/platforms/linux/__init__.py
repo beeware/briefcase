@@ -77,7 +77,8 @@ class LinuxMixin:
         version, datestamp = support_revision.split("+")
         return (
             "https://github.com/indygreg/python-build-standalone/releases/download/"
-            f"{datestamp}/cpython-{support_revision}-{python_download_arch}-unknown-linux-gnu-install_only.tar.gz"
+            f"{datestamp}/"
+            f"cpython-{support_revision}-{python_download_arch}-unknown-linux-gnu-install_only_stripped.tar.gz"
         )
 
     def vendor_details(self, freedesktop_info):
