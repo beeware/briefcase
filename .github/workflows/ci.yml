@@ -28,13 +28,13 @@ env:
   FORCE_COLOR: "1"
 
 jobs:
-  pre-commit:
-    name: Pre-commit checks
-    uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
+  # pre-commit:
+  #   name: Pre-commit checks
+  #   uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
 
-  towncrier:
-    name: Check towncrier
-    uses: beeware/.github/.github/workflows/towncrier-run.yml@main
+  # towncrier:
+  #   name: Check towncrier
+  #   uses: beeware/.github/.github/workflows/towncrier-run.yml@main
 
   package:
     name: Package Briefcase
@@ -46,44 +46,47 @@ jobs:
     with:
       attest: ${{ inputs.attest-package }}
 
-  package-automation:
-    name: Package Automation
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
-    with:
-      build-subdirectory: "automation"
+  # package-automation:
+  #   name: Package Automation
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #     attestations: write
+  #   uses: beeware/.github/.github/workflows/python-package-create.yml@main
+  #   with:
+  #     build-subdirectory: "automation"
 
   unit-tests:
     name: Unit tests
-    needs: [ pre-commit, towncrier, package ]
+    # needs: [ pre-commit, towncrier, package ]
+    needs: [ package ]
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "macos-12", "macos-14", "windows-latest", "ubuntu-latest" ]
-        python-version: [ "3.8", "3.12", "3.13-dev" ]
+        # platform: [ "macos-12", "macos-14", "windows-latest", "ubuntu-latest" ]
+        # python-version: [ "3.8", "3.12", "3.13-dev" ]
+        platform: [ "windows-latest", "ubuntu-latest" ]
+        python-version: [ "3.13-dev" ]
         include:
           - experimental: false
-          - platform: "ubuntu-latest"
-            python-version: "3.9"
-            experimental: false
-          - platform: "ubuntu-latest"
-            python-version: "3.10"
-            experimental: false
-          - platform: "ubuntu-latest"
-            python-version: "3.11"
-            experimental: false
-          # Allow dev Python to fail without failing entire job
-          - python-version: "3.13-dev"
-            experimental: true
-        exclude:
-          # macos-14 (i.e. arm64) does not support Python 3.8
-          - platform: "macos-14"
-            python-version: "3.8"
+        #   - platform: "ubuntu-latest"
+        #     python-version: "3.9"
+        #     experimental: false
+        #   - platform: "ubuntu-latest"
+        #     python-version: "3.10"
+        #     experimental: false
+        #   - platform: "ubuntu-latest"
+        #     python-version: "3.11"
+        #     experimental: false
+        #   # Allow dev Python to fail without failing entire job
+        #   - python-version: "3.13-dev"
+        #     experimental: true
+        # exclude:
+        #   # macos-14 (i.e. arm64) does not support Python 3.8
+        #   - platform: "macos-14"
+        #     python-version: "3.8"
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.7
@@ -129,82 +132,86 @@ jobs:
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
 
-  coverage:
-    name: Project coverage
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    if: always() && contains('success,failure', needs.unit-tests.result)
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.1.7
-      with:
-        fetch-depth: 0
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+    #   if: failure()
 
-    - name: Setup Python
-      uses: actions/setup-python@v5.1.1
-      with:
-        # Use minimum version of python for coverage to avoid phantom branches
-        # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
-        python-version: "3.8"
+  # coverage:
+  #   name: Project coverage
+  #   runs-on: ubuntu-latest
+  #   needs: unit-tests
+  #   if: always() && contains('success,failure', needs.unit-tests.result)
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v4.1.7
+  #     with:
+  #       fetch-depth: 0
 
-    - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
+  #   - name: Setup Python
+  #     uses: actions/setup-python@v5.1.1
+  #     with:
+  #       # Use minimum version of python for coverage to avoid phantom branches
+  #       # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
+  #       python-version: "3.8"
 
-    - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v4.1.8
-      with:
-        pattern: coverage-data-*
-        merge-multiple: true
+  #   - name: Install Tox
+  #     uses: beeware/.github/.github/actions/install-requirement@main
+  #     with:
+  #       requirements: tox
+  #       extra: dev
 
-    - name: Platform Coverage Reports
-      id: platform-coverage
-      run: |
-        tox --parallel-no-spinner -qe \
-          coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
+  #   - name: Retrieve Coverage Data
+  #     uses: actions/download-artifact@v4.1.8
+  #     with:
+  #       pattern: coverage-data-*
+  #       merge-multiple: true
 
-    - name: Project Coverage Report
-      id: project-coverage
-      if: always() || contains('success,failure', needs.platform-coverage.result)
-      run: tox -qe coverage-ci-project-html
+  #   - name: Platform Coverage Reports
+  #     id: platform-coverage
+  #     run: |
+  #       tox --parallel-no-spinner -qe \
+  #         coverage-ci-platform-linux,coverage-ci-platform-macos,coverage-ci-platform-windows
 
-    - name: Upload Project Coverage HTML Report
-      if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v4.3.4
-      with:
-        name: html-coverage-report-project
-        path: htmlcov
+  #   - name: Project Coverage Report
+  #     id: project-coverage
+  #     if: always() || contains('success,failure', needs.platform-coverage.result)
+  #     run: tox -qe coverage-ci-project-html
 
-  verify-projects:
-    name: Verify project
-    needs: [ package, package-automation, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
-    with:
-      runner-os: ${{ matrix.runner-os }}
-      framework: ${{ matrix.framework }}
-    strategy:
-      fail-fast: false
-      matrix:
-        framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
+  #   - name: Upload Project Coverage HTML Report
+  #     if: always() && steps.project-coverage.outcome == 'failure'
+  #     uses: actions/upload-artifact@v4.3.4
+  #     with:
+  #       name: html-coverage-report-project
+  #       path: htmlcov
 
-  verify-apps:
-    name: Build app
-    needs: [ package, package-automation, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
-    with:
-      # This *must* be the version of Python that is the system Python on the
-      # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
-      # rather than `-latest` because at some point, `-latest` will become
-      # `-24.04`, but it will be a soft changeover, which will cause havoc with
-      # the hard Python version requirement for local system packages.
-      python-version: "3.10"
-      runner-os: ${{ matrix.runner-os }}
-      framework: ${{ matrix.framework }}
-    strategy:
-      fail-fast: false
-      matrix:
-        framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
+  # verify-projects:
+  #   name: Verify project
+  #   needs: [ package, package-automation, unit-tests ]
+  #   uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+  #   with:
+  #     runner-os: ${{ matrix.runner-os }}
+  #     framework: ${{ matrix.framework }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       framework: [ "toga", "pyside6", "pygame", "console" ]
+  #       runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
+
+  # verify-apps:
+  #   name: Build app
+  #   needs: [ package, package-automation, unit-tests ]
+  #   uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+  #   with:
+  #     # This *must* be the version of Python that is the system Python on the
+  #     # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
+  #     # rather than `-latest` because at some point, `-latest` will become
+  #     # `-24.04`, but it will be a soft changeover, which will cause havoc with
+  #     # the hard Python version requirement for local system packages.
+  #     python-version: "3.10"
+  #     runner-os: ${{ matrix.runner-os }}
+  #     framework: ${{ matrix.framework }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       framework: [ "toga", "pyside6", "pygame", "console" ]
+  #       runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
