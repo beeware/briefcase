@@ -588,7 +588,9 @@ or
             sign_targets.extend(
                 path
                 for path in folder.rglob("*")
-                if not path.is_dir() and is_mach_o_binary(path)
+                if not path.is_dir()
+                and not path.is_symlink()
+                and is_mach_o_binary(path)
             )
 
             # Sign all embedded frameworks

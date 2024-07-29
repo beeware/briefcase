@@ -584,6 +584,8 @@ def test_sign_app(
     )
     lib_path = app_path / "Contents/Resources/app_packages"
     frameworks_path = app_path / "Contents/Frameworks"
+
+    assert len(dummy_command.tools.subprocess.run.mock_calls) == 11
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
             sign_call(

@@ -119,4 +119,7 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     with (lib_path / "unknown.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEother")
 
+    # A symlink to a Mach-O executable binary file
+    (lib_path / "first_symlink.so").symlink_to(lib_path / "first_so.so")
+
     return first_app_config
