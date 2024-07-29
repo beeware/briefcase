@@ -546,6 +546,10 @@ def test_sign_file_unknown_error(
     assert len(output.strip("\n").split("\n")) == 1
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Can't test macOS codesigning on Windows",
+)
 @pytest.mark.parametrize("verbose", [True, False])
 def test_sign_app(
     dummy_command,
@@ -673,6 +677,10 @@ def test_sign_app(
         assert len(output.strip("\n").split("\n")) == (11 if verbose else 1)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Can't test macOS codesigning on Windows",
+)
 @pytest.mark.parametrize("verbose", [True, False])
 def test_sign_app_with_failure(
     dummy_command,
