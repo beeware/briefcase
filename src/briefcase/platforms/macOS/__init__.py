@@ -419,7 +419,7 @@ class macOSSigningMixin:
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
 
-    def entitlements_path(self, app: AppConfig):
+    def entitlements_path(self, app: AppConfig):  # pragma: no-cover-if-is-windows
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
     def select_identity(
@@ -571,7 +571,11 @@ or
             else:
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
-    def sign_app(self, app: AppConfig, identity: SigningIdentity):
+    def sign_app(
+        self,
+        app: AppConfig,
+        identity: SigningIdentity,
+    ):  # pragma: no-cover-if-is-windows
         """Sign an entire app with a specific identity.
 
         :param app: The app to sign
