@@ -663,14 +663,7 @@ def test_sign_app(
 
     # Output only happens if in debug mode.
     output = capsys.readouterr().out
-    if sys.platform == "win32":
-        # In practice, we won't ever actually run signing on win32; but to ensure test
-        # coverage we need to. However, win32 doesn't handle executable permissions
-        # the same as linux/unix, `unknown.binary` is identified as a signing target.
-        # We ignore this discrepancy for testing purposes.
-        assert len(output.strip("\n").split("\n")) == (12 if verbose else 1)
-    else:
-        assert len(output.strip("\n").split("\n")) == (11 if verbose else 1)
+    assert len(output.strip("\n").split("\n")) == (11 if verbose else 1)
 
 
 @pytest.mark.parametrize("verbose", [True, False])
