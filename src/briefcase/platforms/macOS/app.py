@@ -47,6 +47,12 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
         else:
             return self.bundle_path(app) / "support"
 
+    def runtime_path(self, app: AppConfig) -> Path:
+        try:
+            return self.path_index(app, "runtime_path")
+        except KeyError:
+            return "python-stdlib"
+
     def install_app_support_package(self, app: AppConfig):
         """Install the application support package.
 
@@ -61,9 +67,15 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
                 self.tools.shutil.rmtree(runtime_support_path)
             runtime_support_path.mkdir()
 
+            # The support package will contain a lot more content than is
+            # actually needed at runtime. Only copy the runtime_path into
+            # the support location nominated by the template. Also ensure
+            # that symlinks are preserved.
+            runtime_path = self.runtime_path(app)
             self.tools.shutil.copytree(
-                self.support_path(app) / "python-stdlib",
-                runtime_support_path / "python-stdlib",
+                self.support_path(app) / runtime_path,
+                runtime_support_path / Path(runtime_path).name,
+                # symlinks=True,
             )
 
     def install_app_resources(self, app: AppConfig):
