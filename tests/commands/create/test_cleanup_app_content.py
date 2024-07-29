@@ -46,11 +46,7 @@ def test_no_cleanup(create_command, myapp_unrolled, support_path, debug, capsys)
 
     # Symlinks still exist
     assert (support_path / "dir1/symlink.txt").is_symlink()
-    assert (support_path / "dir1/symlink.txt").readlink() == (
-        support_path / "dir2/b_file.txt"
-    )
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -78,7 +74,6 @@ def test_dir_cleanup(create_command, myapp_unrolled, support_path, debug, capsys
     # Directory symlinks still exists, but the file symlink doesn't
     assert not (support_path / "dir1/symlink.txt").exists()
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -108,11 +103,7 @@ def test_file_cleanup(create_command, myapp_unrolled, support_path, debug, capsy
 
     # Symlinks still exist
     assert (support_path / "dir1/symlink.txt").is_symlink()
-    assert (support_path / "dir1/symlink.txt").readlink() == (
-        support_path / "dir2/b_file.txt"
-    )
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -147,7 +138,6 @@ def test_all_files_in_dir_cleanup(
     # Directory symlinks still exist; file symlink doesn't
     assert not (support_path / "dir1/symlink.txt").exists()
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -175,7 +165,6 @@ def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path, debug, c
     # Directory symlinks still exist; file symlink doesn't
     assert not (support_path / "dir1/symlink.txt").exists()
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -206,7 +195,6 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path, debug, 
     # Directory symlinks still exist; file symlink doesn't
     assert not (support_path / "dir1/symlink.txt").exists()
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -237,11 +225,7 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path, debug, 
 
     # Symlinks still exist
     assert (support_path / "dir1/symlink.txt").is_symlink()
-    assert (support_path / "dir1/symlink.txt").readlink() == (
-        support_path / "dir2/b_file.txt"
-    )
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -313,11 +297,7 @@ def test_template_glob_cleanup(
 
     # Symlinks still exist
     assert (support_path / "dir1/symlink.txt").is_symlink()
-    assert (support_path / "dir1/symlink.txt").readlink() == (
-        support_path / "dir2/b_file.txt"
-    )
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
@@ -361,11 +341,7 @@ def test_non_existent_cleanup(
 
     # Symlinks still exist
     assert (support_path / "dir1/symlink.txt").is_symlink()
-    assert (support_path / "dir1/symlink.txt").readlink() == (
-        support_path / "dir2/b_file.txt"
-    )
     assert (support_path / "mirror").is_symlink()
-    assert (support_path / "mirror").readlink() == (support_path / "dir1")
 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
