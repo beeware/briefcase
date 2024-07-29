@@ -546,6 +546,10 @@ def test_sign_file_unknown_error(
     assert len(output.strip("\n").split("\n")) == 1
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Can't test macOS codesigning on Windows",
+)
 @pytest.mark.parametrize("verbose", [True, False])
 def test_sign_app(
     dummy_command,
@@ -584,6 +588,8 @@ def test_sign_app(
     )
     lib_path = app_path / "Contents/Resources/app_packages"
     frameworks_path = app_path / "Contents/Frameworks"
+
+    assert len(dummy_command.tools.subprocess.run.mock_calls) == 11
     dummy_command.tools.subprocess.run.assert_has_calls(
         [
             sign_call(
@@ -661,16 +667,13 @@ def test_sign_app(
 
     # Output only happens if in debug mode.
     output = capsys.readouterr().out
-    if sys.platform == "win32":
-        # In practice, we won't ever actually run signing on win32; but to ensure test
-        # coverage we need to. However, win32 doesn't handle executable permissions
-        # the same as linux/unix, `unknown.binary` is identified as a signing target.
-        # We ignore this discrepancy for testing purposes.
-        assert len(output.strip("\n").split("\n")) == (12 if verbose else 1)
-    else:
-        assert len(output.strip("\n").split("\n")) == (11 if verbose else 1)
+    assert len(output.strip("\n").split("\n")) == (11 if verbose else 1)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Can't test macOS codesigning on Windows",
+)
 @pytest.mark.parametrize("verbose", [True, False])
 def test_sign_app_with_failure(
     dummy_command,
@@ -708,11 +711,4 @@ def test_sign_app_with_failure(
 
     # Output only happens if in debug mode.
     output = capsys.readouterr().out
-    if sys.platform == "win32":
-        # In practice, we won't ever actually run signing on win32; but to ensure test
-        # coverage we need to. However, win32 doesn't handle executable permissions
-        # the same as linux/unix, `unknown.binary` is identified as a signing target.
-        # We ignore this discrepancy for testing purposes.
-        assert len(output.strip("\n").split("\n")) == (9 if verbose else 1)
-    else:
-        assert len(output.strip("\n").split("\n")) == (8 if verbose else 1)
+    assert len(output.strip("\n").split("\n")) == (8 if verbose else 1)

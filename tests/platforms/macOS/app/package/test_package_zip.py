@@ -67,6 +67,7 @@ def test_package_zip(
             "First App.app/Contents/Resources/app_packages/first.other",
             "First App.app/Contents/Resources/app_packages/first_dylib.dylib",
             "First App.app/Contents/Resources/app_packages/first_so.so",
+            "First App.app/Contents/Resources/app_packages/first_symlink.so",
             "First App.app/Contents/Resources/app_packages/other_binary",
             "First App.app/Contents/Resources/app_packages/second.other",
             "First App.app/Contents/Resources/app_packages/special.binary",

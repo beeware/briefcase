@@ -851,7 +851,7 @@ class CreateCommand(BaseCommand):
                 # on the file system.
                 for path in self.bundle_path(app).glob(glob):
                     relative_path = path.relative_to(self.bundle_path(app))
-                    if path.is_dir():
+                    if path.is_dir() and not path.is_symlink():
                         self.logger.verbose(f"Removing directory {relative_path}")
                         self.tools.shutil.rmtree(path)
                     else:

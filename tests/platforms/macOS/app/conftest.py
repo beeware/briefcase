@@ -33,7 +33,8 @@ def first_app_templated(first_app_config, tmp_path):
         """
 [paths]
 app_packages_path="First App.app/Contents/Resources/app_packages"
-support_path="First App.app/Contents/Resources/support"
+support_path="First App.app/Contents/Frameworks"
+runtime_path="Python.xcframework/macos-arm64_x86_64/Python.framework"
 info_plist_path="First App.app/Contents/Info.plist"
 entitlements_path="Entitlements.plist"
 """,
@@ -118,5 +119,8 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     # A file that has a Mach-O header, but isn't executable
     with (lib_path / "unknown.binary").open("wb") as f:
         f.write(b"\xCA\xFE\xBA\xBEother")
+
+    # A symlink to a Mach-O executable binary file
+    (lib_path / "first_symlink.so").symlink_to(lib_path / "first_so.so")
 
     return first_app_config

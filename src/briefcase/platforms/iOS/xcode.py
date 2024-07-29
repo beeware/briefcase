@@ -570,7 +570,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 f'senderImagePath ENDSWITH "/{app.formal_name}"'
                 f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
                 ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"))',
+                ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))',
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

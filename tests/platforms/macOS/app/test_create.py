@@ -710,15 +710,29 @@ def test_install_app_packages_non_universal(
 
 
 @pytest.mark.parametrize("pre_existing", [True, False])
-def test_install_support_package(
+def test_install_legacy_support_package(
     create_command,
     first_app_templated,
     tmp_path,
     pre_existing,
 ):
-    """The standard library is copied out of the support package into the app bundle."""
+    """The legacy location for the standard library is used by default when installing
+    the support package."""
     # Hard code the support revision
     first_app_templated.support_revision = "37"
+
+    # Rewrite the app's briefcase.toml to use the legacy paths (i.e.,
+    # a support path of Resources/support, and no stdlib_path)
+    create_file(
+        tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
+        """
+[paths]
+app_packages_path="First App.app/Contents/Resources/app_packages"
+support_path="First App.app/Contents/Resources/support"
+info_plist_path="First App.app/Contents/Info.plist"
+entitlements_path="Entitlements.plist"
+""",
+    )
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
     runtime_support_path = bundle_path / "First App.app/Contents/Resources/support"
@@ -726,7 +740,7 @@ def test_install_support_package(
     if pre_existing:
         create_file(
             runtime_support_path / "python-stdlib/old-stdlib",
-            "Legacy stdlib file",
+            "old stdlib file",
         )
 
     # Mock download.file to return a support package
@@ -774,3 +788,89 @@ def test_install_support_package(
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-stdlib").exists()
+
+
+@pytest.mark.parametrize("pre_existing", [True, False])
+def test_install_support_package(
+    create_command,
+    first_app_templated,
+    tmp_path,
+    pre_existing,
+):
+    """The Python framework is copied out of the support package into the app bundle."""
+    # Hard code the support revision
+    first_app_templated.support_revision = "37"
+
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+    runtime_support_path = bundle_path / "First App.app/Contents/Frameworks"
+
+    if pre_existing:
+        create_file(
+            runtime_support_path / "Python.framework/old-Python",
+            "Old library",
+        )
+
+    # Mock download.file to return a support package
+    create_command.tools.file.download = mock.MagicMock(
+        side_effect=mock_tgz_download(
+            f"Python-3.{sys.version_info.minor}-macOS-support.b37.tar.gz",
+            content=[
+                ("VERSIONS", "Version tracking info"),
+                (
+                    "platform-site/macosx.arm64/sitecustomize.py",
+                    "this is the arm64 platform site",
+                ),
+                (
+                    "platform-site/macosx.x86_64/sitecustomize.py",
+                    "this is the x86_64 platform site",
+                ),
+                ("Python.xcframework/Info.plist", "this is the xcframework"),
+                (
+                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python",
+                    "this is the library",
+                ),
+            ],
+            links=[
+                (
+                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Python",
+                    "Versions/Current/Python",
+                ),
+            ],
+        )
+    )
+
+    # Install the support package
+    create_command.install_app_support_package(first_app_templated)
+
+    # Confirm that the support files have been unpacked into the bundle location
+    assert (bundle_path / "support/VERSIONS").exists()
+    assert (
+        bundle_path / "support/platform-site/macosx.arm64/sitecustomize.py"
+    ).exists()
+    assert (
+        bundle_path / "support/platform-site/macosx.x86_64/sitecustomize.py"
+    ).exists()
+    assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
+    assert (
+        bundle_path
+        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"
+    ).is_file()
+    assert (
+        bundle_path
+        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Python"
+    ).is_symlink()
+
+    # The standard library has been copied to the app...
+    assert (runtime_support_path / "Python.framework/Versions/Current/Python").is_file()
+    assert (runtime_support_path / "Python.framework/Python").is_symlink()
+    # ... but the other support files have not.
+    assert not (
+        runtime_support_path / "platform-site/macosx.arm64/sitecustomize.py"
+    ).exists()
+    assert not (
+        runtime_support_path / "platform-site/macosx.x86_64/sitecustomize.py"
+    ).exists()
+    assert not (runtime_support_path / "VERSIONS").exists()
+
+    # The legacy content has been purged
+    assert not (runtime_support_path / "python-stdlib/old-Python").exists()
