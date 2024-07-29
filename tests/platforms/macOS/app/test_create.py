@@ -814,7 +814,7 @@ def test_install_support_package(
     create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_tgz_download(
             f"Python-3.{sys.version_info.minor}-macOS-support.b37.tar.gz",
-            [
+            content=[
                 ("VERSIONS", "Version tracking info"),
                 (
                     "platform-site/macosx.arm64/sitecustomize.py",
@@ -826,8 +826,14 @@ def test_install_support_package(
                 ),
                 ("Python.xcframework/Info.plist", "this is the xcframework"),
                 (
-                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Python",
+                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python",
                     "this is the library",
+                ),
+            ],
+            links=[
+                (
+                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Python",
+                    "Versions/Current/Python",
                 ),
             ],
         )
@@ -847,11 +853,16 @@ def test_install_support_package(
     assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
     assert (
         bundle_path
+        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"
+    ).is_file()
+    assert (
+        bundle_path
         / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Python"
-    ).exists()
+    ).is_symlink()
 
     # The standard library has been copied to the app...
-    assert (runtime_support_path / "Python.framework/Python").exists()
+    assert (runtime_support_path / "Python.framework/Versions/Current/Python").is_file()
+    assert (runtime_support_path / "Python.framework/Python").is_symlink()
     # ... but the other support files have not.
     assert not (
         runtime_support_path / "platform-site/macosx.arm64/sitecustomize.py"

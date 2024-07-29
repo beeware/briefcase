@@ -75,7 +75,7 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
             self.tools.shutil.copytree(
                 self.support_path(app) / runtime_path,
                 runtime_support_path / Path(runtime_path).name,
-                # symlinks=True,
+                symlinks=True,
             )
 
     def install_app_resources(self, app: AppConfig):

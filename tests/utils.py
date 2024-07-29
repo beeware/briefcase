@@ -109,7 +109,7 @@ def create_zip_file(zippath, content):
     return zippath
 
 
-def create_tgz_file(tgzpath, content):
+def create_tgz_file(tgzpath, content, links=None):
     """A test utility to create a .tar.gz file with known content.
 
     Ensures that the directory for the file exists, and writes a file with specific
@@ -117,7 +117,9 @@ def create_tgz_file(tgzpath, content):
 
     :param tgzpath: The path for the gzipped tarfile file to create
     :param content: A list of pairs; each pair is (path, data) describing an item to be
-        added to the zip file.
+        added to the tgz file.
+    :param links: (Optional) A list of pairs; each pair is a (path, target) describing a
+        symlink item to be added to the tgz file, and the file it will target.
     :returns: The path to the file that was created.
     """
     tgzpath.parent.mkdir(parents=True, exist_ok=True)
@@ -127,6 +129,12 @@ def create_tgz_file(tgzpath, content):
             payload = data.encode("utf-8")
             tarinfo.size = len(payload)
             f.addfile(tarinfo, io.BytesIO(payload))
+        if links:
+            for path, target in links:
+                tarinfo = tarfile.TarInfo(path)
+                tarinfo.linkname = target
+                tarinfo.type = tarfile.SYMTYPE
+                f.addfile(tarinfo, None)
 
     return tgzpath
 
@@ -166,15 +174,18 @@ def mock_zip_download(filename, content, role=None):
     return _download_file
 
 
-def mock_tgz_download(filename, content, role=None):
+def mock_tgz_download(filename, content, role=None, links=None):
     """Create a side effect function that mocks the download of a .tar.gz file.
 
     :param content: A string containing the content to write.
+    :param role: The role played by the content being downloaded
+    :param links: (Optional) A list of pairs; each pair is a (path, target) describing a
+        symlink item to be added to the tgz file, and the file it will target.
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
     def _download_file(url, download_path, role):
-        return create_tgz_file(download_path / filename, content)
+        return create_tgz_file(download_path / filename, content, links)
 
     return _download_file
 
