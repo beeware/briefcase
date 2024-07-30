@@ -9,8 +9,8 @@ class iOSMixin:
     supported_host_os_reason = (
         "iOS applications require Xcode, which is only available on macOS."
     )
-    # 0.3.16 introduced new-style dylib support.
-    platform_target_version = "0.3.16"
+    # 0.3.20 introduced PEP 730-style dynamic libraries.
+    platform_target_version = "0.3.20"
 
     def verify_tools(self):
         Xcode.verify(self.tools, min_version=(13, 0, 0))
