@@ -10,11 +10,12 @@ import sys
 import textwrap
 import time
 import traceback
+from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Callable
 
 from rich.console import Console as RichConsole
 from rich.control import strip_control_codes

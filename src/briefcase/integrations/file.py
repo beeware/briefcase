@@ -22,7 +22,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import Tool, ToolCache
 
 if TYPE_CHECKING:
-    from typing import Iterable, Sequence
+    from collections.abc import Iterable, Sequence
 
 
 class File(Tool):
