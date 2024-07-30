@@ -26,8 +26,8 @@ def tools_for_module(tool_module_name: str) -> dict[str, type[Tool]]:
             sys.modules[f"briefcase.integrations.{tool_module_name}"],
             lambda klass: (
                 inspect.isclass(klass)
+                and not inspect.isabstract(klass)
                 and issubclass(klass, (Tool, ManagedTool))
-                and klass not in {Tool, ManagedTool}
             ),
         )
     )
