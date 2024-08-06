@@ -20,3 +20,4 @@ stand alone.
    contribute-docs
    internal/index
    publishing/index
+   tooling-settings-pycharm
