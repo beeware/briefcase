@@ -19,6 +19,8 @@ the other index files for clues.
 Build documentation locally
 ---------------------------
 
+.. Docs are always built on Python 3.12. See also the RTD and tox config.
+
 To build the documentation locally, :ref:`set up a development environment
 <setup-dev-environment>`. However, you **must** have a Python 3.12 interpreter installed
 and available on your path (i.e., ``python3.12`` must start a Python 3.12 interpreter).
