@@ -24,10 +24,11 @@ from briefcase.platforms.linux import (
     DockerOpenCommand,
     LinuxMixin,
     LocalRequirementsMixin,
+    StandalonePythonSupportMixin,
 )
 
 
-class LinuxAppImagePassiveMixin(LinuxMixin):
+class LinuxAppImagePassiveMixin(StandalonePythonSupportMixin, LinuxMixin):
     # The Passive mixin honors the docker options, but doesn't try to verify
     # docker exists. It is used by commands that are "passive" from the
     # perspective of the build system, like open and run.
