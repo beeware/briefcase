@@ -20,7 +20,8 @@ Build documentation locally
 ---------------------------
 
 To build the documentation locally, :ref:`set up a development environment
-<setup-dev-environment>`.
+<setup-dev-environment>`. However, you **must** have a Python 3.12 interpreter installed
+and available on your path (i.e., ``python3.12`` must start a Python 3.12 interpreter).
 
 You'll also need to install the Enchant spell checking library.
 
