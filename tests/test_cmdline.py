@@ -351,6 +351,7 @@ def test_upgrade_command(
     assert overrides == expected_overrides
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_bare_command(monkeypatch, logger, console):
     """``briefcase create`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -369,6 +370,7 @@ def test_bare_command(monkeypatch, logger, console):
     assert overrides == {}
 
 
+# TODO: Find another command to use here since create now has a parameter.
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_linux_default(logger, console):
     """``briefcase create`` returns the linux create system command on Linux."""
@@ -402,6 +404,7 @@ def test_macOS_default(logger, console):
     assert overrides == {}
 
 
+# TODO: Find another command to use here since create now has a parameter.
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 def test_windows_default(logger, console):
     """``briefcase create`` returns the Windows create app command on Windows."""
@@ -419,6 +422,7 @@ def test_windows_default(logger, console):
     assert overrides == {}
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_bare_command_help(monkeypatch, capsys, logger, console):
     """``briefcase create -h`` returns the macOS create app command help."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -466,6 +470,7 @@ def test_command_unknown_platform(monkeypatch, logger, console):
     )
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_command_explicit_platform(monkeypatch, logger, console):
     """``briefcase create linux`` returns linux create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -484,6 +489,7 @@ def test_command_explicit_platform(monkeypatch, logger, console):
     assert overrides == {}
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
     """``briefcase create macOS`` returns macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -503,6 +509,7 @@ def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
     assert overrides == {}
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
     """``briefcase create macOS -h`` returns the macOS create app command help."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -523,6 +530,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
     )
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_command_explicit_format(monkeypatch, logger, console):
     """``briefcase create macOS app`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -573,6 +581,7 @@ def test_command_explicit_unsupported_format(monkeypatch, logger, console):
         do_cmdline_parse("create macOS homebrew".split(), logger, console)
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_command_explicit_format_help(monkeypatch, capsys, logger, console):
     """``briefcase create macOS app -h`` returns the macOS create app help."""
     # Pretend we're on macOS, regardless of where the tests run.
@@ -593,6 +602,7 @@ def test_command_explicit_format_help(monkeypatch, capsys, logger, console):
     )
 
 
+# TODO: Find another command to use here since create now has a parameter.
 def test_command_disable_input(monkeypatch, logger, console):
     """``briefcase create --no-input`` disables console input."""
     # Pretend we're on macOS, regardless of where the tests run.
