@@ -65,7 +65,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "macos-12", "macos-14", "windows-latest", "ubuntu-latest" ]
-        python-version: [ "3.8", "3.12", "3.13-dev" ]
+        python-version: [ "3.9", "3.12", "3.13-dev" ]
         include:
           - experimental: false
           - platform: "ubuntu-latest"
@@ -80,10 +80,6 @@ jobs:
           # Allow dev Python to fail without failing entire job
           - python-version: "3.13-dev"
             experimental: true
-        exclude:
-          # macos-14 (i.e. arm64) does not support Python 3.8
-          - platform: "macos-14"
-            python-version: "3.8"
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.7
@@ -145,7 +141,7 @@ jobs:
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
-        python-version: "3.8"
+        python-version: "3.9"
 
     - name: Install Tox
       uses: beeware/.github/.github/actions/install-requirement@main

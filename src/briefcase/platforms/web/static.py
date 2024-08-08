@@ -4,7 +4,7 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 from zipfile import ZipFile
 
 from briefcase.console import Log
@@ -297,7 +297,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         host,
         port,
         open_browser,

@@ -3,7 +3,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import List
 
 from briefcase.commands.create import _is_local_requirement
 from briefcase.commands.open import OpenCommand
@@ -134,7 +133,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
     def _install_app_requirements(
         self,
         app: AppConfig,
-        requires: List[str],
+        requires: list[str],
         app_packages_path: Path,
     ):
         """Install requirements for the app with pip.
@@ -197,7 +196,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
             app_packages_path=app_packages_path,
         )
 
-    def _pip_requires(self, app: AppConfig, requires: List[str]):
+    def _pip_requires(self, app: AppConfig, requires: list[str]):
         """Convert the requirements list to an .deb project compatible format.
 
         Any local file requirements are converted into a reference to the file generated

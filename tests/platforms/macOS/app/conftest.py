@@ -31,6 +31,9 @@ def first_app_templated(first_app_config, tmp_path):
     create_file(
         tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
         """
+[briefcase]
+target_version = "0.3.20"
+
 [paths]
 app_packages_path="First App.app/Contents/Resources/app_packages"
 support_path="First App.app/Contents/Frameworks"

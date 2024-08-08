@@ -104,7 +104,7 @@ normalization of code name and version is performed, so ``ubuntu:jammy`` and
 same version).
 
 You can specify any identifier you want, provided the distribution is still
-supported by the vendor, and system Python is Python 3.8 or later.
+supported by the vendor, and system Python is Python 3.9 or later.
 
 The following Linux vendors are known to work as Docker targets:
 

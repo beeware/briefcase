@@ -2,7 +2,7 @@ from .conftest import DummyCommand
 
 
 def test_briefcase_required_python_version(base_command):
-    assert base_command.briefcase_required_python_version == (3, 8)
+    assert base_command.briefcase_required_python_version == (3, 9)
 
 
 def test_bundle_path(base_command, my_app, tmp_path):

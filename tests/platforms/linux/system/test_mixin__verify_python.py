@@ -105,7 +105,7 @@ def test_target_too_old(create_command, first_app_config):
     with pytest.raises(
         BriefcaseCommandError,
         match=r"The system python3 version provided by somevendor:surprising "
-        r"is 3\.7\.16; Briefcase requires a minimum Python3 version of 3\.8\.",
+        r"is 3\.7\.16; Briefcase requires a minimum Python3 version of 3\.9\.",
     ):
         create_command.verify_python(first_app_config)
 

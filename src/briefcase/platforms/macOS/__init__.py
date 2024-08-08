@@ -72,6 +72,8 @@ class macOSMixin:
     platform = "macOS"
     supported_host_os = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
+    # 0.3.20 introduced a framework-based support package.
+    platform_target_version = "0.3.20"
 
 
 class macOSCreateMixin(AppPackagesMergeMixin):
