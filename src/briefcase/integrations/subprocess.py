@@ -44,7 +44,7 @@ def json_parser(json_output: str) -> JsonT:
     :param json_output: command output to parse as JSON
     """
     try:
-        return json.loads(json_output)
+        return json.loads(json_output[json_output.index("{") :])
     except json.JSONDecodeError as e:
         raise ParseError(f"Failed to parse output as JSON: {e}") from e
 
