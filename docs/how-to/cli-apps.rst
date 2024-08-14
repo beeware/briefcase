@@ -33,7 +33,7 @@ Run the following from your command prompt:
 
     .. code-block:: console
 
-      $ briefcase new
+      (venv) $ briefcase new
       Let's build a new Briefcase app!
       -- Formal Name ---------------------------------------------------------------
 
@@ -178,7 +178,7 @@ Run the following from your command prompt:
 
     .. code-block:: console
 
-      $ briefcase new
+      (venv) $ briefcase new
       Let's build a new Briefcase app!
       -- Formal Name ---------------------------------------------------------------
 
@@ -322,7 +322,7 @@ Run the following from your command prompt:
 
     .. code-block:: doscon
 
-      C:\...>briefcase new
+      (venv) C:\...>briefcase new
       Let's build a new Briefcase app!
       -- Formal Name ---------------------------------------------------------------
 
@@ -486,8 +486,7 @@ your file system should look something like::
             ├── __init__.py
             └── test_app.py
 
-This skeleton is actually a fully functioning application without adding
-anything else. The ``src`` folder contains all the code for the application, the
+The ``src`` folder contains all the code for the application, the
 ``tests`` folder contains an initial test suite, and the ``pyproject.toml`` file
 describes how to package the application for distribution. If you open
 ``pyproject.toml`` in an editor, you'll see the configuration details you just
@@ -500,7 +499,7 @@ application.
 Running the application in developer mode
 ------------------------------------------
 
-To run the application in developer (or ``dev``) mode, navigate to the project directory ``helloworld``` and
+To run the application in developer (or ``dev``) mode, navigate to the project directory ``helloworld`` and
 run the following command:
 
 .. tabs::
@@ -509,43 +508,161 @@ run the following command:
 
     .. code-block:: console
 
-      (beeware-venv) $ cd helloworld
-      (beeware-venv) $ briefcase dev
+      (venv) $ cd helloworld
+      (venv) $ briefcase dev
 
       [hello-world] Installing requirements...
       ...
 
       [helloworld] Starting in dev mode...
+      ===========================================================================
+      Hello, World.
       ===========================================================================
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (beeware-venv) $ cd helloworld
-      (beeware-venv) $ briefcase dev
+      (venv) $ cd helloworld
+      (venv) $ briefcase dev
 
       [hello-world] Installing requirements...
       ...
 
       [helloworld] Starting in dev mode...
+      ===========================================================================
+      Hello, World.
       ===========================================================================
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (beeware-venv) C:\...>cd helloworld
-      (beeware-venv) C:\...>briefcase dev
+      (venv) C:\...>cd helloworld
+      (venv) C:\...>briefcase dev
 
       [hello-world] Installing requirements...
       ...
 
       [helloworld] Starting in dev mode...
       ===========================================================================
+      Hello, World.
+      ===========================================================================
 
-The application will start in a new terminal window. You should see a message
-that says "Hello, world!".
+The application will start in the terminal window. You should see a message
+that says "Hello, World.".
 
 
-Now you are ready to start building and packaging CLI apps! Have fun!
+Now you are ready to start building your CLI application!
+
+
+Making it interesting
+----------------------
+
+Right now the ``app.py`` file contains a simple ``print`` statement that prints "Hello, World.".
+Let's use ``argparse`` to make it more interesting.
+
+Replace the contents of ``src/helloworld/app.py`` with the following code:
+
+.. code-block:: python
+
+    import argparse
+
+    def main():
+        parser = argparse.ArgumentParser(
+            prog="helloworld",
+            usage="%(prog)s [options] name",
+            description="A simple command line application.",
+            add_help=True
+        )
+        parser.add_argument("name", help="Your name")
+        parser.add_argument("-v", "--version", action="version", version="%(prog)s 1.0")
+        args = parser.parse_args()
+        print(f'Hello, {args.name}!')
+
+Let’s look in detail at what has changed.
+
+1. We import the ``argparse`` module.
+2. We define a new function called ``main`` that will contain the logic for our application.
+3. We create an instance of ``argparse.ArgumentParser`` and pass in some arguments:
+    * ``prog``: The name of the program (in this case, ``helloworld``).
+    * ``usage``: The usage message that will be displayed when the user runs the program with the ``-h`` or ``--help`` flag.
+    * ``description``: A description of the program.
+    * ``add_help``: Whether to add a ``-h`` or ``--help`` flag to the program.
+4. We add two arguments to the parser:
+    * ``name``: A positional argument that takes the user's name.
+    * ``version``: An optional argument that prints the version of the program.
+5. We parse the arguments using ``parser.parse_args()``.
+6. We print a message that greets the user by name.
+
+
+Now that we've made these changes we can see what they look like by starting the application again.
+As before, we'll use developer mode:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ briefcase dev
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ briefcase dev
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>briefcase dev
+
+When you run the application, you should see the following output:
+
+.. code-block:: console
+
+    [helloworld] Starting in dev mode...
+    ===========================================================================
+    usage: helloworld [options] name
+    helloworld: error: the following arguments are required: name
+
+To pass arguments to the application, we will use the the following briefcase command  ``-- ARGS ...``
+Let's run the application again, this time with a name:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ briefcase dev -- John
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ briefcase dev -- John
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>briefcase dev -- John
+
+Now you should see the following output:
+
+.. code-block:: console
+
+    [helloworld] Starting in dev mode...
+    ===========================================================================
+    Hello, John!
+
+Congratulations! You've just built a simple command line application using Briefcase.
+
+Next steps
+----------
+
+So far we have been running the application in developer mode. To distribute the application, you will need to package it for distribution.
+For more information, see the `Tutorial 3 - Packaging for distribution documentation <https://docs.beeware.org/en/latest/tutorial/tutorial-3.html>`_.
