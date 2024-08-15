@@ -10,11 +10,11 @@ import subprocess
 import sys
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Iterator, Mapping, Sequence, TypeVar, Union
+from typing import TypeVar, Union
 
 import psutil
 

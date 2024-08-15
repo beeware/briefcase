@@ -5,10 +5,10 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from email.message import Message
 from pathlib import Path
-from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests.exceptions as requests_exceptions
@@ -20,9 +20,6 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.base import Tool, ToolCache
-
-if TYPE_CHECKING:
-    from typing import Iterable, Sequence
 
 
 class File(Tool):

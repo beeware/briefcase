@@ -4,9 +4,8 @@ import re
 import sys
 import unicodedata
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from email.utils import parseaddr
-from typing import Iterable
 
 if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     from importlib.metadata import entry_points

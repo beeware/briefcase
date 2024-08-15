@@ -514,11 +514,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
         self.logger.info(f"Installing {label}...", prefix=app.app_name)
-        with self.input.wait_bar(
-            "Uninstalling any existing app version..."
-        ) as keep_alive, self.tools.subprocess.Popen(
-            ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
-        ) as uninstall_popen:
+        with (
+            self.input.wait_bar(
+                "Uninstalling any existing app version..."
+            ) as keep_alive,
+            self.tools.subprocess.Popen(
+                ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+            ) as uninstall_popen,
+        ):
             while (ret_code := uninstall_popen.poll()) is None:
                 keep_alive.update()
                 time.sleep(0.25)
@@ -529,11 +532,12 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             )
 
         # Install the app.
-        with self.input.wait_bar(
-            f"Installing new {label} version..."
-        ) as keep_alive, self.tools.subprocess.Popen(
-            ["xcrun", "simctl", "install", udid, self.binary_path(app)]
-        ) as install_popen:
+        with (
+            self.input.wait_bar(f"Installing new {label} version...") as keep_alive,
+            self.tools.subprocess.Popen(
+                ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+            ) as install_popen,
+        ):
             while (ret_code := install_popen.poll()) is None:
                 keep_alive.update()
                 time.sleep(0.25)

@@ -2,7 +2,6 @@ import re
 import subprocess
 import uuid
 from pathlib import Path, PurePath
-from typing import List
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
@@ -131,7 +130,7 @@ class WindowsRunCommand(RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        passthrough: List[str],
+        passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
