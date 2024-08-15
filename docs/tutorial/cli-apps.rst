@@ -5,16 +5,18 @@ Building a CLI application with Briefcase
 Overview
 ---------
 
-In this tutorial, you'll learn how to build and package a Command Line Interface (CLI) application for distribution on Windows, macOS, and Linux using Briefcase.
+In this tutorial, you'll learn how to build and package a Command Line Interface
+(CLI) application for distribution on Windows, macOS, and Linux using Briefcase.
 
-We're going to assume you've got an environment set up like you did in the `Hello, World! tutorial <https://docs.beeware.org/en/latest/tutorial/tutorial-0.html>`_.
+We're going to assume you've got an environment set up like you did in the
+`Hello, World! tutorial <https://docs.beeware.org/en/latest/tutorial/tutorial-0.html>`_.
 
 
 Bootstrap a new project
 ------------------------
 
-Let's start our first Briefcase CLI project!
-We're going to use the Briefcase ``new`` command to create an application called **Hello CLI**.
+Let's start our first Briefcase CLI project! We're going to use the Briefcase
+``new`` command to create an application called **Hello CLI**.
 Run the following from your command prompt:
 
 .. tabs::
@@ -117,8 +119,8 @@ application.
 Running the application in developer mode
 ------------------------------------------
 
-To run the application in developer (or ``dev``) mode, navigate to the project directory ``hello-cli`` and
-run the following command:
+To run the application in developer (or ``dev``) mode, navigate to the project
+directory ``hello-cli`` and run the following command:
 
 .. tabs::
 
@@ -176,8 +178,8 @@ Now you are ready to start building your CLI application!
 Making it interesting
 ----------------------
 
-Right now the ``app.py`` file contains a simple ``print`` statement that prints "Hello, World.".
-Let's use :any:`argparse` to make it more interesting.
+Right now the ``app.py`` file contains a simple ``print`` statement that
+prints "Hello, World.". Let's use :any:`argparse` to make it more interesting.
 
 Replace the contents of ``src/hello_cli/app.py`` with the following code:
 
@@ -200,10 +202,12 @@ Replace the contents of ``src/hello_cli/app.py`` with the following code:
 Let's look in detail at what has changed.
 
 1. We import the  :any:`argparse` module.
-2. We define a new function called ``main`` that will contain the logic for our application.
-3. We create an instance of  :any:`argparse.ArgumentParser`  and pass in some arguments:
+2. We define a new function called ``main`` that will contain the logic for
+   our application.
+3. We create an instance of :any:`argparse.ArgumentParser` and pass in some arguments:
     * ``prog``: The name of the program (in this case, ``hello-cli``).
-    * ``usage``: The usage message that will be displayed when the user runs the program with the ``-h`` or ``--help`` flag.
+    * ``usage``: The usage message that will be displayed when the user runs
+      the program with the ``-h`` or ``--help`` flag.
     * ``description``: A description of the program.
     * ``add_help``: Whether to add a ``-h`` or ``--help`` flag to the program.
 4. We add two arguments to the parser:
@@ -213,8 +217,8 @@ Let's look in detail at what has changed.
 6. We print a message that greets the user by name.
 
 
-Now that we've made these changes we can see what they look like by starting the application again.
-As before, we'll use developer mode:
+Now that we've made these changes we can see what they look like by starting
+the application again. As before, we'll use developer mode:
 
 .. tabs::
 
@@ -245,8 +249,8 @@ When you run the application, you should see the following output:
     usage: hello-cli [options] name
     hello-cli: error: the following arguments are required: name
 
-To pass arguments to the application, we will use the the following briefcase command  ``-- ARGS ...``
-Let's run the application again, this time with a name:
+To pass arguments to the application, we will use the the following briefcase
+command ``-- ARGS ...``. Let's run the application again, this time with a name:
 
 .. tabs::
 
@@ -276,10 +280,13 @@ Now you should see the following output:
     ===========================================================================
     Hello, John!
 
-Congratulations! You've just built a simple command line application using Briefcase.
+Congratulations! You've just built a simple command line application using
+Briefcase.
 
 Next steps
 ----------
 
-So far we have been running the application in developer mode. To distribute the application, you will need to package it for distribution.
-For more information, see the `Tutorial 3 - Packaging for distribution documentation <https://docs.beeware.org/en/latest/tutorial/tutorial-3.html>`_.
+So far we have been running the application in developer mode.
+To distribute the application, you will need to package it for distribution.
+For more information, see the
+`Tutorial 3 - Packaging for distribution documentation <https://docs.beeware.org/en/latest/tutorial/tutorial-3.html>`_.
