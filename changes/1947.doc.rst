@@ -1,1 +1,1 @@
-Tutorial for building and packaging a Command Line Interface (CLI) application using Briefcase.
+A tutorial for writing command-line apps was added.
