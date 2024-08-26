@@ -37,6 +37,17 @@ def test_find_binary_packages(dummy_command, tmp_path):
         "binary-package-2",
         version="3.4.6",
         tag="macOS_13_arm64",
+        extra_content=[
+            # A vendored, but incomplete .dist-info folder. See #1970
+            ("vendored/nested-incomplete.dist-info/LICENSE", "Nested License", 0o644),
+        ],
+    )
+    # A vendored .dist-info folder. This *isn't* found and processed.
+    create_installed_package(
+        tmp_path / "app-packages/binary-package-2/vendored",
+        "nested-package",
+        version="9.9.9",
+        tag="macOS_13_arm64",
     )
 
     binary_packages = dummy_command.find_binary_packages(
