@@ -41,7 +41,7 @@ class AppPackagesMergeMixin:
             are in the install path that are non-universal and non-pure.
         """
         binary_packages = []
-        for distinfo in install_path.glob("**/*.dist-info"):
+        for distinfo in install_path.glob("*.dist-info"):
             # Read the WHEEL file in the dist-info folder.
             # Use this to determine if the wheel is "pure", and the tag
             # for the wheel.
