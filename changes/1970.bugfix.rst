@@ -1,1 +1,1 @@
-Packages that include ``.dist-info`` content in vendored dependencies are now ignored as part of the binary widening process on macOS. If a binary package has vendored subpackages, it is assumed that the top-level package includes the vendored package's files in it's wheel manifest.
+Packages that include ``.dist-info`` content in vendored dependencies are now ignored as part of the binary widening process on macOS. If a binary package has vendored subpackages, it is assumed that the top-level package includes the vendored packages' files in its wheel manifest.
