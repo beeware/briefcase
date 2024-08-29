@@ -99,7 +99,7 @@ test_requires = [
 universal_build = true
 requires = [
     "toga-cocoa~=0.4.6",
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_linux="""\
@@ -214,7 +214,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "45"
+flatpak_runtime_version = "46"
 flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""\
@@ -225,7 +225,7 @@ requires = [
         pyproject_table_iOS="""\
 requires = [
     "toga-iOS~=0.4.6",
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_android="""\
@@ -450,8 +450,8 @@ def main():
 """,
         pyproject_table_briefcase_app_extra_content="""
 requires = [
-    "PySide6-Essentials~=6.5",
-    # "PySide6-Addons~=6.5",
+    "PySide6-Essentials~=6.7",
+    # "PySide6-Addons~=6.7",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -462,7 +462,7 @@ test_requires = [
         pyproject_table_macOS="""\
 universal_build = true
 requires = [
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_linux="""\
@@ -533,7 +533,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.kde.Platform"
-flatpak_runtime_version = "6.6"
+flatpak_runtime_version = "6.7"
 flatpak_sdk = "org.kde.Sdk"
 """,
         pyproject_table_windows="""\
@@ -635,7 +635,7 @@ def main():
 """,
         pyproject_table_briefcase_app_extra_content="""
 requires = [
-    "pygame~=2.2",
+    "pygame~=2.6",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -646,7 +646,7 @@ test_requires = [
         pyproject_table_macOS="""\
 universal_build = true
 requires = [
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_linux="""\
@@ -996,7 +996,7 @@ test_requires = [
 universal_build = true
 requires = [
     "toga-cocoa~=0.4.6",
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_linux="""\
@@ -1111,7 +1111,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "45"
+flatpak_runtime_version = "46"
 flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""\
@@ -1122,7 +1122,7 @@ requires = [
         pyproject_table_iOS="""\
 requires = [
     "toga-iOS~=0.4.6",
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_android="""\
