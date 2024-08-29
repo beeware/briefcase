@@ -26,10 +26,8 @@ class {{{{ cookiecutter.class_name }}}}(toga.App):
         self.main_window.content = main_box
         self.main_window.show()
 
-        self.add_background_task(self.exit_soon)
-
-    async def exit_soon(self, app: toga.App, **kwargs):
-        """Background task that closes the app after a few seconds."""
+    async def on_running(self):
+        """Close the app after a few seconds."""
         await asyncio.sleep(2)
         print("{EXIT_SUCCESS_NOTIFY}")
         print("{BRIEFCASE_EXIT_SUCCESS_SIGNAL}")
