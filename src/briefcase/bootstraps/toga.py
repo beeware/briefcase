@@ -51,7 +51,7 @@ test_requires = [
         return """\
 universal_build = true
 requires = [
-    "toga-cocoa~=0.4.5",
+    "toga-cocoa~=0.4.6",
     "std-nslog~=1.0.0",
 ]
 """
@@ -59,7 +59,7 @@ requires = [
     def pyproject_table_linux(self):
         return """\
 requires = [
-    "toga-gtk~=0.4.5",
+    "toga-gtk~=0.4.6",
 ]
 """
 
@@ -188,14 +188,14 @@ flatpak_sdk = "org.gnome.Sdk"
     def pyproject_table_windows(self):
         return """\
 requires = [
-    "toga-winforms~=0.4.5",
+    "toga-winforms~=0.4.6",
 ]
 """
 
     def pyproject_table_iOS(self):
         return """\
 requires = [
-    "toga-iOS~=0.4.5",
+    "toga-iOS~=0.4.6",
     "std-nslog~=1.0.0",
 ]
 """
@@ -203,7 +203,7 @@ requires = [
     def pyproject_table_android(self):
         return """\
 requires = [
-    "toga-android~=0.4.5",
+    "toga-android~=0.4.6",
 ]
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
@@ -220,7 +220,7 @@ build_gradle_dependencies = [
     def pyproject_table_web(self):
         return """\
 requires = [
-    "toga-web~=0.4.5",
+    "toga-web~=0.4.6",
 ]
 style_framework = "Shoelace v2.3"
 """
