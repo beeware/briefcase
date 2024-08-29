@@ -98,13 +98,13 @@ test_requires = [
         pyproject_table_macOS="""\
 universal_build = true
 requires = [
-    "toga-cocoa~=0.4.5",
+    "toga-cocoa~=0.4.6",
     "std-nslog~=1.0.0",
 ]
 """,
         pyproject_table_linux="""\
 requires = [
-    "toga-gtk~=0.4.5",
+    "toga-gtk~=0.4.6",
 ]
 """,
         pyproject_table_linux_system_debian="""\
@@ -219,18 +219,18 @@ flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""\
 requires = [
-    "toga-winforms~=0.4.5",
+    "toga-winforms~=0.4.6",
 ]
 """,
         pyproject_table_iOS="""\
 requires = [
-    "toga-iOS~=0.4.5",
+    "toga-iOS~=0.4.6",
     "std-nslog~=1.0.0",
 ]
 """,
         pyproject_table_android="""\
 requires = [
-    "toga-android~=0.4.5",
+    "toga-android~=0.4.6",
 ]
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
@@ -245,7 +245,7 @@ build_gradle_dependencies = [
 """,
         pyproject_table_web="""\
 requires = [
-    "toga-web~=0.4.5",
+    "toga-web~=0.4.6",
 ]
 style_framework = "Shoelace v2.3"
 """,
@@ -995,13 +995,13 @@ test_requires = [
         pyproject_table_macOS="""\
 universal_build = true
 requires = [
-    "toga-cocoa~=0.4.5",
+    "toga-cocoa~=0.4.6",
     "std-nslog~=1.0.0",
 ]
 """,
         pyproject_table_linux="""\
 requires = [
-    "toga-gtk~=0.4.5",
+    "toga-gtk~=0.4.6",
 ]
 """,
         pyproject_table_linux_system_debian="""\
@@ -1116,18 +1116,18 @@ flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""\
 requires = [
-    "toga-winforms~=0.4.5",
+    "toga-winforms~=0.4.6",
 ]
 """,
         pyproject_table_iOS="""\
 requires = [
-    "toga-iOS~=0.4.5",
+    "toga-iOS~=0.4.6",
     "std-nslog~=1.0.0",
 ]
 """,
         pyproject_table_android="""\
 requires = [
-    "toga-android~=0.4.5",
+    "toga-android~=0.4.6",
 ]
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
@@ -1142,7 +1142,7 @@ build_gradle_dependencies = [
 """,
         pyproject_table_web="""\
 requires = [
-    "toga-web~=0.4.5",
+    "toga-web~=0.4.6",
 ]
 style_framework = "Shoelace v2.3"
 """,
