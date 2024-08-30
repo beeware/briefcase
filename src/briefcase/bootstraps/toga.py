@@ -52,7 +52,7 @@ test_requires = [
 universal_build = true
 requires = [
     "toga-cocoa~=0.4.6",
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """
 
@@ -181,7 +181,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "45"
+flatpak_runtime_version = "46"
 flatpak_sdk = "org.gnome.Sdk"
 """
 
@@ -196,7 +196,7 @@ requires = [
         return """\
 requires = [
     "toga-iOS~=0.4.6",
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """
 

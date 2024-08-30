@@ -55,7 +55,7 @@ def main():
     def pyproject_table_briefcase_app_extra_content(self):
         return """
 requires = [
-    "pygame~=2.2",
+    "pygame~=2.6",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -68,7 +68,7 @@ test_requires = [
         return """\
 universal_build = true
 requires = [
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """
 

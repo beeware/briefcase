@@ -669,7 +669,7 @@ def test_pep621_defaults():
         [tool.briefcase.app.awesome.macOS]
         requires = [
             "toga-cocoa~=0.3.1",
-            "std-nslog~=1.0.0"
+            "std-nslog~=1.0.3"
         ]
         """
     )
@@ -691,7 +691,7 @@ def test_pep621_defaults():
         "author_email": "kim@example.com",
         "url": "https://example.com/awesome",
         "description": "awesome project",
-        "requires": ["numpy", "toga-cocoa~=0.3.1", "std-nslog~=1.0.0"],
+        "requires": ["numpy", "toga-cocoa~=0.3.1", "std-nslog~=1.0.3"],
         "test_requires": ["pytest"],
         "app_name": "awesome",
         "sources": ["src"],

@@ -47,8 +47,8 @@ def main():
     def pyproject_table_briefcase_app_extra_content(self):
         return """
 requires = [
-    "PySide6-Essentials~=6.5",
-    # "PySide6-Addons~=6.5",
+    "PySide6-Essentials~=6.7",
+    # "PySide6-Addons~=6.7",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -61,7 +61,7 @@ test_requires = [
         return """\
 universal_build = true
 requires = [
-    "std-nslog~=1.0.0",
+    "std-nslog~=1.0.3",
 ]
 """
 
@@ -146,7 +146,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.kde.Platform"
-flatpak_runtime_version = "6.6"
+flatpak_runtime_version = "6.7"
 flatpak_sdk = "org.kde.Sdk"
 """
 
