@@ -167,13 +167,12 @@ Workflow File Contents
               - target: "Android"
                 output-format: "Gradle"
                 runs-on: "ubuntu-latest"
-                # Enable KVM permissions for the emulator and use GitHub's preinstalled JDK
                 pre-command: |
+                  # Enable KVM permissions for the emulator
                   echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
                     | sudo tee /etc/udev/rules.d/99-kvm4all.rules
                   sudo udevadm control --reload-rules
                   sudo udevadm trigger --name-match=kvm
-                briefcase-run-prefix: "JAVA_HOME=${JAVA_HOME_17_X64}"
                 briefcase-run-args: >-
                   --device '{"avd":"beePhone"}'
                   --shutdown-on-exit
@@ -197,8 +196,10 @@ Workflow File Contents
               python -m pip install briefcase
 
           - name: Setup Environment
-            if: matrix.pre-command
-            run: ${{ matrix.pre-command }}
+            run: |
+              # Use GitHub's preinstalled JDK 17 for Android builds
+              echo JAVA_HOME="${JAVA_HOME_17_X64:-$JAVA_HOME_17_arm64}" | tee -a ${GITHUB_ENV}
+              ${{ matrix.pre-command }}
 
           - name: Build App
             run: |
@@ -206,7 +207,7 @@ Workflow File Contents
               briefcase build \
                 ${{ matrix.platform || matrix.target }} \
                 ${{ matrix.output-format }} \
-                --test --no-input \
+                --test --no-input --log \
                 ${{ matrix.briefcase-args }} \
                 ${{ matrix.briefcase-build-args }}
 
@@ -216,7 +217,7 @@ Workflow File Contents
               briefcase run \
                 ${{ matrix.platform || matrix.target }} \
                 ${{ matrix.output-format }} \
-                --test --no-input \
+                --test --no-input --log \
                 ${{ matrix.briefcase-args }} \
                 ${{ matrix.briefcase-run-args }}
 
@@ -226,7 +227,7 @@ Workflow File Contents
               briefcase package \
                 ${{ matrix.platform || matrix.target }} \
                 ${{ matrix.output-format }} \
-                --update --adhoc-sign --no-input \
+                --update --adhoc-sign --no-input --log \
                 ${{ matrix.briefcase-args }} \
                 ${{ matrix.briefcase-package-args }}
 
