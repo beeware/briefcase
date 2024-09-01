@@ -113,11 +113,12 @@ jobs:
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
-      uses: actions/upload-artifact@v4.3.6
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
         path: ".coverage.*"
-        if-no-files-found: ignore
+        if-no-files-found: error
+        include-hidden-files: true
 
     - name: Report Platform Coverage
       id: coverage
@@ -168,7 +169,7 @@ jobs:
 
     - name: Upload Project Coverage HTML Report
       if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v4.3.6
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: html-coverage-report-project
         path: htmlcov
