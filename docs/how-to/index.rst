@@ -14,9 +14,10 @@ stand alone.
    :glob:
 
    code-signing/index
-   upgrade-from-v0.2
    access-packaging-metadata
+   ci
+   publishing/index
+   upgrade-from-v0.2
    contribute-code
    contribute-docs
    internal/index
-   publishing/index
