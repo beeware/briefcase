@@ -10,6 +10,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -164,12 +165,12 @@ class BaseCommand(ABC):
         self.data_path = self.validate_data_path(data_path)
         self.apps = {} if apps is None else apps
         self.is_clone = is_clone
-
         self.tools = tools or ToolCache(
             logger=logger,
             console=console,
             base_path=self.data_path / "tools",
         )
+        self.validate_python_version()
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
@@ -289,6 +290,20 @@ a custom location for Briefcase's tools.
 
 *************************************************************************
 """
+            )
+
+    def validate_python_version(self):
+        """Validate the system's python version is not past its EOL date."""
+        python_version = sys.version_info
+        today = date.today()
+        EOL_year = today.year - 2024  # increment this each year past 10-2024
+        if today.month > 10:
+            EOL_year += 1
+        if python_version[0] < 3 or (
+            python_version[0] == 3 and python_version[1] < 8 + EOL_year
+        ):
+            self.logger.warning(
+                f"WARNING: Python version is past its EOL date. Update Python to at least Python 3.{EOL_year+8}."
             )
 
     def _command_factory(self, command_name: str):
