@@ -356,7 +356,7 @@ system_runtime_requires = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "23.08"
+flatpak_runtime_version = "24.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         pyproject_table_windows="""\
@@ -692,7 +692,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "23.08"
+flatpak_runtime_version = "24.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         pyproject_table_windows="""\
