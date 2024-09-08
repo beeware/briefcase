@@ -9,6 +9,8 @@ class AppContext(TypedDict):
     app_name: str
     class_name: str
     module_name: str
+    source_dir: str
+    test_source_dir: str
     project_name: str
     description: str
     author: str
@@ -16,9 +18,6 @@ class AppContext(TypedDict):
     bundle: str
     url: str
     license: str
-    briefcase_version: str
-    template_source: str
-    template_branch: str
 
 
 class BaseGuiBootstrap(ABC):

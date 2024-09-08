@@ -9,6 +9,7 @@ from briefcase.bootstraps import (
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
+from briefcase.bootstraps.base import AppContext
 
 
 @pytest.fixture
@@ -19,6 +20,68 @@ def mock_builtin_bootstraps():
         "PySide6": PySide6GuiBootstrap,
         "Pygame": PygameGuiBootstrap,
     }
+
+
+def test_question_sequence_bootstrap_context(
+    new_command,
+    mock_builtin_bootstraps,
+    monkeypatch,
+):
+    """The context passed to GUI Toolkits is correct."""
+
+    passed_context = {}
+
+    class GuiBootstrap:
+        fields = []
+
+        def __init__(self, context):
+            nonlocal passed_context
+            passed_context = context.copy()
+
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(
+            return_value=dict(
+                **mock_builtin_bootstraps,
+                **{"Custom GUI": GuiBootstrap},
+            ),
+        ),
+    )
+
+    new_command.input.enabled = False
+
+    new_command.build_context(
+        project_overrides=dict(
+            formal_name="My Override App",
+            app_name="myoverrideapp",
+            bundle="net.example",
+            project_name="My Override Project",
+            description="My override description",
+            author="override, author",
+            author_email="author@override.tld",
+            url="https://override.example.com",
+            license="MIT license",
+            bootstrap="Custom GUI",
+        ),
+    )
+
+    assert passed_context == {
+        "app_name": "myoverrideapp",
+        "author": "override, author",
+        "author_email": "author@override.tld",
+        "bundle": "net.example",
+        "class_name": "MyOverrideApp",
+        "description": "My override description",
+        "formal_name": "My Override App",
+        "license": "MIT license",
+        "module_name": "myoverrideapp",
+        "project_name": "My Override Project",
+        "source_dir": "src/myoverrideapp",
+        "test_source_dir": "tests",
+        "url": "https://override.example.com",
+    }
+    assert sorted(passed_context.keys()) == sorted(AppContext.__annotations__.keys())
 
 
 def test_question_sequence_toga(new_command):
