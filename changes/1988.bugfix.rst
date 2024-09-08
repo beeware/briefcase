@@ -1,0 +1,1 @@
+The typings for ``AppContext`` passed to GUI Toolkit bootstraps for creating new projects is now correct.
