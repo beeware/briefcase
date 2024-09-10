@@ -25,7 +25,7 @@ def run_command(tmp_path):
 
     # To satisfy coverage, the stop function must be invoked
     # at least once when streaming app logs.
-    def mock_stream_app_logs(app, stop_func, **kwargs):
+    def mock_stream_app_logs(app, stop_func=lambda: 1 + 1, **kwargs):
         stop_func()
 
     command._stream_app_logs.side_effect = mock_stream_app_logs
@@ -242,19 +242,14 @@ def test_run_gui_app_find_pid_failed(
     run_command.tools.os.kill.assert_not_called()
 
 
-@pytest.mark.parametrize("is_console_app", [True, False])
-def test_run_app_test_mode(
+def test_run_gui_app_test_mode(
     run_command,
     first_app_config,
-    is_console_app,
     sleep_zero,
     tmp_path,
     monkeypatch,
 ):
-    """A macOS app can be started in test mode."""
-    # Test mode is the same regardless of whether it's test mode or not.
-    first_app_config.console_app = is_console_app
-
+    """A macOS GUI app can be started in test mode."""
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -356,6 +351,72 @@ def test_run_console_app_with_passthrough(
 
     # The log stream was not started
     run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_console_app_test_mode(run_command, first_app_config, sleep_zero, tmp_path):
+    """A macOS console app can be started in test mode."""
+    first_app_config.console_app = True
+
+    # Mock a popen object that represents the app
+    app_process = mock.MagicMock(spec_set=subprocess.Popen)
+    run_command.tools.subprocess.Popen.return_value = app_process
+
+    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+
+    # Calls were made to start the app and to start a log stream.
+    bin_path = run_command.binary_path(first_app_config)
+    run_command.tools.subprocess.Popen.assert_called_with(
+        [bin_path / "Contents/MacOS/First App"],
+        cwd=tmp_path / "home",
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # The log stream was not started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=app_process,
+        test_mode=True,
+    )
+
+
+def test_run_console_app_test_mode_with_passthrough(
+    run_command,
+    first_app_config,
+    sleep_zero,
+    tmp_path,
+):
+    """A macOS console app can be started in test mode with parameters and debug
+    mode."""
+    run_command.logger.verbosity = LogLevel.DEBUG
+
+    first_app_config.console_app = True
+
+    # Mock a popen object that represents the app
+    app_process = mock.MagicMock(spec_set=subprocess.Popen)
+    run_command.tools.subprocess.Popen.return_value = app_process
+
+    run_command.run_app(first_app_config, test_mode=True, passthrough=["foo", "--bar"])
+
+    # Calls were made to start the app and to start a log stream.
+    bin_path = run_command.binary_path(first_app_config)
+    run_command.tools.subprocess.Popen.assert_called_with(
+        [bin_path / "Contents/MacOS/First App", "foo", "--bar"],
+        cwd=tmp_path / "home",
+        env={"BRIEFCASE_DEBUG": "1", "BRIEFCASE_MAIN_MODULE": "tests.first_app"},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # The log stream was not started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_config,
+        popen=app_process,
+        test_mode=True,
+    )
 
 
 def test_run_console_app_failed(run_command, first_app_config, sleep_zero, tmp_path):
