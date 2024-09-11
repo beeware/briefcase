@@ -250,10 +250,11 @@ class macOSRunMixin:
         """
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so
-        # that we can see the test exit sentinel
-        if app.console_app and not test_mode:
+        # that we can see the test exit sentinel.
+        if app.console_app:
             self.run_console_app(
                 app,
+                test_mode=test_mode,
                 passthrough=passthrough,
                 **kwargs,
             )
@@ -268,32 +269,51 @@ class macOSRunMixin:
     def run_console_app(
         self,
         app: AppConfig,
+        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the console application.
 
         :param app: The config object for the app
+        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
-        try:
-            kwargs = self._prepare_app_kwargs(app=app, test_mode=False)
+        sub_kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        cmdline = [self.binary_path(app) / f"Contents/MacOS/{app.formal_name}"]
+        cmdline.extend(passthrough)
 
-            # Start the app directly
-            self.logger.info("=" * 75)
-            self.tools.subprocess.run(
-                [self.binary_path(app) / "Contents" / "MacOS" / f"{app.formal_name}"]
-                + (passthrough if passthrough else []),
+        if test_mode:
+            # Stream the app's output for testing.
+            # When a console app runs normally, its stdout should be connected
+            # directly to the terminal to properly display the app. When its test
+            # suite is running, though, Briefcase should stream the output to
+            # capture the testing outcome.
+            app_popen = self.tools.subprocess.Popen(
+                cmdline,
                 cwd=self.tools.home_path,
-                check=True,
-                stream_output=False,
-                **kwargs,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+                **sub_kwargs,
             )
+            self._stream_app_logs(app, popen=app_popen, test_mode=test_mode)
 
-        except subprocess.CalledProcessError:
-            # The command line app *could* returns an error code, which is entirely legal.
-            # Ignore any subprocess error here.
-            pass
+        else:
+            try:
+                # Start the app directly
+                self.logger.info("=" * 75)
+                self.tools.subprocess.run(
+                    cmdline,
+                    cwd=self.tools.home_path,
+                    check=True,
+                    stream_output=False,
+                    **sub_kwargs,
+                )
+            except subprocess.CalledProcessError:
+                # The command line app *could* returns an error code, which is entirely legal.
+                # Ignore any subprocess error here.
+                pass
 
     def run_gui_app(
         self,
@@ -347,7 +367,7 @@ class macOSRunMixin:
         app_pid = None
         try:
             # Set up the log stream
-            kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+            sub_kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
@@ -356,7 +376,7 @@ class macOSRunMixin:
                 + ((["--args"] + passthrough) if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
-                **kwargs,
+                **sub_kwargs,
             )
 
             # Find the App process ID so log streaming can exit when the app exits
