@@ -82,7 +82,7 @@ jobs:
             experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4.2.0
       with:
         fetch-depth: 0
 
@@ -133,7 +133,7 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4.2.0
       with:
         fetch-depth: 0
 
