@@ -51,7 +51,7 @@ test_requires = [
         return """\
 universal_build = true
 requires = [
-    "toga-cocoa~=0.4.6",
+    "toga-cocoa~=0.4.7",
     "std-nslog~=1.0.3",
 ]
 """
@@ -59,7 +59,7 @@ requires = [
     def pyproject_table_linux(self):
         return """\
 requires = [
-    "toga-gtk~=0.4.6",
+    "toga-gtk~=0.4.7",
 ]
 """
 
@@ -181,21 +181,21 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "46"
+flatpak_runtime_version = "47"
 flatpak_sdk = "org.gnome.Sdk"
 """
 
     def pyproject_table_windows(self):
         return """\
 requires = [
-    "toga-winforms~=0.4.6",
+    "toga-winforms~=0.4.7",
 ]
 """
 
     def pyproject_table_iOS(self):
         return """\
 requires = [
-    "toga-iOS~=0.4.6",
+    "toga-iOS~=0.4.7",
     "std-nslog~=1.0.3",
 ]
 """
@@ -203,24 +203,24 @@ requires = [
     def pyproject_table_android(self):
         return """\
 requires = [
-    "toga-android~=0.4.6",
+    "toga-android~=0.4.7",
 ]
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
 build_gradle_dependencies = [
-    "com.google.android.material:material:1.11.0",
+    "com.google.android.material:material:1.12.0",
     # Needed for DetailedList
     # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for MapView
-    # "org.osmdroid:osmdroid-android:6.1.0",
+    # "org.osmdroid:osmdroid-android:6.1.20",
 ]
 """
 
     def pyproject_table_web(self):
         return """\
 requires = [
-    "toga-web~=0.4.6",
+    "toga-web~=0.4.7",
 ]
 style_framework = "Shoelace v2.3"
 """
