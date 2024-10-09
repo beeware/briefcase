@@ -306,7 +306,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         :returns: A list of additional arguments
         """
         return super()._extra_pip_args(app) + [
-            "--prefer-binary",
+            "--only-binary=:all:",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
         ]
@@ -317,19 +317,27 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         requires: list[str],
         app_packages_path: Path,
     ):
+        # Determine the min iOS version from the VERSIONS file in the support package.
+        versions = dict(
+            [part.strip() for part in line.split(": ", 1)]
+            for line in (
+                (self.support_path(app) / "VERSIONS")
+                .read_text(encoding="UTF-8")
+                .split("\n")
+            )
+            if ": " in line
+        )
+        ios_min_tag = versions.get("Min iOS version", "13.0").replace(".", "_")
+
         # Perform the initial install pass targeting the "iphoneos" platform
         super()._install_app_requirements(
             app,
             requires=requires,
             app_packages_path=app_packages_path.parent / "app_packages.iphoneos",
             progress_message="Installing app requirements for iPhone device...",
-            pip_kwargs={
-                "env": {
-                    "PYTHONPATH": str(
-                        self.support_path(app) / "platform-site/iphoneos.arm64"
-                    ),
-                }
-            },
+            pip_args=[
+                f"--platform=ios_{ios_min_tag}_arm64_iphoneos",
+            ],
         )
 
         # Perform a second install pass targeting the "iphonesimulator" platform for the
@@ -339,15 +347,9 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             requires=requires,
             app_packages_path=app_packages_path.parent / "app_packages.iphonesimulator",
             progress_message="Installing app requirements for iPhone simulator...",
-            pip_kwargs={
-                "env": {
-                    "PYTHONPATH": str(
-                        self.support_path(app)
-                        / "platform-site"
-                        / f"iphonesimulator.{self.tools.host_arch}"
-                    ),
-                }
-            },
+            pip_args=[
+                f"--platform=ios_{ios_min_tag}_{self.tools.host_arch}_iphonesimulator",
+            ],
         )
 
 
