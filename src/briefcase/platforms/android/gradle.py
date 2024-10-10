@@ -347,6 +347,13 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
         parser.add_argument(
+            "--Xadb-install",
+            action="append",
+            dest="extra_adb_install_args",
+            help="Additional arguments passed to adb install",
+            required=False,
+        )
+        parser.add_argument(
             "--Xemulator",
             action="append",
             dest="extra_emulator_args",
@@ -366,6 +373,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         test_mode: bool,
         passthrough: list[str],
         device_or_avd=None,
+        extra_adb_install_args=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
         **kwargs,
@@ -377,6 +385,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
+        :param extra_adb_install_args: Any additional arguments to pass to adb install.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
         """
@@ -425,7 +434,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Install the latest APK file onto the device.
             with self.input.wait_bar("Installing new app version..."):
-                adb.install_apk(self.binary_path(app))
+                adb.install_apk(self.binary_path(app), extra_adb_install_args)
 
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.input.wait_bar(f"Launching {label}..."):

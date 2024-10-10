@@ -92,6 +92,31 @@ def test_device_option(run_command):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "extra_adb_install_args": None,
+        "extra_emulator_args": None,
+        "shutdown_on_exit": False,
+    }
+    assert overrides == {}
+
+
+def test_extra_adb_install_args_option(run_command):
+    """The --Xadb-install option can be parsed."""
+    options, overrides = run_command.parse_options(
+        ["--Xadb-install=--no-streaming", "--Xadb-install=-g"]
+    )
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "update_support": False,
+        "update_stub": False,
+        "no_update": False,
+        "test_mode": False,
+        "passthrough": [],
+        "extra_adb_install_args": ["--no-streaming", "-g"],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
     }
@@ -115,6 +140,7 @@ def test_extra_emulator_args_option(run_command):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "extra_adb_install_args": None,
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
     }
@@ -136,6 +162,7 @@ def test_shutdown_on_exit_option(run_command):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "extra_adb_install_args": None,
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
     }
@@ -207,7 +234,81 @@ def test_run_existing_device(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
+    )
+    run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+    )
+
+    run_command.tools.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+        [],
+    )
+
+    run_command.tools.mock_adb.pidof.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        quiet=True,
+    )
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
+        clean_filter=android_log_clean_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
+    )
+
+    # The emulator was not killed at the end of the test
+    run_command.tools.mock_adb.kill.assert_not_called()
+
+
+def test_run_extra_adb_install_args(run_command, first_app_config):
+    """An app can be run on an existing device after being installed with extra adb
+    install arguments."""
+    # Set up device selection to return a running physical device.
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # To satisfy coverage, the stop function must be invoked at least once
+    # when invoking stream_output.
+    def mock_stream_output(app, stop_func, **kwargs):
+        stop_func()
+
+    run_command._stream_app_logs.side_effect = mock_stream_output
+
+    # Set up app config to have a `-` in the `bundle`, to ensure it gets
+    # normalized into a `_` via `package_name`.
+    first_app_config.bundle = "com.ex-ample"
+
+    # Invoke run_app
+    run_command.run_app(
+        first_app_config,
+        device_or_avd="exampleDevice",
+        extra_adb_install_args=["--no-streaming", "-g"],
+        test_mode=False,
+        passthrough=[],
+    )
+
+    # select_target_device was invoked with a specific device
+    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
+        "exampleDevice"
+    )
+
+    # The ADB wrapper is created
+    run_command.tools.android_sdk.adb.assert_called_once_with(device="exampleDevice")
+
+    # The adb wrapper is invoked with the expected arguments
+    run_command.tools.mock_adb.install_apk.assert_called_once_with(
+        run_command.binary_path(first_app_config), ["--no-streaming", "-g"]
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -279,7 +380,7 @@ def test_run_with_passthrough(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -439,7 +540,7 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -501,7 +602,7 @@ def test_run_idle_device(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -602,7 +703,7 @@ def test_run_test_mode(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -675,7 +776,7 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -752,7 +853,7 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config), None
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
