@@ -1,0 +1,1 @@
+Briefcase will now validate that the running Python interpreter meets requirements specified by the PEP 621 ``requires-python`` setting. If ``requires-python`` is not set, there is no change in behaviour. Briefcase will also validate that ``requires-python`` is a valid version specifier as laid out by PEP 621's requirements.

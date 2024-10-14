@@ -611,3 +611,5 @@ available:
   cumulative setting.
 * ``text`` in a ``[project.license]`` section will be mapped to ``license``.
 * ``homepage`` in a ``[project.urls]`` section will be mapped to ``url``.
+* ``requires-python`` will be used to validate the running Python interpreter's
+  version against the requirement.
