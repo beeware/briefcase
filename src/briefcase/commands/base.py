@@ -81,7 +81,7 @@ def split_passthrough(args):
     try:
         pos = args.index("--")
     except ValueError:
-        return args, []
+        return args[:], []
     else:
         return args[:pos], args[pos + 1 :]
 

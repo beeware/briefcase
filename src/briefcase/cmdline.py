@@ -110,9 +110,23 @@ def parse_cmdline(args, console: Console | None = None):
         return {n.lower(): n for n in platforms.keys()}.get(name.lower(), name)
 
     # argparse handles `--` specially, so make the passthrough args bypass the parser.
+    # Also remove from partial processing any flag that is followed by a non-flag
+    # argument. This is required because we are partially processing arguments *before*
+    # declaring those arguments; that means we need to be able to parse `-X foobar` as a
+    # 2-part argument before actually defining the existence of `-X`. See
+    # beeware/briefcase#2026.
     def parse_known_args(args):
         args, passthrough = split_passthrough(args)
-        options, extra = parser.parse_known_args(args)
+        simple_args = []
+        complex_args = []
+        while args:
+            arg = args.pop(0)
+            if arg.startswith("-") and args and not args[0].startswith("-"):
+                complex_args.extend([arg, args.pop(0)])
+            else:
+                simple_args.append(arg)
+        options, extra = parser.parse_known_args(simple_args)
+        extra += complex_args
         if passthrough:
             extra += ["--"] + passthrough
         return options, extra
