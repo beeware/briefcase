@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import keyword
 import re
@@ -215,7 +217,7 @@ class GlobalConfig(BaseConfig):
         url=None,
         author=None,
         author_email=None,
-        requires_python: str | None = None,
+        requires_python=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
