@@ -9,6 +9,7 @@ from briefcase.commands import ConvertCommand, DevCommand, NewCommand, UpgradeCo
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import (
     InvalidFormatError,
+    InvalidPlatformError,
     NoCommandError,
     UnsupportedCommandError,
 )
@@ -456,14 +457,9 @@ def test_command_unknown_platform(monkeypatch, logger, console):
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    with pytest.raises(SystemExit) as excinfo:
+    expected_exc_regex = r"Invalid platform 'foobar'; \(choose from: .*\)"
+    with pytest.raises(InvalidPlatformError, match=expected_exc_regex):
         do_cmdline_parse("create foobar".split(), logger, console)
-
-    assert excinfo.value.code == 2
-    assert excinfo.value.__context__.argument_name == "platform"
-    assert excinfo.value.__context__.message.startswith(
-        "invalid choice: 'foobar' (choose from"
-    )
 
 
 def test_command_explicit_platform(monkeypatch, logger, console):
