@@ -32,7 +32,7 @@ def test_requires_python_met(base_command, my_app):
 
 
 def test_requires_python_unmet(base_command, my_app):
-    """Validation fails if requires-python specifies a version lower than the running interpreter."""
+    """Validation fails if requires-python specifies a version greater than the running interpreter."""
 
     major, minor, micro, *_ = sys.version_info
     spec = f">{major}.{minor + 1}.{micro}"
