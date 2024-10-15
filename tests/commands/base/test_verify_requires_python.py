@@ -25,29 +25,37 @@ def test_no_requires_python(base_command, my_app):
 @pytest.mark.parametrize(
     "requires_python",
     (
-        spec_format.format(platform.python_version())
-        for spec_format in ("=={}", ">={}", "~={}", "<={}")
+        "!= 3.2",
+        ">= 3.2",
+        "> 3.2",
+        ">= {current}",
+        "== {current}",
+        "~= {current}",
+        "<= {current}",
+        "< 3.100",
     ),
 )
 def test_requires_python_met(base_command, my_app, requires_python):
     """Validation passes if requires-python specifies a version compatible with the running interpreter."""
 
-    base_command.global_config = _get_global_config(requires_python)
+    base_command.global_config = _get_global_config(
+        requires_python.format(current=platform.python_version())
+    )
     base_command.verify_required_python(my_app)
 
 
 @pytest.mark.parametrize(
     "requires_python",
     [
-        spec_format.format(platform.python_version())
-        for spec_format in (
-            "<{}",
-            ">{}",
-        )
-    ]
-    + [
-        # A version earlier than any supported by Briefcase, so tests will never run with this interpreter
-        "==2.0"
+        # Require a version higher than anything that can exist
+        "> 3.100",
+        ">= 3.100",
+        # Require a version lower than anything that is supported
+        "< 3.2",
+        "<= 3.2",
+        # Equality with a version that definitely isn't supported
+        "== 2.0",
+        "~= 2.0",
     ],
 )
 def test_requires_python_unmet(base_command, my_app, requires_python):
