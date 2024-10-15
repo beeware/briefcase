@@ -15,6 +15,7 @@ from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
+from packaging.specifiers import InvalidSpecifier, Specifier
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
@@ -35,6 +36,7 @@ from briefcase.exceptions import (
     NetworkFailure,
     TemplateUnsupportedVersion,
     UnsupportedHostError,
+    UnsupportedPythonVersion,
 )
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
@@ -627,6 +629,7 @@ a custom location for Briefcase's tools.
         """
         self.verify_app_template(app)
         self.verify_app_tools(app)
+        self.verify_required_python(app)
 
     def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
@@ -660,6 +663,27 @@ to re-generate your app with a compatible version of the template.
 If you are using a custom template, you'll need to update the template to correct
 any compatibility problems, and then add the compatibility declaration.
 """
+            )
+
+    def verify_required_python(self, app: AppConfig):
+        """Verify that the running version of Python meets the project's specifications."""
+
+        requires_python = getattr(self.global_config, "requires_python", None)
+        if not requires_python:
+            return
+
+        try:
+            spec = Specifier(requires_python)
+        except InvalidSpecifier as e:
+            raise BriefcaseConfigError(
+                f"Invalid requires-python in pyproject.toml: {e}"
+            ) from e
+
+        running_version = platform.python_version()
+
+        if not spec.contains(running_version):
+            raise UnsupportedPythonVersion(
+                version_specifier=requires_python, running_version=running_version
             )
 
     def parse_options(self, extra):

@@ -386,7 +386,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         self.target_image = command.target_image
         self.extra_docker_build_args = command.extra_docker_build_args
 
-    def verify_python(self, app: AppConfig):
+    def verify_docker_python(self, app: AppConfig):
         """Verify that the version of Python being used to build the app in Docker is
         compatible with the version being used to run Briefcase.
 
@@ -591,7 +591,7 @@ to install the missing dependencies, and re-run Briefcase.
             # Check the system Python on the target system to see if it is
             # compatible with Briefcase.
             if verify_python:
-                self.verify_python(app)
+                self.verify_docker_python(app)
         else:
             NativeAppContext.verify(tools=self.tools, app=app)
 

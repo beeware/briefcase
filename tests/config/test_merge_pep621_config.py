@@ -21,6 +21,7 @@ def test_base_keys():
             "version": "1.2.3",
             "urls": {"Homepage": "https://example.com"},
             "license": {"text": "BSD License"},
+            "requires-python": ">=3.9",
         },
     )
 
@@ -30,6 +31,7 @@ def test_base_keys():
         "version": "1.2.3",
         "license": {"text": "BSD License"},
         "url": "https://example.com",
+        "requires_python": ">=3.9",
     }
 
 

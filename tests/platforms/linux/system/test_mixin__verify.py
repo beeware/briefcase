@@ -80,7 +80,7 @@ def test_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
         "verify",
         mock_docker_app_context_verify,
     )
-    create_command.verify_python = MagicMock()
+    create_command.verify_docker_python = MagicMock()
 
     # Verify the tools
     create_command.verify_tools()
@@ -106,14 +106,14 @@ def test_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
     )
 
     # Python was also verified
-    create_command.verify_python.assert_called_once_with(first_app_config)
+    create_command.verify_docker_python.assert_called_once_with(first_app_config)
 
     # Reset the mock, then invoke verify_app_tools a second time.
-    create_command.verify_python.reset_mock()
+    create_command.verify_docker_python.reset_mock()
     create_command.verify_app_tools(app=first_app_config)
 
     # Python will *not* be verified a second time.
-    create_command.verify_python.assert_not_called()
+    create_command.verify_docker_python.assert_not_called()
 
 
 def test_non_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
@@ -159,7 +159,7 @@ def test_non_linux_docker(create_command, first_app_config, tmp_path, monkeypatc
         "verify",
         mock_docker_app_context_verify,
     )
-    create_command.verify_python = MagicMock()
+    create_command.verify_docker_python = MagicMock()
 
     # Verify the tools
     create_command.verify_tools()
@@ -185,11 +185,11 @@ def test_non_linux_docker(create_command, first_app_config, tmp_path, monkeypatc
     )
 
     # Python was also verified
-    create_command.verify_python.assert_called_once_with(first_app_config)
+    create_command.verify_docker_python.assert_called_once_with(first_app_config)
 
     # Reset the mock, then invoke verify_app_tools a second time.
-    create_command.verify_python.reset_mock()
+    create_command.verify_docker_python.reset_mock()
     create_command.verify_app_tools(app=first_app_config)
 
     # Python will *not* be verified a second time.
-    create_command.verify_python.assert_not_called()
+    create_command.verify_docker_python.assert_not_called()

@@ -230,6 +230,18 @@ to the PyPI server.{install_hint}
         )
 
 
+class UnsupportedPythonVersion(BriefcaseCommandError):
+    def __init__(self, version_specifier, running_version):
+        super().__init__(
+            f"""\
+Unable to run Briefcase command. The project configuration requires
+Python versions {version_specifier}, but the environment's Python
+version is {running_version}. Please run Briefcase using a Python
+version that satisfies the project's requirements.
+"""
+        )
+
+
 class MissingAppSources(BriefcaseCommandError):
     def __init__(self, src):
         self.src = src

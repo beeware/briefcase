@@ -23,7 +23,7 @@ def test_match(create_command, first_app_config, capsys):
     )
 
     # Verify python for the app
-    create_command.verify_python(first_app_config)
+    create_command.verify_docker_python(first_app_config)
 
     # The docker container was interrogated for a Python version
     create_command.tools[
@@ -62,7 +62,7 @@ def test_mismatch(create_command, first_app_config, capsys):
     )
 
     # Verify python for the app
-    create_command.verify_python(first_app_config)
+    create_command.verify_docker_python(first_app_config)
 
     # The docker container was interrogated for a Python version
     create_command.tools[
@@ -107,7 +107,7 @@ def test_target_too_old(create_command, first_app_config):
         match=r"The system python3 version provided by somevendor:surprising "
         r"is 3\.7\.16; Briefcase requires a minimum Python3 version of 3\.9\.",
     ):
-        create_command.verify_python(first_app_config)
+        create_command.verify_docker_python(first_app_config)
 
     # The docker container was interrogated for a Python version
     create_command.tools[

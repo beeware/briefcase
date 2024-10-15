@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import keyword
 import re
@@ -100,7 +102,6 @@ def validate_url(candidate):
 
 
 def validate_document_type_config(document_type_id, document_type):
-
     try:
         if not (
             isinstance(document_type["extension"], str)
@@ -216,6 +217,7 @@ class GlobalConfig(BaseConfig):
         url=None,
         author=None,
         author_email=None,
+        requires_python=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -226,6 +228,7 @@ class GlobalConfig(BaseConfig):
         self.author = author
         self.author_email = author_email
         self.license = license
+        self.requires_python = requires_python
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
@@ -441,6 +444,9 @@ def merge_config(config, data):
 
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
+
+    if requires_python := pep621_config.get("requires-python"):
+        global_config["requires_python"] = requires_python
 
     def maybe_update(field, *project_fields):
         # If there's an existing key in the Briefcase config, it takes priority.
