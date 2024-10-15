@@ -202,22 +202,22 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-latest", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-latest", "windows-latest" ]
 
         includes:
           # A version of Python that is supported by all the GUI toolkits.
           - python-version: "3.12"
 
-          # We need to use the system Python on Ubuntu
-          - runner-os: ubuntu-latest
-            framework: toga
+          # Explicitly enumerate Ubuntu cases to force use of the system Python
+          - framework: toga
+            runner-os: ubuntu-latest
             python-version: system
-          - runner-os: ubuntu-latest
-            framework: pyside6
+          - framework: pyside6
+            runner-os: ubuntu-latest
             python-version: system
-          - runner-os: ubuntu-latest
-            framework: pygame
+          - framework: pygame
+            runner-os: ubuntu-latest
             python-version: system
-          - runner-os: ubuntu-latest
-            framework: console
+          - framework: console
+            runner-os: ubuntu-latest
             python-version: system
