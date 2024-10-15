@@ -210,4 +210,14 @@ jobs:
 
           # We need to use the system Python on Ubuntu
           - runner-os: ubuntu-latest
+            framework: toga
+            python-version: system
+          - runner-os: ubuntu-latest
+            framework: pyside6
+            python-version: system
+          - runner-os: ubuntu-latest
+            framework: pygame
+            python-version: system
+          - runner-os: ubuntu-latest
+            framework: console
             python-version: system
