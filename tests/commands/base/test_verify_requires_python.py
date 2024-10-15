@@ -1,4 +1,4 @@
-import sys
+import platform
 
 import pytest
 
@@ -22,21 +22,38 @@ def test_no_requires_python(base_command, my_app):
     base_command.verify_required_python(my_app)
 
 
-def test_requires_python_met(base_command, my_app):
-    """Validation passes if requires-python specifies a version lower than the running interpreter."""
+@pytest.mark.parametrize(
+    "requires_python",
+    (
+        spec_format.format(platform.python_version())
+        for spec_format in ("=={}", ">={}", "~={}", "<={}")
+    ),
+)
+def test_requires_python_met(base_command, my_app, requires_python):
+    """Validation passes if requires-python specifies a version compatible with the running interpreter."""
 
-    major, minor, micro, *_ = sys.version_info
-    spec = f">{major}.{minor - 1}.{micro}"
-    base_command.global_config = _get_global_config(requires_python=spec)
+    base_command.global_config = _get_global_config(requires_python)
     base_command.verify_required_python(my_app)
 
 
-def test_requires_python_unmet(base_command, my_app):
-    """Validation fails if requires-python specifies a version greater than the running interpreter."""
+@pytest.mark.parametrize(
+    "requires_python",
+    [
+        spec_format.format(platform.python_version())
+        for spec_format in (
+            "<{}",
+            ">{}",
+        )
+    ]
+    + [
+        # A version earlier than any supported by Briefcase, so tests will never run with this interpreter
+        "==2.0"
+    ],
+)
+def test_requires_python_unmet(base_command, my_app, requires_python):
+    """Validation fails if requires-python specifies a version incompatible with the running interpreter."""
 
-    major, minor, micro, *_ = sys.version_info
-    spec = f">{major}.{minor + 1}.{micro}"
-    base_command.global_config = _get_global_config(requires_python=spec)
+    base_command.global_config = _get_global_config(requires_python)
 
     with pytest.raises(UnsupportedPythonVersion):
         base_command.verify_required_python(my_app)
