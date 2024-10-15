@@ -679,7 +679,7 @@ any compatibility problems, and then add the compatibility declaration.
                 f"Invalid requires-python in pyproject.toml: {e}"
             ) from e
 
-        running_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.minor}"
+        running_version = platform.python_version()
 
         if not spec.contains(running_version):
             raise UnsupportedPythonVersion(
