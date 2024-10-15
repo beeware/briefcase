@@ -64,21 +64,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "macos-12", "macos-14", "windows-latest", "ubuntu-latest" ]
-        python-version: [ "3.9", "3.12", "3.13-dev" ]
+        platform: [ "macos-12", "macos-latest", "windows-latest", "ubuntu-latest" ]
+        python-version: [ "3.9", "3.13", "3.14" ]
         include:
           - experimental: false
-          - platform: "ubuntu-latest"
-            python-version: "3.9"
-            experimental: false
+          # Ensure the Python versions between min and max are tested
           - platform: "ubuntu-latest"
             python-version: "3.10"
-            experimental: false
           - platform: "ubuntu-latest"
             python-version: "3.11"
-            experimental: false
+          - platform: "ubuntu-latest"
+            python-version: "3.12"
           # Allow dev Python to fail without failing entire job
-          - python-version: "3.13-dev"
+          - python-version: "3.14"
             experimental: true
     steps:
     - name: Checkout
@@ -90,6 +88,7 @@ jobs:
       uses: actions/setup-python@v5.2.0
       with:
         python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
 
     - name: Get Packages
       uses: actions/download-artifact@v4.1.8
@@ -185,23 +184,27 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-latest", "ubuntu-latest", "windows-latest" ]
 
   verify-apps:
     name: Build app
     needs: [ package, package-automation, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    # TODO: Revert to main when .github#172 is merged
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@599f2fbb61c17aa94a962f26647f31a879a31052
     with:
-      # This *must* be the version of Python that is the system Python on the
-      # Ubuntu version used to run Linux tests. We use a fixed ubuntu-22.04
-      # rather than `-latest` because at some point, `-latest` will become
-      # `-24.04`, but it will be a soft changeover, which will cause havoc with
-      # the hard Python version requirement for local system packages.
-      python-version: "3.10"
+      python-version: ${{ matrix.python-version }}
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
     strategy:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-12", "macos-14", "ubuntu-22.04", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-latest", "ubuntu-latest", "windows-latest" ]
+
+        includes:
+          # A version of Python that is supported by all the GUI toolkits.
+          - python-version: "3.12"
+
+          # We need to use the system Python on Ubuntu
+          - runner-os: ubuntu-latest
+            python-version: system
