@@ -1,1 +1,0 @@
-A missing quote in the example for the documentation of the New Command's ``-Q`` option was added.

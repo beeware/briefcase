@@ -1,1 +1,0 @@
-macOS app templates can now specify what part of the support package should be copied into the final application bundle.

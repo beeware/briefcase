@@ -1,1 +1,0 @@
-The spacing after the New Project wizard prompts are now consistent.

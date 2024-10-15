@@ -1,1 +1,0 @@
-macOS and iOS templates have both had an epoch increase. macOS and iOS projects created with previous versions of Briefcase will need to be re-generated.

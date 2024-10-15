@@ -1,1 +1,0 @@
-The deprecated ``add_background_task()`` API was replaced in the Toga automation bootstrap.

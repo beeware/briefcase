@@ -1,1 +1,0 @@
-Document type declarations are now fully validated.

@@ -1,1 +1,0 @@
-If a macOS support package contains symlinks, those symlinks will be preserved when the support package is copied into the app bundle.

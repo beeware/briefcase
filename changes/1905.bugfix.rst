@@ -1,1 +1,0 @@
-Corrected link to ``build_gradle_dependencies`` documentation in warning message.

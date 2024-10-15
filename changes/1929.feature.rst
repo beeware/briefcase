@@ -1,1 +1,0 @@
-Apps packaged for Flatpak and AppImage now use a stripped (and smaller) Python support package.

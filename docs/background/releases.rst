@@ -4,6 +4,58 @@ Release History
 
 .. towncrier release notes start
 
+0.3.20 (2024-10-15)
+===================
+
+Features
+--------
+
+* Support for Python 3.13 has been added.
+* When the available version of Git is older than v2.17.0, an error message now prompts the user to upgrade their install of Git to proceed. (`#1915 <https://github.com/beeware/briefcase/issues/1915>`__)
+* Apps packaged for Flatpak and AppImage now use a stripped (and smaller) Python support package. (`#1929 <https://github.com/beeware/briefcase/issues/1929>`__)
+* macOS app templates can now specify what part of the support package should be copied into the final application bundle. (`#1933 <https://github.com/beeware/briefcase/issues/1933>`__)
+* The Flatpak runtimes for new projects were updated. ``org.freedesktop.Platform`` will now default to 24.08; ``org.gnome.Platform`` will now default to 46; and ``org.kde.Platform`` will now default to 6.7. (`#1987 <https://github.com/beeware/briefcase/issues/1987>`__)
+* Briefcase will now validate that the running Python interpreter meets requirements specified by the PEP 621 ``requires-python`` setting. If ``requires-python`` is not set, there is no change in behavior. Briefcase will also validate that ``requires-python`` is a valid version specifier as laid out by PEP 621's requirements. (`#2016 <https://github.com/beeware/briefcase/issues/2016>`__)
+
+
+Bugfixes
+--------
+
+* Document type declarations are now fully validated. (`#1846 <https://github.com/beeware/briefcase/issues/1846>`__)
+* The order in which nested frameworks and apps are signed on macOS has been corrected. (`#1891 <https://github.com/beeware/briefcase/issues/1891>`__)
+* The spacing after the New Project wizard prompts are now consistent. (`#1896 <https://github.com/beeware/briefcase/issues/1896>`__)
+* The documentation link provided when an app doesn't specify Gradle dependencies in its configuration has been corrected. (`#1905 <https://github.com/beeware/briefcase/issues/1905>`__)
+* The log filter for iOS has been modified to capture logs generated when using PEP 730-style binary modules. (`#1933 <https://github.com/beeware/briefcase/issues/1933>`__)
+* Briefcase is now able to remove symbolic links to directories as part of the template cleanup. (`#1933 <https://github.com/beeware/briefcase/issues/1933>`__)
+* If a macOS support package contains symbolic links, those symbolic links will be preserved when the support package is copied into the app bundle. (`#1933 <https://github.com/beeware/briefcase/issues/1933>`__)
+* Briefcase will no longer attempt to sign symbolic links in macOS apps. (`#1933 <https://github.com/beeware/briefcase/issues/1933>`__)
+* Packages that include ``.dist-info`` content in vendored dependencies are now ignored as part of the binary widening process on macOS. If a binary package has vendored sub-packages, it is assumed that the top-level package includes the vendored packages' files in its wheel manifest. (`#1970 <https://github.com/beeware/briefcase/issues/1970>`__)
+* The types used by ``AppContext`` in GUI toolkit bootstraps for creating new projects have been corrected. (`#1988 <https://github.com/beeware/briefcase/issues/1988>`__)
+* The ``--test`` flag now works for console apps for macOS. (`#1992 <https://github.com/beeware/briefcase/issues/1992>`__)
+* Python 3.12.7 introduced an incompatibility with the handling of ``-C``, ``-d`` and other flags that accept values. This incompatibility has been corrected. (`#2026 <https://github.com/beeware/briefcase/issues/2026>`__)
+
+
+Backward Incompatible Changes
+-----------------------------
+
+* Java JDK 17.0.12+7 is now used to package Android apps. Use ``briefcase upgrade java`` to update your Briefcase-installed JDK instance to this version. (`#1920 <https://github.com/beeware/briefcase/issues/1920>`__)
+* Support for Python 3.8 has been dropped. (`#1934 <https://github.com/beeware/briefcase/issues/1934>`__)
+* macOS and iOS templates have both had an epoch increase. macOS and iOS projects created with previous versions of Briefcase will need to be re-generated. (`#1934 <https://github.com/beeware/briefcase/issues/1934>`__)
+* Any project using binary modules on iOS will need to be recompiled to use the binary linking format and wheel tag specified by `PEP 730 <https://peps.python.org/pep-0730/>`__  (`#1934 <https://github.com/beeware/briefcase/issues/1934>`__)
+
+Documentation
+-------------
+
+* A how-to guide for building apps in GitHub Actions CI was added. (`#400 <https://github.com/beeware/briefcase/issues/400>`__)
+* Fixed error in example in briefcase run documentation. (`#1928 <https://github.com/beeware/briefcase/issues/1928>`__)
+* Building Briefcase's documentation now requires the use of Python 3.12. (`#1942 <https://github.com/beeware/briefcase/issues/1942>`__)
+
+Misc
+----
+
+* `#1877 <https://github.com/beeware/briefcase/issues/1877>`__, `#1878 <https://github.com/beeware/briefcase/issues/1878>`__, `#1884 <https://github.com/beeware/briefcase/issues/1884>`__, `#1885 <https://github.com/beeware/briefcase/issues/1885>`__, `#1886 <https://github.com/beeware/briefcase/issues/1886>`__, `#1892 <https://github.com/beeware/briefcase/issues/1892>`__, `#1901 <https://github.com/beeware/briefcase/issues/1901>`__, `#1902 <https://github.com/beeware/briefcase/issues/1902>`__, `#1903 <https://github.com/beeware/briefcase/issues/1903>`__, `#1904 <https://github.com/beeware/briefcase/issues/1904>`__, `#1911 <https://github.com/beeware/briefcase/issues/1911>`__, `#1912 <https://github.com/beeware/briefcase/issues/1912>`__, `#1913 <https://github.com/beeware/briefcase/issues/1913>`__, `#1923 <https://github.com/beeware/briefcase/issues/1923>`__, `#1924 <https://github.com/beeware/briefcase/issues/1924>`__, `#1925 <https://github.com/beeware/briefcase/issues/1925>`__, `#1926 <https://github.com/beeware/briefcase/issues/1926>`__, `#1931 <https://github.com/beeware/briefcase/issues/1931>`__, `#1932 <https://github.com/beeware/briefcase/issues/1932>`__, `#1936 <https://github.com/beeware/briefcase/issues/1936>`__, `#1937 <https://github.com/beeware/briefcase/issues/1937>`__, `#1938 <https://github.com/beeware/briefcase/issues/1938>`__, `#1939 <https://github.com/beeware/briefcase/issues/1939>`__, `#1940 <https://github.com/beeware/briefcase/issues/1940>`__, `#1951 <https://github.com/beeware/briefcase/issues/1951>`__, `#1952 <https://github.com/beeware/briefcase/issues/1952>`__, `#1953 <https://github.com/beeware/briefcase/issues/1953>`__, `#1954 <https://github.com/beeware/briefcase/issues/1954>`__, `#1955 <https://github.com/beeware/briefcase/issues/1955>`__, `#1967 <https://github.com/beeware/briefcase/issues/1967>`__, `#1971 <https://github.com/beeware/briefcase/issues/1971>`__, `#1977 <https://github.com/beeware/briefcase/issues/1977>`__, `#1978 <https://github.com/beeware/briefcase/issues/1978>`__, `#1979 <https://github.com/beeware/briefcase/issues/1979>`__, `#1983 <https://github.com/beeware/briefcase/issues/1983>`__, `#1984 <https://github.com/beeware/briefcase/issues/1984>`__, `#1985 <https://github.com/beeware/briefcase/issues/1985>`__, `#1989 <https://github.com/beeware/briefcase/issues/1989>`__, `#1990 <https://github.com/beeware/briefcase/issues/1990>`__, `#1991 <https://github.com/beeware/briefcase/issues/1991>`__, `#1994 <https://github.com/beeware/briefcase/issues/1994>`__, `#1995 <https://github.com/beeware/briefcase/issues/1995>`__, `#2001 <https://github.com/beeware/briefcase/issues/2001>`__, `#2002 <https://github.com/beeware/briefcase/issues/2002>`__, `#2003 <https://github.com/beeware/briefcase/issues/2003>`__, `#2009 <https://github.com/beeware/briefcase/issues/2009>`__, `#2012 <https://github.com/beeware/briefcase/issues/2012>`__, `#2013 <https://github.com/beeware/briefcase/issues/2013>`__, `#2014 <https://github.com/beeware/briefcase/issues/2014>`__, `#2015 <https://github.com/beeware/briefcase/issues/2015>`__, `#2017 <https://github.com/beeware/briefcase/issues/2017>`__, `#2020 <https://github.com/beeware/briefcase/issues/2020>`__, `#2021 <https://github.com/beeware/briefcase/issues/2021>`__, `#2022 <https://github.com/beeware/briefcase/issues/2022>`__, `#2023 <https://github.com/beeware/briefcase/issues/2023>`__, `#2024 <https://github.com/beeware/briefcase/issues/2024>`__, `#2025 <https://github.com/beeware/briefcase/issues/2025>`__, `#2031 <https://github.com/beeware/briefcase/issues/2031>`__
+
+
 0.3.19 (2024-06-12)
 ===================
 

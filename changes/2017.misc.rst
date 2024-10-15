@@ -1,1 +1,0 @@
-The versions for Toga's dependencies in its bootstrap were bumped to their latest versions.

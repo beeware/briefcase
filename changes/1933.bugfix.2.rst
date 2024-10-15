@@ -1,1 +1,0 @@
-Briefcase is now able to remove symlinks to directories as part of the template cleanup.

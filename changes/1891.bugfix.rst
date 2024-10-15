@@ -1,1 +1,0 @@
-The order in which nested frameworks and apps are signed on macOS was corrected.
