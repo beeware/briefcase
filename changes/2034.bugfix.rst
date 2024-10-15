@@ -1,0 +1,1 @@
+Accept pre-release Python interpreter versions when validating the running interpreter against PEP 621 ``requires-python`` as long as the version otherwise satisfies the specifier. Previously, pre-release interpreter versions were incorrectly always rejected.

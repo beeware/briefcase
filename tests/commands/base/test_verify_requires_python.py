@@ -1,4 +1,5 @@
 import platform
+from unittest import mock
 
 import pytest
 
@@ -74,3 +75,11 @@ def test_requires_python_invalid_specifier(base_command, my_app):
 
     with pytest.raises(BriefcaseConfigError, match="Invalid requires-python"):
         base_command.verify_required_python(my_app)
+
+
+@mock.patch("platform.python_version")
+def test_requires_python_prerelease(python_version_mock, base_command, my_app):
+    python_version_mock.return_value = "3.14.0a0"
+
+    base_command.global_config = _get_global_config(requires_python=">=3.12")
+    base_command.verify_required_python(my_app)
