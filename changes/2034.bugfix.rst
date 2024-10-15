@@ -1,0 +1,1 @@
+Pre-release Python interpreter versions are no longer rejected as matching candidates in PEP 621 ``requires-python`` checks.

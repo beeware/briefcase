@@ -681,7 +681,7 @@ any compatibility problems, and then add the compatibility declaration.
 
         running_version = platform.python_version()
 
-        if not spec.contains(running_version):
+        if not spec.contains(running_version, prereleases=True):
             raise UnsupportedPythonVersion(
                 version_specifier=requires_python, running_version=running_version
             )
