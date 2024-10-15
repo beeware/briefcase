@@ -26,6 +26,17 @@ class NoCommandError(HelpText):
         return self.msg
 
 
+class InvalidPlatformError(BriefcaseError):
+    def __init__(self, requested, choices):
+        super().__init__(error_code=-20, skip_logfile=True)
+        self.requested = requested
+        self.choices = choices
+
+    def __str__(self):
+        choices = ", ".join(sorted(self.choices, key=str.lower))
+        return f"Invalid platform {self.requested!r}; (choose from: {choices})"
+
+
 class InvalidFormatError(BriefcaseError):
     def __init__(self, requested, choices):
         super().__init__(error_code=-21, skip_logfile=True)
