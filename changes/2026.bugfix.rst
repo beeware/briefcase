@@ -1,0 +1,1 @@
+Python 3.12.7 introduced an incompatibility with the handling of ``-C``, ``-d`` and other flags that accept values. This incompatibility has been corrected.
