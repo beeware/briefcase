@@ -64,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "macos-12", "macos-latest", "windows-latest", "ubuntu-latest" ]
+        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-latest" ]
         python-version: [ "3.9", "3.13", "3.14" ]
         include:
           - experimental: false
