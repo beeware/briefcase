@@ -175,8 +175,7 @@ jobs:
   verify-projects:
     name: Verify project
     needs: [ package, package-automation, unit-tests ]
-    # TODO: Revert to main when .github#172 is merged
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@599f2fbb61c17aa94a962f26647f31a879a31052
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -189,8 +188,7 @@ jobs:
   verify-apps:
     name: Build app
     needs: [ package, package-automation, unit-tests ]
-    # TODO: Revert to main when .github#172 is merged
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@599f2fbb61c17aa94a962f26647f31a879a31052
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       python-version: ${{ matrix.python-version }}
       runner-os: ${{ matrix.runner-os }}
