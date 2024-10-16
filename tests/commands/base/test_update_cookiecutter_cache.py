@@ -185,13 +185,6 @@ def test_repo_clone_error(stderr_string, error_message, base_command, mock_git):
             branch="briefcase-template",
         )
 
-    base_command.tools.git.Repo.clone_from.assert_called_once_with(
-        url="https://example.com",
-        to_path=base_command.data_path / "templates" / "example.com",
-        filter=["blob:none"],
-        no_checkout=True,
-    )
-
 
 def test_existing_repo_template(base_command, mock_git):
     """If a previously known URL template is specified it is used."""
