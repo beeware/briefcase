@@ -60,24 +60,20 @@ jobs:
     name: Unit tests
     needs: [ pre-commit, towncrier, package ]
     runs-on: ${{ matrix.platform }}
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
         platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-latest" ]
         python-version: [ "3.9", "3.13" ]
         include:
-          - experimental: false
           # Ensure the Python versions between min and max are tested
           - platform: "ubuntu-latest"
             python-version: "3.10"
-            experimental: false
           - platform: "ubuntu-latest"
             python-version: "3.11"
-            experimental: false
           - platform: "ubuntu-latest"
             python-version: "3.12"
-            experimental: false
           # # Allow dev Python to fail without failing entire job
           # - python-version: "3.14"
           #   experimental: true
@@ -179,7 +175,8 @@ jobs:
   verify-projects:
     name: Verify project
     needs: [ package, package-automation, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    # TODO: Revert to main when .github#172 is merged
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@599f2fbb61c17aa94a962f26647f31a879a31052
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
