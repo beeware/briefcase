@@ -981,15 +981,12 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     git_fatal_message = re.findall(r"(?<=fatal: ).*?$", e.stderr, re.S)
                     if git_fatal_message:
                         # GitError captures stderr with single quotes. Because the regex above
-                        # takes everything after git's "fatal" message, we need to strip that final single quote
-                        hint = git_fatal_message[0].rstrip("'")
+                        # takes everything after git's "fatal" message, we need to strip that final single quote.
+                        hint = git_fatal_message[0].rstrip("'").strip()
 
                         # git is inconsistent with capitalisation of the first word of the message
-                        # and about periods at the end of the message. Normalise those here to ensure
-                        # a clean and uniform presentation
-                        # Also strip the string of any trailing whitespace before applying the period fix.
-                        hint = f"{hint[0].upper()}{hint[1:]}".strip()
-                        hint += "." if hint[-1] != "." else ""
+                        # and about periods at the end of the message.
+                        hint = f"{hint[0].upper()}{hint[1:]}{'' if hint[-1] == '.' else '.'}"
                     else:
                         hint = (
                             "This may be because your computer is offline, or "
