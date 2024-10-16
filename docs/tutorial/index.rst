@@ -13,3 +13,15 @@ through the process of building a native Python application from scratch.
 
 Once you've done that tutorial, the :doc:`Briefcase How-To Guides
 <../how-to/index>` provide details on performing specific tasks with Briefcase.
+
+Additional Topics
+-----------------
+
+If you're looking for a more advanced tutorials,
+you might be interested in these topics:
+
+.. toctree::
+   :maxdepth: 1
+   :includehidden:
+
+   cli-apps
