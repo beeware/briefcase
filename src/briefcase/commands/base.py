@@ -6,6 +6,7 @@ import importlib.metadata
 import inspect
 import os
 import platform
+import re
 import subprocess
 import sys
 from abc import ABC, abstractmethod
@@ -977,11 +978,26 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # any partial remnants of this initial clone.
                     # If we're getting a GitError, we know the directory must exist.
                     self.tools.shutil.rmtree(cached_template)
+                    git_fatal_message = re.findall(r"(?<=fatal: ).*?$", e.stderr, re.S)
+                    if git_fatal_message:
+                        # GitError captures stderr with single quotes. Because the regex above
+                        # takes everything after git's "fatal" message, we need to strip that final single quote
+                        hint = git_fatal_message[0].rstrip("'")
+
+                        # git is inconsistent with capitalisation of the first word of the message
+                        # and about periods at the end of the message. Normalise those here to ensure
+                        # a clean and uniform presentation
+                        # Also strip the string of any trailing whitespace before applying the period fix.
+                        hint = f"{hint[0].upper()}{hint[1:]}".strip()
+                        hint += "." if hint[-1] != "." else ""
+                    else:
+                        hint = (
+                            "This may be because your computer is offline, or "
+                            "because the repository URL is incorrect."
+                        )
+
                     raise BriefcaseCommandError(
-                        f"Unable to clone repository {template!r}.\n"
-                        "\n"
-                        "This may be because your computer is offline, or "
-                        "because the repository URL is incorrect."
+                        f"Unable to clone repository {template!r}.\n\n{hint}"
                     ) from e
 
             try:

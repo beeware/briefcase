@@ -1,0 +1,1 @@
+Briefcase will now surface git's error messages if an error occurs when cloning a template repository.

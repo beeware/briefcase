@@ -1,3 +1,4 @@
+import re
 import shutil
 from unittest import mock
 
@@ -124,6 +125,72 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
 
     # The template directory should be cleaned up
     assert not (base_command.data_path / "templates" / "special-template").exists()
+
+
+@pytest.mark.parametrize(
+    ("stderr_string", "error_message"),
+    (
+        pytest.param(
+            "\n    stderr: '\nfatal: could not clone repository 'https://example.com' \n'",
+            "Could not clone repository 'https://example.com'.",
+            id="tailing-whitespace-no-caps-no-period",
+        ),
+        pytest.param(
+            (
+                "\n    stderr: '\nfatal: Could not read from remote repository.\n\n"
+                "Please make sure you have the correct access rights\nand the repository exists. \n'"
+            ),
+            (
+                "Could not read from remote repository.\n\nPlease make sure "
+                "you have the correct access rights\nand the repository exists."
+            ),
+            id="tailing-whitespace-has-caps-has-period",
+        ),
+        pytest.param(
+            (
+                "\n    stderr: '\nfatal: unable to access 'https://example.com/': "
+                "OpenSSL/3.2.2: error:0A000438:SSL routines::tlsv1 alert internal error'"
+            ),
+            (
+                "Unable to access 'https://example.com/': OpenSSL/3.2.2: "
+                "error:0A000438:SSL routines::tlsv1 alert internal error."
+            ),
+            id="no-tailing-whitespace-no-caps-no-period",
+        ),
+        pytest.param(
+            "\n stderr: 'Mysterious git clone edge case with no fatal error.",
+            "This may be because your computer is offline",
+            id="fallback-hint",
+        ),
+    ),
+)
+def test_repo_clone_error(stderr_string, error_message, base_command, mock_git):
+    """If git emits error information when cloning, Briefcase provides that to the user.
+    If git does not emit a 'fatal' error, then fallback to a generic hint."""
+    base_command.tools.git = mock_git
+
+    base_command.tools.git.Repo.clone_from.side_effect = git_exceptions.GitCommandError(
+        "git", 128, stderr_string
+    )
+
+    repository = "https://example.com"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        # The error message should not retain the "fatal:" prefix; it isn't useful information to the user.
+        match=f"Unable to clone repository '{re.escape(repository)}'.\n\n?(?<!fatal: ){re.escape(error_message)}",
+    ):
+        base_command.update_cookiecutter_cache(
+            template=repository,
+            branch="briefcase-template",
+        )
+
+    base_command.tools.git.Repo.clone_from.assert_called_once_with(
+        url="https://example.com",
+        to_path=base_command.data_path / "templates" / "example.com",
+        filter=["blob:none"],
+        no_checkout=True,
+    )
 
 
 def test_existing_repo_template(base_command, mock_git):
