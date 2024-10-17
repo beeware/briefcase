@@ -139,8 +139,10 @@ class UpgradeToolError(BriefcaseCommandError):
 
 class InvalidTemplateBranch(BriefcaseCommandError):
     def __init__(self, template_repo, branch):
+        self.template_repo = template_repo
+        self.branch = branch
         super().__init__(
-            f"{branch} did not match any branches in template repository {template_repo}."
+            f"Could not find a branch named {branch!r} in template repository {template_repo!r}."
         )
 
 
