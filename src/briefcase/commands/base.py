@@ -32,10 +32,10 @@ from briefcase.console import MAX_TEXT_WIDTH, Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    InvalidTemplateBranch,
     InvalidTemplateRepository,
     MissingAppMetadata,
     NetworkFailure,
-    TemplateUnsupportedVersion,
     UnsupportedHostError,
     UnsupportedPythonVersion,
 )
@@ -1037,7 +1037,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     head.checkout()
                 except IndexError as e:
                     # No branch exists for the requested version.
-                    raise TemplateUnsupportedVersion(branch) from e
+                    raise InvalidTemplateBranch(template, branch) from e
             except (ValueError, self.tools.git.exc.GitError) as e:
                 raise BriefcaseCommandError(
                     "Unable to check out template branch.\n"
@@ -1094,7 +1094,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             raise InvalidTemplateRepository(template) from e
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist.
-            raise TemplateUnsupportedVersion(branch) from e
+            raise InvalidTemplateBranch(template, branch) from e
         except cookiecutter_exceptions.UndefinedVariableInTemplate as e:
             raise BriefcaseConfigError(e.message) from e
 
@@ -1135,7 +1135,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 output_path=output_path,
                 extra_context=extra_context,
             )
-        except TemplateUnsupportedVersion:
+        except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
             # and the user didn't explicitly specify which branch to use.
             if version.dev is None or branch is not None:

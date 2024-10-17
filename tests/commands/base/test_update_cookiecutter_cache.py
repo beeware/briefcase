@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 from git import exc as git_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, TemplateUnsupportedVersion
+from briefcase.exceptions import BriefcaseCommandError, InvalidTemplateBranch
 
 from ...utils import create_file
 
@@ -394,7 +394,7 @@ def test_cached_missing_branch_template(base_command, mock_git):
     cached_path.mkdir(parents=True)
 
     # Generating the template under there conditions raises an error
-    with pytest.raises(TemplateUnsupportedVersion):
+    with pytest.raises(InvalidTemplateBranch):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git",
             branch="invalid",

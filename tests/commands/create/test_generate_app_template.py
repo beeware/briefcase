@@ -12,8 +12,8 @@ import briefcase
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    InvalidTemplateBranch,
     NetworkFailure,
-    TemplateUnsupportedVersion,
 )
 
 
@@ -243,7 +243,7 @@ def test_default_template_dev_explicit_invalid_branch(
     )
 
     # Generate the template.
-    with pytest.raises(TemplateUnsupportedVersion):
+    with pytest.raises(InvalidTemplateBranch):
         create_command.generate_app_template(myapp)
 
     # Cookiecutter was invoked (once) with the expected template name and context.
@@ -651,7 +651,7 @@ def test_cached_missing_branch_template(monkeypatch, create_command, myapp):
     mock_remote.refs.__getitem__.side_effect = IndexError
 
     # Generating the template under there conditions raises an error
-    with pytest.raises(TemplateUnsupportedVersion):
+    with pytest.raises(InvalidTemplateBranch):
         create_command.generate_app_template(myapp)
 
 

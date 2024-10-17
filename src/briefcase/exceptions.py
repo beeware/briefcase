@@ -137,11 +137,10 @@ class UpgradeToolError(BriefcaseCommandError):
         super().__init__(msg=error_msg, skip_logfile=True)
 
 
-class TemplateUnsupportedVersion(BriefcaseCommandError):
-    def __init__(self, briefcase_version):
-        self.briefcase_version = briefcase_version
+class InvalidTemplateBranch(BriefcaseCommandError):
+    def __init__(self, template_repo, branch):
         super().__init__(
-            f"Could not find a template branch for Briefcase {briefcase_version}."
+            f"{branch} did not match any branches in template repository {template_repo}."
         )
 
 
