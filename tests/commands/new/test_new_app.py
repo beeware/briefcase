@@ -10,8 +10,8 @@ from briefcase.commands import NewCommand
 from briefcase.console import Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    InvalidTemplateBranch,
     InvalidTemplateRepository,
-    TemplateUnsupportedVersion,
 )
 
 
@@ -123,7 +123,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     )
 
     # Create the new app, using the default template. This raises an error.
-    with pytest.raises(TemplateUnsupportedVersion):
+    with pytest.raises(InvalidTemplateBranch):
         new_command.new_app()
 
     # App context is constructed
@@ -397,7 +397,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     )
 
     # Create a new app, with a specific template; this raises an error
-    with pytest.raises(TemplateUnsupportedVersion):
+    with pytest.raises(InvalidTemplateBranch):
         new_command.new_app(template="https://example.com/other.git")
 
     # App context is constructed

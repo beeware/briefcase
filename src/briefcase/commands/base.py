@@ -6,6 +6,7 @@ import importlib.metadata
 import inspect
 import os
 import platform
+import re
 import subprocess
 import sys
 from abc import ABC, abstractmethod
@@ -31,10 +32,10 @@ from briefcase.console import MAX_TEXT_WIDTH, Console, Log
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    InvalidTemplateBranch,
     InvalidTemplateRepository,
     MissingAppMetadata,
     NetworkFailure,
-    TemplateUnsupportedVersion,
     UnsupportedHostError,
     UnsupportedPythonVersion,
 )
@@ -977,11 +978,23 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # any partial remnants of this initial clone.
                     # If we're getting a GitError, we know the directory must exist.
                     self.tools.shutil.rmtree(cached_template)
+                    git_fatal_message = re.findall(r"(?<=fatal: ).*?$", e.stderr, re.S)
+                    if git_fatal_message:
+                        # GitError captures stderr with single quotes. Because the regex above
+                        # takes everything after git's "fatal" message, we need to strip that final single quote.
+                        hint = git_fatal_message[0].rstrip("'").strip()
+
+                        # git is inconsistent with capitalisation of the first word of the message
+                        # and about periods at the end of the message.
+                        hint = f"{hint[0].upper()}{hint[1:]}{'' if hint[-1] == '.' else '.'}"
+                    else:
+                        hint = (
+                            "This may be because your computer is offline, or "
+                            "because the repository URL is incorrect."
+                        )
+
                     raise BriefcaseCommandError(
-                        f"Unable to clone repository {template!r}.\n"
-                        "\n"
-                        "This may be because your computer is offline, or "
-                        "because the repository URL is incorrect."
+                        f"Unable to clone repository {template!r}.\n\n{hint}"
                     ) from e
 
             try:
@@ -1024,7 +1037,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     head.checkout()
                 except IndexError as e:
                     # No branch exists for the requested version.
-                    raise TemplateUnsupportedVersion(branch) from e
+                    raise InvalidTemplateBranch(template, branch) from e
             except (ValueError, self.tools.git.exc.GitError) as e:
                 raise BriefcaseCommandError(
                     "Unable to check out template branch.\n"
@@ -1081,7 +1094,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             raise InvalidTemplateRepository(template) from e
         except cookiecutter_exceptions.RepositoryCloneFailed as e:
             # Branch does not exist.
-            raise TemplateUnsupportedVersion(branch) from e
+            raise InvalidTemplateBranch(template, branch) from e
         except cookiecutter_exceptions.UndefinedVariableInTemplate as e:
             raise BriefcaseConfigError(e.message) from e
 
@@ -1122,7 +1135,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 output_path=output_path,
                 extra_context=extra_context,
             )
-        except TemplateUnsupportedVersion:
+        except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
             # and the user didn't explicitly specify which branch to use.
             if version.dev is None or branch is not None:
