@@ -80,20 +80,21 @@ def file_perms() -> int:
     ],
 )
 def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
-    response = mock.MagicMock(spec=httpx.Response)
-    response.url = httpx.URL(url)
-    response.status_code = 200
-    response.headers = mock.Mock(
-        wraps=HTTPHeaderDict(
+    response = httpx.Response(
+        status_code=200,
+        request=httpx.Request(method="GET", url=httpx.URL(url)),
+        headers=httpx.Headers(
             {
                 "content-disposition": content_disposition,
             }
             if content_disposition is not None
             else {}
-        )
+        ),
+        stream=httpx.ByteStream(b"all content"),
     )
-    response.content = b"all content"
     mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    response.read = mock.Mock(wraps=response.read)
+    response.headers.get = mock.Mock(wraps=response.headers.get)
 
     # Download the file
     filename = mock_tools.file.download(
@@ -108,7 +109,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
         follow_redirects=True,
     )
     response.headers.get.assert_called_with("content-length")
-    response.iter_bytes.assert_not_called()
+    response.read.assert_called_once()
 
     # The filename is derived from the URL or header
     assert filename == mock_tools.base_path / "downloads/something.zip"
