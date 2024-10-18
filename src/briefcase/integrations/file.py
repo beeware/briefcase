@@ -215,17 +215,18 @@ class File(Tool):
             else:
                 description = filename.name if filename else url
 
-            if isinstance(e, httpx.TransportError):
-                # Use the default hint for network communication errors
-                hint = None
-            elif isinstance(e, httpx.DecodingError):
-                hint = "the server sent a malformed response."
-            elif isinstance(e, httpx.TooManyRedirects):
+            if isinstance(e, httpx.TooManyRedirects):
                 # httpx, unlike requests, will not follow redirects indefinitely, and defaults to
                 # 20 redirects before calling it quits. If the download attempt exceeds 20 redirects,
                 # Briefcase probably needs to re-evaluate the URLs it is using for that download
                 # and ideally find a starting point that won't have so many redirects.
                 hint = "exceeded redirects when downloading the file.\n\nPlease report this as a bug to Briefcase."
+            elif isinstance(e, httpx.DecodingError):
+                hint = "the server sent a malformed response."
+            else:
+                # httpx.TransportError
+                # Use the default hint for generic network communication errors
+                hint = None
 
             raise NetworkFailure(
                 f"download {description}",
