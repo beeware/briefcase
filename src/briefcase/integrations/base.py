@@ -12,7 +12,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, DefaultDict, TypeVar
 
-import requests
+import httpx
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
@@ -169,7 +169,7 @@ class ToolCache(Mapping):
 
     # Third party tools
     cookiecutter = staticmethod(cookiecutter)
-    requests = requests
+    httpx = httpx
 
     def __init__(
         self,
