@@ -309,17 +309,29 @@ def test_get_connection_error(mock_tools):
     mock_tools.os.remove.assert_not_called()
 
 
-def test_iter_content_connection_error(mock_tools):
+@pytest.mark.parametrize(
+    ("error_cls", "expected_hint_fragment"),
+    (
+        (requests.exceptions.ConnectionError, "computer offline"),
+        (requests.exceptions.ChunkedEncodingError, "malformed response"),
+        (requests.exceptions.ContentDecodingError, "malformed response"),
+        (requests.exceptions.SSLError, "malformed response"),
+    ),
+)
+def test_iter_content_connection_error(mock_tools, error_cls, expected_hint_fragment):
     """NetworkFailure raised if response.iter_content() errors."""
     response = mock.MagicMock(spec=requests.Response)
     response.url = "https://example.com/something.zip?useful=Yes"
     response.headers = mock.Mock(wraps=HTTPHeaderDict({"content-length": "100"}))
     response.status_code = 200
-    response.iter_content.side_effect = requests.exceptions.ConnectionError
+    response.iter_content.side_effect = error_cls
     mock_tools.requests.get.return_value = response
 
     # Download the file
-    with pytest.raises(NetworkFailure, match="Unable to download something.zip"):
+    with pytest.raises(
+        NetworkFailure,
+        match=f"Unable to download something.zip; .*{expected_hint_fragment}",
+    ):
         mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,

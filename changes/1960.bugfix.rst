@@ -1,0 +1,1 @@
+Network errors that arise when downloading tools are now more cleanly handled.

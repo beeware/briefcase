@@ -209,12 +209,34 @@ class File(Tool):
             else:
                 self.tools.logger.info(f"Downloading {cache_name}...")
                 self._fetch_and_write_content(response, filename)
-        except requests_exceptions.ConnectionError as e:
+        except (
+            requests_exceptions.ConnectionError,  # superclass of SSLError
+            requests_exceptions.ChunkedEncodingError,
+            requests_exceptions.ContentDecodingError,
+        ) as e:
             if role:
                 description = role
             else:
                 description = filename.name if filename else url
-            raise NetworkFailure(f"download {description}") from e
+
+            if isinstance(
+                e,
+                (
+                    requests_exceptions.ChunkedEncodingError,
+                    requests_exceptions.ContentDecodingError,
+                    requests_exceptions.SSLError,
+                ),
+            ):
+                hint = (
+                    "the server sent a malformed response.\n\n"
+                    "This usually indicates something is wrong with the server."
+                )
+            else:
+                # ConnectionError
+                # use the default configured by NetworkFailure
+                hint = None
+
+            raise NetworkFailure(f"download {description}", hint) from e
 
         return filename
 
