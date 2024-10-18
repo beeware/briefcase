@@ -3,8 +3,8 @@ import shutil
 import sys
 from unittest import mock
 
+import httpx
 import pytest
-from requests import exceptions as requests_exceptions
 
 from briefcase.exceptions import (
     InvalidStubBinary,
@@ -412,8 +412,9 @@ def test_offline_install(
     stub_binary_revision_path_index,
 ):
     """If the computer is offline, an error is raised."""
-    create_command.tools.requests.get = mock.MagicMock(
-        side_effect=requests_exceptions.ConnectionError
+    stream_mock = create_command.tools.httpx.stream = mock.MagicMock()
+    stream_mock.return_value.__enter__.side_effect = httpx.TransportError(
+        "Unstable connection"
     )
 
     # Installing while offline raises an error

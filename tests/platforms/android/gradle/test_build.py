@@ -3,8 +3,8 @@ import sys
 from subprocess import CalledProcessError
 from unittest.mock import MagicMock, PropertyMock
 
+import httpx
 import pytest
-import requests
 
 from briefcase.console import Console, Log, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
@@ -25,7 +25,7 @@ def build_command(tmp_path, first_app_generated, monkeypatch):
     command.tools.os = MagicMock(spec_set=os)
     command.tools.os.environ = {}
     command.tools.sys = MagicMock(spec_set=sys)
-    command.tools.requests = MagicMock(spec_set=requests)
+    command.tools.httpx = MagicMock(spec_set=httpx)
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
     monkeypatch.setattr(
         type(command.tools), "system_encoding", PropertyMock(return_value="ISO-42")

@@ -90,9 +90,12 @@ class BriefcaseCommandError(BriefcaseError):
 
 
 class NetworkFailure(BriefcaseCommandError):
-    def __init__(self, action):
+    DEFAULT_HINT = "is your computer offline?"
+
+    def __init__(self, action, hint=None):
         self.action = action
-        super().__init__(msg=f"Unable to {action}; is your computer offline?")
+        self.hint = hint if hint else self.DEFAULT_HINT
+        super().__init__(msg=f"Unable to {action}; {self.hint}")
 
 
 class MissingNetworkResourceError(BriefcaseCommandError):

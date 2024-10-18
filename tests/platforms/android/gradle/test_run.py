@@ -6,8 +6,8 @@ import time
 from pathlib import Path
 from unittest import mock
 
+import httpx
 import pytest
-import requests
 
 from briefcase.console import Console, Log
 from briefcase.exceptions import BriefcaseCommandError
@@ -49,7 +49,7 @@ def run_command(tmp_path, first_app_config, jdk):
 
     command.tools.os = mock.MagicMock(spec_set=os)
     command.tools.os.environ = {}
-    command.tools.requests = mock.MagicMock(spec_set=requests)
+    command.tools.httpx = mock.MagicMock(spec_set=httpx)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.sys = mock.MagicMock(spec_set=sys)
 
