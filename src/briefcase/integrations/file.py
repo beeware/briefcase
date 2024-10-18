@@ -256,6 +256,7 @@ class File(Tool):
             with temp_file:
                 total = response.headers.get("content-length")
                 if total is None:
+                    response.read()
                     temp_file.write(response.content)
                 else:
                     progress_bar = self.tools.input.progress_bar()
