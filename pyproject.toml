@@ -101,7 +101,7 @@ dev = [
     "pytest == 8.3.3",
     "pytest-xdist == 3.6.1",
     "setuptools_scm == 8.1.0",
-    "tox == 4.21.2",
+    "tox == 4.23.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
