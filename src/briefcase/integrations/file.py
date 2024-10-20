@@ -9,10 +9,8 @@ from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from email.message import Message
 from pathlib import Path
-from urllib.parse import urlparse
 
-import requests.exceptions as requests_exceptions
-from requests import Response
+import httpx
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -176,57 +174,76 @@ class File(Tool):
         download_path.mkdir(parents=True, exist_ok=True)
         filename: Path = None
         try:
-            response = self.tools.requests.get(url, stream=True)
-            if response.status_code == 404:
-                raise MissingNetworkResourceError(url=url)
-            elif response.status_code != 200:
-                raise BadNetworkResourceError(url=url, status_code=response.status_code)
+            with self.tools.httpx.stream("GET", url, follow_redirects=True) as response:
+                if response.status_code == 404:
+                    raise MissingNetworkResourceError(url=url)
+                elif response.status_code != 200:
+                    raise BadNetworkResourceError(
+                        url=url, status_code=response.status_code
+                    )
 
-            # The initial URL might (read: will) go through URL redirects, so
-            # we need the *final* response. We look at either the `Content-Disposition`
-            # header, or the final URL, to extract the cache filename.
-            cache_full_name = urlparse(response.url).path
-            header_value = response.headers.get("Content-Disposition")
-            if header_value:
-                # Neither requests nor httplib provides a way to parse RFC6266 headers.
-                # The cgi module *did* have a way to parse these headers, but
-                # it was deprecated as part of PEP594. PEP594 recommends
-                # using the email.message module to parse these headers as they
-                # are near identical format.
-                # See also:
-                # * https://tools.ietf.org/html/rfc6266
-                # * https://peps.python.org/pep-0594/#cgi
-                msg = Message()
-                msg["Content-Disposition"] = header_value
-                filename = msg.get_filename()
-                if filename:
-                    cache_full_name = filename
-            cache_name = cache_full_name.split("/")[-1]
-            filename = download_path / cache_name
+                # The initial URL might (read: will) go through URL redirects, so
+                # we need the *final* response. We look at either the `Content-Disposition`
+                # header, or the final URL, to extract the cache filename.
+                cache_full_name = response.url.path
+                header_value = response.headers.get("Content-Disposition")
+                if header_value:
+                    # Httpx does not provide a way to parse RFC6266 headers.
+                    # The cgi module *did* have a way to parse these headers, but
+                    # it was deprecated as part of PEP594. PEP594 recommends
+                    # using the email.message module to parse these headers as they
+                    # are near identical format.
+                    # See also:
+                    # * https://tools.ietf.org/html/rfc6266
+                    # * https://peps.python.org/pep-0594/#cgi
+                    msg = Message()
+                    msg["Content-Disposition"] = header_value
+                    filename = msg.get_filename()
+                    if filename:
+                        cache_full_name = filename
+                cache_name = cache_full_name.split("/")[-1]
+                filename = download_path / cache_name
 
-            if filename.exists():
-                self.tools.logger.info(f"{cache_name} already downloaded")
-            else:
-                self.tools.logger.info(f"Downloading {cache_name}...")
-                self._fetch_and_write_content(response, filename)
-        except requests_exceptions.ConnectionError as e:
+                if filename.exists():
+                    self.tools.logger.info(f"{cache_name} already downloaded")
+                else:
+                    self.tools.logger.info(f"Downloading {cache_name}...")
+                    self._fetch_and_write_content(response, filename)
+        except httpx.RequestError as e:
             if role:
                 description = role
             else:
                 description = filename.name if filename else url
-            raise NetworkFailure(f"download {description}") from e
+
+            if isinstance(e, httpx.TooManyRedirects):
+                # httpx, unlike requests, will not follow redirects indefinitely, and defaults to
+                # 20 redirects before calling it quits. If the download attempt exceeds 20 redirects,
+                # Briefcase probably needs to re-evaluate the URLs it is using for that download
+                # and ideally find a starting point that won't have so many redirects.
+                hint = "exceeded redirects when downloading the file.\n\nPlease report this as a bug to Briefcase."
+            elif isinstance(e, httpx.DecodingError):
+                hint = "the server sent a malformed response."
+            else:
+                # httpx.TransportError
+                # Use the default hint for generic network communication errors
+                hint = None
+
+            raise NetworkFailure(
+                f"download {description}",
+                hint,
+            ) from e
 
         return filename
 
-    def _fetch_and_write_content(self, response: Response, filename: Path):
-        """Write the content from the requests Response to file.
+    def _fetch_and_write_content(self, response: httpx.Response, filename: Path):
+        """Write the content from the httpx Response to file.
 
         The data is initially written in to a temporary file in the Briefcase
         cache. This avoids partially downloaded files masquerading as complete
         downloads in later Briefcase runs. The temporary file is only moved
         to ``filename`` if the download is successful; otherwise, it is deleted.
 
-        :param response: ``requests.Response``
+        :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         """
         temp_file = tempfile.NamedTemporaryFile(
@@ -239,12 +256,13 @@ class File(Tool):
             with temp_file:
                 total = response.headers.get("content-length")
                 if total is None:
+                    response.read()
                     temp_file.write(response.content)
                 else:
                     progress_bar = self.tools.input.progress_bar()
                     task_id = progress_bar.add_task("Downloader", total=int(total))
                     with progress_bar:
-                        for data in response.iter_content(chunk_size=1024 * 1024):
+                        for data in response.iter_bytes(chunk_size=1024 * 1024):
                             temp_file.write(data)
                             progress_bar.update(task_id, advance=len(data))
 

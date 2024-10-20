@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import httpx
 import pytest
-import requests
 from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
@@ -83,7 +83,7 @@ def test_third_party_tools_available():
     assert ToolCache.sys is sys
 
     assert ToolCache.cookiecutter is cookiecutter
-    assert ToolCache.requests is requests
+    assert ToolCache.httpx is httpx
 
 
 def test_always_true(simple_tools, tmp_path):
