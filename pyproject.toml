@@ -230,6 +230,9 @@ filterwarnings = [
     "error",
 ]
 
+[tool.briefcase]
+bootstraps = ["toga", "empty"]  # Add "empty" to the list of bootstraps
+
 # need to ensure build directories aren't excluded from recursion
 norecursedirs = []
 

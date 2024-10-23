@@ -583,7 +583,13 @@ class NewCommand(BaseCommand):
             "url": url,
             "license": project_license,
         }
-
+    #Added modify GUI choices 
+    def _gui_bootstrap_choices(self):
+        return [
+            ("toga", "Toga (Recommended)"),
+            ("empty", "Empty (Barebones configuration)"),  # Add this line
+        ]
+    
     def build_gui_context(
         self,
         context: dict[str, str],

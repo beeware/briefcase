@@ -593,17 +593,19 @@ class ConvertCommand(NewCommand):
             "license": project_license,
         }
 
-    def build_gui_context(
-        self,
-        context: dict[str, str],
-        project_overrides: dict[str, str],
-    ) -> dict[str, str]:
-        # We must set the GUI-framework to None here since the convert-command uses the new-command
-        # template. This template includes dependencies for the GUI-frameworks. However, if a project
-        # already is set up for a GUI-framework, then those dependencies should already be listed.
-        # To prevent the same dependency being listed twice (once in the PEP621-section and once in the
-        # briefcase-section), possibly with different versions, we set the GUI-framework to None here.
-        return {"gui_framework": "None"}
+    def build_gui_context(self, app, platform, output_format):
+        if app.gui_framework == "empty":
+            #Handle the empty bootstrap option
+            context = {
+                "platform": platform,
+                "output_format": output_format,
+                #Add any context that is needed for the empty bootstrap
+            }
+        else:
+            #Existing logic for Toga or other frameworks
+            context = super().build_gui_context(app, platform, output_format)
+
+        return context
 
     def merge_or_copy_pyproject(self, briefcase_config_file: Path) -> None:
         """Merge pyproject.toml file made by the cookiecutter with the one in the
