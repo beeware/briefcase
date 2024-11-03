@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==75.2.0",
+    "setuptools==75.3.0",
     "setuptools_scm==8.1.0",
 ]
 build-backend = "setuptools.build_meta"
