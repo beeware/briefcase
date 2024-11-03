@@ -513,12 +513,19 @@ class CreateCommand(BaseCommand):
             written.
         """
 
+        extra_pip_args = self._extra_pip_args(app)
+
         with self.input.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
-                if requires:
+                if requires or extra_pip_args:
                     # Add timestamp so build systems (such as Gradle) detect a change
                     # in the file and perform a re-installation of all requirements.
                     f.write(f"# Generated {datetime.now()}\n")
+
+                for arg in extra_pip_args:
+                    f.write(f"{arg}\n")
+
+                if requires:
                     for requirement in requires:
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file
@@ -541,10 +548,52 @@ class CreateCommand(BaseCommand):
     def _extra_pip_args(self, app: AppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
+        Maps the app config repository_url and extra_repository_urls to pip's
+        index-url and extra-index-url respectively. For both, do only minimal
+        validation to ensure most common use cases function as expected. Namely,
+        that means mapping local path references to stable absolute references so
+        they work regardless of the build context. This mapping minimally facilitates
+        Flatpak builds relying on local package indices.
+
+        Otherwise, let pip handle actual validation of those references.
+
+        For each index-url and extra-index-url, use a single argument ("=" separator)
+        rather than "space separated args" to ensure the string is portable
+        as both a pip command argument and a requirements.txt entry.
+        See ``install_app_requirements`` regarding the two different usages of this
+        function's output.
+
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        return []
+        extra_args = []
+
+        # Note: _has_url specifically checks for schemes supported by pip for
+        # requirements, which includes VCS URLs. Pip does not support
+        # VCS URLs for every option, which may include these index URL options.
+        # This code intentionally ignores validation of that in favour of trying
+        # to minimally detect local path references for package indices. Whether
+        # pip supports the reference in the end is immaterial to Briefcase, pip
+        # will give a usable error in that case and the user can adjust their
+        # configuration accordingly.
+
+        if repo_url := app.repository_url:
+            if not _has_url(repo_url):
+                index_url = os.path.abspath(self.base_path / repo_url)
+            else:
+                index_url = repo_url
+
+            extra_args.append(f"--index-url={index_url}")
+
+        for url in app.extra_repository_urls:
+            if not _has_url(url):
+                extra_index_url = os.path.abspath(self.base_path / url)
+            else:
+                extra_index_url = url
+
+            extra_args.append(f"--extra-index-url={extra_index_url}")
+
+        return extra_args
 
     def _pip_install(
         self,

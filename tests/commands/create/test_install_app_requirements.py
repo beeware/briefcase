@@ -162,6 +162,113 @@ def test_app_packages_valid_requires(
     assert myapp.test_requires is None
 
 
+def test_app_packages_repository_url(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app defines a repository_url, it's included in the pip arguments."""
+    myapp.requires = ["first"]
+    myapp.repository_url = "https://pypi.org/simple"
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "--index-url=https://pypi.org/simple",
+            "first",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_app_packages_repository_url_local_path(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app defines a repository_url, it's included in the pip arguments."""
+    myapp.requires = ["first"]
+    myapp.repository_url = "./packages"
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            f"--index-url={os.path.abspath(create_command.base_path / myapp.repository_url)}",
+            "first",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_app_packages_extra_repository_urls(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app defines a repository_url, it's included in the pip arguments."""
+    myapp.requires = ["first"]
+    local_extra_repo = "./local-package-repository"
+    myapp.extra_repository_urls = [
+        "https://example.com/extra",
+        local_extra_repo,
+    ]
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "--extra-index-url=https://example.com/extra",
+            f"--extra-index-url={os.path.abspath(create_command.base_path / local_extra_repo)}",
+            "first",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
 def test_app_packages_valid_requires_no_support_package(
     create_command,
     myapp,
