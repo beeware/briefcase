@@ -366,6 +366,33 @@ Any PEP 508 version specifier is legal. For example:
 
     requires=["fullpath/wheelfile.whl"]
 
+.. _configuration-package-repository:
+
+``package_repository``
+~~~~~~~~~~~~~~~~~~~~~~
+
+A reference to the package repository that should be used for requirement installation.
+
+.. admonition:: Supported installer backends
+
+    The type of reference supported in this option depends on the installer backend. For
+    example, when pip is used to install requirements, the type of references supported in
+    this option depend on pip's `index-url
+    <https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-i>`_ option.
+
+    Pip is the only currently supported backend. Other backends may not support the same
+    references as pip. As such, this option does not have a concrete format, and the variety
+    of references supported by pip may not be supported by other backends.
+
+``extra_package_repositories``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A list of references of the same type and with the same stipulations as
+:ref:`package_repository <configuration-package-repository>`.
+
+When pip is the installer backend, this option maps to `extra-index-url
+<https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-extra-index-url>`__.
+
 ``revision``
 ~~~~~~~~~~~~
 
