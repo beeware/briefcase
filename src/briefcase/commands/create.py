@@ -548,7 +548,7 @@ class CreateCommand(BaseCommand):
     def _extra_pip_args(self, app: AppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
-        Maps the app config repository_url and extra_repository_urls to pip's
+        Maps the app config package_repository and extra_package_repositories to pip's
         index-url and extra-index-url respectively. For both, do only minimal
         validation to ensure most common use cases function as expected. Namely,
         that means mapping local path references to stable absolute references so
@@ -577,19 +577,19 @@ class CreateCommand(BaseCommand):
         # will give a usable error in that case and the user can adjust their
         # configuration accordingly.
 
-        if repo_url := app.repository_url:
-            if not _has_url(repo_url):
-                index_url = os.path.abspath(self.base_path / repo_url)
+        if repo := app.package_repository:
+            if not _has_url(repo):
+                index_url = os.path.abspath(self.base_path / repo)
             else:
-                index_url = repo_url
+                index_url = repo
 
             extra_args.append(f"--index-url={index_url}")
 
-        for url in app.extra_repository_urls:
-            if not _has_url(url):
-                extra_index_url = os.path.abspath(self.base_path / url)
+        for extra_repo in app.extra_package_repositories:
+            if not _has_url(extra_repo):
+                extra_index_url = os.path.abspath(self.base_path / extra_repo)
             else:
-                extra_index_url = url
+                extra_index_url = extra_repo
 
             extra_args.append(f"--extra-index-url={extra_index_url}")
 

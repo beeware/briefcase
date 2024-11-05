@@ -266,8 +266,8 @@ class AppConfig(BaseConfig):
         supported=True,
         long_description=None,
         console_app=False,
-        repository_url: str | None = None,
-        extra_repository_urls: list[str] | None = None,
+        package_repository: str | None = None,
+        extra_package_repositories: list[str] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -297,9 +297,9 @@ class AppConfig(BaseConfig):
         self.long_description = long_description
         self.license = license
         self.console_app = console_app
-        self.repository_url = repository_url
-        self.extra_repository_urls = (
-            [] if extra_repository_urls is None else extra_repository_urls
+        self.package_repository = package_repository
+        self.extra_package_repositories = (
+            [] if extra_package_repositories is None else extra_package_repositories
         )
 
         if not is_valid_app_name(self.app_name):
@@ -432,7 +432,7 @@ def merge_config(config, data):
         "sources",
         "test_requires",
         "test_sources",
-        "extra_repository_urls",
+        "extra_package_repositories",
     ]:
         value = data.pop(option, [])
 

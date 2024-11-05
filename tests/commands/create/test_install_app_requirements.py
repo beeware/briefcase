@@ -162,15 +162,15 @@ def test_app_packages_valid_requires(
     assert myapp.test_requires is None
 
 
-def test_app_packages_repository_url(
+def test_app_packages_package_repository(
     create_command,
     myapp,
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app defines a repository_url, it's included in the pip arguments."""
+    """If an app defines a package_repository, it's included in the pip arguments."""
     myapp.requires = ["first"]
-    myapp.repository_url = "https://pypi.org/simple"
+    myapp.package_repository = "https://pypi.org/simple"
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -196,15 +196,15 @@ def test_app_packages_repository_url(
     )
 
 
-def test_app_packages_repository_url_local_path(
+def test_app_packages_package_repository_local_path(
     create_command,
     myapp,
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app defines a repository_url, it's included in the pip arguments."""
+    """If an app defines a package_repository, it's included in the pip arguments."""
     myapp.requires = ["first"]
-    myapp.repository_url = "./packages"
+    myapp.package_repository = "./packages"
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -222,7 +222,7 @@ def test_app_packages_repository_url_local_path(
             "--upgrade",
             "--no-user",
             f"--target={app_packages_path}",
-            f"--index-url={os.path.abspath(create_command.base_path / myapp.repository_url)}",
+            f"--index-url={os.path.abspath(create_command.base_path / myapp.package_repository)}",
             "first",
         ],
         check=True,
@@ -230,16 +230,16 @@ def test_app_packages_repository_url_local_path(
     )
 
 
-def test_app_packages_extra_repository_urls(
+def test_app_packages_extra_package_repositories(
     create_command,
     myapp,
     app_packages_path,
     app_packages_path_index,
 ):
-    """If an app defines a repository_url, it's included in the pip arguments."""
+    """If an app defines extra_package_repositories, they are included in the pip arguments."""
     myapp.requires = ["first"]
     local_extra_repo = "./local-package-repository"
-    myapp.extra_repository_urls = [
+    myapp.extra_package_repositories = [
         "https://example.com/extra",
         local_extra_repo,
     ]
