@@ -505,6 +505,7 @@ class CreateCommand(BaseCommand):
         app: AppConfig,
         requires: list[str],
         requirements_path: Path,
+        requirement_installer_args_path: Path | None,
     ):
         """Configure application requirements by writing a requirements.txt file.
 
@@ -512,6 +513,9 @@ class CreateCommand(BaseCommand):
         :param requires: The full list of requirements
         :param requirements_path: The full path to a requirements.txt file that will be
             written.
+        :param requirement_installer_args_path: The full path to where newline
+            delimited additional requirement installer argumentss should be written if
+            the template supports it.
         """
 
         with self.input.wait_bar("Writing requirements file..."):
@@ -530,6 +534,11 @@ class CreateCommand(BaseCommand):
                             # because we *don't* want Path's symlink resolving behavior.
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
+
+            if requirement_installer_args_path:
+                requirement_installer_args_path.write_text(
+                    "\n".join(self._extra_pip_args(app)), encoding="utf-8"
+                )
 
     def _pip_requires(self, app: AppConfig, requires: list[str]):
         """Convert the list of requirements to be passed to pip into its final form.
@@ -664,8 +673,21 @@ class CreateCommand(BaseCommand):
 
         try:
             requirements_path = self.app_requirements_path(app)
-            self._write_requirements_file(app, requires, requirements_path)
         except KeyError:
+            requirements_path = None
+
+        try:
+            requirement_installer_args_path = self.app_requirement_installer_args_path(
+                app
+            )
+        except KeyError:
+            requirement_installer_args_path = None
+
+        if requirements_path:
+            self._write_requirements_file(
+                app, requires, requirements_path, requirement_installer_args_path
+            )
+        else:
             try:
                 app_packages_path = self.app_packages_path(app)
                 self._install_app_requirements(app, requires, app_packages_path)

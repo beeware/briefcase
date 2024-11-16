@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
-
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -151,38 +148,6 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         return {
             "finish_args": finish_args,
         }
-
-    def _write_requirements_file(
-        self, app: AppConfig, requires: list[str], requirements_path: Path
-    ):
-        super()._write_requirements_file(app, requires, requirements_path)
-
-        # Flatpak runs ``pip install`` using an ``install_requirements.sh`` which Briefcase uses
-        # to indicate user-configured arguments to the command
-
-        pip_install_command = " ".join(
-            [
-                "/app/bin/python3",
-                "-m",
-                "pip",
-                "install",
-                "--no-cache-dir",
-                "-r",
-                "requirements.txt",
-                # $INSTALL_TARGET populated by the Flatpak manifest command executing ``install_requirements.sh``
-                '--target="$INSTALL_TARGET"',
-            ]
-            + self._extra_pip_args(app)
-        )
-
-        # The file should exist in the same directory as the ``requirements.txt``
-        install_requirements_path = requirements_path.parent / "install_requirements.sh"
-
-        install_requirements_path.unlink(missing_ok=True)
-
-        install_requirements_path.write_text(
-            f"# Generated {datetime.now()}\n{pip_install_command}\n", encoding="utf-8"
-        )
 
 
 class LinuxFlatpakUpdateCommand(LinuxFlatpakCreateCommand, UpdateCommand):

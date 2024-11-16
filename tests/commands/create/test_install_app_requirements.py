@@ -674,7 +674,7 @@ def test_app_requirements_requires(
     assert myapp.test_requires is None
 
 
-def test_app_requirements_requirement_installer_args(
+def test_app_requirements_requirement_installer_args_no_template_support(
     create_command,
     myapp,
     app_path,
@@ -682,7 +682,9 @@ def test_app_requirements_requirement_installer_args(
     mock_now,
     app_requirements_path_index,
 ):
-    """If an app has requirement install args, a requirements file is still written."""
+    """If an app has requirement install args, a requirements file is still written,
+    but no requirement installer args file is written if the template does not support it.
+    """
     myapp.requirement_installer_args = ["--no-cache"]
     myapp.requires = ["my-favourite-package"]
 
@@ -699,16 +701,51 @@ def test_app_requirements_requirement_installer_args(
     assert myapp.test_requires is None
 
 
-def test_app_requirements_requirement_installer_args_without_requires(
+def test_app_requirements_requirement_installer_args_with_template_support(
     create_command,
     myapp,
     app_path,
     app_requirements_path,
+    app_requirement_installer_args_path,
+    mock_now,
+    app_requirement_installer_args_path_index,
+):
+    """If an app has requirement install args, a requirements file is still written,
+    and requirement installer args file is written if the template supports it."""
+    myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
+    myapp.requires = ["my-favourite-package"]
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # requirements.txt exists either
+    assert app_requirements_path.exists()
+    with app_requirements_path.open(encoding="utf-8") as f:
+        assert f.read() == f"{GENERATED_DATETIME}\nmy-favourite-package\n"
+
+    assert app_requirement_installer_args_path.exists()
+    assert (
+        app_requirement_installer_args_path.read_text(encoding="utf-8")
+        == "--no-cache\n-f\nwheels with space"
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["my-favourite-package"]
+    assert myapp.test_requires is None
+
+
+def test_app_requirements_requirement_installer_args_without_requires_no_template_support(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path,
+    app_requirement_installer_args_path,
     mock_now,
     app_requirements_path_index,
 ):
     """If an app has requirement install args and no requires,
-    a requirements file is still written with the timestamp."""
+    a requirements file is still written with the timestamp,
+    and does not write a requirement installer args file."""
     myapp.requirement_installer_args = ["--no-cache"]
     myapp.requires = []
 
@@ -719,6 +756,42 @@ def test_app_requirements_requirement_installer_args_without_requires(
     assert app_requirements_path.exists()
     with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == f"{GENERATED_DATETIME}\n"
+
+    assert not app_requirement_installer_args_path.exists()
+
+    # Original app definitions haven't changed
+    assert myapp.requires == []
+    assert myapp.test_requires is None
+
+
+def test_app_requirements_requirement_installer_args_without_requires_with_template_support(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path,
+    app_requirement_installer_args_path,
+    mock_now,
+    app_requirement_installer_args_path_index,
+):
+    """If an app has requirement install args and no requires,
+    a requirements file is still written with the timestamp,
+    as well as requirement installer args file when the template supports it."""
+    myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
+    myapp.requires = []
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # requirements.txt exists either
+    assert app_requirements_path.exists()
+    with app_requirements_path.open(encoding="utf-8") as f:
+        assert f.read() == f"{GENERATED_DATETIME}\n"
+
+    assert app_requirement_installer_args_path.exists()
+    assert (
+        app_requirement_installer_args_path.read_text(encoding="utf-8")
+        == "--no-cache\n-f\nwheels with space"
+    )
 
     # Original app definitions haven't changed
     assert myapp.requires == []

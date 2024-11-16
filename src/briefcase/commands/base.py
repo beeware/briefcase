@@ -499,6 +499,17 @@ a custom location for Briefcase's tools.
         """
         return self.bundle_path(app) / self.path_index(app, "app_requirements_path")
 
+    def app_requirement_installer_args_path(self, app: AppConfig) -> Path:
+        """Obtain the path into which a newline delimited requirement installer args
+        file should be written.
+
+        :param app: The config object for the app
+        :return: The full path where the file should be written
+        """
+        return self.bundle_path(app) / self.path_index(
+            app, "app_requirement_installer_args_path"
+        )
+
     def app_packages_path(self, app: AppConfig) -> Path:
         """Obtain the path into which requirements should be installed.
 

@@ -282,24 +282,6 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "features": features,
         }
 
-    def _write_requirements_file(
-        self, app: AppConfig, requires: list[str], requirements_path: Path
-    ):
-        super()._write_requirements_file(app, requires, requirements_path)
-
-        # Flatpak runs ``pip install`` using an ``install_requirements.sh`` which
-        # Briefcase uses to indicate user-configured arguments to the command
-        pip_options = "\n".join(
-            [f"# Generated {datetime.datetime.now()}"] + self._extra_pip_args(app)
-        )
-
-        # The file should exist in the same directory as the ``requirements.txt``
-        pip_options_path = requirements_path.parent / "pip-options.txt"
-
-        pip_options_path.unlink(missing_ok=True)
-
-        pip_options_path.write_text(pip_options + "\n", encoding="utf-8")
-
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
