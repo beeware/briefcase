@@ -287,8 +287,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     ):
         super()._write_requirements_file(app, requires, requirements_path)
 
-        # Flatpak runs ``pip install`` using an ``install_requirements.sh`` which Briefcase uses
-        # to indicate user-configured arguments to the command
+        # Flatpak runs ``pip install`` using an ``install_requirements.sh`` which
+        # Briefcase uses to indicate user-configured arguments to the command
         pip_options = "\n".join(
             [f"# Generated {datetime.datetime.now()}"] + self._extra_pip_args(app)
         )

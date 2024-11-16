@@ -312,20 +312,23 @@ the ``description``, or include the ``description`` as the first line of the
 ``requirement_installer_args``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A list of strings of arguments to pass to the requirement installer when building the app.
+A list of strings of arguments to pass to the requirement installer when building the
+app.
 
-Strings will be automatically transformed to absolute paths if they appear to be relative paths
-(i.e., starting with ``./`` or ``../``) and resolve to an existing path relative to the app's
-configuration file. This is done to support build targets where the requirement installer
-command does not run with the same working directory as the configuration file.
+Strings will be automatically transformed to absolute paths if they appear to be
+relative paths (i.e., starting with ``./`` or ``../``) and resolve to an existing path
+relative to the app's configuration file. This is done to support build targets where
+the requirement installer command does not run with the same working directory as the
+configuration file.
 
 If you encounter a false-positive and need to prevent this transformation,
 you may do so by using a single string for the argument name and the value.
-Arguments starting with ``-`` will never be transformed, even if they happen to resolve to
-an existing path relative to the configuration file.
+Arguments starting with ``-`` will never be transformed, even if they happen to resolve
+to an existing path relative to the configuration file.
 
-The following examples will have the relative path transformed to an absolute one when Briefcase
-runs the requirement installation command if the path ``wheels`` exists relative to the configuration file:
+The following examples will have the relative path transformed to an absolute one when
+Briefcase runs the requirement installation command if the path ``wheels`` exists
+relative to the configuration file:
 
 .. code-block:: TOML
 
@@ -333,8 +336,9 @@ runs the requirement installation command if the path ``wheels`` exists relative
 
     requirement_installer_args = ["-f", "../wheels"]
 
-On the other hand, the next two examples avoid it because the string starts with ``-``, does not start with
-a relative path indication (``./`` or ``../``), or do not resolve to an existing path:
+On the other hand, the next two examples avoid it because the string starts with ``-``,
+does not start with a relative path indication (``./`` or ``../``), or do not resolve
+to an existing path:
 
 .. code-block:: TOML
 
@@ -348,13 +352,15 @@ a relative path indication (``./`` or ``../``), or do not resolve to an existing
 
 .. admonition:: Supported arguments
 
-    The arguments supported in ``requirement_installer_args`` depend on the requirement installer backend.
+    The arguments supported in ``requirement_installer_args`` depend on the requirement
+    installer backend.
 
-    The only currently supported requirement installer is ``pip``. As such, the list should only contain valid
+    The only currently supported requirement installer is ``pip``. As such, the list
+    should only contain valid
     arguments to the ``pip install`` command.
 
-    Briefcase does not validate the inputs to this configuration, and will only report errors directly indicated
-    by the requirement installer backend.
+    Briefcase does not validate the inputs to this configuration, and will only report
+    errors directly indicated by the requirement installer backend.
 
 ``primary_color``
 ~~~~~~~~~~~~~~~~~
