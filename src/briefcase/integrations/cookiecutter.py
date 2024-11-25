@@ -77,6 +77,28 @@ class TOMLEscape(Extension):
         environment.filters["escape_non_ascii"] = escape_non_ascii
 
 
+class GradleEscape(Extension):
+    """Jinja2 extension to escape strings for Gradle as well."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def escape_gradle(obj):
+            """Escapes single quotes."""
+            return obj.replace("'", "")
+
+        def escape_non_ascii(obj):
+            """Quotes obj if non ascii characters are present."""
+            if obj.isascii():
+                return obj
+            else:
+                return '"' + obj + '"'
+
+        environment.filters["escape_gradle"] = escape_gradle
+        environment.filters["escape_non_ascii"] = escape_non_ascii
+
+
 class PListExtension(Extension):
     """Jinja2 extension for generating plist values."""
 
