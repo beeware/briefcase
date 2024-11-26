@@ -1,0 +1,1 @@
+Added escape template for Gradle which handles single quotes.
