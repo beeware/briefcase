@@ -1,6 +1,7 @@
 """Jinja2 extensions."""
 
 import uuid
+import html
 
 from jinja2.ext import Extension
 
@@ -141,7 +142,7 @@ class XMLExtension(Extension):
 
         def escape_xml(obj):
             """Escapes single quotes and backslashes."""
-            return obj.replace("\\", "\\\\").replace("'", "\\'")
+            return html.escape(obj, quote=True)
 
         environment.filters["escape_xml"] = escape_xml
         environment.filters["bool_attr"] = bool_attr
