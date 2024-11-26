@@ -139,6 +139,11 @@ class XMLExtension(Extension):
             """Render value in XML format appropriate for an attribute."""
             return "true" if obj else "false"
 
+        def escape_xml(obj):
+            """Escapes single quotes and backslashes."""
+            return obj.replace("\\", "\\\\").replace("'", "\\'")
+
+        environment.filters["escape_xml"] = escape_xml
         environment.filters["bool_attr"] = bool_attr
 
 
