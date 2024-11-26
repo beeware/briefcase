@@ -10,7 +10,7 @@ from briefcase.integrations.cookiecutter import GradleEscape
     [
         ("Hello World", "Hello World"),
         ("Hello ' World", "Hello \\' World"),
-        # ("Hello \\ World", "Hello \\\\ World"),
+        ("Hello \\ World", "Hello \\\\ World"),
     ],
 )
 def test_escape_gradle(value, expected):

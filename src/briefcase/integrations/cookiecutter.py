@@ -85,8 +85,8 @@ class GradleEscape(Extension):
         super().__init__(environment)
 
         def escape_gradle(obj):
-            """Escapes single quotes."""
-            return obj.replace("'", "")
+            """Escapes single quotes and backslashes."""
+            return obj.replace("\\", "\\\\").replace("'", "\\'")
 
         def escape_non_ascii(obj):
             """Quotes obj if non ascii characters are present."""
