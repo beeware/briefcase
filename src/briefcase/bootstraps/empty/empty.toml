@@ -1,0 +1,22 @@
+# Configuration for an empty bootstrap
+
+# macOS configuration
+[macOS]
+# Delete the next line to support macOS
+supported = false
+requires = [
+    # Python requirements for macOS
+]
+
+# Linux configuration
+[Linux]
+system_requires = [
+    # System packages needed to run the app on Linux
+]
+system_runtime_requires = [
+    # System runtime packages needed to run the app on Linux
+]
+
+# Windows configuration
+[Windows]
+# Add any platform-specific configuration here
