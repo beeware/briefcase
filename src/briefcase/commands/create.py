@@ -640,7 +640,7 @@ class CreateCommand(BaseCommand):
             self.tools.os.mkdir(app_packages_path)
 
         # Install requirements
-        if requires or app.requirement_installer_args:
+        if requires:
             with self.input.wait_bar(progress_message):
                 self._pip_install(
                     app,

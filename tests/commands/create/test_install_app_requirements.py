@@ -172,6 +172,7 @@ def test_app_packages_requirement_installer_args_no_paths(
     """If an app has requirement installer arguments, they are used in pip install."""
     (create_command.base_path / "packages").mkdir(exist_ok=True)
     myapp.requirement_installer_args = ["--no-cache"]
+    myapp.requires = ["package"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -191,6 +192,7 @@ def test_app_packages_requirement_installer_args_no_paths(
             "--no-user",
             f"--target={app_packages_path}",
             "--no-cache",
+            "package",
         ],
         check=True,
         encoding="UTF-8",
@@ -208,6 +210,7 @@ def test_app_packages_requirement_installer_args_path_transformed(
     it is transformed to an absolute path."""
     (create_command.base_path / "packages").mkdir(exist_ok=True)
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
+    myapp.requires = ["package"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -228,6 +231,7 @@ def test_app_packages_requirement_installer_args_path_transformed(
             f"--target={app_packages_path}",
             "--extra-index-url",
             os.path.abspath(create_command.base_path / "packages"),
+            "package",
         ],
         check=True,
         encoding="UTF-8",
@@ -245,6 +249,7 @@ def test_app_packages_requirement_installer_args_coincidental_path_not_transform
     but it starts with `-`, it is used as-is."""
     (create_command.base_path / "-f" / "wheels").mkdir(parents=True, exist_ok=True)
     myapp.requirement_installer_args = ["-f./wheels"]
+    myapp.requires = ["package"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -264,6 +269,7 @@ def test_app_packages_requirement_installer_args_coincidental_path_not_transform
             "--no-user",
             f"--target={app_packages_path}",
             "-f./wheels",
+            "package",
         ],
         check=True,
         encoding="UTF-8",
@@ -281,6 +287,7 @@ def test_app_packages_requirement_installer_args_path_not_transformed(
     but does not resolve to an existing path, it is used as-is."""
     (create_command.base_path / "packages").unlink(missing_ok=True)
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
+    myapp.requires = ["package"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -301,6 +308,7 @@ def test_app_packages_requirement_installer_args_path_not_transformed(
             f"--target={app_packages_path}",
             "--extra-index-url",
             "./packages",
+            "package",
         ],
         check=True,
         encoding="UTF-8",
@@ -318,6 +326,7 @@ def test_app_packages_requirement_installer_args_combined_argument_not_transform
     paths are not modified."""
     (create_command.base_path / "packages").mkdir(exist_ok=True)
     myapp.requirement_installer_args = ["--extra-index-url=./packages"]
+    myapp.requires = ["package"]
 
     create_command.install_app_requirements(myapp, test_mode=False)
 
@@ -337,6 +346,7 @@ def test_app_packages_requirement_installer_args_combined_argument_not_transform
             "--no-user",
             f"--target={app_packages_path}",
             "--extra-index-url=./packages",
+            "package",
         ],
         check=True,
         encoding="UTF-8",
