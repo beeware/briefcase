@@ -557,13 +557,13 @@ class CreateCommand(BaseCommand):
         """
         args: list[str] = []
         for argument in app.requirement_installer_args:
+            to_append = argument
             if relative_path_matcher.match(argument) and _is_local_path(argument):
                 abs_path = os.path.abspath(self.base_path / argument)
                 if Path(abs_path).exists():
-                    args.append(abs_path)
-                    continue
+                    to_append = abs_path
 
-            args.append(argument)
+            args.append(to_append)
 
         return args
 
