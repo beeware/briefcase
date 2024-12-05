@@ -54,7 +54,6 @@ DEFAULT_FINISH_ARGS = {
     "filesystem=xdg-config": True,
     "filesystem=xdg-data": True,
     "filesystem=xdg-documents": True,
-    "socket=session-bus": True,
 }
 
 
@@ -89,7 +88,6 @@ DEFAULT_FINISH_ARGS = {
                     "filesystem=xdg-config": True,
                     "filesystem=xdg-data": True,
                     "filesystem=xdg-documents": True,
-                    "socket=session-bus": True,
                     "allow=bluetooth": True,
                 },
             },
@@ -221,7 +219,6 @@ DEFAULT_FINISH_ARGS = {
                     "filesystem=xdg-config": True,
                     "filesystem=xdg-data": True,
                     "filesystem=xdg-documents": True,
-                    "socket=session-bus": True,
                     "allow=bluetooth": True,
                 },
             },

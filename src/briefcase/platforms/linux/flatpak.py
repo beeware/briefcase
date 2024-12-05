@@ -139,8 +139,6 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             "filesystem=xdg-config": True,
             "filesystem=xdg-data": True,
             "filesystem=xdg-documents": True,
-            # DBus access
-            "socket=session-bus": True,
         }
 
         finish_args.update(getattr(app, "finish_arg", {}))
