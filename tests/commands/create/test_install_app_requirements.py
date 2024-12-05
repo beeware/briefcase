@@ -726,7 +726,7 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     assert app_requirement_installer_args_path.exists()
     assert (
         app_requirement_installer_args_path.read_text(encoding="utf-8")
-        == "--no-cache\n-f\nwheels with space"
+        == "--no-cache\n-f\nwheels with space\n"
     )
 
     # Original app definitions haven't changed
@@ -790,7 +790,7 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
     assert app_requirement_installer_args_path.exists()
     assert (
         app_requirement_installer_args_path.read_text(encoding="utf-8")
-        == "--no-cache\n-f\nwheels with space"
+        == "--no-cache\n-f\nwheels with space\n"
     )
 
     # Original app definitions haven't changed

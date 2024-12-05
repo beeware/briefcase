@@ -536,8 +536,9 @@ class CreateCommand(BaseCommand):
                         f.write(f"{requirement}\n")
 
             if requirement_installer_args_path:
+                pip_args = "\n".join(self._extra_pip_args(app))
                 requirement_installer_args_path.write_text(
-                    "\n".join(self._extra_pip_args(app)), encoding="utf-8"
+                    f"{pip_args}\n", encoding="utf-8"
                 )
 
     def _pip_requires(self, app: AppConfig, requires: list[str]):
