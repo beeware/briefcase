@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -504,6 +505,7 @@ class CreateCommand(BaseCommand):
         app: AppConfig,
         requires: list[str],
         requirements_path: Path,
+        requirement_installer_args_path: Path | None,
     ):
         """Configure application requirements by writing a requirements.txt file.
 
@@ -511,23 +513,33 @@ class CreateCommand(BaseCommand):
         :param requires: The full list of requirements
         :param requirements_path: The full path to a requirements.txt file that will be
             written.
+        :param requirement_installer_args_path: The full path to where newline
+            delimited additional requirement installer argumentss should be written if
+            the template supports it.
         """
 
         with self.input.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
+                # Add timestamp so build systems (such as Gradle) detect a change
+                # in the file and perform a re-installation of all requirements.
+                f.write(f"# Generated {datetime.now()}\n")
+
                 if requires:
-                    # Add timestamp so build systems (such as Gradle) detect a change
-                    # in the file and perform a re-installation of all requirements.
-                    f.write(f"# Generated {datetime.now()}\n")
                     for requirement in requires:
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file
                         # to a different place before using it.
-                        if _is_local_requirement(requirement):
+                        if _is_local_path(requirement):
                             # We use os.path.abspath() rather than Path.resolve()
                             # because we *don't* want Path's symlink resolving behavior.
                             requirement = os.path.abspath(self.base_path / requirement)
                         f.write(f"{requirement}\n")
+
+            if requirement_installer_args_path:
+                pip_args = "\n".join(self._extra_pip_args(app))
+                requirement_installer_args_path.write_text(
+                    f"{pip_args}\n", encoding="utf-8"
+                )
 
     def _pip_requires(self, app: AppConfig, requires: list[str]):
         """Convert the list of requirements to be passed to pip into its final form.
@@ -544,7 +556,17 @@ class CreateCommand(BaseCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        return []
+        args: list[str] = []
+        for argument in app.requirement_installer_args:
+            to_append = argument
+            if relative_path_matcher.match(argument) and _is_local_path(argument):
+                abs_path = os.path.abspath(self.base_path / argument)
+                if Path(abs_path).exists():
+                    to_append = abs_path
+
+            args.append(to_append)
+
+        return args
 
     def _pip_install(
         self,
@@ -652,8 +674,21 @@ class CreateCommand(BaseCommand):
 
         try:
             requirements_path = self.app_requirements_path(app)
-            self._write_requirements_file(app, requires, requirements_path)
         except KeyError:
+            requirements_path = None
+
+        try:
+            requirement_installer_args_path = self.app_requirement_installer_args_path(
+                app
+            )
+        except KeyError:
+            requirement_installer_args_path = None
+
+        if requirements_path:
+            self._write_requirements_file(
+                app, requires, requirements_path, requirement_installer_args_path
+            )
+        else:
             try:
                 app_packages_path = self.app_packages_path(app)
                 self._install_app_requirements(app, requires, app_packages_path)
@@ -972,15 +1007,18 @@ def _has_url(requirement):
     )
 
 
-def _is_local_requirement(requirement):
-    """Determine if the requirement is a local file path.
+def _is_local_path(reference):
+    """Determine if the reference is a local file path.
 
-    :param requirement: The requirement to check
-    :returns: True if the requirement is a local file path
+    :param reference: The reference to check
+    :returns: True if the reference is a local file path
     """
-    # Windows allows both / and \ as a path separator in requirements.
+    # Windows allows both / and \ as a path separator in references.
     separators = [os.sep]
     if os.altsep:
         separators.append(os.altsep)
 
-    return any(sep in requirement for sep in separators) and (not _has_url(requirement))
+    return any(sep in reference for sep in separators) and (not _has_url(reference))
+
+
+relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")

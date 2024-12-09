@@ -305,7 +305,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        return [
+        return super()._extra_pip_args(app) + [
             "--prefer-binary",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",

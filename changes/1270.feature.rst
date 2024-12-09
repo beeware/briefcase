@@ -1,0 +1,1 @@
+Briefcase now supports per-app configuration of ``pip install`` command line arguments using ``requirement_installer_args``.
