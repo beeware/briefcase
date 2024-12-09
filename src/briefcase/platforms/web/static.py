@@ -32,6 +32,7 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 class StaticWebMixin:
     output_format = "static"
     platform = "web"
+    platform_target_version = "0.3.21"
 
     def project_path(self, app):
         return self.bundle_path(app) / "www"
@@ -182,11 +183,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with self.input.wait_bar("Writing Pyscript configuration file..."):
             with (self.project_path(app) / "pyscript.toml").open("wb") as f:
                 config = {
-                    "name": app.formal_name,
-                    "description": app.description,
-                    "version": app.version,
-                    "splashscreen": {"autoclose": True},
-                    "terminal": False,
                     # Ensure that we're using Unix path separators, as the content
                     # will be parsed by pyscript in the browser.
                     "packages": [
