@@ -1,0 +1,1 @@
+The web template now targets PyScript version 2024.11.1. In addition, the web template can provide a base ``pyscript.toml`` that Briefcase will update as required during the build process.
