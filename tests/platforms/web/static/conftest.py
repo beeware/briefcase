@@ -19,6 +19,15 @@ app_requirements_path="requirements.txt"
     # Create index.html
     create_file(bundle_path / "www/index.html", "<html></html>")
 
+    # Create the initial pyscript.toml
+    create_file(
+        bundle_path / "www/pyscript.toml",
+        """
+existing-key-1 = "value-1"
+existing-key-2 = 2
+""",
+    )
+
     # Create the initial briefcase.css
     create_file(
         bundle_path / "www/static/css/briefcase.css",

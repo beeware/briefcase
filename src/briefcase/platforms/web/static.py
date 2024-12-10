@@ -32,6 +32,7 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 class StaticWebMixin:
     output_format = "static"
     platform = "web"
+    platform_target_version = "0.3.21"
 
     def project_path(self, app):
         return self.bundle_path(app) / "www"
@@ -180,33 +181,40 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ) from e
 
         with self.input.wait_bar("Writing Pyscript configuration file..."):
-            with (self.project_path(app) / "pyscript.toml").open("wb") as f:
-                config = {
-                    "name": app.formal_name,
-                    "description": app.description,
-                    "version": app.version,
-                    "splashscreen": {"autoclose": True},
-                    "terminal": False,
-                    # Ensure that we're using Unix path separators, as the content
-                    # will be parsed by pyscript in the browser.
-                    "packages": [
-                        f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
-                        for wheel in sorted(self.wheel_path(app).glob("*.whl"))
-                    ],
-                }
-                # Parse any additional pyscript.toml content, and merge it into
-                # the overall content
-                try:
-                    extra = tomllib.loads(app.extra_pyscript_toml_content)
-                    config.update(extra)
-                except tomllib.TOMLDecodeError as e:
-                    raise BriefcaseConfigError(
-                        f"Extra pyscript.toml content isn't valid TOML: {e}"
-                    ) from e
-                except AttributeError:
-                    pass
+            # Load any pre-existing pyscript.toml provided by the template. If the file
+            # doesn't exist, assume an empty pyscript.toml as a starting point.
+            try:
+                with (self.project_path(app) / "pyscript.toml").open("rb") as f:
+                    config = tomllib.load(f)
+            except tomllib.TOMLDecodeError as e:
+                raise BriefcaseConfigError(
+                    f"pyscript.toml content isn't valid TOML: {e}"
+                ) from e
+            except FileNotFoundError:
+                config = {}
 
-                # Write the final configuration.
+            # Add the packages declaration to the existing pyscript.toml.
+            # Ensure that we're using Unix path separators, as the content
+            # will be parsed by pyscript in the browser.
+            config["packages"] = [
+                f'/{"/".join(wheel.relative_to(self.project_path(app)).parts)}'
+                for wheel in sorted(self.wheel_path(app).glob("*.whl"))
+            ]
+
+            # Parse any additional pyscript.toml content, and merge it into
+            # the overall content
+            try:
+                extra = tomllib.loads(app.extra_pyscript_toml_content)
+                config.update(extra)
+            except tomllib.TOMLDecodeError as e:
+                raise BriefcaseConfigError(
+                    f"Extra pyscript.toml content isn't valid TOML: {e}"
+                ) from e
+            except AttributeError:
+                pass
+
+            # Write the final configuration.
+            with (self.project_path(app) / "pyscript.toml").open("wb") as f:
                 tomli_w.dump(config, f)
 
         self.logger.info("Compile static web content from wheels")

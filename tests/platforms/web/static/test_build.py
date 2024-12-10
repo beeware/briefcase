@@ -15,7 +15,7 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.web.static import StaticWebBuildCommand
 
-from ....utils import create_wheel
+from ....utils import create_file, create_wheel
 
 
 @pytest.fixture
@@ -124,11 +124,8 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
     # Pyscript.toml has been written
     with (bundle_path / "www/pyscript.toml").open("rb") as f:
         assert tomllib.load(f) == {
-            "name": "First App",
-            "description": "The first simple app \\ demonstration",
-            "version": "0.0.1",
-            "splashscreen": {"autoclose": True},
-            "terminal": False,
+            "existing-key-1": "value-1",
+            "existing-key-2": 2,
             "packages": [
                 "/static/wheels/dependency-1.2.3-py3-none-any.whl",
                 "/static/wheels/first_app-1.2.3-py3-none-any.whl",
@@ -205,12 +202,10 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
     # Pyscript.toml has been written
     with (bundle_path / "www/pyscript.toml").open("rb") as f:
         assert tomllib.load(f) == {
-            "name": "First App",
-            "description": "The first simple app \\ demonstration",
-            "version": "0.0.1",
+            "existing-key-1": "value-1",
+            "existing-key-2": 2,
             "something": "custom",
             "splashscreen": {"wiggle": False},
-            "terminal": False,
             "packages": ["something-custom"],
             "runtimes": [
                 {"src": "https://example.com/pyodide.js"},
@@ -218,7 +213,57 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
         }
 
 
-def test_build_app_invalid_custom_pyscript_toml(
+def test_build_app_no_template_pyscript_toml(
+    build_command, first_app_generated, tmp_path
+):
+    """An app whose template doesn't provide pyscript.toml gets a basic config."""
+    # Remove the templated pyscript.toml
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+    (bundle_path / "www/pyscript.toml").unlink()
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www/static/wheels"
+    )
+
+    # Build the web app.
+    build_command.build_app(first_app_generated)
+
+    # Pyscript.toml has been written with only the packages content
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "packages": [],
+        }
+
+
+def test_build_app_invalid_template_pyscript_toml(
+    build_command, first_app_generated, tmp_path
+):
+    """An app with an invalid pyscript.toml raises an error."""
+    # Re-write an invalid templated pyscript.toml
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+    (bundle_path / "www/pyscript.toml").unlink()
+    create_file(
+        bundle_path / "www/pyscript.toml",
+        """
+This is not valid toml.
+""",
+    )
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www/static/wheels"
+    )
+
+    # Building the web app raises an error
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
+    ):
+        build_command.build_app(first_app_generated)
+
+
+def test_build_app_invalid_extra_pyscript_toml_content(
     build_command, first_app_generated, tmp_path
 ):
     """An app with invalid extra pyscript.toml content raises an error."""
@@ -374,11 +419,8 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
     # Pyscript.toml has been written
     with (bundle_path / "www/pyscript.toml").open("rb") as f:
         assert tomllib.load(f) == {
-            "name": "First App",
-            "description": "The first simple app \\ demonstration",
-            "version": "0.0.1",
-            "splashscreen": {"autoclose": True},
-            "terminal": False,
+            "existing-key-1": "value-1",
+            "existing-key-2": 2,
             "packages": [
                 "/static/wheels/first_app-1.2.3-py3-none-any.whl",
             ],
@@ -458,8 +500,12 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
     # Wheels folder still exists
     assert (bundle_path / "www/static/wheels").is_dir()
 
-    # Pyscript.toml was not written
-    assert not (bundle_path / "www/pyscript.toml").exists()
+    # Pyscript.toml content has not changed
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "existing-key-1": "value-1",
+            "existing-key-2": 2,
+        }
 
 
 def test_dependency_fail(build_command, first_app_generated, tmp_path):
@@ -530,5 +576,9 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
     # Wheels folder still exists
     assert (bundle_path / "www/static/wheels").is_dir()
 
-    # Pyscript.toml was not written
-    assert not (bundle_path / "www/pyscript.toml").exists()
+    # Pyscript.toml content has not changed
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "existing-key-1": "value-1",
+            "existing-key-2": 2,
+        }
