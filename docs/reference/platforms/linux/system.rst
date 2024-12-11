@@ -238,3 +238,16 @@ perform container setup operations as ``root``, switch the container's user to
 
     USER brutus
     """
+
+Platform quirks
+===============
+
+Local path references and Docker builds
+~~~~~~~~~~~~~~~~~~~~~
+
+When referencing local paths in the ``requires`` and ``requirement_installer_args``
+configuration, be aware that those paths will not be available inside a Docker build
+context. `This is a known limitation that has workarounds available if needed
+<https://github.com/beeware/briefcase/issues/2081>`__, and support will eventually
+be added to Briefcase so that these paths work seamlessly like they do with other build
+targets.
