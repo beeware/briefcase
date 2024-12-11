@@ -8,7 +8,7 @@ import pytest
 import tomli_w
 
 import briefcase
-from briefcase.commands.create import _is_local_requirement
+from briefcase.commands.create import _is_local_path
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
@@ -160,6 +160,197 @@ def test_app_packages_valid_requires(
     # Original app definitions haven't changed
     assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires is None
+
+
+def test_app_packages_requirement_installer_args_no_paths(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_path,
+    app_packages_path_index,
+):
+    """If an app has requirement installer arguments, they are used in pip install."""
+    (create_command.base_path / "packages").mkdir(exist_ok=True)
+    myapp.requirement_installer_args = ["--no-cache"]
+    myapp.requires = ["package"]
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "--no-cache",
+            "package",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_app_packages_requirement_installer_args_path_transformed(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_path,
+    app_packages_path_index,
+):
+    """If an app's requirement installer arguments includes a relative path that exists,
+    it is transformed to an absolute path."""
+    (create_command.base_path / "packages").mkdir(exist_ok=True)
+    myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
+    myapp.requires = ["package"]
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "--extra-index-url",
+            os.path.abspath(create_command.base_path / "packages"),
+            "package",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_app_packages_requirement_installer_args_coincidental_path_not_transformed(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_path,
+    app_packages_path_index,
+):
+    """If an app's requirement installer arguments includes a path that exists,
+    but it starts with `-`, it is used as-is."""
+    (create_command.base_path / "-f" / "wheels").mkdir(parents=True, exist_ok=True)
+    myapp.requirement_installer_args = ["-f./wheels"]
+    myapp.requires = ["package"]
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "-f./wheels",
+            "package",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_app_packages_requirement_installer_args_path_not_transformed(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_path,
+    app_packages_path_index,
+):
+    """If an app's requirement installer arguments have an argument that looks like a local path,
+    but does not resolve to an existing path, it is used as-is."""
+    (create_command.base_path / "packages").unlink(missing_ok=True)
+    myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
+    myapp.requires = ["package"]
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "--extra-index-url",
+            "./packages",
+            "package",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_app_packages_requirement_installer_args_combined_argument_not_transformed(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_path,
+    app_packages_path_index,
+):
+    """If an app's requirement installer arguments use a combined argument,
+    paths are not modified."""
+    (create_command.base_path / "packages").mkdir(exist_ok=True)
+    myapp.requirement_installer_args = ["--extra-index-url=./packages"]
+    myapp.requires = ["package"]
+
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-python-version-warning",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "--extra-index-url=./packages",
+            "package",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
 
 
 def test_app_packages_valid_requires_no_support_package(
@@ -427,6 +618,7 @@ def test_app_requirements_no_requires(
     myapp,
     app_requirements_path,
     app_requirements_path_index,
+    mock_now,
 ):
     """If an app has no requirements, a requirements file is still written."""
     myapp.requires = None
@@ -437,7 +629,7 @@ def test_app_requirements_no_requires(
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
     with app_requirements_path.open(encoding="utf-8") as f:
-        assert f.read() == ""
+        assert f.read() == f"{GENERATED_DATETIME}\n"
 
     # Original app definitions haven't changed
     assert myapp.requires is None
@@ -449,6 +641,7 @@ def test_app_requirements_empty_requires(
     myapp,
     app_requirements_path,
     app_requirements_path_index,
+    mock_now,
 ):
     """If an app has an empty requirements list, a requirements file is still
     written."""
@@ -460,7 +653,7 @@ def test_app_requirements_empty_requires(
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
     with app_requirements_path.open(encoding="utf-8") as f:
-        assert f.read() == ""
+        assert f.read() == f"{GENERATED_DATETIME}\n"
 
     # Original app definitions haven't changed
     assert myapp.requires == []
@@ -491,6 +684,130 @@ def test_app_requirements_requires(
     assert myapp.test_requires is None
 
 
+def test_app_requirements_requirement_installer_args_no_template_support(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path,
+    mock_now,
+    app_requirements_path_index,
+):
+    """If an app has requirement install args, a requirements file is still written,
+    but no requirement installer args file is written if the template does not support it.
+    """
+    myapp.requirement_installer_args = ["--no-cache"]
+    myapp.requires = ["my-favourite-package"]
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # requirements.txt exists either
+    assert app_requirements_path.exists()
+    with app_requirements_path.open(encoding="utf-8") as f:
+        assert f.read() == f"{GENERATED_DATETIME}\nmy-favourite-package\n"
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["my-favourite-package"]
+    assert myapp.test_requires is None
+
+
+def test_app_requirements_requirement_installer_args_with_template_support(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path,
+    app_requirement_installer_args_path,
+    mock_now,
+    app_requirement_installer_args_path_index,
+):
+    """If an app has requirement install args, a requirements file is still written,
+    and requirement installer args file is written if the template supports it."""
+    myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
+    myapp.requires = ["my-favourite-package"]
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # requirements.txt exists either
+    assert app_requirements_path.exists()
+    with app_requirements_path.open(encoding="utf-8") as f:
+        assert f.read() == f"{GENERATED_DATETIME}\nmy-favourite-package\n"
+
+    assert app_requirement_installer_args_path.exists()
+    assert (
+        app_requirement_installer_args_path.read_text(encoding="utf-8")
+        == "--no-cache\n-f\nwheels with space\n"
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["my-favourite-package"]
+    assert myapp.test_requires is None
+
+
+def test_app_requirements_requirement_installer_args_without_requires_no_template_support(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path,
+    app_requirement_installer_args_path,
+    mock_now,
+    app_requirements_path_index,
+):
+    """If an app has requirement install args and no requires,
+    a requirements file is still written with the timestamp,
+    and does not write a requirement installer args file."""
+    myapp.requirement_installer_args = ["--no-cache"]
+    myapp.requires = []
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # requirements.txt exists either
+    assert app_requirements_path.exists()
+    with app_requirements_path.open(encoding="utf-8") as f:
+        assert f.read() == f"{GENERATED_DATETIME}\n"
+
+    assert not app_requirement_installer_args_path.exists()
+
+    # Original app definitions haven't changed
+    assert myapp.requires == []
+    assert myapp.test_requires is None
+
+
+def test_app_requirements_requirement_installer_args_without_requires_with_template_support(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path,
+    app_requirement_installer_args_path,
+    mock_now,
+    app_requirement_installer_args_path_index,
+):
+    """If an app has requirement install args and no requires,
+    a requirements file is still written with the timestamp,
+    as well as requirement installer args file when the template supports it."""
+    myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
+    myapp.requires = []
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, test_mode=False)
+
+    # requirements.txt exists either
+    assert app_requirements_path.exists()
+    with app_requirements_path.open(encoding="utf-8") as f:
+        assert f.read() == f"{GENERATED_DATETIME}\n"
+
+    assert app_requirement_installer_args_path.exists()
+    assert (
+        app_requirement_installer_args_path.read_text(encoding="utf-8")
+        == "--no-cache\n-f\nwheels with space\n"
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == []
+    assert myapp.test_requires is None
+
+
 @pytest.mark.parametrize(
     "altsep, requirement, expected",
     [
@@ -501,7 +818,7 @@ def test_app_requirements_requires(
         (">", "asdf+xcvb", False),
     ],
 )
-def test__is_local_requirement_altsep_respected(
+def test__is_local_path_altsep_respected(
     altsep,
     requirement,
     expected,
@@ -510,7 +827,7 @@ def test__is_local_requirement_altsep_respected(
     """``os.altsep`` is included as a separator when available."""
     monkeypatch.setattr(os, "sep", "/")
     monkeypatch.setattr(os, "altsep", altsep)
-    assert _is_local_requirement(requirement) is expected
+    assert _is_local_path(requirement) is expected
 
 
 def _test_app_requirements_paths(

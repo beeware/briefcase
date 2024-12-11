@@ -238,3 +238,15 @@ perform container setup operations as ``root``, switch the container's user to
 
     USER brutus
     """
+
+Platform quirks
+===============
+
+Local path references and Docker builds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Docker builds are not able to reference local paths in the ``requires`` and
+``requirement_installer_args`` configurations. This is because the Docker container only
+has access to specific file paths on the host system. See `issue #2018
+<https://github.com/beeware/briefcase/issues/2081>`__ for more discussion of the
+problem, and some possible workarounds.

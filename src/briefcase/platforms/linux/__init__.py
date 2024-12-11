@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from briefcase.commands.create import _is_local_requirement
+from briefcase.commands.create import _is_local_path
 from briefcase.commands.open import OpenCommand
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
@@ -156,7 +156,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
 
         # Iterate over every requirement, looking for local references
         for requirement in requires:
-            if _is_local_requirement(requirement):
+            if _is_local_path(requirement):
                 if Path(requirement).is_dir():
                     # Requirement is a filesystem reference
                     # Build an sdist for the local requirement
@@ -210,7 +210,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
         final = [
             requirement
             for requirement in super()._pip_requires(app, requires)
-            if not _is_local_requirement(requirement)
+            if not _is_local_path(requirement)
         ]
 
         # Add in any local packages.

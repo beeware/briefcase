@@ -100,7 +100,8 @@ class DevCommand(RunAppMixin, BaseCommand):
                             "--upgrade",
                         ]
                         + (["-vv"] if self.logger.is_deep_debug else [])
-                        + requires,
+                        + requires
+                        + app.requirement_installer_args,
                         check=True,
                         encoding="UTF-8",
                     )

@@ -266,6 +266,7 @@ class AppConfig(BaseConfig):
         supported=True,
         long_description=None,
         console_app=False,
+        requirement_installer_args: list[str] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -295,6 +296,9 @@ class AppConfig(BaseConfig):
         self.long_description = long_description
         self.license = license
         self.console_app = console_app
+        self.requirement_installer_args = (
+            [] if requirement_installer_args is None else requirement_installer_args
+        )
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(

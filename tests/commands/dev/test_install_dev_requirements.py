@@ -77,6 +77,17 @@ def test_no_requirements(dev_command, first_app):
     dev_command.tools.subprocess.run.assert_not_called()
 
 
+def test_no_requirements_with_requirement_installer_Args(dev_command, first_app):
+    """Ensure dependency installation is not attempted when nothing to install,
+    even if requirement installer args are defined."""
+    first_app.requires = []
+    first_app.requirement_installer_args = ["--no-cache"]
+
+    dev_command.install_dev_requirements(app=first_app)
+
+    dev_command.tools.subprocess.run.assert_not_called()
+
+
 def test_install_requirements_test_mode(dev_command, first_app):
     """If an app has test requirements, they are also installed."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
@@ -124,6 +135,32 @@ def test_only_test_requirements(dev_command, first_app):
             "--upgrade",
             "test-one",
             "test_two",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_requirement_installer_args(dev_command, first_app):
+    """If an app has requirement installer args, they're used correctly."""
+    first_app.requires = ["one", "two"]
+    first_app.requirement_installer_args = ["--no-cache"]
+
+    dev_command.install_dev_requirements(app=first_app)
+
+    dev_command.tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "one",
+            "two",
+            "--no-cache",
         ],
         check=True,
         encoding="UTF-8",

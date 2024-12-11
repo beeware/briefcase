@@ -275,6 +275,21 @@ def app_requirements_path_index(bundle_path):
 
 
 @pytest.fixture
+def app_requirement_installer_args_path_index(bundle_path):
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "app_requirement_installer_args_path": "path/to/installer-args.txt",
+                "support_path": "path/to/support",
+                "support_revision": 37,
+            }
+        }
+        tomli_w.dump(index, f)
+
+
+@pytest.fixture
 def no_support_revision_index(bundle_path):
     with (bundle_path / "briefcase.toml").open("wb") as f:
         index = {
@@ -307,6 +322,11 @@ def support_path(bundle_path):
 @pytest.fixture
 def app_requirements_path(bundle_path):
     return bundle_path / "path/to/requirements.txt"
+
+
+@pytest.fixture
+def app_requirement_installer_args_path(bundle_path):
+    return bundle_path / "path/to/installer-args.txt"
 
 
 @pytest.fixture
