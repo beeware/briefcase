@@ -105,6 +105,10 @@ class CreateCommand(BaseCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
+    def default_support_revision(self) -> str:
+        """The default revision for the default support package for a format."""
+        return ""
+
     def stub_binary_filename(self, support_revision: str, is_console_app: bool) -> str:
         """The filename for the stub binary."""
         stub_type = "Console" if is_console_app else "GUI"
@@ -230,6 +234,8 @@ class CreateCommand(BaseCommand):
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
+                # Support package revision for default support package
+                "support_revision": self.default_support_revision(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
                 # Transformations of explicit properties into useful forms
