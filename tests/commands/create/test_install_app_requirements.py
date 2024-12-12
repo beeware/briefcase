@@ -8,7 +8,6 @@ import pytest
 import tomli_w
 
 import briefcase
-from briefcase.commands.create import _is_local_path
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
@@ -806,28 +805,6 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
     # Original app definitions haven't changed
     assert myapp.requires == []
     assert myapp.test_requires is None
-
-
-@pytest.mark.parametrize(
-    "altsep, requirement, expected",
-    [
-        (None, "asdf/xcvb", True),
-        (None, "asdf>xcvb", False),
-        (">", "asdf/xcvb", True),
-        (">", "asdf>xcvb", True),
-        (">", "asdf+xcvb", False),
-    ],
-)
-def test__is_local_path_altsep_respected(
-    altsep,
-    requirement,
-    expected,
-    monkeypatch,
-):
-    """``os.altsep`` is included as a separator when available."""
-    monkeypatch.setattr(os, "sep", "/")
-    monkeypatch.setattr(os, "altsep", altsep)
-    assert _is_local_path(requirement) is expected
 
 
 def _test_app_requirements_paths(

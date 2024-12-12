@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
@@ -25,6 +24,7 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.git import Git
 from briefcase.integrations.subprocess import NativeAppContext
+from briefcase.utils import is_local_path, is_relative_local_path
 
 from .base import BaseCommand, full_options
 
@@ -529,7 +529,7 @@ class CreateCommand(BaseCommand):
                         # If the requirement is a local path, convert it to
                         # absolute, because Flatpak moves the requirements file
                         # to a different place before using it.
-                        if _is_local_path(requirement):
+                        if is_local_path(requirement):
                             # We use os.path.abspath() rather than Path.resolve()
                             # because we *don't* want Path's symlink resolving behavior.
                             requirement = os.path.abspath(self.base_path / requirement)
@@ -559,7 +559,7 @@ class CreateCommand(BaseCommand):
         args: list[str] = []
         for argument in app.requirement_installer_args:
             to_append = argument
-            if relative_path_matcher.match(argument) and _is_local_path(argument):
+            if is_relative_local_path(argument):
                 abs_path = os.path.abspath(self.base_path / argument)
                 if Path(abs_path).exists():
                     to_append = abs_path
@@ -984,41 +984,3 @@ class CreateCommand(BaseCommand):
                 state = self.create_app(app, **full_options(state, options))
 
         return state
-
-
-def _has_url(requirement):
-    """Determine if the requirement is defined as a URL.
-
-    Detects any of the URL schemes supported by pip
-    (https://pip.pypa.io/en/stable/topics/vcs-support/).
-
-    :param requirement: The requirement to check
-    :returns: True if the requirement is a URL supported by pip.
-    """
-    return any(
-        f"{scheme}:" in requirement
-        for scheme in (
-            ["http", "https", "file", "ftp"]
-            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
-            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
-            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
-            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
-        )
-    )
-
-
-def _is_local_path(reference):
-    """Determine if the reference is a local file path.
-
-    :param reference: The reference to check
-    :returns: True if the reference is a local file path
-    """
-    # Windows allows both / and \ as a path separator in references.
-    separators = [os.sep]
-    if os.altsep:
-        separators.append(os.altsep)
-
-    return any(sep in reference for sep in separators) and (not _has_url(reference))
-
-
-relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")

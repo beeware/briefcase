@@ -7,7 +7,7 @@ import subprocess
 import sys
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
-from pathlib import Path, PosixPath, PurePosixPath
+from pathlib import Path, PosixPath, PurePath, PurePosixPath
 
 from packaging.version import InvalidVersion, Version
 
@@ -15,6 +15,7 @@ from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
+from briefcase.utils import is_relative_local_path
 
 
 class XauthDatabaseCreationFailure(Exception):
@@ -452,14 +453,44 @@ Delete this file and run Briefcase again.
         if interactive:
             docker_cmdline.append("-it")
 
+        # Use separate containers to avoid mutating incoming mounts and path_map
+        arg_mounts = []
+        arg_path_map = {}
+        for arg in args:
+            arg = os.fsdecode(arg)
+
+            # Map relative local paths into the container in `/opt`
+            # with the full path preserved. Preserving the full path under opt
+            # prevents any chance of path name collision issues for the target path.
+            # While Windows paths may be distinguishable only,
+            # by the drive letter, it's not possible to have a relative
+            # path across drives, so in practice it isn't possible to configure
+            # arguments that are both relative local but are indistinguishable
+            # if the drive letter is dropped.
+            # https://learn.microsoft.com/en-us/dotnet/standard/io/file-path-formats
+            if is_relative_local_path(arg):
+                abs_source = PurePath(os.path.abspath(arg))
+                # ``abs_source.relative_to(.anchor)`` strips the path anchor allowing
+                # it to be turned safely into a PosixPath and joined to ``opt`` to form
+                # "/opt/{abs_source}", capable of being a mount target in the
+                # Docker container
+                without_anchor = PurePosixPath(
+                    abs_source.relative_to(abs_source.anchor)
+                )
+                target = str("/opt" / without_anchor)
+
+                arg_mounts.append((abs_source, target))
+                arg_path_map[arg] = target
+
         # Add volume mounts
         # The :z suffix on volume mounts allows SELinux to modify the host mount;
         # it is ignored on non-SELinux platforms
-        if mounts:
-            for source, target in mounts:
-                docker_cmdline.extend(
-                    ("--volume", f"{os.fsdecode(source)}:{os.fsdecode(target)}:z")
-                )
+        for mapping in (mounts, arg_mounts):
+            if mapping:
+                for source, target in mapping:
+                    docker_cmdline.extend(
+                        ("--volume", f"{os.fsdecode(source)}:{os.fsdecode(target)}:z")
+                    )
 
         # Pass environment variables in as --env arguments to Docker
         if env:
@@ -481,7 +512,8 @@ Delete this file and run Briefcase again.
         docker_cmdline.append(image_tag)
 
         # Finally, add the command (and its arguments) to run in the container
-        docker_cmdline.extend(self.dockerize_path(arg, path_map) for arg in args)
+        path_maps = (path_map, arg_path_map)
+        docker_cmdline.extend(self.dockerize_path(arg, path_maps) for arg in args)
 
         # Augment configuration to drive the subprocess call
         subprocess_kwargs["args"] = docker_cmdline
@@ -492,7 +524,9 @@ Delete this file and run Briefcase again.
     def dockerize_path(
         self,
         arg: str | os.PathLike,
-        path_map: Mapping[str | os.PathLike, str | os.PathLike] | None = None,
+        path_maps: (
+            Iterable[Mapping[str | os.PathLike, str | os.PathLike] | None] | None
+        ) = None,
     ) -> str:  # pragma: no-cover-if-is-windows
         """Translates host file paths into the equivalent location in the docker
         filesystem as defined by a file path mapping.
@@ -508,9 +542,10 @@ Delete this file and run Briefcase again.
         """
         arg = os.fsdecode(arg)
 
-        if path_map:
-            for source, target in path_map.items():
-                arg = arg.replace(os.fsdecode(source), os.fsdecode(target))
+        for path_map in path_maps or []:
+            if path_map:
+                for source, target in path_map.items():
+                    arg = arg.replace(os.fsdecode(source), os.fsdecode(target))
 
         return arg
 
