@@ -12,10 +12,10 @@ from briefcase.commands import (
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
-from briefcase.platforms.linux import LinuxMixin
+from briefcase.platforms.linux import LinuxMixin, StandalonePythonSupportMixin
 
 
-class LinuxFlatpakMixin(LinuxMixin):
+class LinuxFlatpakMixin(StandalonePythonSupportMixin, LinuxMixin):
     output_format = "flatpak"
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Flatpaks can only be built on Linux."

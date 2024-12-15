@@ -56,30 +56,6 @@ def parse_freedesktop_os_release(content):
 class LinuxMixin:
     platform = "linux"
 
-    def support_package_url(self, support_revision):
-        """The URL of the support package to use for apps of this type.
-
-        Linux builds that use a support package (AppImage, Flatpak) use indygreg's
-        Standalone Python to provide system packages. See
-        `https://github.com/indygreg/python-build-standalone` for details.
-
-        System packages don't use a support package; this is defined by
-        the template, so this method won't be invoked
-        """
-        python_download_arch = self.tools.host_arch
-        # use a 32bit Python if using 32bit Python on 64bit hardware
-        if self.tools.is_32bit_python and self.tools.host_arch == "aarch64":
-            python_download_arch = "armv7"
-        elif self.tools.is_32bit_python and self.tools.host_arch == "x86_64":
-            python_download_arch = "i686"
-
-        version, datestamp = support_revision.split("+")
-        return (
-            "https://github.com/indygreg/python-build-standalone/releases/download/"
-            f"{datestamp}/"
-            f"cpython-{support_revision}-{python_download_arch}-unknown-linux-gnu-install_only_stripped.tar.gz"
-        )
-
     def vendor_details(self, freedesktop_info):
         """Normalize the identity of the target Linux vendor, version, and base.
 
@@ -120,6 +96,42 @@ class LinuxMixin:
             vendor_base = None
 
         return vendor, codename, vendor_base
+
+
+class StandalonePythonSupportMixin:
+    """Linux builds that use a support package (AppImage, Flatpak) use indygreg's
+    Standalone Python to provide system packages.
+
+    See `https://github.com/indygreg/python-build-standalone` for details.
+
+    System packages don't use a support package and instead use the system Python.
+    """
+
+    def default_support_revision(self) -> str:
+        """The default support revision for Standalone Python."""
+        return {
+            "3.8": "3.8.19+20240726",
+            "3.9": "3.9.19+20240726",
+            "3.10": "3.10.14+20240726",
+            "3.11": "3.11.9+20240726",
+            "3.12": "3.12.4+20240726",
+        }[self.python_version_tag]
+
+    def support_package_url(self, support_revision: str):
+        """The URL of the Standalone Python package."""
+        python_download_arch = self.tools.host_arch
+        # use a 32bit Python if using 32bit Python on 64bit hardware
+        if self.tools.is_32bit_python and self.tools.host_arch == "aarch64":
+            python_download_arch = "armv7"
+        elif self.tools.is_32bit_python and self.tools.host_arch == "x86_64":
+            python_download_arch = "i686"
+
+        version, datestamp = support_revision.split("+")
+        return (
+            "https://github.com/indygreg/python-build-standalone/releases/download/"
+            f"{datestamp}/"
+            f"cpython-{support_revision}-{python_download_arch}-unknown-linux-gnu-install_only_stripped.tar.gz"
+        )
 
 
 class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
