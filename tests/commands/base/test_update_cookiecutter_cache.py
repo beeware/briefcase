@@ -219,7 +219,6 @@ def test_existing_repo_template(base_command, mock_git):
     mock_repo.remote.assert_called_once_with(name="origin")
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
-        old_url="https://example.com/magic/special-template.git",
     )
     mock_remote.fetch.assert_called_once_with()
 
@@ -307,7 +306,6 @@ def test_existing_repo_template_with_different_url(base_command, mock_git):
     mock_repo.remote.assert_called_once_with(name="origin")
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
-        old_url="https://example.com/existing/special-template.git",
     )
     mock_remote.fetch.assert_called_once_with()
 
@@ -356,7 +354,6 @@ def test_offline_repo_template(base_command, mock_git, capsys):
     mock_repo.remote.assert_called_once_with(name="origin")
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
-        old_url="https://example.com/magic/special-template.git",
     )
     mock_remote.fetch.assert_called_once_with()
 
@@ -407,7 +404,6 @@ def test_cached_missing_branch_template(base_command, mock_git):
     mock_repo.remote.assert_called_once_with(name="origin")
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
-        old_url="https://example.com/magic/special-template.git",
     )
     mock_remote.fetch.assert_called_once_with()
 

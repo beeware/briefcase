@@ -1,0 +1,1 @@
+Briefcase no longer fails to create projects or builds because it cannot update the Git configuration for the relevant template.
