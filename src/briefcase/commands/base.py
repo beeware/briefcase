@@ -1014,7 +1014,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 # Ensure the existing repo's origin URL points to the location
                 # being requested. A difference can occur, for instance, if a
                 # fork of the template is used.
-                remote.set_url(new_url=template, old_url=remote.url)
+                remote.set_url(new_url=template)
                 try:
                     # Attempt to update the repository
                     remote.fetch()
