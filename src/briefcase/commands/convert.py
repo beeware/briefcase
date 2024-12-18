@@ -617,7 +617,8 @@ class ConvertCommand(NewCommand):
             override_value=project_overrides.pop("console_app", None)
         ):
             return {
-                "pyproject_table_briefcase_app_extra_content": "\nconsole_app = true\n"
+                "gui_framework": "None",
+                "pyproject_table_briefcase_app_extra_content": "\nconsole_app = true\n",
             }
         return {"gui_framework": "None"}
 
