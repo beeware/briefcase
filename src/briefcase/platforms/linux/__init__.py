@@ -64,7 +64,7 @@ class LinuxMixin:
         `https://github.com/astral-sh/python-build-standalone` for details.
 
         System packages don't use a support package; this is defined by the template, so
-        this method won't be invoked
+        this method won't be invoked.
         """
         python_download_arch = self.tools.host_arch
         # use a 32bit Python if using 32bit Python on 64bit hardware
