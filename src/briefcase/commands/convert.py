@@ -326,6 +326,16 @@ class ConvertCommand(NewCommand):
 
         return url
 
+    def input_console_app(self, override_value: str | None):
+        options = [True, False]
+        return self.select_option(
+            intro=("Is your application a console application?"),
+            variable="Console app",
+            default=False,
+            options=options,
+            override_value=override_value,
+        )
+
     def input_bundle(self, url, app_name, override_value: str | None) -> str:
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
         return self.input_text(
@@ -603,6 +613,12 @@ class ConvertCommand(NewCommand):
         # already is set up for a GUI-framework, then those dependencies should already be listed.
         # To prevent the same dependency being listed twice (once in the PEP621-section and once in the
         # briefcase-section), possibly with different versions, we set the GUI-framework to None here.
+        if self.input_console_app(
+            override_value=project_overrides.pop("console_app", None)
+        ):
+            return {
+                "pyproject_table_briefcase_app_extra_content": "\nconsole_app = true\n"
+            }
         return {"gui_framework": "None"}
 
     def merge_or_copy_pyproject(self, briefcase_config_file: Path) -> None:
