@@ -1,0 +1,1 @@
+The "briefcase convert" command now prompts user for "console_app" configuration.
