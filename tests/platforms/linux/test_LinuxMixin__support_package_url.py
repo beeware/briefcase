@@ -61,5 +61,5 @@ def test_support_package_url(
     linux_mixin.tools.is_32bit_python = is_32bit_python
 
     assert linux_mixin.support_package_url(support_revision) == (
-        "https://github.com/indygreg/python-build-standalone/releases/download/" + url
+        "https://github.com/astral-sh/python-build-standalone/releases/download/" + url
     )

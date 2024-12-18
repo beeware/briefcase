@@ -1,0 +1,1 @@
+Support packages for Linux Flatpak and AppImage builds are now downloaded from the ``astral-sh`` repository, rather than the ``indygreg`` repository. This reflect the recent transfer of ownership of the project.
