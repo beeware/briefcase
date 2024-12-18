@@ -326,7 +326,11 @@ class ConvertCommand(NewCommand):
 
         return url
 
-    def input_console_app(self, override_value: str | None):
+    def input_console_app(self, override_value: str | None) -> bool:
+        """Ask about whether the app is a console application.
+
+        :returns: console_app
+        """
         options = [True, False]
         return self.select_option(
             intro=("Is your application a console application?"),
