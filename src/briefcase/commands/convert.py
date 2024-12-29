@@ -620,6 +620,7 @@ class ConvertCommand(NewCommand):
         # already is set up for a GUI-framework, then those dependencies should already be listed.
         # To prevent the same dependency being listed twice (once in the PEP621-section and once in the
         # briefcase-section), possibly with different versions, we set the GUI-framework to None here.
+
         if self.input_console_app(
             override_value=project_overrides.pop("console_app", None)
         ):
