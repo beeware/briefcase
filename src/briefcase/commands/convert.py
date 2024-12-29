@@ -334,8 +334,8 @@ class ConvertCommand(NewCommand):
         options = ["GUI", "Console"]
         return (
             self.select_option(
-                intro=("is this a GUI application or a Console application?"),
-                variable="Interface Style",
+                intro="Is this a GUI application or a console application?",
+                variable="interface style",
                 default=None,
                 options=options,
                 override_value=override_value,
