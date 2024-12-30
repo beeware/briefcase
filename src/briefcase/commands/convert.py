@@ -615,18 +615,15 @@ class ConvertCommand(NewCommand):
         context: dict[str, str],
         project_overrides: dict[str, str],
     ) -> dict[str, str]:
-        # We must set the GUI-framework to None here since the convert-command uses the new-command
+        # We must set the GUI-framework to None here since the convert-command uses the new-commandcd
         # template. This template includes dependencies for the GUI-frameworks. However, if a project
         # already is set up for a GUI-framework, then those dependencies should already be listed.
         # To prevent the same dependency being listed twice (once in the PEP621-section and once in the
         # briefcase-section), possibly with different versions, we set the GUI-framework to None here.
 
-        if self.input_console_app(
+        console_app = self.input_console_app(
             override_value=project_overrides.pop("console_app", None)
-        ):
-            console_app = "true"
-        else:
-            console_app = "false"
+        )
         return {
             "gui_framework": "None",
             "console_app": console_app,
