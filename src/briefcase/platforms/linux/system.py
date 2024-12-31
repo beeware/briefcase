@@ -479,11 +479,11 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             base_system_packages = [
                 "python3-dev",
                 # The consitutent parts of build-essential
-                "dpkg-dev",
-                "g++",
-                "gcc",
-                "libc6-dev",
-                "make",
+                ("dpkg-dev", "build-essential"),
+                ("g++", "build-essential"),
+                ("gcc", "build-essential"),
+                ("libc6-dev", "build-essential"),
+                ("make", "build-essential"),
             ]
             system_verify = ["dpkg", "-s"]
             system_installer = ["apt", "install"]
@@ -551,12 +551,22 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
         # Run a check for each package listed in the app's system_requires,
         # plus the baseline system packages that are required.
-        missing = []
+        missing = set()
         for package in base_system_packages + getattr(app, "system_requires", []):
+            # Look for tuples in the package list. If there's a tuple, we're looking
+            # for the first name in the tuple on the installed list, but we install
+            # the package using the second name. This is to handle `build-essential`
+            # style installation aliases. If it's not a tuple, the package name is
+            # provided by the same name that we're checking for.
+            if isinstance(package, tuple):
+                installed, provided_by = package
+            else:
+                installed = provided_by = package
+
             try:
-                self.tools.subprocess.check_output(system_verify + [package])
+                self.tools.subprocess.check_output(system_verify + [installed])
             except subprocess.CalledProcessError:
-                missing.append(package)
+                missing.add(provided_by)
 
         # If any required packages are missing, raise an error.
         if missing:
@@ -564,7 +574,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
-    sudo {" ".join(system_installer)} {" ".join(missing)}
+    sudo {" ".join(system_installer)} {" ".join(sorted(missing))}
 
 to install the missing dependencies, and re-run Briefcase.
 """
