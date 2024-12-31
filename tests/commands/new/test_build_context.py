@@ -350,6 +350,7 @@ def test_question_sequence_console(new_command):
         test_source_dir="tests",
         project_name="My Project",
         url="https://navy.mil/myapplication",
+        console_app=True,
         app_source="""\
 
 def main():
@@ -363,7 +364,6 @@ if __name__ == "__main__":
     main()
 """,
         pyproject_table_briefcase_app_extra_content="""
-console_app = true
 requires = [
 ]
 test_requires = [

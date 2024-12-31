@@ -1,8 +1,17 @@
+from __future__ import annotations
+
+from typing import Any
+
 from briefcase.bootstraps.base import BaseGuiBootstrap
 
 
 class ConsoleBootstrap(BaseGuiBootstrap):
     display_name_annotation = "does not support iOS/Android/Web deployment"
+
+    def extra_context(self) -> dict[str, Any] | None:
+        return {
+            "console_app": True,
+        }
 
     def app_source(self):
         return """\
@@ -22,7 +31,6 @@ if __name__ == "__main__":
 
     def pyproject_table_briefcase_app_extra_content(self):
         return """
-console_app = true
 requires = [
 ]
 test_requires = [
