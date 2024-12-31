@@ -476,7 +476,15 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             if the system cannot be identified.
         """
         if app.target_vendor_base == DEBIAN:
-            base_system_packages = ["python3-dev", "build-essential"]
+            base_system_packages = [
+                "python3-dev",
+                # The consitutent parts of build-essential
+                "dpkg-dev",
+                "g++",
+                "gcc",
+                "libc6-dev",
+                "make",
+            ]
             system_verify = ["dpkg", "-s"]
             system_installer = ["apt", "install"]
         elif app.target_vendor_base == RHEL:

@@ -38,7 +38,11 @@ def test_deb_requirements(build_command, first_app_config):
     # The packages were verified
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["dpkg", "-s", "python3-dev"]),
-        call(["dpkg", "-s", "build-essential"]),
+        call(["dpkg", "-s", "dpkg-dev"]),
+        call(["dpkg", "-s", "g++"]),
+        call(["dpkg", "-s", "gcc"]),
+        call(["dpkg", "-s", "libc6-dev"]),
+        call(["dpkg", "-s", "make"]),
     ]
 
 
