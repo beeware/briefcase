@@ -1,0 +1,1 @@
+A Debian-based system that does *not* have ``build-essential`` installed, but *does* have the constituent packages of ``build-essential`` installed, can now build Briefcase system packages.
