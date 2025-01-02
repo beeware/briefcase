@@ -38,7 +38,11 @@ def test_deb_requirements(build_command, first_app_config):
     # The packages were verified
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["dpkg", "-s", "python3-dev"]),
-        call(["dpkg", "-s", "build-essential"]),
+        call(["dpkg", "-s", "dpkg-dev"]),
+        call(["dpkg", "-s", "g++"]),
+        call(["dpkg", "-s", "gcc"]),
+        call(["dpkg", "-s", "libc6-dev"]),
+        call(["dpkg", "-s", "make"]),
     ]
 
 
@@ -96,12 +100,20 @@ def test_unknown_requirements(build_command, first_app_config, capsys):
 
 def test_missing_packages(build_command, first_app_config, capsys):
     """If there are missing system packages, an error is raised."""
-    # Mock the system requirement tools; there's a base requirement of
-    # a packaged called "compiler", verified using "check <pkg>", and
-    # installed using "system <pkg>"
+    # Mock the system requirement tools; there's a base requirement of packages called
+    # "compiler" and "compiler++", plus 3 packages provided by an installation alias
+    # "alias". These packages are verified using "check <pkg>", and installed using
+    # "system install_flag <pkg>"
     build_command._system_requirement_tools = MagicMock(
         return_value=(
-            ["compiler"],
+            [
+                "compiler",
+                "compiler++",
+                # Three packages provided by the `alias` alias
+                ("aliased-1", "alias"),
+                ("aliased-2", "alias"),
+                ("aliased-3", "alias"),
+            ],
             ["check"],
             ["system", "install_flag"],
         )
@@ -112,17 +124,22 @@ def test_missing_packages(build_command, first_app_config, capsys):
 
     # Mock the side effect of checking those requirements.
     build_command.tools.subprocess.check_output.side_effect = [
-        subprocess.CalledProcessError(cmd="check", returncode=1),
-        "installed",
-        subprocess.CalledProcessError(cmd="check", returncode=1),
-        "installed",
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # compiler
+        "installed",  # compiler++
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # aliased-1
+        "installed",  # aliased-2
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # aliased-3
+        "installed",  # first
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # second
+        "installed",  # third
     ]
 
     # Verify the requirements. This will raise an error, but the error
-    # message will tell you how to install the system packages.
+    # message will tell you how to install the system packages. This includes
+    # using an alias for the install of aliased-1 and aliased-3.
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"    sudo system install_flag compiler second",
+        match=r"    sudo system install_flag alias compiler second",
     ):
         build_command.verify_system_packages(first_app_config)
 
