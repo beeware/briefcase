@@ -46,8 +46,6 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
             / "ios"
             / "xcode"
             / "First App.xcodeproj",
-            "-destination",
-            'platform="iOS Simulator"',
             "-configuration",
             "Debug",
             "-arch",
@@ -87,8 +85,6 @@ def test_build_app_test_mode(build_command, first_app_generated, tmp_path):
             / "ios"
             / "xcode"
             / "First App.xcodeproj",
-            "-destination",
-            'platform="iOS Simulator"',
             "-configuration",
             "Debug",
             "-arch",
@@ -133,8 +129,6 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
             / "ios"
             / "xcode"
             / "First App.xcodeproj",
-            "-destination",
-            'platform="iOS Simulator"',
             "-configuration",
             "Debug",
             "-arch",
