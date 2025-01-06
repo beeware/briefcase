@@ -404,8 +404,6 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         "build",
                         "-project",
                         self.project_path(app),
-                        "-destination",
-                        'platform="iOS Simulator"',
                         "-configuration",
                         "Debug",
                         "-arch",

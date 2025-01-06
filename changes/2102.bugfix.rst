@@ -1,0 +1,1 @@
+The arguments passed to xcodebuild when compiling an iOS app have been modified to avoid a warning about an ignored argument.
