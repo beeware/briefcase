@@ -67,8 +67,8 @@ dependencies = [
     #
     # limited to <=3.9 for the `group` argument for `entry_points()`
     "importlib_metadata >= 4.4; python_version <= '3.9'",
-    "packaging >= 22.0",
-    "pip >= 23.1.2",
+    "packaging >= 24.2",
+    "pip >= 24.3",
     "setuptools >= 60",
     "wheel >= 0.37",
     "build >= 0.10",

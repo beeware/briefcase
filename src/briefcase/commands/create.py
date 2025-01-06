@@ -622,6 +622,7 @@ class CreateCommand(BaseCommand):
         requires: list[str],
         app_packages_path: Path,
         progress_message: str = "Installing app requirements...",
+        pip_args: list[str] | None = None,
         pip_kwargs: dict[str, str] | None = None,
     ):
         """Install requirements for the app with pip.
@@ -631,6 +632,7 @@ class CreateCommand(BaseCommand):
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
         :param progress_message: The waitbar progress message to display to the user.
+        :param pip_args: Any additional command line arguments to use when invoking pip.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
         """
@@ -645,7 +647,10 @@ class CreateCommand(BaseCommand):
                 self._pip_install(
                     app,
                     app_packages_path=app_packages_path,
-                    pip_args=self._pip_requires(app, requires),
+                    pip_args=(
+                        ([] if pip_args is None else pip_args)
+                        + self._pip_requires(app, requires)
+                    ),
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:

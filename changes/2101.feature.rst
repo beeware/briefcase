@@ -1,0 +1,1 @@
+Briefcase now uses native pip handling for cross-platform installs, rather than the site-based shim.
