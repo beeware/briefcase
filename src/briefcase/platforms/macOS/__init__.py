@@ -12,8 +12,12 @@ from signal import SIGTERM
 
 from briefcase.config import AppConfig
 from briefcase.console import select_option
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.subprocess import get_process_id_by_command, is_process_dead
+from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
+from briefcase.integrations.subprocess import (
+    get_process_id_by_command,
+    is_process_dead,
+    json_parser,
+)
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
@@ -40,9 +44,11 @@ class SigningIdentity:
         if self.id == "-":
             self.team_id = None
             self.name = ADHOC_IDENTITY_NAME
+            self.profile = None
         else:
             self.name = name
             self.team_id = self.team_id_from_name(name)
+            self.profile = f"briefcase-macOS-{self.team_id}"
 
     @classmethod
     def team_id_from_name(cls, name):
@@ -448,6 +454,7 @@ class macOSSigningMixin:
         self,
         identity: str | None = None,
         app_identity: SigningIdentity | None = None,
+        allow_adhoc: bool = True,
     ) -> SigningIdentity:
         """Get the codesigning identity to use.
 
@@ -463,6 +470,7 @@ class macOSSigningMixin:
             installer identity. Only non-app signing identities that match the team ID
             for the ``app_identity`` will be presented as options. Omit this value to
             select an app signing identity.
+        :param allow_adhoc: Should the adhoc identities be allowed?
         :returns: The final identity to use
         """
         # Obtain the valid codesigning identities. These are the identities that could
@@ -494,7 +502,8 @@ class macOSSigningMixin:
             ident_option = "--identity"
 
             # App signing also allows for the adhoc identity
-            identities["-"] = ADHOC_IDENTITY_NAME
+            if allow_adhoc:
+                identities["-"] = ADHOC_IDENTITY_NAME
 
         if identity:
             try:
@@ -521,22 +530,22 @@ class macOSSigningMixin:
         if identity == "-":
             self.logger.info(
                 f"""
-In the future, you could specify this signing identity by running:
+In future, you could specify this signing identity by using:
 
-    $ briefcase {self.command} macOS --adhoc-sign
+    $ briefcase {self.command} macOS {self.output_format} --adhoc-sign ...
 
 """
             )
         else:
             self.logger.info(
                 f"""
-In the future, you could specify this signing identity by running:
+In future, you could specify this signing identity by using:
 
-    $ briefcase {self.command} macOS {ident_option} {identity}
+    $ briefcase {self.command} macOS {self.output_format} {ident_option} {identity} ...
 
 or
 
-    $ briefcase {self.command} macOS {ident_option} "{identity_name}"
+    $ briefcase {self.command} macOS {self.output_format} {ident_option} "{identity_name}" ...
 
 """
             )
@@ -652,7 +661,9 @@ or
         task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
         with progress_bar:
             for group in self.tools.file.sorted_depth_first_groups(sign_targets):
-                with concurrent.futures.ThreadPoolExecutor() as executor:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=1 if self.logger.verbosity >= 3 else None
+                ) as executor:
                     futures = []
                     for path in group:
                         future = executor.submit(
@@ -726,6 +737,12 @@ class macOSPackageMixin(macOSSigningMixin):
             const=False,
             help="Disable notarization for the app",
         )
+        parser.add_argument(
+            "--resume",
+            dest="submission_id",
+            help="The notarization submission ID to resume",
+            required=False,
+        )
 
     def verify_tools(self):
         # Require the Xcode command line tools.
@@ -755,28 +772,125 @@ class macOSPackageMixin(macOSSigningMixin):
         elif app.packaging_format is None:
             app.packaging_format = "dmg"
 
-    def notarize(self, filename, identity: SigningIdentity):
-        """Notarize a file.
+    def clean_dist_folder(self, app, **options):
+        """Clean up any existing artefacts in the dist folder.
 
-        Submits the file to Apple for notarization; if successful, staples the
-        notarization result onto the file.
+        If we are resuming a notarization session verify that the artefact exists,
+        but *do not* delete it.
+
+        :param app: The app being packaged.
+        :param submission_id: The notarization submission being resumed.
+        :param options: Any additional arguments passed to the package command.
+        """
+        if options.get("submission_id"):
+            if not self.distribution_path(app).exists():
+                raise BriefcaseCommandError(
+                    "Notarization cannot be resumed, as the distribution artefact "
+                    "associated with this app "
+                    f"({self.distribution_path(app).relative_to(self.base_path)}) "
+                    "does not exist. "
+                )
+        else:
+            super().clean_dist_folder(app, **options)
+
+    def ditto_archive(self, app_filename: Path, archive_filename: Path):
+        """Create an archive of an app using ditto.
+
+        Although the archive format is ".zip", we can't use standard Zip tools, as they
+        don't preserve UTF-8 encoding on all resources. Instead, we need to use `ditto`,
+        which is provided as part of macOS developer tooling. See
+        https://forums.developer.apple.com/forums/thread/116831 and
+        https://developer.apple.com/library/archive/technotes/tn2206/_index.html for
+        more details.
+
+        :param app_filename: The filename of the app to archive
+        :param archive_filename: The filename of the archive to produce
+        """
+        try:
+            self.tools.subprocess.run(
+                [
+                    "/usr/bin/ditto",
+                    "-c",
+                    "-k",
+                    "--sequesterRsrc",
+                    "--keepParent",
+                    app_filename,
+                    archive_filename,
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to archive {app_filename.name}") from e
+
+    def notarize(
+        self,
+        filename,
+        identity: SigningIdentity,
+        installer_identity: SigningIdentity | None = None,
+    ):
+        """Submit a file for notarization, and wait for that notarization to be completed.
+
+        :param filename: The file to notarize.
+        :param identity: The code signing used to notarize the app.
+        :param installer_identity: The signing identity to use when signing the
+            installer. Optional unless the packaging format is ``pkg``.
+        """
+        # Determine the arguments that would be needed to reproduce this notarization
+        if installer_identity:
+            identity_args = (
+                f"--identity {identity.id} "
+                f"--installer_identity {installer_identity.id}"
+            )
+            notarization_identity = installer_identity
+        else:
+            identity_args = f"--identity {identity.id}"
+            notarization_identity = identity
+
+        if filename.suffix == ".app":
+            format_args = "-p zip"
+        else:
+            format_args = f"-p {filename.suffix[1:]}"
+
+        # Submit the app for notarization
+        submission_id = self.submit_notarization(
+            filename,
+            identity=notarization_identity,
+        )
+
+        self.logger.warning(
+            f"""
+Briefcase will now wait for Apple to approve the notarization request.
+This can take some time - in some cases, hours.
+
+If notarization is interrupted, you can resume by running:
+
+    briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
+
+"""
+        )
+
+        self.finalize_notarization(
+            filename,
+            identity=notarization_identity,
+            submission_id=submission_id,
+        )
+
+    def submit_notarization(self, filename, identity: SigningIdentity) -> str:
+        """Submit a file for notarization, returning the ID of the notarizatzion task.
 
         If the file is a .app, it will be archived as a .zip for submission purposes.
 
         :param filename: The file to notarize.
-        :param identity: The code signing identity to use
+        :param identity: The code signing identity to use.
+        :returns: The ID of the notarization task.
         """
         try:
             if filename.suffix == ".app":
-                # Archive the app into a zip.
-                with self.input.wait_bar(f"Archiving {filename.name}..."):
+                with self.input.wait_bar(
+                    f"Archiving {filename.name} for notarization..."
+                ):
                     archive_filename = filename.parent / "archive.zip"
-                    self.tools.shutil.make_archive(
-                        archive_filename.with_suffix(""),
-                        format="zip",
-                        root_dir=filename.parent,
-                        base_dir=filename.name,
-                    )
+                    self.ditto_archive(filename, archive_filename)
             elif filename.suffix in {".dmg", ".pkg"}:
                 archive_filename = filename
             else:
@@ -785,18 +899,17 @@ class macOSPackageMixin(macOSSigningMixin):
                     f"Don't know how to notarize a file of type {filename.suffix}"
                 )
 
-            profile = f"briefcase-macOS-{identity.team_id}"
-            submitted = False
+            submission_id = None
             store_credentials = False
-            while not submitted:
+            while not submission_id:
                 if store_credentials:
                     if not self.input.enabled:
                         raise BriefcaseCommandError(
                             f"""
-The keychain does not contain credentials for the profile {profile}.
+The keychain does not contain credentials for the profile {identity.profile}.
 You can store these credentials by invoking:
 
-    $ xcrun notarytool store-credentials --team-id {identity.team_id} profile
+    $ xcrun notarytool store-credentials --team-id {identity.team_id} {identity.profile}
 
 """
                         )
@@ -827,7 +940,7 @@ password:
                                 "store-credentials",
                                 "--team-id",
                                 identity.team_id,
-                                profile,
+                                identity.profile,
                             ],
                             check=True,
                             stream_output=False,  # Command reads from stdin.
@@ -840,19 +953,21 @@ password:
                 # Attempt the notarization
                 try:
                     self.logger.info()
-                    self.tools.subprocess.run(
-                        [
-                            "xcrun",
-                            "notarytool",
-                            "submit",
-                            archive_filename,
-                            "--keychain-profile",
-                            profile,
-                            "--wait",
-                        ],
-                        check=True,
-                    )
-                    submitted = True
+                    with self.input.wait_bar("Submitting app for notariztion..."):
+                        submission = self.tools.subprocess.parse_output(
+                            json_parser,
+                            [
+                                "xcrun",
+                                "notarytool",
+                                "submit",
+                                archive_filename,
+                                "--keychain-profile",
+                                identity.profile,
+                                "--output-format",
+                                "json",
+                            ],
+                        )
+                        submission_id = submission["id"]
                 except subprocess.CalledProcessError as e:
                     # Error when submitting for notarization.
                     # A return code of 69 (nice) indicates an issue with the
@@ -863,37 +978,130 @@ password:
                         store_credentials = True
                     else:
                         raise BriefcaseCommandError(
-                            f"""\
-Unable to submit {filename.relative_to(self.base_path)} for notarization.
-To find the cause of this failure, get the submission ID by running:
-
-    xcrun notarytool history
-
-Then run:
-
-    xcrun notarytool log <submission-id>
-
-to generate a full log of the error.
-"""
+                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization"
                         ) from e
         finally:
             # Clean up house; we don't need the archive anymore.
             if archive_filename != filename:
                 self.tools.os.unlink(archive_filename)
 
+        return submission_id
+
+    def validate_submission_id(
+        self,
+        filename: Path,
+        identity: SigningIdentity,
+        submission_id: str,
+    ):
+        with self.input.wait_bar("Determining validity of submission ID..."):
+            try:
+                response = self.tools.subprocess.parse_output(
+                    json_parser,
+                    [
+                        "xcrun",
+                        "notarytool",
+                        "history",
+                        "--keychain-profile",
+                        identity.profile,
+                        "--output-format",
+                        "json",
+                    ],
+                )
+
+                id_matches = [
+                    submission
+                    for submission in response["history"]
+                    if submission["id"] == submission_id
+                ]
+
+                expected_filename = id_matches[0]["name"]
+                if expected_filename != filename.name:
+                    raise BriefcaseCommandError(
+                        f"{submission_id} doesn't appear to be for this project. "
+                        f"It notarizes a file named {expected_filename}"
+                    )
+            except IndexError:
+                raise BriefcaseCommandError(
+                    f"{submission_id} is not a known submission ID for this identity."
+                )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(
+                    "Unable to invoke notarytool to determine validity of submission ID.\n"
+                    "Are you sure this is the identity that was used to notarize the app?"
+                )
+
+    def finalize_notarization(
+        self,
+        filename: Path,
+        identity: SigningIdentity,
+        submission_id: str,
+    ):
+        """Finalize a notarization task.
+
+        Polls to check the current notarization status; once notarization approval is
+        received, the notarization is stapled onto the distribution artefact.
+
+        :param filename: The file to notarize.
+        :param identity: The code signing identity to use.
+        :param submission_id: The submission ID of the notarization task to finalize.
+        """
         try:
-            self.logger.info()
-            self.logger.info(
-                f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
-            )
-            self.tools.subprocess.run(
-                ["xcrun", "stapler", "staple", filename],
-                check=True,
-            )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                f"Unable to staple notarization onto {filename.relative_to(self.base_path)}."
-            )
+            with self.input.wait_bar("Waiting for notarization acceptance..."):
+                accepted = False
+                while not accepted:
+                    try:
+                        response = self.tools.subprocess.parse_output(
+                            json_parser,
+                            [
+                                "xcrun",
+                                "notarytool",
+                                "log",
+                                "--keychain-profile",
+                                identity.profile,
+                                submission_id,
+                            ],
+                        )
+                        if response["status"] == "Accepted":
+                            accepted = True
+                        elif response["status"] == "Invalid":
+                            raise BriefcaseCommandError(
+                                f"Notarization was rejected: {response['statusSummary']}\n"
+                                + "\n".join(
+                                    f"""
+        * ({issue.get('severity')}) {issue.get('path')} [{issue.get('architecture', "all architectures")}]
+        {issue.get('message')}
+        {issue.get('docUrl', '')}"""
+                                    for issue in response["issues"]
+                                )
+                            )
+                        else:
+                            # Try again in 20 seconds
+                            time.sleep(20)
+                    except subprocess.CalledProcessError as e:
+                        if e.returncode == 69:
+                            # Error code 69 (nice) indicates that the submission log is not
+                            # yet available, or does not exist. We've already validated that
+                            # it's a valid ID, so notarization isn't complete yet.
+                            pass
+                        else:
+                            raise BriefcaseCommandError("Invalid submission ID")
+
+        except KeyboardInterrupt:
+            raise NotarizationInterrupted("Notarization interrupted by user.")
+        else:
+            try:
+                self.logger.info()
+                self.logger.info(
+                    f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
+                )
+                self.tools.subprocess.run(
+                    ["xcrun", "stapler", "staple", filename],
+                    check=True,
+                )
+            except subprocess.CalledProcessError:
+                raise BriefcaseCommandError(
+                    f"Unable to staple notarization onto {filename.relative_to(self.base_path)}."
+                )
 
     def package_app(
         self,
@@ -903,6 +1111,7 @@ to generate a full log of the error.
         adhoc_sign=False,
         sign_installer=True,
         installer_identity=None,
+        submission_id=None,
         **kwargs,
     ):
         """Package an app bundle.
@@ -921,7 +1130,48 @@ to generate a full log of the error.
             packaging format is ``pkg``.
         :param installer_identity: The signing identity to use when signing the
             installer. Ignored unless the packaging format is ``pkg``.
+        :param submission_id: The submission ID of the notarization task to resume.
         """
+        if submission_id:
+            # If we're resuming notarization, we *can't* use an adhoc identity,
+            # so don't allow it to be selected.
+            identity = self.select_identity(identity=identity, allow_adhoc=False)
+
+            if app.packaging_format == "zip":
+                filename: Path = self.binary_path(app)
+                notarization_identity = identity
+            elif app.packaging_format == "pkg":
+                filename: Path = self.distribution_path(app)
+
+                notarization_identity = self.select_identity(
+                    identity=installer_identity,
+                    app_identity=identity,
+                )
+
+            else:
+                filename: Path = self.distribution_path(app)
+                notarization_identity = identity
+
+            self.logger.info(
+                f"Resuming notarization for submission {submission_id}",
+                prefix=app.app_name,
+            )
+
+            self.logger.info()
+            self.validate_submission_id(
+                filename,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
+
+            self.logger.info()
+            self.finalize_notarization(
+                filename,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
+            return
+
         self.logger.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
             identity = SigningIdentity()
@@ -1012,13 +1262,11 @@ to generate a full log of the error.
             )
             self.notarize(self.binary_path(app), identity=identity)
 
-        with self.input.wait_bar(f"Archiving {dist_path.name}..."):
-            self.tools.shutil.make_archive(
-                dist_path.with_suffix(""),
-                format="zip",
-                root_dir=self.binary_path(app).parent,
-                base_dir=self.binary_path(app).name,
-            )
+        # Build the final archive for distribution
+        with self.input.wait_bar(
+            f"Building final distribution archive for {self.binary_path(app).name}..."
+        ):
+            self.ditto_archive(self.binary_path(app), dist_path)
 
     def package_pkg(
         self,
@@ -1146,7 +1394,11 @@ with your app's licensing terms.
                 f"Notarizing PKG with team ID {installer_identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(dist_path, identity=installer_identity)
+            self.notarize(
+                dist_path,
+                identity=identity,
+                installer_identity=installer_identity,
+            )
 
     def package_dmg(
         self,
