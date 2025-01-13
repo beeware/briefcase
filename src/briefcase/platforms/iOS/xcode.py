@@ -338,6 +338,13 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_args=[
                 f"--platform=ios_{ios_min_tag}_arm64_iphoneos",
             ],
+            pip_kwargs={
+                "env": {
+                    "PYTHONPATH": str(
+                        self.support_path(app) / "platform-site/iphoneos.arm64"
+                    )
+                }
+            },
         )
 
         # Perform a second install pass targeting the "iphonesimulator" platform for the
@@ -350,6 +357,15 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_args=[
                 f"--platform=ios_{ios_min_tag}_{self.tools.host_arch}_iphonesimulator",
             ],
+            pip_kwargs={
+                "env": {
+                    "PYTHONPATH": str(
+                        self.support_path(app)
+                        / "platform-site"
+                        / f"iphonesimulator.{self.tools.host_arch}"
+                    )
+                }
+            },
         )
 
 

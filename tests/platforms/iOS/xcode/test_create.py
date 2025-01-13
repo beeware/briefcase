@@ -70,6 +70,19 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             ],
             check=True,
             encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
+                    / "Support"
+                    / "platform-site"
+                    / "iphoneos.arm64"
+                )
+            },
         ),
         call(
             [
@@ -94,6 +107,19 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
             ],
             check=True,
             encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path"
+                    / "build"
+                    / "first-app"
+                    / "ios"
+                    / "xcode"
+                    / "Support"
+                    / "platform-site"
+                    / "iphonesimulator.wonky"
+                )
+            },
         ),
     ]
 
