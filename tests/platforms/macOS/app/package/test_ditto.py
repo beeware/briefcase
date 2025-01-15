@@ -1,3 +1,4 @@
+import platform
 import subprocess
 from zipfile import ZipFile
 
@@ -6,6 +7,10 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 
 
+@pytest.mark.skipif(
+    platform.system() != "Darwin",
+    reason="ditto tests can only be performed on macOS",
+)
 def test_ditto(
     package_command,
     first_app_with_binaries,
@@ -61,6 +66,10 @@ def test_ditto(
         ]
 
 
+@pytest.mark.skipif(
+    platform.system() != "Darwin",
+    reason="ditto tests can only be performed on macOS",
+)
 def test_ditto_failure(
     package_command,
     first_app_with_binaries,

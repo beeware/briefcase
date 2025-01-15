@@ -411,7 +411,7 @@ def test_resume_notarize_artefact_missing(
         BriefcaseCommandError,
         match=(
             r"Notarization cannot be resumed, as the distribution artefact "
-            r"associated with this app \(dist/First App-0.0.1.dmg\) does not exist."
+            r"associated with this app \(.*First App-0.0.1.dmg\) does not exist."
         ),
     ):
         package_command._package_app(
