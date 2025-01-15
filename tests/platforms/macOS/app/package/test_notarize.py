@@ -1,14 +1,14 @@
 import os
 import subprocess
+import uuid
 from unittest import mock
 from unittest.mock import MagicMock
-from zipfile import ZipFile
 
 import pytest
 
 from briefcase.console import Console, Log
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.subprocess import Subprocess
+from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
+from briefcase.integrations.subprocess import Subprocess, json_parser
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
 
 
@@ -52,6 +52,7 @@ def test_notarize_app(
     first_app_with_binaries,
     sekrit_identity,
     tmp_path,
+    sleep_zero,
 ):
     """An app can be notarized."""
     app_path = (
@@ -63,72 +64,96 @@ def test_notarize_app(
         / "app"
         / "First App.app"
     )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
+
     package_command.notarize(app_path, identity=sekrit_identity)
 
-    # As a result of mocking os.unlink, the zip archive won't be
-    # cleaned up, so we can test for its existence, but also
+    # As a result of mocking ditto, the zip archive won't *actually* be created;
+    # and as a result of mocking os, it won't *actually* be deleted either - but we can
     # verify that it *would* have been deleted.
-    assert archive_path.exists()
+    package_command.ditto_archive.assert_called_once_with(app_path, archive_path)
     package_command.tools.os.unlink.assert_called_with(archive_path)
-    # The archive contains the app as the only top level element.
-    with ZipFile(archive_path) as archive:
-        assert sorted(archive.namelist()) == [
-            "First App.app/",
-            "First App.app/Contents/",
-            "First App.app/Contents/Frameworks/",
-            "First App.app/Contents/Frameworks/Extras.framework/",
-            "First App.app/Contents/Frameworks/Extras.framework/Resources/",
-            "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
-            "First App.app/Contents/Info.plist",
-            "First App.app/Contents/MacOS/",
-            "First App.app/Contents/MacOS/First App",
-            "First App.app/Contents/Resources/",
-            "First App.app/Contents/Resources/app_packages/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/Extras",
-            "First App.app/Contents/Resources/app_packages/first.other",
-            "First App.app/Contents/Resources/app_packages/first_dylib.dylib",
-            "First App.app/Contents/Resources/app_packages/first_so.so",
-            "First App.app/Contents/Resources/app_packages/first_symlink.so",
-            "First App.app/Contents/Resources/app_packages/other_binary",
-            "First App.app/Contents/Resources/app_packages/second.other",
-            "First App.app/Contents/Resources/app_packages/special.binary",
-            "First App.app/Contents/Resources/app_packages/subfolder/",
-            "First App.app/Contents/Resources/app_packages/subfolder/second_dylib.dylib",
-            "First App.app/Contents/Resources/app_packages/subfolder/second_so.so",
-            "First App.app/Contents/Resources/app_packages/unknown.binary",
-        ]
 
-    # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit *archive* for notarization
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                archive_path,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    package_command.tools.subprocess.run.assert_called_once_with(
         [
-            # Submit *archive* for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    archive_path,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Staple the result to the *app*
-            mock.call(
-                [
-                    "xcrun",
-                    "stapler",
-                    "staple",
-                    app_path,
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "stapler",
+            "staple",
+            app_path,
+        ],
+        check=True,
     )
 
 
@@ -136,41 +161,95 @@ def test_notarize_dmg(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    sleep_zero,
 ):
     """A DMG can be notarized."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
 
     package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
-    # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit dmg for notarization
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    package_command.tools.subprocess.run.assert_called_once_with(
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Staple the result
-            mock.call(
-                [
-                    "xcrun",
-                    "stapler",
-                    "staple",
-                    first_app_dmg,
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "stapler",
+            "staple",
+            first_app_dmg,
+        ],
+        check=True,
     )
 
 
@@ -178,41 +257,100 @@ def test_notarize_pkg(
     package_command,
     first_app_pkg,
     sekrit_identity,
+    sekrit_installer_identity,
+    sleep_zero,
 ):
     """A PKG can be notarized."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
 
-    package_command.notarize(first_app_pkg, identity=sekrit_identity)
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
 
-    # The PKG didn't require an archive file, so unlink wasn't invoked.
+    package_command.notarize(
+        first_app_pkg,
+        identity=sekrit_identity,
+        installer_identity=sekrit_installer_identity,
+    )
+
+    # The PKG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
-    # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit pkg for notarization
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_pkg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    package_command.tools.subprocess.run.assert_called_once_with(
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_pkg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Staple the result
-            mock.call(
-                [
-                    "xcrun",
-                    "stapler",
-                    "staple",
-                    first_app_pkg,
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "stapler",
+            "staple",
+            first_app_pkg,
+        ],
+        check=True,
     )
 
 
@@ -232,79 +370,132 @@ def test_notarize_unknown_credentials(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    sleep_zero,
 ):
     """When notarizing, if credentials haven't been stored, the user will be prompted to
     store them."""
-    # Set up subprocess to fail on the first notarization attempt
-    package_command.tools.subprocess.run.side_effect = [
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit failure
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
         ),  # Unknown credential failure
-        None,  # Successful credential storage
-        None,  # Successful notarization
-        None,  # Successful stapling
+        # notarytool submit success
+        {"id": submission_id},
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
     ]
 
     package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
-    # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
-        [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Store credentials in the keychain
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "store-credentials",
-                    "--team-id",
-                    "DEADBEEF",
-                    "briefcase-macOS-DEADBEEF",
-                ],
-                check=True,
-                stream_output=False,
-            ),
-            # Submit for notarization a second time
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Staple the result
-            mock.call(
-                [
-                    "xcrun",
-                    "stapler",
-                    "staple",
-                    first_app_dmg,
-                ],
-                check=True,
-            ),
-        ]
-    )
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit dmg for notarization; this attempt will fail
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Submit dmg for notarization; this attempt succeeds
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    assert package_command.tools.subprocess.run.mock_calls == [
+        # Submit credentials
+        mock.call(
+            [
+                "xcrun",
+                "notarytool",
+                "store-credentials",
+                "--team-id",
+                "DEADBEEF",
+                "briefcase-macOS-DEADBEEF",
+            ],
+            check=True,
+            stream_output=False,
+        ),
+        # Staple credentials
+        mock.call(
+            [
+                "xcrun",
+                "stapler",
+                "staple",
+                first_app_dmg,
+            ],
+            check=True,
+        ),
+    ]
 
 
 def test_credential_storage_failure_app(
@@ -324,15 +515,22 @@ def test_credential_storage_failure_app(
         / "app"
         / "First App.app"
     )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
 
     # Set up subprocess to fail on the first notarization attempt,
     # then fail on the storage of credentials
-    package_command.tools.subprocess.run.side_effect = [
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit failure
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
         ),  # Unknown credential failure
+    ]
+
+    package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
             returncode=1,
             cmd=["xcrun", "notarytool", "store-credentials"],
@@ -346,42 +544,40 @@ def test_credential_storage_failure_app(
     ):
         package_command.notarize(app_path, identity=sekrit_identity)
 
-    # As a result of mocking os.unlink, the zip archive won't be
-    # cleaned up, so we can test for its existence, but also
+    # As a result of mocking ditto, the zip archive won't *actually* be created;
+    # and as a result of mocking os, it won't *actually* be deleted either - but we can
     # verify that it *would* have been deleted.
-    assert archive_path.exists()
+    package_command.ditto_archive.assert_called_once_with(app_path, archive_path)
     package_command.tools.os.unlink.assert_called_with(archive_path)
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # Submit *archive* for notarization
+    package_command.tools.subprocess.parse_output.assert_called_once_with(
+        json_parser,
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    archive_path,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Store credentials in the keychain
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "store-credentials",
-                    "--team-id",
-                    "DEADBEEF",
-                    "briefcase-macOS-DEADBEEF",
-                ],
-                check=True,
-                stream_output=False,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "submit",
+            archive_path,
+            "--keychain-profile",
+            "briefcase-macOS-DEADBEEF",
+            "--output-format",
+            "json",
+        ],
+    )
+
+    # Store credentials in the keychain
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            "xcrun",
+            "notarytool",
+            "store-credentials",
+            "--team-id",
+            "DEADBEEF",
+            "briefcase-macOS-DEADBEEF",
+        ],
+        check=True,
+        stream_output=False,
     )
 
 
@@ -391,13 +587,20 @@ def test_credential_storage_failure_dmg(
     sekrit_identity,
 ):
     """If credentials haven't been stored, and storage fails, an error is raised."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
     # Set up subprocess to fail on the first notarization attempt,
     # then fail on the storage of credentials
-    package_command.tools.subprocess.run.side_effect = [
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit failure
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
         ),  # Unknown credential failure
+    ]
+
+    package_command.tools.subprocess.run.side_effect = [
         subprocess.CalledProcessError(
             returncode=1,
             cmd=["xcrun", "notarytool", "store-credentials"],
@@ -411,39 +614,38 @@ def test_credential_storage_failure_dmg(
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # Submit *archive* for notarization
+    package_command.tools.subprocess.parse_output.assert_called_once_with(
+        json_parser,
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Store credentials in the keychain
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "store-credentials",
-                    "--team-id",
-                    "DEADBEEF",
-                    "briefcase-macOS-DEADBEEF",
-                ],
-                check=True,
-                stream_output=False,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "submit",
+            first_app_dmg,
+            "--keychain-profile",
+            "briefcase-macOS-DEADBEEF",
+            "--output-format",
+            "json",
+        ],
+    )
+
+    # Store credentials in the keychain
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            "xcrun",
+            "notarytool",
+            "store-credentials",
+            "--team-id",
+            "DEADBEEF",
+            "briefcase-macOS-DEADBEEF",
+        ],
+        check=True,
+        stream_output=False,
     )
 
 
@@ -464,15 +666,28 @@ def test_credential_storage_disabled_input_app(
         / "app"
         / "First App.app"
     )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
 
-    # Set up subprocess to fail on the first notarization attempt.
-    package_command.tools.subprocess.run.side_effect = [
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Set up subprocess to fail on the first notarization attempt,
+    # then fail on the storage of credentials
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit failure
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
         ),  # Unknown credential failure
     ]
+
+    package_command.tools.subprocess.run.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd=["xcrun", "notarytool", "store-credentials"],
+        ),  # Credential verification failed
+    ]
+
     # Disable console input
     package_command.tools.input.enabled = False
 
@@ -483,30 +698,30 @@ def test_credential_storage_disabled_input_app(
     ):
         package_command.notarize(app_path, identity=sekrit_identity)
 
-    # As a result of mocking os.unlink, the zip archive won't be
-    # cleaned up, so we can test for its existence, but also
+    # As a result of mocking ditto, the zip archive won't *actually* be created;
+    # and as a result of mocking os, it won't *actually* be deleted either - but we can
     # verify that it *would* have been deleted.
-    assert archive_path.exists()
+    package_command.ditto_archive.assert_called_once_with(app_path, archive_path)
     package_command.tools.os.unlink.assert_called_with(archive_path)
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # Submit *archive* for notarization
+    package_command.tools.subprocess.parse_output.assert_called_once_with(
+        json_parser,
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    archive_path,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "submit",
+            archive_path,
+            "--keychain-profile",
+            "briefcase-macOS-DEADBEEF",
+            "--output-format",
+            "json",
+        ],
     )
+
+    # No call is made to store credentials on the keychain
+    package_command.tools.subprocess.run.assert_not_called()
 
 
 def test_credential_storage_disabled_input_dmg(
@@ -516,13 +731,26 @@ def test_credential_storage_disabled_input_dmg(
 ):
     """When packaging a DMG, if credentials haven't been stored, and input is disabled,
     an error is raised."""
-    # Set up subprocess to fail on the first notarization attempt.
-    package_command.tools.subprocess.run.side_effect = [
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Set up subprocess to fail on the first notarization attempt,
+    # then fail on the storage of credentials
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit failure
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
         ),  # Unknown credential failure
     ]
+
+    package_command.tools.subprocess.run.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd=["xcrun", "notarytool", "store-credentials"],
+        ),  # Credential verification failed
+    ]
+
     # Disable console input
     package_command.tools.input.enabled = False
 
@@ -533,47 +761,51 @@ def test_credential_storage_disabled_input_dmg(
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # Submit *archive* for notarization
+    package_command.tools.subprocess.parse_output.assert_called_once_with(
+        json_parser,
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "submit",
+            first_app_dmg,
+            "--keychain-profile",
+            "briefcase-macOS-DEADBEEF",
+            "--output-format",
+            "json",
+        ],
     )
+
+    # No attempt was made to store credentials in the keychain
+    package_command.tools.subprocess.run.assert_not_called()
 
 
 def test_notarize_unknown_credentials_after_storage(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    sleep_zero,
 ):
     """If we get a credential failure after an attempt to store, an error is raised."""
-    # Set up subprocess to fail on the second notarization attempt
-    package_command.tools.subprocess.run.side_effect = [
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Set up subprocess to succeed on storing credentials, but fail on the second
+    # notarization attempt
+    package_command.tools.subprocess.parse_output.side_effect = [
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
         ),  # Unknown credential failure
-        None,  # Successful credential storage
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "submit"],
-        ),  # A second unknown credential failure
-        None,  # Successful stapling
+        ),  # Unknown credential failure
     ]
 
     # The notarization call will fail with an error
@@ -583,56 +815,57 @@ def test_notarize_unknown_credentials_after_storage(
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # Submit for notarization twice
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+    ]
+
+    # Store credentials in the keychain
+    package_command.tools.subprocess.run.assert_called_once_with(
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Store credentials in the keychain
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "store-credentials",
-                    "--team-id",
-                    "DEADBEEF",
-                    "briefcase-macOS-DEADBEEF",
-                ],
-                check=True,
-                stream_output=False,
-            ),
-            # Submit for notarization a second time
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "store-credentials",
+            "--team-id",
+            "DEADBEEF",
+            "briefcase-macOS-DEADBEEF",
+        ],
+        check=True,
+        stream_output=False,
     )
 
 
-def test_app_notarization_failure_with_credentials(
+def test_app_submit_notarization_failure_with_credentials(
     package_command,
     first_app_with_binaries,
     sekrit_identity,
@@ -649,11 +882,14 @@ def test_app_notarization_failure_with_credentials(
         / "app"
         / "First App.app"
     )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/archive.zip"
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
 
     # Set up subprocess to fail on the first notarization attempt
     # for a reason other than credentials
-    package_command.tools.subprocess.run.side_effect = [
+    package_command.tools.subprocess.parse_output.side_effect = [
         subprocess.CalledProcessError(
             returncode=42,
             cmd=["xcrun", "notarytool", "submit"],
@@ -667,42 +903,44 @@ def test_app_notarization_failure_with_credentials(
     ):
         package_command.notarize(app_path, identity=sekrit_identity)
 
-    # As a result of mocking os.unlink, the zip archive won't be
-    # cleaned up, so we can test for its existence, but also
+    # As a result of mocking ditto, the zip archive won't *actually* be created;
+    # and as a result of mocking os, it won't *actually* be deleted either - but we can
     # verify that it *would* have been deleted.
-    assert archive_path.exists()
+    package_command.ditto_archive.assert_called_once_with(app_path, archive_path)
     package_command.tools.os.unlink.assert_called_with(archive_path)
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    package_command.tools.subprocess.parse_output.assert_called_once_with(
+        json_parser,
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    archive_path,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "submit",
+            archive_path,
+            "--keychain-profile",
+            "briefcase-macOS-DEADBEEF",
+            "--output-format",
+            "json",
+        ],
     )
 
+    # No calls to submit credentials
+    package_command.tools.subprocess.run.assert_not_called()
 
-def test_dmg_notarization_failure_with_credentials(
+
+def test_dmg_submit_notarization_failure_with_credentials(
     package_command,
     first_app_dmg,
     sekrit_identity,
 ):
     """If the notarization process for a DMG fails for a reason other than credentials,
     an error is raised."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
     # Set up subprocess to fail on the first notarization attempt
     # for a reason other than credentials
-    package_command.tools.subprocess.run.side_effect = [
+    package_command.tools.subprocess.parse_output.side_effect = [
         subprocess.CalledProcessError(
             returncode=42,
             cmd=["xcrun", "notarytool", "submit"],
@@ -716,38 +954,124 @@ def test_dmg_notarization_failure_with_credentials(
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
     # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    package_command.tools.subprocess.parse_output.assert_called_once_with(
+        json_parser,
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "notarytool",
+            "submit",
+            first_app_dmg,
+            "--keychain-profile",
+            "briefcase-macOS-DEADBEEF",
+            "--output-format",
+            "json",
+        ],
     )
+
+    # No calls to submit credentials
+    package_command.tools.subprocess.run.assert_not_called()
+
+
+def test_unknown_notarization_status_failure(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+    sleep_zero,
+):
+    """If the notarization log process fails with an unexpected status code, an error is raised."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+        # notarytool log; a failure with an unknown status code.
+        subprocess.CalledProcessError(
+            returncode=42,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unknown problem retrieving notarization status.",
+    ):
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
+
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
+    package_command.tools.os.unlink.assert_not_called()
+
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit dmg for notarization
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # One attempt to check status is made
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    # No staple attempt is made.
+    package_command.tools.subprocess.run.assert_not_called()
 
 
 def test_stapling_failure(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    sleep_zero,
 ):
     """If the stapling process fails, an error is raised."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
+
     # Set up a failure in the stapling process
     package_command.tools.subprocess.run.side_effect = [
-        None,
         subprocess.CalledProcessError(
             returncode=42,
             cmd=["xcrun", "stapler"],
@@ -760,34 +1084,157 @@ def test_stapling_failure(
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    # The DMG didn't require an archive file, so unlink wasn't invoked.
+    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
+    package_command.ditto_archive.assert_not_called()
     package_command.tools.os.unlink.assert_not_called()
 
-    # The calls to notarize were made
-    package_command.tools.subprocess.run.assert_has_calls(
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit dmg for notarization
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    package_command.tools.subprocess.run.assert_called_once_with(
         [
-            # Submit for notarization
-            mock.call(
-                [
-                    "xcrun",
-                    "notarytool",
-                    "submit",
-                    first_app_dmg,
-                    "--keychain-profile",
-                    "briefcase-macOS-DEADBEEF",
-                    "--wait",
-                ],
-                check=True,
-            ),
-            # Staple the result
-            mock.call(
-                [
-                    "xcrun",
-                    "stapler",
-                    "staple",
-                    first_app_dmg,
-                ],
-                check=True,
-            ),
-        ]
+            "xcrun",
+            "stapler",
+            "staple",
+            first_app_dmg,
+        ],
+        check=True,
     )
+
+
+def test_interrupt_notarization(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+    sleep_zero,
+    capsys,
+):
+    """If notarization is interrupted, the submission ID is output for the user."""
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+        # notarytool log; 2 failures, then a keyboard interrupt
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        KeyboardInterrupt,
+    ]
+
+    with pytest.raises(NotarizationInterrupted):
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
+
+    assert (
+        f"briefcase package macOS app -p dmg --identity CAFEBEEF --resume {submission_id}"
+        in capsys.readouterr().out
+    )
+
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Submit dmg for notarization
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                first_app_dmg,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    # No stapling occurred
+    package_command.tools.subprocess.run.assert_not_called()

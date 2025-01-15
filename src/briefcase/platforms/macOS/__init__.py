@@ -788,7 +788,7 @@ class macOSPackageMixin(macOSSigningMixin):
                     "Notarization cannot be resumed, as the distribution artefact "
                     "associated with this app "
                     f"({self.distribution_path(app).relative_to(self.base_path)}) "
-                    "does not exist. "
+                    "does not exist."
                 )
         else:
             super().clean_dist_folder(app, **options)
@@ -889,7 +889,7 @@ If notarization is interrupted, you can resume by running:
                 with self.input.wait_bar(
                     f"Archiving {filename.name} for notarization..."
                 ):
-                    archive_filename = filename.parent / "archive.zip"
+                    archive_filename = filename.parent / (filename.name + ".zip")
                     self.ditto_archive(filename, archive_filename)
             elif filename.suffix in {".dmg", ".pkg"}:
                 archive_filename = filename
@@ -978,7 +978,7 @@ password:
                         store_credentials = True
                     else:
                         raise BriefcaseCommandError(
-                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization"
+                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
                         ) from e
         finally:
             # Clean up house; we don't need the archive anymore.
@@ -1015,9 +1015,14 @@ password:
                 ]
 
                 expected_filename = id_matches[0]["name"]
+                # .app files are zipped for notarization, but the app itself is
+                # notarized; strip the .zip suffix for filename matching purposes.
+                if expected_filename.endswith(".zip"):
+                    expected_filename = expected_filename[:-4]
+
                 if expected_filename != filename.name:
                     raise BriefcaseCommandError(
-                        f"{submission_id} doesn't appear to be for this project. "
+                        f"{submission_id} is not a submission ID for this project. "
                         f"It notarizes a file named {expected_filename}"
                     )
             except IndexError:
@@ -1061,30 +1066,38 @@ password:
                                 submission_id,
                             ],
                         )
+
                         if response["status"] == "Accepted":
                             accepted = True
                         elif response["status"] == "Invalid":
+                            summary = response.get(
+                                "statusSummary", "No details provided"
+                            )
                             raise BriefcaseCommandError(
-                                f"Notarization was rejected: {response['statusSummary']}\n"
+                                f"Notarization was rejected: {summary}\n"
                                 + "\n".join(
                                     f"""
-        * ({issue.get('severity')}) {issue.get('path')} [{issue.get('architecture', "all architectures")}]
-        {issue.get('message')}
-        {issue.get('docUrl', '')}"""
-                                    for issue in response["issues"]
+    * ({issue.get('severity', "?")}) {issue.get('path')} [{issue.get('architecture', "unknown architecture")}]
+      {issue.get('message')}
+      {issue.get('docUrl', '(No additional help available)')}"""
+                                    for issue in response.get("issues", [])
                                 )
                             )
                         else:
-                            # Try again in 20 seconds
-                            time.sleep(20)
+                            raise BriefcaseCommandError(
+                                f"Unexpected notarization status: {response['status']}"
+                            )
                     except subprocess.CalledProcessError as e:
                         if e.returncode == 69:
-                            # Error code 69 (nice) indicates that the submission log is not
-                            # yet available, or does not exist. We've already validated that
-                            # it's a valid ID, so notarization isn't complete yet.
-                            pass
+                            # Error code 69 (nice) indicates the server can't give a log
+                            # response for the provided submission ID. We've already
+                            # validated that it's a valid submission ID, so that means
+                            # notarization isn't complete yet. Try again in 20 seconds.
+                            time.sleep(20)
                         else:
-                            raise BriefcaseCommandError("Invalid submission ID")
+                            raise BriefcaseCommandError(
+                                "Unknown problem retrieving notarization status."
+                            ) from e
 
         except KeyboardInterrupt:
             raise NotarizationInterrupted("Notarization interrupted by user.")
@@ -1172,6 +1185,7 @@ password:
             )
             return
 
+        # It's a normal packaging pass.
         self.logger.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
             identity = SigningIdentity()
