@@ -843,7 +843,7 @@ class macOSPackageMixin(macOSSigningMixin):
         if installer_identity:
             identity_args = (
                 f"--identity {identity.id} "
-                f"--installer_identity {installer_identity.id}"
+                f"--installer-identity {installer_identity.id}"
             )
             notarization_identity = installer_identity
         else:
