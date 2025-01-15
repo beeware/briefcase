@@ -1092,8 +1092,8 @@ password:
                             # Error code 69 (nice) indicates the server can't give a log
                             # response for the provided submission ID. We've already
                             # validated that it's a valid submission ID, so that means
-                            # notarization isn't complete yet. Try again in 20 seconds.
-                            time.sleep(20)
+                            # notarization isn't complete yet. Try again in 10 seconds.
+                            time.sleep(10)
                         else:
                             raise BriefcaseCommandError(
                                 "Unknown problem retrieving notarization status."

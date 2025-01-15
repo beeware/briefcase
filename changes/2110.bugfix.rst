@@ -1,0 +1,1 @@
+The hints displayed to the user when an identity has been selected now more accurately reflect the context in which they have been invoked.
