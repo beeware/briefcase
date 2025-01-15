@@ -793,7 +793,11 @@ class macOSPackageMixin(macOSSigningMixin):
         else:
             super().clean_dist_folder(app, **options)
 
-    def ditto_archive(self, app_filename: Path, archive_filename: Path):
+    def ditto_archive(
+        self,
+        app_filename: Path,
+        archive_filename: Path,
+    ):  # pragma: no-cover-if-not-macos
         """Create an archive of an app using ditto.
 
         Although the archive format is ".zip", we can't use standard Zip tools, as they
