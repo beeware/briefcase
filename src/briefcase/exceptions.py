@@ -280,5 +280,10 @@ class NoDistributionArtefact(BriefcaseWarning):
         super().__init__(error_code=0, msg=msg)
 
 
+class NotarizationInterrupted(BriefcaseWarning):
+    def __init__(self, msg):
+        super().__init__(error_code=0, msg=msg)
+
+
 class ParseError(Exception):
     """Raised by parser functions to signal parsing was unsuccessful."""

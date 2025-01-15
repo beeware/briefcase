@@ -1,0 +1,1 @@
+When a verbosity level of 3 (i.e., ``-vvv``) is selected, any tasks that would normally be performed in parallel will now be performed serially.

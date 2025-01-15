@@ -1,0 +1,1 @@
+When a macOS notarization attempt fails, Briefcase now displays the cause of the notarization failure.

@@ -1,0 +1,1 @@
+Briefcase now uses ``ditto`` to archive apps for submission to the notarization service, rather than standard ``zip`` tooling. This ensures that UTF-8 encoding and filesystem resources are preserved.

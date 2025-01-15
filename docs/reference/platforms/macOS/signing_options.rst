@@ -22,3 +22,12 @@ possible to distribute an unsigned installer to others.
 Do not submit the application for notarization. By default, apps will be
 submitted for notarization unless they have been signed with an ad-hoc
 signing identity.
+
+``--resume <submission ID>``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Apple's notarization server can take a long time to respond - in some cases, hours. When
+you submit an app for notarization, the console output of the ``package`` command will
+provide you with a submission ID. If the notarization process is interrupted for any
+reason (including user intervention), you can use this submission ID with the
+``--resume`` option to resume the notarization process for an app.
