@@ -218,6 +218,31 @@ def test_select_app_identity(dummy_command):
     assert dummy_command.input.prompts == ["> "]
 
 
+def test_select_app_identity_no_adhoc(dummy_command):
+    """Adhoc identities can be excluded from the list of options."""
+    # get_identities will return some options.
+    dummy_command.get_identities.return_value = {
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+    }
+
+    # Return option 2
+    dummy_command.input.values = ["2"]
+
+    # Disallow adhoc identities. This will make the identities from get_identities the
+    # only available values.
+    result = dummy_command.select_identity(allow_adhoc=False)
+
+    # The identity will be second of the returned values
+    assert result == SigningIdentity(
+        id="11E77FB58F13F6108B38110D5D92233C58ED38C5",
+        name="iPhone Developer: Jane Smith (BXAH5H869S)",
+    )
+
+    # User input was solicited once
+    assert dummy_command.input.prompts == ["> "]
+
+
 def test_select_installer_identity(dummy_command):
     """The user can select from a list of installer identities."""
     # get_identities is invoked twice - once with app identities, and once with all identities.
@@ -634,7 +659,7 @@ def test_sign_app(
             ),
             sign_call(
                 tmp_path,
-                frameworks_path / "Extras.framework/Resources/extras.dylib",
+                frameworks_path / "Extras.framework/Versions/1.2/libs/extras.dylib",
                 identity=sekrit_identity,
             ),
             sign_call(

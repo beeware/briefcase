@@ -70,6 +70,7 @@ def test_no_notarize_option(package_command):
         "installer_identity": None,
         "sign_installer": True,
         "packaging_format": None,
+        "submission_id": None,
         "update": False,
     }
     assert overrides == {}
@@ -88,6 +89,7 @@ def test_installer_identity_option(package_command):
         "installer_identity": "DEADBEEF",
         "sign_installer": True,
         "packaging_format": None,
+        "submission_id": None,
         "update": False,
     }
     assert overrides == {}
@@ -104,6 +106,24 @@ def test_no_sign_installer(package_command):
         "installer_identity": None,
         "sign_installer": False,
         "packaging_format": None,
+        "submission_id": None,
+        "update": False,
+    }
+    assert overrides == {}
+
+
+def test_resume(package_command):
+    """The --resume option can be parsed."""
+    options, overrides = package_command.parse_options(["--resume", "cafe-beef-1234"])
+
+    assert options == {
+        "adhoc_sign": False,
+        "identity": None,
+        "notarize_app": None,
+        "installer_identity": None,
+        "sign_installer": True,
+        "packaging_format": None,
+        "submission_id": "cafe-beef-1234",
         "update": False,
     }
     assert overrides == {}
@@ -149,8 +169,13 @@ def test_package_app(
     # Select a codesigning identity
     package_command.select_identity.return_value = sekrit_identity
 
-    # Package the app. Sign and notarize by default
-    package_command.package_app(first_app_with_binaries)
+    # Package the app. Sign and notarize by default. Use the base command's interface to
+    # ensure the full cleanup process is tested.
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="dmg",
+    )
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
@@ -195,7 +220,7 @@ def test_package_app(
 
     # A request was made to notarize the DMG
     package_command.notarize.assert_called_once_with(
-        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        first_app_with_binaries,
         identity=sekrit_identity,
     )
 
@@ -215,8 +240,14 @@ def test_no_notarization(
     # Select a codesigning identity
     package_command.select_identity.return_value = sekrit_identity
 
-    # Package the app; sign by default, but disable notarization
-    package_command.package_app(first_app_with_binaries, notarize_app=False)
+    # Package the app; sign by default, but disable notarization. Use the base command's
+    # interface to ensure the full cleanup process is tested.
+    package_command._package_app(
+        first_app_with_binaries,
+        notarize_app=False,
+        update=False,
+        packaging_format="dmg",
+    )
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
@@ -274,10 +305,13 @@ def test_adhoc_sign(
     tmp_path,
 ):
     """A macOS App can be packaged and signed with ad-hoc identity."""
-    # Package the app with an ad-hoc identity.
-    # Explicitly disable notarization (can't ad-hoc notarize an app)
-    package_command.package_app(
+    # Package the app with an ad-hoc identity. Explicitly disable notarization (can't
+    # ad-hoc notarize an app). Use the base command's interface to ensure the full
+    # cleanup process is tested.
+    package_command._package_app(
         first_app_with_binaries,
+        update=False,
+        packaging_format="dmg",
         adhoc_sign=True,
         notarize_app=False,
     )
@@ -330,13 +364,16 @@ def test_adhoc_sign(
 def test_notarize_adhoc_signed(package_command, first_app_with_binaries):
     """A macOS App cannot be notarized if ad-hoc signing is requested."""
 
-    # Package the app without code signing
+    # Package the app without code signing. Use the base command's interface to ensure
+    # the full cleanup process is tested.
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Can't notarize an app with an ad-hoc signing identity",
     ):
-        package_command.package_app(
+        package_command._package_app(
             first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
             notarize_app=True,
             adhoc_sign=True,
         )
@@ -357,13 +394,16 @@ def test_notarize_adhoc_signed_via_prompt(
 
     package_command.select_identity.return_value = adhoc_identity
 
-    # Package the app without code signing
+    # Package the app without code signing. Use the base command's interface to ensure the full
+    # cleanup process is tested.
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Can't notarize an app with an ad-hoc signing identity",
     ):
-        package_command.package_app(
+        package_command._package_app(
             first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
             notarize_app=True,
         )
 
@@ -381,10 +421,13 @@ def test_adhoc_sign_default_no_notarization(
     tmp_path,
 ):
     """An ad-hoc signed app is not notarized by default."""
-    # Package the app with an ad-hoc identity; notarization will
-    # be disabled as a default
-    package_command.package_app(
+    # Package the app with an ad-hoc identity; notarization will be disabled as a
+    # default. Use the base command's interface to ensure the full cleanup process is
+    # tested.
+    package_command._package_app(
         first_app_with_binaries,
+        update=False,
+        packaging_format="dmg",
         adhoc_sign=True,
     )
 
@@ -447,9 +490,14 @@ def test_sign_failure(
     # Raise an error when attempting to sign the app
     package_command.sign_app.side_effect = BriefcaseCommandError("Unable to code sign")
 
-    # Attempt to package the app; it should raise an error
+    # Attempt to package the app; it should raise an error. Use the base command's
+    # interface to ensure the full cleanup process is tested.
     with pytest.raises(BriefcaseCommandError, match=r"Unable to code sign"):
-        package_command.package_app(first_app_with_binaries)
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
+        )
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(

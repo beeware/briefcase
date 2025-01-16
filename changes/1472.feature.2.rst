@@ -1,0 +1,1 @@
+If macOS app notarization is interrupted, the notarization attempt can now be resumed.

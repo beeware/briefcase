@@ -1,13 +1,15 @@
-from zipfile import ZipFile
+from unittest.mock import MagicMock
 
 
 def test_package_zip(
     package_command,
     first_app_with_binaries,
     sekrit_identity,
-    tmp_path,
 ):
     """A macOS App can be packaged as a zip."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
     # Select zip packaging
     first_app_with_binaries.packaging_format = "zip"
 
@@ -25,13 +27,7 @@ def test_package_zip(
 
     # A request has been made to notarize the app
     package_command.notarize.assert_called_once_with(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app",
+        first_app_with_binaries,
         identity=sekrit_identity,
     )
 
@@ -43,43 +39,21 @@ def test_package_zip(
     # by calling sign_app()
     assert package_command.sign_file.call_count == 0
 
-    # The packaged archive exists, and contains all the files,
-    # contained in the `.app` bundle.
-    archive_file = tmp_path / "base_path/dist/First App-0.0.1.app.zip"
-    assert archive_file.exists()
-    with ZipFile(archive_file) as archive:
-        assert sorted(archive.namelist()) == [
-            "First App.app/",
-            "First App.app/Contents/",
-            "First App.app/Contents/Frameworks/",
-            "First App.app/Contents/Frameworks/Extras.framework/",
-            "First App.app/Contents/Frameworks/Extras.framework/Resources/",
-            "First App.app/Contents/Frameworks/Extras.framework/Resources/extras.dylib",
-            "First App.app/Contents/Info.plist",
-            "First App.app/Contents/MacOS/",
-            "First App.app/Contents/MacOS/First App",
-            "First App.app/Contents/Resources/",
-            "First App.app/Contents/Resources/app_packages/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/Extras",
-            "First App.app/Contents/Resources/app_packages/first.other",
-            "First App.app/Contents/Resources/app_packages/first_dylib.dylib",
-            "First App.app/Contents/Resources/app_packages/first_so.so",
-            "First App.app/Contents/Resources/app_packages/first_symlink.so",
-            "First App.app/Contents/Resources/app_packages/other_binary",
-            "First App.app/Contents/Resources/app_packages/second.other",
-            "First App.app/Contents/Resources/app_packages/special.binary",
-            "First App.app/Contents/Resources/app_packages/subfolder/",
-            "First App.app/Contents/Resources/app_packages/subfolder/second_dylib.dylib",
-            "First App.app/Contents/Resources/app_packages/subfolder/second_so.so",
-            "First App.app/Contents/Resources/app_packages/unknown.binary",
-        ]
+    # The notarization process will create the final artefact;
+    # since we're mocking notarize, we rely on the notarization tests
+    # to verify that the final distribution artefact was created.
 
 
-def test_zip_no_notarization(package_command, sekrit_identity, first_app_with_binaries):
+def test_zip_no_notarization(
+    package_command,
+    sekrit_identity,
+    first_app_with_binaries,
+    tmp_path,
+):
     """A macOS App can be packaged as a zip, without notarization."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
     # Select zip packaging
     first_app_with_binaries.packaging_format = "zip"
 
@@ -108,3 +82,9 @@ def test_zip_no_notarization(package_command, sekrit_identity, first_app_with_bi
     # This ignores the calls that would have been made transitively
     # by calling sign_app()
     assert package_command.sign_file.call_count == 0
+
+    # Since we're not notarizing, the packaged archive was created.
+    package_command.ditto_archive.assert_called_once_with(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+    )

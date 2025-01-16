@@ -1,9 +1,9 @@
-import subprocess
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Console, Log
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
 
 
@@ -21,6 +21,6 @@ def package_command(tmp_path):
     command.sign_file = mock.MagicMock()
     command.notarize = mock.MagicMock()
     command.dmgbuild = mock.MagicMock()
-    command.tools.subprocess = mock.MagicMock(spec=subprocess)
+    command.tools.subprocess = mock.MagicMock(spec=Subprocess)
 
     return command

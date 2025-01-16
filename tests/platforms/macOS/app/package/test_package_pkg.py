@@ -73,6 +73,12 @@ def test_gui_app(
     # App content has been copied into place.
     assert (bundle_path / "installer/root/First App.app/Contents/Info.plist").is_file()
 
+    # When duplicating the app, symlinks have been preserved
+    assert (
+        bundle_path
+        / "installer/root/First App.app/Contents/Frameworks/Extras.framework/Extras"
+    ).is_symlink()
+
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
@@ -125,8 +131,9 @@ def test_gui_app(
 
     # Notarization was performed with the installer identity
     package_command.notarize.assert_called_once_with(
-        tmp_path / "base_path/dist/First App-0.0.1.pkg",
-        identity=sekrit_installer_identity,
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        installer_identity=sekrit_installer_identity,
     )
 
 
@@ -325,8 +332,9 @@ def test_console_app(
 
     # Notarization was performed with the installer identity
     package_command.notarize.assert_called_once_with(
-        tmp_path / "base_path/dist/First App-0.0.1.pkg",
-        identity=sekrit_installer_identity,
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        installer_identity=sekrit_installer_identity,
     )
 
 
