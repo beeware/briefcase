@@ -5,7 +5,6 @@ def test_package_zip(
     package_command,
     first_app_with_binaries,
     sekrit_identity,
-    tmp_path,
 ):
     """A macOS App can be packaged as a zip."""
     # Mock the creation of the ditto archive
@@ -28,13 +27,7 @@ def test_package_zip(
 
     # A request has been made to notarize the app
     package_command.notarize.assert_called_once_with(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app",
+        first_app_with_binaries,
         identity=sekrit_identity,
     )
 
@@ -46,16 +39,21 @@ def test_package_zip(
     # by calling sign_app()
     assert package_command.sign_file.call_count == 0
 
-    # The packaged archive was created. We have mocked the ditto tool, so we just check
-    # that it has been invoked.
-    package_command.ditto_archive.assert_called_once_with(
-        tmp_path / "base_path/build/first-app/macos/app/First App.app",
-        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
-    )
+    # The notarization process will create the final artefact;
+    # since we're mocking notarize, we rely on the notarization tests
+    # to verify that the final distribution artefact was created.
 
 
-def test_zip_no_notarization(package_command, sekrit_identity, first_app_with_binaries):
+def test_zip_no_notarization(
+    package_command,
+    sekrit_identity,
+    first_app_with_binaries,
+    tmp_path,
+):
     """A macOS App can be packaged as a zip, without notarization."""
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
     # Select zip packaging
     first_app_with_binaries.packaging_format = "zip"
 
@@ -84,3 +82,9 @@ def test_zip_no_notarization(package_command, sekrit_identity, first_app_with_bi
     # This ignores the calls that would have been made transitively
     # by calling sign_app()
     assert package_command.sign_file.call_count == 0
+
+    # Since we're not notarizing, the packaged archive was created.
+    package_command.ditto_archive.assert_called_once_with(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+    )

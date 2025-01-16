@@ -698,7 +698,18 @@ class macOSPackageMixin(macOSSigningMixin):
         # The default changes depending on whether the app is a console app or a GUI app
         return None
 
-    def distribution_path(self, app):
+    def notarization_path(self, app: AppConfig) -> Path:
+        """The file that is submitted for notarization."""
+        if app.packaging_format == "zip":
+            # Notarization for bare .app's is applied to the binary, not the
+            # distribution artefact, with the distribution artefact being
+            # created after notarization has completed.
+            return self.binary_path(app)
+        else:
+            return self.distribution_path(app)
+
+    def distribution_path(self, app: AppConfig) -> Path:
+        """The path to the final distribution artefact."""
         if app.packaging_format == "zip":
             return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
         elif app.packaging_format == "pkg":
@@ -783,13 +794,19 @@ class macOSPackageMixin(macOSSigningMixin):
         :param options: Any additional arguments passed to the package command.
         """
         if options.get("submission_id"):
-            if not self.distribution_path(app).exists():
+            if not self.notarization_path(app).exists():
                 raise BriefcaseCommandError(
-                    "Notarization cannot be resumed, as the distribution artefact "
+                    "Notarization cannot be resumed, as the notarization artefact "
                     "associated with this app "
-                    f"({self.distribution_path(app).relative_to(self.base_path)}) "
+                    f"({self.notarization_path(app).relative_to(self.base_path)}) "
                     "does not exist."
                 )
+
+            # If the packaging format is zip, the distribution artefact is created
+            # *after* completion of notarization. If there's an existing distribution
+            # artefact, it must be from a previous notarization/stapling attempt.
+            if app.packaging_format == "zip":
+                super().clean_dist_folder(app, **options)
         else:
             super().clean_dist_folder(app, **options)
 
@@ -828,13 +845,13 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def notarize(
         self,
-        filename,
+        app: AppConfig,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
     ):
         """Submit a file for notarization, and wait for that notarization to be completed.
 
-        :param filename: The file to notarize.
+        :param app: The app to notarize.
         :param identity: The code signing used to notarize the app.
         :param installer_identity: The signing identity to use when signing the
             installer. Optional unless the packaging format is ``pkg``.
@@ -850,16 +867,10 @@ class macOSPackageMixin(macOSSigningMixin):
             identity_args = f"--identity {identity.id}"
             notarization_identity = identity
 
-        if filename.suffix == ".app":
-            format_args = "-p zip"
-        else:
-            format_args = f"-p {filename.suffix[1:]}"
+        format_args = f"-p {app.packaging_format}"
 
         # Submit the app for notarization
-        submission_id = self.submit_notarization(
-            filename,
-            identity=notarization_identity,
-        )
+        submission_id = self.submit_notarization(app, identity=notarization_identity)
 
         self.logger.warning(
             f"""
@@ -874,34 +885,31 @@ If notarization is interrupted, you can resume by running:
         )
 
         self.finalize_notarization(
-            filename,
+            app,
             identity=notarization_identity,
             submission_id=submission_id,
         )
 
-    def submit_notarization(self, filename, identity: SigningIdentity) -> str:
+    def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.
 
         If the file is a .app, it will be archived as a .zip for submission purposes.
 
-        :param filename: The file to notarize.
+        :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :returns: The ID of the notarization task.
         """
+        filename = self.notarization_path(app)
         try:
-            if filename.suffix == ".app":
+            if app.packaging_format == "zip":
+                self.logger.info()
                 with self.input.wait_bar(
                     f"Archiving {filename.name} for notarization..."
                 ):
                     archive_filename = filename.parent / (filename.name + ".zip")
                     self.ditto_archive(filename, archive_filename)
-            elif filename.suffix in {".dmg", ".pkg"}:
-                archive_filename = filename
             else:
                 archive_filename = filename
-                raise RuntimeError(
-                    f"Don't know how to notarize a file of type {filename.suffix}"
-                )
 
             submission_id = None
             store_credentials = False
@@ -985,7 +993,8 @@ password:
                             f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
                         ) from e
         finally:
-            # Clean up house; we don't need the archive anymore.
+            # If we're using .zip packaging, the archive is temporary and isn't used for
+            # distribution, so we can clean up.
             if archive_filename != filename:
                 self.tools.os.unlink(archive_filename)
 
@@ -993,7 +1002,7 @@ password:
 
     def validate_submission_id(
         self,
-        filename: Path,
+        app: AppConfig,
         identity: SigningIdentity,
         submission_id: str,
     ):
@@ -1024,7 +1033,7 @@ password:
                 if expected_filename.endswith(".zip"):
                     expected_filename = expected_filename[:-4]
 
-                if expected_filename != filename.name:
+                if expected_filename != self.notarization_path(app).name:
                     raise BriefcaseCommandError(
                         f"{submission_id} is not a submission ID for this project. "
                         f"It notarizes a file named {expected_filename}"
@@ -1041,7 +1050,7 @@ password:
 
     def finalize_notarization(
         self,
-        filename: Path,
+        app: AppConfig,
         identity: SigningIdentity,
         submission_id: str,
     ):
@@ -1050,7 +1059,7 @@ password:
         Polls to check the current notarization status; once notarization approval is
         received, the notarization is stapled onto the distribution artefact.
 
-        :param filename: The file to notarize.
+        :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :param submission_id: The submission ID of the notarization task to finalize.
         """
@@ -1106,6 +1115,7 @@ password:
         except KeyboardInterrupt:
             raise NotarizationInterrupted("Notarization interrupted by user.")
         else:
+            filename = self.notarization_path(app)
             try:
                 self.logger.info()
                 self.logger.info(
@@ -1117,8 +1127,13 @@ password:
                 )
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(
-                    f"Unable to staple notarization onto {filename.relative_to(self.base_path)}."
+                    f"Unable to staple notarization onto {filename.relative_to(self.base_path)}"
                 )
+
+        # Notarization on a zip package is performed on the bare app, so we can't
+        # complete packaging until notarization has completed.
+        if app.packaging_format == "zip":
+            self.finalize_package_zip(app)
 
     def package_app(
         self,
@@ -1154,19 +1169,12 @@ password:
             # so don't allow it to be selected.
             identity = self.select_identity(identity=identity, allow_adhoc=False)
 
-            if app.packaging_format == "zip":
-                filename: Path = self.binary_path(app)
-                notarization_identity = identity
-            elif app.packaging_format == "pkg":
-                filename: Path = self.distribution_path(app)
-
+            if app.packaging_format == "pkg":
                 notarization_identity = self.select_identity(
                     identity=installer_identity,
                     app_identity=identity,
                 )
-
             else:
-                filename: Path = self.distribution_path(app)
                 notarization_identity = identity
 
             self.logger.info(
@@ -1176,14 +1184,14 @@ password:
 
             self.logger.info()
             self.validate_submission_id(
-                filename,
+                app,
                 identity=notarization_identity,
                 submission_id=submission_id,
             )
 
             self.logger.info()
             self.finalize_notarization(
-                filename,
+                app,
                 identity=notarization_identity,
                 submission_id=submission_id,
             )
@@ -1270,21 +1278,29 @@ password:
         notarize_app: bool,
         identity: SigningIdentity,
     ):
-        """Package an .app bundle in a zip file."""
-        dist_path: Path = self.distribution_path(app)
+        """Package an .app bundle in a zip file.
 
+        If we're notarizing, this doesn't actually create the distribution artefact.
+        Notarization on a zip package is performed on the bare app, so we can't complete
+        packaging until notarization has completed. We call ``finalize_package_zip()``
+        as part of completing zip notarization.
+        """
         if notarize_app:
             self.logger.info(
                 f"Notarizing app using team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(self.binary_path(app), identity=identity)
+            self.notarize(app, identity=identity)
+        else:
+            self.finalize_package_zip(app)
 
+    def finalize_package_zip(self, app: AppConfig):
+        """Finalize the zip packaging process."""
         # Build the final archive for distribution
         with self.input.wait_bar(
             f"Building final distribution archive for {self.binary_path(app).name}..."
         ):
-            self.ditto_archive(self.binary_path(app), dist_path)
+            self.ditto_archive(self.binary_path(app), self.distribution_path(app))
 
     def package_pkg(
         self,
@@ -1413,7 +1429,7 @@ with your app's licensing terms.
                 prefix=app.app_name,
             )
             self.notarize(
-                dist_path,
+                app,
                 identity=identity,
                 installer_identity=installer_identity,
             )
@@ -1489,4 +1505,4 @@ with your app's licensing terms.
                 f"Notarizing DMG with team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(dist_path, identity=identity)
+            self.notarize(app, identity=identity)

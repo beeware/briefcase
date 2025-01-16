@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
@@ -19,14 +20,11 @@ def test_resume_notarize_app(
     sleep_zero,
 ):
     """Notarization of an app bundle can be resumed."""
-    # Create a pre-existing distribution artefact
-    create_file(
-        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
-        "distribution file",
-    )
-
     # Select a codesigning identity
     package_command.select_identity.return_value = sekrit_identity
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = mock.MagicMock()
 
     # Mock the return values of subprocesses
     submission_id = str(uuid.uuid4())
@@ -136,6 +134,13 @@ def test_resume_notarize_app(
         check=True,
     )
 
+    # As this is a .zip distribution, there's a finalization step to create the actual
+    # distribution artefact with ditto.
+    package_command.ditto_archive.assert_called_once_with(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+    )
+
 
 def test_resume_notarize_dmg(
     package_command,
@@ -153,6 +158,9 @@ def test_resume_notarize_dmg(
 
     # Select a codesigning identity
     package_command.select_identity.return_value = sekrit_identity
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = mock.MagicMock()
 
     # Mock the return values of subprocesses
     submission_id = str(uuid.uuid4())
@@ -261,6 +269,9 @@ def test_resume_notarize_dmg(
         check=True,
     )
 
+    # The distribution artefact already exists, so there's no call to ditto.
+    package_command.ditto_archive.assert_not_called()
+
 
 def test_resume_notarize_pkg(
     package_command,
@@ -282,6 +293,9 @@ def test_resume_notarize_pkg(
         sekrit_identity,
         sekrit_installer_identity,
     ]
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = mock.MagicMock()
 
     # Mock the return values of subprocesses
     submission_id = str(uuid.uuid4())
@@ -397,6 +411,177 @@ def test_resume_notarize_pkg(
         check=True,
     )
 
+    # The distribution artefact already exists, so there's no call to ditto.
+    package_command.ditto_archive.assert_not_called()
+
+
+def test_resume_notarize_app_artefact_missing(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
+    """If the app binary doesn't exist, notarization of an app cannot be resumed."""
+    # Delete the actual binary
+    shutil.rmtree(tmp_path / "base_path/build/first-app/macos/app/First App.app")
+
+    # Attempting to resume notarization when there's no pre-existing artefact raises an
+    # error.
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Notarization cannot be resumed, as the notarization artefact "
+            r"associated with this app \(.*First App.app\) does not exist."
+        ),
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="zip",
+            identity=sekrit_identity.id,
+            submission_id=str(uuid.uuid4()),
+        )
+
+
+def test_resume_notarize_app_dist_artefact_exists(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """A *distribution* artefact of an app bundle will be cleaned up as part of resuming notarization."""
+    # Create a pre-existing distribution artefact
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+        "distribution file",
+    )
+
+    # Select a codesigning identity
+    package_command.select_identity.return_value = sekrit_identity
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = mock.MagicMock()
+
+    # Mock the return values of subprocesses
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool history returns list with the app's submission ID
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App.app.zip",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
+
+    # Resume notarizaton. Use the base command's interface to ensure the full cleanup
+    # process is tested.
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="zip",
+        identity=sekrit_identity.id,
+        submission_id=submission_id,
+    )
+
+    # Identity selection excluded adhoc identities
+    package_command.select_identity.assert_called_once_with(
+        identity=sekrit_identity.id,
+        allow_adhoc=False,
+    )
+
+    # The calls to notarization tools were made
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        # Retrieve notarization history to verify the submission ID
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "history",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+        ),
+        # Check status 3 times
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "log",
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                submission_id,
+            ],
+        ),
+    ]
+
+    # Notarization is complete; we can staple.
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            "xcrun",
+            "stapler",
+            "staple",
+            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        ],
+        check=True,
+    )
+
+    # As this is a .zip distribution, there's a finalization step to create the actual
+    # distribution artefact with ditto. This file won't actually be created though, as
+    # we're mocking ditto. However, as a result of resuming with a pre-existing
+    # distribution artefact, the pre-existing artefact will have been deleted.
+    package_command.ditto_archive.assert_called_once_with(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+    )
+
+    assert not (tmp_path / "base_path/dist/First App-0.0.1.app.zip").exists()
+
 
 def test_resume_notarize_artefact_missing(
     package_command,
@@ -410,7 +595,7 @@ def test_resume_notarize_artefact_missing(
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"Notarization cannot be resumed, as the distribution artefact "
+            r"Notarization cannot be resumed, as the notarization artefact "
             r"associated with this app \(.*First App-0.0.1.dmg\) does not exist."
         ),
     ):

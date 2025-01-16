@@ -28,28 +28,39 @@ def package_command(tmp_path):
 
 
 @pytest.fixture
-def first_app_dmg(tmp_path):
+def first_app_zip(first_app_with_binaries, tmp_path):
+    first_app_with_binaries.packaging_format = "zip"
+
+    return first_app_with_binaries
+
+
+@pytest.fixture
+def first_app_dmg(first_app_with_binaries, tmp_path):
+    first_app_with_binaries.packaging_format = "dmg"
+
     dmg_path = tmp_path / "base_path/dist/First App.dmg"
     dmg_path.parent.mkdir(parents=True)
     with dmg_path.open("w", encoding="utf-8") as f:
         f.write("DMG content here")
 
-    return dmg_path
+    return first_app_with_binaries
 
 
 @pytest.fixture
-def first_app_pkg(tmp_path):
+def first_app_pkg(first_app_with_binaries, tmp_path):
+    first_app_with_binaries.packaging_format = "pkg"
+
     dmg_path = tmp_path / "base_path/dist/First App-0.0.1.pkg"
     dmg_path.parent.mkdir(parents=True)
     with dmg_path.open("w", encoding="utf-8") as f:
         f.write("PKG content here")
 
-    return dmg_path
+    return first_app_with_binaries
 
 
 def test_notarize_app(
     package_command,
-    first_app_with_binaries,
+    first_app_zip,
     sekrit_identity,
     tmp_path,
     sleep_zero,
@@ -86,12 +97,16 @@ def test_notarize_app(
         {"status": "Accepted"},
     ]
 
-    package_command.notarize(app_path, identity=sekrit_identity)
+    package_command.notarize(first_app_zip, identity=sekrit_identity)
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
     # and as a result of mocking os, it won't *actually* be deleted either - but we can
-    # verify that it *would* have been deleted.
-    package_command.ditto_archive.assert_called_once_with(app_path, archive_path)
+    # verify that it *would* have been deleted. ditto will also be called when finalizing,
+    # to create the actual distribution artefact.
+    assert package_command.ditto_archive.mock_calls == [
+        mock.call(app_path, archive_path),
+        mock.call(app_path, tmp_path / "base_path/dist/First App-0.0.1.app.zip"),
+    ]
     package_command.tools.os.unlink.assert_called_with(archive_path)
 
     # The calls to notarization tools were made
@@ -162,6 +177,7 @@ def test_notarize_dmg(
     first_app_dmg,
     sekrit_identity,
     sleep_zero,
+    tmp_path,
 ):
     """A DMG can be notarized."""
     # Mock the creation of the ditto archive
@@ -199,7 +215,7 @@ def test_notarize_dmg(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -247,7 +263,7 @@ def test_notarize_dmg(
             "xcrun",
             "stapler",
             "staple",
-            first_app_dmg,
+            tmp_path / "base_path/dist/First App-0.0.1.dmg",
         ],
         check=True,
     )
@@ -259,6 +275,7 @@ def test_notarize_pkg(
     sekrit_identity,
     sekrit_installer_identity,
     sleep_zero,
+    tmp_path,
 ):
     """A PKG can be notarized."""
     # Mock the creation of the ditto archive
@@ -300,7 +317,7 @@ def test_notarize_pkg(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_pkg,
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -348,22 +365,10 @@ def test_notarize_pkg(
             "xcrun",
             "stapler",
             "staple",
-            first_app_pkg,
+            tmp_path / "base_path/dist/First App-0.0.1.pkg",
         ],
         check=True,
     )
-
-
-def test_notarize_unknown_format(package_command, sekrit_identity, tmp_path):
-    """Attempting to notarize a file of unknown format raises an error."""
-    pkg_path = tmp_path / "base_path/dist/First App.foo"
-
-    # The notarization call will fail with an error
-    with pytest.raises(
-        RuntimeError,
-        match=r"Don't know how to notarize a file of type .foo",
-    ):
-        package_command.notarize(pkg_path, identity=sekrit_identity)
 
 
 def test_notarize_unknown_credentials(
@@ -371,6 +376,7 @@ def test_notarize_unknown_credentials(
     first_app_dmg,
     sekrit_identity,
     sleep_zero,
+    tmp_path,
 ):
     """When notarizing, if credentials haven't been stored, the user will be prompted to
     store them."""
@@ -414,7 +420,7 @@ def test_notarize_unknown_credentials(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -428,7 +434,7 @@ def test_notarize_unknown_credentials(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -491,7 +497,7 @@ def test_notarize_unknown_credentials(
                 "xcrun",
                 "stapler",
                 "staple",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
             ],
             check=True,
         ),
@@ -500,7 +506,7 @@ def test_notarize_unknown_credentials(
 
 def test_credential_storage_failure_app(
     package_command,
-    first_app_with_binaries,
+    first_app_zip,
     sekrit_identity,
     tmp_path,
 ):
@@ -542,7 +548,7 @@ def test_credential_storage_failure_app(
         BriefcaseCommandError,
         match=r"Unable to store credentials for team ID DEADBEEF.",
     ):
-        package_command.notarize(app_path, identity=sekrit_identity)
+        package_command.notarize(first_app_zip, identity=sekrit_identity)
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
     # and as a result of mocking os, it won't *actually* be deleted either - but we can
@@ -585,6 +591,7 @@ def test_credential_storage_failure_dmg(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    tmp_path,
 ):
     """If credentials haven't been stored, and storage fails, an error is raised."""
     # Mock the creation of the ditto archive
@@ -626,7 +633,7 @@ def test_credential_storage_failure_dmg(
             "xcrun",
             "notarytool",
             "submit",
-            first_app_dmg,
+            tmp_path / "base_path/dist/First App-0.0.1.dmg",
             "--keychain-profile",
             "briefcase-macOS-DEADBEEF",
             "--output-format",
@@ -651,7 +658,7 @@ def test_credential_storage_failure_dmg(
 
 def test_credential_storage_disabled_input_app(
     package_command,
-    first_app_with_binaries,
+    first_app_zip,
     sekrit_identity,
     tmp_path,
 ):
@@ -696,7 +703,7 @@ def test_credential_storage_disabled_input_app(
         BriefcaseCommandError,
         match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
     ):
-        package_command.notarize(app_path, identity=sekrit_identity)
+        package_command.notarize(first_app_zip, identity=sekrit_identity)
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
     # and as a result of mocking os, it won't *actually* be deleted either - but we can
@@ -728,6 +735,7 @@ def test_credential_storage_disabled_input_dmg(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    tmp_path,
 ):
     """When packaging a DMG, if credentials haven't been stored, and input is disabled,
     an error is raised."""
@@ -773,7 +781,7 @@ def test_credential_storage_disabled_input_dmg(
             "xcrun",
             "notarytool",
             "submit",
-            first_app_dmg,
+            tmp_path / "base_path/dist/First App-0.0.1.dmg",
             "--keychain-profile",
             "briefcase-macOS-DEADBEEF",
             "--output-format",
@@ -790,6 +798,7 @@ def test_notarize_unknown_credentials_after_storage(
     first_app_dmg,
     sekrit_identity,
     sleep_zero,
+    tmp_path,
 ):
     """If we get a credential failure after an attempt to store, an error is raised."""
     # Mock the creation of the ditto archive
@@ -811,7 +820,7 @@ def test_notarize_unknown_credentials_after_storage(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit dist[/\\]First App.dmg for notarization.",
+        match=r"Unable to submit dist[/\\]First App-0.0.1.dmg for notarization.",
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
@@ -828,7 +837,7 @@ def test_notarize_unknown_credentials_after_storage(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -841,7 +850,7 @@ def test_notarize_unknown_credentials_after_storage(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -867,7 +876,7 @@ def test_notarize_unknown_credentials_after_storage(
 
 def test_app_submit_notarization_failure_with_credentials(
     package_command,
-    first_app_with_binaries,
+    first_app_zip,
     sekrit_identity,
     tmp_path,
 ):
@@ -901,7 +910,7 @@ def test_app_submit_notarization_failure_with_credentials(
         BriefcaseCommandError,
         match=r"Unable to submit build[/\\]first-app[/\\]macos[/\\]app[/\\]First App.app for notarization.",
     ):
-        package_command.notarize(app_path, identity=sekrit_identity)
+        package_command.notarize(first_app_zip, identity=sekrit_identity)
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
     # and as a result of mocking os, it won't *actually* be deleted either - but we can
@@ -932,6 +941,7 @@ def test_dmg_submit_notarization_failure_with_credentials(
     package_command,
     first_app_dmg,
     sekrit_identity,
+    tmp_path,
 ):
     """If the notarization process for a DMG fails for a reason other than credentials,
     an error is raised."""
@@ -950,7 +960,7 @@ def test_dmg_submit_notarization_failure_with_credentials(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit dist[/\\]First App.dmg for notarization.",
+        match=r"Unable to submit dist[/\\]First App-0.0.1.dmg for notarization.",
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
@@ -965,7 +975,7 @@ def test_dmg_submit_notarization_failure_with_credentials(
             "xcrun",
             "notarytool",
             "submit",
-            first_app_dmg,
+            tmp_path / "base_path/dist/First App-0.0.1.dmg",
             "--keychain-profile",
             "briefcase-macOS-DEADBEEF",
             "--output-format",
@@ -982,6 +992,7 @@ def test_unknown_notarization_status_failure(
     first_app_dmg,
     sekrit_identity,
     sleep_zero,
+    tmp_path,
 ):
     """If the notarization log process fails with an unexpected status code, an error is raised."""
     # Mock the creation of the ditto archive
@@ -1018,7 +1029,7 @@ def test_unknown_notarization_status_failure(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -1048,6 +1059,7 @@ def test_stapling_failure(
     first_app_dmg,
     sekrit_identity,
     sleep_zero,
+    tmp_path,
 ):
     """If the stapling process fails, an error is raised."""
     # Mock the creation of the ditto archive
@@ -1080,7 +1092,7 @@ def test_stapling_failure(
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to staple notarization onto dist[/\\]First App.dmg",
+        match=r"Unable to staple notarization onto dist[/\\]First App-0.0.1.dmg",
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
@@ -1097,7 +1109,7 @@ def test_stapling_failure(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -1145,7 +1157,7 @@ def test_stapling_failure(
             "xcrun",
             "stapler",
             "staple",
-            first_app_dmg,
+            tmp_path / "base_path/dist/First App-0.0.1.dmg",
         ],
         check=True,
     )
@@ -1156,6 +1168,7 @@ def test_interrupt_notarization(
     first_app_dmg,
     sekrit_identity,
     sleep_zero,
+    tmp_path,
     capsys,
 ):
     """If notarization is interrupted, the submission ID is output for the user."""
@@ -1193,7 +1206,7 @@ def test_interrupt_notarization(
                 "xcrun",
                 "notarytool",
                 "submit",
-                first_app_dmg,
+                tmp_path / "base_path/dist/First App-0.0.1.dmg",
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",

@@ -220,7 +220,7 @@ def test_package_app(
 
     # A request was made to notarize the DMG
     package_command.notarize.assert_called_once_with(
-        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        first_app_with_binaries,
         identity=sekrit_identity,
     )
 
