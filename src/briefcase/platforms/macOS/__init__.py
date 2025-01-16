@@ -957,7 +957,7 @@ password:
                 # Attempt the notarization
                 try:
                     self.logger.info()
-                    with self.input.wait_bar("Submitting app for notariztion..."):
+                    with self.input.wait_bar("Submitting app for notarization..."):
                         submission = self.tools.subprocess.parse_output(
                             json_parser,
                             [
