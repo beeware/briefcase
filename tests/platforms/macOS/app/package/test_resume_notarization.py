@@ -425,6 +425,10 @@ def test_resume_notarize_app_artefact_missing(
     # Delete the actual binary
     shutil.rmtree(tmp_path / "base_path/build/first-app/macos/app/First App.app")
 
+    # Mock the command factory to prevent the binary from being rebuilt as part of
+    # package dependencies.
+    package_command._command_factory = mock.MagicMock()
+
     # Attempting to resume notarization when there's no pre-existing artefact raises an
     # error.
     with pytest.raises(
