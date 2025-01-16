@@ -73,6 +73,12 @@ def test_gui_app(
     # App content has been copied into place.
     assert (bundle_path / "installer/root/First App.app/Contents/Info.plist").is_file()
 
+    # When duplicating the app, symlinks have been preserved
+    assert (
+        bundle_path
+        / "installer/root/First App.app/Contents/Frameworks/Extras.framework/Extras"
+    ).is_symlink()
+
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"

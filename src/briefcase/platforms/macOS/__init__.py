@@ -1346,7 +1346,12 @@ with your app's licensing terms.
             installed_app_path = installer_path / "root" / self.binary_path(app).name
             if installed_app_path.exists():
                 self.tools.shutil.rmtree(installed_app_path)
-            self.tools.shutil.copytree(self.binary_path(app), installed_app_path)
+            self.tools.shutil.copytree(
+                self.binary_path(app),
+                installed_app_path,
+                # Ensure that symlinks are preserved in the duplication.
+                symlinks=True,
+            )
 
         components_plist_path = self.bundle_path(app) / "installer/components.plist"
 

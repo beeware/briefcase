@@ -659,7 +659,7 @@ def test_sign_app(
             ),
             sign_call(
                 tmp_path,
-                frameworks_path / "Extras.framework/Resources/extras.dylib",
+                frameworks_path / "Extras.framework/Versions/1.2/libs/extras.dylib",
                 identity=sekrit_identity,
             ),
             sign_call(
