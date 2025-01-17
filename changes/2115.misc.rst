@@ -1,0 +1,1 @@
+The methods used for handling questions in the new project wizard have been refactored into a common utility.
