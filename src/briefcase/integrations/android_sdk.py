@@ -1493,14 +1493,17 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: str | Path):
+    def install_apk(self, apk_path: str | Path, extra_args: list[str] | None = None):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
+        :param extra_args: Any additional arguments to pass to adb install.
         :returns: `None` on success; raises an exception on failure.
         """
+        command = ["install", "-r"] + (extra_args if extra_args else []) + [apk_path]
+
         try:
-            self.run("install", "-r", apk_path)
+            self.run(*command)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Unable to install APK {apk_path} on {self.device}"

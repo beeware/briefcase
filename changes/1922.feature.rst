@@ -1,0 +1,1 @@
+Added to ``briefcase run android`` a ``--Xadb-install`` option for passing extra arguments to ``adb install``. This makes it possible to handle various corner cases, for example, setting the ``--no-streaming`` option to make installation work for devices running recent versions of LineageOS.
