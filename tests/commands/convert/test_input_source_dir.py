@@ -2,8 +2,8 @@ from unittest.mock import ANY, MagicMock
 
 
 def test_default_and_intro_is_used(convert_command, monkeypatch):
-    mock_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
 
     def get_source_dir_hint(*args, **kwargs):
         return "SOME_DIRECTORY", "SOME_DESCRIPTION"
@@ -11,9 +11,9 @@ def test_default_and_intro_is_used(convert_command, monkeypatch):
     monkeypatch.setattr(convert_command, "get_source_dir_hint", get_source_dir_hint)
 
     convert_command.input_source_dir("app-name", "app_name", None)
-    mock_input_text.assert_called_once_with(
+    mock_text_question.assert_called_once_with(
         intro="SOME_DESCRIPTION",
-        variable="source directory",
+        description="Source directory",
         default="SOME_DIRECTORY",
         validator=ANY,
         override_value=None,

@@ -11,7 +11,6 @@ from pathlib import Path
 from signal import SIGTERM
 
 from briefcase.config import AppConfig
-from briefcase.console import select_option
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import (
     get_process_id_by_command,
@@ -473,9 +472,15 @@ class macOSSigningMixin:
         :param allow_adhoc: Should the adhoc identities be allowed?
         :returns: The final identity to use
         """
+        # If the adhoc identity is allowed, add it first so it appears first in the list
+        # of options.
+        identities = {}
+        if allow_adhoc:
+            identities["-"] = ADHOC_IDENTITY_NAME
+
         # Obtain the valid codesigning identities. These are the identities that could
         # be used for app signing.
-        identities = self.get_identities(self.tools, "codesigning")
+        identities.update(self.get_identities(self.tools, "codesigning"))
 
         if app_identity:
             ident_type = "installer"
@@ -501,10 +506,6 @@ class macOSSigningMixin:
             ident_type = "application"
             ident_option = "--identity"
 
-            # App signing also allows for the adhoc identity
-            if allow_adhoc:
-                identities["-"] = ADHOC_IDENTITY_NAME
-
         if identity:
             try:
                 # Try to look up the identity as a hex checksum
@@ -522,10 +523,11 @@ class macOSSigningMixin:
                         f"Invalid {ident_type} signing identity {identity}"
                     ) from e
 
-        self.input.prompt()
-        self.input.prompt(f"Select {ident_type} signing identity to use:")
-        self.input.prompt()
-        identity = select_option(identities, input=self.input)
+        identity = self.input.selection_question(
+            intro=f"Select {ident_type} signing identity to use:",
+            description=f"{ident_type.title()} signing identity",
+            options=identities,
+        )
         identity_name = identities[identity]
         if identity == "-":
             self.logger.info(

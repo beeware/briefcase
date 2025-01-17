@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from packaging.utils import canonicalize_name
 
 from ..config import is_valid_app_name
-from .new import NewCommand, parse_project_overrides, titlecase
+from .new import NewCommand, parse_project_overrides
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -118,7 +118,7 @@ class ConvertCommand(NewCommand):
             and override_value is None
         ):
             app_name = canonicalize_name(self.pep621_data["name"])
-            self.prompt_divider(title="App name")
+            self.input.divider(title="App name")
             self.input.prompt()
             self.input.prompt(
                 f"Using value from PEP621 formatted pyproject.toml {app_name!r}"
@@ -133,9 +133,9 @@ class ConvertCommand(NewCommand):
                 f"app name of '{default}', but you can use another name if you want."
             )
 
-        return self.input_text(
+        return self.input.text_question(
             intro=intro,
-            variable="app name",
+            description="App name",
             default=default,
             validator=self.validate_app_name,
             override_value=override_value,
@@ -146,8 +146,8 @@ class ConvertCommand(NewCommand):
 
         :returns: The source directory
         """
-        default = titlecase(" ".join(re.split("[-_]", app_name)))
-        return self.input_text(
+        default = (" ".join(re.split("[-_]", app_name))).title()
+        return self.input.text_question(
             intro=(
                 "We need a formal name for your application. This is the name that "
                 "will be displayed to humans whenever the name of the application is "
@@ -157,7 +157,7 @@ class ConvertCommand(NewCommand):
                 f"Based on the app name, we suggest a formal name of '{default}', but "
                 "you can use another name if you want."
             ),
-            variable="formal name",
+            description="Formal name",
             default=default,
             override_value=override_value,
         )
@@ -214,9 +214,9 @@ class ConvertCommand(NewCommand):
         :returns: The source directory
         """
         default, intro = self.get_source_dir_hint(app_name, module_name)
-        return self.input_text(
+        return self.input.text_question(
             intro=intro,
-            variable="source directory",
+            description="Source directory",
             default=default,
             validator=partial(self.validate_source_dir, module_name),
             override_value=override_value,
@@ -249,9 +249,9 @@ class ConvertCommand(NewCommand):
         else:
             default = "tests"
 
-        return self.input_text(
+        return self.input.text_question(
             intro=intro,
-            variable="test source directory",
+            description="Test source directory",
             default=default,
             validator=partial(self.validate_test_source_dir, module_name),
             override_value=override_value,
@@ -269,16 +269,16 @@ class ConvertCommand(NewCommand):
         if "description" in self.pep621_data and override_value is None:
             description = self.pep621_data["description"]
 
-            self.prompt_divider(title="Description")
+            self.input.divider(title="Description")
             self.input.prompt()
             self.input.prompt(
                 f"Using value from PEP621 formatted pyproject.toml {description!r}"
             )
             return description
 
-        return self.input_text(
+        return self.input.text_question(
             intro="Now, we need a one line description for your application.",
-            variable="description",
+            description="Description",
             default="My first application",
             override_value=override_value,
         )
@@ -292,34 +292,34 @@ class ConvertCommand(NewCommand):
 
         if not options or override_value:
             default = self.make_project_url("com.example", app_name)
-            return self.input_text(
+            return self.input.text_question(
                 intro=(
                     "What website URL do you want to use for this application? Based "
                     f"on your existing 'pyproject.toml', this might be {default}"
                 ),
-                variable="application URL",
+                description="Application URL",
                 default=default,
                 validator=validate_url,
                 override_value=override_value,
             )
 
         options.append("Other")
-        url = self.select_option(
+        url = self.input.selection_question(
             intro=(
                 "What website URL do you want to use for this application? The "
                 "following URLs are defined in your existing 'pyproject.toml'; "
                 "select 'Other' to provide a different URL."
             ),
-            variable="application URL",
+            description="Application URL",
             default=None,
             options=options,
             override_value=override_value,
         )
 
         if url == "Other":
-            url = self.input_text(
+            url = self.input.text_question(
                 intro="What website URL do you want to use for the application?",
-                variable="application URL",
+                description="Application URL",
                 default=self.make_project_url("com.example", app_name),
                 validator=validate_url,
             )
@@ -333,10 +333,10 @@ class ConvertCommand(NewCommand):
         """
         options = ["GUI", "Console"]
         return (
-            self.select_option(
+            self.input.selection_question(
                 intro="Is this a GUI application or a console application?",
-                variable="interface style",
-                default=None,
+                description="Interface style",
+                default="GUI",
                 options=options,
                 override_value=override_value,
             )
@@ -345,7 +345,7 @@ class ConvertCommand(NewCommand):
 
     def input_bundle(self, url, app_name, override_value: str | None) -> str:
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
-        return self.input_text(
+        return self.input.text_question(
             intro=(
                 "Now we need a bundle identifier for your application.\n"
                 "\n"
@@ -360,7 +360,7 @@ class ConvertCommand(NewCommand):
                 "application's machine readable name to form a complete application "
                 f"identifier ('{default}.{app_name}')."
             ),
-            variable="bundle identifier",
+            description="Bundle identifier",
             default=default,
             validator=self.validate_bundle,
             override_value=override_value,
@@ -384,9 +384,9 @@ class ConvertCommand(NewCommand):
         ]
 
         if not options or override_value is not None:
-            return self.input_text(
+            return self.input.text_question(
                 intro=intro,
-                variable="author",
+                description="Author",
                 default="Jane Developer",
                 override_value=override_value,
             )
@@ -397,10 +397,11 @@ class ConvertCommand(NewCommand):
 
         options.append("Other")
 
-        # We want to use the input_text-function if override_value is provided or if the selected author is "Other"
-        # However, since we don't want the select_option prompt if an override value is provided, we need to
-        # initialise the author variable here.
-        author = self.select_option(
+        # We want to use text_question if override_value is provided or if the selected
+        # author is "Other". However, since we don't want the selection_question prompt
+        # if an override value is provided, we need to initialise the author variable
+        # here.
+        author = self.input.selection_question(
             intro=(
                 intro
                 + "\n\n"
@@ -408,15 +409,15 @@ class ConvertCommand(NewCommand):
                 + "'pyproject.toml'. Who do you want to be credited as the author of "
                 + "this application?"
             ),
-            variable="Author",
+            description="Author",
             options=options,
             default=None,
             override_value=None,
         )
         if author == "Other":
-            author = self.input_text(
+            author = self.input.text_question(
                 intro="Who do you want to be credited as the author of this application?",
-                variable="author",
+                description="Author",
                 default="Jane Developer",
                 override_value=None,
             )
@@ -443,9 +444,9 @@ class ConvertCommand(NewCommand):
             f"we believe it could be '{default}'."
         )
 
-        author_email = self.input_text(
+        author_email = self.input.text_question(
             intro=intro,
-            variable="author's email",
+            description="Author's email",
             default=default,
             validator=self.validate_email,
             override_value=override_value,
@@ -547,9 +548,9 @@ class ConvertCommand(NewCommand):
             "Other",
         ]
 
-        return self.select_option(
+        return self.input.selection_question(
             intro=intro,
-            variable="Project License",
+            description="Project license",
             options=options,
             default=default,
             override_value=override_value,
@@ -718,7 +719,7 @@ class ConvertCommand(NewCommand):
         self.input.prompt()
         self.input.prompt("Let's setup an existing project as a Briefcase app!")
         context = self.build_context(project_overrides)
-        self.prompt_divider()  # close the prompting section of output
+        self.input.divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 

@@ -4,15 +4,15 @@ from ...utils import PartialMatchString
 
 
 def test_app_name_is_formatted(convert_command, monkeypatch):
-    mock_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
     convert_command.input_formal_name("test-app-name", None)
 
-    mock_input_text.assert_called_once_with(
+    mock_text_question.assert_called_once_with(
         intro=PartialMatchString(
             "Based on the app name, we suggest a formal name of 'Test App Name',"
         ),
-        variable="formal name",
+        description="Formal name",
         default="Test App Name",
         override_value=None,
     )

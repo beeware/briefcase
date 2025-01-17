@@ -4,13 +4,13 @@ from ...utils import PartialMatchString
 
 
 def test_default_without_http_protocol(convert_command, monkeypatch):
-    mock_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
 
     convert_command.input_bundle("http://www.some_url.no", "test-app-name", None)
-    mock_input_text.assert_called_once_with(
+    mock_text_question.assert_called_once_with(
         intro=PartialMatchString("no.some_url.www.test-app-name"),
-        variable="bundle identifier",
+        description="Bundle identifier",
         default="no.some_url.www",
         validator=convert_command.validate_bundle,
         override_value=None,
@@ -18,13 +18,13 @@ def test_default_without_http_protocol(convert_command, monkeypatch):
 
 
 def test_default_without_https_protocol(convert_command, monkeypatch):
-    mock_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
 
     convert_command.input_bundle("https://www.some_url.no", "test-app-name", None)
-    mock_input_text.assert_called_once_with(
+    mock_text_question.assert_called_once_with(
         intro=PartialMatchString("no.some_url.www.test-app-name"),
-        variable="bundle identifier",
+        description="Bundle identifier",
         default="no.some_url.www",
         validator=convert_command.validate_bundle,
         override_value=None,

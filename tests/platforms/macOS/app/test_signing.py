@@ -174,7 +174,7 @@ def test_implied_app_identity(dummy_command):
     )
 
     # User input was solicited
-    assert dummy_command.input.prompts
+    assert dummy_command.input.prompts == ["Application signing identity: "]
 
 
 def test_no_app_identities(dummy_command):
@@ -215,7 +215,7 @@ def test_select_app_identity(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["> "]
+    assert dummy_command.input.prompts == ["Application signing identity: "]
 
 
 def test_select_app_identity_no_adhoc(dummy_command):
@@ -240,7 +240,7 @@ def test_select_app_identity_no_adhoc(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["> "]
+    assert dummy_command.input.prompts == ["Application signing identity: "]
 
 
 def test_select_installer_identity(dummy_command):
@@ -276,7 +276,7 @@ def test_select_installer_identity(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["> "]
+    assert dummy_command.input.prompts == ["Installer signing identity: "]
 
 
 def test_installer_identity_matching_app(dummy_command):
@@ -323,7 +323,7 @@ def test_installer_identity_matching_app(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["> "]
+    assert dummy_command.input.prompts == ["Installer signing identity: "]
 
 
 def test_installer_identity_no_match(dummy_command):

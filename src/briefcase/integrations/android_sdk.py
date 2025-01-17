@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import InputDisabled, select_option
+from briefcase.console import InputDisabled
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -935,10 +935,10 @@ connection.
         # Choices is an ordered list of options that can be shown to the user.
         # Each device should appear only once, and be keyed by AVD only if
         # a device ID isn't available.
-        choices = []
-        # Device choices is the full lookup list. Devices can be looked up
-        # by any valid key - ID *or* AVD.
-        device_choices = {}
+        choices = {}
+        # A full index of available devices. Devices can be looked up by any valid key -
+        # ID *or* AVD.
+        device_index = {}
 
         # Iterate over all the running devices.
         # If the device is a virtual device, use ADB to get the emulator AVD name.
@@ -952,32 +952,32 @@ connection.
                 # It's a running emulator
                 running_avds[avd] = d
                 full_name = f"@{avd} (running emulator)"
-                choices.append((d, full_name))
+                choices[d] = full_name
 
                 # Save the AVD as a device detail.
                 details["avd"] = avd
 
                 # Device can be looked up by device ID or AVD
-                device_choices[d] = full_name
-                device_choices[f"@{avd}"] = full_name
+                device_index[d] = full_name
+                device_index[f"@{avd}"] = full_name
             else:
                 # It's a physical device (might be disabled)
                 full_name = f"{name} ({d})"
-                choices.append((d, full_name))
-                device_choices[d] = full_name
+                choices[d] = full_name
+                device_index[d] = full_name
 
         # Add any non-running emulator AVDs to the list of candidate devices
         for avd in self.emulators():
             if avd not in running_avds:
                 name = f"@{avd} (emulator)"
-                choices.append((f"@{avd}", name))
-                device_choices[f"@{avd}"] = name
+                choices[f"@{avd}"] = name
+                device_index[f"@{avd}"] = name
 
         # If a device or AVD has been provided, check it against the available
         # device list.
         if device_or_avd:
             try:
-                name = device_choices[device_or_avd]
+                name = device_index[device_or_avd]
 
                 if device_or_avd.startswith("@"):
                     # specifier is an AVD
@@ -1009,19 +1009,20 @@ connection.
                 raise InvalidDeviceError(id_type, device_or_avd) from e
         # We weren't given a device/AVD; we have to select from the list.
         # If we're selecting from a list, there's always one last choice
-        choices.append((None, "Create a new Android emulator"))
+        choices["-"] = "Create a new Android emulator"
 
         # Show the choices to the user.
-        self.tools.input.prompt()
-        self.tools.input.prompt("Select device:")
-        self.tools.input.prompt()
         try:
-            choice = select_option(choices, input=self.tools.input)
+            choice = self.tools.input.selection_question(
+                intro="Select Android device to use:",
+                description="Android device",
+                options=choices,
+            )
         except InputDisabled as e:
             # If input is disabled, and there's only one actual simulator,
             # select it. If there are no simulators, select "Create simulator"
             if len(choices) <= 2:
-                choice = choices[0][0]
+                choice = next(iter(choices))
             else:
                 raise BriefcaseCommandError(
                     """\
@@ -1031,7 +1032,7 @@ Use the -d/--device option to explicitly specify the device to use.
                 ) from e
 
         # Process the user's choice
-        if choice is None:
+        if choice == "-":
             # Create a new emulator. No device ID or AVD.
             device = None
             avd = None
@@ -1039,7 +1040,7 @@ Use the -d/--device option to explicitly specify the device to use.
         elif choice.startswith("@"):
             # A non-running emulator. We have an AVD, but no device ID.
             device = None
-            name = device_choices[choice]
+            name = device_index[choice]
             avd = choice[1:]
         else:
             # Either a running emulator, or a physical device. Regardless,
@@ -1055,7 +1056,7 @@ Use the -d/--device option to explicitly specify the device to use.
 
             # Return the device ID and name.
             device = choice
-            name = device_choices[choice]
+            name = device_index[choice]
             avd = details.get("avd")
 
         if avd:

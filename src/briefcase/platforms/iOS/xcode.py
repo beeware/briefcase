@@ -16,7 +16,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.console import InputDisabled, select_option
+from briefcase.console import InputDisabled
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidDeviceError,
@@ -211,11 +211,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(simulators) == 1:
             iOS_tag = list(simulators.keys())[0]
         else:
-            self.input.prompt()
-            self.input.prompt("Select iOS version:")
-            self.input.prompt()
-            iOS_tag = select_option(
-                {tag: tag for tag in simulators.keys()}, input=self.input
+            iOS_tag = self.input.selection_question(
+                intro="Select iOS version:",
+                description="iOS version",
+                options=simulators.keys(),
             )
 
         devices = simulators[iOS_tag]
@@ -225,10 +224,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
-            self.input.prompt()
-            self.input.prompt("Select simulator device:")
-            self.input.prompt()
-            udid = select_option(devices, input=self.input)
+            udid = self.input.selection_question(
+                intro="Select simulator device to use:",
+                description="Simulator",
+                options=devices,
+            )
 
         device = devices[udid]
 

@@ -23,12 +23,12 @@ from tests.utils import default_rich_prompt
         ("never!", False),
     ],
 )
-def test_boolean_input(console, user_input, expected):
+def test_boolean(console, user_input, expected):
     question = "Are you handsome"
     prompt = "Are you handsome [y/N]? "
     console.input.side_effect = [user_input]
 
-    result = console.boolean_input(question=question)
+    result = console.boolean(question=question)
 
     assert result == expected
     console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
@@ -40,7 +40,7 @@ def test_boolean_default_true(console):
     prompt = "Are you handsome [Y/n]? "
     console.input.side_effect = [""]
 
-    result = console.boolean_input(question=question, default=True)
+    result = console.boolean(question=question, default=True)
 
     assert result
     console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
@@ -52,7 +52,7 @@ def test_boolean_default_false(console):
     prompt = "Are you handsome [y/N]? "
     console.input.side_effect = [""]
 
-    result = console.boolean_input(question=question, default=False)
+    result = console.boolean(question=question, default=False)
 
     assert not result
     console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
@@ -63,7 +63,7 @@ def test_boolean_default_None(console):
     question = "Are you handsome"
     console.input.side_effect = ["", "y"]
 
-    result = console.boolean_input(question=question, default=None)
+    result = console.boolean(question=question, default=None)
 
     assert result
     assert console.input.call_count == 2
@@ -73,7 +73,7 @@ def test_bad_input(console):
     question = "Are you handsome"
     console.input.side_effect = ["pork", "ham", "spam", "Yam"]
 
-    result = console.boolean_input(question=question)
+    result = console.boolean(question=question)
 
     assert result
     assert console.input.call_count == 4
@@ -83,7 +83,7 @@ def test_disabled(disabled_console):
     """If input is disabled, the default is returned."""
     question = "Are you handsome "
 
-    result = disabled_console.boolean_input(question=question)
+    result = disabled_console.boolean(question=question)
 
     assert not result
     disabled_console.input.assert_not_called()
@@ -94,6 +94,6 @@ def test_disabled_no_default(disabled_console):
     question = "Are you handsome "
 
     with pytest.raises(InputDisabled):
-        disabled_console.boolean_input(question=question, default=None)
+        disabled_console.boolean(question=question, default=None)
 
     disabled_console.input.assert_not_called()
