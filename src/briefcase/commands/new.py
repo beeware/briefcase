@@ -623,14 +623,20 @@ class NewCommand(BaseCommand):
         gui_context = {}
 
         if bootstrap_class is not None:
-            bootstrap: BaseGuiBootstrap = bootstrap_class(context=context)
+            bootstrap: BaseGuiBootstrap = bootstrap_class(
+                logger=self.logger,
+                input=self.input,
+                context=context,
+            )
 
             # Iterate over the Bootstrap interface to build the context.
             # Returning ``None`` is a special case that means the field should not be
             # included in the context and instead deferred to the template default.
 
             if hasattr(bootstrap, "extra_context"):
-                if (additional_context := bootstrap.extra_context()) is not None:
+                if (
+                    additional_context := bootstrap.extra_context(project_overrides)
+                ) is not None:
                     gui_context.update(additional_context)
 
             for context_field in bootstrap.fields:

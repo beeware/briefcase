@@ -8,7 +8,7 @@ from briefcase.bootstraps.base import BaseGuiBootstrap
 class ConsoleBootstrap(BaseGuiBootstrap):
     display_name_annotation = "does not support iOS/Android/Web deployment"
 
-    def extra_context(self) -> dict[str, Any] | None:
+    def extra_context(self, project_overrides: dict[str, str]) -> dict[str, Any] | None:
         return {
             "console_app": True,
         }

@@ -3,6 +3,8 @@ from __future__ import annotations
 from abc import ABC
 from typing import Any, TypedDict
 
+from briefcase.console import Console, Log
+
 
 class AppContext(TypedDict):
     formal_name: str
@@ -51,15 +53,21 @@ class BaseGuiBootstrap(ABC):
     # is presented with the options to create a new project.
     display_name_annotation: str = ""
 
-    def __init__(self, context: AppContext):
+    def __init__(self, logger: Log, input: Console, context: AppContext):
+        self.logger = logger
+        self.input = input
+
         # context contains metadata about the app being created
         self.context = context
 
-    def extra_context(self) -> dict[str, Any] | None:
+    def extra_context(self, project_overrides: dict[str, str]) -> dict[str, Any] | None:
         """Runs prior to other plugin hooks to provide additional context.
 
         This can be used to prompt the user with additional questions or run arbitrary
         logic to supplement the context provided to cookiecutter.
+
+        :param project_overrides: Any overrides provided by the user as -Q options that
+            haven't been consumed by the standard bootstrap wizard questions.
         """
 
     def app_source(self) -> str | None:

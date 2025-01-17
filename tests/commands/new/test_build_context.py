@@ -34,7 +34,7 @@ def test_question_sequence_bootstrap_context(
     class GuiBootstrap:
         fields = []
 
-        def __init__(self, context):
+        def __init__(self, logger, input, context):
             nonlocal passed_context
             passed_context = context.copy()
 
@@ -825,7 +825,7 @@ def test_question_sequence_with_overrides(
     class GuiBootstrap:
         fields = []
 
-        def __init__(self, context):
+        def __init__(self, logger, input, context):
             pass
 
     monkeypatch.setattr(
@@ -886,7 +886,7 @@ def test_question_sequence_with_bad_license_override(
     class GuiBootstrap:
         fields = []
 
-        def __init__(self, context):
+        def __init__(self, logger, input, context):
             pass
 
     monkeypatch.setattr(
@@ -949,7 +949,7 @@ def test_question_sequence_with_bad_bootstrap_override(
         # requires() would cause an error
         fields = ["requires"]
 
-        def __init__(self, context):
+        def __init__(self, logger, input, context):
             pass
 
     monkeypatch.setattr(
@@ -1222,11 +1222,14 @@ def test_question_sequence_custom_bootstrap(
     class GuiBootstrap:
         fields = ["requires", "platform"]
 
-        def __init__(self, context):
+        def __init__(self, logger, input, context):
             pass
 
-        def extra_context(self):
-            return {"custom_context": "value"}
+        def extra_context(self, project_overrides):
+            return {
+                "custom_context": "value",
+                "custom_override": project_overrides.pop("custom_override", None),
+            }
 
         def requires(self):
             return "toga"
@@ -1259,7 +1262,7 @@ def test_question_sequence_custom_bootstrap(
         "5",  # Custom GUI bootstrap
     ]
 
-    context = new_command.build_context(project_overrides={})
+    context = new_command.build_context(project_overrides={"custom_override": "other"})
 
     assert context == dict(
         app_name="myapplication",
@@ -1276,6 +1279,7 @@ def test_question_sequence_custom_bootstrap(
         project_name="My Project",
         url="https://navy.mil/myapplication",
         custom_context="value",
+        custom_override="other",
         requires="toga",
         platform="bsd",
     )
@@ -1291,7 +1295,7 @@ def test_question_sequence_custom_bootstrap_without_additional_context(
     class GuiBootstrap:
         fields = ["requires", "platform"]
 
-        def __init__(self, context):
+        def __init__(self, logger, input, context):
             pass
 
         def requires(self):
