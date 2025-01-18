@@ -64,15 +64,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-latest" ]
+        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
         python-version: [ "3.9", "3.13" ]
         include:
           # Ensure the Python versions between min and max are tested
-          - platform: "ubuntu-latest"
+          - platform: "ubuntu-24.04"
             python-version: "3.10"
-          - platform: "ubuntu-latest"
+          - platform: "ubuntu-24.04"
             python-version: "3.11"
-          - platform: "ubuntu-latest"
+          - platform: "ubuntu-24.04"
             python-version: "3.12"
           # # Allow dev Python to fail without failing entire job
           # - python-version: "3.14"
@@ -126,7 +126,7 @@ jobs:
 
   coverage:
     name: Project coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: unit-tests
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
@@ -183,26 +183,20 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-latest", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
 
   verify-apps:
     name: Build app
     needs: [ package, package-automation, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@ci-linux-arm64
+    # uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
-      python-version: ${{ matrix.python-version }}
+      # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
+      python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
     strategy:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-latest", "windows-latest" ]
-
-        include:
-          # A version of Python that is supported by all the GUI toolkits.
-          - python-version: "3.12"
-
-          # Ubuntu must always use the system Python
-          - runner-os: ubuntu-latest
-            python-version: system
+        runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
