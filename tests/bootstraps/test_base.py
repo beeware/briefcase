@@ -10,6 +10,12 @@ def test_base_bootstrap_fields():
         attr
         for attr in BaseGuiBootstrap.__dict__
         if not attr.startswith("_")
-        and attr not in {"fields", "display_name_annotation", "extra_context"}
+        and attr
+        not in {
+            "fields",
+            "display_name_annotation",
+            "extra_context",
+            "post_generate",
+        }
     ]:
         assert field in BaseGuiBootstrap.fields

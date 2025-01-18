@@ -1,18 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
-
 from briefcase.bootstraps.base import BaseGuiBootstrap
 
 
-class ConsoleBootstrap(BaseGuiBootstrap):
-    display_name_annotation = "does not support iOS/Android/Web deployment"
-
-    def extra_context(self, project_overrides: dict[str, str]) -> dict[str, Any] | None:
-        return {
-            "console_app": True,
-        }
-
+class EmptyBootstrap(BaseGuiBootstrap):
     def app_source(self):
         return """\
 
@@ -35,9 +26,7 @@ requires = [
     # Add your cross-platform app requirements here
 ]
 test_requires = [
-{% if cookiecutter.test_framework == "pytest" %}
-    "pytest",
-{% endif %}
+    # Add your cross-platform test requirements here
 ]
 """
 
@@ -116,15 +105,21 @@ requires = [
 
     def pyproject_table_iOS(self):
         return """\
-supported = false
+requires = [
+    # Add your iOS-specific app requirements here
+]
 """
 
     def pyproject_table_android(self):
         return """\
-supported = false
+requires = [
+    # Add your Android-specific app requirements here
+]
 """
 
     def pyproject_table_web(self):
         return """\
-supported = false
+requires = [
+    # Add your web-specific app requirements here
+]
 """
