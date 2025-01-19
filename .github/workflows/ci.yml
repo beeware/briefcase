@@ -188,8 +188,7 @@ jobs:
   verify-apps:
     name: Build app
     needs: [ package, package-automation, unit-tests ]
-    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@ci-linux-arm64
-    # uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
