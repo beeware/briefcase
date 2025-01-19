@@ -18,6 +18,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+from briefcase.bootstraps import EmptyBootstrap
 from briefcase.config import make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
 
@@ -326,21 +327,24 @@ class ConvertCommand(NewCommand):
 
         return url
 
-    def input_console_app(self, override_value: str | None) -> bool:
-        """Ask about whether the app is a console application.
+    def input_app_type(self, override_value: str | None) -> bool:
+        """Ask whether the app is a console application.
 
-        :returns: console_app
+        :returns: True if the app is a console app; False otherwise.
         """
-        options = ["GUI", "Console"]
+        options = {
+            "gui": "GUI",
+            "console": "Console",
+        }
         return (
             self.input.selection_question(
                 intro="Is this a GUI application or a console application?",
                 description="Interface style",
-                default="GUI",
+                default="gui",
                 options=options,
-                override_value=override_value,
+                override_value=override_value.lower() if override_value else None,
             )
-            == "Console"
+            == "console"
         )
 
     def input_bundle(self, url, app_name, override_value: str | None) -> str:
@@ -594,6 +598,9 @@ class ConvertCommand(NewCommand):
         project_license = self.input_license(
             override_value=project_overrides.pop("license", None)
         )
+        console_app = self.input_app_type(
+            override_value=project_overrides.pop("app_type", None)
+        )
 
         return {
             "formal_name": formal_name,
@@ -609,23 +616,6 @@ class ConvertCommand(NewCommand):
             "bundle": bundle,
             "url": url,
             "license": project_license,
-        }
-
-    def build_gui_context(
-        self,
-        context: dict[str, str],
-        project_overrides: dict[str, str],
-    ) -> dict[str, str]:
-        # We must set the GUI-framework to None here since the convert-command uses the new-command
-        # template. This template includes dependencies for the GUI-frameworks. However, if a project
-        # already is set up for a GUI-framework, then those dependencies should already be listed.
-        # To prevent the same dependency being listed twice (once in the PEP621-section and once in the
-        # briefcase-section), possibly with different versions, we set the GUI-framework to None here.
-
-        console_app = self.input_console_app(
-            override_value=project_overrides.pop("console_app", None)
-        )
-        return {
             "gui_framework": "None",
             "console_app": console_app,
         }
@@ -718,7 +708,14 @@ class ConvertCommand(NewCommand):
         """
         self.input.prompt()
         self.input.prompt("Let's setup an existing project as a Briefcase app!")
-        context = self.build_context(project_overrides)
+
+        context = self.build_app_context(project_overrides)
+        # The convert wizard uses the new project template - but the user already has
+        # project code, and we don't want to add additional GUI dependencies (as the
+        # existing app should already be defining them), so we use the Empty bootstrap.
+        bootstrap = EmptyBootstrap(self.logger, self.input, context)
+        context.update(self.build_gui_context(bootstrap, project_overrides))
+
         self.input.divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)

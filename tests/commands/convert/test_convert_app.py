@@ -53,7 +53,7 @@ def test_convert_app_unused_project_overrides(
     # App context is constructed
     convert_command.build_app_context.assert_called_once_with({"unused": "override"})
     convert_command.build_gui_context.assert_called_once_with(
-        app_context, {"unused": "override"}
+        mock.ANY, {"unused": "override"}
     )
     # Template is updated
     convert_command.update_cookiecutter_cache.assert_called_once_with(

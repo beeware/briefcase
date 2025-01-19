@@ -1,0 +1,1 @@
+When an existing project uses the ``convert`` wizard to add a Briefcase configuration, the updated ``pyproject.toml`` now includes a stub configuration for all platforms.

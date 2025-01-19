@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from pathlib import Path
 from typing import Any, TypedDict
 
 from briefcase.console import Console, Log
@@ -120,3 +121,12 @@ class BaseGuiBootstrap(ABC):
 
     def pyproject_extra_content(self) -> str | None:
         """Additional TOML to add to the bottom of pyproject.toml."""
+
+    def post_generate(self, base_path: Path) -> None:
+        """Runs after the template has been generated.
+
+        This can be used to produce any additional files that the base
+        template doesn't provide.
+
+        :param base_path: The path to the root of the generated project.
+        """
