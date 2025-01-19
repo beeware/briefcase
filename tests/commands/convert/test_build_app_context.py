@@ -15,12 +15,15 @@ def test_overrides_are_used(convert_command):
         "author": "author",
         "author_email": "author_email",
         "license": "Other",
+        "app_type": "GUI",
         "leftover": "leftover",
     }
     override_input = overrides.copy()
     out = convert_command.build_app_context(override_input)
     for k, v in overrides.items():
-        if k != "leftover":
+        if k == "app_type":
+            assert not out["console_app"]
+        elif k != "leftover":
             assert out[k] == v
     assert "leftover" not in out
 

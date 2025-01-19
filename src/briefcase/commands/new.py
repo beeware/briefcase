@@ -14,7 +14,7 @@ else:  # pragma: no-cover-if-gte-py310
     # so, the backport package must be used on older versions.
     from importlib_metadata import entry_points
 
-from briefcase.bootstraps import BaseGuiBootstrap
+from briefcase.bootstraps import BaseGuiBootstrap, EmptyBootstrap
 from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
@@ -442,13 +442,6 @@ class NewCommand(BaseCommand):
             override_value=override_value,
         )
 
-    def build_context(self, project_overrides: dict[str, str]) -> dict[str, str]:
-        """Builds the cookiecutter context dict for the new project."""
-        context = self.build_app_context(project_overrides)
-        context.update(self.build_gui_context(context, project_overrides))
-
-        return context
-
     def build_app_context(self, project_overrides: dict[str, str]) -> dict[str, str]:
         """Ask the user for details about the app to be created.
 
@@ -584,12 +577,15 @@ class NewCommand(BaseCommand):
             "license": project_license,
         }
 
-    def build_gui_context(
+    def create_bootstrap(
         self,
         context: dict[str, str],
         project_overrides: dict[str, str],
-    ) -> dict[str, str]:
-        """Build context specific to the GUI toolkit."""
+    ) -> BaseGuiBootstrap:
+        """Select and instantiate a bootstrap for the new project.
+
+        :returns: An instance of the GUI bootstrap that the user has selected.
+        """
         bootstraps = get_gui_bootstraps()
         bootstrap_options = self._gui_bootstrap_choices(bootstraps)
 
@@ -620,28 +616,32 @@ class NewCommand(BaseCommand):
         )
         bootstrap_class = bootstrap_options[selected_bootstrap]
 
+        return bootstrap_class(
+            logger=self.logger,
+            input=self.input,
+            context=context,
+        )
+
+    def build_gui_context(
+        self,
+        bootstrap: BaseGuiBootstrap,
+        project_overrides: dict[str, str],
+    ) -> dict[str, str]:
+        """Build context specific to the GUI toolkit."""
+
         gui_context = {}
 
-        if bootstrap_class is not None:
-            bootstrap: BaseGuiBootstrap = bootstrap_class(
-                logger=self.logger,
-                input=self.input,
-                context=context,
-            )
+        # Iterate over the Bootstrap interface to build the context.
+        # Returning ``None`` is a special case that means the field should not be
+        # included in the context and instead deferred to the template default.
+        if (
+            additional_context := bootstrap.extra_context(project_overrides)
+        ) is not None:
+            gui_context.update(additional_context)
 
-            # Iterate over the Bootstrap interface to build the context.
-            # Returning ``None`` is a special case that means the field should not be
-            # included in the context and instead deferred to the template default.
-
-            if hasattr(bootstrap, "extra_context"):
-                if (
-                    additional_context := bootstrap.extra_context(project_overrides)
-                ) is not None:
-                    gui_context.update(additional_context)
-
-            for context_field in bootstrap.fields:
-                if (context_value := getattr(bootstrap, context_field)()) is not None:
-                    gui_context[context_field] = context_value
+        for context_field in bootstrap.fields:
+            if (context_value := getattr(bootstrap, context_field)()) is not None:
+                gui_context[context_field] = context_value
 
         return gui_context
 
@@ -656,7 +656,7 @@ class NewCommand(BaseCommand):
         ordered.move_to_end("Toga", last=False)
 
         # Option None should always be last
-        ordered["None"] = None
+        ordered["None"] = EmptyBootstrap
         ordered.move_to_end("None")
 
         # Construct the bootstrap options as they should be presented to users.
@@ -696,7 +696,10 @@ class NewCommand(BaseCommand):
         self.input.prompt()
         self.input.prompt("Let's build a new Briefcase app!")
 
-        context = self.build_context(project_overrides=project_overrides)
+        context = self.build_app_context(project_overrides)
+        bootstrap = self.create_bootstrap(context, project_overrides)
+        context.update(self.build_gui_context(bootstrap, project_overrides))
+
         self.prompt_divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
@@ -723,6 +726,9 @@ class NewCommand(BaseCommand):
             output_path=self.base_path,
             extra_context=context,
         )
+
+        # Perform any post-template processing required by the bootstrap.
+        bootstrap.post_generate(base_path=self.base_path)
 
         self.logger.info(
             f"Generated new application {context['formal_name']!r}",

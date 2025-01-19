@@ -1,0 +1,1 @@
+Project bootstraps can now define a ``post_generate()`` extension point. This will be invoked after the new project template has been generated, providing a way for bootstraps to add additional files to the generated project.
