@@ -9,80 +9,18 @@ In this tutorial, you'll learn how to build and package a Command Line Interface
 (CLI) application for distribution on Windows, macOS, and Linux using Briefcase.
 
 We're going to assume you've got an environment set up like you did in the
-`Hello, World! tutorial <https://docs.beeware.org/en/latest/tutorial/tutorial-0.html>`_.
+`Hello, World! tutorial 0 <https://docs.beeware.org/en/latest/tutorial/tutorial-0.html>`_.
 
 Bootstrap a new project
 ------------------------
 
 Let's start our first Briefcase CLI project! We're going to use the Briefcase
 ``new`` command to create an application called **Hello CLI**.
-Run the following from your command prompt:
 
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ briefcase new
-
-      Let's build a new Briefcase app!
-      ...
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ briefcase new
-
-      Let's build a new Briefcase app!
-      ...
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>briefcase new
-
-      Let's build a new Briefcase app!
-      ...
-
-Briefcase will ask us for some details of our new application. For the
-purposes of this tutorial, use the following:
-
-* **Formal Name** - Enter a formal name for your app, for example: ``Hello CLI``.
-
-* **App Name** - Enter a name for your app, for example: ``hello-cli``.
-
-* **Bundle** - If you own your own domain, enter that domain in reversed order.
-  (For example, if you own the domain "cupcakes.com", enter ``com.cupcakes``
-  as the bundle). If you don't own your own domain, accept the default bundle
-  (``com.example``).
-
-* **Project Name** - Accept the default value: ``Hello CLI``.
-
-* **Description** - Accept the default value (or, if you want to be really
-  creative, come up with your own description!).
-
-* **Author** - Enter your own name here.
-
-* **Author's email** - Enter your own email address. This will be used in the
-  configuration file, in help text, and anywhere that an email is required
-  when submitting the app to an app store.
-
-* **URL** - The URL of the landing page for your application. Again, if you own
-  your own domain, enter a URL at that domain (including the ``https://``).
-  Otherwise, just accept the default URL (``https://example.com/hello-cli``).
-  This URL doesn't need to actually exist (for now); it will only be used if
-  you publish your application to an app store.
-
-* **License** - Accept the default license (BSD). This won't affect
-  anything about the operation of the tutorial, though - so if you have
-  particularly strong feelings about license choice, feel free to choose
-  another license.
-
-* **GUI framework** - Enter ``4`` to select the **Console** GUI framework. This
-  will create a project that is designed to run in a terminal window.
+Similar to what you did in the
+`Hello, World! tutorial 1 <https://docs.beeware.org/en/latest/tutorial/tutorial-1.html>`_,
+but enter ``4`` for the **GUI framework** to select **Console** rather than **Toga**
+as the GUI framework.
 
 Briefcase will then generate a project skeleton for you to use.
 If you've followed this tutorial so far, and accepted the defaults as described,
@@ -113,7 +51,13 @@ The ``src`` folder contains all the code for the application, the
 ``tests`` folder contains an initial test suite, and the ``pyproject.toml`` file
 describes how to package the application for distribution. If you open
 ``pyproject.toml`` in an editor, you'll see the configuration details you just
-provided to Briefcase.
+provided to Briefcase including the ``console_app = true`` setting to indicate
+that this is a console application.
+
+If you chose to use an ``App Name`` like **hello-cli**, Briefcase will transform
+the name to a valid Python module name by replacing dashes with underscores.
+This is why the folder is named ``hello_cli`` While the parent folder holds the
+same name as the ``App Name`` i.e. **hello-cli**.
 
 Now that we have a stub application, we can use Briefcase to run the
 application.
@@ -169,7 +113,8 @@ directory ``hello-cli`` and run the following command:
       Hello, World.
 
 The application will start in the terminal window. You should see a message
-that says "Hello, World.".
+that says "Hello, World.". Console applications don't have a GUI, so the
+output will be displayed in the terminal window.
 
 Now we are ready to start building our CLI application!
 
@@ -178,6 +123,9 @@ Making it interesting
 
 Right now the ``app.py`` file contains a simple ``print`` statement that
 prints "Hello, World.". Let's use :any:`argparse` to make it more interesting.
+:any:`argparse` is a module in the Python standard library that makes it easy
+to write user-friendly command line interfaces. You can use any other library
+that you prefer, as long as it can parse command line arguments.
 
 Replace the contents of ``src/hello_cli/app.py`` with the following code:
 
@@ -296,193 +244,24 @@ Packaging for distribution
 So far we have been running the application in developer mode.
 To distribute the application, you will need to package it for distribution.
 
-Creating your application scaffold
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Creating and building your application scaffold
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Since this is the first time we're packaging our application, we need to create
 some configuration files and other scaffolding to support the packaging process.
 
-From the ``hello-cli`` directory, run:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ briefcase create
-
-      [hello-cli] Generating application template...
-      ...
-
-      [hello-cli] Installing support package...
-      ...
-
-      [hello-cli] Installing stub binary...
-      ...
-
-      [hello-cli] Installing application code...
-      Installing src/hello_cli... done
-
-      [hello-cli] Installing requirements...
-      ...
-
-      [hello-cli] Installing application resources...
-
-      [hello-cli] Removing unneeded app content...
-      Removing unneeded app bundle content... done
-
-      [hello-cli] Created build/hello-cli/macos/app
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ briefcase create
-
-      [hello-cli] Finalizing application configuration...
-      ...
-
-      [hello-cli] Generating application template...
-      ...
-
-      [hello-cli] Installing support package...
-      No support package required.
-
-      [hello-cli] Installing application code...
-      Installing src/hello_cli... done
-
-      [hello-cli] Installing requirements...
-      ...
-
-      [hello-cli] Installing application resources...
-      ...
-
-      [hello-cli] Removing unneeded app content...
-      Removing unneeded app bundle content... done
-
-      [hello-cli] Created build/hello-cli/ubuntu/noble
-
-    .. admonition:: Errors about Python versions
-
-      If you receive an error that reads something like:
-
-          The version of Python being used to run Briefcase (3.12) is not the system python3 (3.10).
-
-      You will need to recreate your virtual environment using the system
-      ``python3``. Using the system Python is a requirement for packaging your
-      application.
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>briefcase create
-
-      [hello-cli] Generating application template...
-      ...
-
-      [hello-cli] Installing support package...
-      ...
-
-      [hello-cli] Installing stub binary...
-      ...
-
-      [hello-cli] Installing application code...
-      Installing src/hello_cli... done
-
-      [hello-cli] Installing requirements...
-      ...
-
-      [hello-cli] Installing application resources...
-      ...
-
-      [hello-cli] Removing unneeded app content...
-      ...
-
-      [hello-cli] Created build\hello-cli\windows\app
-
-Once this completes, if you look in the project directory, you should now see a
-directory corresponding to your platform (``macOS``, ``linux``, or ``windows``)
-that contains additional files. This is the platform-specific packaging
-configuration for your application.
-
-Building your application
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can now compile your application. This step performs any binary
-compilation that is necessary for your application to be executable on your
-target platform.
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ briefcase build
-
-      [hello-cli] Building App...
-
-      [hello-cli] Ad-hoc signing app...
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.0% • 00:01
-
-      [hello-cli] Built build/hello-cli/macos/app/Hello CLI.app
-
-    On macOS, the ``build`` command doesn't need to *compile* anything, but it
-    does need to sign the contents of binary so that it can be executed. This
-    signature is an *ad hoc* signature - it will only work on *your* machine; if
-    you want to distribute the application to others, you'll need to provide a
-    full signature.
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ briefcase build
-
-      [hello-cli] Finalizing application configuration...
-      ...
-
-      [hello-cli] Building application...
-      ...
-
-      [hello-cli] Built build/hello-cli/ubuntu/noble/hello-cli-0.0.1/usr/bin/hello-cli
-
-    Once this step completes, the ``build`` folder will contain a
-    ``hello-cli-0.0.1`` folder that contains a mirror of a Linux ``/usr``
-    file system. This file system mirror will contain a ``bin`` folder with a
-    ``hello-cli`` binary, plus ``lib`` and ``share`` folders needed to support
-    the binary.
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>briefcase build
-
-      [hello-cli] Building App...
-      ...
-
-      [hello-cli] Built build\hello-cli\windows\app\src\hello-cli.exe
-
-    On Windows, the ``build`` command doesn't need to *compile* anything, but
-    it does need to write some metadata so that the application knows its name,
-    version, and so on.
-
-    .. admonition:: Triggering antivirus
-
-      Since this metadata is being written directly in to the pre-compiled
-      binary rolled out from the template during the ``create`` command, this
-      may trigger antivirus software running on your machine and prevent the
-      metadata from being written. In that case, instruct the antivirus to
-      allow the tool (named ``rcedit-x64.exe``) to run and re-run the command
-      above.
+Similar to what you did in the
+`Hello, World! tutorial 3 <https://docs.beeware.org/en/latest/tutorial/tutorial-3.html>`_,
+Run the ``briefcase create`` command from the ``hello-cli`` directory, followed by the
+``briefcase build`` command to compile the application.
 
 Running your app
 ~~~~~~~~~~~~~~~~
 
-You can now use Briefcase to run your application:
+You can now use Briefcase to run your application. The ``run`` command will
+start your application using the app bundle created by the ``build`` command.
+Similar to the ``dev`` command, you can pass arguments to the application using
+the ``-- ARGS ...`` syntax.
 
 .. tabs::
 
@@ -490,40 +269,34 @@ You can now use Briefcase to run your application:
 
     .. code-block:: console
 
-      (venv) $ briefcase run
+      (venv) $ briefcase run -- John
 
       [hello-cli] Starting app...
       ===========================================================================
-      usage: hello-cli [options] name
-      hello-cli: error: the following arguments are required: name
+      Hello, John!
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ briefcase run
+      (venv) $ briefcase run -- John
 
       [hello-cli] Finalizing application configuration...
       ...
 
       [hello-cli] Starting app...
       ===========================================================================
-      usage: hello-cli [options] name
-      hello-cli: error: the following arguments are required: name
+      Hello, John!
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>briefcase run
+      (venv) C:\...>briefcase run -- John
 
       [hello-cli] Starting app...
       ===========================================================================
-      usage: hello-cli [options] name
-      hello-cli: error: the following arguments are required: name
-
-This will start to run your console application, using the app bundle created by
-the ``build`` command.
+      Hello, John!
 
 Building your installer
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -630,6 +403,9 @@ or doing other pre-distribution tasks.
     You can double click on the ``.msi`` file to install the application on your
     machine.
 
+If you look in the ``dist`` folder, you will see the installer file that was
+created. For macOS it will be a ``.pkg`` file, for Linux it will be a ``.deb``
+file, and for Windows it will be a ``.msi`` file.
 
 Running your installed app
 --------------------------
