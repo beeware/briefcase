@@ -9,7 +9,7 @@ Native System Packages
 +--------+-------+-----+--------+-------+-----+--------+-----+-------+
 | x86‑64 | arm64 | x86 | x86‑64 | arm64 | x86 | x86‑64 | arm | arm64 |
 +========+=======+=====+========+=======+=====+========+=====+=======+
-| |y|    | |y|   |     |        |       | |v| | |f|    | |v| | |v|   |
+| |y|    | |y|   |     |        |       | |v| | |f|    | |v| | |f|   |
 +--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
 All modern Linux distributions have a native format for distributing packages
@@ -109,8 +109,8 @@ supported by the vendor, and system Python is Python 3.9 or later.
 The following Linux vendors are known to work as Docker targets:
 
 * Debian (e.g., ``debian:bookworm`` or ``debian:12``)
-* Ubuntu (e.g., ``ubuntu:jammy`` or ``ubuntu:22.04``)
-* Fedora (e.g, ``fedora:39``)
+* Ubuntu (e.g., ``ubuntu:noble`` or ``ubuntu:24.04``)
+* Fedora (e.g, ``fedora:41``)
 * AlmaLinux (e.g., ``almalinux:9``)
 * Red Hat Enterprise Linux (e.g., ``redhat/ubi9:9``)
 * openSUSE Tumbleweed (e.g., ``"opensuse/tumbleweed:latest"``)
