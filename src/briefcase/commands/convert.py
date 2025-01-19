@@ -328,20 +328,23 @@ class ConvertCommand(NewCommand):
         return url
 
     def input_app_type(self, override_value: str | None) -> bool:
-        """Ask about whether the app is a console application.
+        """Ask whether the app is a console application.
 
         :returns: True if the app is a console app; False otherwise.
         """
-        options = ["GUI", "Console"]
+        options = {
+            "gui": "GUI",
+            "console": "Console",
+        }
         return (
             self.select_option(
                 intro="Is this a GUI application or a console application?",
                 variable="interface style",
                 default=None,
                 options=options,
-                override_value=override_value,
+                override_value=override_value.lower() if override_value else None,
             )
-            == "Console"
+            == "console"
         )
 
     def input_bundle(self, url, app_name, override_value: str | None) -> str:
