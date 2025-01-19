@@ -437,9 +437,9 @@ class NewCommand(BaseCommand):
             intro=(
                 "What GUI toolkit do you want to use for this project?\n"
                 "\n"
-                "Additional GUI bootstraps are available; visit "
-                "https://beeware.org/bee/briefcase-bootstraps "
-                "for a full list of known GUI bootstraps."
+                "Additional GUI bootstraps are available from the community.\n"
+                "\n"
+                "Check them out at https://beeware.org/bee/briefcase-bootstraps"
             ),
             description="GUI framework",
             default=next(iter(bootstrap_options.keys())),

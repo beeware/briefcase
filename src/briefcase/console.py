@@ -866,7 +866,7 @@ class Console:
 
         The options are provided as a dictionary, or as a list of items. If a dictionary
         is provided, the values are the human-readable options, and the keys are the
-        values that will be returned as the selection. The human- readable options will
+        values that will be returned as the selection. The human-readable options will
         be sorted before display to the user. If a list is provided, the values in the
         list are both the user-displayed values and the returned value.
 
