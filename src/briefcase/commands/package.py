@@ -114,7 +114,7 @@ class PackageCommand(BaseCommand):
         state = self.package_app(app, **full_options(state, options))
 
         filename = self.distribution_path(app).relative_to(self.base_path)
-        self.logger.info(f"Packaged {filename}", prefix=app.app_name)
+        self.console.info(f"Packaged {filename}", prefix=app.app_name)
         return state
 
     def add_options(self, parser):

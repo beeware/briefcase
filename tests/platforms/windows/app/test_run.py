@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppRunCommand
 
@@ -11,7 +11,6 @@ from briefcase.platforms.windows.app import WindowsAppRunCommand
 @pytest.fixture
 def run_command(tmp_path):
     command = WindowsAppRunCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -54,7 +53,7 @@ def test_run_gui_app(run_command, first_app_config, tmp_path):
 
 def test_run_gui_app_with_passthrough(run_command, first_app_config, tmp_path):
     """A Windows GUI app can be started in debug mode with args."""
-    run_command.logger.verbosity = LogLevel.DEBUG
+    run_command.console.verbosity = LogLevel.DEBUG
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -139,7 +138,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
 
 def test_run_console_app_with_passthrough(run_command, first_app_config, tmp_path):
     """A Windows console app can be started in debug mode with args."""
-    run_command.logger.verbosity = LogLevel.DEBUG
+    run_command.console.verbosity = LogLevel.DEBUG
 
     first_app_config.console_app = True
 

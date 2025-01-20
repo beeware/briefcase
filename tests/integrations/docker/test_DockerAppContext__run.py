@@ -111,7 +111,7 @@ def test_call_with_extra_kwargs(
 @pytest.mark.usefixtures("mock_docker_app_context")
 def test_simple_verbose_call(mock_tools, my_app, tmp_path, sub_stream_kw, capsys):
     """If verbosity is turned out, there is output."""
-    mock_tools[my_app].app_context.tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools[my_app].app_context.tools.console.verbosity = LogLevel.DEBUG
 
     mock_tools[my_app].app_context.run(["hello", "world"])
 

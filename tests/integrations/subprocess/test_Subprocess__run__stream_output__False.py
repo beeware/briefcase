@@ -133,7 +133,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
 
 def test_debug_call(mock_sub, capsys, sub_kw):
     """If verbosity is turned up, there is output."""
-    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
+    mock_sub.tools.console.verbosity = LogLevel.DEBUG
 
     mock_sub.run(["hello", "world"], stream_output=False)
 
@@ -154,7 +154,7 @@ def test_debug_call(mock_sub, capsys, sub_kw):
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
     """If verbosity is turned up, injected env vars are included output."""
-    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
+    mock_sub.tools.console.verbosity = LogLevel.DEBUG
 
     env = {"NewVar": "NewVarValue"}
     mock_sub.run(["hello", "world"], env=env, cwd=tmp_path / "cwd", stream_output=False)
@@ -182,7 +182,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
 
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
-    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
+    mock_sub.tools.console.verbosity = LogLevel.DEBUG
 
     mock_sub._subprocess.run.side_effect = CalledProcessError(
         returncode=-1,

@@ -120,7 +120,7 @@ def ensure_console_is_safe(sub_method):
         :returns: the return value for the Subprocess method
         """
         # Just run the command if no dynamic elements are active
-        if not sub.tools.input.is_console_controlled:
+        if not sub.tools.console.is_console_controlled:
             return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
 
         remove_dynamic_elements = False
@@ -138,7 +138,7 @@ def ensure_console_is_safe(sub_method):
 
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
-            with sub.tools.input.release_console_control():
+            with sub.tools.console.release_console_control():
                 return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
         else:
             return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)

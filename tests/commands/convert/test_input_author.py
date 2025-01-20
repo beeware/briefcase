@@ -10,7 +10,7 @@ def test_multiple_pep621_authors(convert_command, monkeypatch):
     mock_selection_question = MagicMock()
     mock_selection_question.return_value = "Firstname Firstauthor"
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     (convert_command.base_path / "pyproject.toml").write_text(
@@ -47,7 +47,7 @@ def test_single_pep621_author(convert_command, monkeypatch):
     mock_selection_question = MagicMock()
     mock_selection_question.return_value = "Firstname Firstauthor"
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     (convert_command.base_path / "pyproject.toml").write_text(
@@ -78,11 +78,11 @@ def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
     mock_selection_question = MagicMock()
     mock_selection_question.return_value = "Other"
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
     mock_text_question = MagicMock()
     mock_text_question.return_value = "Some Name"
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n"
@@ -123,7 +123,7 @@ def test_no_pep621_author(convert_command, monkeypatch, write_empty_pyproject):
     """If there is no author names in the pyproject.toml, then you're asked to write the
     name."""
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     if write_empty_pyproject:
         (convert_command.base_path / "pyproject.toml").write_text(
@@ -157,7 +157,7 @@ def test_override(convert_command):
 
 def test_prompted_author_without_pyproject(convert_command):
     """The user is prompted for an author."""
-    convert_command.input.values = ["Some author"]
+    convert_command.console.values = ["Some author"]
     assert convert_command.input_author(None) == "Some author"
 
 
@@ -172,7 +172,7 @@ def test_prompted_author_with_pyproject(convert_command):
         "]",
         encoding="utf-8",
     )
-    convert_command.input.values = ["2"]
+    convert_command.console.values = ["2"]
     assert convert_command.input_author(None) == "Name Thirdauthor"
 
 
@@ -188,7 +188,7 @@ def test_prompted_author_with_pyproject_joined_author(convert_command):
         "]",
         encoding="utf-8",
     )
-    convert_command.input.values = ["4"]
+    convert_command.console.values = ["4"]
     assert (
         convert_command.input_author(None)
         == "Firstname Firstauthor, Name Thirdauthor & Firstname Fourthauthor"
@@ -207,5 +207,5 @@ def test_prompted_author_with_pyproject_other(convert_command):
         "]",
         encoding="utf-8",
     )
-    convert_command.input.values = ["5", "Some Author"]
+    convert_command.console.values = ["5", "Some Author"]
     assert convert_command.input_author(None) == "Some Author"

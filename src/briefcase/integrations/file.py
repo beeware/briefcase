@@ -205,9 +205,9 @@ class File(Tool):
                 filename = download_path / cache_name
 
                 if filename.exists():
-                    self.tools.logger.info(f"{cache_name} already downloaded")
+                    self.tools.console.info(f"{cache_name} already downloaded")
                 else:
-                    self.tools.logger.info(f"Downloading {cache_name}...")
+                    self.tools.console.info(f"Downloading {cache_name}...")
                     self._fetch_and_write_content(response, filename)
         except httpx.RequestError as e:
             if role:
@@ -259,7 +259,7 @@ class File(Tool):
                     response.read()
                     temp_file.write(response.content)
                 else:
-                    progress_bar = self.tools.input.progress_bar()
+                    progress_bar = self.tools.console.progress_bar()
                     task_id = progress_bar.add_task("Downloader", total=int(total))
                     with progress_bar:
                         for data in response.iter_bytes(chunk_size=1024 * 1024):

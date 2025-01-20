@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
@@ -12,7 +12,6 @@ from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 @pytest.fixture
 def create_command(tmp_path):
     return iOSXcodeCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

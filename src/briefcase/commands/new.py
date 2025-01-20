@@ -127,7 +127,7 @@ class NewCommand(BaseCommand):
         """
         if not make_class_name(candidate):  # Check whether a class name may be derived
             raise ValueError(
-                self.input.textwrap(
+                self.console.textwrap(
                     f"{candidate!r} is not a valid formal name.\n"
                     "\n"
                     "Formal names must include at least one valid Python identifier character."
@@ -143,7 +143,7 @@ class NewCommand(BaseCommand):
         """
         if (self.base_path / candidate).exists():
             raise ValueError(
-                self.input.textwrap(
+                self.console.textwrap(
                     f"A {candidate!r} directory already exists.\n"
                     f"\n"
                     f"Select a different name, move to a different parent directory, or "
@@ -160,7 +160,7 @@ class NewCommand(BaseCommand):
         """
         if not is_valid_app_name(candidate):
             raise ValueError(
-                self.input.textwrap(
+                self.console.textwrap(
                     f"{candidate!r} is not a valid app name.\n"
                     "\n"
                     "App names must not be reserved keywords such as 'and', 'for' and "
@@ -192,7 +192,7 @@ class NewCommand(BaseCommand):
         """
         if not is_valid_bundle_identifier(candidate):
             raise ValueError(
-                self.input.textwrap(
+                self.console.textwrap(
                     f"{candidate!r} is not a valid bundle identifier.\n"
                     "\n"
                     "The bundle should be a reversed domain name. It must contain at "
@@ -253,7 +253,7 @@ class NewCommand(BaseCommand):
         return f"https://{self.make_domain(bundle)}/{app_name}"
 
     def input_project_name(self, formal_name, override_value):
-        return self.input.text_question(
+        return self.console.text_question(
             intro=(
                 "Briefcase can manage projects that contain multiple applications, so "
                 "we need a Project name.\n"
@@ -278,7 +278,7 @@ class NewCommand(BaseCommand):
             "Proprietary",
             "Other",
         ]
-        return self.input.selection_question(
+        return self.console.selection_question(
             intro="What license do you want to use for this project's code?",
             description="Project License",
             options=licenses,
@@ -291,7 +291,7 @@ class NewCommand(BaseCommand):
 
         :returns: A context dictionary to be used in the cookiecutter project template.
         """
-        formal_name = self.input.text_question(
+        formal_name = self.console.text_question(
             intro=(
                 "First, we need a formal name for your application.\n"
                 "\n"
@@ -309,7 +309,7 @@ class NewCommand(BaseCommand):
         class_name = make_class_name(formal_name)
 
         default_app_name = self.make_app_name(formal_name)
-        app_name = self.input.text_question(
+        app_name = self.console.text_question(
             intro=(
                 "Next, we need a name that can serve as a machine-readable Python "
                 "package name for your application.\n"
@@ -333,7 +333,7 @@ class NewCommand(BaseCommand):
         source_dir = f"src/{module_name}"
         test_source_dir = "tests"
 
-        bundle = self.input.text_question(
+        bundle = self.console.text_question(
             intro=(
                 "Now we need a bundle identifier for your application.\n"
                 "\n"
@@ -358,14 +358,14 @@ class NewCommand(BaseCommand):
             formal_name, project_overrides.pop("project_name", None)
         )
 
-        description = self.input.text_question(
+        description = self.console.text_question(
             intro="Now, we need a one line description for your application.",
             description="Description",
             default="My first application",
             override_value=project_overrides.pop("description", None),
         )
 
-        author = self.input.text_question(
+        author = self.console.text_question(
             intro=(
                 "Who do you want to be credited as the author of this application?\n"
                 "\n"
@@ -376,7 +376,7 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("author", None),
         )
 
-        author_email = self.input.text_question(
+        author_email = self.console.text_question(
             intro=(
                 "What email address should people use to contact the developers of "
                 "this application?\n"
@@ -390,7 +390,7 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("author_email", None),
         )
 
-        url = self.input.text_question(
+        url = self.console.text_question(
             intro=(
                 "What is the website URL for this application?\n"
                 "\n"
@@ -433,7 +433,7 @@ class NewCommand(BaseCommand):
         bootstraps = get_gui_bootstraps()
         bootstrap_options = self._gui_bootstrap_choices(bootstraps)
 
-        selected_bootstrap = self.input.selection_question(
+        selected_bootstrap = self.console.selection_question(
             intro=(
                 "What GUI toolkit do you want to use for this project?\n"
                 "\n"
@@ -449,11 +449,7 @@ class NewCommand(BaseCommand):
 
         bootstrap_class = bootstraps[selected_bootstrap]
 
-        return bootstrap_class(
-            logger=self.logger,
-            input=self.input,
-            context=context,
-        )
+        return bootstrap_class(console=self.console, context=context)
 
     def build_gui_context(
         self,
@@ -510,8 +506,8 @@ class NewCommand(BaseCommand):
             unused_overrides = "\n    ".join(
                 f"{key} = {value}" for key, value in project_overrides.items()
             )
-            self.logger.warning()
-            self.logger.warning(
+            self.console.warning()
+            self.console.warning(
                 "WARNING: These project configuration overrides were not used:\n\n"
                 f"    {unused_overrides}"
             )
@@ -525,18 +521,18 @@ class NewCommand(BaseCommand):
     ):
         """Ask questions to generate a new application, and generate a stub project from
         the briefcase-template."""
-        self.input.prompt()
-        self.input.prompt("Let's build a new Briefcase app!")
+        self.console.prompt()
+        self.console.prompt("Let's build a new Briefcase app!")
 
         context = self.build_app_context(project_overrides)
         bootstrap = self.create_bootstrap(context, project_overrides)
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
-        self.input.divider()  # close the prompting section of output
+        self.console.debug()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 
-        self.logger.info(
+        self.console.info(
             f"Generating a new application {context['formal_name']!r}",
             prefix=context["app_name"],
         )
@@ -562,11 +558,11 @@ class NewCommand(BaseCommand):
         # Perform any post-template processing required by the bootstrap.
         bootstrap.post_generate(base_path=self.base_path)
 
-        self.logger.info(
+        self.console.info(
             f"Generated new application {context['formal_name']!r}",
             prefix=context["app_name"],
         )
-        self.logger.info(
+        self.console.info(
             f"""
 To run your application, type:
 

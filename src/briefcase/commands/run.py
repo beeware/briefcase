@@ -168,7 +168,7 @@ class RunAppMixin:
             )
 
             # Start streaming logs for the app.
-            self.logger.info("=" * 75)
+            self.console.info("=" * 75)
             with popen:
                 self.tools.subprocess.stream_output(
                     label="log stream" if log_stream else app.app_name,
@@ -181,14 +181,14 @@ class RunAppMixin:
             # check for the status of the test suite.
             if test_mode:
                 if log_filter.returncode == 0:
-                    self.logger.info("Test suite passed!", prefix=app.app_name)
+                    self.console.info("Test suite passed!", prefix=app.app_name)
                 else:
                     if log_filter.returncode is None:
                         raise BriefcaseCommandError(
                             "Test suite didn't report a result."
                         )
                     else:
-                        self.logger.error("Test suite failed!", prefix=app.app_name)
+                        self.console.error("Test suite failed!", prefix=app.app_name)
                         raise BriefcaseTestSuiteFailure()
             elif log_stream:
                 # If we're monitoring a log stream, and the log stream reported a
@@ -234,16 +234,16 @@ class RunCommand(RunAppMixin, BaseCommand):
         env = {}
 
         # If we're in debug mode, put BRIEFCASE_DEBUG into the environment
-        if self.logger.is_debug:
+        if self.console.is_debug:
             env["BRIEFCASE_DEBUG"] = "1"
 
         if test_mode:
             # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
             # to override the module at startup
             env["BRIEFCASE_MAIN_MODULE"] = app.main_module(test_mode)
-            self.logger.info("Starting test_suite...", prefix=app.app_name)
+            self.console.info("Starting test_suite...", prefix=app.app_name)
         else:
-            self.logger.info("Starting app...", prefix=app.app_name)
+            self.console.info("Starting app...", prefix=app.app_name)
 
         # If we need any environment variables, add them to the arguments.
         if env:

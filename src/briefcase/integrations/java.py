@@ -108,8 +108,8 @@ class JDK(ManagedTool):
         install_message = None
 
         if java_home := tools.os.environ.get("JAVA_HOME", ""):
-            tools.logger.debug("Evaluating JAVA_HOME...", prefix=cls.full_name)
-            tools.logger.debug(f"JAVA_HOME={java_home}")
+            tools.console.debug("Evaluating JAVA_HOME...", prefix=cls.full_name)
+            tools.console.debug(f"JAVA_HOME={java_home}")
             try:
                 version_str = cls.version_from_path(tools, java_home)
                 if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
@@ -206,7 +206,7 @@ class JDK(ManagedTool):
 
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         elif tools.host_os == "Darwin":
-            tools.logger.debug(
+            tools.console.debug(
                 "Evaluating /usr/libexec/java_home...", prefix=cls.full_name
             )
             try:
@@ -216,7 +216,7 @@ class JDK(ManagedTool):
                     ["/usr/libexec/java_home"],
                 ).strip("\n")
             except (OSError, subprocess.CalledProcessError):
-                tools.logger.debug("An existing JDK/JRE was not returned")
+                tools.console.debug("An existing JDK/JRE was not returned")
             else:
                 try:
                     version_str = cls.version_from_path(tools, java_home)
@@ -228,7 +228,7 @@ class JDK(ManagedTool):
         if java is None:
             # Inform the user if the user-specified JDK wasn't valid
             if install_message:
-                tools.logger.warning(install_message)
+                tools.console.warning(install_message)
 
             # Use the Briefcase JDK install
             java_home = tools.base_path / cls.JDK_INSTALL_DIR_NAME
@@ -242,20 +242,20 @@ class JDK(ManagedTool):
 
             if not java.exists():
                 if install:
-                    tools.logger.info(
+                    tools.console.info(
                         f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
                         prefix=cls.name,
                     )
-                    tools.logger.info(
+                    tools.console.info(
                         f"To use an existing JDK {cls.JDK_MAJOR_VER} instance, "
                         f"specify its root directory path in the JAVA_HOME environment variable."
                     )
-                    tools.logger.info()
+                    tools.console.info()
                     java.install()
                 else:
                     raise MissingToolError("Java")
 
-        tools.logger.debug(f"Using JDK at {java.java_home}")
+        tools.console.debug(f"Using JDK at {java.java_home}")
         tools.java = java
         return java
 
@@ -281,7 +281,7 @@ class JDK(ManagedTool):
             role=f"Java {self.JDK_MAJOR_VER} JDK",
         )
 
-        with self.tools.input.wait_bar("Installing OpenJDK..."):
+        with self.tools.console.wait_bar("Installing OpenJDK..."):
             try:
                 self.tools.file.unpack_archive(
                     os.fsdecode(jdk_zip_path),
@@ -309,7 +309,7 @@ Delete {jdk_zip_path} and run briefcase again.
 
     def uninstall(self):
         """Uninstall a JDK."""
-        with self.tools.input.wait_bar("Removing old JDK install..."):
+        with self.tools.console.wait_bar("Removing old JDK install..."):
             if self.tools.host_os == "Darwin":
                 self.tools.shutil.rmtree(self.java_home.parent.parent)
             else:

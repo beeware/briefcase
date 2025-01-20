@@ -2,7 +2,7 @@ from io import StringIO
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.platforms.web.static import StaticWebBuildCommand
 
 from ....utils import create_wheel
@@ -11,7 +11,6 @@ from ....utils import create_wheel
 @pytest.fixture
 def build_command(tmp_path):
     return StaticWebBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

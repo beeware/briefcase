@@ -65,7 +65,7 @@ def test_simple_verbose_call(
     capsys,
 ):
     """If verbosity is turned out, there is output."""
-    mock_tools[my_app].app_context.tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools[my_app].app_context.tools.console.verbosity = LogLevel.DEBUG
 
     output = mock_tools[my_app].app_context.check_output(["hello", "world"])
 

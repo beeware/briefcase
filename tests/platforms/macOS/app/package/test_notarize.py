@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import Subprocess, json_parser
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
@@ -15,7 +15,6 @@ from briefcase.platforms.macOS.app import macOSAppPackageCommand
 @pytest.fixture
 def package_command(tmp_path):
     command = macOSAppPackageCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -696,7 +695,7 @@ def test_credential_storage_disabled_input_app(
     ]
 
     # Disable console input
-    package_command.tools.input.enabled = False
+    package_command.tools.console.input_enabled = False
 
     # The notarization call will fail with an error
     with pytest.raises(
@@ -760,7 +759,7 @@ def test_credential_storage_disabled_input_dmg(
     ]
 
     # Disable console input
-    package_command.tools.input.enabled = False
+    package_command.tools.console.input_enabled = False
 
     # The notarization call will fail with an error
     with pytest.raises(

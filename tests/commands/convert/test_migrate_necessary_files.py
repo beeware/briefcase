@@ -86,7 +86,7 @@ def test_warning_without_license_file(
     test_source_dir,
 ):
     """A single warning is raised if changelog file is present but not license file."""
-    convert_command.logger.warning = mock.MagicMock()
+    convert_command.console.warning = mock.MagicMock()
 
     create_file(convert_command.base_path / "CHANGELOG", "")
     convert_command.migrate_necessary_files(
@@ -95,7 +95,7 @@ def test_warning_without_license_file(
         dummy_app_name,
     )
 
-    convert_command.logger.warning.assert_called_once_with(
+    convert_command.console.warning.assert_called_once_with(
         f"\nLicense file not found in '{convert_command.base_path}'. "
         "Briefcase will create a template 'LICENSE' file."
     )
@@ -127,7 +127,7 @@ def test_pep621_specified_license_filename(
     test_source_dir,
 ):
     """No license file is copied if a license file is specified in pyproject.toml."""
-    convert_command.logger.warning = mock.MagicMock()
+    convert_command.console.warning = mock.MagicMock()
     license_name = "LICENSE.txt"
     create_file(convert_command.base_path / license_name, "")
     create_file(
@@ -152,7 +152,7 @@ def test_pep621_specified_license_text(
 ):
     """A license file is copied if the license is specified as text and no LICENSE file
     exists."""
-    convert_command.logger.warning = mock.MagicMock()
+    convert_command.console.warning = mock.MagicMock()
     create_file(
         convert_command.base_path / "pyproject.toml",
         '[project]\nlicense = { text = "New BSD" }',
@@ -165,7 +165,7 @@ def test_pep621_specified_license_text(
     )
     assert (convert_command.base_path / "LICENSE").exists()
 
-    convert_command.logger.warning.assert_called_once_with(
+    convert_command.console.warning.assert_called_once_with(
         f"\nLicense file not found in '{convert_command.base_path}'. "
         "Briefcase will create a template 'LICENSE' file."
     )
@@ -179,7 +179,7 @@ def test_warning_without_changelog_file(
     test_source_dir,
 ):
     """A single warning is raised if license file is present but not changelog file."""
-    convert_command.logger.warning = mock.MagicMock()
+    convert_command.console.warning = mock.MagicMock()
 
     create_file(convert_command.base_path / "LICENSE", "")
     convert_command.migrate_necessary_files(
@@ -188,7 +188,7 @@ def test_warning_without_changelog_file(
         dummy_app_name,
     )
 
-    convert_command.logger.warning.assert_called_once_with(
+    convert_command.console.warning.assert_called_once_with(
         f"\nChangelog file not found in '{convert_command.base_path}'. You should either "
         f"create a new '{convert_command.base_path / 'CHANGELOG'}' file, or rename an "
         "already existing changelog file to 'CHANGELOG'."
@@ -203,7 +203,7 @@ def test_no_warning_with_license_and_changelog_file(
     test_source_dir,
 ):
     """No warning is raised if both license file and changelog file is present."""
-    convert_command.logger.warning = mock.MagicMock()
+    convert_command.console.warning = mock.MagicMock()
 
     create_file(
         convert_command.base_path / "pyproject.toml",
@@ -217,7 +217,7 @@ def test_no_warning_with_license_and_changelog_file(
         dummy_app_name,
     )
 
-    convert_command.logger.warning.assert_not_called()
+    convert_command.console.warning.assert_not_called()
 
 
 @pytest.mark.parametrize("test_source_dir", ["tests"])
@@ -228,7 +228,7 @@ def test_two_warnings_without_license_and_changelog_file(
     test_source_dir,
 ):
     """Two warnings are raised if both license file and changelog file are missing."""
-    convert_command.logger.warning = mock.MagicMock()
+    convert_command.console.warning = mock.MagicMock()
 
     convert_command.migrate_necessary_files(
         project_dir_with_files,
@@ -244,7 +244,7 @@ def test_two_warnings_without_license_and_changelog_file(
         f"create a new '{convert_command.base_path / 'CHANGELOG'}' file, or rename an "
         "already existing changelog file to 'CHANGELOG'."
     )
-    assert convert_command.logger.warning.mock_calls == [
+    assert convert_command.console.warning.mock_calls == [
         mock.call(license_warning),
         mock.call(changelog_warning),
     ]

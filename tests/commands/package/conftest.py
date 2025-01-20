@@ -3,9 +3,8 @@ import pytest
 from briefcase.commands import PackageCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
-from briefcase.console import Console, Log
 
-from ...utils import create_file
+from ...utils import DummyConsole, create_file
 
 
 class DefaultPackageCommand(PackageCommand):
@@ -25,7 +24,7 @@ class DefaultPackageCommand(PackageCommand):
 
 @pytest.fixture
 def default_package_command(tmp_path):
-    return DefaultPackageCommand(base_path=tmp_path, logger=Log(), console=Console())
+    return DefaultPackageCommand(base_path=tmp_path, console=DummyConsole())
 
 
 class DummyPackageCommand(PackageCommand):
@@ -48,8 +47,7 @@ class DummyPackageCommand(PackageCommand):
         return "pkg"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("logger", Log())
-        kwargs.setdefault("console", Console())
+        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []

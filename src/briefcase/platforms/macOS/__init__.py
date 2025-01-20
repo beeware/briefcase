@@ -123,7 +123,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
             self.tools.os.mkdir(other_app_packages_path)
 
             if binary_packages:
-                with self.input.wait_bar(
+                with self.console.wait_bar(
                     f"Installing binary app requirements for {other_arch}..."
                 ):
                     self._pip_install(
@@ -156,7 +156,7 @@ in the macOS configuration section of your pyproject.toml.
                         },
                     )
             else:
-                self.logger.info("All packages are pure Python, or universal.")
+                self.console.info("All packages are pure Python, or universal.")
 
             # If given the option of a single architecture binary or a universal2 binary,
             # pip will install the single platform binary. However, a common situation on
@@ -307,7 +307,7 @@ class macOSRunMixin:
         else:
             try:
                 # Start the app directly
-                self.logger.info("=" * 75)
+                self.console.info("=" * 75)
                 self.tools.subprocess.run(
                     cmdline,
                     cwd=self.tools.home_path,
@@ -387,7 +387,7 @@ class macOSRunMixin:
             # Find the App process ID so log streaming can exit when the app exits
             app_pid = get_process_id_by_command(
                 command=str(self.binary_path(app)),
-                logger=self.logger,
+                console=self.console,
             )
 
             if app_pid is None:
@@ -523,14 +523,14 @@ class macOSSigningMixin:
                         f"Invalid {ident_type} signing identity {identity}"
                     ) from e
 
-        identity = self.input.selection_question(
+        identity = self.console.selection_question(
             intro=f"Select {ident_type} signing identity to use:",
             description=f"{ident_type.title()} Signing Identity",
             options=identities,
         )
         identity_name = identities[identity]
         if identity == "-":
-            self.logger.info(
+            self.console.info(
                 f"""
 In future, you could specify this signing identity by using:
 
@@ -539,7 +539,7 @@ In future, you could specify this signing identity by using:
 """
             )
         else:
-            self.logger.info(
+            self.console.info(
                 f"""
 In future, you could specify this signing identity by using:
 
@@ -576,7 +576,7 @@ or
             process_command.append("--options")
             process_command.append(options)
 
-        self.logger.verbose(f"Signing {Path(path).relative_to(self.base_path)}")
+        self.console.verbose(f"Signing {Path(path).relative_to(self.base_path)}")
 
         try:
             self.tools.subprocess.run(
@@ -597,7 +597,7 @@ or
                 ]
             ):
                 # We should not be signing this in the first place
-                self.logger.verbose(
+                self.console.verbose(
                     f"... {Path(path).relative_to(self.base_path)} does not require a signature"
                 )
                 return
@@ -659,12 +659,12 @@ or
         # embedding apps in frameworks in Python libraries that are installed by pip,
         # you're already making poor life choices; this approach is enough to satisfy
         # the one use of app-in-framework embedding that we're aware of (PySide).
-        progress_bar = self.input.progress_bar()
+        progress_bar = self.console.progress_bar()
         task_id = progress_bar.add_task("Signing App", total=len(sign_targets))
         with progress_bar:
             for group in self.tools.file.sorted_depth_first_groups(sign_targets):
                 with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=1 if self.logger.verbosity >= 3 else None
+                    max_workers=1 if self.console.is_deep_debug else None
                 ) as executor:
                     futures = []
                     for path in group:
@@ -874,7 +874,7 @@ class macOSPackageMixin(macOSSigningMixin):
         # Submit the app for notarization
         submission_id = self.submit_notarization(app, identity=notarization_identity)
 
-        self.logger.warning(
+        self.console.warning(
             f"""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
@@ -904,8 +904,8 @@ If notarization is interrupted, you can resume by running:
         filename = self.notarization_path(app)
         try:
             if app.packaging_format == "zip":
-                self.logger.info()
-                with self.input.wait_bar(
+                self.console.info()
+                with self.console.wait_bar(
                     f"Archiving {filename.name} for notarization..."
                 ):
                     archive_filename = filename.parent / (filename.name + ".zip")
@@ -917,7 +917,7 @@ If notarization is interrupted, you can resume by running:
             store_credentials = False
             while not submission_id:
                 if store_credentials:
-                    if not self.input.enabled:
+                    if not self.console.input_enabled:
                         raise BriefcaseCommandError(
                             f"""
 The keychain does not contain credentials for the profile {identity.profile}.
@@ -928,7 +928,7 @@ You can store these credentials by invoking:
 """
                         )
 
-                    self.logger.warning(
+                    self.console.warning(
                         """
 The notarization process uses credentials stored on your system Keychain.
 You need to do this once for each signing certificate you use.
@@ -966,8 +966,8 @@ password:
 
                 # Attempt the notarization
                 try:
-                    self.logger.info()
-                    with self.input.wait_bar("Submitting app for notarization..."):
+                    self.console.info()
+                    with self.console.wait_bar("Submitting app for notarization..."):
                         submission = self.tools.subprocess.parse_output(
                             json_parser,
                             [
@@ -1008,7 +1008,7 @@ password:
         identity: SigningIdentity,
         submission_id: str,
     ):
-        with self.input.wait_bar("Determining validity of submission ID..."):
+        with self.console.wait_bar("Determining validity of submission ID..."):
             try:
                 response = self.tools.subprocess.parse_output(
                     json_parser,
@@ -1066,7 +1066,7 @@ password:
         :param submission_id: The submission ID of the notarization task to finalize.
         """
         try:
-            with self.input.wait_bar("Waiting for notarization acceptance..."):
+            with self.console.wait_bar("Waiting for notarization acceptance..."):
                 accepted = False
                 while not accepted:
                     try:
@@ -1119,8 +1119,8 @@ password:
         else:
             filename = self.notarization_path(app)
             try:
-                self.logger.info()
-                self.logger.info(
+                self.console.info()
+                self.console.info(
                     f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
                 )
                 self.tools.subprocess.run(
@@ -1179,19 +1179,19 @@ password:
             else:
                 notarization_identity = identity
 
-            self.logger.info(
+            self.console.info(
                 f"Resuming notarization for submission {submission_id}",
                 prefix=app.app_name,
             )
 
-            self.logger.info()
+            self.console.info()
             self.validate_submission_id(
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
             )
 
-            self.logger.info()
+            self.console.info()
             self.finalize_notarization(
                 app,
                 identity=notarization_identity,
@@ -1200,7 +1200,7 @@ password:
             return
 
         # It's a normal packaging pass.
-        self.logger.info("Signing app...", prefix=app.app_name)
+        self.console.info("Signing app...", prefix=app.app_name)
         if adhoc_sign:
             identity = SigningIdentity()
         else:
@@ -1211,7 +1211,7 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.logger.warning(
+            self.console.warning(
                 """
 *************************************************************************
 ** WARNING: Signing with an ad-hoc identity                            **
@@ -1230,14 +1230,14 @@ password:
 
 """
             )
-            self.logger.info("Signing app with ad-hoc identity...")
+            self.console.info("Signing app with ad-hoc identity...")
         else:
             # If we're signing, and notarization isn't explicitly disabled,
             # notarize by default.
             if notarize_app is None:
                 notarize_app = True
 
-            self.logger.info(f"Signing app with identity {identity.name}...")
+            self.console.info(f"Signing app with identity {identity.name}...")
 
         self.sign_app(app=app, identity=identity)
 
@@ -1288,7 +1288,7 @@ password:
         as part of completing zip notarization.
         """
         if notarize_app:
-            self.logger.info(
+            self.console.info(
                 f"Notarizing app using team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
@@ -1299,7 +1299,7 @@ password:
     def finalize_package_zip(self, app: AppConfig):
         """Finalize the zip packaging process."""
         # Build the final archive for distribution
-        with self.input.wait_bar(
+        with self.console.wait_bar(
             f"Building final distribution archive for {self.binary_path(app).name}..."
         ):
             self.ditto_archive(self.binary_path(app), self.distribution_path(app))
@@ -1314,11 +1314,11 @@ password:
         """Package the app as an installer."""
         dist_path: Path = self.distribution_path(app)
 
-        self.logger.info("Building PKG...", prefix=app.app_name)
+        self.console.info("Building PKG...", prefix=app.app_name)
 
         installer_path = self.bundle_path(app) / "installer"
 
-        with self.input.wait_bar("Installing license..."):
+        with self.console.wait_bar("Installing license..."):
             license_file = self.base_path / "LICENSE"
             if license_file.is_file():
                 (installer_path / "resources").mkdir(exist_ok=True)
@@ -1344,7 +1344,7 @@ with your app's licensing terms.
         # plist file - but that requires providing a "root" folder that *only* contains
         # the products you want to install. So - we need to copy the built app to a
         # "clean" packaging location.
-        with self.input.wait_bar("Copying app into products folder..."):
+        with self.console.wait_bar("Copying app into products folder..."):
             installed_app_path = installer_path / "root" / self.binary_path(app).name
             if installed_app_path.exists():
                 self.tools.shutil.rmtree(installed_app_path)
@@ -1357,7 +1357,7 @@ with your app's licensing terms.
 
         components_plist_path = self.bundle_path(app) / "installer/components.plist"
 
-        with self.input.wait_bar("Writing component manifest..."):
+        with self.console.wait_bar("Writing component manifest..."):
             with components_plist_path.open("wb") as components_plist:
                 plistlib.dump(
                     [
@@ -1385,7 +1385,7 @@ with your app's licensing terms.
         else:
             install_args = ["--install-location", "/Applications"]
 
-        with self.input.wait_bar("Building app package..."):
+        with self.console.wait_bar("Building app package..."):
             installer_packages_path = installer_path / "packages"
             if installer_packages_path.exists():
                 self.tools.shutil.rmtree(installer_packages_path)
@@ -1407,7 +1407,7 @@ with your app's licensing terms.
             )
 
         # Build package
-        with self.input.wait_bar(f"Building {dist_path.name}..."):
+        with self.console.wait_bar(f"Building {dist_path.name}..."):
             if installer_identity:
                 signing_options = ["--sign", installer_identity.id]
             else:
@@ -1431,7 +1431,7 @@ with your app's licensing terms.
             )
 
         if notarize_app:
-            self.logger.info(
+            self.console.info(
                 f"Notarizing PKG with team ID {installer_identity.team_id}...",
                 prefix=app.app_name,
             )
@@ -1449,9 +1449,9 @@ with your app's licensing terms.
     ):
         """Package an app as a DMG installer."""
         dist_path: Path = self.distribution_path(app)
-        self.logger.info("Building DMG...", prefix=app.app_name)
+        self.console.info("Building DMG...", prefix=app.app_name)
 
-        with self.input.wait_bar(f"Building {dist_path.name}..."):
+        with self.console.wait_bar(f"Building {dist_path.name}..."):
             dmg_settings = {
                 "files": [os.fsdecode(self.binary_path(app))],
                 "symlinks": {"Applications": "/Applications"},
@@ -1467,7 +1467,7 @@ with your app's licensing terms.
             try:
                 icon_filename = self.base_path / f"{app.installer_icon}.icns"
                 if not icon_filename.exists():
-                    self.logger.warning(
+                    self.console.warning(
                         f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
                     )
                     raise AttributeError()
@@ -1476,7 +1476,7 @@ with your app's licensing terms.
                 if app.icon:
                     icon_filename = self.base_path / f"{app.icon}.icns"
                     if not icon_filename.exists():
-                        self.logger.warning(
+                        self.console.warning(
                             f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
                         )
                         icon_filename = None
@@ -1492,7 +1492,7 @@ with your app's licensing terms.
                 if image_filename.exists():
                     dmg_settings["background"] = os.fsdecode(image_filename)
                 else:
-                    self.logger.warning(
+                    self.console.warning(
                         f"Can't find {app.installer_background}.png to use as DMG background"
                     )
             except AttributeError:
@@ -1508,7 +1508,7 @@ with your app's licensing terms.
         self.sign_file(dist_path, identity=identity)
 
         if notarize_app:
-            self.logger.info(
+            self.console.info(
                 f"Notarizing DMG with team ID {identity.team_id}...",
                 prefix=app.app_name,
             )

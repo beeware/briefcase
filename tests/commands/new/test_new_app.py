@@ -8,7 +8,7 @@ from cookiecutter.main import cookiecutter
 import briefcase
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.commands import NewCommand
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidTemplateBranch,
@@ -21,7 +21,6 @@ def new_command(tmp_path):
     return NewCommand(
         base_path=tmp_path / "base",
         data_path=tmp_path / "data",
-        logger=Log(),
         console=Console(),
     )
 
@@ -53,7 +52,7 @@ def test_new_app(
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -111,7 +110,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -181,7 +180,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -277,7 +276,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -335,7 +334,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -403,7 +402,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -471,7 +470,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -534,7 +533,7 @@ def test_new_app_unused_project_overrides(
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -605,7 +604,7 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap = BaseGuiBootstrap(new_command.console, {})
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={

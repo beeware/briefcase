@@ -90,7 +90,7 @@ def test_target_too_old(create_command, first_app_config):
     first_app_config.python_version_tag = "3"
     first_app_config.target_image = "somevendor:surprising"
 
-    create_command.logger.warning = MagicMock()
+    create_command.console.warning = MagicMock()
     create_command.tools[first_app_config].app_context = DockerAppContext(
         tools=create_command.tools,
         app=first_app_config,

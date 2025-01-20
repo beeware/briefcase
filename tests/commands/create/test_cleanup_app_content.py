@@ -31,7 +31,7 @@ def test_no_cleanup(create_command, myapp_unrolled, support_path, debug, capsys)
     """If there are no cleanup directives, bundle content isn't touched; but __pycache__
     is cleaned."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     # Cleanup app content
     create_command.cleanup_app_content(myapp_unrolled)
@@ -59,7 +59,7 @@ def test_no_cleanup(create_command, myapp_unrolled, support_path, debug, capsys)
 def test_dir_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A directory can be cleaned up."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1"]
 
@@ -86,7 +86,7 @@ def test_dir_cleanup(create_command, myapp_unrolled, support_path, debug, capsys
 def test_file_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A single file can be cleaned up."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1/a_file1.txt"]
 
@@ -118,7 +118,7 @@ def test_all_files_in_dir_cleanup(
 ):
     """All files in a directory can be cleaned up."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1/*"]
 
@@ -150,7 +150,7 @@ def test_all_files_in_dir_cleanup(
 def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A glob of directories can be cleaned up."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = ["path/to/support/dir*"]
 
@@ -177,7 +177,7 @@ def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path, debug, c
 def test_file_glob_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A glob of files can be cleaned up."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = ["path/to/support/dir1/*.txt"]
 
@@ -207,7 +207,7 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path, debug, 
 def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """A glob that matches all directories will be added to the cleanup list."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = ["path/to/support/**/b_file.*"]
 
@@ -238,7 +238,7 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path, debug, 
 def test_symlink_cleanup(create_command, myapp_unrolled, support_path, debug, capsys):
     """Symlinks can be cleaned up."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = [
         "path/to/support/dir1/symlink.txt",
@@ -273,7 +273,7 @@ def test_template_glob_cleanup(
 ):
     """A glob of files specified in the template will be added to the cleanup list."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     # Define a cleanup_paths in the template *and* on the app
     create_command._briefcase_toml[myapp_unrolled] = {
@@ -316,7 +316,7 @@ def test_non_existent_cleanup(
 ):
     """Referencing a specific file that doesn't exist doesn't cause a problem."""
     if debug:
-        create_command.logger.verbosity = LogLevel.DEBUG
+        create_command.console.verbosity = LogLevel.DEBUG
 
     myapp_unrolled.cleanup_paths = [
         # This file exists

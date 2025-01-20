@@ -16,7 +16,7 @@ import pytest
 )
 def test_app_type(convert_command, input, result):
     """The user can be asked for the app type."""
-    convert_command.input.values = input
+    convert_command.console.values = input
     out = convert_command.input_app_type(None)
     assert out == result
 

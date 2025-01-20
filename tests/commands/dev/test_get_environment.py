@@ -82,13 +82,13 @@ def test_pythonpath_with_two_sources_and_tests_in_linux(dev_command, third_app):
 
 def test_non_verbose_mode(dev_command, first_app):
     """Non-verbose mode doesn't include BRIEFCASE_DEBUG in the dev environment."""
-    dev_command.logger.verbosity = LogLevel.INFO
+    dev_command.console.verbosity = LogLevel.INFO
     env = dev_command.get_environment(first_app, test_mode=False)
     assert "BRIEFCASE_DEBUG" not in env
 
 
 def test_verbose_mode(dev_command, first_app):
     """Verbose mode adds BRIEFCASE_DEBUG to the dev environment."""
-    dev_command.logger.verbosity = LogLevel.DEBUG
+    dev_command.console.verbosity = LogLevel.DEBUG
     env = dev_command.get_environment(first_app, test_mode=False)
     assert env["BRIEFCASE_DEBUG"] == "1"

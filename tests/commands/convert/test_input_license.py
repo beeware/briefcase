@@ -49,7 +49,7 @@ def test_get_license_from_file(
 ):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     dummy_license_text = (
@@ -125,7 +125,7 @@ def test_get_license_from_pep621_license_file(
 ):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     dummy_license_text = (
@@ -181,7 +181,7 @@ def test_get_license_from_pyproject(
 ):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n" f'license = {{text = "{license_text}"}}', encoding="utf-8"
@@ -210,7 +210,7 @@ def test_get_license_from_pyproject(
 def test_no_license_hint(convert_command, monkeypatch):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     convert_command.input_license(None)

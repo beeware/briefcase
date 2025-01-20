@@ -13,7 +13,7 @@ from ...utils import create_file
 def test_lipo_dylib(dummy_command, verbose, tmp_path, capsys):
     """A binary library can be merged with lipo."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create 3 source binaries.
     create_file(tmp_path / "source-1/path/to/file.dylib", "dylib-1")
@@ -57,7 +57,7 @@ def test_lipo_dylib(dummy_command, verbose, tmp_path, capsys):
 def test_lipo_dylib_partial(dummy_command, verbose, tmp_path, capsys):
     """If a source doesn't have the library, it isn't included in the merge."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create 2 source binaries. Source-2 doesn't have the binary.
     create_file(tmp_path / "source-1/path/to/file.dylib", "dylib-1")
@@ -98,7 +98,7 @@ def test_lipo_dylib_partial(dummy_command, verbose, tmp_path, capsys):
 def test_lipo_dylib_merge_error(dummy_command, verbose, tmp_path, capsys):
     """If the merge process fails, an exception is raised."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create 3 source binaries.
     create_file(tmp_path / "source-1/path/to/file.dylib", "dylib-1")

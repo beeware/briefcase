@@ -4,9 +4,10 @@ import pytest
 
 import briefcase.commands.upgrade
 from briefcase.commands import UpgradeCommand
-from briefcase.console import Console, Log
 from briefcase.exceptions import MissingToolError
 from briefcase.integrations.base import ManagedTool, Tool
+
+from ...utils import DummyConsole
 
 
 @pytest.fixture
@@ -28,8 +29,7 @@ class DummyUpgradeCommand(UpgradeCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("logger", Log())
-        kwargs.setdefault("console", Console())
+        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, **kwargs)
 
     def bundle_path(self, app):

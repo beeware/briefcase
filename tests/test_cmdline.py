@@ -6,7 +6,7 @@ import pytest
 
 from briefcase import __version__, cmdline
 from briefcase.commands import ConvertCommand, DevCommand, NewCommand, UpgradeCommand
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import (
     InvalidFormatError,
     InvalidPlatformError,
@@ -23,19 +23,14 @@ from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
 @pytest.fixture
-def logger() -> Log:
-    return Log()
-
-
-@pytest.fixture
 def console() -> Console:
     return Console()
 
 
-def do_cmdline_parse(args: list, logger: Log, console: Console):
+def do_cmdline_parse(args: list, console: Console):
     """Simulate process to parse command line."""
     Command, extra_cmdline = cmdline.parse_cmdline(args)
-    cmd = Command(logger=logger, console=console)
+    cmd = Command(console=console)
     options, overrides = cmd.parse_options(extra=extra_cmdline)
     return cmd, options, overrides
 
@@ -120,17 +115,15 @@ def test_unknown_command():
         ),
     ],
 )
-def test_new_command(logger, console, cmdline, expected_options, expected_overrides):
+def test_new_command(console, cmdline, expected_options, expected_overrides):
     """``briefcase new`` returns the New command."""
-    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), logger, console)
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
 
     assert isinstance(cmd, NewCommand)
     assert cmd.platform == "all"
     assert cmd.output_format is None
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
     assert overrides == expected_overrides
 
@@ -161,19 +154,15 @@ def test_new_command(logger, console, cmdline, expected_options, expected_overri
         ),
     ],
 )
-def test_convert_command(
-    logger, console, cmdline, expected_options, expected_overrides
-):
+def test_convert_command(console, cmdline, expected_options, expected_overrides):
     """``briefcase convert`` returns the Convert command."""
-    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), logger, console)
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
 
     assert isinstance(cmd, ConvertCommand)
     assert cmd.platform == "all"
     assert cmd.output_format is None
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
     assert overrides == expected_overrides
 
@@ -225,7 +214,6 @@ def dev_run_parameters(command):
 )
 def test_dev_command(
     monkeypatch,
-    logger,
     console,
     cmdline,
     expected_options,
@@ -235,15 +223,13 @@ def test_dev_command(
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), logger, console)
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
 
     assert isinstance(cmd, DevCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format is None
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {
         "appname": None,
         "update_requirements": False,
@@ -269,7 +255,6 @@ def test_dev_command(
 )
 def test_run_command(
     monkeypatch,
-    logger,
     console,
     cmdline,
     expected_options,
@@ -279,15 +264,13 @@ def test_run_command(
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), logger, console)
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
 
     assert isinstance(cmd, macOSAppRunCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {
         "appname": None,
         "update": False,
@@ -329,7 +312,6 @@ def test_run_command(
 )
 def test_upgrade_command(
     monkeypatch,
-    logger,
     console,
     cmdline,
     expected_options,
@@ -339,94 +321,84 @@ def test_upgrade_command(
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse(cmdline.split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse(cmdline.split(), console)
 
     assert isinstance(cmd, UpgradeCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format is None
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
     assert overrides == expected_overrides
 
 
-def test_bare_command(monkeypatch, logger, console):
+def test_bare_command(monkeypatch, console):
     """``briefcase create`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse("create".split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse("create".split(), console)
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
-def test_linux_default(logger, console):
+def test_linux_default(console):
     """``briefcase create`` returns the linux create system command on Linux."""
 
-    cmd, options, overrides = do_cmdline_parse("create".split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse("create".split(), console)
 
     assert isinstance(cmd, LinuxSystemCreateCommand)
     assert cmd.platform == "linux"
     assert cmd.output_format == "system"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
-def test_macOS_default(logger, console):
+def test_macOS_default(console):
     """``briefcase create`` returns the macOS create command on Linux."""
 
-    cmd, options, overrides = do_cmdline_parse("create".split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse("create".split(), console)
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
-def test_windows_default(logger, console):
+def test_windows_default(console):
     """``briefcase create`` returns the Windows create app command on Windows."""
 
-    cmd, options, overrides = do_cmdline_parse("create".split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse("create".split(), console)
 
     assert isinstance(cmd, WindowsAppCreateCommand)
     assert cmd.platform == "windows"
     assert cmd.output_format == "app"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
-def test_bare_command_help(monkeypatch, capsys, logger, console):
+def test_bare_command_help(monkeypatch, capsys, console):
     """``briefcase create -h`` returns the macOS create app command help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     with pytest.raises(SystemExit) as excinfo:
-        do_cmdline_parse("create -h".split(), logger, console)
+        do_cmdline_parse("create -h".split(), console)
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
@@ -440,10 +412,10 @@ def test_bare_command_help(monkeypatch, capsys, logger, console):
     )
 
 
-def test_bare_command_version(capsys, logger, console):
+def test_bare_command_version(capsys, console):
     """``briefcase create -V`` returns the version."""
     with pytest.raises(SystemExit) as excinfo:
-        do_cmdline_parse("create -V".split(), logger, console)
+        do_cmdline_parse("create -V".split(), console)
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
@@ -452,60 +424,56 @@ def test_bare_command_version(capsys, logger, console):
     assert output == f"{__version__}\n"
 
 
-def test_command_unknown_platform(monkeypatch, logger, console):
+def test_command_unknown_platform(monkeypatch, console):
     """``briefcase create foobar`` raises an unknown platform error."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     expected_exc_regex = r"Invalid platform 'foobar'; \(choose from: .*\)"
     with pytest.raises(InvalidPlatformError, match=expected_exc_regex):
-        do_cmdline_parse("create foobar".split(), logger, console)
+        do_cmdline_parse("create foobar".split(), console)
 
 
-def test_command_explicit_platform(monkeypatch, logger, console):
+def test_command_explicit_platform(monkeypatch, console):
     """``briefcase create linux`` returns linux create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse("create linux".split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse("create linux".split(), console)
 
     assert isinstance(cmd, LinuxSystemCreateCommand)
     assert cmd.platform == "linux"
     assert cmd.output_format == "system"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
-def test_command_explicit_platform_case_handling(monkeypatch, logger, console):
+def test_command_explicit_platform_case_handling(monkeypatch, console):
     """``briefcase create macOS`` returns macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     # This is all lower case; the command normalizes to macOS
-    cmd, options, overrides = do_cmdline_parse("create macOS".split(), logger, console)
+    cmd, options, overrides = do_cmdline_parse("create macOS".split(), console)
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
-def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
+def test_command_explicit_platform_help(monkeypatch, capsys, console):
     """``briefcase create macOS -h`` returns the macOS create app command help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     with pytest.raises(SystemExit) as excinfo:
-        do_cmdline_parse("create macOS -h".split(), logger, console)
+        do_cmdline_parse("create macOS -h".split(), console)
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
@@ -519,37 +487,33 @@ def test_command_explicit_platform_help(monkeypatch, capsys, logger, console):
     )
 
 
-def test_command_explicit_format(monkeypatch, logger, console):
+def test_command_explicit_format(monkeypatch, console):
     """``briefcase create macOS app`` returns the macOS create app command."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse(
-        "create macOS app".split(), logger, console
-    )
+    cmd, options, overrides = do_cmdline_parse("create macOS app".split(), console)
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
-def test_command_unknown_format(monkeypatch, logger, console):
+def test_command_unknown_format(monkeypatch, console):
     """``briefcase create macOS foobar`` returns an invalid format error."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     expected_exc_regex = r"Invalid format 'foobar'; \(choose from: app, Xcode\)"
     with pytest.raises(InvalidFormatError, match=expected_exc_regex):
-        do_cmdline_parse("create macOS foobar".split(), logger, console)
+        do_cmdline_parse("create macOS foobar".split(), console)
 
 
-def test_command_explicit_unsupported_format(monkeypatch, logger, console):
+def test_command_explicit_unsupported_format(monkeypatch, console):
     """``briefcase create macOS homebrew`` raises an error because the format isn't
     supported (yet)"""
     # Mock the output formats to include a "homebrew" backend with no commands.
@@ -566,16 +530,16 @@ def test_command_explicit_unsupported_format(monkeypatch, logger, console):
         UnsupportedCommandError,
         match=r"The create command for the macOS homebrew format has not been implemented \(yet!\).",
     ):
-        do_cmdline_parse("create macOS homebrew".split(), logger, console)
+        do_cmdline_parse("create macOS homebrew".split(), console)
 
 
-def test_command_explicit_format_help(monkeypatch, capsys, logger, console):
+def test_command_explicit_format_help(monkeypatch, capsys, console):
     """``briefcase create macOS app -h`` returns the macOS create app help."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     with pytest.raises(SystemExit) as excinfo:
-        do_cmdline_parse("create macOS app -h".split(), logger, console)
+        do_cmdline_parse("create macOS app -h".split(), console)
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 0
@@ -589,27 +553,23 @@ def test_command_explicit_format_help(monkeypatch, capsys, logger, console):
     )
 
 
-def test_command_disable_input(monkeypatch, logger, console):
+def test_command_disable_input(monkeypatch, console):
     """``briefcase create --no-input`` disables console input."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
-    cmd, options, overrides = do_cmdline_parse(
-        "create --no-input".split(), logger, console
-    )
+    cmd, options, overrides = do_cmdline_parse("create --no-input".split(), console)
 
     assert isinstance(cmd, macOSAppCreateCommand)
     assert cmd.platform == "macOS"
     assert cmd.output_format == "app"
-    assert not cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert not cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
     assert overrides == {}
 
 
-def test_command_options(monkeypatch, capsys, logger, console):
+def test_command_options(monkeypatch, capsys, console):
     """Commands can provide their own arguments."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
@@ -617,19 +577,17 @@ def test_command_options(monkeypatch, capsys, logger, console):
     # Invoke a command that is known to have its own custom arguments
     # (In this case, the channel argument for publication)
     cmd, options, overrides = do_cmdline_parse(
-        "publish macos app -c s3".split(), logger, console
+        "publish macos app -c s3".split(), console
     )
 
     assert isinstance(cmd, macOSAppPublishCommand)
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {"channel": "s3"}
     assert overrides == {}
 
 
-def test_command_overrides(monkeypatch, capsys, logger, console):
+def test_command_overrides(monkeypatch, capsys, console):
     """Configuration overrides can be specified."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
@@ -638,15 +596,12 @@ def test_command_overrides(monkeypatch, capsys, logger, console):
     # (In this case, the channel argument for publication)
     cmd, options, overrides = do_cmdline_parse(
         "publish macos app -C version='1.2.3' -C extra=42".split(),
-        logger,
         console,
     )
 
     assert isinstance(cmd, macOSAppPublishCommand)
-    assert cmd.input.enabled
-    assert cmd.logger.verbosity == LogLevel.INFO
-    assert cmd.logger is logger
-    assert cmd.input is console
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
     assert options == {"channel": "s3"}
     assert overrides == {
         "version": "1.2.3",
@@ -654,14 +609,14 @@ def test_command_overrides(monkeypatch, capsys, logger, console):
     }
 
 
-def test_unknown_command_options(monkeypatch, capsys, logger, console):
+def test_unknown_command_options(monkeypatch, capsys, console):
     """Commands can provide their own arguments."""
     # Pretend we're on macOS, regardless of where the tests run.
     monkeypatch.setattr(sys, "platform", "darwin")
 
     # Invoke a command but provide an option. that isn't defined
     with pytest.raises(SystemExit) as excinfo:
-        do_cmdline_parse("publish macOS xcode -x foobar".split(), logger, console)
+        do_cmdline_parse("publish macOS xcode -x foobar".split(), console)
 
     # Normal exit due to displaying help
     assert excinfo.value.code == 2

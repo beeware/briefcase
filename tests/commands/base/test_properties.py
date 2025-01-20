@@ -44,41 +44,35 @@ def test_publish_command(base_command):
 def test_command_state_transferred(tmp_path):
     """Command state is transferred to created subcommands."""
     command = DummyCommand(base_path=tmp_path)
-    command.tools.input.enabled = False
+    command.tools.console.input_enabled = False
 
     # Check the enabled state of subcommands
-    assert not command.create_command.input.enabled
-    assert command.create_command.logger is command.tools.logger
-    assert command.create_command.input is command.tools.input
+    assert not command.create_command.console.input_enabled
+    assert command.create_command.console is command.tools.console
     assert command.create_command.tools is command.tools
     assert command.create_command.is_clone is True
 
-    assert not command.update_command.input.enabled
-    assert command.update_command.logger is command.tools.logger
-    assert command.update_command.input is command.tools.input
+    assert not command.update_command.console.input_enabled
+    assert command.update_command.console is command.tools.console
     assert command.update_command.tools is command.tools
     assert command.update_command.is_clone is True
 
-    assert not command.build_command.input.enabled
-    assert command.build_command.logger is command.tools.logger
-    assert command.build_command.input is command.tools.input
+    assert not command.build_command.console.input_enabled
+    assert command.build_command.console is command.tools.console
     assert command.build_command.tools is command.tools
     assert command.build_command.is_clone is True
 
-    assert not command.run_command.input.enabled
-    assert command.run_command.logger is command.tools.logger
-    assert command.run_command.input is command.tools.input
+    assert not command.run_command.console.input_enabled
+    assert command.run_command.console is command.tools.console
     assert command.run_command.tools is command.tools
     assert command.run_command.is_clone is True
 
-    assert not command.package_command.input.enabled
-    assert command.package_command.logger is command.tools.logger
-    assert command.package_command.input is command.tools.input
+    assert not command.package_command.console.input_enabled
+    assert command.package_command.console is command.tools.console
     assert command.package_command.tools is command.tools
     assert command.package_command.is_clone is True
 
-    assert not command.publish_command.input.enabled
-    assert command.publish_command.logger is command.tools.logger
-    assert command.publish_command.input is command.tools.input
+    assert not command.publish_command.console.input_enabled
+    assert command.publish_command.console is command.tools.console
     assert command.publish_command.tools is command.tools
     assert command.publish_command.is_clone is True

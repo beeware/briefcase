@@ -504,7 +504,7 @@ def test_app_packages_install_requirements(
 ):
     """Requirements can be installed."""
     # Configure logging level
-    create_command.logger.verbosity = logging_level
+    create_command.console.verbosity = logging_level
 
     # Set up the app requirements
     myapp.requires = ["first", "second", "third"]

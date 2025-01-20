@@ -6,7 +6,7 @@ from ...utils import PartialMatchString
 def test_pep621_author(convert_command, monkeypatch):
     mock_text_question = MagicMock()
     mock_text_question.return_value = "Some Name"
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n"
         "authors = [\n"
@@ -31,7 +31,7 @@ def test_pep621_author(convert_command, monkeypatch):
 def test_pep621_wrong_author(convert_command, monkeypatch):
     mock_text_question = MagicMock()
     mock_text_question.return_value = "Some Name"
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n"
         "authors = [\n"
@@ -56,7 +56,7 @@ def test_pep621_wrong_author(convert_command, monkeypatch):
 def test_no_pep621_author(convert_command, monkeypatch):
     mock_text_question = MagicMock()
     mock_text_question.return_value = "Some Name"
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     convert_command.input_email("Noname Thirdauthor", "some.bundle", None)
     mock_text_question.assert_called_once_with(
@@ -89,7 +89,7 @@ def test_override(convert_command):
 
 def test_prompted_email(convert_command):
     """You can type in the e-mail address."""
-    convert_command.input.values = ["my@email.com"]
+    convert_command.console.values = ["my@email.com"]
     assert (
         convert_command.input_email("Some name", "com.some.bundle", None)
         == "my@email.com"

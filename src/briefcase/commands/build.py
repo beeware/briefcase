@@ -77,7 +77,7 @@ class BuildCommand(BaseCommand):
         state = self.build_app(app, test_mode=test_mode, **full_options(state, options))
 
         qualifier = " (test mode)" if test_mode else ""
-        self.logger.info(
+        self.console.info(
             f"Built {self.binary_path(app).relative_to(self.base_path)}{qualifier}",
             prefix=app.app_name,
         )

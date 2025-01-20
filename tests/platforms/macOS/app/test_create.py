@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
@@ -17,7 +17,6 @@ from ....utils import create_file, create_installed_package, mock_tgz_download
 @pytest.fixture
 def create_command(tmp_path, first_app_templated):
     command = macOSAppCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

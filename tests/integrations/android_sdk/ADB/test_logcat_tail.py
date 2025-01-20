@@ -12,7 +12,7 @@ def test_logcat_tail(mock_tools, adb, is_color_enabled, monkeypatch):
     """Invoking `logcat_tail()` calls `run()` with the appropriate parameters."""
     # Mock whether color is enabled for the console
     monkeypatch.setattr(
-        type(mock_tools.input),
+        type(mock_tools.console),
         "is_color_enabled",
         PropertyMock(return_value=is_color_enabled),
     )

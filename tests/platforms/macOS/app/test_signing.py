@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import SigningIdentity, macOSSigningMixin
@@ -20,10 +20,9 @@ class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
     command = "sign"
 
     def __init__(self, base_path, **kwargs):
-        kwargs.setdefault("logger", Log())
         kwargs.setdefault("console", Console())
         super().__init__(base_path=base_path / "base_path", **kwargs)
-        self.tools.input = DummyConsole()
+        self.tools.console = DummyConsole()
 
 
 @pytest.fixture
@@ -116,7 +115,7 @@ def test_explicit_app_identity_checksum(dummy_command):
     )
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_explicit_app_identity_name(dummy_command):
@@ -136,7 +135,7 @@ def test_explicit_app_identity_name(dummy_command):
     )
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_invalid_app_identity_name(dummy_command):
@@ -152,7 +151,7 @@ def test_invalid_app_identity_name(dummy_command):
         dummy_command.select_identity("not-an-identity")
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_implied_app_identity(dummy_command):
@@ -164,7 +163,7 @@ def test_implied_app_identity(dummy_command):
     }
 
     # Return option 2
-    dummy_command.input.values = ["2"]
+    dummy_command.console.values = ["2"]
 
     result = dummy_command.select_identity()
 
@@ -174,7 +173,7 @@ def test_implied_app_identity(dummy_command):
     )
 
     # User input was solicited
-    assert dummy_command.input.prompts == ["Application Signing Identity: "]
+    assert dummy_command.console.prompts == ["Application Signing Identity: "]
 
 
 def test_no_app_identities(dummy_command):
@@ -184,7 +183,7 @@ def test_no_app_identities(dummy_command):
     dummy_command.get_identities.return_value = {}
 
     # Return option 1
-    dummy_command.input.values = ["1"]
+    dummy_command.console.values = ["1"]
 
     result = dummy_command.select_identity()
 
@@ -192,7 +191,7 @@ def test_no_app_identities(dummy_command):
     assert result == SigningIdentity()
 
     # User input was solicited
-    assert dummy_command.input.prompts
+    assert dummy_command.console.prompts
 
 
 def test_select_app_identity(dummy_command):
@@ -204,7 +203,7 @@ def test_select_app_identity(dummy_command):
     }
 
     # Return option 3
-    dummy_command.input.values = ["3"]
+    dummy_command.console.values = ["3"]
 
     result = dummy_command.select_identity()
 
@@ -215,7 +214,7 @@ def test_select_app_identity(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["Application Signing Identity: "]
+    assert dummy_command.console.prompts == ["Application Signing Identity: "]
 
 
 def test_select_app_identity_no_adhoc(dummy_command):
@@ -227,7 +226,7 @@ def test_select_app_identity_no_adhoc(dummy_command):
     }
 
     # Return option 2
-    dummy_command.input.values = ["2"]
+    dummy_command.console.values = ["2"]
 
     # Disallow adhoc identities. This will make the identities from get_identities the
     # only available values.
@@ -240,7 +239,7 @@ def test_select_app_identity_no_adhoc(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["Application Signing Identity: "]
+    assert dummy_command.console.prompts == ["Application Signing Identity: "]
 
 
 def test_select_installer_identity(dummy_command):
@@ -260,7 +259,7 @@ def test_select_installer_identity(dummy_command):
     ]
 
     # Return option 2
-    dummy_command.input.values = ["2"]
+    dummy_command.console.values = ["2"]
 
     result = dummy_command.select_identity(
         app_identity=SigningIdentity(
@@ -276,7 +275,7 @@ def test_select_installer_identity(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["Installer Signing Identity: "]
+    assert dummy_command.console.prompts == ["Installer Signing Identity: "]
 
 
 def test_installer_identity_matching_app(dummy_command):
@@ -306,7 +305,7 @@ def test_installer_identity_matching_app(dummy_command):
     ]
 
     # Return option 2
-    dummy_command.input.values = ["2"]
+    dummy_command.console.values = ["2"]
 
     result = dummy_command.select_identity(
         app_identity=SigningIdentity(
@@ -323,7 +322,7 @@ def test_installer_identity_matching_app(dummy_command):
     )
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["Installer Signing Identity: "]
+    assert dummy_command.console.prompts == ["Installer Signing Identity: "]
 
 
 def test_installer_identity_no_match(dummy_command):
@@ -361,7 +360,7 @@ def test_installer_identity_no_match(dummy_command):
         )
 
     # User input was never solicited once
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 @pytest.mark.parametrize("verbose", [True, False])
@@ -374,7 +373,7 @@ def test_sign_file_adhoc_identity(
 ):
     """If an ad-hoc identity is used, the runtime option isn't used."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(tmp_path / "base_path/random.file", identity=adhoc_identity)
@@ -408,7 +407,7 @@ def test_sign_file_entitlements(
 ):
     """Entitlements can be included in a signing call."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Sign the file with an ad-hoc identity
     dummy_command.sign_file(
@@ -451,7 +450,7 @@ def test_sign_file_unsupported_format(
     """If codesign reports an unsupported format, the signing attempt is ignored with a
     warning."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # FIXME: I'm not sure how to manufacture this in practice.
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
@@ -497,7 +496,7 @@ def test_sign_file_unknown_bundle_format(
     """If a folder happens to have a .framework extension, the signing attempt is
     ignored with a warning."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Raise an error caused by an unknown bundle format during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign(
@@ -542,7 +541,7 @@ def test_sign_file_unknown_error(
 ):
     """Any other codesigning error raises an error."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Raise an unknown error during codesign
     dummy_command.tools.subprocess.run.side_effect = mock_codesign("Unknown error")
@@ -586,7 +585,7 @@ def test_sign_app(
 ):
     """An app bundle can be signed."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Sign the app
     dummy_command.sign_app(
@@ -709,7 +708,7 @@ def test_sign_app_with_failure(
 ):
     """If signing a single file in the app fails, the error is surfaced."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Sign the app. Signing first_dylib.dylib will fail.
     def _codesign(args, **kwargs):

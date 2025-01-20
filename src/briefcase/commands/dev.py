@@ -86,7 +86,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             requires.extend(app.test_requires)
 
         if requires:
-            with self.input.wait_bar("Installing dev requirements..."):
+            with self.console.wait_bar("Installing dev requirements..."):
                 try:
                     self.tools.subprocess.run(
                         [
@@ -99,7 +99,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                             "install",
                             "--upgrade",
                         ]
-                        + (["-vv"] if self.logger.is_deep_debug else [])
+                        + (["-vv"] if self.console.is_deep_debug else [])
                         + requires
                         + app.requirement_installer_args,
                         check=True,
@@ -108,7 +108,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
         else:
-            self.logger.info("No application requirements.")
+            self.console.info("No application requirements.")
 
     def run_dev_app(
         self,
@@ -146,7 +146,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
         if app.console_app and not test_mode:
-            self.logger.info("=" * 75)
+            self.console.info("=" * 75)
             self.tools.subprocess.run(
                 cmdline,
                 env=env,
@@ -190,7 +190,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             env["PYTHONMALLOC"] = "default"  # pragma: no-cover-if-not-windows
 
         # If we're in verbose mode, put BRIEFCASE_DEBUG into the environment
-        if self.logger.is_debug:
+        if self.console.is_debug:
             env["BRIEFCASE_DEBUG"] = "1"
 
         return env
@@ -238,17 +238,17 @@ class DevCommand(RunAppMixin, BaseCommand):
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
         if update_requirements or not dist_info_path.exists():
-            self.logger.info("Installing requirements...", prefix=app.app_name)
+            self.console.info("Installing requirements...", prefix=app.app_name)
             self.install_dev_requirements(app, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:
             if test_mode:
-                self.logger.info(
+                self.console.info(
                     "Running test suite in dev environment...", prefix=app.app_name
                 )
             else:
-                self.logger.info("Starting in dev mode...", prefix=app.app_name)
+                self.console.info("Starting in dev mode...", prefix=app.app_name)
             env = self.get_environment(app, test_mode=test_mode)
             return self.run_dev_app(
                 app,

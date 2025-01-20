@@ -211,7 +211,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(simulators) == 1:
             iOS_tag = list(simulators.keys())[0]
         else:
-            iOS_tag = self.input.selection_question(
+            iOS_tag = self.console.selection_question(
                 intro="Select iOS version:",
                 description="iOS Version",
                 options=simulators.keys(),
@@ -224,7 +224,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         elif len(devices) == 1:
             udid = list(devices.keys())[0]
         else:
-            udid = self.input.selection_question(
+            udid = self.console.selection_question(
                 intro="Select simulator device to use:",
                 description="Simulator",
                 options=devices,
@@ -232,7 +232,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         device = devices[udid]
 
-        self.logger.info(
+        self.console.info(
             f"""
 In the future, you could specify this device by running:
 
@@ -389,7 +389,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
     def update_app_metadata(self, app: AppConfig, test_mode: bool):
-        with self.input.wait_bar("Setting main module..."):
+        with self.console.wait_bar("Setting main module..."):
             # Load the original plist
             with self.info_plist_path(app).open("rb") as f:
                 info_plist = plistlib.load(f)
@@ -408,11 +408,11 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         :param app: The application to build
         :param test_mode: Should the app be updated in test mode? (default: False)
         """
-        self.logger.info("Updating app metadata...", prefix=app.app_name)
+        self.console.info("Updating app metadata...", prefix=app.app_name)
         self.update_app_metadata(app=app, test_mode=test_mode)
 
-        self.logger.info("Building Xcode project...", prefix=app.app_name)
-        with self.input.wait_bar("Building..."):
+        self.console.info("Building Xcode project...", prefix=app.app_name)
+        with self.console.wait_bar("Building..."):
             try:
                 self.tools.subprocess.run(
                     [
@@ -426,11 +426,11 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         self.tools.host_arch,
                         "-sdk",
                         "iphonesimulator",
-                        "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
+                        "-verbose" if self.tools.console.is_deep_debug else "-quiet",
                     ],
                     check=True,
                     filter_func=(
-                        None if self.tools.logger.is_deep_debug else XcodeBuildFilter()
+                        None if self.tools.console.is_deep_debug else XcodeBuildFilter()
                     ),
                 )
             except subprocess.CalledProcessError as e:
@@ -477,7 +477,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         else:
             label = "app"
 
-        self.logger.info(
+        self.console.info(
             f"Starting {label} on an {device} running iOS {iOS_version} (device UDID {udid})",
             prefix=app.app_name,
         )
@@ -487,7 +487,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # shutting down, we need to wait for it to shut down before restarting.
         device_state = self.get_device_state(self.tools, udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
-            with self.input.wait_bar("Waiting for simulator shutdown..."):
+            with self.console.wait_bar("Waiting for simulator shutdown..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     time.sleep(2)
                     device_state = self.get_device_state(self.tools, udid)
@@ -496,7 +496,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # if it's shut down, start it again.
         if device_state == DeviceState.SHUTDOWN:
             try:
-                with self.input.wait_bar("Booting simulator..."):
+                with self.console.wait_bar("Booting simulator..."):
                     self.tools.subprocess.run(
                         ["xcrun", "simctl", "boot", udid],
                         check=True,
@@ -510,7 +510,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             # We now know the simulator is *running*, so we can open it.
             # We don't need to open the simulator to run the test suite.
             try:
-                with self.input.wait_bar("Opening simulator..."):
+                with self.console.wait_bar("Opening simulator..."):
                     self.tools.subprocess.run(
                         [
                             "open",
@@ -529,9 +529,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Try to uninstall the app first. If the app hasn't been installed
         # before, this will still succeed.
-        self.logger.info(f"Installing {label}...", prefix=app.app_name)
+        self.console.info(f"Installing {label}...", prefix=app.app_name)
         with (
-            self.input.wait_bar(
+            self.console.wait_bar(
                 "Uninstalling any existing app version..."
             ) as keep_alive,
             self.tools.subprocess.Popen(
@@ -542,14 +542,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 keep_alive.update()
                 time.sleep(0.25)
         if ret_code != 0:
-            self.logger.error(f"{ret_code=}")
+            self.console.error(f"{ret_code=}")
             raise BriefcaseCommandError(
                 f"Unable to uninstall old version of app {app.app_name}."
             )
 
         # Install the app.
         with (
-            self.input.wait_bar(f"Installing new {label} version...") as keep_alive,
+            self.console.wait_bar(f"Installing new {label} version...") as keep_alive,
             self.tools.subprocess.Popen(
                 ["xcrun", "simctl", "install", udid, self.binary_path(app)]
             ) as install_popen,
@@ -602,8 +602,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         time.sleep(0.25)
 
         try:
-            self.logger.info(f"Starting {label}...", prefix=app.app_name)
-            with self.input.wait_bar(f"Launching {label}..."):
+            self.console.info(f"Starting {label}...", prefix=app.app_name)
+            with self.console.wait_bar(f"Launching {label}..."):
                 output = self.tools.subprocess.check_output(
                     ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
                     + passthrough
@@ -616,7 +616,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     ) from e
 
             # Start streaming logs for the app.
-            self.logger.info(
+            self.console.info(
                 "Following simulator log output (type CTRL-C to stop log)...",
                 prefix=app.app_name,
             )

@@ -41,7 +41,7 @@ class Flatpak(Tool):
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
-                tools.logger.warning(
+                tools.console.warning(
                     """\
 *************************************************************************
 ** WARNING: Unable to determine the version of Flatpak                 **
@@ -99,7 +99,7 @@ You must install both flatpak and flatpak-builder.
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
-                tools.logger.warning(
+                tools.console.warning(
                     """\
 *************************************************************************
 ** WARNING: Unable to determine the version of flatpak-builder         **
@@ -158,7 +158,7 @@ You must install both flatpak and flatpak-builder.
                     repo_alias,
                     url,
                 ]
-                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
+                + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -191,7 +191,7 @@ You must install both flatpak and flatpak-builder.
                     f"{runtime}/{self.tools.host_arch}/{runtime_version}",
                     f"{sdk}/{self.tools.host_arch}/{runtime_version}",
                 ]
-                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
+                + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,
                 # flatpak install uses many animations that cannot be disabled
                 stream_output=False,
@@ -228,7 +228,7 @@ You must install both flatpak and flatpak-builder.
                     "build",
                     "manifest.yml",
                 ]
-                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
+                + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,
                 cwd=path,
             )
@@ -281,10 +281,10 @@ flatpak run {bundle_identifier}
         flatpak_run_cmd = ["flatpak", "run", bundle_identifier]
         flatpak_run_cmd.extend([] if args is None else args)
 
-        if self.tools.logger.is_debug:
+        if self.tools.console.is_debug:
             kwargs.setdefault("env", {})["BRIEFCASE_DEBUG"] = "1"
 
-        if self.tools.logger.is_deep_debug:
+        if self.tools.console.is_deep_debug:
             # Must come before bundle identifier; otherwise, it's passed as an arg to app
             flatpak_run_cmd.insert(2, "--verbose")
 
@@ -342,7 +342,7 @@ flatpak run {bundle_identifier}
                     bundle_identifier,
                     version,
                 ]
-                + (["--verbose"] if self.tools.logger.is_deep_debug else []),
+                + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,
                 cwd=build_path,
             )

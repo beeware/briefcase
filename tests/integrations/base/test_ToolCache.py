@@ -12,7 +12,7 @@ import pytest
 from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.integrations.base import ToolCache
 
 from .test_tool_registry import integrations_modules, tools_for_module
@@ -115,7 +115,6 @@ def test_base_path_is_path(simple_tools):
     # The BaseCommand tests have much more extensive tests for this path.
     assert isinstance(simple_tools.base_path, Path)
     tools = ToolCache(
-        logger=Log(),
         console=Console(),
         base_path="/home/data",
     )
@@ -140,7 +139,6 @@ def test_home_path_default(simple_tools):
 def test_nonwindows_home_path(home_path, expected_path, tmp_path):
     """Home path is always expanded or defaulted."""
     tools = ToolCache(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path,
         home_path=home_path,
@@ -161,7 +159,6 @@ def test_nonwindows_home_path(home_path, expected_path, tmp_path):
 def test_windows_home_path(home_path, expected_path, tmp_path):
     """Home path is always expanded or defaulted."""
     tools = ToolCache(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path,
         home_path=home_path,
@@ -175,7 +172,6 @@ def test_is_32bit_python(maxsize, is_32bit, monkeypatch, tmp_path):
     monkeypatch.setattr(sys, "maxsize", maxsize)
 
     tools = ToolCache(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path,
     )

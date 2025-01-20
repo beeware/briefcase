@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.platforms.macOS.app import macOSAppCreateCommand, macOSAppPackageCommand
 
@@ -8,7 +8,6 @@ from briefcase.platforms.macOS.app import macOSAppCreateCommand, macOSAppPackage
 @pytest.fixture
 def create_command(tmp_path):
     return macOSAppCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -18,7 +17,6 @@ def create_command(tmp_path):
 @pytest.fixture
 def package_command(tmp_path):
     return macOSAppPackageCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import briefcase.platforms.linux.flatpak
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.integrations.subprocess import Subprocess
@@ -13,7 +13,6 @@ from briefcase.platforms.linux.flatpak import LinuxFlatpakCreateCommand
 @pytest.fixture
 def create_command(tmp_path):
     return LinuxFlatpakCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

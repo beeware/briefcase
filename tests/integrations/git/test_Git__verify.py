@@ -41,7 +41,7 @@ def test_unsupported_os(mock_tools):
 )
 def test_git_stdlib_logging(mock_tools, logging_level, handler_expected):
     """A logging handler is configured for GitPython when DEEP_DEBUG is enabled."""
-    mock_tools.logger.verbosity = logging_level
+    mock_tools.console.verbosity = logging_level
 
     Git.verify(mock_tools)
 

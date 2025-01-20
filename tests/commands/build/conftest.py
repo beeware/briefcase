@@ -3,8 +3,7 @@ import pytest
 from briefcase.commands import BuildCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
-from briefcase.console import Console, Log
-from ...utils import create_file
+from ...utils import create_file, DummyConsole
 
 
 class DummyBuildCommand(BuildCommand):
@@ -19,8 +18,7 @@ class DummyBuildCommand(BuildCommand):
     description = "Dummy build command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("logger", Log())
-        kwargs.setdefault("console", Console())
+        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []

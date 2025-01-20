@@ -3,7 +3,7 @@ from unittest.mock import ANY, MagicMock
 
 def test_default_and_intro_is_used(convert_command, monkeypatch):
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     def get_source_dir_hint(*args, **kwargs):
         return "SOME_DIRECTORY", "SOME_DESCRIPTION"
@@ -43,7 +43,7 @@ def test_prompted_source_dir(convert_command):
     (convert_command.base_path / "src/app_name" / "__main__.py").write_text(
         "", encoding="utf-8"
     )
-    convert_command.input.values = ["src/app_name"]
+    convert_command.console.values = ["src/app_name"]
 
     assert (
         convert_command.input_source_dir("app-name", "app_name", None) == "src/app_name"

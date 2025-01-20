@@ -6,7 +6,7 @@ from zipfile import ZipFile
 import pytest
 
 import briefcase.platforms.windows
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.windows_sdk import WindowsSDK
@@ -19,7 +19,6 @@ from ....utils import create_file
 @pytest.fixture
 def package_command(tmp_path):
     command = WindowsAppPackageCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

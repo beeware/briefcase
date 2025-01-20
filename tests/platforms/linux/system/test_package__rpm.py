@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import system
 from briefcase.platforms.linux.system import LinuxSystemPackageCommand
@@ -18,7 +18,6 @@ from ....utils import create_file, create_tgz_file
 @pytest.fixture
 def package_command(first_app, tmp_path):
     command = LinuxSystemPackageCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
