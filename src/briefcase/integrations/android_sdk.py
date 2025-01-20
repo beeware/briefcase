@@ -25,6 +25,19 @@ from briefcase.integrations.subprocess import SubprocessArgT
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
 
+def create_avd_validator(emulators):
+    def _validate_avd_name(avd):
+        if not PEP508_NAME_RE.match(avd):
+            raise ValueError(
+                "An emulator name may only contain letters, numbers, hyphens and underscores."
+            )
+        elif avd in emulators:
+            raise ValueError(f"An emulator named '{avd}' already exists.")
+        return True
+
+    return _validate_avd_name
+
+
 class AndroidDeviceNotAuthorized(BriefcaseCommandError):
     def __init__(self, device):
         self.device = device
@@ -1094,40 +1107,18 @@ In future, you can specify this device by running:
             default_avd = f"beePhone{i}"
 
         # Prompt for a device avd until a valid one is provided.
-        self.tools.logger.info(
-            f"""
+        avd = self.tools.input.text_question(
+            intro=f"""\
 You need to select a name for your new emulator. This is an identifier that
 can be used to start the emulator in future. It should follow the same naming
 conventions as a Python package (i.e., it may only contain letters, numbers,
 hyphens and underscores). If you don't provide a name, Briefcase will use the
 a default name '{default_avd}'.
-
-"""
+""",
+            description="Emulator Name",
+            default=default_avd,
+            validator=create_avd_validator(emulators),
         )
-        avd_is_invalid = True
-        while avd_is_invalid:
-            avd = self.tools.input(f"Emulator name [{default_avd}]: ")
-            # If the user doesn't provide a name, use the default.
-            if avd == "":
-                avd = default_avd
-
-            if not PEP508_NAME_RE.match(avd):
-                self.tools.logger.info(
-                    f"""
-'{avd}' is not a valid emulator name. An emulator name may only contain
-letters, numbers, hyphens and underscores.
-
-"""
-                )
-            elif avd in emulators:
-                self.tools.logger.info(
-                    f"""
-An emulator named '{avd}' already exists.
-
-"""
-                )
-            else:
-                avd_is_invalid = False
 
         # TODO: Provide a list of options for device types with matching skins
         device_type = self.DEFAULT_DEVICE_TYPE
