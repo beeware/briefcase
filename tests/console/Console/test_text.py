@@ -11,26 +11,22 @@ from tests.utils import default_rich_prompt
         ("", "Default"),
     ],
 )
-def test_text_question(console, value, expected):
+def test_text(console, value, expected):
     console.input.return_value = value
 
-    actual = console.text_question(
-        description="My variable",
-        intro="Intro",
+    actual = console.text(
+        prompt="> ",
         default="Default",
     )
 
     assert actual == expected
-    console.input.assert_called_once_with(
-        default_rich_prompt("My variable [Default]: "), markup=True
-    )
+    console.input.assert_called_once_with(default_rich_prompt("> "), markup=True)
 
 
 def test_disabled(disabled_console):
     """If input is disabled, the default is returned."""
-    actual = disabled_console.text_question(
-        description="My variable",
-        intro="Intro",
+    actual = disabled_console.text(
+        prompt="> ",
         default="Default",
     )
 
@@ -41,9 +37,8 @@ def test_disabled(disabled_console):
 def test_disabled_no_default(disabled_console):
     """If input is disabled and there is no default, an error is raised."""
     with pytest.raises(InputDisabled):
-        disabled_console.text_question(
-            description="My variable",
-            intro="Intro",
+        disabled_console.text(
+            prompt="> ",
             default=None,
         )
 
