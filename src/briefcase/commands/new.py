@@ -4,7 +4,6 @@ import re
 import sys
 import unicodedata
 from collections import OrderedDict
-from collections.abc import Iterable, Sequence
 from email.utils import parseaddr
 
 if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
@@ -14,63 +13,17 @@ else:  # pragma: no-cover-if-gte-py310
     # so, the backport package must be used on older versions.
     from importlib_metadata import entry_points
 
-from briefcase.bootstraps import BaseGuiBootstrap, EmptyBootstrap
+from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
     validate_url,
 )
-from briefcase.console import MAX_TEXT_WIDTH
-from briefcase.console import select_option as _select_option
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.git import Git
 
 from .base import BaseCommand
-
-
-def titlecase(s):
-    """Convert a string to titlecase.
-
-    Follow Chicago Manual of Style rules for capitalization (roughly).
-
-    * Capitalize *only* the first letter of each word
-    * ... unless the word is an acronym (e.g., URL)
-    * ... or the word is on the exclude list ('of', 'and', 'the')
-    :param s: The input string
-    :returns: A capitalized string.
-    """
-    return " ".join(
-        (
-            word
-            if (
-                word.isupper()
-                or word
-                in {
-                    "a",
-                    "an",
-                    "and",
-                    "as",
-                    "at",
-                    "but",
-                    "by",
-                    "en",
-                    "for",
-                    "if",
-                    "in",
-                    "of",
-                    "on",
-                    "or",
-                    "the",
-                    "to",
-                    "via",
-                    "vs",
-                }
-            )
-            else word.capitalize()
-        )
-        for word in s.split(" ")
-    )
 
 
 def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
@@ -299,117 +252,8 @@ class NewCommand(BaseCommand):
         """
         return f"https://{self.make_domain(bundle)}/{app_name}"
 
-    def prompt_divider(self, title: str = ""):
-        """Writes a divider with an optional title."""
-        title = f"-- {title} " if title else ""
-        self.input.prompt()
-        self.input.prompt()
-        self.input.prompt(f"{title}{'-' * (MAX_TEXT_WIDTH - len(title))}", style="bold")
-
-    def prompt_intro(self, intro: str):
-        """Write the introduction for a prompt."""
-        self.input.prompt()
-        self.input.prompt(self.input.textwrap(intro))
-        self.input.prompt()
-
-    def validate_user_input(self, validator, answer) -> bool:
-        """Validate a user's input is acceptable.
-
-        A warning message is issued if input is enabled. Otherwise, an exception is
-        raised and project creation is aborted.
-        """
-        error_msg = f"Invalid value; {answer}"
-        try:
-            if validator is None or validator(answer):
-                return True
-        except ValueError as e:
-            error_msg = str(e)
-
-        if not self.input.enabled:
-            raise BriefcaseCommandError(error_msg)
-        self.logger.warning()
-        self.logger.warning(error_msg)
-
-        return False
-
-    def validate_override(self, override_value: str | None, validator=None) -> bool:
-        """Validates and returns override value for a project configuration."""
-        if override_value is not None:
-            self.input.prompt()
-            self.input.prompt(f"Using override value {override_value!r}")
-            if not self.validate_user_input(validator, override_value):
-                return False
-        return True
-
-    def validate_selection_override(
-        self,
-        choices: Iterable[str],
-        override_value: str | None,
-    ) -> bool:
-        """Validate a project override value against a list of options."""
-        return self.validate_override(override_value, validator=lambda c: c in choices)
-
-    def input_text(self, intro, variable, default, validator=None, override_value=None):
-        """Read a text answer from the user.
-
-        :param intro: An introductory paragraph explaining the question being asked.
-        :param variable: The name of the variable being entered.
-        :param default: The default value if the user hits enter without typing anything.
-        :param validator: (optional) A validator function; accepts a single input (the
-            candidate response), returns True if the answer is valid, or raises
-            ValueError() with a debugging message if the candidate value isn't valid.
-        :param override_value: value to return instead of soliciting input
-        :returns: a string, guaranteed to meet the validation criteria of ``validator``
-        """
-        variable = titlecase(variable)
-        self.prompt_divider(title=variable)
-
-        if override_value and self.validate_override(override_value, validator):
-            return override_value
-
-        self.prompt_intro(intro=intro)
-        while True:
-            answer = self.input.text_input(f"{variable} [{default}]: ", default=default)
-
-            if self.validate_user_input(validator, answer):
-                return answer
-
-            self.input.prompt()
-
-    def select_option(
-        self,
-        intro: str,
-        variable: str,
-        default: str | None,
-        options: Sequence[str],
-        override_value: str | None,
-    ) -> str:
-        variable = titlecase(variable)
-        self.prompt_divider(title=variable)
-
-        if override_value is not None:
-            if self.validate_selection_override(options, override_value):
-                return override_value
-            else:
-                self.logger.warning(
-                    f"Invalid override value {override_value!r} for {variable}, using user-provided value."
-                )
-
-        if default is not None:
-            default = str(options.index(default) + 1)
-        else:
-            default = "1"
-
-        self.prompt_intro(intro=intro)
-        return _select_option(
-            prompt=f"{variable} [{default}]: ",
-            input=self.input,
-            default=default,
-            options=list(zip(options, options)),
-        )
-
     def input_project_name(self, formal_name, override_value):
-        return self.input_text(
+        return self.input.text_question(
             intro=(
                 "Briefcase can manage projects that contain multiple applications, so "
                 "we need a Project name.\n"
@@ -417,7 +261,7 @@ class NewCommand(BaseCommand):
                 "If you're only planning to have one application in this project, you "
                 "can use the formal name as the project name."
             ),
-            variable="project name",
+            description="Project Name",
             default=formal_name,
             override_value=override_value,
         )
@@ -434,11 +278,11 @@ class NewCommand(BaseCommand):
             "Proprietary",
             "Other",
         ]
-        return self.select_option(
+        return self.input.selection_question(
             intro="What license do you want to use for this project's code?",
-            variable="Project License",
+            description="Project License",
             options=licenses,
-            default=None,
+            default=licenses[0],
             override_value=override_value,
         )
 
@@ -447,7 +291,7 @@ class NewCommand(BaseCommand):
 
         :returns: A context dictionary to be used in the cookiecutter project template.
         """
-        formal_name = self.input_text(
+        formal_name = self.input.text_question(
             intro=(
                 "First, we need a formal name for your application.\n"
                 "\n"
@@ -455,7 +299,7 @@ class NewCommand(BaseCommand):
                 "of the application is displayed. It can have spaces and punctuation "
                 "if you like, and any capitalization will be used as you type it."
             ),
-            variable="formal name",
+            description="Formal Name",
             default="Hello World",
             validator=self.validate_formal_name,
             override_value=project_overrides.pop("formal_name", None),
@@ -465,7 +309,7 @@ class NewCommand(BaseCommand):
         class_name = make_class_name(formal_name)
 
         default_app_name = self.make_app_name(formal_name)
-        app_name = self.input_text(
+        app_name = self.input.text_question(
             intro=(
                 "Next, we need a name that can serve as a machine-readable Python "
                 "package name for your application.\n"
@@ -478,7 +322,7 @@ class NewCommand(BaseCommand):
                 "Based on your formal name, we suggest an app name of "
                 f"{default_app_name!r}, but you can use another name if you want."
             ),
-            variable="app name",
+            description="App Name",
             default=default_app_name,
             validator=self.validate_app_name,
             override_value=project_overrides.pop("app_name", None),
@@ -489,7 +333,7 @@ class NewCommand(BaseCommand):
         source_dir = f"src/{module_name}"
         test_source_dir = "tests"
 
-        bundle = self.input_text(
+        bundle = self.input.text_question(
             intro=(
                 "Now we need a bundle identifier for your application.\n"
                 "\n"
@@ -504,7 +348,7 @@ class NewCommand(BaseCommand):
                 "name to form a complete application identifier (e.g., "
                 f"com.example.{app_name})."
             ),
-            variable="bundle identifier",
+            description="Bundle Identifier",
             default="com.example",
             validator=self.validate_bundle,
             override_value=project_overrides.pop("bundle", None),
@@ -514,25 +358,25 @@ class NewCommand(BaseCommand):
             formal_name, project_overrides.pop("project_name", None)
         )
 
-        description = self.input_text(
+        description = self.input.text_question(
             intro="Now, we need a one line description for your application.",
-            variable="description",
+            description="Description",
             default="My first application",
             override_value=project_overrides.pop("description", None),
         )
 
-        author = self.input_text(
+        author = self.input.text_question(
             intro=(
                 "Who do you want to be credited as the author of this application?\n"
                 "\n"
                 "This could be your own name, or the name of your company you work for."
             ),
-            variable="author",
+            description="Author",
             default="Jane Developer",
             override_value=project_overrides.pop("author", None),
         )
 
-        author_email = self.input_text(
+        author_email = self.input.text_question(
             intro=(
                 "What email address should people use to contact the developers of "
                 "this application?\n"
@@ -540,19 +384,19 @@ class NewCommand(BaseCommand):
                 "This might be your own email address, or a generic contact address "
                 "you set up specifically for this application."
             ),
-            variable="author's email",
+            description="Author's Email",
             default=self.make_author_email(author, bundle),
             validator=self.validate_email,
             override_value=project_overrides.pop("author_email", None),
         )
 
-        url = self.input_text(
+        url = self.input.text_question(
             intro=(
                 "What is the website URL for this application?\n"
                 "\n"
                 "If you don't have a website set up yet, you can put in a dummy URL."
             ),
-            variable="application URL",
+            description="Application URL",
             default=self.make_project_url(bundle, app_name),
             validator=validate_url,
             override_value=project_overrides.pop("url", None),
@@ -589,32 +433,21 @@ class NewCommand(BaseCommand):
         bootstraps = get_gui_bootstraps()
         bootstrap_options = self._gui_bootstrap_choices(bootstraps)
 
-        # Map the override value to the annotated override value so we can use it with self.select_option
-        # If a user specifies the override value PySide6, then we want it to be mapped to the annotated value
-        # "PySide6       (does not support iOS/Android deployment)"
-        # since that is the option presented to the user. To accomplish this, we map the bootstrap classes
-        # to their annotated names and do a reverse lookup from the override bootstrap class to the annotated name.
-        #
-        # We do it this way to ensure consistent prompting for the user.
-        if bootstrap_override := project_overrides.pop("bootstrap", None):
-            reverse_lookup = {v: k for k, v in bootstrap_options.items()}
-            if self.validate_selection_override(bootstraps.keys(), bootstrap_override):
-                bootstrap_override = reverse_lookup[bootstraps[bootstrap_override]]
-
-        selected_bootstrap = self.select_option(
+        selected_bootstrap = self.input.selection_question(
             intro=(
                 "What GUI toolkit do you want to use for this project?\n"
                 "\n"
-                "Additional GUI bootstraps are available; visit "
-                "https://beeware.org/bee/briefcase-bootstraps "
-                "for a full list of known GUI bootstraps."
+                "Additional GUI bootstraps are available from the community.\n"
+                "\n"
+                "Check them out at https://beeware.org/bee/briefcase-bootstraps"
             ),
-            variable="GUI Framework",
-            default=None,
-            options=bootstrap_options.keys(),
-            override_value=bootstrap_override,
+            description="GUI Framework",
+            default=next(iter(bootstrap_options.keys())),
+            options=bootstrap_options,
+            override_value=project_overrides.pop("bootstrap", None),
         )
-        bootstrap_class = bootstrap_options[selected_bootstrap]
+
+        bootstrap_class = bootstraps[selected_bootstrap]
 
         return bootstrap_class(
             logger=self.logger,
@@ -650,13 +483,12 @@ class NewCommand(BaseCommand):
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 5 options are: Toga, PySide6, Pygame
+        # Ensure the first 3 options are: Toga, PySide6, Pygame
         ordered.move_to_end("Pygame", last=False)
         ordered.move_to_end("PySide6", last=False)
         ordered.move_to_end("Toga", last=False)
 
         # Option None should always be last
-        ordered["None"] = EmptyBootstrap
         ordered.move_to_end("None")
 
         # Construct the bootstrap options as they should be presented to users.
@@ -668,7 +500,7 @@ class NewCommand(BaseCommand):
         for name, klass in ordered.items():
             if annotation := getattr(klass, "display_name_annotation", ""):
                 annotation = f"{' ' * (max_len - len(name))} ({annotation})"
-            bootstrap_choices[f"{name}{annotation or ''}"] = klass
+            bootstrap_choices[name] = f"{name}{annotation or ''}"
 
         return bootstrap_choices
 
@@ -700,7 +532,7 @@ class NewCommand(BaseCommand):
         bootstrap = self.create_bootstrap(context, project_overrides)
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
-        self.prompt_divider()  # close the prompting section of output
+        self.input.divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 

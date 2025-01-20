@@ -126,6 +126,7 @@ Source = "https://github.com/beeware/briefcase"
 briefcase = "briefcase.__main__:main"
 
 [project.entry-points."briefcase.bootstraps"]
+None = "briefcase.bootstraps.empty:EmptyBootstrap"
 Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
 Console = "briefcase.bootstraps.console:ConsoleBootstrap"
 PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"

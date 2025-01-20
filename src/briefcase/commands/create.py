@@ -910,7 +910,7 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             self.logger.info()
-            confirm = self.input.boolean_input(
+            confirm = self.input.boolean(
                 f"Application {app.app_name!r} already exists; overwrite", default=False
             )
             if not confirm:

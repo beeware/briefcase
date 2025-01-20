@@ -6,6 +6,7 @@ import briefcase.commands.new
 from briefcase.bootstraps import (
     BaseGuiBootstrap,
     ConsoleBootstrap,
+    EmptyBootstrap,
     PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
@@ -15,6 +16,7 @@ from briefcase.bootstraps import (
 @pytest.fixture
 def mock_builtin_bootstraps():
     return {
+        "None": EmptyBootstrap,
         "Toga": TogaGuiBootstrap,
         "Console": ConsoleBootstrap,
         "PySide6": PySide6GuiBootstrap,
@@ -157,7 +159,7 @@ def test_question_sequence_pygame(new_command):
 
 
 def test_question_sequence_none(new_command):
-    """If no bootstrap is selected, ."""
+    """If no bootstrap is selected, the empty bootstrap is used."""
 
     # Prime answers for all the questions.
     new_command.input.values = [

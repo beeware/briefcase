@@ -4,9 +4,11 @@ from briefcase.config import validate_url
 
 
 def test_multiple_pep621_options(convert_command, monkeypatch):
-    mock_select_option = MagicMock()
-    mock_select_option.return_value = "https://some_other_url.com/"
-    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_selection_question = MagicMock()
+    mock_selection_question.return_value = "https://some_other_url.com/"
+    monkeypatch.setattr(
+        convert_command.input, "selection_question", mock_selection_question
+    )
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project.urls]\n"
@@ -15,14 +17,14 @@ def test_multiple_pep621_options(convert_command, monkeypatch):
         encoding="utf-8",
     )
     convert_command.input_url("some-name", None)
-    mock_select_option.assert_called_once_with(
+    mock_selection_question.assert_called_once_with(
         intro=(
             "What website URL do you want to use for this application? The "
             "following URLs are defined in your existing 'pyproject.toml'; "
             "select 'Other' to provide a different URL."
         ),
-        variable="application URL",
-        default=None,
+        description="Application URL",
+        default="https://some_url.com/",
         options=[
             "https://some_url.com/",
             "https://some_other_url.com/",
@@ -33,12 +35,14 @@ def test_multiple_pep621_options(convert_command, monkeypatch):
 
 
 def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
-    mock_select_option = MagicMock()
-    mock_select_option.return_value = "Other"
-    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_selection_question = MagicMock()
+    mock_selection_question.return_value = "Other"
+    monkeypatch.setattr(
+        convert_command.input, "selection_question", mock_selection_question
+    )
 
-    mock_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project.urls]\n"
@@ -47,14 +51,14 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
         encoding="utf-8",
     )
     convert_command.input_url("some-name", None)
-    mock_select_option.assert_called_once_with(
+    mock_selection_question.assert_called_once_with(
         intro=(
             "What website URL do you want to use for this application? The "
             "following URLs are defined in your existing 'pyproject.toml'; "
             "select 'Other' to provide a different URL."
         ),
-        variable="application URL",
-        default=None,
+        description="Application URL",
+        default="https://some_url.com/",
         options=[
             "https://some_url.com/",
             "https://some_other_url.com/",
@@ -62,26 +66,26 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
         ],
         override_value=None,
     )
-    mock_input_text.assert_called_once_with(
+    mock_text_question.assert_called_once_with(
         intro="What website URL do you want to use for the application?",
-        variable="application URL",
+        description="Application URL",
         default="https://example.com/some-name",
         validator=validate_url,
     )
 
 
 def test_no_pep621_options(convert_command, monkeypatch):
-    mock_input_text = MagicMock()
-    monkeypatch.setattr(convert_command, "input_text", mock_input_text)
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
 
     convert_command.input_url("some-name", None)
     default = "https://example.com/some-name"
-    mock_input_text.assert_called_once_with(
+    mock_text_question.assert_called_once_with(
         intro=(
             "What website URL do you want to use for this application? Based "
             f"on your existing 'pyproject.toml', this might be {default}"
         ),
-        variable="application URL",
+        description="Application URL",
         default=default,
         validator=validate_url,
         override_value=None,

@@ -47,8 +47,10 @@ from ...utils import PartialMatchString
 def test_get_license_from_file(
     convert_command, license_text, license, license_file_name, monkeypatch
 ):
-    mock_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_selection_question = MagicMock()
+    monkeypatch.setattr(
+        convert_command.input, "selection_question", mock_selection_question
+    )
 
     dummy_license_text = (
         "some leading text\neven_more_text" + license_text + "some_ending_text\n"
@@ -58,9 +60,9 @@ def test_get_license_from_file(
     )
 
     convert_command.input_license(None)
-    mock_select_option.assert_called_once_with(
+    mock_selection_question.assert_called_once_with(
         intro=PartialMatchString("the license file"),
-        variable="Project License",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",
@@ -121,8 +123,10 @@ def test_get_license_from_pep621_license_file(
     license,
     monkeypatch,
 ):
-    mock_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_selection_question = MagicMock()
+    monkeypatch.setattr(
+        convert_command.input, "selection_question", mock_selection_question
+    )
 
     dummy_license_text = (
         "some leading text\neven_more_text" + license_text + "some_ending_text\n"
@@ -136,9 +140,9 @@ def test_get_license_from_pep621_license_file(
 
     convert_command.input_license(None)
 
-    mock_select_option.assert_called_once_with(
+    mock_selection_question.assert_called_once_with(
         intro=PartialMatchString("the license file"),
-        variable="Project License",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",
@@ -175,16 +179,18 @@ def test_get_license_from_pyproject(
     license,
     monkeypatch,
 ):
-    mock_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_selection_question = MagicMock()
+    monkeypatch.setattr(
+        convert_command.input, "selection_question", mock_selection_question
+    )
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project]\n" f'license = {{text = "{license_text}"}}', encoding="utf-8"
     )
 
     convert_command.input_license(None)
-    mock_select_option.assert_called_once_with(
+    mock_selection_question.assert_called_once_with(
         intro=PartialMatchString("the PEP621 formatted pyproject.toml"),
-        variable="Project License",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",
@@ -202,13 +208,15 @@ def test_get_license_from_pyproject(
 
 
 def test_no_license_hint(convert_command, monkeypatch):
-    mock_select_option = MagicMock()
-    monkeypatch.setattr(convert_command, "select_option", mock_select_option)
+    mock_selection_question = MagicMock()
+    monkeypatch.setattr(
+        convert_command.input, "selection_question", mock_selection_question
+    )
 
     convert_command.input_license(None)
-    mock_select_option.assert_called_once_with(
+    mock_selection_question.assert_called_once_with(
         intro="What license do you want to use for this project's code? ",
-        variable="Project License",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",

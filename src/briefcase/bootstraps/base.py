@@ -123,7 +123,7 @@ class BaseGuiBootstrap(ABC):
         """Additional TOML to add to the bottom of pyproject.toml."""
 
     def post_generate(self, base_path: Path) -> None:
-        """Code to run after the template has been generated.
+        """Runs after the template has been generated.
 
         This can be used to produce any additional files that the base
         template doesn't provide.

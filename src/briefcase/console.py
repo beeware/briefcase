@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import operator
 import os
 import platform
 import re
@@ -10,12 +9,12 @@ import sys
 import textwrap
 import time
 import traceback
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from rich.console import Console as RichConsole
 from rich.control import strip_control_codes
@@ -31,6 +30,7 @@ from rich.progress import (
 from rich.traceback import Trace, Traceback
 
 from briefcase import __version__
+from briefcase.exceptions import InputDisabled
 
 # Max width for printing to console; matches argparse's default width
 MAX_TEXT_WIDTH = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
@@ -41,13 +41,6 @@ SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=
 # 7-bit C1 ANSI escape sequences
 ANSI_ESC_SEQ_RE_DEF = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
 ANSI_ESCAPE_RE = re.compile(ANSI_ESC_SEQ_RE_DEF)
-
-
-class InputDisabled(Exception):
-    def __init__(self):
-        super().__init__(
-            "Input is disabled; cannot request user input without a default"
-        )
 
 
 def sanitize_text(text: str) -> str:
@@ -679,7 +672,17 @@ class Console:
         if self.enabled:
             self.print(*values, markup=markup, stack_offset=4, **kwargs)
 
-    def boolean_input(self, question: str, default: bool = False) -> bool:
+    def divider(self, title: str = ""):
+        """Writes a divider with an optional title.
+
+        :param title: Optional; the title to display in the divider.
+        """
+        title = f"-- {title} " if title else ""
+        self.prompt()
+        self.prompt()
+        self.prompt(f"{title}{'-' * (MAX_TEXT_WIDTH - len(title))}", style="bold")
+
+    def boolean(self, question: str, default: bool = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
 
         The user might press "y" for true or "n" for false. If input is disabled,
@@ -703,7 +706,7 @@ class Console:
 
         prompt = f"{question} {yes_no}? "
 
-        result = self.selection_input(
+        result = self._selection(
             prompt=prompt,
             choices=["y", "n"],
             default=default_text,
@@ -715,7 +718,7 @@ class Console:
 
         return False
 
-    def selection_input(
+    def _selection(
         self,
         prompt: str,
         choices: Iterable[str],
@@ -733,7 +736,7 @@ class Console:
             performing any validity checks.
         """
         while True:
-            result = self.text_input(prompt, default)
+            result = self.text(prompt, default)
 
             if transform is not None and result is not None:
                 result = transform(result)
@@ -742,9 +745,10 @@ class Console:
                 return result
 
             self.prompt()
-            self.prompt(error_message)
+            self.prompt(error_message, style="bold yellow")
+            self.prompt()
 
-    def text_input(self, prompt: str, default: str | None = None) -> str:
+    def text(self, prompt: str, default: str | None = None) -> str:
         """Prompt the user for text input.
 
         If no default is specified, the input will be returned as entered.
@@ -767,6 +771,155 @@ class Console:
 
         return user_input
 
+    def _validate(self, value, validator, usage="Invalid value") -> bool:
+        """Validate a user-provided value.
+
+        A warning message is printed if input is enabled. Otherwise, an exception is
+        raised.
+
+        :param value: The candidate value.
+        :param validator: A validator function (or None, for no validation); accepts a
+            single input (the candidate response), returns True if the value is valid,
+            or raises ValueError() with a debugging message if the candidate value isn't
+            valid.
+        :raises InputDisabled: if console input has been disabled.
+        :returns: True if the value is valid
+        """
+        try:
+            if validator is None or validator(value):
+                return True
+            else:
+                error_msg = repr(value)
+        except ValueError as e:
+            error_msg = str(e)
+
+        if not self.enabled:
+            raise InputDisabled(error_msg)
+
+        self.prompt()
+        self.prompt(f"{usage}: {error_msg}", style="bold yellow")
+
+        return False
+
+    def text_question(
+        self,
+        description,
+        intro,
+        default,
+        validator=None,
+        override_value=None,
+    ) -> str:
+        """Ask the user a question whose answer is text.
+
+        :param description: A short description of the question being asked. This text
+            is used in prompts and a header bar prefacing the question.
+        :param intro: An introductory paragraph explaining the question being asked.
+        :param default: The default value if the user hits enter without typing anything.
+        :param validator: (optional) A validator function; accepts a single input (the
+            candidate response), returns True if the answer is valid, or raises
+            ValueError() with a debugging message if the candidate value isn't valid.
+        :param override_value: A pre-selected answer for the question. This can be used
+            to shortcut asking the question, such as when a command line option provides
+            a value. If provided and valid, the header bar will be displayed, but the
+            intro paragraph and option list will not.
+        :returns: a string, guaranteed to meet the validation criteria of ``validator``
+        """
+        self.divider(title=description)
+
+        if override_value is not None:
+            self.print()
+            self.print(f"Using override value {override_value!r}")
+            if self._validate(
+                override_value,
+                validator,
+                usage=f"Invalid override value for {description}",
+            ):
+                return override_value
+
+        self.prompt()
+        self.prompt(self.textwrap(intro))
+        self.prompt()
+        while True:
+            answer = self.text(f"{description} [{default}]: ", default=default)
+
+            if self._validate(answer, validator):
+                return answer
+
+            self.prompt()
+
+    def selection_question(
+        self,
+        description: str,
+        intro: str,
+        options: Iterable[str] | Mapping[Any, str],
+        default: str | None = None,
+        override_value: str | None = None,
+    ) -> Any:
+        """Ask the user a question whose answer requires selecting from a list of
+        options.
+
+        The options are provided as a dictionary, or as a list of items. If a dictionary
+        is provided, the values are the human-readable options, and the keys are the
+        values that will be returned as the selection. The human-readable options will
+        be sorted before display to the user. If a list is provided, the values in the
+        list are both the user-displayed values and the returned value.
+
+        :param description: A short description of the question being asked. This text
+            is used in prompts and a header bar prefacing the question.
+        :param intro: An introductory paragraph explaining the question being asked.
+        :param options: The options to present to the user.
+        :param default: The default option for empty user input. The options for the
+            user start numbering at 1; so, to default to the first item, this should be
+            "1".
+        :param override_value: A pre-selected answer for the question. This can be used
+            to shortcut asking the question, such as when a command line option provides
+            a value. If provided and valid, the header bar will be displayed, but the
+            intro paragraph and option list will not.
+        :returns: The user's chosen option (the key of that option if options were
+            provided as a dictionary)
+        """
+        self.divider(title=description)
+
+        if override_value is not None:
+            self.print()
+            self.print(f"Using override value {override_value!r}")
+            if self._validate(
+                override_value,
+                validator=lambda c: c in options,
+                usage=f"Invalid override value for {description}",
+            ):
+                return override_value
+
+        self.prompt()
+        self.prompt(self.textwrap(intro))
+        self.prompt()
+
+        if isinstance(options, dict):
+            ordered = list(options.items())
+        else:
+            ordered = list(zip(options, options))
+
+        if default is not None:
+            try:
+                default = str([option[0] for option in ordered].index(default) + 1)
+            except ValueError:
+                raise ValueError(f"{default!r} is not a valid default value")
+
+        for i, (key, value) in enumerate(ordered, start=1):
+            self.prompt(f"  {i}) {value}")
+
+        self.prompt()
+
+        choices = [str(index) for index in range(1, len(ordered) + 1)]
+        index = self._selection(
+            prompt=f"{description} [{default}]: " if default else f"{description}: ",
+            choices=choices,
+            error_message="Invalid Selection",
+            default=default,
+        )
+
+        return ordered[int(index) - 1][0]
+
     def __call__(self, prompt: str, *, markup: bool = False):
         """Present input() interface; prompt should be bold if markup is included."""
         if not self.enabled:
@@ -784,42 +937,3 @@ class Console:
         self.print.to_log(f"User input: {input_value}")
 
         return input_value
-
-
-def select_option(options, input, prompt="> ", error="Invalid selection", default=None):
-    """Prompt the user for a choice from a list of options.
-
-    The options are provided as a dictionary; the values are the human-readable options,
-    and the keys are the values that will be returned as the selection. The human-
-    readable options will be sorted before display to the user.
-
-    This method does *not* print a question or any leading text; it only prints the list
-    of options, and prompts the user for their choice. If the user chooses an invalid
-    selection (either provides non-integer input, or an invalid integer), it prints an
-    error message and prompts the user again.
-
-    :param options: A dictionary, or list of tuples, of options to present to the user.
-    :param input: The function to use to retrieve the user's input. This exists so that
-        the user's input can be easily mocked during testing.
-    :param prompt: The prompt to display to the user.
-    :param error: The error message to display when the user provides invalid input.
-    :param default: The default option for empty user input. The options for the user
-        start numbering at 1; so, to default to the first item, this should be "1".
-    :returns: The key corresponding to the user's chosen option.
-    """
-    if isinstance(options, dict):
-        ordered = list(sorted(options.items(), key=operator.itemgetter(1)))
-    else:
-        ordered = options
-
-    if input.enabled:
-        for i, (key, value) in enumerate(ordered, start=1):
-            input.prompt(f"  {i}) {value}")
-
-        input.prompt()
-
-    choices = [str(index) for index in range(1, len(ordered) + 1)]
-    index = input.selection_input(
-        prompt=prompt, choices=choices, error_message=error, default=default
-    )
-    return ordered[int(index) - 1][0]

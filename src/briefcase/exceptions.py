@@ -17,6 +17,18 @@ class HelpText(BriefcaseError):
     """Exceptions that contain help text and shouldn't be displayed as an error."""
 
 
+class InputDisabled(BriefcaseError):
+    def __init__(
+        self,
+        msg="Input is disabled; cannot request user input without a default",
+    ):
+        super().__init__(error_code=99)
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class NoCommandError(HelpText):
     def __init__(self, msg):
         super().__init__(error_code=-10, skip_logfile=True)
