@@ -312,7 +312,7 @@ class ConvertCommand(NewCommand):
                 "select 'Other' to provide a different URL."
             ),
             description="Application URL",
-            default=None,
+            default=options[0],
             options=options,
             override_value=override_value,
         )
@@ -414,7 +414,7 @@ class ConvertCommand(NewCommand):
             ),
             description="Author",
             options=options,
-            default=None,
+            default=options[0],
             override_value=None,
         )
         if author == "Other":

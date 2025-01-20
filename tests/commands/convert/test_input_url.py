@@ -24,7 +24,7 @@ def test_multiple_pep621_options(convert_command, monkeypatch):
             "select 'Other' to provide a different URL."
         ),
         description="Application URL",
-        default=None,
+        default="https://some_url.com/",
         options=[
             "https://some_url.com/",
             "https://some_other_url.com/",
@@ -58,7 +58,7 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
             "select 'Other' to provide a different URL."
         ),
         description="Application URL",
-        default=None,
+        default="https://some_url.com/",
         options=[
             "https://some_url.com/",
             "https://some_other_url.com/",

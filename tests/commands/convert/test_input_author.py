@@ -37,7 +37,7 @@ def test_multiple_pep621_authors(convert_command, monkeypatch):
             "Firstname Firstauthor, Name Thirdauthor & Firstname Fourthauthor",
             "Other",
         ],
-        default=None,
+        default="Firstname Firstauthor",
         override_value=None,
     )
 
@@ -68,7 +68,7 @@ def test_single_pep621_author(convert_command, monkeypatch):
             "Firstname Firstauthor",
             "Other",
         ],
-        default=None,
+        default="Firstname Firstauthor",
         override_value=None,
     )
 
@@ -107,7 +107,7 @@ def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
             "Firstname Firstauthor, Name Thirdauthor & Firstname Fourthauthor",
             "Other",
         ],
-        default=None,
+        default="Firstname Firstauthor",
         override_value=None,
     )
     mock_text_question.assert_called_once_with(
