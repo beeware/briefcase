@@ -136,7 +136,7 @@ class ConvertCommand(NewCommand):
 
         return self.input.text_question(
             intro=intro,
-            description="App name",
+            description="App Name",
             default=default,
             validator=self.validate_app_name,
             override_value=override_value,
@@ -158,7 +158,7 @@ class ConvertCommand(NewCommand):
                 f"Based on the app name, we suggest a formal name of '{default}', but "
                 "you can use another name if you want."
             ),
-            description="Formal name",
+            description="Formal Name",
             default=default,
             override_value=override_value,
         )
@@ -217,7 +217,7 @@ class ConvertCommand(NewCommand):
         default, intro = self.get_source_dir_hint(app_name, module_name)
         return self.input.text_question(
             intro=intro,
-            description="Source directory",
+            description="Source Directory",
             default=default,
             validator=partial(self.validate_source_dir, module_name),
             override_value=override_value,
@@ -252,7 +252,7 @@ class ConvertCommand(NewCommand):
 
         return self.input.text_question(
             intro=intro,
-            description="Test source directory",
+            description="Test Source Directory",
             default=default,
             validator=partial(self.validate_test_source_dir, module_name),
             override_value=override_value,
@@ -339,7 +339,7 @@ class ConvertCommand(NewCommand):
         return (
             self.input.selection_question(
                 intro="Is this a GUI application or a console application?",
-                description="Interface style",
+                description="Interface Style",
                 default="gui",
                 options=options,
                 override_value=override_value.lower() if override_value else None,
@@ -364,7 +364,7 @@ class ConvertCommand(NewCommand):
                 "application's machine readable name to form a complete application "
                 f"identifier ('{default}.{app_name}')."
             ),
-            description="Bundle identifier",
+            description="Bundle Identifier",
             default=default,
             validator=self.validate_bundle,
             override_value=override_value,
@@ -407,8 +407,7 @@ class ConvertCommand(NewCommand):
         # here.
         author = self.input.selection_question(
             intro=(
-                intro
-                + "\n\n"
+                f"{intro}\n\n"
                 + "We found these author names in the PEP621 formatted "
                 + "'pyproject.toml'. Who do you want to be credited as the author of "
                 + "this application?"
@@ -450,7 +449,7 @@ class ConvertCommand(NewCommand):
 
         author_email = self.input.text_question(
             intro=intro,
-            description="Author's email",
+            description="Author's Email",
             default=default,
             validator=self.validate_email,
             override_value=override_value,
@@ -554,7 +553,7 @@ class ConvertCommand(NewCommand):
 
         return self.input.selection_question(
             intro=intro,
-            description="Project license",
+            description="Project License",
             options=options,
             default=default,
             override_value=override_value,

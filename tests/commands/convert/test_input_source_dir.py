@@ -13,7 +13,7 @@ def test_default_and_intro_is_used(convert_command, monkeypatch):
     convert_command.input_source_dir("app-name", "app_name", None)
     mock_text_question.assert_called_once_with(
         intro="SOME_DESCRIPTION",
-        description="Source directory",
+        description="Source Directory",
         default="SOME_DIRECTORY",
         validator=ANY,
         override_value=None,

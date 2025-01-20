@@ -10,7 +10,7 @@ def test_default_without_http_protocol(convert_command, monkeypatch):
     convert_command.input_bundle("http://www.some_url.no", "test-app-name", None)
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString("no.some_url.www.test-app-name"),
-        description="Bundle identifier",
+        description="Bundle Identifier",
         default="no.some_url.www",
         validator=convert_command.validate_bundle,
         override_value=None,
@@ -24,7 +24,7 @@ def test_default_without_https_protocol(convert_command, monkeypatch):
     convert_command.input_bundle("https://www.some_url.no", "test-app-name", None)
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString("no.some_url.www.test-app-name"),
-        description="Bundle identifier",
+        description="Bundle Identifier",
         default="no.some_url.www",
         validator=convert_command.validate_bundle,
         override_value=None,

@@ -22,7 +22,7 @@ def test_no_pep621_data(convert_command, monkeypatch):
         intro=PartialMatchString(
             "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
         ),
-        description="App name",
+        description="App Name",
         default="test-app-name",
         validator=convert_command.validate_app_name,
         override_value=None,
@@ -56,7 +56,7 @@ def test_invalid_hint_app_name(convert_command, monkeypatch):
         intro=NoMatchString(
             "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
         ),
-        description="App name",
+        description="App Name",
         default="hello-world",
         validator=convert_command.validate_app_name,
         override_value=None,
@@ -74,7 +74,7 @@ def test_hint_is_canonicalized(convert_command, monkeypatch):
         intro=PartialMatchString(
             "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
         ),
-        description="App name",
+        description="App Name",
         default="test-app-name",
         validator=convert_command.validate_app_name,
         override_value=None,

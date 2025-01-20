@@ -62,7 +62,7 @@ def test_get_license_from_file(
     convert_command.input_license(None)
     mock_selection_question.assert_called_once_with(
         intro=PartialMatchString("the license file"),
-        description="Project license",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",
@@ -142,7 +142,7 @@ def test_get_license_from_pep621_license_file(
 
     mock_selection_question.assert_called_once_with(
         intro=PartialMatchString("the license file"),
-        description="Project license",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",
@@ -190,7 +190,7 @@ def test_get_license_from_pyproject(
     convert_command.input_license(None)
     mock_selection_question.assert_called_once_with(
         intro=PartialMatchString("the PEP621 formatted pyproject.toml"),
-        description="Project license",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",
@@ -216,7 +216,7 @@ def test_no_license_hint(convert_command, monkeypatch):
     convert_command.input_license(None)
     mock_selection_question.assert_called_once_with(
         intro="What license do you want to use for this project's code? ",
-        description="Project license",
+        description="Project License",
         options=[
             "BSD license",
             "MIT license",

@@ -12,7 +12,7 @@ def test_app_name_is_formatted(convert_command, monkeypatch):
         intro=PartialMatchString(
             "Based on the app name, we suggest a formal name of 'Test App Name',"
         ),
-        description="Formal name",
+        description="Formal Name",
         default="Test App Name",
         override_value=None,
     )

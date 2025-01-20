@@ -261,7 +261,7 @@ class NewCommand(BaseCommand):
                 "If you're only planning to have one application in this project, you "
                 "can use the formal name as the project name."
             ),
-            description="Project name",
+            description="Project Name",
             default=formal_name,
             override_value=override_value,
         )
@@ -280,7 +280,7 @@ class NewCommand(BaseCommand):
         ]
         return self.input.selection_question(
             intro="What license do you want to use for this project's code?",
-            description="Project license",
+            description="Project License",
             options=licenses,
             default=licenses[0],
             override_value=override_value,
@@ -299,7 +299,7 @@ class NewCommand(BaseCommand):
                 "of the application is displayed. It can have spaces and punctuation "
                 "if you like, and any capitalization will be used as you type it."
             ),
-            description="Formal name",
+            description="Formal Name",
             default="Hello World",
             validator=self.validate_formal_name,
             override_value=project_overrides.pop("formal_name", None),
@@ -322,7 +322,7 @@ class NewCommand(BaseCommand):
                 "Based on your formal name, we suggest an app name of "
                 f"{default_app_name!r}, but you can use another name if you want."
             ),
-            description="App name",
+            description="App Name",
             default=default_app_name,
             validator=self.validate_app_name,
             override_value=project_overrides.pop("app_name", None),
@@ -348,7 +348,7 @@ class NewCommand(BaseCommand):
                 "name to form a complete application identifier (e.g., "
                 f"com.example.{app_name})."
             ),
-            description="Bundle identifier",
+            description="Bundle Identifier",
             default="com.example",
             validator=self.validate_bundle,
             override_value=project_overrides.pop("bundle", None),
@@ -384,7 +384,7 @@ class NewCommand(BaseCommand):
                 "This might be your own email address, or a generic contact address "
                 "you set up specifically for this application."
             ),
-            description="Author's email",
+            description="Author's Email",
             default=self.make_author_email(author, bundle),
             validator=self.validate_email,
             override_value=project_overrides.pop("author_email", None),
@@ -441,7 +441,7 @@ class NewCommand(BaseCommand):
                 "\n"
                 "Check them out at https://beeware.org/bee/briefcase-bootstraps"
             ),
-            description="GUI framework",
+            description="GUI Framework",
             default=next(iter(bootstrap_options.keys())),
             options=bootstrap_options,
             override_value=project_overrides.pop("bootstrap", None),

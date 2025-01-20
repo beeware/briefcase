@@ -21,7 +21,7 @@ def test_pep621_author(convert_command, monkeypatch):
     convert_command.input_email("Name Thirdauthor", "some.bundle", None)
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString("the selected author name"),
-        description="Author's email",
+        description="Author's Email",
         default="mail3@tld.com",
         validator=convert_command.validate_email,
         override_value=None,
@@ -46,7 +46,7 @@ def test_pep621_wrong_author(convert_command, monkeypatch):
     convert_command.input_email("Noname Thirdauthor", "some.bundle", None)
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString("the author name and bundle"),
-        description="Author's email",
+        description="Author's Email",
         default="noname@bundle.some",
         validator=convert_command.validate_email,
         override_value=None,
@@ -61,7 +61,7 @@ def test_no_pep621_author(convert_command, monkeypatch):
     convert_command.input_email("Noname Thirdauthor", "some.bundle", None)
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString("the author name and bundle"),
-        description="Author's email",
+        description="Author's Email",
         default="noname@bundle.some",
         validator=convert_command.validate_email,
         override_value=None,
