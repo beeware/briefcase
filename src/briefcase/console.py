@@ -751,9 +751,9 @@ class Console:
             if result in choices:
                 return result
 
-            self.prompt()
-            self.prompt(error_message, style="bold yellow")
-            self.prompt()
+            self.warning()
+            self.warning(error_message)
+            self.warning()
 
     def input_text(self, prompt: str, default: str | None = None) -> str:
         """Prompt the user for text input.
