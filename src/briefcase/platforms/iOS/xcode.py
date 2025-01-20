@@ -213,7 +213,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         else:
             iOS_tag = self.input.selection_question(
                 intro="Select iOS version:",
-                description="iOS version",
+                description="iOS Version",
                 options=simulators.keys(),
             )
 

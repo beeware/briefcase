@@ -525,7 +525,7 @@ class macOSSigningMixin:
 
         identity = self.input.selection_question(
             intro=f"Select {ident_type} signing identity to use:",
-            description=f"{ident_type.title()} signing identity",
+            description=f"{ident_type.title()} Signing Identity",
             options=identities,
         )
         identity_name = identities[identity]

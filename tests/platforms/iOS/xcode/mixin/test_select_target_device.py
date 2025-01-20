@@ -289,7 +289,7 @@ def test_multiple_os_implied_device(dummy_command):
     assert device == "iPhone 11"
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["iOS version: "]
+    assert dummy_command.input.prompts == ["iOS Version: "]
 
 
 def test_os_and_device_options(dummy_command):
@@ -318,7 +318,7 @@ def test_os_and_device_options(dummy_command):
     assert device == "iPhone 8"
 
     # User input was solicited twice
-    assert dummy_command.input.prompts == ["iOS version: ", "Simulator: "]
+    assert dummy_command.input.prompts == ["iOS Version: ", "Simulator: "]
 
 
 def test_no_os_versions(dummy_command):
