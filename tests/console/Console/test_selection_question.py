@@ -135,7 +135,7 @@ def test_override_validation(capsys):
 
     output = capsys.readouterr().out
 
-    assert "Invalid override value for my variable: 'invalid_value'" in output
+    assert "Invalid override value for My variable: 'invalid_value'" in output
 
     # "other value" was selected by the user after validation failed.
     assert result == "other_value"

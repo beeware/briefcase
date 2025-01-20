@@ -16,9 +16,9 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.console import InputDisabled
 from briefcase.exceptions import (
     BriefcaseCommandError,
+    InputDisabled,
     InvalidDeviceError,
     NoDistributionArtefact,
 )

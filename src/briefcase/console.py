@@ -30,6 +30,7 @@ from rich.progress import (
 from rich.traceback import Trace, Traceback
 
 from briefcase import __version__
+from briefcase.exceptions import InputDisabled
 
 # Max width for printing to console; matches argparse's default width
 MAX_TEXT_WIDTH = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
@@ -40,13 +41,6 @@ SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=
 # 7-bit C1 ANSI escape sequences
 ANSI_ESC_SEQ_RE_DEF = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
 ANSI_ESCAPE_RE = re.compile(ANSI_ESC_SEQ_RE_DEF)
-
-
-class InputDisabled(Exception):
-    def __init__(self):
-        super().__init__(
-            "Input is disabled; cannot request user input without a default"
-        )
 
 
 def sanitize_text(text: str) -> str:
@@ -795,15 +789,15 @@ class Console:
             if validator is None or validator(value):
                 return True
             else:
-                error_msg = f"{usage}: {value!r}"
+                error_msg = repr(value)
         except ValueError as e:
-            error_msg = f"{usage}: {e}"
+            error_msg = str(e)
 
         if not self.enabled:
-            raise InputDisabled()
+            raise InputDisabled(error_msg)
 
         self.prompt()
-        self.prompt(error_msg, style="bold yellow")
+        self.prompt(f"{usage}: {error_msg}", style="bold yellow")
 
         return False
 
@@ -838,7 +832,7 @@ class Console:
             if self._validate(
                 override_value,
                 validator,
-                usage=f"Invalid override value for {description.lower()}",
+                usage=f"Invalid override value for {description}",
             ):
                 return override_value
 
@@ -892,7 +886,7 @@ class Console:
             if self._validate(
                 override_value,
                 validator=lambda c: c in options,
-                usage=f"Invalid override value for {description.lower()}",
+                usage=f"Invalid override value for {description}",
             ):
                 return override_value
 

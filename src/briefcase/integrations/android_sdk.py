@@ -11,10 +11,10 @@ from datetime import datetime
 from pathlib import Path
 
 from briefcase.config import PEP508_NAME_RE
-from briefcase.console import InputDisabled
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
+    InputDisabled,
     InvalidDeviceError,
     MissingToolError,
 )

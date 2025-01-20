@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.console import InputDisabled
+from briefcase.exceptions import InputDisabled
 from tests.utils import DummyConsole
 
 
@@ -150,10 +150,7 @@ def test_input_disabled_validation_failure():
     """If input is disabled, and validation fails, an error is raised."""
     console = DummyConsole(enabled=False)
 
-    with pytest.raises(
-        InputDisabled,
-        match=r"Input is disabled; cannot request user input without a default",
-    ):
+    with pytest.raises(InputDisabled, match=r"Well that won't work..."):
 
         def not_valid(text):
             raise ValueError("Well that won't work...")
@@ -172,10 +169,7 @@ def test_input_disabled_validation_failure_with_override():
     """If input is disabled, and validation fails for override, an error is raised."""
     console = DummyConsole(enabled=False)
 
-    with pytest.raises(
-        InputDisabled,
-        match=r"Input is disabled; cannot request user input without a default",
-    ):
+    with pytest.raises(InputDisabled, match=r"Well that won't work..."):
 
         def not_valid(text):
             raise ValueError("Well that won't work...")
