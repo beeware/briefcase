@@ -28,7 +28,7 @@ else:  # pragma: no-cover-if-gte-py311
 import briefcase
 from briefcase import __version__
 from briefcase.config import AppConfig, GlobalConfig, parse_config
-from briefcase.console import MAX_TEXT_WIDTH, Console, Log
+from briefcase.console import MAX_TEXT_WIDTH, Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -140,7 +140,6 @@ class BaseCommand(ABC):
 
     def __init__(
         self,
-        logger: Log,
         console: Console,
         tools: ToolCache = None,
         apps: dict = None,
@@ -150,7 +149,6 @@ class BaseCommand(ABC):
     ):
         """Base for all Commands.
 
-        :param logger: Logger for console and logfile.
         :param console: Facilitates console interaction and input solicitation.
         :param tools: Cache of tools populated by Commands as they are required.
         :param apps: Dictionary of project's Apps keyed by app name.
@@ -169,7 +167,6 @@ class BaseCommand(ABC):
         self.is_clone = is_clone
 
         self.tools = tools or ToolCache(
-            logger=logger,
             console=console,
             base_path=self.data_path / "tools",
         )
@@ -185,12 +182,8 @@ class BaseCommand(ABC):
         self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
 
     @property
-    def logger(self):
-        return self.tools.logger
-
-    @property
-    def input(self):
-        return self.tools.input
+    def console(self):
+        return self.tools.console
 
     def validate_data_path(self, data_path):
         """Validate provided data path or determine OS-specific path.
@@ -275,7 +268,7 @@ a custom location for Briefcase's tools.
     def validate_locale(self):
         """Validate the system's locale is compatible."""
         if self.tools.host_os == "Linux" and self.tools.system_encoding != "UTF-8":
-            self.logger.warning(
+            self.console.warning(
                 f"""
 *************************************************************************
 ** WARNING: Default system encoding is not supported                   **
@@ -304,8 +297,7 @@ a custom location for Briefcase's tools.
         command = getattr(format_module, command_name)(
             base_path=self.base_path,
             apps=self.apps,
-            logger=self.logger,
-            console=self.input,
+            console=self.console,
             tools=self.tools,
             is_clone=True,
         )
@@ -731,7 +723,7 @@ any compatibility problems, and then add the compatibility declaration.
                 platform=self.platform,
                 output_format=self.output_format,
             ),
-            description=self.input.textwrap(
+            description=self.console.textwrap(
                 f"{self.description}\n\n{supported_formats_helptext}"
             ),
             formatter_class=(
@@ -765,9 +757,9 @@ any compatibility problems, and then add the compatibility declaration.
             options["passthrough"] = passthrough
 
         # Extract the base default options onto the command
-        self.input.enabled = options.pop("input_enabled")
-        self.logger.verbosity = options.pop("verbosity")
-        self.logger.save_log = options.pop("save_log")
+        self.console.input_enabled = options.pop("input_enabled")
+        self.console.verbosity = options.pop("verbosity")
+        self.console.save_log = options.pop("save_log")
 
         # Parse the configuration overrides
         overrides = parse_config_overrides(options.pop("config_overrides"))
@@ -902,7 +894,7 @@ any compatibility problems, and then add the compatibility declaration.
                     config_file,
                     platform=self.platform,
                     output_format=self.output_format,
-                    logger=self.logger,
+                    console=self.console,
                 )
 
                 # Create the global config
@@ -958,7 +950,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     repo = self.tools.git.Repo(cached_template)
                 except self.tools.git.exc.GitError:
                     # Template repository is in a weird state. Delete it
-                    self.logger.warning(
+                    self.console.warning(
                         "Template cache is in a weird state. Getting a clean clone."
                     )
                     self.tools.shutil.rmtree(cached_template)
@@ -968,7 +960,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 # the template, or the template was in a weird state. Perform a blobless
                 # clone.
                 try:
-                    self.logger.info(f"Cloning template {template!r}...")
+                    self.console.info(f"Cloning template {template!r}...")
                     cached_template.mkdir(exist_ok=True, parents=True)
                     repo = self.tools.git.Repo.clone_from(
                         url=template,
@@ -1022,8 +1014,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # We are offline, or otherwise unable to contact the origin git
                     # repo. It's OK to continue; but capture the error in the log and
                     # warn the user that the template may be stale.
-                    self.logger.debug(str(e))
-                    self.logger.warning(
+                    self.console.debug(str(e))
+                    self.console.warning(
                         """
 *************************************************************************
 ** WARNING: Unable to update template                                  **
@@ -1041,7 +1033,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # Check out the branch for the required version tag.
                     head = remote.refs[branch]
 
-                    self.logger.info(
+                    self.console.info(
                         f"Using existing template (sha {head.commit.hexsha}, "
                         f"updated {head.commit.committed_datetime.strftime('%c')})"
                     )
@@ -1082,7 +1074,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             branch=branch,
         )
 
-        self.logger.configure_stdlib_logging("cookiecutter")
+        self.console.configure_stdlib_logging("cookiecutter")
         try:
             # Unroll the template.
             self.tools.cookiecutter(
@@ -1136,7 +1128,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         )
 
         try:
-            self.logger.info(
+            self.console.info(
                 f"Using app template: {template}, branch {template_branch}"
             )
             # Unroll the new app template
@@ -1153,7 +1145,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 raise
 
             # Development branches can use the main template.
-            self.logger.info(
+            self.console.info(
                 f"Template branch {template_branch} not found; falling back to development template"
             )
 

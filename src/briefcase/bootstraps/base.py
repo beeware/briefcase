@@ -4,7 +4,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, TypedDict
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 
 
 class AppContext(TypedDict):
@@ -54,9 +54,8 @@ class BaseGuiBootstrap(ABC):
     # is presented with the options to create a new project.
     display_name_annotation: str = ""
 
-    def __init__(self, logger: Log, input: Console, context: AppContext):
-        self.logger = logger
-        self.input = input
+    def __init__(self, console: Console, context: AppContext):
+        self.console = console
 
         # context contains metadata about the app being created
         self.context = context

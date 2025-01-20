@@ -10,7 +10,7 @@ from rich.traceback import Trace
 
 import briefcase
 from briefcase.commands.dev import DevCommand
-from briefcase.console import Console, Log, LogLevel, Printer, RichLoggingHandler
+from briefcase.console import Console, LogLevel, RichLoggingHandler
 from briefcase.exceptions import BriefcaseError
 
 TRACEBACK_HEADER = "Traceback (most recent call last)"
@@ -34,7 +34,7 @@ def mock_now(monkeypatch):
 @pytest.fixture
 def command(mock_now, tmp_path) -> DevCommand:
     """Provides a mocked DevCommand."""
-    command = MagicMock(spec_set=DevCommand(Log(), Console()))
+    command = MagicMock(spec_set=DevCommand(console=Console()))
     command.base_path = tmp_path
     command.command = "dev"
     command.tools.os.environ = {}
@@ -42,11 +42,11 @@ def command(mock_now, tmp_path) -> DevCommand:
 
 
 @pytest.fixture
-def logging_logger() -> logging.Logger:
-    logging_logger = logging.getLogger("test_pkg")
-    yield logging_logger
+def logging_console() -> logging.Logger:
+    logging_console = logging.getLogger("test_pkg")
+    yield logging_console
     # reset handlers since they are persistent
-    logging_logger.handlers.clear()
+    logging_console.handlers.clear()
 
 
 @pytest.mark.parametrize(
@@ -67,18 +67,18 @@ def logging_logger() -> logging.Logger:
 )
 def test_log_level(verbosity, verbose_enabled, debug_enabled, deep_debug_enabled):
     """Logging level is correct."""
-    assert Log(verbosity=verbosity).is_verbose is verbose_enabled
-    assert Log(verbosity=verbosity).is_debug is debug_enabled
-    assert Log(verbosity=verbosity).is_deep_debug is deep_debug_enabled
+    assert Console(verbosity=verbosity).is_verbose is verbose_enabled
+    assert Console(verbosity=verbosity).is_debug is debug_enabled
+    assert Console(verbosity=verbosity).is_deep_debug is deep_debug_enabled
 
 
 def test_info_logging(capsys):
     """The info level logging only includes info logs."""
-    logger = Log()
+    console = Console()
 
-    logger.info("info")
-    logger.verbose("verbose")
-    logger.debug("debug")
+    console.info("info")
+    console.verbose("verbose")
+    console.debug("debug")
 
     output = capsys.readouterr().out.splitlines()
 
@@ -89,11 +89,11 @@ def test_info_logging(capsys):
 
 def test_verbose_logging(capsys):
     """The verbose level logging includes info and verbose logs."""
-    logger = Log(verbosity=LogLevel.VERBOSE)
+    console = Console(verbosity=LogLevel.VERBOSE)
 
-    logger.info("info")
-    logger.verbose("verbose")
-    logger.debug("debug")
+    console.info("info")
+    console.verbose("verbose")
+    console.debug("debug")
 
     output = capsys.readouterr().out.splitlines()
 
@@ -104,11 +104,11 @@ def test_verbose_logging(capsys):
 
 def test_debug_logging(capsys):
     """The debug level logging includes info, verbose and debug logs."""
-    logger = Log(verbosity=LogLevel.DEBUG)
+    console = Console(verbosity=LogLevel.DEBUG)
 
-    logger.info("info")
-    logger.verbose("verbose")
-    logger.debug("debug")
+    console.info("info")
+    console.verbose("verbose")
+    console.debug("debug")
 
     output = capsys.readouterr().out.splitlines()
 
@@ -119,48 +119,48 @@ def test_debug_logging(capsys):
 
 def test_capture_stacktrace():
     """capture_stacktrace sets Log.stacktrace."""
-    logger = Log()
-    assert logger.skip_log is False
+    console = Console()
+    assert console.skip_log is False
 
     try:
         1 / 0
     except ZeroDivisionError:
-        logger.capture_stacktrace()
+        console.capture_stacktrace()
 
-    assert len(logger.stacktraces) == 1
-    assert logger.stacktraces[0][0] == "Main thread"
-    assert isinstance(logger.stacktraces[0][1], Trace)
-    assert logger.skip_log is False
+    assert len(console.stacktraces) == 1
+    assert console.stacktraces[0][0] == "Main thread"
+    assert isinstance(console.stacktraces[0][1], Trace)
+    assert console.skip_log is False
 
 
 @pytest.mark.parametrize("skip_logfile", [True, False])
 def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
     """skip_log is updated for BriefcaseError exceptions."""
-    logger = Log()
-    assert logger.skip_log is False
+    console = Console()
+    assert console.skip_log is False
 
     try:
         raise BriefcaseError(error_code=542, skip_logfile=skip_logfile)
     except BriefcaseError:
-        logger.capture_stacktrace()
+        console.capture_stacktrace()
 
-    assert len(logger.stacktraces) == 1
-    assert logger.stacktraces[0][0] == "Main thread"
-    assert isinstance(logger.stacktraces[0][1], Trace)
-    assert logger.skip_log is skip_logfile
+    assert len(console.stacktraces) == 1
+    assert console.stacktraces[0][0] == "Main thread"
+    assert isinstance(console.stacktraces[0][1], Trace)
+    assert console.skip_log is skip_logfile
 
 
 def test_save_log_to_file_do_not_log(command):
     """Nothing is done to save log if no command or --log wasn't passed."""
-    logger = Log()
-    logger.save_log_to_file(command=None)
+    console = Console()
+    console.save_log_to_file(command=None)
 
-    logger.save_log = False
-    logger.save_log_to_file(command=command)
-    command.input.wait_bar.assert_not_called()
+    console.save_log = False
+    console.save_log_to_file(command=command)
+    command.console.wait_bar.assert_not_called()
 
     # There were no stack traces captured
-    assert len(logger.stacktraces) == 0
+    assert len(console.stacktraces) == 0
 
 
 def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch):
@@ -171,37 +171,36 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch)
         "ANDROID_HOME": "/androidsdk",
     }
 
-    printer = Printer()
-    command.tools.input = Console(printer=printer)
-    logger = command.tools.logger = Log(printer=printer, verbosity=LogLevel.DEBUG)
-    logger.save_log = True
+    console = Console(verbosity=LogLevel.DEBUG)
+    command.tools.console = console
+    console.save_log = True
 
-    logger.debug("this is debug output")
-    logger.info("this is info output")
-    logger.warning("this is warning output")
-    logger.error("this is error output")
-    logger.print("this is print output")
-    logger.print.to_log("this is log output")
-    logger.print.to_log(f"{chr(7)}this is sanitized log output: \u001b[31mred")
-    logger.print.to_console("this is console output")
+    console.debug("this is debug output")
+    console.info("this is info output")
+    console.warning("this is warning output")
+    console.error("this is error output")
+    console.print("this is print output")
+    console.to_log("this is log output")
+    console.to_log(f"{chr(7)}this is sanitized log output: \u001b[31mred")
+    console.to_console("this is console output")
 
-    logger.info("this is [bold]info output with markup[/bold]")
-    logger.info(
+    console.info("this is [bold]info output with markup[/bold]")
+    console.info(
         "this is [bold]info output with markup and a prefix[/bold]", prefix="wibble"
     )
-    logger.info("this is [bold]info output with escaped markup[/bold]", markup=True)
-    logger.info(
+    console.info("this is [bold]info output with escaped markup[/bold]", markup=True)
+    console.info(
         "this is [bold]info output with escaped markup and a prefix[/bold]",
         prefix="wibble",
         markup=True,
     )
 
-    with command.tools.input.wait_bar("transient message...", transient=True):
+    with command.tools.console.wait_bar("transient message...", transient=True):
         pass
-    with command.tools.input.wait_bar("wait message..."):
+    with command.tools.console.wait_bar("wait message..."):
         pass
     with contextlib.suppress(KeyboardInterrupt):
-        with command.tools.input.wait_bar("abort message..."):
+        with command.tools.console.wait_bar("abort message..."):
             raise KeyboardInterrupt
 
     project_root = tmp_path / "project_root"
@@ -210,7 +209,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch)
     with open("pyproject.toml", "w", encoding="utf-8") as f:
         f.writelines(["[section]\n", "name = 'project'\n\n\n\n\n"])
 
-    logger.save_log_to_file(command=command)
+    console.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
@@ -249,20 +248,20 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch)
 
 def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
     """Log file contains exception stacktrace when one is captured."""
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
     try:
         1 / 0
     except ZeroDivisionError:
-        logger.capture_stacktrace()
-    logger.save_log_to_file(command=command)
+        console.capture_stacktrace()
+    console.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
     log_contents = log_filepath.read_text(encoding="utf-8")
 
-    assert len(logger.stacktraces) == 1
+    assert len(console.stacktraces) == 1
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert TRACEBACK_HEADER in log_contents
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
@@ -270,22 +269,22 @@ def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
 
 def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
     """Log file contains exception stacktrace when more than one is captured."""
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
     for i in range(1, 5):
         try:
             1 / 0
         except ZeroDivisionError:
-            logger.capture_stacktrace(f"Thread {i}")
+            console.capture_stacktrace(f"Thread {i}")
 
-    logger.save_log_to_file(command=command)
+    console.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
     assert log_filepath.exists()
     log_contents = log_filepath.read_text(encoding="utf-8")
 
-    assert len(logger.stacktraces) == 4
+    assert len(console.stacktraces) == 4
     assert log_contents.startswith("Date/Time:       2022-06-25 16:12:29")
     assert TRACEBACK_HEADER in log_contents
     for i in range(1, 5):
@@ -295,21 +294,21 @@ def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
 
 def test_save_log_to_file_extra(mock_now, command, tmp_path):
     """Log file extras are called when the log is written."""
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
 
     def extra1():
-        logger.debug("Log extra 1")
+        console.debug("Log extra 1")
 
     def extra2():
         raise ValueError("Log extra 2")
 
     def extra3():
-        logger.debug("Log extra 3")
+        console.debug("Log extra 3")
 
     for extra in [extra1, extra2, extra3]:
-        logger.add_log_file_extra(extra)
-    logger.save_log_to_file(command=command)
+        console.add_log_file_extra(extra)
+    console.save_log_to_file(command=command)
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
     log_contents = log_filepath.read_text(encoding="utf-8")
 
@@ -322,17 +321,17 @@ def test_save_log_to_file_extra(mock_now, command, tmp_path):
 
 def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
     """Log file extras can be interrupted by Ctrl-C."""
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
 
     def extra1():
         raise KeyboardInterrupt()
 
     extra2 = MagicMock()
     for extra in [extra1, extra2]:
-        logger.add_log_file_extra(extra)
+        console.add_log_file_extra(extra)
     with pytest.raises(KeyboardInterrupt):
-        logger.save_log_to_file(command=command)
+        console.save_log_to_file(command=command)
     extra2.assert_not_called()
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
     assert log_filepath.stat().st_size == 0
@@ -340,14 +339,14 @@ def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
 
 def test_save_log_to_file_missing_pyproject(mock_now, command, tmp_path, monkeypatch):
     """Log file contains pyproject read exception if it's missing."""
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
 
     # ensure in a directory without a pyproject.toml
     monkeypatch.chdir(tmp_path)
     Path(tmp_path / "pyproject.toml").unlink(missing_ok=True)
 
-    logger.save_log_to_file(command=command)
+    console.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
 
@@ -378,11 +377,11 @@ def test_save_log_to_file_fail_to_make_logs_dir(
     #  - raises for the call to ``mkdir`` to create the ``logs`` directory
     mock_base_path.mkdir.side_effect = OSError("directory creation denied")
 
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
 
-    logger.print("a line of output")
-    logger.save_log_to_file(command=command)
+    console.print("a line of output")
+    console.save_log_to_file(command=command)
 
     assert capsys.readouterr().out == "\n".join(
         [
@@ -410,11 +409,11 @@ def test_save_log_to_file_fail_to_write_file(
     mock_open.return_value.__enter__.return_value = mock_log_file
     mock_log_file.write.side_effect = OSError("file write denied")
 
-    logger = Log()
-    logger.save_log = True
+    console = Console()
+    console.save_log = True
 
-    logger.print("a line of output")
-    logger.save_log_to_file(command=command)
+    console.print("a line of output")
+    console.save_log_to_file(command=command)
 
     log_filepath = tmp_path / "logs/briefcase.2022_06_25-16_12_29.dev.log"
     assert capsys.readouterr().out == "\n".join(
@@ -430,22 +429,22 @@ def test_save_log_to_file_fail_to_write_file(
 
 def test_log_with_context(capsys):
     """Log file can be given a persistent context."""
-    logger = Log(verbosity=LogLevel.DEBUG)
-    logger.save_log = False
+    console = Console(verbosity=LogLevel.DEBUG)
+    console.save_log = False
 
-    logger.info("this is info output")
-    with logger.context("Deep"):
-        logger.info("this is deep context")
-        logger.info("prefixed deep context", prefix="prefix")
-        logger.info()
-        logger.debug("this is deep debug")
-        with logger.context("Really Deep"):
-            logger.info("this is really deep context")
-            logger.info("prefixed really deep context", prefix="prefix2")
-            logger.info()
-            logger.debug("this is really deep debug")
-        logger.info("Pop back to deep")
-    logger.info("Pop back to normal")
+    console.info("this is info output")
+    with console.context("Deep"):
+        console.info("this is deep context")
+        console.info("prefixed deep context", prefix="prefix")
+        console.info()
+        console.debug("this is deep debug")
+        with console.context("Really Deep"):
+            console.info("this is really deep context")
+            console.info("prefixed really deep context", prefix="prefix2")
+            console.info()
+            console.debug("this is really deep debug")
+        console.info("Pop back to deep")
+    console.info("Pop back to normal")
 
     assert capsys.readouterr().out == "\n".join(
         [
@@ -481,16 +480,16 @@ def test_log_with_context(capsys):
 
 def test_log_error_with_context(capsys):
     """If an exception is raised in a logging context, the context is cleared."""
-    logger = Log(verbosity=LogLevel.DEBUG)
-    logger.save_log = False
+    console = Console(verbosity=LogLevel.DEBUG)
+    console.save_log = False
 
-    logger.info("this is info output")
+    console.info("this is info output")
     try:
-        with logger.context("Deep"):
-            logger.info("this is deep context")
+        with console.context("Deep"):
+            console.info("this is deep context")
             raise ValueError()
     except ValueError:
-        logger.info("this is cleanup")
+        console.info("this is cleanup")
 
     assert capsys.readouterr().out == "\n".join(
         [
@@ -517,39 +516,39 @@ def test_log_error_with_context(capsys):
         (LogLevel.INFO, False),
     ],
 )
-def test_stdlib_logging_config(logging_level, handler_expected, logging_logger):
+def test_stdlib_logging_config(logging_level, handler_expected, logging_console):
     """A logging handler is only added for DEEP_DEBUG mode."""
-    logger = Log(verbosity=logging_level)
+    console = Console(verbosity=logging_level)
 
-    logger.configure_stdlib_logging("test_pkg")
+    console.configure_stdlib_logging("test_pkg")
 
     assert handler_expected is any(
-        isinstance(h, RichLoggingHandler) for h in logging_logger.handlers
+        isinstance(h, RichLoggingHandler) for h in logging_console.handlers
     )
 
 
-def test_stdlib_logging_only_one(logging_logger):
+def test_stdlib_logging_only_one(logging_console):
     """Only one logging handler is ever created for a package."""
-    logger = Log(verbosity=LogLevel.DEEP_DEBUG)
+    console = Console(verbosity=LogLevel.DEEP_DEBUG)
 
-    logger.configure_stdlib_logging("test_pkg")
-    logger.configure_stdlib_logging("test_pkg")
-    logger.configure_stdlib_logging("test_pkg")
+    console.configure_stdlib_logging("test_pkg")
+    console.configure_stdlib_logging("test_pkg")
+    console.configure_stdlib_logging("test_pkg")
 
-    assert len(logging_logger.handlers) == 1
+    assert len(logging_console.handlers) == 1
 
 
-def test_stdlib_logging_handler_writes_to_debug(logging_logger):
-    """The logging handler writes to the console through Log()."""
-    logger = Log(verbosity=LogLevel.DEEP_DEBUG)
-    logger.debug = MagicMock(wraps=logger.debug)
+def test_stdlib_logging_handler_writes_to_debug(logging_console):
+    """The logging handler writes to the console through Console()."""
+    console = Console(verbosity=LogLevel.DEEP_DEBUG)
+    console.debug = MagicMock(wraps=console.debug)
 
-    logger.configure_stdlib_logging("test_pkg")
+    console.configure_stdlib_logging("test_pkg")
 
-    logging_logger.debug("This is debug output")
-    logging_logger.info("This is info output")
+    logging_console.debug("This is debug output")
+    logging_console.info("This is info output")
 
-    assert logger.debug.mock_calls == [
+    assert console.debug.mock_calls == [
         call("DEBUG test_pkg: This is debug output\n"),
         call("INFO test_pkg: This is info output\n"),
     ]

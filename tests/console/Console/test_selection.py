@@ -19,7 +19,7 @@ def test_selection(console, value, expected, default, transform):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    console.input.side_effect = [value]
+    console._console_impl.input.side_effect = [value]
 
     actual = console._selection(
         prompt=prompt,
@@ -29,7 +29,9 @@ def test_selection(console, value, expected, default, transform):
     )
 
     assert actual == expected
-    console.input.assert_called_once_with(default_rich_prompt(prompt), markup=True)
+    console._console_impl.input.assert_called_once_with(
+        default_rich_prompt(prompt), markup=True
+    )
 
 
 def test_bad_input(console):
@@ -37,19 +39,19 @@ def test_bad_input(console):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    console.input.side_effect = ["G", "Q", "C"]
+    console._console_impl.input.side_effect = ["G", "Q", "C"]
 
     actual = console._selection(prompt=prompt, choices=options)
 
     assert actual == "C"
-    assert console.input.call_count == 3
-    assert console.input.call_args_list[0] == call(
+    assert console._console_impl.input.call_count == 3
+    assert console._console_impl.input.call_args_list[0] == call(
         default_rich_prompt(prompt), markup=True
     )
-    assert console.input.call_args_list[1] == call(
+    assert console._console_impl.input.call_args_list[1] == call(
         default_rich_prompt(prompt), markup=True
     )
-    assert console.input.call_args_list[2] == call(
+    assert console._console_impl.input.call_args_list[2] == call(
         default_rich_prompt(prompt), markup=True
     )
 
@@ -61,7 +63,7 @@ def test_disabled(disabled_console):
     actual = disabled_console._selection(prompt=prompt, choices=options, default="C")
 
     assert actual == "C"
-    disabled_console.input.assert_not_called()
+    disabled_console._console_impl.input.assert_not_called()
 
 
 def test_disabled_no_default(disabled_console):
@@ -75,4 +77,4 @@ def test_disabled_no_default(disabled_console):
             default=None,
         )
 
-    disabled_console.input.assert_not_called()
+    disabled_console._console_impl.input.assert_not_called()

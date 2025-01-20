@@ -4,31 +4,31 @@ from briefcase.console import Console
 def test_default_constructor():
     """A console is enabled by default."""
     console = Console()
-    assert console.enabled
+    assert console.input_enabled
 
 
 def test_constructor_with_enabled_false():
     """A console can be constructed in a disabled state."""
-    console = Console(enabled=False)
-    assert not console.enabled
+    console = Console(input_enabled=False)
+    assert not console.input_enabled
 
 
 def test_enable(disabled_console):
     """A disabled console can be enabled."""
-    assert not disabled_console.enabled
+    assert not disabled_console.input_enabled
 
-    disabled_console.enabled = True
+    disabled_console.input_enabled = True
 
-    assert disabled_console.enabled
+    assert disabled_console.input_enabled
 
 
 def test_disable():
     """A disabled console can be enabled."""
     console = Console()
-    assert console.enabled
+    assert console.input_enabled
 
-    console.enabled = False
-    assert not console.enabled
+    console.input_enabled = False
+    assert not console.input_enabled
 
 
 def test_is_interactive_non_interactive(non_interactive_console):

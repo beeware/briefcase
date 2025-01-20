@@ -119,7 +119,7 @@ def test_input_with_default():
 
 def test_input_disabled():
     """If input is disabled, the default is returned."""
-    console = DummyConsole(enabled=False)
+    console = DummyConsole(input_enabled=False)
 
     value = console.text_question(
         intro="Some introduction",
@@ -133,7 +133,7 @@ def test_input_disabled():
 
 def test_input_disabled_with_override():
     """If input is disabled, the override is returned."""
-    console = DummyConsole(enabled=False)
+    console = DummyConsole(input_enabled=False)
 
     value = console.text_question(
         intro="Some introduction",
@@ -148,7 +148,7 @@ def test_input_disabled_with_override():
 
 def test_input_disabled_validation_failure():
     """If input is disabled, and validation fails, an error is raised."""
-    console = DummyConsole(enabled=False)
+    console = DummyConsole(input_enabled=False)
 
     with pytest.raises(InputDisabled, match=r"Well that won't work..."):
 
@@ -167,7 +167,7 @@ def test_input_disabled_validation_failure():
 
 def test_input_disabled_validation_failure_with_override():
     """If input is disabled, and validation fails for override, an error is raised."""
-    console = DummyConsole(enabled=False)
+    console = DummyConsole(input_enabled=False)
 
     with pytest.raises(InputDisabled, match=r"Well that won't work..."):
 

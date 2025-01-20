@@ -1,1 +1,1 @@
-Project bootstraps now have access to the Briefcase logger, console, and the overrides specified with ``-Q`` options at the command line.
+Project bootstraps now have access to the Briefcase console, and the overrides specified with ``-Q`` options at the command line.
