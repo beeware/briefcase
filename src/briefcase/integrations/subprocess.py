@@ -19,7 +19,7 @@ from typing import TypeVar, Union
 import psutil
 
 from briefcase.config import AppConfig
-from briefcase.console import Log
+from briefcase.console import Log, LogLevel
 from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
 
@@ -617,31 +617,33 @@ class Subprocess(Tool):
         return subprocess.CompletedProcess(args, return_code, stderr=stderr)
 
     @ensure_console_is_safe
-    def check_output(self, args: SubprocessArgsT, quiet: bool = False, **kwargs) -> str:
+    def check_output(self, args: SubprocessArgsT, quiet: int = 0, **kwargs) -> str:
         """A wrapper for subprocess.check_output()
 
-        The behavior of this method is identical to
-        subprocess.check_output(), except for:
-         - If the `env` is argument provided, the current system environment
-           will be copied, and the contents of env overwritten into that
-           environment.
-         - The `text` argument is defaulted to True so all output
-           is returned as strings instead of bytes.
-         - The `stderr` argument is defaulted to `stdout` so _all_ output is
-           returned and `stderr` isn't unexpectedly printed to the console.
+        The behavior of this method is identical to subprocess.check_output(), except
+        for:
+         - If the `env` is argument provided, the current system environment will be
+           copied, and the contents of env overwritten into that environment.
+         - The `text` argument is defaulted to True so all output is returned as strings
+           instead of bytes.
+         - The `stderr` argument is defaulted to `stdout` so _all_ output is returned
+           and `stderr` isn't unexpectedly printed to the console.
 
         :param args: commands and its arguments to run via subprocess
-        :param quiet: Should the invocation of this command be silent, and
-            *not* appear in the logs? This should almost always be False;
-            however, for some calls (most notably, calls that are called
-            frequently to evaluate the status of another process), logging can
-            be turned off so that log output isn't corrupted by thousands of
-            polling calls.
+        :param quiet: Should the invocation of this command be silent, and *not* appear
+            in the logs? This should almost always be 0, indicating "not quiet"; any
+            command output will be logged, and any errors will be logged *and* printed
+            to the console. A value of 1 will log all command output, but errors will be
+            logged, but *not* printed to the console. A value of 2 will *not* log any
+            command output; errors will be logged, but *not* printed to the console. A
+            value of 2 is mostly useful for calls that are called frequently to evaluate
+            the status of another process (such as calls that poll an API) so that log
+            output isn't corrupted by thousands of polling calls.
         """
         # if stderr isn't explicitly redirected, then send it to stdout.
         kwargs.setdefault("stderr", subprocess.STDOUT)
 
-        if not quiet:
+        if quiet < 2:
             self._log_command(args)
             self._log_cwd(kwargs.get("cwd"))
             self._log_environment(kwargs.get("env"))
@@ -651,12 +653,14 @@ class Subprocess(Tool):
                 [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
-            if not quiet:
+            if quiet == 0 and self.tools.logger.verbosity < LogLevel.DEBUG:
+                self.tools.logger.raw_error(e)
+            if quiet < 2:
                 self._log_output(e.output, e.stderr)
                 self._log_return_code(e.returncode)
             raise
 
-        if not quiet:
+        if quiet < 2:
             self._log_output(cmd_output)
             self._log_return_code(0)
         return cmd_output

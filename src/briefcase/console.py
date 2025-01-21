@@ -4,7 +4,9 @@ import logging
 import os
 import platform
 import re
+import shlex
 import shutil
+import subprocess
 import sys
 import textwrap
 import time
@@ -290,6 +292,32 @@ class Log:
     def error(self, message="", *, prefix="", markup=False):
         """Log message at error level; always included in output."""
         self._log(prefix=prefix, message=message, markup=markup, style="bold red")
+
+    def raw_error(self, exception: subprocess.CalledProcessException):
+        """Print the raw error from a subprocess to the console.
+
+        This content is *only* printed to the console - it is *not* recorded to the log.
+        It is assumed that subprocess output will *always* be logged; this method should
+        only be required when subprocess errors may be useful to the end user.
+
+        :param exception: The raw exception raised by a subprocess
+        """
+        prefix = exception.cmd[0]
+
+        self.print.to_console()
+        self.print.to_console(f"[dim]> {shlex.join(exception.cmd)}[dim]")
+        if exception.output:
+            for line in exception.output.split("\n")[:-1]:
+                self.print.to_console(f"[dim]\\[{prefix}] {line}[dim]")
+        if exception.stderr:
+            self.print.to_console("[dim]Errors:[dim]")
+            for line in exception.stderr.split("\n")[:-1]:
+                self.print.to_console(f"[dim]\\[{prefix}] {line}")
+        self.print.to_console()
+        self.print.to_console(
+            f"[dim]\\[{prefix}] Return code: {exception.returncode}[dim]"
+        )
+        self.print.to_console()
 
     @property
     def verbosity(self) -> LogLevel:
