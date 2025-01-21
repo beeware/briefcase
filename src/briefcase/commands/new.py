@@ -556,7 +556,7 @@ class NewCommand(BaseCommand):
         )
 
         # Perform any post-template processing required by the bootstrap.
-        bootstrap.post_generate(base_path=self.base_path)
+        bootstrap.post_generate(base_path=self.base_path / context["app_name"])
 
         self.console.info(
             f"Generated new application {context['formal_name']!r}",
