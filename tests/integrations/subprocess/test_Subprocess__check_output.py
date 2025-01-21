@@ -131,7 +131,7 @@ def test_call_with_escaped_arg(mock_sub, capsys, caplog):
         ">>> Running Command:\n"
         ">>>     hello 'my world'\n"
         ">>> Working Directory:\n"
-        ">>>     /Users/rkm/beeware/briefcase\n"
+        f">>>     {Path.cwd()}\n"
         ">>> Command Output:\n"
         ">>>     output line 1\n"
         ">>>     output line 2\n"
