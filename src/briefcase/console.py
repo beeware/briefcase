@@ -203,6 +203,10 @@ class Console:
     def __del__(self):
         self._dev_null.close()
 
+    #################################################################
+    # Console primitives
+    #################################################################
+
     def print(self, *messages, stack_offset=5, show=True, **kwargs):
         """Entry point for all printing to the console and the log.
 
@@ -661,6 +665,10 @@ class Console:
             # Restore previous console state
             if is_wait_bar_running:
                 self._wait_bar.start()
+
+    #################################################################
+    # User Input/Output controls
+    #################################################################
 
     def textwrap(self, text: str, width: int = MAX_TEXT_WIDTH) -> str:
         """Wrap text to the console width, a default max width, or a specified width."""
