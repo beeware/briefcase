@@ -104,7 +104,7 @@ you can re-run Briefcase.
             #   xcode-select: error: tool 'xcodebuild' requires Xcode, but active
             #   developer directory '/Library/Developer/CommandLineTools' is a
             #   command line tools instance
-            output = tools.subprocess.check_output(["xcodebuild", "-version"])
+            output = tools.subprocess.check_output(["xcodebuild", "-version"], quiet=1)
 
             if min_version is not None:
                 # Look for a line in the output that reads "Xcode X.Y.Z"
@@ -187,6 +187,7 @@ and then re-run Briefcase.
                 ) from e
 
             else:
+                tools.logger.raw_error(e)
                 raise BriefcaseCommandError(
                     """\
 An Xcode install appears to exist, but Briefcase was unable to
@@ -250,7 +251,7 @@ class XcodeCliTools(Tool):
         #
         # Any other status code is a problem.
         try:
-            tools.subprocess.check_output(["xcode-select", "--install"])
+            tools.subprocess.check_output(["xcode-select", "--install"], quiet=1)
             raise BriefcaseCommandError(
                 """\
 The command line developer tools are not installed.
@@ -294,7 +295,7 @@ to continue, and re-run Briefcase once that installation is complete.
         # tools return a status code of 69 (nice...) if the license has not been
         # accepted. In this case, we can prompt the user to accept the license.
         try:
-            tools.subprocess.check_output(["/usr/bin/clang", "--version"])
+            tools.subprocess.check_output(["/usr/bin/clang", "--version"], quiet=1)
         except subprocess.CalledProcessError as e:
             if e.returncode == 69:
                 tools.logger.info(
@@ -362,6 +363,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 """
                         )
             else:
+                tools.logger.raw_error(e)
                 tools.logger.warning(
                     """
 *************************************************************************

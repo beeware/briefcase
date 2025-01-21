@@ -58,7 +58,7 @@ def test_custom_install_location(default_xcode_install_path, tmp_path, mock_tool
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -90,7 +90,7 @@ def test_command_line_tools_only(default_xcode_install_path, mock_tools):
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -126,7 +126,7 @@ def test_installed_but_command_line_tools_selected(
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -167,7 +167,7 @@ def test_custom_install_with_command_line_tools(
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -193,7 +193,7 @@ def test_installed_but_corrupted(xcode, mock_tools):
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -213,7 +213,7 @@ def test_installed_no_minimum_version(xcode, mock_tools):
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -245,7 +245,7 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -316,7 +316,7 @@ def test_installed_with_minimum_version_success(
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -361,7 +361,7 @@ def test_installed_with_minimum_version_failure(
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )
@@ -385,7 +385,7 @@ def test_unexpected_version_output(capsys, xcode, mock_tools):
     mock_tools.subprocess.check_output.assert_has_calls(
         [
             mock.call(["xcode-select", "-p"]),
-            mock.call(["xcodebuild", "-version"]),
+            mock.call(["xcodebuild", "-version"], quiet=1),
         ],
         any_order=False,
     )

@@ -207,6 +207,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             tools.subprocess.check_output(
                 ["docker", "info"],
                 env=cls.subprocess_env(),
+                quiet=1,
             )
         except subprocess.CalledProcessError as e:
             failure_output = e.output
@@ -220,6 +221,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             ):
                 raise BriefcaseCommandError(cls.DAEMON_NOT_RUNNING_ERROR) from e
             else:
+                tools.logger.raw_error(e)
                 raise BriefcaseCommandError(cls.GENERIC_DOCKER_ERROR) from e
 
     @classmethod

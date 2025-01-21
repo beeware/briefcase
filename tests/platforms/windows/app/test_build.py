@@ -181,6 +181,7 @@ def test_build_app_with_windows_sdk(
             Path("src/first-app.exe") if console_app else Path("src/First App.exe"),
         ],
         cwd=tmp_path / "base_path/build/first-app/windows/app",
+        quiet=1,
     )
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
@@ -247,6 +248,7 @@ def test_build_app_without_any_digital_signatures(
             Path("src/First App.exe"),
         ],
         cwd=tmp_path / "base_path/build/first-app/windows/app",
+        quiet=1,
     )
     # update the app binary resources
     build_command.tools.subprocess.run.assert_called_once_with(
@@ -321,6 +323,7 @@ def test_build_app_error_remove_signature(
             Path("src/First App.exe"),
         ],
         cwd=tmp_path / "base_path/build/first-app/windows/app",
+        quiet=1,
     )
     # update the app binary resources not called
     build_command.tools.subprocess.run.assert_not_called()

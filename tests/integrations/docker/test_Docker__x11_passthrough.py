@@ -188,7 +188,9 @@ def test_x11_write_xauth_missing_xauth_bin(mock_tools, tmp_path):
     "xauth_nlist_outcome",
     [
         subprocess.CalledProcessError(
-            returncode=1, cmd=["xauth", "-i", "nlist", ":66"]
+            returncode=1,
+            cmd=["xauth", "-i", "nlist", ":66"],
+            output="xauth failure",
         ),
         "not found",
         "",
@@ -231,6 +233,7 @@ def test_x11_write_xauth_add_new_xauth_fails(mock_tools, tmp_path):
                 "MIT-MAGIC-COOKIE-1",
                 "cookie",
             ],
+            output="xauth failure",
         ),
     ]
 
@@ -258,6 +261,7 @@ def test_x11_write_xauth_retrieve_xauth_fails(mock_tools, tmp_path):
         subprocess.CalledProcessError(
             returncode=1,
             cmd=["xauth", "-i", "-f", str(tmp_path / "test_xauth_file"), "nlist"],
+            output="xauth failure",
         ),
     ]
 
@@ -286,6 +290,7 @@ def test_x11_write_xauth_merge_xauth_fails(mock_tools, tmp_path):
         subprocess.CalledProcessError(
             returncode=1,
             cmd=["xauth", "-f", str(tmp_path / "test_xauth_file"), "nmerge", "-"],
+            output="xauth failure",
         ),
     ]
 

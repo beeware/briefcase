@@ -17,7 +17,7 @@ VALID_BUILDX_VERSION = "github.com/docker/buildx v0.10.2 00ed17d\n"
 VALID_USER_MAPPING_IMAGE_CACHE = "1ed313b0551f"
 DOCKER_VERIFICATION_CALLS = [
     call(["docker", "--version"], env={"DOCKER_CLI_HINTS": "false"}),
-    call(["docker", "info"], env={"DOCKER_CLI_HINTS": "false"}),
+    call(["docker", "info"], env={"DOCKER_CLI_HINTS": "false"}, quiet=1),
     call(["docker", "buildx", "version"], env={"DOCKER_CLI_HINTS": "false"}),
 ]
 

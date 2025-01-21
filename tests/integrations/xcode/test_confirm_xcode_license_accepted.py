@@ -13,7 +13,8 @@ def test_license_accepted(capsys, mock_tools):
 
     # ... clang was invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
-        ["/usr/bin/clang", "--version"]
+        ["/usr/bin/clang", "--version"],
+        quiet=1,
     )
 
     # ... and the user is none the wiser
@@ -26,6 +27,7 @@ def test_unknown_error(capsys, mock_tools):
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         cmd=["/usr/bin/clang", "--version"],
         returncode=1,
+        output="Can't invoke clang\n",
     )
 
     # Check passes without an error...
@@ -34,6 +36,7 @@ def test_unknown_error(capsys, mock_tools):
     # ... clang was invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["/usr/bin/clang", "--version"],
+        quiet=1,
     )
 
     # ...but stdout contains a warning
@@ -54,6 +57,7 @@ def test_accept_license(mock_tools):
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["/usr/bin/clang", "--version"],
+        quiet=1,
     )
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
@@ -83,6 +87,7 @@ def test_sudo_fail(mock_tools):
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["/usr/bin/clang", "--version"],
+        quiet=1,
     )
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
@@ -111,6 +116,7 @@ def test_license_not_accepted(mock_tools):
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["/usr/bin/clang", "--version"],
+        quiet=1,
     )
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
@@ -136,6 +142,7 @@ def test_license_status_unknown(capsys, mock_tools):
     # ... clang *and* xcodebuild were invoked ...
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["/usr/bin/clang", "--version"],
+        quiet=1,
     )
     mock_tools.subprocess.run.assert_called_once_with(
         ["sudo", "xcodebuild", "-license"],
