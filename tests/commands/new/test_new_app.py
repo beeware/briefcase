@@ -54,6 +54,7 @@ def test_new_app(
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.logger, new_command.input, {})
+    bootstrap.post_generate = mock.MagicMock()
     new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
@@ -99,6 +100,11 @@ def test_new_app(
             "pyproject_requires": "toga",
         },
         default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
+    )
+
+    # Bootstrap post-generate step is invoked with correct path
+    bootstrap.post_generate.assert_called_once_with(
+        base_path=tmp_path / "base" / "myapplication"
     )
 
 
