@@ -18,7 +18,7 @@ from briefcase.integrations.java import JDK
 from ...utils import assert_url_resolvable, create_zip_file
 from .conftest import JDK_BUILD, JDK_RELEASE
 
-CALL_JAVA_HOME = call(["/usr/libexec/java_home"])
+CALL_JAVA_HOME = call(["/usr/libexec/java_home"], quiet=1)
 
 
 def test_short_circuit(mock_tools):

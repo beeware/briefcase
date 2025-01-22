@@ -214,6 +214,7 @@ class JDK(ManagedTool):
                 # If no JRE/JDK is installed, /usr/libexec/java_home raises an error
                 java_home = tools.subprocess.check_output(
                     ["/usr/libexec/java_home"],
+                    quiet=1,
                 ).strip("\n")
             except (OSError, subprocess.CalledProcessError):
                 tools.console.debug("An existing JDK/JRE was not returned")

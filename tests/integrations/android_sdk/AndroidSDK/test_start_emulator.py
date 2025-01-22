@@ -130,9 +130,9 @@ def test_start_emulator(mock_tools, android_sdk):
     android_sdk.mock_run.assert_has_calls(
         [
             # Three calls to get avd name
-            call("emu", "avd", "name"),
-            call("emu", "avd", "name"),
-            call("emu", "avd", "name"),
+            call("emu", "avd", "name", quiet=1),
+            call("emu", "avd", "name", quiet=1),
+            call("emu", "avd", "name", quiet=1),
             # 2 calls to get boot property
             call("shell", "getprop", "sys.boot_completed"),
             call("shell", "getprop", "sys.boot_completed"),
@@ -217,8 +217,8 @@ def test_start_emulator_fast_start(mock_tools, android_sdk):
     android_sdk.mock_run.assert_has_calls(
         [
             # 2 calls to get avd name
-            call("emu", "avd", "name"),
-            call("emu", "avd", "name"),
+            call("emu", "avd", "name", quiet=1),
+            call("emu", "avd", "name", quiet=1),
             # 1 calls to get boot property
             call("shell", "getprop", "sys.boot_completed"),
         ]
@@ -317,8 +317,8 @@ def test_emulator_fail_to_start(mock_tools, android_sdk):
     # There were 2 calls to run, both to get AVD name
     android_sdk.mock_run.assert_has_calls(
         [
-            call("emu", "avd", "name"),
-            call("emu", "avd", "name"),
+            call("emu", "avd", "name", quiet=1),
+            call("emu", "avd", "name", quiet=1),
         ]
     )
 
@@ -428,9 +428,9 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
     android_sdk.mock_run.assert_has_calls(
         [
             # 3 calls to get avd name
-            call("emu", "avd", "name"),
-            call("emu", "avd", "name"),
-            call("emu", "avd", "name"),
+            call("emu", "avd", "name", quiet=1),
+            call("emu", "avd", "name", quiet=1),
+            call("emu", "avd", "name", quiet=1),
             # 3 calls to get boot property (since boot fails
             # before last/fourth one would return success)
             call("shell", "getprop", "sys.boot_completed"),
@@ -568,7 +568,7 @@ def test_start_emulator_extra_args(mock_tools, android_sdk):
     android_sdk.mock_run.assert_has_calls(
         [
             # 1 call to get avd name
-            call("emu", "avd", "name"),
+            call("emu", "avd", "name", quiet=1),
             # 1 calls to get boot property
             call("shell", "getprop", "sys.boot_completed"),
         ]

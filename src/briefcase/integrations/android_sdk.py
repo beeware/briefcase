@@ -1424,7 +1424,7 @@ class ADB:
             an emulator
         """
         try:
-            output = self.run("emu", "avd", "name")
+            output = self.run("emu", "avd", "name", quiet=1)
             return output.split("\n")[0]
         except subprocess.CalledProcessError as e:
             # Status code 1 is a normal "it's not an emulator" error response
