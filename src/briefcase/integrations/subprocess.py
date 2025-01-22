@@ -653,8 +653,11 @@ class Subprocess(Tool):
                 [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
+            # Subprocess errors will be logged, and also printed to console if we're at
+            # DEBUG+ log levels. However, if we're at quiet=0 *and* a non-debug log
+            # level, we need to explicitly output to the console.
             if quiet == 0 and self.tools.logger.verbosity < LogLevel.DEBUG:
-                self.tools.logger.raw_error(e)
+                self.output_error(e)
             if quiet < 2:
                 self._log_output(e.output, e.stderr)
                 self._log_return_code(e.returncode)
@@ -826,15 +829,22 @@ class Subprocess(Tool):
             self.tools.logger.warning(f"Forcibly killing {label}...")
             popen_process.kill()
 
+    def _console(self, msg: str = ""):
+        """Funnel for subprocess console-only logging."""
+        self.tools.logger.print.to_console(msg, style="dim")
+
     def _log(self, msg: str = ""):
         """Funnel for all subprocess details logging."""
         self.tools.logger.debug(msg, preface=">>> " if msg else "")
 
-    def _log_command(self, args: SubprocessArgsT):
+    def _log_command(self, args: SubprocessArgsT, handler=None):
         """Log the entire console command being executed."""
-        self._log()
-        self._log("Running Command:")
-        self._log(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
+        if handler is None:
+            handler = self._log
+
+        handler()
+        handler("Running Command:")
+        handler(f"    {' '.join(shlex.quote(str(arg)) for arg in args)}")
 
     def _log_cwd(self, cwd: str | Path | None):
         """Log the working directory for the command being executed."""
@@ -853,18 +863,36 @@ class Subprocess(Tool):
             for env_var, value in overrides.items():
                 self._log(f"    {env_var}={value}")
 
-    def _log_output(self, output: str, stderr: str | None = None):
+    def _log_output(self, output: str, stderr: str | None = None, handler=None):
         """Log the output of the executed command."""
+        if handler is None:
+            handler = self._log
+
         if output:
-            self._log("Command Output:")
+            handler("Command Output:")
             for line in ensure_str(output).splitlines():
-                self._log(f"    {line}")
+                handler(f"    {line}")
 
         if stderr:
-            self._log("Command Error Output (stderr):")
+            handler("Command Error Output (stderr):")
             for line in ensure_str(stderr).splitlines():
-                self._log(f"    {line}")
+                handler(f"    {line}")
 
-    def _log_return_code(self, return_code: int | str):
+    def _log_return_code(self, return_code: int | str, handler=None):
         """Log the output value of the executed command."""
-        self._log(f"Return code: {return_code}")
+        if handler is None:
+            handler = self._log
+        handler(f"Return code: {return_code}")
+        handler()
+
+    def output_error(self, exception: subprocess.CalledProcessException):
+        """Print error from a subprocess to the console.
+
+        This will output the command, output and return code to the console,
+        but *not* to the log.
+
+        :param exception: The raw exception raised by a subprocess
+        """
+        self._log_command(exception.cmd, handler=self._console)
+        self._log_output(exception.output, exception.stderr, handler=self._console)
+        self._log_return_code(exception.returncode, handler=self._console)

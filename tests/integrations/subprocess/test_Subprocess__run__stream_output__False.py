@@ -146,6 +146,7 @@ def test_debug_call(mock_sub, capsys, sub_kw):
         ">>> Working Directory:\n"
         f">>>     {Path.cwd()}\n"
         ">>> Return code: 0\n"
+        "\n"
     )
     # fmt: on
 
@@ -177,6 +178,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
         ">>> Environment Overrides:\n"
         ">>>     NewVar=NewVarValue\n"
         ">>> Return code: 0\n"
+        "\n"
     )
     assert capsys.readouterr().out == expected_output
 
@@ -202,6 +204,7 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ">>> Working Directory:\n"
         f">>>     {Path.cwd()}\n"
         ">>> Return code: -1\n"
+        "\n"
     )
     # fmt: on
     assert capsys.readouterr().out == expected_output

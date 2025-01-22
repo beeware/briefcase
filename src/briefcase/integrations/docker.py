@@ -221,7 +221,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
             ):
                 raise BriefcaseCommandError(cls.DAEMON_NOT_RUNNING_ERROR) from e
             else:
-                tools.logger.raw_error(e)
+                tools.subprocess.output_error(e)
                 raise BriefcaseCommandError(cls.GENERIC_DOCKER_ERROR) from e
 
     @classmethod

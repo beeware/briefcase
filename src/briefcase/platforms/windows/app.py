@@ -82,7 +82,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
                     # Ignore this error from signtool since it is logged if the file
                     # is not currently signed
                     if "error: 0x00000057" not in e.stdout:
-                        self.logger.raw_error(e)
+                        self.tools.subprocess.output_error(e)
                         raise BriefcaseCommandError(
                             f"""\
 Failed to remove any existing digital signatures from the stub app.

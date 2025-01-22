@@ -34,6 +34,7 @@ EXPECTED_SUCCESS_OUTPUT = (
     ">>>     some output line 1\n"
     ">>>     more output line 2\n"
     ">>> Return code: 0\n"
+    "\n"
 )
 
 
@@ -116,14 +117,15 @@ def test_call_with_escaped_arg(mock_sub, capsys, caplog):
 
     assert capsys.readouterr().out == (
         "\n"
-        "> hello 'my world'\n"
-        "[hello] output line 1\n"
-        "[hello] output line 2\n"
-        "Errors:\n"
-        "[hello] error line 1\n"
-        "[hello] error line 2\n"
-        "\n"
-        "[hello] Return code: -1\n"
+        "Running Command:\n"
+        "    hello 'my world'\n"
+        "Command Output:\n"
+        "    output line 1\n"
+        "    output line 2\n"
+        "Command Error Output (stderr):\n"
+        "    error line 1\n"
+        "    error line 2\n"
+        "Return code: -1\n"
         "\n"
     )
     assert "".join(caplog) == (
@@ -139,6 +141,7 @@ def test_call_with_escaped_arg(mock_sub, capsys, caplog):
         ">>>     error line 1\n"
         ">>>     error line 2\n"
         ">>> Return code: -1\n"
+        "\n"
     )
 
 
@@ -249,6 +252,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_check_output_kw):
         ">>>     some output line 1\n"
         ">>>     more output line 2\n"
         ">>> Return code: 0\n"
+        "\n"
     )
 
     assert capsys.readouterr().out == expected_output
@@ -282,6 +286,7 @@ def test_debug_call_with_stderr(mock_sub, capsys, tmp_path, sub_check_output_kw)
         ">>>     some output line 1\n"
         ">>>     more output line 2\n"
         ">>> Return code: 0\n"
+        "\n"
     )
 
     assert capsys.readouterr().out == expected_output
@@ -289,14 +294,15 @@ def test_debug_call_with_stderr(mock_sub, capsys, tmp_path, sub_check_output_kw)
 
 EXPECTED_ERROR_OUTPUT = (
     "\n"
-    "> hello world\n"
-    "[hello] output line 1\n"
-    "[hello] output line 2\n"
-    "Errors:\n"
-    "[hello] error line 1\n"
-    "[hello] error line 2\n"
-    "\n"
-    "[hello] Return code: -1\n"
+    "Running Command:\n"
+    "    hello world\n"
+    "Command Output:\n"
+    "    output line 1\n"
+    "    output line 2\n"
+    "Command Error Output (stderr):\n"
+    "    error line 1\n"
+    "    error line 2\n"
+    "Return code: -1\n"
     "\n"
 )
 EXPECTED_ERROR_LOG_OUTPUT = (
@@ -312,6 +318,7 @@ EXPECTED_ERROR_LOG_OUTPUT = (
     ">>>     error line 1\n"
     ">>>     error line 2\n"
     ">>> Return code: -1\n"
+    "\n"
 )
 
 
@@ -367,7 +374,7 @@ def test_calledprocesserror_exception_logging_no_output(mock_sub, capsys, caplog
         mock_sub.check_output(["hello", "world"])
 
     assert capsys.readouterr().out == (
-        "\n" "> hello world\n" "\n" "[hello] Return code: -1\n" "\n"
+        "\n" "Running Command:\n" "    hello world\n" "Return code: -1\n" "\n"
     )
     assert "".join(caplog) == (
         "\n"
@@ -376,6 +383,7 @@ def test_calledprocesserror_exception_logging_no_output(mock_sub, capsys, caplog
         ">>> Working Directory:\n"
         f">>>     {Path.cwd()}\n"
         ">>> Return code: -1\n"
+        "\n"
     )
 
 

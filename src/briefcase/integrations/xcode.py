@@ -187,7 +187,7 @@ and then re-run Briefcase.
                 ) from e
 
             else:
-                tools.logger.raw_error(e)
+                tools.subprocess.output_error(e)
                 raise BriefcaseCommandError(
                     """\
 An Xcode install appears to exist, but Briefcase was unable to
@@ -363,7 +363,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 """
                         )
             else:
-                tools.logger.raw_error(e)
+                tools.subprocess.output_error(e)
                 tools.logger.warning(
                     """
 *************************************************************************
