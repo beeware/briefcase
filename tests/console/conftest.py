@@ -9,7 +9,7 @@ from briefcase.console import Console
 @pytest.fixture
 def console(monkeypatch) -> Console:
     console = Console()
-    console.input = mock.MagicMock(spec_set=input)
+    console._console_impl.input = mock.MagicMock(spec_set=input)
     # default console is always interactive
     monkeypatch.setattr(os, "isatty", lambda _: True)
     return console
@@ -17,8 +17,8 @@ def console(monkeypatch) -> Console:
 
 @pytest.fixture
 def disabled_console() -> Console:
-    console = Console(enabled=False)
-    console.input = mock.MagicMock(spec_set=input)
+    console = Console(input_enabled=False)
+    console._console_impl.input = mock.MagicMock(spec_set=input)
     return console
 
 

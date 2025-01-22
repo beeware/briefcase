@@ -16,7 +16,7 @@ def test_invalid_toml():
             config_file,
             platform="macOS",
             output_format="Xcode",
-            logger=Mock(),
+            console=Mock(),
         )
 
 
@@ -35,7 +35,7 @@ def test_no_briefcase_section():
             config_file,
             platform="macOS",
             output_format="Xcode",
-            logger=Mock(),
+            console=Mock(),
         )
 
 
@@ -54,7 +54,7 @@ def test_no_apps():
             config_file,
             platform="macOS",
             output_format="Xcode",
-            logger=Mock(),
+            console=Mock(),
         )
 
 
@@ -74,7 +74,7 @@ def test_single_minimal_app():
         config_file,
         platform="macOS",
         output_format="Xcode",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # There's a single global option
@@ -110,7 +110,7 @@ def test_multiple_minimal_apps():
         config_file,
         platform="macOS",
         output_format="Xcode",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # There are no global options
@@ -159,7 +159,7 @@ def test_platform_override():
         config_file,
         platform="macOS",
         output_format="Xcode",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -225,7 +225,7 @@ def test_platform_override_ordering():
         config_file,
         platform="macOS",
         output_format="Xcode",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -307,7 +307,7 @@ def test_format_override():
         config_file,
         platform="macOS",
         output_format="app",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -390,7 +390,7 @@ def test_format_override_ordering():
         config_file,
         platform="macOS",
         output_format="app",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -461,7 +461,7 @@ def test_requires():
         config_file,
         platform="macOS",
         output_format="app",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -501,7 +501,7 @@ def test_requires():
         config_file,
         platform="macOS",
         output_format="Xcode",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -540,7 +540,7 @@ def test_requires():
         config_file,
         platform="linux",
         output_format="appimage",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The global options are exactly as specified
@@ -604,7 +604,7 @@ def test_document_types():
         config_file,
         platform="macOS",
         output_format="Xcode",
-        logger=Mock(),
+        console=Mock(),
     )
 
     # The macOS my_app app specifies a full inherited chain.
@@ -678,7 +678,7 @@ def test_pep621_defaults():
         config_file,
         platform="macOS",
         output_format="app",
-        logger=Mock(),
+        console=Mock(),
     )
 
     awesome = apps["awesome"]
@@ -714,9 +714,9 @@ def test_license_is_string_project():
         """
     )
 
-    logger = Mock()
+    console = Mock()
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app", logger=logger
+        config_file, platform="macOS", output_format="app", console=console
     )
 
     assert global_options == {
@@ -729,7 +729,7 @@ def test_license_is_string_project():
         "appvalue": "the app",
         "license": {"file": "LICENSE"},
     }
-    logger.warning.assert_called_once_with(
+    console.warning.assert_called_once_with(
         """
 *************************************************************************
 ** WARNING: License Definition for the Project is Deprecated           **
@@ -771,9 +771,9 @@ def test_license_is_string_project_and_app():
         """
     )
 
-    logger = Mock()
+    console = Mock()
     global_options, apps = parse_config(
-        config_file, platform="macOS", output_format="app", logger=logger
+        config_file, platform="macOS", output_format="app", console=console
     )
 
     assert global_options == {
@@ -786,7 +786,7 @@ def test_license_is_string_project_and_app():
         "appvalue": "the app",
         "license": {"file": "LICENSE"},
     }
-    logger.warning.assert_has_calls(
+    console.warning.assert_has_calls(
         [
             call(
                 """

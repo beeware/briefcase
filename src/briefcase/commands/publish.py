@@ -36,7 +36,7 @@ class PublishCommand(BaseCommand):
         :param app: The application to publish
         :param channel: The publication channel to use
         """
-        self.logger.info(
+        self.console.info(
             f"TODO: Publish {app.app_name} to {channel}"
         )  # pragma: no cover
 

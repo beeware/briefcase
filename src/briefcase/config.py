@@ -503,7 +503,7 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
-def parse_config(config_file, platform, output_format, logger):
+def parse_config(config_file, platform, output_format, console):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
@@ -526,6 +526,7 @@ def parse_config(config_file, platform, output_format, logger):
     :param config_file: A file-like object containing TOML to be parsed.
     :param platform: The platform being targeted
     :param output_format: The output format
+    :param console: The console to use for any output or logging.
     :returns: A dictionary of configuration data. The top level dictionary is
         keyed by the names of the apps that are declared; each value is
         itself the configuration data merged from global, app, platform and
@@ -559,7 +560,7 @@ def parse_config(config_file, platform, output_format, logger):
     for name, config in [("project", global_config)] + list(all_apps.items()):
         if isinstance(config.get("license"), str):
             section_name = "the Project" if name == "project" else f"{name!r}"
-            logger.warning(
+            console.warning(
                 f"""
 *************************************************************************
 ** {f"WARNING: License Definition for {section_name} is Deprecated":67} **

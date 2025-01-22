@@ -36,7 +36,7 @@ def test_question_sequence_bootstrap_context(
     class GuiBootstrap:
         fields = []
 
-        def __init__(self, logger, input, context):
+        def __init__(self, console, context):
             nonlocal passed_context
             passed_context = context.copy()
 
@@ -51,7 +51,7 @@ def test_question_sequence_bootstrap_context(
         ),
     )
 
-    new_command.input.enabled = False
+    new_command.console.input_enabled = False
 
     bootstrap = new_command.create_bootstrap(
         context={
@@ -73,7 +73,7 @@ def test_question_sequence_bootstrap_context(
 def test_question_sequence_toga(new_command):
     """The Toga bootstrap can be selected."""
 
-    new_command.input.values = [
+    new_command.console.values = [
         "1",  # Toga GUI toolkit
     ]
 
@@ -95,7 +95,7 @@ def test_question_sequence_toga(new_command):
 def test_question_sequence_console(new_command):
     """A console bootstrap can be constructed."""
 
-    new_command.input.values = [
+    new_command.console.values = [
         "4",  # Console app
     ]
 
@@ -117,7 +117,7 @@ def test_question_sequence_console(new_command):
 def test_question_sequence_pyside6(new_command):
     """A Pyside6 bootstrap can be created."""
 
-    new_command.input.values = [
+    new_command.console.values = [
         "2",  # PySide6 GUI toolkit
     ]
 
@@ -139,7 +139,7 @@ def test_question_sequence_pyside6(new_command):
 def test_question_sequence_pygame(new_command):
     """A Pygame bootstrap can be constructed."""
 
-    new_command.input.values = [
+    new_command.console.values = [
         "3",  # Pygame GUI toolkit
     ]
 
@@ -162,7 +162,7 @@ def test_question_sequence_none(new_command):
     """If no bootstrap is selected, the empty bootstrap is used."""
 
     # Prime answers for all the questions.
-    new_command.input.values = [
+    new_command.console.values = [
         "5",  # None
     ]
 
@@ -189,12 +189,12 @@ def test_question_sequence_with_overrides(
     """The answer to the bootstrap question can be overridden."""
 
     # Prime answers for none of the questions.
-    new_command.input.values = []
+    new_command.console.values = []
 
     class GuiBootstrap:
         fields = []
 
-        def __init__(self, logger, input, context):
+        def __init__(self, console, context):
             self.context = context.copy()
 
     monkeypatch.setattr(
@@ -233,7 +233,7 @@ def test_question_sequence_with_bad_bootstrap_override(
     """A bad override for the bootstrap uses user input instead."""
 
     # Prime a bad answer for the bootstrap question
-    new_command.input.values = [
+    new_command.console.values = [
         "6",  # None
     ]
 
@@ -242,7 +242,7 @@ def test_question_sequence_with_bad_bootstrap_override(
         # requires() would cause an error
         fields = ["requires"]
 
-        def __init__(self, logger, input, context):
+        def __init__(self, console, context):
             pass
 
     monkeypatch.setattr(
@@ -276,7 +276,7 @@ def test_question_sequence_with_bad_bootstrap_override(
 def test_question_sequence_with_no_user_input(new_command):
     """If no user input is provided, all user inputs are taken as default."""
 
-    new_command.input.enabled = False
+    new_command.console.input_enabled = False
 
     bootstrap = new_command.create_bootstrap(
         context={

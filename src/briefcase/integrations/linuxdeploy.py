@@ -97,7 +97,7 @@ class LinuxDeployBase(ABC):
         plugins while building the AppImage. ELF files need special "magic" bytes zeroed
         to run properly in Docker.
         """
-        with self.tools.input.wait_bar(f"Installing {self.file_name}..."):
+        with self.tools.console.wait_bar(f"Installing {self.file_name}..."):
             self.tools.os.chmod(self.file_path / self.file_name, 0o755)
             if self.is_elf_file():
                 self.patch_elf_header()
@@ -127,7 +127,7 @@ class LinuxDeployBase(ABC):
         tool: LinuxDeployT = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
-                tools.logger.info(
+                tools.console.info(
                     cls.install_msg.format(full_name=cls.full_name),
                     prefix="linuxdeploy",
                 )
@@ -142,7 +142,7 @@ class LinuxDeployBase(ABC):
 
     def uninstall(self):
         """Uninstall tool."""
-        with self.tools.input.wait_bar(f"Removing old {self.full_name} install..."):
+        with self.tools.console.wait_bar(f"Removing old {self.full_name} install..."):
             (self.file_path / self.file_name).unlink()
 
     def is_elf_file(self) -> bool:
@@ -180,12 +180,12 @@ class LinuxDeployBase(ABC):
                 appimage.write(ELF_PATCH_PATCHED_BYTES)
                 appimage.flush()
                 appimage.seek(0)
-                self.tools.logger.info(f"Patched ELF header for {self.file_name}.")
+                self.tools.console.info(f"Patched ELF header for {self.file_name}.")
             # Else if the header is the patched value, do nothing.
             elif (
                 appimage.read(len(ELF_PATCH_ORIGINAL_BYTES)) == ELF_PATCH_PATCHED_BYTES
             ):
-                self.tools.logger.info(
+                self.tools.console.info(
                     f"ELF header for {self.file_name} is already patched."
                 )
             else:
@@ -400,14 +400,14 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
 
             try:
                 plugin_klass = self.plugins[plugin_name]
-                self.tools.logger.info(f"Using default {plugin_name} plugin")
+                self.tools.console.info(f"Using default {plugin_name} plugin")
                 plugin = plugin_klass.verify(self.tools)
             except KeyError:
                 if plugin_name.startswith(("https://", "http://")):
-                    self.tools.logger.info(f"Using URL plugin {plugin_name}")
+                    self.tools.console.info(f"Using URL plugin {plugin_name}")
                     plugin = LinuxDeployURLPlugin.verify(self.tools, url=plugin_name)
                 else:  # pragma: no-cover-if-is-windows
-                    self.tools.logger.info(f"Using local file plugin {plugin_name}")
+                    self.tools.console.info(f"Using local file plugin {plugin_name}")
                     plugin = LinuxDeployLocalFilePlugin.verify(
                         self.tools,
                         plugin_path=Path(plugin_name),

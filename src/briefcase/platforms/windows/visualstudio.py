@@ -45,9 +45,9 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
         :param app: The config object for the app
         """
-        self.logger.info("Building VisualStudio project...", prefix=app.app_name)
+        self.console.info("Building VisualStudio project...", prefix=app.app_name)
 
-        with self.input.wait_bar("Building solution..."):
+        with self.console.wait_bar("Building solution..."):
             try:
                 self.tools.subprocess.run(
                     [
@@ -59,7 +59,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
                         "-property:Configuration=Release",
                         (
                             "-verbosity:detailed"
-                            if self.logger.is_deep_debug
+                            if self.console.is_deep_debug
                             else "-verbosity:normal"
                         ),
                     ],

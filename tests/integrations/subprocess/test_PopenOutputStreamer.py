@@ -3,7 +3,7 @@ from io import StringIO
 
 import pytest
 
-from briefcase.console import Log
+from briefcase.console import Console
 from briefcase.integrations import subprocess
 from briefcase.integrations.subprocess import PopenOutputStreamer
 
@@ -13,7 +13,7 @@ def streamer(streaming_process):
     return PopenOutputStreamer(
         label="test",
         popen_process=streaming_process,
-        logger=Log(),
+        console=Console(),
     )
 
 

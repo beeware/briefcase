@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from briefcase.commands import CreateCommand
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
@@ -29,7 +29,6 @@ class DummyCreateCommand(LocalRequirementsMixin, CreateCommand):
 @pytest.fixture
 def no_docker_create_command(first_app_config, tmp_path):
     command = DummyCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

@@ -38,7 +38,7 @@ class RCEdit(ManagedTool):
 
         if not rcedit.exists():
             if install:
-                tools.logger.info(
+                tools.console.info(
                     "RCEdit was not found; downloading and installing...",
                     prefix=cls.name,
                 )
@@ -62,5 +62,5 @@ class RCEdit(ManagedTool):
 
     def uninstall(self):
         """Uninstall RCEdit."""
-        with self.tools.input.wait_bar("Removing old RCEdit install..."):
+        with self.tools.console.wait_bar("Removing old RCEdit install..."):
             self.rcedit_path.unlink()

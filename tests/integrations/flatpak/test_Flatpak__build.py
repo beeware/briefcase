@@ -11,7 +11,7 @@ def test_build(flatpak, tool_debug_mode, tmp_path):
     """A Flatpak project can be built."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        flatpak.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     flatpak.build(
         bundle_identifier="com.example.my-app",

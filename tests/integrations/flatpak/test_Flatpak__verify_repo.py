@@ -11,7 +11,7 @@ def test_verify_repo(flatpak, tool_debug_mode):
     """A Flatpak repo can be verified."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        flatpak.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     flatpak.verify_repo(
         repo_alias="test-alias",

@@ -16,7 +16,7 @@ import httpx
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import (
     MissingToolError,
     NonManagedToolError,
@@ -173,7 +173,6 @@ class ToolCache(Mapping):
 
     def __init__(
         self,
-        logger: Log,
         console: Console,
         base_path: Path,
         home_path: Path | None = None,
@@ -185,13 +184,11 @@ class ToolCache(Mapping):
         App-specific tools are available via dictionary access:
             e.g.: tools[app].app_context
 
-        :param logger: Logger for console and logfile.
         :param console: Facilitates console interaction and input solicitation.
         :param base_path: Base directory for tools (e.g. ~/.cache/briefcase/tools).
         :param home_path: Home directory for current user.
         """
-        self.logger = logger
-        self.input = console
+        self.console = console
         self.base_path = Path(base_path)
         self.home_path = Path(
             os.path.expanduser(home_path if home_path else Path.home())
@@ -204,8 +201,7 @@ class ToolCache(Mapping):
 
         self.app_tools: DefaultDict[AppConfig, ToolCache] = defaultdict(
             lambda: ToolCache(
-                logger=self.logger,
-                console=self.input,
+                console=self.console,
                 base_path=self.base_path,
                 home_path=self.home_path,
             )

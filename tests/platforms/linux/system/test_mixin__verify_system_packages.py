@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
@@ -11,7 +11,6 @@ from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 @pytest.fixture
 def build_command(tmp_path, first_app):
     command = LinuxSystemBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

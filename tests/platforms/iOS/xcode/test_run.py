@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.xcode import DeviceState
@@ -15,7 +15,6 @@ from briefcase.platforms.macOS import macOS_log_clean_filter
 @pytest.fixture
 def run_command(tmp_path):
     command = iOSXcodeRunCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -67,7 +66,7 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
     )
 
     # Disable console input.
-    run_command.tools.input.enabled = False
+    run_command.tools.console.input_enabled = False
 
     with pytest.raises(
         BriefcaseCommandError,

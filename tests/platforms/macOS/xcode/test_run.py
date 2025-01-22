@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import macOS_log_clean_filter
 from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
@@ -16,7 +16,6 @@ from briefcase.platforms.macOS.xcode import macOSXcodeRunCommand
 @pytest.fixture
 def run_command(tmp_path):
     command = macOSXcodeRunCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

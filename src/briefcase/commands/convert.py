@@ -119,9 +119,9 @@ class ConvertCommand(NewCommand):
             and override_value is None
         ):
             app_name = canonicalize_name(self.pep621_data["name"])
-            self.input.divider(title="App name")
-            self.input.prompt()
-            self.input.prompt(
+            self.console.divider(title="App name")
+            self.console.prompt()
+            self.console.prompt(
                 f"Using value from PEP621 formatted pyproject.toml {app_name!r}"
             )
             return app_name
@@ -134,7 +134,7 @@ class ConvertCommand(NewCommand):
                 f"app name of '{default}', but you can use another name if you want."
             )
 
-        return self.input.text_question(
+        return self.console.text_question(
             intro=intro,
             description="App Name",
             default=default,
@@ -148,7 +148,7 @@ class ConvertCommand(NewCommand):
         :returns: The source directory
         """
         default = (" ".join(re.split("[-_]", app_name))).title()
-        return self.input.text_question(
+        return self.console.text_question(
             intro=(
                 "We need a formal name for your application. This is the name that "
                 "will be displayed to humans whenever the name of the application is "
@@ -215,7 +215,7 @@ class ConvertCommand(NewCommand):
         :returns: The source directory
         """
         default, intro = self.get_source_dir_hint(app_name, module_name)
-        return self.input.text_question(
+        return self.console.text_question(
             intro=intro,
             description="Source Directory",
             default=default,
@@ -250,7 +250,7 @@ class ConvertCommand(NewCommand):
         else:
             default = "tests"
 
-        return self.input.text_question(
+        return self.console.text_question(
             intro=intro,
             description="Test Source Directory",
             default=default,
@@ -270,14 +270,14 @@ class ConvertCommand(NewCommand):
         if "description" in self.pep621_data and override_value is None:
             description = self.pep621_data["description"]
 
-            self.input.divider(title="Description")
-            self.input.prompt()
-            self.input.prompt(
+            self.console.divider(title="Description")
+            self.console.prompt()
+            self.console.prompt(
                 f"Using value from PEP621 formatted pyproject.toml {description!r}"
             )
             return description
 
-        return self.input.text_question(
+        return self.console.text_question(
             intro="Now, we need a one line description for your application.",
             description="Description",
             default="My first application",
@@ -293,7 +293,7 @@ class ConvertCommand(NewCommand):
 
         if not options or override_value:
             default = self.make_project_url("com.example", app_name)
-            return self.input.text_question(
+            return self.console.text_question(
                 intro=(
                     "What website URL do you want to use for this application? Based "
                     f"on your existing 'pyproject.toml', this might be {default}"
@@ -305,7 +305,7 @@ class ConvertCommand(NewCommand):
             )
 
         options.append("Other")
-        url = self.input.selection_question(
+        url = self.console.selection_question(
             intro=(
                 "What website URL do you want to use for this application? The "
                 "following URLs are defined in your existing 'pyproject.toml'; "
@@ -318,7 +318,7 @@ class ConvertCommand(NewCommand):
         )
 
         if url == "Other":
-            url = self.input.text_question(
+            url = self.console.text_question(
                 intro="What website URL do you want to use for the application?",
                 description="Application URL",
                 default=self.make_project_url("com.example", app_name),
@@ -337,7 +337,7 @@ class ConvertCommand(NewCommand):
             "console": "Console",
         }
         return (
-            self.input.selection_question(
+            self.console.selection_question(
                 intro="Is this a GUI application or a console application?",
                 description="Interface Style",
                 default="gui",
@@ -349,7 +349,7 @@ class ConvertCommand(NewCommand):
 
     def input_bundle(self, url, app_name, override_value: str | None) -> str:
         default = ".".join(reversed(urlparse(url).netloc.split(".")))
-        return self.input.text_question(
+        return self.console.text_question(
             intro=(
                 "Now we need a bundle identifier for your application.\n"
                 "\n"
@@ -388,7 +388,7 @@ class ConvertCommand(NewCommand):
         ]
 
         if not options or override_value is not None:
-            return self.input.text_question(
+            return self.console.text_question(
                 intro=intro,
                 description="Author",
                 default="Jane Developer",
@@ -405,7 +405,7 @@ class ConvertCommand(NewCommand):
         # author is "Other". However, since we don't want the selection_question prompt
         # if an override value is provided, we need to initialise the author variable
         # here.
-        author = self.input.selection_question(
+        author = self.console.selection_question(
             intro=(
                 f"{intro}\n\n"
                 + "We found these author names in the PEP621 formatted "
@@ -418,7 +418,7 @@ class ConvertCommand(NewCommand):
             override_value=None,
         )
         if author == "Other":
-            author = self.input.text_question(
+            author = self.console.text_question(
                 intro="Who do you want to be credited as the author of this application?",
                 description="Author",
                 default="Jane Developer",
@@ -447,7 +447,7 @@ class ConvertCommand(NewCommand):
             f"we believe it could be '{default}'."
         )
 
-        author_email = self.input.text_question(
+        author_email = self.console.text_question(
             intro=intro,
             description="Author's Email",
             default=default,
@@ -551,7 +551,7 @@ class ConvertCommand(NewCommand):
             "Other",
         ]
 
-        return self.input.selection_question(
+        return self.console.selection_question(
             intro=intro,
             description="Project License",
             options=options,
@@ -663,7 +663,7 @@ class ConvertCommand(NewCommand):
         license_file = self.pep621_data.get("license", {}).get("file")
 
         if license_file is None and not (self.base_path / "LICENSE").exists():
-            self.logger.warning(
+            self.console.warning(
                 f"\nLicense file not found in '{self.base_path}'. "
                 "Briefcase will create a template 'LICENSE' file."
             )
@@ -672,7 +672,7 @@ class ConvertCommand(NewCommand):
         # Copy changelog file
         changelog_file = self.base_path / "CHANGELOG"
         if not changelog_file.is_file():
-            self.logger.warning(
+            self.console.warning(
                 f"\nChangelog file not found in '{self.base_path}'. You should either "
                 f"create a new '{self.base_path / 'CHANGELOG'}' file, or rename an "
                 "already existing changelog file to 'CHANGELOG'."
@@ -705,22 +705,22 @@ class ConvertCommand(NewCommand):
         :param template: The cookiecutter template to use.
         :param template_branch: The git branch that the template should use.
         """
-        self.input.prompt()
-        self.input.prompt("Let's setup an existing project as a Briefcase app!")
+        self.console.prompt()
+        self.console.prompt("Let's setup an existing project as a Briefcase app!")
 
         context = self.build_app_context(project_overrides)
         # The convert wizard uses the new project template - but the user already has
         # project code, and we don't want to add additional GUI dependencies (as the
         # existing app should already be defining them), so we use the Empty bootstrap.
-        bootstrap = EmptyBootstrap(self.logger, self.input, context)
+        bootstrap = EmptyBootstrap(self.console, context)
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
-        self.input.divider()  # close the prompting section of output
+        self.console.divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 
-        self.logger.info()
-        self.logger.info(
+        self.console.info()
+        self.console.info(
             f"Generating required files to set up '{context['formal_name']}' with Briefcase",
             prefix=context["app_name"],
         )
@@ -742,11 +742,11 @@ class ConvertCommand(NewCommand):
             project_dir, context["test_source_dir"], context["module_name"]
         )
 
-        self.logger.info(
+        self.console.info(
             f"Converted existing application '{context['formal_name']}'",
             prefix=context["app_name"],
         )
-        self.logger.info(
+        self.console.info(
             """
 To run your application, type:
 

@@ -186,9 +186,9 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                     )
                 )
         except (InvalidVersion, IndexError):
-            tools.logger.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
+            tools.console.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
         except subprocess.CalledProcessError:
-            tools.logger.warning(cls.DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
+            tools.console.warning(cls.DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
         except OSError as e:
             # Docker executable doesn't exist
             raise BriefcaseCommandError(
@@ -364,7 +364,7 @@ Delete this file and run Briefcase again.
         ).strip()
 
         if not image_id:
-            self.tools.logger.info(
+            self.tools.console.info(
                 f"Downloading Docker base image for {image_tag}...",
                 prefix=self.full_name,
             )
@@ -552,7 +552,7 @@ Delete this file and run Briefcase again.
             try:
                 self._x11_write_xauth_file(DISPLAY, xauth_file_path, proxy_display_num)
             except XauthDatabaseCreationFailure:
-                self.tools.logger.warning(
+                self.tools.console.warning(
                     """\
 An X11 authentication database could not be created for the display.
 
@@ -895,17 +895,17 @@ class DockerAppContext(Tool):
         self.image_tag = image_tag
         self.python_version = python_version
 
-        self.tools.logger.info(
+        self.tools.console.info(
             "Building Docker container image...",
             prefix=self.app.app_name,
         )
-        with self.tools.input.wait_bar("Building Docker image..."):
+        with self.tools.console.wait_bar("Building Docker image..."):
             # Install requirements for both building *and* running the app
             # (ensure a copy of system_requires is used to avoid modification)
             system_requires = getattr(self.app, "system_requires", []).copy()
             system_requires.extend(getattr(self.app, "system_runtime_requires", []))
 
-            with self.tools.logger.context("Docker"):
+            with self.tools.console.context("Docker"):
                 try:
                     self.tools.subprocess.run(
                         [
@@ -955,7 +955,7 @@ class DockerAppContext(Tool):
         if kwargs.get("interactive"):
             kwargs["stream_output"] = False
 
-        with self.tools.logger.context("Docker"):
+        with self.tools.console.context("Docker"):
             self.tools.subprocess.run(**self._dockerize_args(args, **kwargs))
 
     def check_output(self, args: SubprocessArgsT, **kwargs) -> str:

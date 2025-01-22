@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, PropertyMock
 import httpx
 import pytest
 
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import Subprocess
@@ -16,7 +16,6 @@ from briefcase.platforms.android.gradle import GradleBuildCommand
 @pytest.fixture
 def build_command(tmp_path, first_app_generated, monkeypatch):
     command = GradleBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -72,7 +71,7 @@ def test_build_app(
     build_command.tools.host_os = host_os
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        build_command.tools.console.verbosity = LogLevel.DEEP_DEBUG
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
@@ -139,7 +138,7 @@ def test_build_app_test_mode(
     build_command.tools.host_os = host_os
     # Enable verbose tool logging
     if debug_mode:
-        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        build_command.tools.console.verbosity = LogLevel.DEEP_DEBUG
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}

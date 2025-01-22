@@ -124,7 +124,7 @@ def test_call_windows_with_start_new_session_and_creationflags(
 
 def test_debug_call(mock_sub, capsys, sub_kw):
     """If verbosity is turned up, there is output."""
-    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
+    mock_sub.tools.console.verbosity = LogLevel.DEBUG
     mock_sub.Popen(["hello", "world"])
 
     mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **sub_kw)
@@ -140,7 +140,7 @@ def test_debug_call(mock_sub, capsys, sub_kw):
 
 def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
     """If verbosity is turned up, and injected env vars are included output."""
-    mock_sub.tools.logger.verbosity = LogLevel.DEBUG
+    mock_sub.tools.console.verbosity = LogLevel.DEBUG
 
     env = {"NewVar": "NewVarValue"}
     mock_sub.Popen(["hello", "world"], env=env, cwd=tmp_path / "cwd")

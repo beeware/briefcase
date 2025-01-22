@@ -91,7 +91,7 @@ class UpgradeCommand(BaseCommand):
                 if not tools_to_upgrade:
                     raise UpgradeToolError(error_msg)
                 else:
-                    self.logger.warning(error_msg)
+                    self.console.warning(error_msg)
 
         return sorted(list(tools_to_upgrade), key=attrgetter("name"))
 
@@ -102,16 +102,18 @@ class UpgradeCommand(BaseCommand):
         :param list_tools: Boolean to only list upgradeable tools (default False).
         """
         if tools_to_upgrade := self.get_tools_to_upgrade(set(tool_list)):
-            self.logger.info(
+            self.console.info(
                 f"Briefcase {'is managing' if list_tools else 'will upgrade'} the following tools:",
                 prefix=self.command,
             )
             for tool in tools_to_upgrade:
-                self.logger.info(f" - {tool.full_name} ({tool.name})")
+                self.console.info(f" - {tool.full_name} ({tool.name})")
 
             if not list_tools:
                 for tool in tools_to_upgrade:
-                    self.logger.info(f"Upgrading {tool.full_name}...", prefix=tool.name)
+                    self.console.info(
+                        f"Upgrading {tool.full_name}...", prefix=tool.name
+                    )
                     tool.upgrade()
         else:
-            self.logger.info("Briefcase is not managing any tools.")
+            self.console.info("Briefcase is not managing any tools.")

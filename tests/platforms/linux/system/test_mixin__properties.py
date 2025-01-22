@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
@@ -164,7 +164,6 @@ def test_docker_image_tag_uppercase_name(
 def test_clone_options(create_command, tmp_path):
     """Docker options are cloned."""
     build_command = LinuxSystemBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

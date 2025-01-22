@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
 from tests.utils import DummyConsole
@@ -15,10 +15,9 @@ class DummyCommand(iOSXcodeMixin, BaseCommand):
     command = "dummy"
 
     def __init__(self, base_path, **kwargs):
-        kwargs.setdefault("logger", Log())
         kwargs.setdefault("console", Console())
         super().__init__(base_path=base_path, **kwargs)
-        self.tools.input = DummyConsole()
+        self.tools.console = DummyConsole()
 
 
 @pytest.fixture
@@ -82,7 +81,7 @@ def test_explicit_device_name_should_find_highest_version(dummy_command):
     assert device == "iPhone 8"
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_explicit_device_name_should_find_highest_version_no_os(dummy_command):
@@ -114,7 +113,7 @@ def test_explicit_device_name_should_find_highest_version_no_os(dummy_command):
     assert device == "iPhone 8"
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_explicit_device_name_and_version(dummy_command):
@@ -143,7 +142,7 @@ def test_explicit_device_name_and_version(dummy_command):
     assert device == "iPhone 8"
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_invalid_explicit_device_udid(dummy_command):
@@ -162,7 +161,7 @@ def test_invalid_explicit_device_udid(dummy_command):
         dummy_command.select_target_device("deadbeef-dead-beef-cafe-deadbeefdead")
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_invalid_explicit_device_name(dummy_command):
@@ -181,7 +180,7 @@ def test_invalid_explicit_device_name(dummy_command):
         dummy_command.select_target_device("iphone 99")
 
     # User input was not solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_explicit_name_invalid_version(dummy_command):
@@ -236,7 +235,7 @@ def test_implied_device(dummy_command):
     assert device == "iPhone 11"
 
     # No user input was solicited
-    assert dummy_command.input.prompts == []
+    assert dummy_command.console.prompts == []
 
 
 def test_implied_os(dummy_command):
@@ -251,7 +250,7 @@ def test_implied_os(dummy_command):
     }
 
     # Return option 2 (iPhone 11)
-    dummy_command.input.values = ["2"]
+    dummy_command.console.values = ["2"]
 
     udid, iOS_version, device = dummy_command.select_target_device()
 
@@ -260,7 +259,7 @@ def test_implied_os(dummy_command):
     assert device == "iPhone 11"
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["Simulator: "]
+    assert dummy_command.console.prompts == ["Simulator: "]
 
 
 def test_multiple_os_implied_device(dummy_command):
@@ -279,7 +278,7 @@ def test_multiple_os_implied_device(dummy_command):
     }
 
     # Return option 1 (13.2)
-    dummy_command.input.values = ["2"]
+    dummy_command.console.values = ["2"]
 
     # Device for iOS 13.2 is implied.
     udid, iOS_version, device = dummy_command.select_target_device()
@@ -289,7 +288,7 @@ def test_multiple_os_implied_device(dummy_command):
     assert device == "iPhone 11"
 
     # User input was solicited once
-    assert dummy_command.input.prompts == ["iOS Version: "]
+    assert dummy_command.console.prompts == ["iOS Version: "]
 
 
 def test_os_and_device_options(dummy_command):
@@ -309,7 +308,7 @@ def test_os_and_device_options(dummy_command):
     }
 
     # Return option 2 (13.2), then option 1 (iPhone 8)
-    dummy_command.input.values = ["2", "1"]
+    dummy_command.console.values = ["2", "1"]
 
     udid, iOS_version, device = dummy_command.select_target_device()
 
@@ -318,7 +317,7 @@ def test_os_and_device_options(dummy_command):
     assert device == "iPhone 8"
 
     # User input was solicited twice
-    assert dummy_command.input.prompts == ["iOS Version: ", "Simulator: "]
+    assert dummy_command.console.prompts == ["iOS Version: ", "Simulator: "]
 
 
 def test_no_os_versions(dummy_command):

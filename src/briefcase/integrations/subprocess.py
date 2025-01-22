@@ -19,7 +19,7 @@ from typing import TypeVar, Union
 import psutil
 
 from briefcase.config import AppConfig
-from briefcase.console import Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
 
@@ -65,7 +65,7 @@ def is_process_dead(pid: int) -> bool:
 def get_process_id_by_command(
     command_list: list[str] | None = None,
     command: str = "",
-    logger: Log | None = None,
+    console: Console | None = None,
 ) -> int | None:
     """Find a Process ID (PID) a by its command. If multiple processes are found, then
     the most recently created process ID is returned.
@@ -75,7 +75,7 @@ def get_process_id_by_command(
         This is primarily intended for use on macOS where the `open` command
         takes a filepath to a directory for an application; therefore, the actual
         running process will be running a command within that directory.
-    :param logger: optional Log to show messages about process matching to users
+    :param console: optional console to show messages about process matching to users
     :returns: PID if found else None
     """
     matching_procs = []
@@ -94,8 +94,8 @@ def get_process_id_by_command(
     elif len(matching_procs) > 1:
         # return the ID of the most recently created matching process
         pid = sorted(matching_procs, key=operator.itemgetter("create_time"))[-1]["pid"]
-        if logger:
-            logger.info(
+        if console:
+            console.info(
                 f"Multiple running instances of app found. Using most recently created app process {pid}."
             )
         return pid
@@ -120,7 +120,7 @@ def ensure_console_is_safe(sub_method):
         :returns: the return value for the Subprocess method
         """
         # Just run the command if no dynamic elements are active
-        if not sub.tools.input.is_console_controlled:
+        if not sub.tools.console.is_console_controlled:
             return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
 
         remove_dynamic_elements = False
@@ -138,7 +138,7 @@ def ensure_console_is_safe(sub_method):
 
         # Run subprocess command with or without console control
         if remove_dynamic_elements:
-            with sub.tools.input.release_console_control():
+            with sub.tools.console.release_console_control():
                 return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
         else:
             return sub_method(sub, args, *wrapped_args, **wrapped_kwargs)
@@ -151,7 +151,7 @@ class PopenOutputStreamer(threading.Thread):
         self,
         label: str,
         popen_process: subprocess.Popen,
-        logger: Log,
+        console: Console,
         capture_output: bool = False,
         filter_func: Callable[[str], Iterator[str]] | None = None,
     ):
@@ -159,7 +159,7 @@ class PopenOutputStreamer(threading.Thread):
 
         :param label: Descriptive name for process being streamed
         :param popen_process: Popen process with stdout to stream
-        :param logger: logger for printing to console
+        :param console: console for printing to console
         :param capture_output: Retain process output in ``output_queue`` via a
             ``queue.Queue`` instead of printing to console
         :param filter_func: a callable that will be invoked on every line of output
@@ -168,7 +168,7 @@ class PopenOutputStreamer(threading.Thread):
         super().__init__(name=f"{label} output streamer", daemon=True)
 
         self.popen_process = popen_process
-        self.logger = logger
+        self.console = console
         self.capture_output = capture_output
         self.filter_func = filter_func
 
@@ -192,7 +192,7 @@ class PopenOutputStreamer(threading.Thread):
                         if self.capture_output:
                             self.output_queue.put_nowait(filtered_line)
                         else:
-                            self.logger.info(filtered_line)
+                            self.console.info(filtered_line)
 
                     if stop_streaming:
                         self.stop_flag.set()
@@ -200,8 +200,8 @@ class PopenOutputStreamer(threading.Thread):
                 if self.stop_flag.is_set():
                     break
         except Exception as e:
-            self.logger.error(f"Error while streaming output: {type(e).__name__}: {e}")
-            self.logger.capture_stacktrace("Output thread")
+            self.console.error(f"Error while streaming output: {type(e).__name__}: {e}")
+            self.console.capture_stacktrace("Output thread")
 
     def request_stop(self):
         """Set the stop flag to cause the streamer to exit.
@@ -237,7 +237,7 @@ class PopenOutputStreamer(threading.Thread):
             # Catch ValueError if stdout is unexpectedly closed; this can
             # happen, for instance, if the user starts spamming CTRL+C.
             if "I/O operation on closed file" in str(e):
-                self.logger.warning(
+                self.console.warning(
                     "WARNING: stdout was unexpectedly closed while streaming output"
                 )
                 return ""
@@ -571,7 +571,7 @@ class Subprocess(Tool):
         be captured for logging.
 
         When dynamic screen content like a Wait Bar is active, output can
-        only be printed to the screen via Log or Console to avoid interfering
+        only be printed to the screen via Console to avoid interfering
         with and likely corrupting the updates to the dynamic screen elements.
 
         stdout will always be piped so it can be printed to the screen;
@@ -656,7 +656,7 @@ class Subprocess(Tool):
             # Subprocess errors will be logged, and also printed to console if we're at
             # DEBUG+ log levels. However, if we're at quiet=0 *and* a non-debug log
             # level, we need to explicitly output to the console.
-            if quiet == 0 and self.tools.logger.verbosity < LogLevel.DEBUG:
+            if quiet == 0 and self.tools.console.verbosity < LogLevel.DEBUG:
                 self.output_error(e)
             if quiet < 2:
                 self._log_output(e.output, e.stderr)
@@ -696,16 +696,16 @@ class Subprocess(Tool):
                 str(e)
                 or f"Failed to parse command output using '{output_parser.__name__}'"
             )
-            self.tools.logger.error()
-            self.tools.logger.error("Command Output Parsing Error:")
-            self.tools.logger.error(f"    {error_reason}")
-            self.tools.logger.error("Command:")
-            self.tools.logger.error(
+            self.tools.console.error()
+            self.tools.console.error("Command Output Parsing Error:")
+            self.tools.console.error(f"    {error_reason}")
+            self.tools.console.error("Command:")
+            self.tools.console.error(
                 f"    {' '.join(shlex.quote(str(arg)) for arg in args)}"
             )
-            self.tools.logger.error("Command Output:")
+            self.tools.console.error("Command Output:")
             for line in ensure_str(cmd_output).splitlines():
-                self.tools.logger.error(f"    {line}")
+                self.tools.console.error(f"    {line}")
             raise CommandOutputParseError(error_reason) from e
 
     def Popen(self, args: SubprocessArgsT, **kwargs) -> subprocess.Popen:
@@ -755,7 +755,7 @@ class Subprocess(Tool):
         output_streamer = PopenOutputStreamer(
             label=label,
             popen_process=popen_process,
-            logger=self.tools.logger,
+            console=self.tools.console,
             filter_func=filter_func,
         )
         try:
@@ -765,7 +765,7 @@ class Subprocess(Tool):
             while not stop_func() and output_streamer.is_alive():
                 time.sleep(0.1)
         except KeyboardInterrupt:
-            self.tools.logger.info("Stopping...")
+            self.tools.console.info("Stopping...")
             # allow time for CTRL+C to propagate to the child process
             time.sleep(0.25)
             # re-raise to exit as "Aborted by user"
@@ -776,7 +776,7 @@ class Subprocess(Tool):
             while output_streamer.is_alive() and time.time() < streamer_deadline:
                 time.sleep(0.1)
             if output_streamer.is_alive():
-                self.tools.logger.error(
+                self.tools.console.error(
                     "Log stream hasn't terminated; log output may be corrupted."
                 )
 
@@ -807,7 +807,7 @@ class Subprocess(Tool):
         output_streamer = PopenOutputStreamer(
             label=label,
             popen_process=popen_process,
-            logger=self.tools.logger,
+            console=self.tools.console,
             capture_output=capture_output,
             filter_func=filter_func,
         )
@@ -826,16 +826,16 @@ class Subprocess(Tool):
         try:
             popen_process.wait(timeout=3)
         except subprocess.TimeoutExpired:
-            self.tools.logger.warning(f"Forcibly killing {label}...")
+            self.tools.console.warning(f"Forcibly killing {label}...")
             popen_process.kill()
 
     def _console(self, msg: str = ""):
         """Funnel for subprocess console-only logging."""
-        self.tools.logger.print.to_console(msg, style="dim")
+        self.tools.console.to_console(msg, style="dim")
 
     def _log(self, msg: str = ""):
         """Funnel for all subprocess details logging."""
-        self.tools.logger.debug(msg, preface=">>> " if msg else "")
+        self.tools.console.debug(msg, preface=">>> " if msg else "")
 
     def _log_command(self, args: SubprocessArgsT, handler=None):
         """Log the entire console command being executed."""

@@ -5,7 +5,6 @@ import pytest
 import briefcase.commands.convert
 from briefcase.commands import ConvertCommand
 from briefcase.commands.base import full_options
-from briefcase.console import Console, Log
 from tests.utils import DummyConsole
 
 
@@ -18,12 +17,10 @@ class DummyConvertCommand(ConvertCommand):
     description = "Dummy convert command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("logger", Log())
-        kwargs.setdefault("console", Console())
+        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
-        self.tools.input = DummyConsole()
 
     def verify_host(self):
         super().verify_host()

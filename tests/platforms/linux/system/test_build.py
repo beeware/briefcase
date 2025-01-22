@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
@@ -16,7 +16,6 @@ from ....utils import create_file
 @pytest.fixture
 def build_command(tmp_path, first_app):
     command = LinuxSystemBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -176,12 +175,12 @@ def test_license_text_warns_with_single_line_license(build_command, first_app):
     """A warning is logged if the license text is a single line."""
 
     first_app.license = {"text": "Some license text"}
-    build_command.logger.warning = mock.MagicMock()
+    build_command.console.warning = mock.MagicMock()
 
     # Build the app
     build_command.build_app(first_app)
 
-    build_command.logger.warning.assert_called_once_with(
+    build_command.console.warning.assert_called_once_with(
         """
 Your app specifies a license using `license.text`, but the value doesn't appear to be a
 full license. Briefcase will generate a `copyright` file for your project; you should
@@ -194,7 +193,7 @@ def test_exception_with_no_license(build_command, first_app):
     """An exception is raised if there is no license defined."""
 
     first_app.license = {}
-    build_command.logger.warning = mock.MagicMock()
+    build_command.console.warning = mock.MagicMock()
 
     # Build the app
     with pytest.raises(
@@ -209,11 +208,11 @@ def test_license_text_doesnt_warn_with_multi_line_license(
 ):
     """No warning is logged if the license text is multi-line."""
     first_app.license = {"text": "Some license text\nsome more text"}
-    build_command.logger.warning = mock.MagicMock()
+    build_command.console.warning = mock.MagicMock()
 
     # Build the app
     build_command.build_app(first_app)
-    build_command.logger.warning.assert_not_called()
+    build_command.console.warning.assert_not_called()
 
 
 def test_missing_changelog(build_command, first_app, tmp_path):

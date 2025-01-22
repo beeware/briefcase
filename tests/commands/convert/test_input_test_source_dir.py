@@ -5,7 +5,7 @@ from ...utils import NoMatchString, PartialMatchString
 
 def test_no_test_dir(convert_command, monkeypatch):
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     convert_command.input_test_source_dir("app_name", None)
     intro_content = "\n\nBased on your project's folder structure, we believe 'test' might be your test directory"
@@ -20,7 +20,7 @@ def test_no_test_dir(convert_command, monkeypatch):
 
 def test_test_dir(convert_command, monkeypatch):
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     (convert_command.base_path / "test").mkdir()
     convert_command.input_test_source_dir("app_name", None)
@@ -37,7 +37,7 @@ def test_test_dir(convert_command, monkeypatch):
 
 def test_tests_dir(convert_command, monkeypatch):
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     (convert_command.base_path / "tests").mkdir()
     convert_command.input_test_source_dir("app_name", None)
@@ -54,7 +54,7 @@ def test_tests_dir(convert_command, monkeypatch):
 
 def test_tests_dir_is_prefered_over_test_dir(convert_command, monkeypatch):
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     (convert_command.base_path / "tests").mkdir()
     (convert_command.base_path / "test").mkdir()
@@ -78,6 +78,6 @@ def test_override_is_used(convert_command):
 def test_prompted_test_source_dir(convert_command):
     """You can type in the test source dir."""
     (convert_command.base_path / "mytest").mkdir(parents=True)
-    convert_command.input.values = ["mytest"]
+    convert_command.console.values = ["mytest"]
 
     assert convert_command.input_test_source_dir("app_name", None) == "mytest"

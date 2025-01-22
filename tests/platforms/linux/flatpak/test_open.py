@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.flatpak import LinuxFlatpakOpenCommand
 
@@ -14,7 +14,6 @@ from ....utils import create_file
 @pytest.fixture
 def open_command(tmp_path, first_app_config):
     command = LinuxFlatpakOpenCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

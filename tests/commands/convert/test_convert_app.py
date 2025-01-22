@@ -6,7 +6,7 @@ from cookiecutter.main import cookiecutter
 
 import briefcase
 from briefcase.commands import ConvertCommand
-from briefcase.console import Console, Log
+from briefcase.console import Console
 
 
 @pytest.fixture
@@ -14,7 +14,6 @@ def convert_command(tmp_path):
     return ConvertCommand(
         base_path=tmp_path / "project",
         data_path=tmp_path / "data",
-        logger=Log(),
         console=Console(),
     )
 

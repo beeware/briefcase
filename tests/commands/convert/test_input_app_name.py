@@ -14,7 +14,7 @@ def test_override_is_used(convert_command):
 def test_no_pep621_data(convert_command, monkeypatch):
     """The app directory is used if there is no PEP621-name."""
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
     convert_command.base_path /= "test-app-name"
     convert_command.input_app_name(None)
 
@@ -48,7 +48,7 @@ def test_invalid_hint_app_name(convert_command, monkeypatch):
     """A placeholder is used if there's no PEP621 name and the app directory is an
     invalid name."""
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
     convert_command.base_path /= "!app_name"
     convert_command.input_app_name(None)
 
@@ -66,7 +66,7 @@ def test_invalid_hint_app_name(convert_command, monkeypatch):
 def test_hint_is_canonicalized(convert_command, monkeypatch):
     """The app directory name is canonicalized when used as a hint."""
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
     convert_command.base_path /= "test-app_name"
     convert_command.input_app_name(None)
 

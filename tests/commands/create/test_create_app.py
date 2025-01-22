@@ -9,7 +9,7 @@ def test_create_app(tracking_create_command, tmp_path):
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input wasn't required by the user
-    assert tracking_create_command.input.prompts == []
+    assert tracking_create_command.console.prompts == []
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
@@ -32,7 +32,7 @@ def test_create_app(tracking_create_command, tmp_path):
 def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     """An existing app can be overwritten if requested."""
     # Answer yes when asked
-    tracking_create_command.input.values = ["y"]
+    tracking_create_command.console.values = ["y"]
 
     # Generate an app in the location.
     bundle_path = tmp_path / "base_path/build/first/tester/dummy"
@@ -43,7 +43,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input was required by the user
-    assert tracking_create_command.input.prompts == [
+    assert tracking_create_command.console.prompts == [
         "Application 'first' already exists; overwrite [y/N]? "
     ]
 
@@ -69,7 +69,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
     """If you say no, the existing app won't be overwritten."""
     # Answer no when asked
-    tracking_create_command.input.values = ["n"]
+    tracking_create_command.console.values = ["n"]
 
     bundle_path = tmp_path / "base_path/build/first/tester/dummy"
     bundle_path.mkdir(parents=True)
@@ -78,7 +78,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input was required by the user
-    assert tracking_create_command.input.prompts == [
+    assert tracking_create_command.console.prompts == [
         "Application 'first' already exists; overwrite [y/N]? "
     ]
 
@@ -95,7 +95,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
 def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_path):
     """By default, the existing app won't be overwritten."""
     # Answer '' (i.e., just press return) when asked
-    tracking_create_command.input.values = [""]
+    tracking_create_command.console.values = [""]
 
     bundle_path = tmp_path / "base_path/build/first/tester/dummy"
     bundle_path.mkdir(parents=True)
@@ -105,7 +105,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input was required by the user
-    assert tracking_create_command.input.prompts == [
+    assert tracking_create_command.console.prompts == [
         "Application 'first' already exists; overwrite [y/N]? "
     ]
 
@@ -122,7 +122,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
 def test_create_existing_app_input_disabled(tracking_create_command, tmp_path):
     """If input is disabled, fallback to default without get input from user."""
     # Answer '' (i.e., just press return) when asked
-    tracking_create_command.input.enabled = False
+    tracking_create_command.console.input_enabled = False
 
     bundle_path = tmp_path / "base_path/build/first/tester/dummy"
     bundle_path.mkdir(parents=True)
@@ -132,7 +132,7 @@ def test_create_existing_app_input_disabled(tracking_create_command, tmp_path):
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input wasn't required by the user
-    assert tracking_create_command.input.prompts == []
+    assert tracking_create_command.console.prompts == []
 
     # And no actions were necessary
     assert tracking_create_command.actions == []
@@ -175,7 +175,7 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
     tracking_create_command.create_app(tracking_create_command.apps["first"])
 
     # Input wasn't required by the user
-    assert tracking_create_command.input.prompts == []
+    assert tracking_create_command.console.prompts == []
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
