@@ -667,7 +667,7 @@ class Console:
                 self._wait_bar.start()
 
     #################################################################
-    # User Input/Output controls
+    # Basic User Input/Output controls
     #################################################################
 
     def textwrap(self, text: str, width: int = MAX_TEXT_WIDTH) -> str:
@@ -697,6 +697,28 @@ class Console:
         self.prompt()
         self.prompt(f"{title}{'-' * (MAX_TEXT_WIDTH - len(title))}", style="bold")
 
+    def input(self, prompt: str, *, markup: bool = False):
+        """A simple input() interface, consistent with the Python builtin input().
+
+        Prompt should be bold if markup is included.
+        """
+        if not self.input_enabled:
+            raise InputDisabled()
+
+        # make the prompt *bold* if it doesn't already contain markup
+        escaped_prompt = f"[bold]{escape(prompt)}[/bold]" if not markup else prompt
+
+        try:
+            # Use underlying Rich input() to read from user
+            input_value = self._console_impl.input(escaped_prompt, markup=True)
+        except EOFError:
+            raise KeyboardInterrupt
+
+        self.to_log(prompt)
+        self.to_log(f"User input: {input_value}")
+
+        return input_value
+
     def input_boolean(self, question: str, default: bool = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
 
@@ -721,7 +743,7 @@ class Console:
 
         prompt = f"{question} {yes_no}? "
 
-        result = self._selection(
+        result = self.input_selection(
             prompt=prompt,
             choices=["y", "n"],
             default=default_text,
@@ -733,7 +755,7 @@ class Console:
 
         return False
 
-    def _selection(
+    def input_selection(
         self,
         prompt: str,
         choices: Iterable[str],
@@ -785,6 +807,10 @@ class Console:
             raise
 
         return user_input
+
+    #################################################################
+    # Advanced User Input/Output controls
+    #################################################################
 
     def _validate(self, value, validator, usage="Invalid value") -> bool:
         """Validate a user-provided value.
@@ -926,7 +952,7 @@ class Console:
         self.prompt()
 
         choices = [str(index) for index in range(1, len(ordered) + 1)]
-        index = self._selection(
+        index = self.input_selection(
             prompt=f"{description} [{default}]: " if default else f"{description}: ",
             choices=choices,
             error_message="Invalid Selection",
@@ -934,22 +960,3 @@ class Console:
         )
 
         return ordered[int(index) - 1][0]
-
-    def input(self, prompt: str, *, markup: bool = False):
-        """Present input() interface; prompt should be bold if markup is included."""
-        if not self.input_enabled:
-            raise InputDisabled()
-
-        # make the prompt *bold* if it doesn't already contain markup
-        escaped_prompt = f"[bold]{escape(prompt)}[/bold]" if not markup else prompt
-
-        try:
-            # Use underlying Rich input() to read from user
-            input_value = self._console_impl.input(escaped_prompt, markup=True)
-        except EOFError:
-            raise KeyboardInterrupt
-
-        self.to_log(prompt)
-        self.to_log(f"User input: {input_value}")
-
-        return input_value
