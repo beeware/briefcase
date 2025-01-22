@@ -15,13 +15,13 @@ from tests.utils import default_rich_prompt
         ("c", "C", None, str.upper),
     ],
 )
-def test_selection(console, value, expected, default, transform):
+def test_input_selection(console, value, expected, default, transform):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
     console._console_impl.input.side_effect = [value]
 
-    actual = console._selection(
+    actual = console.input_selection(
         prompt=prompt,
         choices=options,
         default=default,
@@ -41,7 +41,7 @@ def test_bad_input(console):
 
     console._console_impl.input.side_effect = ["G", "Q", "C"]
 
-    actual = console._selection(prompt=prompt, choices=options)
+    actual = console.input_selection(prompt=prompt, choices=options)
 
     assert actual == "C"
     assert console._console_impl.input.call_count == 3
@@ -60,7 +60,9 @@ def test_disabled(disabled_console):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    actual = disabled_console._selection(prompt=prompt, choices=options, default="C")
+    actual = disabled_console.input_selection(
+        prompt=prompt, choices=options, default="C"
+    )
 
     assert actual == "C"
     disabled_console._console_impl.input.assert_not_called()
@@ -71,7 +73,7 @@ def test_disabled_no_default(disabled_console):
     options = ["A", "B", "C", "D", "E", "F"]
 
     with pytest.raises(InputDisabled):
-        disabled_console._selection(
+        disabled_console.input_selection(
             prompt=prompt,
             choices=options,
             default=None,
