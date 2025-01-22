@@ -528,7 +528,7 @@ class NewCommand(BaseCommand):
         bootstrap = self.create_bootstrap(context, project_overrides)
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
-        self.console.debug()  # close the prompting section of output
+        self.console.divider()  # close the prompting section of output
 
         self.warn_unused_overrides(project_overrides)
 
