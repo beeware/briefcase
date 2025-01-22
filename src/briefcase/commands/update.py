@@ -35,26 +35,26 @@ class UpdateCommand(CreateCommand):
         """
 
         if not self.bundle_path(app).exists():
-            self.logger.error(
+            self.console.error(
                 "Application does not exist; call create first!", prefix=app.app_name
             )
             return
 
         self.verify_app(app)
 
-        self.logger.info("Updating application code...", prefix=app.app_name)
+        self.console.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
 
         if update_requirements:
-            self.logger.info("Updating requirements...", prefix=app.app_name)
+            self.console.info("Updating requirements...", prefix=app.app_name)
             self.install_app_requirements(app=app, test_mode=test_mode)
 
         if update_resources:
-            self.logger.info("Updating application resources...", prefix=app.app_name)
+            self.console.info("Updating application resources...", prefix=app.app_name)
             self.install_app_resources(app=app)
 
         if update_support:
-            self.logger.info("Updating application support...", prefix=app.app_name)
+            self.console.info("Updating application support...", prefix=app.app_name)
             self.cleanup_app_support_package(app=app)
             self.install_app_support_package(app=app)
 
@@ -67,14 +67,14 @@ class UpdateCommand(CreateCommand):
             except KeyError:
                 pass
             else:
-                self.logger.info("Updating stub binary...", prefix=app.app_name)
+                self.console.info("Updating stub binary...", prefix=app.app_name)
                 self.cleanup_stub_binary(app=app)
                 self.install_stub_binary(app=app)
 
-        self.logger.info("Removing unneeded app content...", prefix=app.app_name)
+        self.console.info("Removing unneeded app content...", prefix=app.app_name)
         self.cleanup_app_content(app=app)
 
-        self.logger.info("Application updated.", prefix=app.app_name)
+        self.console.info("Application updated.", prefix=app.app_name)
 
     def __call__(
         self,

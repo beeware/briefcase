@@ -20,8 +20,8 @@ def test_parse_options_no_overrides(base_command):
         "required": "important",
     }
     assert overrides == {}
-    assert base_command.input.enabled
-    assert base_command.logger.verbosity == LogLevel.INFO
+    assert base_command.console.input_enabled
+    assert base_command.console.verbosity == LogLevel.INFO
 
 
 def test_parse_options_with_overrides(base_command):
@@ -48,8 +48,8 @@ def test_parse_options_with_overrides(base_command):
         "width": 10,
         "height": 20,
     }
-    assert base_command.input.enabled
-    assert base_command.logger.verbosity == LogLevel.INFO
+    assert base_command.console.input_enabled
+    assert base_command.console.verbosity == LogLevel.INFO
 
 
 @pytest.mark.parametrize(
@@ -67,7 +67,7 @@ def test_verbosity(base_command, verbosity, log_level):
     """The logging level is set correctly for the verbosity."""
     base_command.parse_options(extra=filter(None, ("-r", "default", verbosity)))
 
-    assert base_command.logger.verbosity == log_level
+    assert base_command.console.verbosity == log_level
 
 
 def test_missing_option(base_command, capsys):

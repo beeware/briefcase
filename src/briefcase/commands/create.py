@@ -267,7 +267,7 @@ class CreateCommand(BaseCommand):
         :param support_path: The path where support files should be unpacked.
         """
         try:
-            with self.input.wait_bar("Unpacking support package..."):
+            with self.console.wait_bar("Unpacking support package..."):
                 support_path.mkdir(parents=True, exist_ok=True)
                 self.tools.file.unpack_archive(
                     support_file_path,
@@ -284,7 +284,7 @@ class CreateCommand(BaseCommand):
 
         :param support_path: The support path to clean up.
         """
-        with self.input.wait_bar("Removing existing support package..."):
+        with self.console.wait_bar("Removing existing support package..."):
             self.tools.shutil.rmtree(support_path)
 
     def cleanup_app_support_package(self, app: AppConfig):
@@ -309,7 +309,7 @@ class CreateCommand(BaseCommand):
         try:
             support_path = self.support_path(app)
         except KeyError:
-            self.logger.info("No support package required.")
+            self.console.info("No support package required.")
         else:
             support_file_path = self._download_support_package(app)
             self._unpack_support_package(support_file_path, support_path)
@@ -321,12 +321,12 @@ class CreateCommand(BaseCommand):
             try:
                 support_package_url = app.support_package
                 custom_support_package = True
-                self.logger.info(f"Using custom support package {support_package_url}")
+                self.console.info(f"Using custom support package {support_package_url}")
                 try:
                     # If the app has a custom support package *and* a support revision,
                     # that's an error.
                     app.support_revision
-                    self.logger.warning(
+                    self.console.warning(
                         "App specifies both a support package and a support revision; "
                         "support revision will be ignored."
                     )
@@ -352,7 +352,7 @@ class CreateCommand(BaseCommand):
 
                 support_package_url = self.support_package_url(support_revision)
                 custom_support_package = False
-                self.logger.info(f"Using support package {support_package_url}")
+                self.console.info(f"Using support package {support_package_url}")
 
             if support_package_url.startswith(("https://", "http://")):
                 if custom_support_package:
@@ -396,7 +396,7 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
-        with self.input.wait_bar("Removing existing stub binary..."):
+        with self.console.wait_bar("Removing existing stub binary..."):
             self.binary_executable_path(app).unlink(missing_ok=True)
             self.unbuilt_executable_path(app).unlink(missing_ok=True)
 
@@ -408,7 +408,7 @@ class CreateCommand(BaseCommand):
         unbuilt_executable_path = self.unbuilt_executable_path(app)
         stub_binary_path = self._download_stub_binary(app)
 
-        with self.input.wait_bar("Installing stub binary..."):
+        with self.console.wait_bar("Installing stub binary..."):
             # Ensure the folder for the stub binary exists
             unbuilt_executable_path.parent.mkdir(exist_ok=True, parents=True)
 
@@ -439,12 +439,12 @@ class CreateCommand(BaseCommand):
             try:
                 stub_binary_url = app.stub_binary
                 custom_stub_binary = True
-                self.logger.info(f"Using custom stub binary {stub_binary_url}")
+                self.console.info(f"Using custom stub binary {stub_binary_url}")
                 try:
                     # If the app has a custom stub binary *and* a support revision,
                     # that's an error.
                     app.stub_binary_revision
-                    self.logger.warning(
+                    self.console.warning(
                         "App specifies both a stub binary and a stub binary revision; "
                         "stub binary revision will be ignored."
                     )
@@ -463,7 +463,7 @@ class CreateCommand(BaseCommand):
                     stub_binary_revision, app.console_app
                 )
                 custom_stub_binary = False
-                self.logger.info(f"Using stub binary {stub_binary_url}")
+                self.console.info(f"Using stub binary {stub_binary_url}")
 
             if stub_binary_url.startswith(("https://", "http://")):
                 if custom_stub_binary:
@@ -518,7 +518,7 @@ class CreateCommand(BaseCommand):
             the template supports it.
         """
 
-        with self.input.wait_bar("Writing requirements file..."):
+        with self.console.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
                 # Add timestamp so build systems (such as Gradle) detect a change
                 # in the file and perform a re-installation of all requirements.
@@ -606,7 +606,7 @@ class CreateCommand(BaseCommand):
                     "--no-user",
                     f"--target={app_packages_path}",
                 ]
-                + (["-vv"] if self.logger.is_deep_debug else [])
+                + (["-vv"] if self.console.is_deep_debug else [])
                 + self._extra_pip_args(app)
                 + pip_args,
                 check=True,
@@ -643,7 +643,7 @@ class CreateCommand(BaseCommand):
 
         # Install requirements
         if requires:
-            with self.input.wait_bar(progress_message):
+            with self.console.wait_bar(progress_message):
                 self._pip_install(
                     app,
                     app_packages_path=app_packages_path,
@@ -654,7 +654,7 @@ class CreateCommand(BaseCommand):
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:
-            self.logger.info("No application requirements.")
+            self.console.info("No application requirements.")
 
     def install_app_requirements(self, app: AppConfig, test_mode: bool):
         """Handle requirements for the app.
@@ -722,7 +722,7 @@ class CreateCommand(BaseCommand):
         # Install app code.
         if sources:
             for src in sources:
-                with self.input.wait_bar(f"Installing {src}..."):
+                with self.console.wait_bar(f"Installing {src}..."):
                     original = self.base_path / src
                     target = app_path / original.name
 
@@ -734,7 +734,7 @@ class CreateCommand(BaseCommand):
                     else:
                         self.tools.shutil.copy(original, target)
         else:
-            self.logger.info(f"No sources defined for {app.app_name}.")
+            self.console.info(f"No sources defined for {app.app_name}.")
 
         # Write the dist-info folder for the application.
         write_dist_info(
@@ -770,7 +770,7 @@ class CreateCommand(BaseCommand):
                     except TypeError:
                         source_filename = f"{source}-{variant}{target.suffix}"
                     except KeyError:
-                        self.logger.info(
+                        self.console.info(
                             f"Unknown variant {variant!r} for {role}; using default"
                         )
                         return
@@ -796,14 +796,14 @@ class CreateCommand(BaseCommand):
                     except TypeError:
                         source_filename = f"{source}-{variant}-{size}{target.suffix}"
                     except KeyError:
-                        self.logger.info(
+                        self.console.info(
                             f"Unknown variant {variant!r} for {size}px {role}; using default"
                         )
                         return
 
             full_source = self.base_path / source_filename
             if full_source.exists():
-                with self.input.wait_bar(
+                with self.console.wait_bar(
                     f"Installing {source_filename} as {full_role}..."
                 ):
                     # Make sure the target directory exists
@@ -811,7 +811,7 @@ class CreateCommand(BaseCommand):
                     # Copy the source image to the target location
                     self.tools.shutil.copy(full_source, target)
             else:
-                self.logger.info(
+                self.console.info(
                     f"Unable to find {source_filename} for {full_role}; using default"
                 )
 
@@ -845,14 +845,14 @@ class CreateCommand(BaseCommand):
 
         # Briefcase v0.3.18 - splash screens deprecated.
         if getattr(app, "splash", None):
-            self.logger.warning()
-            self.logger.warning(
+            self.console.warning()
+            self.console.warning(
                 "Splash screens are now configured based on the icon. "
                 "The splash configuration will be ignored."
             )
 
         for extension, doctype in self.document_type_icon_targets(app).items():
-            self.logger.info()
+            self.console.info()
             for size, target in doctype.items():
                 self.install_image(
                     f"icon for .{extension} documents",
@@ -885,17 +885,17 @@ class CreateCommand(BaseCommand):
         # corrupting any app bundle signatures.
         paths_to_remove.append("**/__pycache__")
 
-        with self.input.wait_bar("Removing unneeded app bundle content..."):
+        with self.console.wait_bar("Removing unneeded app bundle content..."):
             for glob in paths_to_remove:
                 # Expand each glob into a full list of files that actually exist
                 # on the file system.
                 for path in self.bundle_path(app).glob(glob):
                     relative_path = path.relative_to(self.bundle_path(app))
                     if path.is_dir() and not path.is_symlink():
-                        self.logger.verbose(f"Removing directory {relative_path}")
+                        self.console.verbose(f"Removing directory {relative_path}")
                         self.tools.shutil.rmtree(path)
                     else:
-                        self.logger.verbose(f"Removing {relative_path}")
+                        self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
     def create_app(self, app: AppConfig, test_mode: bool = False, **options):
@@ -909,22 +909,22 @@ class CreateCommand(BaseCommand):
 
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
-            self.logger.info()
-            confirm = self.input.boolean(
+            self.console.info()
+            confirm = self.console.input_boolean(
                 f"Application {app.app_name!r} already exists; overwrite", default=False
             )
             if not confirm:
-                self.logger.error(
+                self.console.error(
                     f"Aborting creation of app {app.app_name!r}; existing application will not be overwritten."
                 )
                 return
-            self.logger.info("Removing old application bundle...", prefix=app.app_name)
+            self.console.info("Removing old application bundle...", prefix=app.app_name)
             self.tools.shutil.rmtree(bundle_path)
 
-        self.logger.info("Generating application template...", prefix=app.app_name)
+        self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        self.logger.info("Installing support package...", prefix=app.app_name)
+        self.console.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
 
         try:
@@ -935,26 +935,26 @@ class CreateCommand(BaseCommand):
         except KeyError:
             pass
         else:
-            self.logger.info("Installing stub binary...", prefix=app.app_name)
+            self.console.info("Installing stub binary...", prefix=app.app_name)
             self.install_stub_binary(app=app)
 
         # Verify the app after the app template and support package
         # are in place since the app tools may be dependent on them.
         self.verify_app(app)
 
-        self.logger.info("Installing application code...", prefix=app.app_name)
+        self.console.info("Installing application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode)
 
-        self.logger.info("Installing requirements...", prefix=app.app_name)
+        self.console.info("Installing requirements...", prefix=app.app_name)
         self.install_app_requirements(app=app, test_mode=test_mode)
 
-        self.logger.info("Installing application resources...", prefix=app.app_name)
+        self.console.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)
 
-        self.logger.info("Removing unneeded app content...", prefix=app.app_name)
+        self.console.info("Removing unneeded app content...", prefix=app.app_name)
         self.cleanup_app_content(app=app)
 
-        self.logger.info(
+        self.console.info(
             f"Created {bundle_path.relative_to(self.base_path)}",
             prefix=app.app_name,
         )

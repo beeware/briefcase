@@ -62,7 +62,7 @@ def test_explicit_device(mock_tools, android_sdk):
     assert avd is None
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_unauthorized_device(mock_tools, android_sdk):
@@ -74,7 +74,7 @@ def test_explicit_unauthorized_device(mock_tools, android_sdk):
         android_sdk.select_target_device("041234567892009a")
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_running_emulator_by_id(mock_tools, android_sdk):
@@ -89,7 +89,7 @@ def test_explicit_running_emulator_by_id(mock_tools, android_sdk):
     assert avd == "runningEmulator"
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_running_emulator_by_avd(mock_tools, android_sdk):
@@ -104,7 +104,7 @@ def test_explicit_running_emulator_by_avd(mock_tools, android_sdk):
     assert avd == "runningEmulator"
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_idle_emulator(mock_tools, android_sdk):
@@ -119,7 +119,7 @@ def test_explicit_idle_emulator(mock_tools, android_sdk):
     assert avd == "idleEmulator"
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_invalid_device(mock_tools, android_sdk):
@@ -130,7 +130,7 @@ def test_explicit_invalid_device(mock_tools, android_sdk):
         device, name, avd = android_sdk.select_target_device("deadbeefcafe")
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_invalid_avd(mock_tools, android_sdk):
@@ -141,13 +141,13 @@ def test_explicit_invalid_avd(mock_tools, android_sdk):
         device, name, avd = android_sdk.select_target_device("@invalidEmulator")
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_select_device(mock_tools, android_sdk, capsys):
     """If the user manually selects a physical device, details are returned."""
     # Mock the user input
-    mock_tools.input.values = ["2"]
+    mock_tools.console.values = ["2"]
 
     # Run the selection with no pre-existing choice
     device, name, avd = android_sdk.select_target_device(None)
@@ -158,7 +158,7 @@ def test_select_device(mock_tools, android_sdk, capsys):
     assert avd is None
 
     # The user was asked to select a device
-    assert len(mock_tools.input.prompts) == 1
+    assert len(mock_tools.console.prompts) == 1
 
     # A re-run prompt has been provided
     out = capsys.readouterr().out
@@ -169,7 +169,7 @@ def test_select_unauthorized_device(mock_tools, android_sdk):
     """If the user manually selects an unauthorized running device, an error is
     raised."""
     # Mock the user input
-    mock_tools.input.values = ["3"]
+    mock_tools.console.values = ["3"]
 
     # Run the selection with no pre-existing choice
     with pytest.raises(AndroidDeviceNotAuthorized):
@@ -179,7 +179,7 @@ def test_select_unauthorized_device(mock_tools, android_sdk):
 def test_select_running_emulator(mock_tools, android_sdk, capsys):
     """If the user manually selects a running emulator, details are returned."""
     # Mock the user input
-    mock_tools.input.values = ["1"]
+    mock_tools.console.values = ["1"]
 
     # Run the selection with no pre-existing choice
     device, name, avd = android_sdk.select_target_device(None)
@@ -197,7 +197,7 @@ def test_select_running_emulator(mock_tools, android_sdk, capsys):
 def test_select_idle_emulator(mock_tools, android_sdk, capsys):
     """If the user manually selects a running device, details are returned."""
     # Mock the user input
-    mock_tools.input.values = ["4"]
+    mock_tools.console.values = ["4"]
 
     # Run the selection with no pre-existing choice
     device, name, avd = android_sdk.select_target_device(None)
@@ -215,7 +215,7 @@ def test_select_idle_emulator(mock_tools, android_sdk, capsys):
 def test_select_create_emulator(mock_tools, android_sdk, capsys):
     """If the user manually selects a running device, details are returned."""
     # Mock the user input
-    mock_tools.input.values = ["5"]
+    mock_tools.console.values = ["5"]
 
     # Run the selection with no pre-existing choice
     device, name, avd = android_sdk.select_target_device(None)
@@ -233,19 +233,19 @@ def test_select_create_emulator(mock_tools, android_sdk, capsys):
 def test_input_disabled(mock_tools, android_sdk):
     """If input has been disabled, and there are multiple simulators, an error is
     raised."""
-    mock_tools.input.enabled = False
+    mock_tools.console.input_enabled = False
 
     # Run the selection with no pre-existing choice
     with pytest.raises(BriefcaseCommandError):
         android_sdk.select_target_device(None)
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_input_disabled_no_simulators(mock_tools, android_sdk):
     """If input has been disabled, and there are no simulators, 'create' is selected."""
-    mock_tools.input.enabled = False
+    mock_tools.console.input_enabled = False
 
     # Remove all the devices and emulators
     android_sdk.devices = MagicMock(return_value={})
@@ -260,12 +260,12 @@ def test_input_disabled_no_simulators(mock_tools, android_sdk):
     assert avd is None
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_input_disabled_one_device(mock_tools, android_sdk):
     """If input has been disabled, and there is a single device, it is selected."""
-    mock_tools.input.enabled = False
+    mock_tools.console.input_enabled = False
 
     # Set up a single device.
     android_sdk.devices = MagicMock(
@@ -287,7 +287,7 @@ def test_input_disabled_one_device(mock_tools, android_sdk):
     assert avd is None
 
     # No input was requested
-    assert mock_tools.input.prompts == []
+    assert mock_tools.console.prompts == []
 
 
 def test_explicit_new_device(android_sdk):

@@ -169,7 +169,7 @@ def test_winsdk_latest_install_from_reg(mock_tools, mock_winreg, tmp_path, monke
     mock_tools.os.environ.get.return_value = None
 
     # Turn on verbose logging
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Patch target SDK version
     monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "83.0")
@@ -208,7 +208,7 @@ def test_winsdk_nonlatest_install_from_reg(
     mock_tools.os.environ.get.return_value = None
 
     # Turn on verbose logging
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Patch target SDK version
     monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "85.0")
@@ -294,7 +294,7 @@ def test_winsdk_invalid_install_from_reg(
     WindowsSDK.DEFAULT_SDK_DIRS = []
 
     # Turn on verbose logging
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Patch target SDK version
     monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "85.0")
@@ -361,7 +361,7 @@ def test_winsdk_valid_install_from_default_dir(
     mock_tools.os.environ.get.return_value = None
 
     # Turn on verbose logging
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Patch target SDK version
     monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "86.0")
@@ -404,7 +404,7 @@ def test_winsdk_invalid_install_from_default_dir(
     mock_tools.os.environ.get.return_value = None
 
     # Turn on verbose logging
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Patch target SDK version
     monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "87.0")

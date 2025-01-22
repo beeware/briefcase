@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, PropertyMock
 import httpx
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradlePackageCommand
@@ -16,7 +16,6 @@ from ....utils import create_file
 @pytest.fixture
 def package_command(tmp_path, first_app_config, monkeypatch):
     command = GradlePackageCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

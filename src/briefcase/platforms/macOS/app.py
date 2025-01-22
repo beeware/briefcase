@@ -61,7 +61,7 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
         super().install_app_support_package(app)
 
         # Copy the stdlib into its final location
-        with self.input.wait_bar("Copying standard library into app bundle..."):
+        with self.console.wait_bar("Copying standard library into app bundle..."):
             runtime_support_path = self.support_path(app, runtime=True)
             if runtime_support_path.is_dir():
                 self.tools.shutil.rmtree(runtime_support_path)
@@ -107,16 +107,16 @@ class macOSAppBuildCommand(
 
         :param app: The application to build
         """
-        self.logger.info("Building App...", prefix=app.app_name)
+        self.console.info("Building App...", prefix=app.app_name)
 
         # Move the unbuilt binary in to the final executable location
         unbuilt_path = self.unbuilt_executable_path(app)
         if unbuilt_path.exists():
-            with self.input.wait_bar("Renaming stub binary..."):
+            with self.console.wait_bar("Renaming stub binary..."):
                 unbuilt_path.rename(self.binary_executable_path(app))
 
         if not getattr(app, "universal_build", True):
-            with self.input.wait_bar("Ensuring stub binary is thin..."):
+            with self.console.wait_bar("Ensuring stub binary is thin..."):
                 # The stub binary is universal by default. If we're building a non-universal app,
                 # we can strip the binary to remove the unused slice. This occurs before the
                 self.ensure_thin_binary(
@@ -128,7 +128,7 @@ class macOSAppBuildCommand(
         # signed to be able to execute on Apple Silicon hardware - even if it's only an
         # ad-hoc signing identity. Apply an ad-hoc signing identity to the
         # app bundle.
-        self.logger.info("Ad-hoc signing app...", prefix=app.app_name)
+        self.console.info("Ad-hoc signing app...", prefix=app.app_name)
         self.sign_app(app=app, identity=SigningIdentity())
 
 

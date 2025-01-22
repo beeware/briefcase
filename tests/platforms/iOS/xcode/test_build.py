@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeBuildCommand
@@ -13,7 +13,6 @@ from briefcase.platforms.iOS.xcode import iOSXcodeBuildCommand
 @pytest.fixture
 def build_command(tmp_path):
     return iOSXcodeBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -30,7 +29,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
 
     # Enable verbose tool logging
     if tool_debug_mode:
-        build_command.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        build_command.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.build_app(first_app_generated)
 

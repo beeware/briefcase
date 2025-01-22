@@ -130,7 +130,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
         :param app: The app configuration to finalize.
         """
-        self.logger.info("Finalizing application configuration...", prefix=app.app_name)
+        self.console.info(
+            "Finalizing application configuration...", prefix=app.app_name
+        )
         freedesktop_info = self.platform_freedesktop_info(app)
 
         # Process the FreeDesktop content to give the vendor, codename and vendor base.
@@ -140,7 +142,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             app.target_vendor_base,
         ) = self.vendor_details(freedesktop_info)
 
-        self.logger.info(
+        self.console.info(
             f"Targeting {app.target_vendor}:{app.target_codename} (Vendor base {app.target_vendor_base})"
         )
 
@@ -198,13 +200,13 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             for key, value in config.items():
                 setattr(app, key, value)
 
-        with self.input.wait_bar("Determining glibc version..."):
+        with self.console.wait_bar("Determining glibc version..."):
             app.glibc_version = self.target_glibc_version(app)
-        self.logger.info(f"Targeting glibc {app.glibc_version}")
+        self.console.info(f"Targeting glibc {app.glibc_version}")
 
         app.python_version_tag = self.app_python_version_tag(app)
 
-        self.logger.info(f"Targeting Python{app.python_version_tag}")
+        self.console.info(f"Targeting Python{app.python_version_tag}")
 
 
 class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
@@ -357,7 +359,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             app.target_image = self.target_image
 
             # Extract release information from the image.
-            with self.input.wait_bar(
+            with self.console.wait_bar(
                 f"Checking Docker target image {app.target_image}..."
             ):
                 output = self.tools.docker.check_output(
@@ -428,7 +430,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             self.tools.sys.version_info.major,
             self.tools.sys.version_info.minor,
         ):
-            self.logger.warning(
+            self.console.warning(
                 f"""
 *************************************************************************
 ** WARNING: Python version mismatch!                                   **
@@ -533,7 +535,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         ) = self._system_requirement_tools(app)
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
-            self.logger.warning(
+            self.console.warning(
                 """
 *************************************************************************
 ** WARNING: Can't verify system packages                               **
@@ -689,10 +691,10 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info("Building application...", prefix=app.app_name)
+        self.console.info("Building application...", prefix=app.app_name)
 
-        self.logger.info("Build bootstrap binary...")
-        with self.input.wait_bar("Building bootstrap binary..."):
+        self.console.info("Build bootstrap binary...")
+        with self.console.wait_bar("Building bootstrap binary..."):
             try:
                 # Build the bootstrap binary.
                 self.tools[app].app_context.run(
@@ -721,7 +723,7 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
         )
         doc_folder.mkdir(parents=True, exist_ok=True)
 
-        with self.input.wait_bar("Installing license..."):
+        with self.console.wait_bar("Installing license..."):
             if license_file := app.license.get("file"):
                 license_file = self.base_path / license_file
                 if license_file.is_file():
@@ -739,7 +741,7 @@ Ensure you have correctly spelled the filename in your `license.file` setting.
             elif license_text := app.license.get("text"):
                 (doc_folder / "copyright").write_text(license_text, encoding="utf-8")
                 if len(license_text.splitlines()) <= 1:
-                    self.logger.warning(
+                    self.console.warning(
                         """
 Your app specifies a license using `license.text`, but the value doesn't appear to be a
 full license. Briefcase will generate a `copyright` file for your project; you should
@@ -757,7 +759,7 @@ app's configuration.
 """
                 )
 
-        with self.input.wait_bar("Installing changelog..."):
+        with self.console.wait_bar("Installing changelog..."):
             changelog = self.base_path / "CHANGELOG"
             if changelog.is_file():
                 with changelog.open(encoding="utf-8") as infile:
@@ -787,7 +789,7 @@ with details about the release.
         )
         man_folder.mkdir(parents=True, exist_ok=True)
 
-        with self.input.wait_bar("Installing man page..."):
+        with self.console.wait_bar("Installing man page..."):
             manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
             if manpage_source.is_file():
                 with manpage_source.open(encoding="utf-8") as infile:
@@ -801,8 +803,8 @@ with details about the release.
                     f"Template does not provide a manpage source file `{app.app_name}.1`"
                 )
 
-        self.logger.verbose("Update file permissions...")
-        with self.input.wait_bar("Updating file permissions..."):
+        self.console.verbose("Update file permissions...")
+        with self.console.wait_bar("Updating file permissions..."):
             for path in self.project_path(app).glob("**/*"):
                 old_perms = self.tools.os.stat(path).st_mode & 0o777
                 user_perms = old_perms & 0o700
@@ -815,14 +817,14 @@ with details about the release.
 
                 # If there's been any change in permissions, apply them
                 if new_perms != old_perms:  # pragma: no-cover-if-is-windows
-                    self.logger.verbose(
+                    self.console.verbose(
                         "Updating file permissions on "
                         f"{path.relative_to(self.bundle_path(app))} "
                         f"from {oct(old_perms)[2:]} to {oct(new_perms)[2:]}"
                     )
                     path.chmod(new_perms)
 
-        with self.input.wait_bar("Stripping binary..."):
+        with self.console.wait_bar("Stripping binary..."):
             self.tools.subprocess.check_output(["strip", self.binary_path(app)])
 
 
@@ -852,7 +854,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
             # be handled correctly. However, if we're in test mode, we *must* stream so
             # that we can see the test exit sentinel
             if app.console_app and not test_mode:
-                self.logger.info("=" * 75)
+                self.console.info("=" * 75)
                 self.tools[app].app_context.run(
                     [self.binary_path(app)] + passthrough,
                     cwd=self.tools.home_path,
@@ -955,7 +957,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
     def _package_deb(self, app: AppConfig, **kwargs):
-        self.logger.info("Building .deb package...", prefix=app.app_name)
+        self.console.info("Building .deb package...", prefix=app.app_name)
 
         # The long description *must* exist.
         if app.long_description is None:
@@ -965,7 +967,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
         # Write the Debian metadata control file.
-        with self.input.wait_bar("Write Debian package control file..."):
+        with self.console.wait_bar("Write Debian package control file..."):
             DEBIAN_path = self.project_path(app) / "DEBIAN"
 
             if DEBIAN_path.exists():
@@ -1005,7 +1007,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     )
                 )
 
-        with self.input.wait_bar("Building Debian package..."):
+        with self.console.wait_bar("Building Debian package..."):
             try:
                 # Build the dpkg.
                 self.tools[app].app_context.run(
@@ -1030,7 +1032,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
     def _package_rpm(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
-        self.logger.info("Building .rpm package...", prefix=app.app_name)
+        self.console.info("Building .rpm package...", prefix=app.app_name)
 
         # The long description *must* exist.
         if app.long_description is None:
@@ -1041,7 +1043,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Generate the rpmbuild layout
         rpmbuild_path = self.bundle_path(app) / "rpmbuild"
-        with self.input.wait_bar("Generating rpmbuild layout..."):
+        with self.console.wait_bar("Generating rpmbuild layout..."):
             if rpmbuild_path.exists():
                 self.tools.shutil.rmtree(rpmbuild_path)
 
@@ -1059,7 +1061,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
         ] + getattr(app, "system_runtime_requires", [])
 
         # Write the spec file
-        with self.input.wait_bar("Write RPM spec file..."):
+        with self.console.wait_bar("Write RPM spec file..."):
             with (rpmbuild_path / "SPECS" / f"{app.app_name}.spec").open(
                 "w", encoding="utf-8"
             ) as f:
@@ -1152,7 +1154,7 @@ with details about the release.
                 with changelog_source.open(encoding="utf-8") as c:
                     f.write(c.read())
 
-        with self.input.wait_bar("Building source archive..."):
+        with self.console.wait_bar("Building source archive..."):
             self.tools.shutil.make_archive(
                 rpmbuild_path / "SOURCES" / f"{app.app_name}-{app.version}",
                 format="gztar",
@@ -1160,7 +1162,7 @@ with details about the release.
                 base_dir=f"{app.app_name}-{app.version}",
             )
 
-        with self.input.wait_bar("Building RPM package..."):
+        with self.console.wait_bar("Building RPM package..."):
             try:
                 # Build the dpkg.
                 self.tools[app].app_context.run(
@@ -1189,7 +1191,7 @@ with details about the release.
         )
 
     def _package_pkg(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
-        self.logger.info("Building .pkg.tar.zst package...", prefix=app.app_name)
+        self.console.info("Building .pkg.tar.zst package...", prefix=app.app_name)
 
         # The description *must* exist.
         # pkgdesc has 80 char limit.
@@ -1211,7 +1213,7 @@ with details about the release.
 
         # Generate the pkgbuild layout
         pkgbuild_path = self.bundle_path(app) / "pkgbuild"
-        with self.input.wait_bar("Generating pkgbuild layout..."):
+        with self.console.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
             pkgbuild_path.mkdir(parents=True)
@@ -1220,7 +1222,7 @@ with details about the release.
             self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
 
         # Build the source archive
-        with self.input.wait_bar("Building source archive..."):
+        with self.console.wait_bar("Building source archive..."):
             self.tools.shutil.make_archive(
                 pkgbuild_path / f"{app.app_name}-{app.version}",
                 format="gztar",
@@ -1229,7 +1231,7 @@ with details about the release.
             )
 
         # Write the arch PKGBUILD file.
-        with self.input.wait_bar("Write PKGBUILD file..."):
+        with self.console.wait_bar("Write PKGBUILD file..."):
             # Add runtime package dependencies. App config has been finalized,
             # so this will be the target-specific definition, if one exists.
             system_runtime_requires_list = [
@@ -1266,7 +1268,7 @@ with details about the release.
                     )
                 )
 
-        with self.input.wait_bar("Building Arch package..."):
+        with self.console.wait_bar("Building Arch package..."):
             try:
                 # Build the pkg.
                 self.tools[app].app_context.run(

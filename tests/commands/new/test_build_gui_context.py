@@ -27,8 +27,7 @@ def test_toga_bootstrap(new_command):
 
     context = new_command.build_gui_context(
         TogaGuiBootstrap(
-            new_command.logger,
-            new_command.input,
+            new_command.console,
             {
                 "app_name": "myapplication",
                 "author": "Grace Hopper",
@@ -239,8 +238,7 @@ def test_console_bootstrap(new_command):
 
     context = new_command.build_gui_context(
         ConsoleBootstrap(
-            new_command.logger,
-            new_command.input,
+            new_command.console,
             {
                 "app_name": "myapplication",
                 "author": "Grace Hopper",
@@ -347,8 +345,7 @@ def test_pyside6_bootstrap(new_command):
 
     context = new_command.build_gui_context(
         PySide6GuiBootstrap(
-            new_command.logger,
-            new_command.input,
+            new_command.console,
             {
                 "app_name": "myapplication",
                 "author": "Grace Hopper",
@@ -505,8 +502,7 @@ def test_pygame_bootstrap(new_command):
 
     context = new_command.build_gui_context(
         PygameGuiBootstrap(
-            new_command.logger,
-            new_command.input,
+            new_command.console,
             {
                 "app_name": "myapplication",
                 "author": "Grace Hopper",
@@ -645,8 +641,7 @@ def test_no_bootstrap(new_command):
 
     context = new_command.build_gui_context(
         EmptyBootstrap(
-            new_command.logger,
-            new_command.input,
+            new_command.console,
             {
                 "app_name": "myapplication",
                 "author": "Grace Hopper",
@@ -761,9 +756,8 @@ def test_custom_bootstrap(
     class GuiBootstrap:
         fields = ["requires", "platform"]
 
-        def __init__(self, logger, input, context):
-            self.logger = logger
-            self.input = input
+        def __init__(self, console, context):
+            self.console = console
             self.context = context
 
         def extra_context(self, project_overrides):
@@ -791,8 +785,7 @@ def test_custom_bootstrap(
 
     context = new_command.build_gui_context(
         GuiBootstrap(
-            new_command.logger,
-            new_command.input,
+            new_command.console,
             {
                 "app_name": "myapplication",
                 "author": "Grace Hopper",

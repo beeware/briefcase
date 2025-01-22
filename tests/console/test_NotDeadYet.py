@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import briefcase.console
-from briefcase.console import NotDeadYet, Printer
+from briefcase.console import Console, NotDeadYet
 
 
 def test_update(capsys, monkeypatch):
@@ -15,7 +15,7 @@ def test_update(capsys, monkeypatch):
         MagicMock(side_effect=[0] + [10 - 5, 10 + 5, 0] * 3),
     )
 
-    keep_alive = NotDeadYet(printer=Printer())
+    keep_alive = NotDeadYet(console=Console())
 
     for _ in range(3):
         keep_alive.update()
@@ -37,7 +37,7 @@ def test_reset(capsys, monkeypatch):
         MagicMock(side_effect=[0] + [10, 15] * 10),
     )
 
-    keep_alive = NotDeadYet(printer=Printer())
+    keep_alive = NotDeadYet(console=Console())
 
     for _ in range(10):
         keep_alive.reset()

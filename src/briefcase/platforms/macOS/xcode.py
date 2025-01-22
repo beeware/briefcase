@@ -64,25 +64,25 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info("Building Xcode project...", prefix=app.app_name)
-        with self.input.wait_bar("Building..."):
+        self.console.info("Building Xcode project...", prefix=app.app_name)
+        with self.console.wait_bar("Building..."):
             try:
                 self.tools.subprocess.run(
                     [
                         "xcodebuild",
                         "-project",
                         self.project_path(app),
-                        "-verbose" if self.tools.logger.is_deep_debug else "-quiet",
+                        "-verbose" if self.tools.console.is_deep_debug else "-quiet",
                         "-configuration",
                         "Release",
                         "build",
                     ],
                     check=True,
                     filter_func=(
-                        None if self.tools.logger.is_deep_debug else XcodeBuildFilter()
+                        None if self.tools.console.is_deep_debug else XcodeBuildFilter()
                     ),
                 )
-                self.logger.info("Build succeeded.")
+                self.console.info("Build succeeded.")
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to build app {app.app_name}."

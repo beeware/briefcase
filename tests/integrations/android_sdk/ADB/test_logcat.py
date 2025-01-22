@@ -9,7 +9,7 @@ def test_logcat(mock_tools, adb, is_color_enabled, monkeypatch):
     """Invoking `logcat()` calls `Popen()` with the appropriate parameters."""
     # Mock whether color is enabled for the console
     monkeypatch.setattr(
-        type(mock_tools.input),
+        type(mock_tools.console),
         "is_color_enabled",
         mock.PropertyMock(return_value=is_color_enabled),
     )

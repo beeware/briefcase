@@ -36,7 +36,7 @@ class OpenCommand(BaseCommand):
 
         self.verify_app(app)
 
-        self.logger.info(
+        self.console.info(
             f"Opening {self.project_path(app).relative_to(self.base_path)}...",
             prefix=app.app_name,
         )

@@ -164,13 +164,13 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
 
         :param app: The application to build
         """
-        self.logger.info(
+        self.console.info(
             "Ensuring Flatpak runtime for the app is available...",
             prefix=app.app_name,
         )
         flatpak_repo_alias, flatpak_repo_url = self.flatpak_runtime_repo(app)
 
-        with self.input.wait_bar("Ensuring Flatpak runtime repo is registered..."):
+        with self.console.wait_bar("Ensuring Flatpak runtime repo is registered..."):
             self.tools.flatpak.verify_repo(
                 repo_alias=flatpak_repo_alias,
                 url=flatpak_repo_url,
@@ -186,8 +186,8 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
             sdk=self.flatpak_sdk(app),
         )
 
-        self.logger.info("Building Flatpak...", prefix=app.app_name)
-        with self.input.wait_bar("Building..."):
+        self.console.info("Building Flatpak...", prefix=app.app_name)
+        with self.console.wait_bar("Building..."):
             self.tools.flatpak.build(
                 bundle_identifier=app.bundle_identifier,
                 app_name=app.app_name,
@@ -226,7 +226,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
         if app.console_app and not test_mode:
-            self.logger.info("=" * 75)
+            self.console.info("=" * 75)
             self.tools.flatpak.run(
                 bundle_identifier=app.bundle_identifier,
                 args=passthrough,
@@ -259,8 +259,8 @@ class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
 
         :param app: The config object for the app
         """
-        self.logger.info("Building bundle...", prefix=app.app_name)
-        with self.input.wait_bar("Bundling..."):
+        self.console.info("Building bundle...", prefix=app.app_name)
+        with self.console.wait_bar("Bundling..."):
             _, flatpak_repo_url = self.flatpak_runtime_repo(app)
             self.tools.flatpak.bundle(
                 repo_url=flatpak_repo_url,

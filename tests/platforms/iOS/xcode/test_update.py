@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeUpdateCommand
 
@@ -11,7 +11,6 @@ from briefcase.platforms.iOS.xcode import iOSXcodeUpdateCommand
 @pytest.fixture
 def update_command(tmp_path):
     return iOSXcodeUpdateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

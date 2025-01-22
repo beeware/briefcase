@@ -4,13 +4,14 @@ import pytest
 
 from briefcase.commands import DevCommand
 from briefcase.config import AppConfig
-from briefcase.console import Console, Log
 from briefcase.integrations.subprocess import Subprocess
+
+from ...utils import DummyConsole
 
 
 @pytest.fixture
 def dev_command(tmp_path):
-    command = DevCommand(logger=Log(), console=Console(), base_path=tmp_path)
+    command = DevCommand(console=DummyConsole(), base_path=tmp_path)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     return command
 

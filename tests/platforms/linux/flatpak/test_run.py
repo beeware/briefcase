@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.flatpak import LinuxFlatpakRunCommand
@@ -11,7 +11,6 @@ from briefcase.platforms.linux.flatpak import LinuxFlatpakRunCommand
 @pytest.fixture
 def run_command(tmp_path):
     command = LinuxFlatpakRunCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -51,7 +50,7 @@ def test_run_gui_app(run_command, first_app_config):
 
 def test_run_gui_app_with_passthrough(run_command, first_app_config):
     """A GUI flatpak can be executed in debug mode with args."""
-    run_command.logger.verbosity = LogLevel.DEBUG
+    run_command.console.verbosity = LogLevel.DEBUG
 
     # Set up the log streamer to return a known stream and a good return code
     log_popen = mock.MagicMock()
@@ -118,7 +117,7 @@ def test_run_console_app(run_command, first_app_config):
 
 def test_run_console_app_with_passthrough(run_command, first_app_config):
     """A console flatpak can be executed in debug mode with args."""
-    run_command.logger.verbosity = LogLevel.DEBUG
+    run_command.console.verbosity = LogLevel.DEBUG
     first_app_config.console_app = True
 
     # Run the app with args

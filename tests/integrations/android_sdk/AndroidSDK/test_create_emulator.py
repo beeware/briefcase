@@ -54,7 +54,7 @@ def test_create_emulator(
     mock_tools.host_arch = host_arch
 
     # Mock the user providing several invalid names before getting it right.
-    mock_tools.input.values = [
+    mock_tools.console.values = [
         "runningEmulator",  # an existing emulator
         "invalid name",  # A name with a space
         "annoying!",  # a name with non-alpha characters
@@ -91,7 +91,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # it only checks that the emulator is created with the default name.
 
     # User provides no input; default name will be used
-    mock_tools.input.values = [""]
+    mock_tools.console.values = [""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -116,7 +116,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
             "beePhone",
         ]
     )
-    mock_tools.input.values = [""]
+    mock_tools.console.values = [""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()

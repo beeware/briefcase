@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import briefcase.integrations.xcode
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import NoDistributionArtefact
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
@@ -11,7 +11,6 @@ from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 @pytest.fixture
 def create_command(tmp_path):
     return iOSXcodeCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

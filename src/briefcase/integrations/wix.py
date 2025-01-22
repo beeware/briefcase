@@ -79,8 +79,8 @@ class WiX(ManagedTool):
 
         # Look for the WIX environment variable
         if wix_env := tools.os.environ.get("WIX"):
-            tools.logger.debug("Evaluating WIX...", prefix=cls.full_name)
-            tools.logger.debug(f"WIX={wix_env}")
+            tools.console.debug("Evaluating WIX...", prefix=cls.full_name)
+            tools.console.debug(f"WIX={wix_env}")
             wix_home = Path(wix_env)
 
             # Set up the paths for the WiX executables we will use.
@@ -102,7 +102,7 @@ does not point to an install of the WiX Toolset.
 
             if not wix.exists():
                 if install:
-                    tools.logger.info(
+                    tools.console.info(
                         "The WiX toolset was not found; downloading and installing...",
                         prefix=cls.name,
                     )
@@ -110,7 +110,7 @@ does not point to an install of the WiX Toolset.
                 else:
                     raise MissingToolError("WiX")
 
-        tools.logger.debug(f"Using WiX at {wix.wix_home}")
+        tools.console.debug(f"Using WiX at {wix.wix_home}")
         tools.wix = wix
         return wix
 
@@ -141,7 +141,7 @@ does not point to an install of the WiX Toolset.
         )
 
         try:
-            with self.tools.input.wait_bar("Installing WiX..."):
+            with self.tools.console.wait_bar("Installing WiX..."):
                 self.tools.file.unpack_archive(
                     os.fsdecode(wix_zip_path),
                     extract_dir=os.fsdecode(self.wix_home),
@@ -161,5 +161,5 @@ Delete {wix_zip_path} and run briefcase again.
 
     def uninstall(self):
         """Uninstall WiX."""
-        with self.tools.input.wait_bar("Removing old WiX install..."):
+        with self.tools.console.wait_bar("Removing old WiX install..."):
             self.tools.shutil.rmtree(self.wix_home)

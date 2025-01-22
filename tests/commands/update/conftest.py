@@ -2,9 +2,8 @@ import pytest
 
 from briefcase.commands import UpdateCommand
 from briefcase.config import AppConfig
-from briefcase.console import Console, Log
 
-from ...utils import create_file
+from ...utils import DummyConsole, create_file
 
 
 class DummyUpdateCommand(UpdateCommand):
@@ -19,8 +18,7 @@ class DummyUpdateCommand(UpdateCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, apps, **kwargs):
-        kwargs.setdefault("logger", Log())
-        kwargs.setdefault("console", Console())
+        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps=apps, **kwargs)
 
         self.actions = []

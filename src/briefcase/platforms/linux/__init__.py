@@ -160,7 +160,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                 if Path(requirement).is_dir():
                     # Requirement is a filesystem reference
                     # Build an sdist for the local requirement
-                    with self.input.wait_bar(f"Building sdist for {requirement}..."):
+                    with self.console.wait_bar(f"Building sdist for {requirement}..."):
                         try:
                             self.tools.subprocess.check_output(
                                 [

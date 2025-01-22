@@ -17,5 +17,5 @@ def test_override_is_used(convert_command):
 def test_prompted_description(convert_command):
     """The user is prompted for a description if there is no description in the
     pyproject.toml file."""
-    convert_command.input.values = ["A very descriptive description"]
+    convert_command.console.values = ["A very descriptive description"]
     assert convert_command.input_description(None) == "A very descriptive description"

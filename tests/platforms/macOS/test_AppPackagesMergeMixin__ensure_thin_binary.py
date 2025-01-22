@@ -12,7 +12,7 @@ from ...utils import create_file, file_content
 def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
     """A thin binary is left as-is."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path/to/file.dylib", "dylib-original")
@@ -52,7 +52,7 @@ def test_thin_binary(dummy_command, verbose, tmp_path, capsys):
 def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
     """A fat binary library can be thinned."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
@@ -108,7 +108,7 @@ def test_fat_dylib(dummy_command, verbose, tmp_path, capsys):
 def test_fat_dylib_arch_mismatch(dummy_command, verbose, tmp_path, capsys):
     """If a fat binary doesn't contain the target architecture, an error is raised."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
@@ -146,7 +146,7 @@ def test_fat_dylib_unknown_info(dummy_command, verbose, tmp_path, capsys):
     """If the lipo info call succeeds, but generates unknown output, an error is
     raised."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path/to/file.dylib", "dylib-fat")
@@ -215,7 +215,7 @@ def test_lipo_info_fail(dummy_command, tmp_path):
 def test_lipo_thin_fail(dummy_command, verbose, tmp_path, capsys):
     """If lipo fails thinning the binary, an error is raised."""
     if verbose:
-        dummy_command.logger.verbosity = LogLevel.VERBOSE
+        dummy_command.console.verbosity = LogLevel.VERBOSE
 
     # Create a source binary.
     create_file(tmp_path / "path/to/file.dylib", "dylib-fat")

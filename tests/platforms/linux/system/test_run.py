@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
@@ -19,7 +19,6 @@ from ....utils import create_file
 @pytest.fixture
 def run_command(tmp_path, first_app, monkeypatch):
     command = LinuxSystemRunCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -274,7 +273,7 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
 
 def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     """A bootstrap binary for a GUI app can be started in debug mode with arguments."""
-    run_command.logger.verbosity = LogLevel.DEBUG
+    run_command.console.verbosity = LogLevel.DEBUG
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -378,7 +377,7 @@ def test_run_console_app(run_command, first_app, tmp_path):
 
 def test_run_console_app_passthrough(run_command, first_app, tmp_path):
     """A console app can be started in debug mode with command line arguments."""
-    run_command.logger.verbosity = LogLevel.DEBUG
+    run_command.console.verbosity = LogLevel.DEBUG
 
     first_app.console_app = True
 

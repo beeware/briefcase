@@ -85,7 +85,7 @@ need to restart your terminal session.
                 skip_logfile=True,
             )
 
-        tools.logger.configure_stdlib_logging("git")
+        tools.console.configure_stdlib_logging("git")
 
         tools.git = git
         return git

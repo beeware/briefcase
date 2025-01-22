@@ -2,14 +2,13 @@ from zipfile import ZipFile
 
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.platforms.web.static import StaticWebPackageCommand
 
 
 @pytest.fixture
 def package_command(tmp_path):
     command = StaticWebPackageCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

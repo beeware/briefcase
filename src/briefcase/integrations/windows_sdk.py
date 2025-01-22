@@ -79,7 +79,7 @@ class WindowsSDK(Tool):
         enforced by the SDK installer. Certain subdirectories, such as `include` and
         `bin`, will contain subdirectories for versions that may be installed.
         """
-        tools.logger.debug("Finding Suitable Installation...", prefix=cls.full_name)
+        tools.console.debug("Finding Suitable Installation...", prefix=cls.full_name)
 
         # Return user-specified SDK
         if (environ_sdk_dir := tools.os.environ.get("WindowsSDKDir")) and (
@@ -130,7 +130,7 @@ WindowsSDKVersion: {environ_sdk_version}
                     if reg_version := winreg.QueryValueEx(key, cls.SDK_VERSION_KEY)[0]:
                         # Append missing "servicing" revision to registry version
                         reg_version = f"{reg_version}.0"
-                        tools.logger.debug(
+                        tools.console.debug(
                             f"Evaluating Registry SDK version '{reg_version}' at {sdk_dir}"
                         )
                         yield sdk_dir, reg_version
@@ -138,7 +138,7 @@ WindowsSDKVersion: {environ_sdk_version}
                     # Return other versions of the SDK installed in sdk_dir
                     for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
                         if sdk_version != reg_version:
-                            tools.logger.debug(
+                            tools.console.debug(
                                 f"Evaluating Registry SDK Bin version '{sdk_version}' at {sdk_dir}"
                             )
                             yield sdk_dir, sdk_version
@@ -148,7 +148,7 @@ WindowsSDKVersion: {environ_sdk_version}
         for sdk_dir in cls.DEFAULT_SDK_DIRS:
             if sdk_dir.is_dir():
                 for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
-                    tools.logger.debug(
+                    tools.console.debug(
                         f"Evaluating Default Bin SDK version '{sdk_version}' at {sdk_dir}"
                     )
                     yield sdk_dir, sdk_version
@@ -224,6 +224,6 @@ See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ to inst
 """
             )
 
-        tools.logger.debug(f"Using Windows SDK v{sdk.version} at {sdk.root_path}")
+        tools.console.debug(f"Using Windows SDK v{sdk.version} at {sdk.root_path}")
         tools.windows_sdk = sdk
         return sdk

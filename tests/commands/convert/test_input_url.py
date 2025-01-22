@@ -7,7 +7,7 @@ def test_multiple_pep621_options(convert_command, monkeypatch):
     mock_selection_question = MagicMock()
     mock_selection_question.return_value = "https://some_other_url.com/"
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     (convert_command.base_path / "pyproject.toml").write_text(
@@ -38,11 +38,11 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
     mock_selection_question = MagicMock()
     mock_selection_question.return_value = "Other"
     monkeypatch.setattr(
-        convert_command.input, "selection_question", mock_selection_question
+        convert_command.console, "selection_question", mock_selection_question
     )
 
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     (convert_command.base_path / "pyproject.toml").write_text(
         "[project.urls]\n"
@@ -76,7 +76,7 @@ def test_multiple_pep621_options_select_other(convert_command, monkeypatch):
 
 def test_no_pep621_options(convert_command, monkeypatch):
     mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.input, "text_question", mock_text_question)
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
 
     convert_command.input_url("some-name", None)
     default = "https://example.com/some-name"
@@ -101,7 +101,7 @@ def test_override(convert_command):
 
 def test_prompted_url(convert_command):
     """You can type in the URL."""
-    convert_command.input.values = ["https://example.com/some-name"]
+    convert_command.console.values = ["https://example.com/some-name"]
     assert (
         convert_command.input_url("some-name", None) == "https://example.com/some-name"
     )

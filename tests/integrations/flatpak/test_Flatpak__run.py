@@ -11,7 +11,7 @@ def test_run(flatpak, tool_debug_mode):
     """A Flatpak project can be executed."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        flatpak.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -43,7 +43,7 @@ def test_run_with_args(flatpak, tool_debug_mode):
     """A Flatpak project can be executed with additional arguments."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        flatpak.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -79,7 +79,7 @@ def test_run_non_streaming(flatpak, tool_debug_mode):
     """A Flatpak project can be executed in non-streaming mode."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        flatpak.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     # Call run()
     flatpak.run(
@@ -108,7 +108,7 @@ def test_main_module_override(flatpak, tool_debug_mode):
     """The main module can be overridden."""
     # Enable verbose tool logging
     if tool_debug_mode:
-        flatpak.tools.logger.verbosity = LogLevel.DEEP_DEBUG
+        flatpak.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()

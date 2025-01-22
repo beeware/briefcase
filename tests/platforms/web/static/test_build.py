@@ -10,7 +10,7 @@ else:  # pragma: no-cover-if-gte-py311
 
 import pytest
 
-from briefcase.console import Console, Log, LogLevel
+from briefcase.console import Console, LogLevel
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.web.static import StaticWebBuildCommand
@@ -21,7 +21,6 @@ from ....utils import create_file, create_wheel
 @pytest.fixture
 def build_command(tmp_path):
     command = StaticWebBuildCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
@@ -36,7 +35,7 @@ def build_command(tmp_path):
 def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
     """An app can be built."""
     # Configure logging level
-    build_command.logger.verbosity = logging_level
+    build_command.console.verbosity = logging_level
 
     bundle_path = tmp_path / "base_path/build/first-app/web/static"
 

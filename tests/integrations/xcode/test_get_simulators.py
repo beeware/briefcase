@@ -14,7 +14,7 @@ from briefcase.integrations.xcode import get_simulators
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
-    mock_tools.input = mock.MagicMock(spec_set=Console)
+    mock_tools.console = mock.MagicMock(spec_set=Console)
     mock_tools.subprocess = Subprocess(mock_tools)
     mock_tools.subprocess._subprocess = mock.MagicMock(spec_set=subprocess)
     mock_tools.subprocess.check_output = mock.MagicMock()
@@ -47,7 +47,7 @@ def test_simulator_is_missing(mock_tools, tmp_path):
     )
 
     # The prompt was displayed
-    assert mock_tools.input.call_count == 1
+    assert mock_tools.console.call_count == 1
 
     # The call returned without error.
     assert simulators == {}
@@ -84,7 +84,7 @@ def test_no_runtimes(mock_tools, simulator):
     assert simulators == {}
 
     # The prompt was not shown
-    mock_tools.input.assert_not_called()
+    mock_tools.console.assert_not_called()
 
 
 def test_single_iOS_runtime(mock_tools, simulator):
@@ -113,7 +113,7 @@ def test_single_iOS_runtime(mock_tools, simulator):
     }
 
     # The prompt was not shown
-    mock_tools.input.assert_not_called()
+    mock_tools.console.assert_not_called()
 
 
 def test_watchOS_runtime(mock_tools, simulator):
@@ -136,7 +136,7 @@ def test_watchOS_runtime(mock_tools, simulator):
     }
 
     # The prompt was not shown
-    mock_tools.input.assert_not_called()
+    mock_tools.console.assert_not_called()
 
 
 def test_multiple_iOS_runtime(mock_tools, simulator):
@@ -185,7 +185,7 @@ def test_multiple_iOS_runtime(mock_tools, simulator):
     }
 
     # The prompt was not shown
-    mock_tools.input.assert_not_called()
+    mock_tools.console.assert_not_called()
 
 
 def test_unknown_runtime(mock_tools, simulator):
@@ -203,7 +203,7 @@ def test_unknown_runtime(mock_tools, simulator):
     assert simulators == {}
 
     # The prompt was not shown
-    mock_tools.input.assert_not_called()
+    mock_tools.console.assert_not_called()
 
 
 def test_alternate_format(mock_tools, simulator):

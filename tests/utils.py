@@ -29,13 +29,13 @@ class NoMatchString(str):
 
 
 class DummyConsole(Console):
-    def __init__(self, *values, enabled=True):
-        super().__init__(enabled=enabled)
+    def __init__(self, *values, input_enabled=True):
+        super().__init__(input_enabled=input_enabled)
         self.prompts = []
         self.values = list(values)
 
-    def __call__(self, prompt, *args, **kwargs):
-        if not self.enabled:
+    def input(self, prompt, *args, **kwargs):
+        if not self.input_enabled:
             raise InputDisabled()
         self.prompts.append(prompt)
         return self.values.pop(0)

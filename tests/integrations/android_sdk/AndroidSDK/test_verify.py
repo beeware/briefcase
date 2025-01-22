@@ -162,7 +162,7 @@ def test_succeeds_immediately_in_happy_path(mock_tools, tmp_path):
 def test_user_provided_sdk(mock_tools, env_var, tmp_path, capsys):
     """If the user environment specifies a valid Android SDK, it is used."""
     # Increase the log level.
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
@@ -201,7 +201,7 @@ def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     """If the user environment specifies a valid Android SDK in both ANDROID_HOME and
     ANDROID_SDK_ROOT, it is used."""
     # Increase the log level.
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"
@@ -239,7 +239,7 @@ def test_consistent_user_provided_sdk(mock_tools, tmp_path, capsys):
 def test_inconsistent_user_provided_sdk(mock_tools, tmp_path, capsys):
     """A warning is logged if ANDROID_HOME and ANDROID_SDK_ROOT are not the same."""
     # Increase the log level.
-    mock_tools.logger.verbosity = LogLevel.DEBUG
+    mock_tools.console.verbosity = LogLevel.DEBUG
 
     # Create `sdkmanager` and the license file.
     existing_android_sdk_root_path = tmp_path / "other_sdk"

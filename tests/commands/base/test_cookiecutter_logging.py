@@ -26,7 +26,7 @@ def base_command(base_command):
 )
 def test_git_stdlib_logging(base_command, logging_level, handler_expected):
     """A logging handler is configured for GitPython when DEEP_DEBUG is enabled."""
-    base_command.logger.verbosity = logging_level
+    base_command.console.verbosity = logging_level
 
     base_command.generate_template(
         template="",

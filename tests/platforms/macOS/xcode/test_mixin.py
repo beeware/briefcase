@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.console import Console, Log
+from briefcase.console import Console
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.platforms.macOS.xcode import macOSXcodeCreateCommand
 
@@ -8,7 +8,6 @@ from briefcase.platforms.macOS.xcode import macOSXcodeCreateCommand
 @pytest.fixture
 def create_command(tmp_path):
     return macOSXcodeCreateCommand(
-        logger=Log(),
         console=Console(),
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",

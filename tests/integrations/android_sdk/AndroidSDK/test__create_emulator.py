@@ -237,7 +237,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # it only checks that the emulator is created with the default name.
 
     # User provides no input; default name will be used
-    mock_tools.input.values = [""]
+    mock_tools.console.values = [""]
 
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone.avd/config.ini"
@@ -266,7 +266,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
         ]
     )
     # User provides no input; default name will be used
-    mock_tools.input.values = [""]
+    mock_tools.console.values = [""]
 
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone3.avd/config.ini"

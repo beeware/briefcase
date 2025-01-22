@@ -11,7 +11,7 @@ from briefcase.exceptions import RequirementsInstallError
 def test_install_requirements_no_error(dev_command, first_app, logging_level):
     """Ensure run is executed properly to install requirements."""
     # Configure logging level
-    dev_command.logger.verbosity = logging_level
+    dev_command.console.verbosity = logging_level
 
     first_app.requires = ["package-one", "package_two", "packagethree"]
 

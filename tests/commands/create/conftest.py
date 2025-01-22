@@ -8,7 +8,6 @@ from cookiecutter.main import cookiecutter
 
 from briefcase.commands import CreateCommand
 from briefcase.config import AppConfig
-from briefcase.console import Console, Log
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
@@ -36,7 +35,7 @@ class DefaultCreateCommand(CreateCommand):
 
 @pytest.fixture
 def default_create_command(tmp_path):
-    return DefaultCreateCommand(base_path=tmp_path, logger=Log(), console=Console())
+    return DefaultCreateCommand(base_path=tmp_path, console=DummyConsole())
 
 
 class DummyCreateCommand(CreateCommand):
@@ -51,8 +50,7 @@ class DummyCreateCommand(CreateCommand):
     hidden_app_properties = {"permission", "request"}
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
-        kwargs.setdefault("logger", Log())
-        kwargs.setdefault("console", Console())
+        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, **kwargs)
 
         # Override the host properties
@@ -68,7 +66,6 @@ class DummyCreateCommand(CreateCommand):
         self.tools.git = git
         self.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
         self.support_file = support_file
-        self.tools.input = DummyConsole()
         self.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
 
     @property
