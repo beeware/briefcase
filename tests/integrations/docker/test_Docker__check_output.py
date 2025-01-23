@@ -40,7 +40,11 @@ def test_check_output_fail(mock_tools, sub_check_output_kw):
     # mock image already being cached in Docker and check_output() call fails
     mock_tools.subprocess._subprocess.check_output.side_effect = [
         "1ed313b0551f",
-        subprocess.CalledProcessError(returncode=1, cmd=["cmd", "arg1", "arg2"]),
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd=["cmd", "arg1", "arg2"],
+            output="This didn't work\n",
+        ),
     ]
 
     # The CalledProcessError surfaces from Docker().check_output()

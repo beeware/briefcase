@@ -440,7 +440,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 while not pid and datetime.datetime.now() < fail_time:
                     # Try to get the PID; run in quiet mode because we may
                     # need to do this a lot in the next 5 seconds.
-                    pid = adb.pidof(package, quiet=True)
+                    pid = adb.pidof(package, quiet=2)
                     if not pid:
                         time.sleep(0.01)
 
@@ -460,7 +460,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     clean_filter=android_log_clean_filter,
                     clean_output=False,
                     # Check for the PID in quiet mode so logs aren't corrupted.
-                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=True),
+                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
                     log_stream=True,
                 )
             else:

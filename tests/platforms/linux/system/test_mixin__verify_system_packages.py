@@ -36,12 +36,12 @@ def test_deb_requirements(build_command, first_app_config):
 
     # The packages were verified
     assert build_command.tools.subprocess.check_output.mock_calls == [
-        call(["dpkg", "-s", "python3-dev"]),
-        call(["dpkg", "-s", "dpkg-dev"]),
-        call(["dpkg", "-s", "g++"]),
-        call(["dpkg", "-s", "gcc"]),
-        call(["dpkg", "-s", "libc6-dev"]),
-        call(["dpkg", "-s", "make"]),
+        call(["dpkg", "-s", "python3-dev"], quiet=1),
+        call(["dpkg", "-s", "dpkg-dev"], quiet=1),
+        call(["dpkg", "-s", "g++"], quiet=1),
+        call(["dpkg", "-s", "gcc"], quiet=1),
+        call(["dpkg", "-s", "libc6-dev"], quiet=1),
+        call(["dpkg", "-s", "make"], quiet=1),
     ]
 
 
@@ -52,10 +52,10 @@ def test_rpm_requirements(build_command, first_app_config):
     build_command.verify_system_packages(first_app_config)
 
     assert build_command.tools.subprocess.check_output.mock_calls == [
-        call(["rpm", "-q", "python3-devel"]),
-        call(["rpm", "-q", "gcc"]),
-        call(["rpm", "-q", "make"]),
-        call(["rpm", "-q", "pkgconf-pkg-config"]),
+        call(["rpm", "-q", "python3-devel"], quiet=1),
+        call(["rpm", "-q", "gcc"], quiet=1),
+        call(["rpm", "-q", "make"], quiet=1),
+        call(["rpm", "-q", "pkgconf-pkg-config"], quiet=1),
     ]
 
 
@@ -66,8 +66,10 @@ def test_suse_requirements(build_command, first_app_config):
     build_command.verify_system_packages(first_app_config)
 
     assert build_command.tools.subprocess.check_output.mock_calls == [
-        call(["rpm", "-q", "--whatprovides", "python3-devel"]),
-        call(["rpm", "-q", "--whatprovides", "patterns-devel-base-devel_basis"]),
+        call(["rpm", "-q", "--whatprovides", "python3-devel"], quiet=1),
+        call(
+            ["rpm", "-q", "--whatprovides", "patterns-devel-base-devel_basis"], quiet=1
+        ),
     ]
 
 
@@ -78,8 +80,8 @@ def test_arch_requirements(build_command, first_app_config, capsys):
     build_command.verify_system_packages(first_app_config)
 
     assert build_command.tools.subprocess.check_output.mock_calls == [
-        call(["pacman", "-Q", "python3"]),
-        call(["pacman", "-Q", "base-devel"]),
+        call(["pacman", "-Q", "python3"], quiet=1),
+        call(["pacman", "-Q", "base-devel"], quiet=1),
     ]
 
 
@@ -181,8 +183,8 @@ def test_packages_installed(build_command, first_app_config, capsys):
     build_command.verify_system_packages(first_app_config)
 
     assert build_command.tools.subprocess.check_output.mock_calls == [
-        call(["check", "compiler"]),
-        call(["check", "first"]),
-        call(["check", "second"]),
-        call(["check", "third"]),
+        call(["check", "compiler"], quiet=1),
+        call(["check", "first"], quiet=1),
+        call(["check", "second"], quiet=1),
+        call(["check", "third"], quiet=1),
     ]

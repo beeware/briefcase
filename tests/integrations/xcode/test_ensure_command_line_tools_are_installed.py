@@ -13,7 +13,7 @@ def test_not_installed(mock_tools):
 
     # xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
-        ["xcode-select", "--install"],
+        ["xcode-select", "--install"], quiet=1
     )
 
 
@@ -30,6 +30,7 @@ def test_installed(capsys, mock_tools):
     # ... xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
         ["xcode-select", "--install"],
+        quiet=1,
     )
 
     # ...and the user is none the wiser
@@ -49,7 +50,7 @@ def test_unsure_if_installed(capsys, mock_tools):
 
     # ... xcode-select was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
-        ["xcode-select", "--install"]
+        ["xcode-select", "--install"], quiet=1
     )
 
     # ...but stdout contains a warning

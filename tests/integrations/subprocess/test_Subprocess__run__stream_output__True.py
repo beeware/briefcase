@@ -174,6 +174,7 @@ def test_debug_call(mock_sub, capsys, sub_stream_kw, sleep_zero):
         "\n"
         "output line 3\n"
         ">>> Return code: -3\n"
+        "\n"
     )
     # fmt: on
 
@@ -208,6 +209,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_stream_kw, sleep_ze
         "\n"
         "output line 3\n"
         ">>> Return code: -3\n"
+        "\n"
     )
     assert capsys.readouterr().out == expected_output
 
@@ -229,6 +231,7 @@ def test_calledprocesserror_exception_logging(mock_sub, sleep_zero, capsys):
         "\n"
         "output line 3\n"
         ">>> Return code: -3\n"
+        "\n"
     )
     # fmt: on
     assert capsys.readouterr().out == expected_output

@@ -1424,7 +1424,7 @@ class ADB:
             an emulator
         """
         try:
-            output = self.run("emu", "avd", "name")
+            output = self.run("emu", "avd", "name", quiet=1)
             return output.split("\n")[0]
         except subprocess.CalledProcessError as e:
             # Status code 1 is a normal "it's not an emulator" error response
@@ -1451,13 +1451,13 @@ class ADB:
                 f"Unable to determine if emulator {self.device} has booted."
             ) from e
 
-    def run(self, *arguments: SubprocessArgT, quiet: bool = False) -> str:
+    def run(self, *arguments: SubprocessArgT, quiet: int = 0) -> str:
         """Run a command on a device using Android debug bridge, `adb`. The device name
         is mandatory to ensure clarity in the case of multiple attached devices.
 
         :param arguments: List of strings to pass to `adb` as arguments.
         :param quiet: Should the invocation of this command be silent, and
-            *not* appear in the logs? This should almost always be False;
+            *not* appear in the logs? This should almost always be 0;
             however, for some calls (most notably, calls that are called
             frequently to evaluate the status of another process), logging can
             be turned off so that log output isn't corrupted by thousands of

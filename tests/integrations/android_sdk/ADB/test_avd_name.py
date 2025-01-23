@@ -15,7 +15,7 @@ def test_emulator(adb, capsys):
     assert adb.avd_name() == "exampledevice"
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("emu", "avd", "name")
+    adb.run.assert_called_once_with("emu", "avd", "name", quiet=1)
 
 
 def test_device(adb, capsys):
@@ -29,7 +29,7 @@ def test_device(adb, capsys):
     assert adb.avd_name() is None
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("emu", "avd", "name")
+    adb.run.assert_called_once_with("emu", "avd", "name", quiet=1)
 
 
 def test_adb_failure(adb, capsys):
@@ -44,7 +44,7 @@ def test_adb_failure(adb, capsys):
         adb.avd_name()
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("emu", "avd", "name")
+    adb.run.assert_called_once_with("emu", "avd", "name", quiet=1)
 
 
 def test_invalid_device(adb, capsys):
@@ -57,4 +57,4 @@ def test_invalid_device(adb, capsys):
         adb.avd_name()
 
     # Validate call parameters.
-    adb.run.assert_called_once_with("emu", "avd", "name")
+    adb.run.assert_called_once_with("emu", "avd", "name", quiet=1)

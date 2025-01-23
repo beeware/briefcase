@@ -566,7 +566,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 installed = provided_by = package
 
             try:
-                self.tools.subprocess.check_output(system_verify + [installed])
+                self.tools.subprocess.check_output(system_verify + [installed], quiet=1)
             except subprocess.CalledProcessError:
                 missing.add(provided_by)
 

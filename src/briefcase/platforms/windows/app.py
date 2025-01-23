@@ -76,11 +76,13 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
                             self.binary_path(app).relative_to(self.bundle_path(app)),
                         ],
                         cwd=self.bundle_path(app),
+                        quiet=1,
                     )
                 except subprocess.CalledProcessError as e:
                     # Ignore this error from signtool since it is logged if the file
                     # is not currently signed
                     if "error: 0x00000057" not in e.stdout:
+                        self.tools.subprocess.output_error(e)
                         raise BriefcaseCommandError(
                             f"""\
 Failed to remove any existing digital signatures from the stub app.

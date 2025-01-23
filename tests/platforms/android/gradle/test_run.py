@@ -220,7 +220,7 @@ def test_run_existing_device(run_command, first_app_config):
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
-        quiet=True,
+        quiet=2,
     )
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
@@ -292,7 +292,7 @@ def test_run_with_passthrough(run_command, first_app_config):
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
-        quiet=True,
+        quiet=2,
     )
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
@@ -333,7 +333,7 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
 
     assert (
         run_command.tools.mock_adb.pidof.mock_calls
-        == [mock.call("com.example.first_app", quiet=True)] * 3
+        == [mock.call("com.example.first_app", quiet=2)] * 3
     )
     assert time.sleep.mock_calls == [mock.call(0.01)] * 2
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="888")
@@ -387,7 +387,7 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
 
     assert (
         run_command.tools.mock_adb.pidof.mock_calls
-        == [mock.call("com.example.first_app", quiet=True)] * 5
+        == [mock.call("com.example.first_app", quiet=2)] * 5
     )
     assert time.sleep.mock_calls == [mock.call(0.01)] * 5
 
@@ -615,7 +615,7 @@ def test_run_test_mode(run_command, first_app_config):
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
-        quiet=True,
+        quiet=2,
     )
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
@@ -688,7 +688,7 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
-        quiet=True,
+        quiet=2,
     )
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
 
