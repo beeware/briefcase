@@ -1,1 +1,0 @@
-The API for project bootstraps has been slightly modified. The constructor for a bootstrap must now accept a console argument; the ``extra_context()`` method must now accept a ``project_overrides`` argument.

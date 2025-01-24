@@ -1,1 +1,0 @@
-The "briefcase convert" command can now be used to configure a console-based applications.

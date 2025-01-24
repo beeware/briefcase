@@ -1,1 +1,0 @@
-Linux on arm64 is now a fully supported platform.

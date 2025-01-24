@@ -1,1 +1,0 @@
-The project wizard now generates a more complete configuration file when no GUI framework is selected.

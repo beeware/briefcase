@@ -1,1 +1,0 @@
-The base path provided to post_generate was corrected to include the app name.

@@ -1,1 +1,0 @@
-If Briefcase receives an error invoking a system tool, it will now surface the raw error message to the user in addition to logging the error.

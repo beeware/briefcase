@@ -4,6 +4,51 @@ Release History
 
 .. towncrier release notes start
 
+0.3.21 (2025-01-24)
+===================
+
+Features
+--------
+
+* Briefcase will now surface git's error messages if an error occurs when cloning a template repository. (`#1118 <https://github.com/beeware/briefcase/issues/1118>`__)
+* Briefcase now supports per-app configuration of ``pip install`` command line arguments using ``requirement_installer_args``. (`#1270 <https://github.com/beeware/briefcase/issues/1270>`__)
+* If macOS app notarization is interrupted, the notarization attempt can now be resumed. (`#1472 <https://github.com/beeware/briefcase/issues/1472>`__)
+* When a macOS notarization attempt fails, Briefcase now displays the cause of the notarization failure. (`#1472 <https://github.com/beeware/briefcase/issues/1472>`__)
+* When an existing project uses the ``convert`` wizard to add a Briefcase configuration, the updated ``pyproject.toml`` now includes a stub configuration for all platforms. (`#1899 <https://github.com/beeware/briefcase/issues/1899>`__)
+* The ``briefcase convert`` command can now be used to configure a console-based applications. (`#1900 <https://github.com/beeware/briefcase/issues/1900>`__)
+* If Briefcase receives an error invoking a system tool, it will now surface the raw error message to the user in addition to logging the error. (`#1907 <https://github.com/beeware/briefcase/issues/1907>`__)
+* The project wizard now generates a more complete configuration file when no GUI framework is selected. (`#2006 <https://github.com/beeware/briefcase/issues/2006>`__)
+* The web template now targets PyScript version 2024.11.1. In addition, the web template can provide a base ``pyscript.toml`` that Briefcase will update as required during the build process. (`#2080 <https://github.com/beeware/briefcase/issues/2080>`__)
+* Briefcase now uses native pip handling for iOS installs. (`#2101 <https://github.com/beeware/briefcase/issues/2101>`__)
+* When a verbosity level of 3 (i.e., ``-vvv``) is selected, any tasks that would normally be performed in parallel will now be performed serially. (`#2110 <https://github.com/beeware/briefcase/issues/2110>`__)
+* Linux on arm64 is now a fully supported platform. (`#2113 <https://github.com/beeware/briefcase/issues/2113>`__)
+* Project bootstraps now have access to the Briefcase console and the overrides specified with ``-Q`` options at the command line. (`#2114 <https://github.com/beeware/briefcase/issues/2114>`__)
+* Project bootstraps can now define a ``post_generate()`` extension point. This will be invoked after the new project template has been generated, providing a way for bootstraps to add additional files to the generated project. (`#2119 <https://github.com/beeware/briefcase/issues/2119>`__)
+
+Bugfixes
+--------
+
+* Briefcase now uses ``ditto`` to archive apps for submission to the notarization service, rather than standard ``zip`` tooling. This ensures that UTF-8 encoding and file system resources are preserved. (`#1218 <https://github.com/beeware/briefcase/issues/1218>`__)
+* The Gradle file generated for Android projects now correctly escapes single quotes. (`#1876 <https://github.com/beeware/briefcase/issues/1876>`__)
+* Pre-release Python interpreter versions are no longer rejected as matching candidates in PEP 621 ``requires-python`` checks. (`#2034 <https://github.com/beeware/briefcase/issues/2034>`__)
+* Briefcase no longer fails to create projects or builds because it cannot update the Git configuration for the relevant template. (`#2077 <https://github.com/beeware/briefcase/issues/2077>`__)
+* Support packages for Linux Flatpak and AppImage builds are now downloaded from the ``astral-sh`` repository, rather than the ``indygreg`` repository. This reflect the recent transfer of ownership of the project. (`#2087 <https://github.com/beeware/briefcase/issues/2087>`__)
+* A Debian-based system that does *not* have ``build-essential`` installed, but *does* have the constituent packages of ``build-essential`` installed, can now build Briefcase system packages. (`#2096 <https://github.com/beeware/briefcase/issues/2096>`__)
+* The arguments passed to ``xcodebuild`` when compiling an iOS app have been modified to avoid a warning about an ignored argument. (`#2102 <https://github.com/beeware/briefcase/issues/2102>`__)
+* The hints displayed to the user when an identity has been selected now more accurately reflect the context in which they have been invoked. (`#2110 <https://github.com/beeware/briefcase/issues/2110>`__)
+
+Backward Incompatible Changes
+-----------------------------
+
+* Flatpak apps no longer request D-Bus session access by default. Most apps have no need to access the D-Bus session, unless they're a development tool that is inspecting D-Bus messages at runtime. If you experience errors related to this change, it is likely caused by an inconsistency between the ``bundle`` definition in your app configuration, and the way the app describes its bundle ID at runtime. If you *do* require D-Bus access, adding ``finish_arg."socket=session-bus" = true`` to the Flatpak configuration for your app will restore D-Bus session access. (`#2074 <https://github.com/beeware/briefcase/issues/2074>`__)
+* Briefcase can no longer install pure Python iOS packages from a source archive (i.e., a ``.tar.gz`` file published on PyPI). If a package is pure Python, it *must* be provided as a ``py3-none-any`` wheel. Briefcase's `iOS platform documentation <https://briefcase.readthedocs.io/en/latest/reference/platforms/iOS/xcode.html#requirements-cannot-be-provided-as-source-tarballs>`__ contains details on how to provide a ``py3-none-any`` wheel when PyPI does not provide one. (`#2101 <https://github.com/beeware/briefcase/issues/2101>`__)
+* The API for project bootstraps has been slightly modified. The constructor for a bootstrap must now accept a console argument; the ``extra_context()`` method must now accept a ``project_overrides`` argument. (`#2114 <https://github.com/beeware/briefcase/issues/2114>`__)
+
+Misc
+----
+
+* `#2032 <https://github.com/beeware/briefcase/issues/2032>`__, `#2039 <https://github.com/beeware/briefcase/issues/2039>`__, `#2043 <https://github.com/beeware/briefcase/issues/2043>`__, `#2044 <https://github.com/beeware/briefcase/issues/2044>`__, `#2048 <https://github.com/beeware/briefcase/issues/2048>`__, `#2049 <https://github.com/beeware/briefcase/issues/2049>`__, `#2050 <https://github.com/beeware/briefcase/issues/2050>`__, `#2051 <https://github.com/beeware/briefcase/issues/2051>`__, `#2052 <https://github.com/beeware/briefcase/issues/2052>`__, `#2056 <https://github.com/beeware/briefcase/issues/2056>`__, `#2061 <https://github.com/beeware/briefcase/issues/2061>`__, `#2062 <https://github.com/beeware/briefcase/issues/2062>`__, `#2065 <https://github.com/beeware/briefcase/issues/2065>`__, `#2066 <https://github.com/beeware/briefcase/issues/2066>`__, `#2072 <https://github.com/beeware/briefcase/issues/2072>`__, `#2079 <https://github.com/beeware/briefcase/issues/2079>`__, `#2091 <https://github.com/beeware/briefcase/issues/2091>`__, `#2092 <https://github.com/beeware/briefcase/issues/2092>`__, `#2093 <https://github.com/beeware/briefcase/issues/2093>`__, `#2095 <https://github.com/beeware/briefcase/issues/2095>`__, `#2100 <https://github.com/beeware/briefcase/issues/2100>`__, `#2106 <https://github.com/beeware/briefcase/issues/2106>`__, `#2107 <https://github.com/beeware/briefcase/issues/2107>`__, `#2108 <https://github.com/beeware/briefcase/issues/2108>`__, `#2115 <https://github.com/beeware/briefcase/issues/2115>`__, `#2124 <https://github.com/beeware/briefcase/issues/2124>`__, `#2126 <https://github.com/beeware/briefcase/issues/2126>`__
+
 0.3.20 (2024-10-15)
 ===================
 

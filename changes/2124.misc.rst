@@ -1,1 +1,0 @@
-The Printer, Logger and Console classes have been unified into a single Console class.
