@@ -17,9 +17,9 @@ class JDK(ManagedTool):
     name = "java"
     full_name = "Java JDK"
 
-    # Latest OpenJDK as of July 2024: https://adoptium.net/temurin/releases/
+    # Latest OpenJDK as of January 2025: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.12"
+    JDK_RELEASE = "17.0.14"
     JDK_BUILD = "7"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
