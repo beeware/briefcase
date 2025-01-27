@@ -61,7 +61,7 @@ def make_class_name(formal_name):
             "Mn",  # nonspacing marks
             "Mc",  # spacing combining marks
             "Nd",  # decimal number
-            "Pc",  # connector punctuations
+            "Pc",  # connector punctuation
         }
     )
 

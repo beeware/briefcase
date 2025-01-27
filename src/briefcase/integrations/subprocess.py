@@ -53,7 +53,7 @@ def is_process_dead(pid: int) -> bool:
     """Returns True if a PID is not assigned to a process.
 
     Checking if a PID exists is only a semi-safe proxy to determine if a process is dead
-    since PIDs can be re-used. Therefore, this function should only be used via constant
+    since PIDs can be reused. Therefore, this function should only be used via constant
     monitoring of a PID to identify when the process goes from existing to not existing.
 
     :param pid: integer value to be checked if assigned as a PID.

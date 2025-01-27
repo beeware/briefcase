@@ -415,7 +415,7 @@ class Console:
         """Register a function to be called in the event that a log file is written.
 
         This can be used to provide additional debugging information which is too
-        expensive to gather pre-emptively.
+        expensive to gather preemptively.
         """
         self.log_file_extras.append(func)
 
