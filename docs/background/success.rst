@@ -12,3 +12,6 @@ Want to see examples of Briefcase in use? Here's some:
 
 * `Napari <https://napari.org/>`_ is a multi-dimensional image viewer for python.
   It uses Briefcase to prepare bundled Windows, MacOS, and Linux installers.
+
+* `Patent Toolkit <https://patenttk.com/>`_ is a suite of tools for patent professionals.
+  It uses Briefcase to prepare Windows and MacOS builds.
