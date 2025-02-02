@@ -15,7 +15,7 @@ from briefcase.console import sanitize_text
             "ls\nexamplefile.zip\n",
         ),
         (
-            "log output: \u001b[31mRed\u001B[0m",
+            "log output: \u001b[31mRed\u001b[0m",
             "log output: Red",
         ),
         (

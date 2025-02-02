@@ -22,12 +22,12 @@ from briefcase.config import make_class_name
         ("Hallo Vögel", "HalloVögel"),
         ("Bonjour Garçon", "BonjourGarçon"),
         # Unicode codepoints that can be at the start of an identifier
-        ("\u02EC World", "\u02ECWorld"),  # Unicode category Lm
+        ("\u02ec World", "\u02ecWorld"),  # Unicode category Lm
         ("\u3006 World", "\u3006World"),  # Unicode category Lo
         ("\u3021 World", "\u3021World"),  # Unicode category Nl
         # ('\u2118 World', '\u2118World'),  # in Other_ID_Start
         # Unicode codepoints that cannot be at the start of an identifier
-        ("\u20E1 World", "_\u20E1World"),  # Unicode Category Mn
+        ("\u20e1 World", "_\u20e1World"),  # Unicode Category Mn
         ("\u0903 World", "_\u0903World"),  # Unicode Category Mc
         ("\u2040 World", "_\u2040World"),  # Category Pc
         # ('\u00B7 World', '_\u00B7World'),  # in Other_ID_Continue
