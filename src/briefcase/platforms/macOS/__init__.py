@@ -426,12 +426,12 @@ def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
         with path.open("rb") as f:
             magic = f.read(4)
             return magic in (
-                b"\xCA\xFE\xBA\xBE",
-                b"\xCF\xFA\xED\xFE",
-                b"\xCE\xFA\xED\xFE",
-                b"\xBE\xBA\xFE\xCA",
-                b"\xFE\xED\xFA\xCF",
-                b"\xFE\xED\xFA\xCE",
+                b"\xca\xfe\xba\xbe",
+                b"\xcf\xfa\xed\xfe",
+                b"\xce\xfa\xed\xfe",
+                b"\xbe\xba\xfe\xca",
+                b"\xfe\xed\xfa\xcf",
+                b"\xfe\xed\xfa\xce",
             )
     else:
         # Not a binary

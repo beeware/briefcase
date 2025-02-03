@@ -97,14 +97,14 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
         create_file(
             lib_path / lib,
             mode="wb",
-            content=b"\xCA\xFE\xBA\xBEBinary content here",
+            content=b"\xca\xfe\xba\xbeBinary content here",
         )
 
     # Mach-O file that is executable, with an odd extension
     create_file(
         lib_path / "special.binary",
         mode="wb",
-        content=b"\xCA\xFE\xBA\xBEBinary content here",
+        content=b"\xca\xfe\xba\xbeBinary content here",
     )
     os.chmod(lib_path / "special.binary", 0o755)
 
@@ -112,7 +112,7 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     create_file(
         lib_path / "Extras.app/Contents/MacOS/Extras",
         mode="wb",
-        content=b"\xCA\xFE\xBA\xBEBinary content here",
+        content=b"\xca\xfe\xba\xbeBinary content here",
     )
 
     # An embedded framework
@@ -120,7 +120,7 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     create_file(
         frameworks_path / "Extras.framework/Versions/1.2/libs/extras.dylib",
         mode="wb",
-        content=b"\xCA\xFE\xBA\xBEBinary content here",
+        content=b"\xca\xfe\xba\xbeBinary content here",
     )
     (frameworks_path / "Extras.framework/Versions/1.2/Extras").symlink_to(
         frameworks_path / "Extras.framework/Versions/1.2/libs/extras.dylib"
@@ -140,7 +140,7 @@ def first_app_with_binaries(first_app_templated, first_app_config, tmp_path):
     create_file(
         lib_path / "unknown.binary",
         mode="wb",
-        content=b"\xCA\xFE\xBA\xBEother",
+        content=b"\xca\xfe\xba\xbeother",
     )
 
     return first_app_config
