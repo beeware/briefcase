@@ -601,7 +601,6 @@ class CreateCommand(BaseCommand):
                     "pip",
                     "install",
                     "--disable-pip-version-check",
-                    "--no-python-version-warning",
                     "--upgrade",
                     "--no-user",
                     f"--target={app_packages_path}",
