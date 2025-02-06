@@ -98,6 +98,7 @@ def test_resume_notarize_app(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -109,6 +110,7 @@ def test_resume_notarize_app(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -120,6 +122,7 @@ def test_resume_notarize_app(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -233,6 +236,7 @@ def test_resume_notarize_dmg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -244,6 +248,7 @@ def test_resume_notarize_dmg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -255,6 +260,7 @@ def test_resume_notarize_dmg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -375,6 +381,7 @@ def test_resume_notarize_pkg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -386,6 +393,7 @@ def test_resume_notarize_pkg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -397,6 +405,7 @@ def test_resume_notarize_pkg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -539,6 +548,7 @@ def test_resume_notarize_app_dist_artefact_exists(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -550,6 +560,7 @@ def test_resume_notarize_app_dist_artefact_exists(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -561,6 +572,7 @@ def test_resume_notarize_app_dist_artefact_exists(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -990,6 +1002,7 @@ def test_notarization_rejected(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -1001,6 +1014,7 @@ def test_notarization_rejected(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -1012,6 +1026,7 @@ def test_notarization_rejected(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 

@@ -1,0 +1,1 @@
+Some error messages that are an expected part of the macOS notarization process are now hidden from default verbosity.

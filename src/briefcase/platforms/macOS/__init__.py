@@ -980,6 +980,7 @@ password:
                                 "--output-format",
                                 "json",
                             ],
+                            quiet=1,
                         )
                         submission_id = submission["id"]
                 except subprocess.CalledProcessError as e:
@@ -991,6 +992,7 @@ password:
                     if e.returncode == 69 and not store_credentials:
                         store_credentials = True
                     else:
+                        self.tools.subprocess.output_error(e)
                         raise BriefcaseCommandError(
                             f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
                         ) from e
@@ -1080,6 +1082,7 @@ password:
                                 identity.profile,
                                 submission_id,
                             ],
+                            quiet=1,
                         )
 
                         if response["status"] == "Accepted":
@@ -1110,6 +1113,7 @@ password:
                             # notarization isn't complete yet. Try again in 10 seconds.
                             time.sleep(10)
                         else:
+                            self.tools.subprocess.output_error(e)
                             raise BriefcaseCommandError(
                                 "Unknown problem retrieving notarization status."
                             ) from e
