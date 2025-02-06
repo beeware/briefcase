@@ -123,6 +123,7 @@ def test_notarize_app(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Check status 3 times
         mock.call(
@@ -135,6 +136,7 @@ def test_notarize_app(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -146,6 +148,7 @@ def test_notarize_app(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -157,6 +160,7 @@ def test_notarize_app(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -220,6 +224,7 @@ def test_notarize_dmg(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Check status 3 times
         mock.call(
@@ -232,6 +237,7 @@ def test_notarize_dmg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -243,6 +249,7 @@ def test_notarize_dmg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -254,6 +261,7 @@ def test_notarize_dmg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -322,6 +330,7 @@ def test_notarize_pkg(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Check status 3 times
         mock.call(
@@ -334,6 +343,7 @@ def test_notarize_pkg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -345,6 +355,7 @@ def test_notarize_pkg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -356,6 +367,7 @@ def test_notarize_pkg(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -425,6 +437,7 @@ def test_notarize_unknown_credentials(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Submit dmg for notarization; this attempt succeeds
         mock.call(
@@ -439,6 +452,7 @@ def test_notarize_unknown_credentials(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Check status 3 times
         mock.call(
@@ -451,6 +465,7 @@ def test_notarize_unknown_credentials(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -462,6 +477,7 @@ def test_notarize_unknown_credentials(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -473,6 +489,7 @@ def test_notarize_unknown_credentials(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -569,6 +586,7 @@ def test_credential_storage_failure_app(
             "--output-format",
             "json",
         ],
+        quiet=1,
     )
 
     # Store credentials in the keychain
@@ -638,6 +656,7 @@ def test_credential_storage_failure_dmg(
             "--output-format",
             "json",
         ],
+        quiet=1,
     )
 
     # Store credentials in the keychain
@@ -724,6 +743,7 @@ def test_credential_storage_disabled_input_app(
             "--output-format",
             "json",
         ],
+        quiet=1,
     )
 
     # No call is made to store credentials on the keychain
@@ -786,6 +806,7 @@ def test_credential_storage_disabled_input_dmg(
             "--output-format",
             "json",
         ],
+        quiet=1,
     )
 
     # No attempt was made to store credentials in the keychain
@@ -842,6 +863,7 @@ def test_notarize_unknown_credentials_after_storage(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -855,6 +877,7 @@ def test_notarize_unknown_credentials_after_storage(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
     ]
 
@@ -930,6 +953,7 @@ def test_app_submit_notarization_failure_with_credentials(
             "--output-format",
             "json",
         ],
+        quiet=1,
     )
 
     # No calls to submit credentials
@@ -980,6 +1004,7 @@ def test_dmg_submit_notarization_failure_with_credentials(
             "--output-format",
             "json",
         ],
+        quiet=1,
     )
 
     # No calls to submit credentials
@@ -1034,6 +1059,7 @@ def test_unknown_notarization_status_failure(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # One attempt to check status is made
         mock.call(
@@ -1046,6 +1072,7 @@ def test_unknown_notarization_status_failure(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -1114,6 +1141,7 @@ def test_stapling_failure(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Check status 3 times
         mock.call(
@@ -1126,6 +1154,7 @@ def test_stapling_failure(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -1137,6 +1166,7 @@ def test_stapling_failure(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -1148,6 +1178,7 @@ def test_stapling_failure(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
@@ -1211,6 +1242,7 @@ def test_interrupt_notarization(
                 "--output-format",
                 "json",
             ],
+            quiet=1,
         ),
         # Check status 3 times
         mock.call(
@@ -1223,6 +1255,7 @@ def test_interrupt_notarization(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -1234,6 +1267,7 @@ def test_interrupt_notarization(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
         mock.call(
             json_parser,
@@ -1245,6 +1279,7 @@ def test_interrupt_notarization(
                 "briefcase-macOS-DEADBEEF",
                 submission_id,
             ],
+            quiet=1,
         ),
     ]
 
