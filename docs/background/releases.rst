@@ -4,6 +4,25 @@ Release History
 
 .. towncrier release notes start
 
+0.3.22 (2025-02-07)
+===================
+
+Bugfixes
+--------
+
+* Some error messages that are an expected part of the macOS notarization process are now hidden from default verbosity. (`#2149 <https://github.com/beeware/briefcase/issues/2149>`__)
+* Briefcase no longer uses the ``--no-python-version-warning`` option when invoking pip. This option has been deprecated, is currently a no-op, and will be removed soon. (`#2149 <https://github.com/beeware/briefcase/issues/2149>`__)
+
+Backward Incompatible Changes
+-----------------------------
+
+* Java JDK 17.0.14+7 is now used to package Android apps. Use ``briefcase upgrade java`` to update your Briefcase-installed JDK instance to this version. (`#2133 <https://github.com/beeware/briefcase/issues/2133>`__)
+
+Misc
+----
+
+* `#2136 <https://github.com/beeware/briefcase/issues/2136>`__, `#2137 <https://github.com/beeware/briefcase/issues/2137>`__, `#2138 <https://github.com/beeware/briefcase/issues/2138>`__, `#2141 <https://github.com/beeware/briefcase/issues/2141>`__, `#2142 <https://github.com/beeware/briefcase/issues/2142>`__, `#2143 <https://github.com/beeware/briefcase/issues/2143>`__, `#2144 <https://github.com/beeware/briefcase/issues/2144>`__, `#2145 <https://github.com/beeware/briefcase/issues/2145>`__
+
 0.3.21 (2025-01-24)
 ===================
 

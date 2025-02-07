@@ -1,1 +1,0 @@
-Briefcase no longer uses the ``--no-python-version-warning`` option when invoking pip. This option has been deprecated, is currently a no-op, and will be removed soon.
