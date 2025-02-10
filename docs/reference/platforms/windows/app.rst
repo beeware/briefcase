@@ -25,8 +25,8 @@ Briefcase supports two packaging formats for a Windows app:
 2. As a ZIP file containing all files needed to run the app (by using ``briefcase
    package windows -p zip``).
 
-Briefcase uses the `WiX Toolset <https://wixtoolset.org/>`__ to build an MSI
-installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
+Briefcase uses the `WiX Toolset <https://www.firegiant.com/wixtoolset/>`__ to build an
+MSI installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
 enabled. To ensure .NET Framework 3.5 is enabled:
 
 1. Open the Windows Control Panel
