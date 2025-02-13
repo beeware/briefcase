@@ -1,3 +1,4 @@
+import shutil
 import sys
 from unittest.mock import MagicMock, call
 
@@ -17,8 +18,37 @@ def update_command(tmp_path):
     )
 
 
-def test_extra_pip_args(update_command, first_app_generated, tmp_path):
+@pytest.mark.parametrize(
+    "old_config, device_config_path, sim_config_path",
+    [
+        (
+            False,
+            "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
+            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/wonky-iphonesimulator",
+        ),
+        (
+            True,
+            "platform-site/iphoneos.arm64",
+            "platform-site/iphonesimulator.wonky",
+        ),
+    ],
+)
+def test_extra_pip_args(
+    update_command,
+    first_app_generated,
+    old_config,
+    device_config_path,
+    sim_config_path,
+    tmp_path,
+):
     """Extra iOS-specific args are included in calls to pip during update."""
+    # If we're testing an old config, delete the xcframework. This deletes the platform
+    # config folders, forcing a fallback to the older locations.
+    if old_config:
+        shutil.rmtree(
+            tmp_path / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
+        )
+
     # Hard code the current architecture for testing. We only install simulator
     # requirements for the current platform.
     update_command.tools.host_arch = "wonky"
@@ -58,14 +88,8 @@ def test_extra_pip_args(update_command, first_app_generated, tmp_path):
             env={
                 "PYTHONPATH": str(
                     tmp_path
-                    / "base_path"
-                    / "build"
-                    / "first-app"
-                    / "ios"
-                    / "xcode"
-                    / "Support"
-                    / "platform-site"
-                    / "iphoneos.arm64"
+                    / "base_path/build/first-app/ios/xcode/Support"
+                    / device_config_path
                 )
             },
         ),
@@ -94,14 +118,8 @@ def test_extra_pip_args(update_command, first_app_generated, tmp_path):
             env={
                 "PYTHONPATH": str(
                     tmp_path
-                    / "base_path"
-                    / "build"
-                    / "first-app"
-                    / "ios"
-                    / "xcode"
-                    / "Support"
-                    / "platform-site"
-                    / "iphonesimulator.wonky"
+                    / "base_path/build/first-app/ios/xcode/Support"
+                    / sim_config_path
                 )
             },
         ),
