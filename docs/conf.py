@@ -128,6 +128,8 @@ linkcheck_ignore = [
     r"^./windows/visualstudio.html$",
     r"^https://github.com/beeware/briefcase/issues/\d+$",
     r"^https://github.com/beeware/briefcase/pull/\d+$",
+    # Ignore WiX URLs, because they client block RTD's build.
+    r"^https://www.firegiant.com/wixtoolset/$",
 ]
 
 # -- Options for copy button ---------------------------------------------------
