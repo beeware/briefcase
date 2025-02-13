@@ -329,6 +329,26 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         )
         ios_min_tag = versions.get("Min iOS version", "13.0").replace(".", "_")
 
+        # Feb 2025: The platform-site was moved into the xcframework as
+        # `platform-config`. Look for the new location; fall back to the old location.
+        device_platform_site = (
+            self.support_path(app)
+            / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+        )
+        simulator_platform_site = (
+            self.support_path(app)
+            / "Python.xcframework/ios-arm64_x86_64-simulator"
+            / f"platform-config/{self.tools.host_arch}-iphonesimulator"
+        )
+        if not device_platform_site.exists():
+            device_platform_site = (
+                self.support_path(app) / "platform-site/iphoneos.arm64"
+            )
+            simulator_platform_site = (
+                self.support_path(app)
+                / f"platform-site/iphonesimulator.{self.tools.host_arch}"
+            )
+
         # Perform the initial install pass targeting the "iphoneos" platform
         super()._install_app_requirements(
             app,
@@ -340,10 +360,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             ],
             pip_kwargs={
                 "env": {
-                    "PYTHONPATH": str(
-                        self.support_path(app) / "platform-site/iphoneos.arm64"
-                    )
-                }
+                    "PYTHONPATH": str(device_platform_site),
+                },
             },
         )
 
@@ -359,12 +377,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             ],
             pip_kwargs={
                 "env": {
-                    "PYTHONPATH": str(
-                        self.support_path(app)
-                        / "platform-site"
-                        / f"iphonesimulator.{self.tools.host_arch}"
-                    )
-                }
+                    "PYTHONPATH": str(simulator_platform_site),
+                },
             },
         )
 
