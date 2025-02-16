@@ -83,7 +83,7 @@ dependencies = [
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
-    "psutil >= 5.9, < 7.0",
+    "psutil >= 5.9, < 8.0",
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "httpx >= 0.20, < 1.0",
     "rich >= 12.6, < 14.0",
