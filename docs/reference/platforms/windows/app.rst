@@ -1,6 +1,6 @@
-===========
-Windows App
-===========
+==================
+Windows App folder
+==================
 
 +--------+-------+---------+--------+---+-----+--------+-----+-------+
 | Host Platform Support (:ref:`platform-support-key`)                |
@@ -12,120 +12,23 @@ Windows App
 |        |       |     | |f|    |       |     |        |     |       |
 +--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
-A Windows app is a stub binary, allow with a collection of folders that contain
-the Python code for the app and the Python runtime libraries.
+A Windows App folder is a stub binary, allow with a collection of subfolders that
+contain the Python code for the app and the Python runtime libraries.
 
-Packaging format
-================
+A Windows App folder is the default Briefcase output format when running on Windows.
+However, you can explicitly specify the use of the Windows App folder backend by using
+``briefcase <command> windows app`` when invoking Briefcase.
 
-Briefcase supports two packaging formats for a Windows app:
-
-1. As an MSI installer (the default output of ``briefcase package windows``, or by using
-   ``briefcase package windows -p msi``); or
-2. As a ZIP file containing all files needed to run the app (by using ``briefcase
-   package windows -p zip``).
-
-Briefcase uses the `WiX Toolset <https://www.firegiant.com/wixtoolset/>`__ to build an
-MSI installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
-enabled. To ensure .NET Framework 3.5 is enabled:
-
-1. Open the Windows Control Panel
-2. Traverse to Programs -> Programs and Features
-3. Select "Turn Windows features On or Off"
-4. Ensure that ".NET framework 3.5 (includes .NET 2.0 and 3.0)" is selected.
-
-Icon format
-===========
-
-Windows apps installers use multi-format ``.ico`` icons; these icons should
-contain images in the following sizes:
-
-* 16px
-* 32px
-* 48px
-* 64px
-* 256px
-
-Windows Apps do not support splash screens or installer images.
-
-Additional options
-==================
-
-The following options can be provided at the command line when packaging
-Windows apps.
-
-.. include:: signing_options.rst
+All Windows apps, regardless of output format, use the same icon formats, have the same
+set of configuration and runtime options, have the same permissions, and have the same
+platform quirks. See :doc:`the documentation configuring Windows apps <./index>` for
+more details.
 
 Application configuration
 =========================
 
-The following options can be added to the
-``tool.briefcase.app.<appname>.windows`` section of your ``pyproject.toml``
-file.
-
-``system_installer``
-~~~~~~~~~~~~~~~~~~~~
-
-Controls whether the app will be installed as a per-user or per-machine app.
-Per-machine apps are "system" apps, and require admin permissions to run the
-installer; however, they are installed once and shared between all users on a
-computer.
-
-If ``true`` the installer will attempt to install the app as a per-machine app,
-available to all users. If ``false``, the installer will install as a per-user
-app. If undefined the installer will ask the user for their preference.
-
-``use_full_install_path``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Controls whether the app will be installed using a path which includes both the
-application name *and* the company or developer's name. If ``true`` (the
-default), the app will be installed to ``Program Files\<Author Name>\<Project
-Name>``. If ``false``, it will be installed to ``Program Files\<Project Name>``.
-Using the full path makes sense for larger companies with multiple applications,
-but less so for a solo developer.
-
-``version_triple``
-~~~~~~~~~~~~~~~~~~
-
-Python and Briefcase allow any valid `PEP440 version number
-<https://peps.python.org/pep-0440/>`_ as a ``version`` specifier. However, MSI
-installers require a strict integer triple version number. Many
-PEP440-compliant version numbers, such as "1.2", "1.2.3b3", and "1.2.3.4", are
-invalid for MSI installers.
-
-Briefcase will attempt to convert your ``version`` into a valid MSI value by
-extracting the first three parts of the main series version number (excluding
-pre, post and dev version indicators), padding with zeros if necessary:
-
-    * ``1.2`` becomes ``1.2.0``
-    * ``1.2b4`` becomes ``1.2.0``
-    * ``1.2.3b3`` becomes ``1.2.3``
-    * ``1.2.3.4`` becomes ``1.2.3``.
-
-However, if you need to override this default value, you can define
-``version_triple`` in your app settings. If provided, this value will be used
-in the MSI configuration file instead of the auto-generated value.
-
-Platform quirks
-===============
-
-Use caution with ``--update-support``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Care should be taken when using the ``--update-support`` option to the
-``update``, ``build`` or ``run`` commands. Support packages in Windows apps are
-overlaid with app content, so it isn't possible to remove all old support files
-before installing new ones.
-
-Briefcase will unpack the new support package without cleaning up existing
-support package content. This *should* work; however, ensure a reproducible
-release artefacts, it is advisable to perform a clean app build before release.
-
-Packaging with ``--adhoc-sign``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Using the ``--adhoc-sign`` option on Windows results in no signing being
-performed on the packaged app. This will result in your application being
-flagged as coming from an unverified publisher. This may limit who is able to
-install your app.
+Any configuration option specified in the ``tool.briefcase.app.<appname>.windows``
+section of your ``pyproject.toml`` file will be used by the Windows App folder backend.
+To specify a setting that will *only* be used by Windows App folders and *not* other
+Windows output formats, put the setting in a
+``tool.briefcase.app.<appname>.windows.app`` section of your ``pyproject.toml``.
