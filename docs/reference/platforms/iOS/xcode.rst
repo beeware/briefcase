@@ -180,3 +180,33 @@ put the wheel in a folder and add:
 
 to your ``pyproject.toml``. This will instruct Briefcase to search that folder for
 compatible wheels during the installation process.
+
+Executable binary content in wheels
+-----------------------------------
+
+The iOS App Store has very stringent constraints on what can be included in an app
+bundle, and where it can be included. One of those constraints is that any executable
+content must be distributed as a framework, in the ``Frameworks`` folder of the iOS
+project.
+
+Briefcase's app template will process binary wheels to satisfy this requirement.
+However, it will only process binary content that is executable at runtime. Some
+packages (NumPy is one notable example) are known to distribute additional executable
+files, such as statically linked ``.a`` libraries, in their wheel content. These files
+are not usable at runtime, and Briefcase will not process them. If they're present in an
+app bundle at time of submission to the App Store, your app will not pass app
+validation, raising errors like:
+
+    Error: Validation failed Invalid bundle structure. The ``.../libsomething.a`` binary
+    file is not permitted. Your app cannot contain standalone executables or libraries,
+    other than a valid CFBundleExecutable of supported bundles.
+
+To avoid this, you must purge any binary content from your app before submission. You
+can do this using the ``cleanup_paths`` configuration option::
+
+    cleanup_paths = [
+        "*/app_packages.*/**/*.a",
+    ]
+
+This will find and purge all ``.a`` content in your app's dependencies. You can add
+additional patterns to remove other problematic content.

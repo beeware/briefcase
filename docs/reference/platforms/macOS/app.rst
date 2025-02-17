@@ -131,3 +131,5 @@ Using the ``--adhoc-sign`` option on macOS produces an app that will be able
 to run on your own machine, but won't run on any other computer. In order to
 distribute your app to other users, you will need to sign the app with a full
 signing identity.
+
+.. include:: platform_quirks.rst
