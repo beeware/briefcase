@@ -191,11 +191,11 @@ project.
 
 Briefcase's app template will process binary wheels to satisfy this requirement.
 However, it will only process binary content that is executable at runtime. Some
-packages (``numpy`` is one notable example) are known to distribute additional
-executable files, such as statically linked ``.a`` libraries, in their wheel content.
-These files are not usable at runtime, and Briefcase will not process them. If they're
-present in an app bundle at time of submission to the App Store, your app will not pass
-app validation, raising errors like:
+packages (NumPy is one notable example) are known to distribute additional executable
+files, such as statically linked ``.a`` libraries, in their wheel content. These files
+are not usable at runtime, and Briefcase will not process them. If they're present in an
+app bundle at time of submission to the App Store, your app will not pass app
+validation, raising errors like:
 
     Error: Validation failed Invalid bundle structure. The ``.../libsomething.a`` binary
     file is not permitted. Your app cannot contain standalone executables or libraries,
