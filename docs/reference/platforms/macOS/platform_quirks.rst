@@ -9,7 +9,7 @@ binary.
 
 For most wheels, this approach works without difficulty. However, the wheels for some
 packages include slightly different content on each platform. NumPy is a notable example
-- it includes static libraries (``.a`` files), header files (``.h``) files, and a
+- it includes static libraries (``.a`` files), headers (``.h`` files), and a
 ``__config__.py`` file that records the configuration options that were used at the time
 the wheel was built.
 
@@ -18,10 +18,10 @@ or are in a binary format that doesn't allow for multi-architecture merging.
 
 Briefcase will warn when it finds files that cannot be merged, and will fall back to
 copying the version matching the platform where Briefcase has been executed (i.e., if
-you're running on an arm64 MacBook, the version from the arm64 wheel will be coped). You
+you're running on an arm64 MacBook, the version from the arm64 wheel will be copied). You
 must determine whether this will cause a problem at runtime.
 
-For many forms of content, the files that cannot be merged files are **not** used at
+For many forms of content, the files that cannot be merged are **not** used at
 runtime. For example, the ``.a`` and ``.h`` files provided by NumPy exist so that code
 can statically link against NumPy. They are not needed at runtime by Python code that
 imports and uses NumPy.
