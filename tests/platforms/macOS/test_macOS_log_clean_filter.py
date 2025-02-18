@@ -24,6 +24,10 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
             None,
         ),
         (
+            "getpwuid_r did not find a match for uid 501",
+            None,
+        ),
+        (
             'Filtering the log data using "senderImagePath ENDSWITH "/Toga Test!" '
             'OR (processImagePath ENDSWITH "/Toga Test!" '
             'AND (senderImagePath ENDSWITH "-iphonesimulator.so" '

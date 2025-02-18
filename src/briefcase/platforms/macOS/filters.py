@@ -25,8 +25,9 @@ def macOS_log_clean_filter(line):
             line.startswith("Filtering the log data using "),
             # Log stream outputs barely useful column headers on startup
             line.startswith("Timestamp          "),
-            # iOS reports an ignorable error on startup
+            # iOS reports ignorable errors on startup
             line.startswith("Error from getpwuid_r:"),
+            line.startswith("getpwuid_r did not find a match "),
         ]
     ):
         return None
