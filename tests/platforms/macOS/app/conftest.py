@@ -73,7 +73,7 @@ entitlements_path="Entitlements.plist"
     # Create the support package VERSIONS file
     # with a deliberately weird min macOS version
     create_file(
-        tmp_path / "base_path/build/first-app/macos/app/Support/VERSIONS",
+        tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
         "\n".join(
             [
                 "Python version: 3.10.15",
