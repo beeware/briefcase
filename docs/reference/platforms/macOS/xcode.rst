@@ -19,7 +19,7 @@ Xcode.
 You can specify the use of the macOS Xcode project backend by using ``briefcase <command>
 macOS Xcode`` when invoking Briefcase.
 
-Most apps will have not need to use the Xcode format - the :doc:`./app` format provides
+Most apps will have no need to use the Xcode format - the :doc:`./app` format provides
 everything that is required to run most macOS apps. The Xcode project format is useful
 if you need to customize the stub binary that is used to start your app. The Xcode
 project backend is used to generate the stub binary that is used by the :doc:`./app`

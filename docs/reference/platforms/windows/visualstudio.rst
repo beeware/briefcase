@@ -19,7 +19,7 @@ build`` command, or directly from Visual Studio.
 You can specify the use of the Windows Visual Studio project backend by using
 ``briefcase <command> windows visualstudio`` when invoking Briefcase.
 
-Most apps will have not need to use the Visual Studio project format - the :doc:`./app`
+Most apps will have no need to use the Visual Studio project format - the :doc:`./app`
 format provides everything that is required to run most Windows apps. The Visual Studio
 project format is useful if you need to customize the stub binary that is used to start
 your app. The Visual Studio project backend is used to generate the stub binary that is

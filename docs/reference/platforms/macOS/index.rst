@@ -21,7 +21,7 @@ macOS
 Briefcase supports two output formats for macOS apps:
 
 * An :doc:`./app` with a pre-compiled binary; and
-* An :doc:`./xcode` which can be used build an app with a customized
+* An :doc:`./xcode` which can be used to build an app with a customized
   binary.
 
 The default output format for macOS is an :doc:`./app`. The :doc:`./xcode` format is
@@ -30,7 +30,7 @@ used to generate the stub binary that is used in by :doc:`./app` format.
 Both output formats support packaging as a macOS DMG, PKG or as a standalone signed app
 bundle. By default, apps will be both signed and notarized when they are packaged.
 
-Configuration options between :doc:`./app` and :doc:`./xcode` formats are identical.
+Configuration options between the :doc:`./app` and :doc:`./xcode` formats are identical.
 
 Packaging format
 ================

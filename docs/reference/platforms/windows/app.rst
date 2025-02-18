@@ -12,7 +12,7 @@ Windows App folder
 |        |       |     | |f|    |       |     |        |     |       |
 +--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
-A Windows App folder is a stub binary, allow with a collection of subfolders that
+A Windows App folder is a stub binary, along with a collection of subfolders that
 contain the Python code for the app and the Python runtime libraries.
 
 A Windows App folder is the default Briefcase output format when running on Windows.
