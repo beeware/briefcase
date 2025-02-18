@@ -19,15 +19,16 @@ def macOS_log_clean_filter(line):
         included for analysis purposes (i.e., it's Python content, not a system
         message). Returns a single ``None`` if the line should be dumped.
     """
-    if any(
-        [
+    if line.startswith(
+        (
             # Log stream outputs the filter when it starts
-            line.startswith("Filtering the log data using "),
+            "Filtering the log data using ",
             # Log stream outputs barely useful column headers on startup
-            line.startswith("Timestamp          "),
-            # iOS reports an ignorable error on startup
-            line.startswith("Error from getpwuid_r:"),
-        ]
+            "Timestamp          ",
+            # iOS reports ignorable errors on startup
+            "Error from getpwuid_r:",
+            "getpwuid_r did not find a match ",
+        )
     ):
         return None
 

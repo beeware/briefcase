@@ -70,6 +70,20 @@ entitlements_path="Entitlements.plist"
         """<?xml?>\n<installer-script></installer-script>""",
     )
 
+    # Create the support package VERSIONS file
+    # with a deliberately weird min macOS version
+    create_file(
+        tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
+        "\n".join(
+            [
+                "Python version: 3.10.15",
+                "Build: b11",
+                "Min macOS version: 15.2",
+                "",
+            ]
+        ),
+    )
+
     # Select dmg packaging by default
     first_app_config.packaging_format = "dmg"
 

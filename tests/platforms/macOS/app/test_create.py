@@ -373,6 +373,8 @@ def test_install_app_packages(
                 "--upgrade",
                 "--no-user",
                 f"--target={bundle_path / ('app_packages.' + host_arch)}",
+                "--only-binary",
+                ":all:",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
@@ -395,6 +397,8 @@ def test_install_app_packages(
                 "--no-user",
                 f"--target={bundle_path / ('app_packages.' + other_arch)}",
                 "--no-deps",
+                "--platform",
+                f"macosx_15_2_{other_arch}",
                 "--only-binary",
                 ":all:",
                 "second==1.2.3",
@@ -402,11 +406,6 @@ def test_install_app_packages(
             ],
             check=True,
             encoding="UTF-8",
-            env={
-                "PYTHONPATH": str(
-                    bundle_path / "support/platform-site" / f"macosx.{other_arch}"
-                )
-            },
         ),
     ]
 
@@ -490,6 +489,8 @@ def test_install_app_packages_no_binary(
                 "--upgrade",
                 "--no-user",
                 f"--target={bundle_path / ('app_packages.' + host_arch)}",
+                "--only-binary",
+                ":all:",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
@@ -586,6 +587,8 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
                 "--upgrade",
                 "--no-user",
                 f"--target={bundle_path / 'app_packages.arm64'}",
+                "--only-binary",
+                ":all:",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
@@ -609,6 +612,8 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
                 "--no-user",
                 f"--target={bundle_path / 'app_packages.x86_64'}",
                 "--no-deps",
+                "--platform",
+                "macosx_15_2_x86_64",
                 "--only-binary",
                 ":all:",
                 "second==1.2.3",
@@ -616,9 +621,6 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
             ],
             check=True,
             encoding="UTF-8",
-            env={
-                "PYTHONPATH": str(bundle_path / "support/platform-site/macosx.x86_64")
-            },
         ),
     ]
 
@@ -683,6 +685,8 @@ def test_install_app_packages_non_universal(
                 "--upgrade",
                 "--no-user",
                 f"--target={bundle_path / 'First App.app' / 'Contents' / 'Resources' / 'app_packages'}",
+                "--only-binary",
+                ":all:",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
