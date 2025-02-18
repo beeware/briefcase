@@ -95,10 +95,31 @@ class macOSCreateMixin(AppPackagesMergeMixin):
             host_app_packages_path = (
                 self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
             )
+            # A standard install, except we explicitly reject installs from source
+            # tarballs with `--only-binary :all:`. This is for two reasons:
+            #
+            # 1. Consistency. We need to use `--only-binary :all:` when we do the second
+            #    "other arch" wheel install because of use of the `--platform` argument;
+            #    if we only reject source tarballs from one of the installs, then a
+            #    package that only provides binary wheels for one architecture would
+            #    cause inconsistent results depending on which platform was the host;
+            #    and
+            #
+            # 2. Security. Installs from source tarball involve executing arbitrary code
+            #    at time of installation; and it makes the entire development
+            #    environment building the app a vector for introducing vulnerabilities
+            #    into an app. Forcing the use of binary wheels ensures that we can know
+            #    with certainty the provenance of any binary content in the app.
+            #
+            # Since Briefcase is a tool designed to produce redistributable binaries,
+            # we've made the judgement call that the (minor, with known workarounds)
+            # inconvenience of not being able to use source tarballs is outweighed by
+            # the need to produce reliable, repeatable binary artefacts.
             super()._install_app_requirements(
                 app,
                 requires=requires,
                 app_packages_path=host_app_packages_path,
+                pip_args=["--only-binary", ":all:"],
             )
 
             # Find all the packages with binary components.
@@ -107,6 +128,18 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 host_app_packages_path,
                 universal_suffix="_universal2",
             )
+
+            # Determine the min macOS version from the VERSIONS file in the support package.
+            versions = dict(
+                [part.strip() for part in line.split(": ", 1)]
+                for line in (
+                    (self.support_path(app) / "VERSIONS")
+                    .read_text(encoding="UTF-8")
+                    .split("\n")
+                )
+                if ": " in line
+            )
+            macOS_min_tag = versions.get("Min macOS version", "11.0").replace(".", "_")
 
             # Now install dependencies for the architecture that isn't the host architecture.
             other_arch = {
@@ -131,6 +164,8 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                         app_packages_path=other_app_packages_path,
                         pip_args=[
                             "--no-deps",
+                            "--platform",
+                            f"macosx_{macOS_min_tag}_{other_arch}",
                             "--only-binary",
                             ":all:",
                         ]
@@ -147,13 +182,6 @@ you must compile those wheels yourself, or build a non-universal app by setting:
 
 in the macOS configuration section of your pyproject.toml.
 """,
-                        env={
-                            "PYTHONPATH": str(
-                                self.support_path(app)
-                                / "platform-site"
-                                / f"macosx.{other_arch}"
-                            )
-                        },
                     )
             else:
                 self.console.info("All packages are pure Python, or universal.")
@@ -185,6 +213,7 @@ in the macOS configuration section of your pyproject.toml.
                 app,
                 requires=requires,
                 app_packages_path=app_packages_path,
+                pip_args=["--only-binary", ":all:"],
             )
 
             # Since we're only targeting 1 architecture, we can strip any universal
