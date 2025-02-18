@@ -95,6 +95,26 @@ class macOSCreateMixin(AppPackagesMergeMixin):
             host_app_packages_path = (
                 self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
             )
+            # A standard install, except we explicitly reject installs from source
+            # tarballs with `--only-binary :all:`. This is for two reasons:
+            #
+            # 1. Consistency. We need to use `--only-binary :all:` when we do the second
+            #    "other arch" wheel install because of use of the `--platform` argument;
+            #    if we only reject source tarballs from one of the installs, then a
+            #    package that only provides binary wheels for one architecture would
+            #    cause inconsistent results depending on which platform was the host;
+            #    and
+            #
+            # 2. Security. Installs from source tarball involve executing arbitrary code
+            #    at time of installation; and it makes the entire development
+            #    environment building the app a vector for introducing vulnerabilities
+            #    into an app. Forcing the use of binary wheels ensures that we can know
+            #    with certainty the provenance of any binary content in the app.
+            #
+            # Since Briefcase is a tool designed to produce redistributable binaries,
+            # we've made the judgement call that the (minor, with known workarounds)
+            # inconvenience of not being able to use source tarballs is outweighed by
+            # the need to produce reliable, repeatable binary artefacts.
             super()._install_app_requirements(
                 app,
                 requires=requires,
