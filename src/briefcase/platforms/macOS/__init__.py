@@ -99,6 +99,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 app,
                 requires=requires,
                 app_packages_path=host_app_packages_path,
+                pip_args=["--only-binary", ":all:"],
             )
 
             # Find all the packages with binary components.
@@ -107,6 +108,18 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 host_app_packages_path,
                 universal_suffix="_universal2",
             )
+
+            # Determine the min macOS version from the VERSIONS file in the support package.
+            versions = dict(
+                [part.strip() for part in line.split(": ", 1)]
+                for line in (
+                    (self.support_path(app) / "VERSIONS")
+                    .read_text(encoding="UTF-8")
+                    .split("\n")
+                )
+                if ": " in line
+            )
+            macOS_min_tag = versions.get("Min macOS version", "11.0").replace(".", "_")
 
             # Now install dependencies for the architecture that isn't the host architecture.
             other_arch = {
@@ -131,6 +144,8 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                         app_packages_path=other_app_packages_path,
                         pip_args=[
                             "--no-deps",
+                            "--platform",
+                            f"macosx_{macOS_min_tag}_{other_arch}",
                             "--only-binary",
                             ":all:",
                         ]
@@ -147,13 +162,6 @@ you must compile those wheels yourself, or build a non-universal app by setting:
 
 in the macOS configuration section of your pyproject.toml.
 """,
-                        env={
-                            "PYTHONPATH": str(
-                                self.support_path(app)
-                                / "platform-site"
-                                / f"macosx.{other_arch}"
-                            )
-                        },
                     )
             else:
                 self.console.info("All packages are pure Python, or universal.")
@@ -185,6 +193,7 @@ in the macOS configuration section of your pyproject.toml.
                 app,
                 requires=requires,
                 app_packages_path=app_packages_path,
+                pip_args=["--only-binary", ":all:"],
             )
 
             # Since we're only targeting 1 architecture, we can strip any universal
