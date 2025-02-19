@@ -1,0 +1,1 @@
+The macOS and Windows platform documentation has been simplified to remove duplication of content between output formats.

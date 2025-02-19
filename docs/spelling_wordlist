@@ -34,8 +34,8 @@ flatpak
 Flatpak
 Flatpaks
 Freedesktop
-Github
 geolocation
+Github
 gradle
 Gradle
 gradlew
@@ -86,8 +86,11 @@ sandboxing
 Setuptools
 subdirectories
 subdirectory
+subfolders
 submodule
 subprocesses
+Tk
+Tkinter
 tl
 toml
 toolkits

@@ -12,122 +12,27 @@
 | |f|    | |f|   |     |        |       |     |        |     |       |
 +--------+-------+-----+--------+-------+-----+--------+-----+-------+
 
-A macOS ``.app`` bundle is a collection of directory with a specific layout,
-and with some key metadata. If this structure and metadata exists, macOS treats
-the folder as an executable file, giving it an icon.
+A macOS ``.app`` bundle is a directory with a specific layout, with some key metadata.
+If this structure and metadata exists, macOS treats the folder as an executable file,
+giving it an icon.
+
+An ``.app`` bundle is the default Briefcase output format when running on macOS.
+However, you can explicitly specify the use of the ``.app`` bundle backend by using
+``briefcase <command> macOS app``.
 
 ``.app`` bundles can be copied around as if they are a single file. They can
-also be compressed to reduce their size for transport.
+also be compressed to reduce their size for distribution.
 
-By default, apps will be both signed and notarized when they are packaged.
-
-Packaging format
-================
-
-Briefcase supports three packaging formats for a macOS app:
-
-1. A DMG that contains the ``.app`` bundle (using ``briefcase package macOS -p dmg``).
-2. A zipped ``.app`` folder (using ``briefcase package macOS -p zip``).
-3. A ``.pkg`` installer (using ``briefcase package macOS -p pkg``).
-
-``.pkg`` is the *required* format for console apps. ``.dmg`` is the
-default format for GUI apps.
-
-Icon format
-===========
-
-macOS ``.app`` bundles use ``.icns`` format icons.
-
-macOS ``.app`` bundles do not support splash screens or installer images.
-
-Additional options
-==================
-
-The following options can be provided at the command line when packaging
-macOS apps.
-
-.. include:: signing_options.rst
+All macOS apps, regardless of output format, use the same icon formats, have the same
+set of configuration and runtime options, have the same permissions, and have the same
+platform quirks. See :doc:`the documentation on macOS apps <./index>` for more
+details.
 
 Application configuration
 =========================
 
-The following options can be added to the ``tool.briefcase.app.<appname>.macOS.app``
-section of your ``pyproject.toml`` file.
-
-``entitlement``
-~~~~~~~~~~~~~~~
-
-A property whose sub-attributes define keys that will be added to the app's
-``Entitlements.plist`` file. Each entry will be converted into a key in the entitlements
-file. For example, specifying::
-
-    entitlement."com.apple.vm.networking" = true
-
-will result in an ``Entitlements.plist`` declaration of::
-
-    <key>com.apple.vm.networking</key><true/>
-
-Any Boolean, string, list, or dictionary value can be used as an entitlement value.
-
-All macOS apps are automatically granted the following entitlements by default:
-
-* ``com.apple.security.cs.allow-unsigned-executable-memory``
-* ``com.apple.security.cs.disable-library-validation``
-
-You can disable these default entitlements by defining them manually. For example, to
-enable library validation, you could add the following to your ``pyproject.toml``::
-
-    entitlement."com.apple.security.cs.disable-library-validation" = false
-
-``info``
-~~~~~~~~
-
-A property whose sub-attributes define keys that will be added to the app's
-``Info.plist`` file. Each entry will be converted into a key in the entitlements
-file. For example, specifying::
-
-    info."NSAppleScriptEnabled" = true
-
-will result in an ``Info.plist`` declaration of::
-
-    <key>NSAppleScriptEnabled</key><true/>
-
-Any Boolean or string value can be used for an ``Info.plist`` value.
-
-``universal_build``
-~~~~~~~~~~~~~~~~~~~
-
-A Boolean, indicating whether Briefcase should build a universal app (i.e, an app that
-can target both x86_64 and ARM64). Defaults to ``true``; if ``false``, the binary will
-only be executable on the host platform on which it was built - i.e., if you build on
-an x86_64 machine, you will produce an x86_65 binary; if you build on an ARM64 machine,
-you will produce an ARM64 binary.
-
-Permissions
-===========
-
-Briefcase cross platform permissions map to a combination of ``info`` and ``entitlement``
-keys:
-
-* ``microphone``: an ``entitlement`` of ``com.apple.security.device.audio-input``
-* ``camera``: an ``entitlement`` of ``com.apple.security.device.camera``
-* ``coarse_location``: an ``info`` entry for ``NSLocationUsageDescription``
-  (ignored if ``background_location`` or ``fine_location`` is defined); plus an
-  entitlement of ``com.apple.security.personal-information.location``
-* ``fine_location``: an ``info`` entry for ``NSLocationUsageDescription``(ignored
-  if ``background_location`` is defined); plus an ``entitlement`` of
-  ``com.apple.security.personal-information.location``
-* ``background_location``: an ``info`` entry for ``NSLocationUsageDescription``;
-  plus an ``entitlement`` of ``com.apple.security.personal-information.location``
-* ``photo_library``: an ``entitlement`` of ``com.apple.security.personal-information.photos-library``
-
-Platform quirks
-===============
-
-Packaging with ``--adhoc-sign``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Using the ``--adhoc-sign`` option on macOS produces an app that will be able
-to run on your own machine, but won't run on any other computer. In order to
-distribute your app to other users, you will need to sign the app with a full
-signing identity.
+Any configuration option specified in the ``tool.briefcase.app.<appname>.macOS`` section
+of your ``pyproject.toml`` file will be used by the macOS ``.app`` bundle. To specify a
+setting that will *only* be used by ``.app`` bundles and *not* other macOS output
+formats, put the setting in a ``tool.briefcase.app.<appname>.macOS.app`` section of your
+``pyproject.toml``.
