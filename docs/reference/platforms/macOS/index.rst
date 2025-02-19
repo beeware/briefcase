@@ -24,8 +24,7 @@ Briefcase supports two output formats for macOS apps:
 * An :doc:`./xcode` which can be used to build an app with a customized
   binary.
 
-The default output format for macOS is an :doc:`./app`. The :doc:`./xcode` format is
-used to generate the stub binary that is used in by :doc:`./app` format.
+The default output format for macOS is an :doc:`./app`.
 
 Both output formats support packaging as a macOS DMG, PKG or as a standalone signed app
 bundle. By default, apps will be both signed and notarized when they are packaged.
@@ -152,8 +151,10 @@ Permissions
 Briefcase cross platform permissions map to a combination of ``info`` and ``entitlement``
 keys:
 
-* ``microphone``: an ``entitlement`` of ``com.apple.security.device.audio-input``
-* ``camera``: an ``entitlement`` of ``com.apple.security.device.camera``
+* ``microphone``: an ``info`` entry for ``NSMicrophoneUsageDescription``; and an
+  ``entitlement`` of ``com.apple.security.device.audio-input``
+* ``camera``: an ``info`` entry for ``NSCameraUsageDescription``; and
+  an ``entitlement`` of ``com.apple.security.device.camera``
 * ``coarse_location``: an ``info`` entry for ``NSLocationUsageDescription``
   (ignored if ``background_location`` or ``fine_location`` is defined); plus an
   entitlement of ``com.apple.security.personal-information.location``
@@ -162,7 +163,8 @@ keys:
   ``com.apple.security.personal-information.location``
 * ``background_location``: an ``info`` entry for ``NSLocationUsageDescription``;
   plus an ``entitlement`` of ``com.apple.security.personal-information.location``
-* ``photo_library``: an ``entitlement`` of ``com.apple.security.personal-information.photos-library``
+* ``photo_library``: an ``info`` entry for ``NSPhotoLibraryUsageDescription``; plus an
+  ``entitlement`` of ``com.apple.security.personal-information.photos-library``
 
 Platform quirks
 ===============

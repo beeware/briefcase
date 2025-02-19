@@ -24,8 +24,7 @@ Briefcase supports two output formats for Windows apps:
 * A :doc:`./visualstudio` which can be used to build an app with a customized
   binary.
 
-The default output format for Windows is a :doc:`./app`. The :doc:`./visualstudio`
-format is used to generate the stub binary that is used in by :doc:`./app` format.
+The default output format for Windows is a :doc:`./app`.
 
 Configuration options between the :doc:`./app` and :doc:`./visualstudio` formats are
 identical.

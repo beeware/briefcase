@@ -17,11 +17,11 @@ contain the Python code for the app and the Python runtime libraries.
 
 A Windows App folder is the default Briefcase output format when running on Windows.
 However, you can explicitly specify the use of the Windows App folder backend by using
-``briefcase <command> windows app`` when invoking Briefcase.
+``briefcase <command> windows app``.
 
 All Windows apps, regardless of output format, use the same icon formats, have the same
 set of configuration and runtime options, have the same permissions, and have the same
-platform quirks. See :doc:`the documentation configuring Windows apps <./index>` for
+platform quirks. See :doc:`the documentation on Windows apps <./index>` for
 more details.
 
 Application configuration

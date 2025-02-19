@@ -17,17 +17,15 @@ be used to build an app bundle, with the ``briefcase build`` command or directly
 Xcode.
 
 You can specify the use of the macOS Xcode project backend by using ``briefcase <command>
-macOS Xcode`` when invoking Briefcase.
+macOS Xcode``.
 
 Most apps will have no need to use the Xcode format - the :doc:`./app` format provides
 everything that is required to run most macOS apps. The Xcode project format is useful
-if you need to customize the stub binary that is used to start your app. The Xcode
-project backend is used to generate the stub binary that is used by the :doc:`./app`
-format.
+if you need to customize the stub binary that is used to start your app.
 
 All macOS apps, regardless of output format, use the same icon formats, have the same
 set of configuration and runtime options, have the same permissions, and have the same
-platform quirks. See :doc:`the documentation configuring macOS apps <./index>` for more
+platform quirks. See :doc:`the documentation on macOS apps <./index>` for more
 details.
 
 Application configuration

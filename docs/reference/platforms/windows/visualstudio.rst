@@ -17,17 +17,16 @@ project can then be used to build the stub app binary with the ``briefcase
 build`` command, or directly from Visual Studio.
 
 You can specify the use of the Windows Visual Studio project backend by using
-``briefcase <command> windows visualstudio`` when invoking Briefcase.
+``briefcase <command> windows visualstudio``.
 
 Most apps will have no need to use the Visual Studio project format - the :doc:`./app`
 format provides everything that is required to run most Windows apps. The Visual Studio
 project format is useful if you need to customize the stub binary that is used to start
-your app. The Visual Studio project backend is used to generate the stub binary that is
-used by the :doc:`./app` format.
+your app.
 
 All Windows apps, regardless of output format, use the same icon formats, have the same
 set of configuration and runtime options, have the same permissions, and have the same
-platform quirks. See :doc:`the documentation configuring Windows apps <./index>` for more
+platform quirks. See :doc:`the documentation on Windows apps <./index>` for more
 details.
 
 Pre-requisites
