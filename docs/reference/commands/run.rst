@@ -34,6 +34,60 @@ corresponding to test suite completion. Briefcase has built-in support for
 other test frameworks can be added using the ``test_success_regex`` and
 ``test_failure_regex`` settings.
 
+Debug mode
+----------
+
+The debug mode can be used to (remote) debug an bundled app. The debugger to
+use can be configured via ``pyproject.toml`` an can then be activated through
+``run --debug``.
+
+This is incredible useful when developing an iOS or Android app that can't be
+debugged via ``briefcase dev``.
+
+To debug an bundled app you need a socket connection from your host system to
+the device running your bundled app. Depending on the debugger selected the
+bundled app is either a socket server or socket client.
+
+This feature needs to inject some code into your app to create the socket
+connection. So you have to add ``import __briefcase_startup__`` to your
+``__main__.py`` to get this running.
+TODO: Better use .pth Files for this, so no modification of the app is needed.
+      But using this currently creates an import error on android...
+
+Some debuggers (like ``debugpy``) also support the mapping of the source code
+from your bundled app to your local copy of the apps source code in the
+``build`` folder.
+
+The configuration is done via ``pyproject.toml``:
+
+- ``debugger``:
+   - ``pdb`` (default):
+        This is used for debugging via console.
+        Currently it only supports ``debgger_mode=server``.
+        It creates a socket server that streams all stdout/stderr/stdin to
+        the host PC. The host PC can connect to it via:
+            - ``telnet localhost 5678``
+            - ``nc -C localhost 5678``
+            - ``socat readline tcp:localhost:5678``.
+        The app will start after the connection is established.
+   - ``debugpy``:
+        This is used for debugging via VSCode:
+            - If ``debgger_mode=server``: The bundled app creates an socket server an VSCode can connect to it.
+            - If ``debgger_mode=client``: This is used for debugging via VSCode. VSCode has to create an socket server and the bundled app connects to VSCode.
+   - ``debugpy-client``:
+        This is used for debugging via VSCode. VSCode has to create an socket server and the bundled app connects to VSCode.
+- ``debugger_mode``:
+    - ``server`` (default):
+        The bundled app creates an socket server and the host system connects to it.
+    - ``client``:
+        The bundled app creates an socket client and the host system creates an socket server.
+    Note, that not all debuggers support all modes.
+- ``debugger_ip``:
+    Specifies the IP of the socket connection (defaults to ``localhost``)
+- ``debugger_port``:
+    Specifies the Port of the socket connection (defaults to ``5678``)
+
+
 Usage
 =====
 
@@ -136,6 +190,14 @@ contains the most recent test code. To prevent this update and build, use the
 
 Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
+
+``--debug``
+----------
+
+Run the app in debug mode in the bundled app environment. This option can be used
+standalone or in combination with the test mode ``run --test --debug``.
+
+On Android this also forwards the ``debugger_port`` from the android device to the host pc via adb.
 
 Passthrough arguments
 ---------------------

@@ -864,8 +864,8 @@ any compatibility problems, and then add the compatibility declaration.
                 help=f"Prevent any automated update{context_label}",
             )
 
-    def _add_test_options(self, parser, context_label):
-        """Internal utility method for adding common test-related options.
+    def _add_test_and_debug_options(self, parser, context_label):
+        """Internal utility method for adding common test- and debug-related options.
 
         :param parser: The parser to which options should be added.
         :param context_label: Label text for commands; the capitalized action being
@@ -876,6 +876,12 @@ any compatibility problems, and then add the compatibility declaration.
             dest="test_mode",
             action="store_true",
             help=f"{context_label} the app in test mode",
+        )
+        parser.add_argument(
+            "--debug",
+            dest="debug_mode",
+            action="store_true",
+            help=f"{context_label} the app in debug mode",
         )
 
     def add_options(self, parser):
