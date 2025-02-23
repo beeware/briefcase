@@ -12,7 +12,7 @@ class BuildCommand(BaseCommand):
 
     def add_options(self, parser):
         self._add_update_options(parser, context_label=" before building")
-        self._add_test_options(parser, context_label="Build")
+        self._add_test_and_debug_options(parser, context_label="Build")
 
     def build_app(self, app: AppConfig, **options):
         """Build an application.

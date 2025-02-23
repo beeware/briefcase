@@ -12,7 +12,7 @@ class UpdateCommand(CreateCommand):
 
     def add_options(self, parser):
         self._add_update_options(parser, update=False)
-        self._add_test_options(parser, context_label="Update")
+        self._add_test_and_debug_options(parser, context_label="Update")
 
     def update_app(
         self,
@@ -22,6 +22,7 @@ class UpdateCommand(CreateCommand):
         update_support: bool,
         update_stub: bool,
         test_mode: bool,
+        debug_mode: bool,
         **options,
     ) -> dict | None:
         """Update an existing application bundle.
@@ -32,6 +33,7 @@ class UpdateCommand(CreateCommand):
         :param update_support: Should app support be updated?
         :param update_stub: Should stub binary be updated?
         :param test_mode: Should the app be updated in test mode?
+        :param debug_mode: Should the app be updated in debug mode?
         """
 
         if not self.bundle_path(app).exists():
@@ -43,11 +45,13 @@ class UpdateCommand(CreateCommand):
         self.verify_app(app)
 
         self.console.info("Updating application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode)
+        self.install_app_code(app=app, test_mode=test_mode, debug_mode=debug_mode)
 
         if update_requirements:
             self.console.info("Updating requirements...", prefix=app.app_name)
-            self.install_app_requirements(app=app, test_mode=test_mode)
+            self.install_app_requirements(
+                app=app, test_mode=test_mode, debug_mode=debug_mode
+            )
 
         if update_resources:
             self.console.info("Updating application resources...", prefix=app.app_name)
@@ -84,6 +88,7 @@ class UpdateCommand(CreateCommand):
         update_support: bool = False,
         update_stub: bool = False,
         test_mode: bool = False,
+        debug_mode: bool = False,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
@@ -98,6 +103,7 @@ class UpdateCommand(CreateCommand):
                 update_support=update_support,
                 update_stub=update_stub,
                 test_mode=test_mode,
+                debug_mode=debug_mode,
                 **options,
             )
         else:
@@ -110,6 +116,7 @@ class UpdateCommand(CreateCommand):
                     update_support=update_support,
                     update_stub=update_stub,
                     test_mode=test_mode,
+                    debug_mode=debug_mode,
                     **full_options(state, options),
                 )
 
