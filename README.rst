@@ -1,4 +1,4 @@
-.. |logo| image:: https://beeware.org/project/projects/tools/briefcase/briefcase.png
+.. |logo| image:: https://beeware.org/project/briefcase/briefcase.png
    :width: 72px
    :target: https://beeware.org/briefcase
 
@@ -55,6 +55,23 @@ To install Briefcase, run::
 If you would like a full introduction to using Briefcase, try the `BeeWare tutorial
 <https://docs.beeware.org>`__. This tutorial walks you through the process of creating
 and packaging a new application with Briefcase.
+
+Financial support
+-----------------
+
+The BeeWare project would not be possible without the generous support of our financial
+members:
+
+.. image:: https://beeware.org/community/members/anaconda/anaconda-large.png
+    :target: https://anaconda.com/
+    :alt: Anaconda logo
+
+Anaconda is the world's most trusted open ecosystem for sourcing, building, and
+deploying data science and AI initiatives.
+
+Plus individual contributions from `users like you
+<https://beeware.org/community/members/>`__. If you find Briefcase, or other BeeWare
+tools useful, please consider becoming a financial member.
 
 Documentation
 -------------
