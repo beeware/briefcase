@@ -130,6 +130,8 @@ linkcheck_ignore = [
     r"^https://github.com/beeware/briefcase/pull/\d+$",
     # Ignore WiX URLs, because they client block RTD's build.
     r"^https://www.firegiant.com/wixtoolset/$",
+    # PyGame seems to be having a long-term outage of their homepage.
+    r"^https://www.pygame.org/news$",
 ]
 
 # -- Options for copy button ---------------------------------------------------
