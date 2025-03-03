@@ -218,7 +218,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         )
 
         self._add_update_options(parser, context_label=" before running")
-        self._add_test_options(parser, context_label="Run")
+        self._add_test_and_debug_options(parser, context_label="Run")
 
     def _prepare_app_kwargs(self, app: AppConfig, test_mode: bool):
         """Prepare the kwargs for running an app as a log stream.

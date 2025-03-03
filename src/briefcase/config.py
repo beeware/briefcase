@@ -263,6 +263,10 @@ class AppConfig(BaseConfig):
         template_branch=None,
         test_sources=None,
         test_requires=None,
+        debugger=None,
+        debugger_mode=None,
+        debugger_ip=None,
+        debugger_port=None,
         supported=True,
         long_description=None,
         console_app=False,
@@ -292,6 +296,10 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.test_sources = test_sources
         self.test_requires = test_requires
+        self.debugger = debugger
+        self.debugger_mode = debugger_mode
+        self.debugger_ip = debugger_ip
+        self.debugger_port = debugger_port
         self.supported = supported
         self.long_description = long_description
         self.license = license

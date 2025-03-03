@@ -124,6 +124,32 @@ class WindowsCreateCommand(CreateCommand):
 """
         )
 
+    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]):
+        """Path mappings for enhanced debugger support
+
+        :param app: The config object for the app
+        :param app_sources: All source files of the app
+        :return: A list of code snippets that add a path mapping to the
+            'path_mappings' variable.
+        """
+        # Normally app & requirements are automatically found, because
+        # developing an windows app also requires a windows host. But the app
+        # path is pointing to a copy of the source in some temporary folder,
+        # so we redirect it to the original source.
+
+        path_mappings = """
+device_app_folder = list(filter(lambda p: True if p.endswith("app") else False, sys.path))
+if len(device_app_folder) > 0:
+    pass
+"""
+        for src in app_sources:
+            original = self.base_path / src
+            path_mappings += f"""
+    path_mappings.append((r"{original.absolute()}", str(Path(device_app_folder[0]) / "{original.name}")))
+"""
+
+        return path_mappings
+
 
 class WindowsRunCommand(RunCommand):
     def run_app(

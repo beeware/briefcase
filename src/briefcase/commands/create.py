@@ -12,6 +12,7 @@ from pathlib import Path
 
 import briefcase
 from briefcase.config import AppConfig
+from briefcase.debugger import DebuggerConfig, write_debugger_startup_file
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidStubBinary,
@@ -655,7 +656,9 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info("No application requirements.")
 
-    def install_app_requirements(self, app: AppConfig, test_mode: bool):
+    def install_app_requirements(
+        self, app: AppConfig, test_mode: bool, debug_mode: bool
+    ):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -675,6 +678,10 @@ class CreateCommand(BaseCommand):
         requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
+
+        if debug_mode:
+            debugger_config = DebuggerConfig.from_app(app)
+            requires.extend(debugger_config.additional_requirements)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -702,11 +709,12 @@ class CreateCommand(BaseCommand):
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(self, app: AppConfig, test_mode: bool):
+    def install_app_code(self, app: AppConfig, test_mode: bool, debug_mode: bool):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the application test code also be installed?
+        :param debug_mode: Should the application debug code also be installed?
         """
         # Remove existing app folder if it exists
         app_path = self.app_path(app)
@@ -735,12 +743,39 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info(f"No sources defined for {app.app_name}.")
 
+        if debug_mode:
+            with self.console.wait_bar("Writing debugger startup files..."):
+                # TODO: How to get the "pth_folder_path"?
+                # - On windows "app_path.parent" is working
+                # - On android "app_path" is working, but then when running "__briefcase_startup__.py" via .pth file
+                #   importing socket raises an error...
+                #
+                # As long as it is not clear for all platforms we have to call "import __briefcase_startup__" manually
+                # in "main.py"
+
+                write_debugger_startup_file(
+                    app_path=app_path,
+                    pth_folder_path=None,  # TODO: see above
+                    app=app,
+                    path_mappings=self.debugger_path_mappings(app, sources),
+                )
+
         # Write the dist-info folder for the application.
         write_dist_info(
             app=app,
             dist_info_path=self.app_path(app)
             / f"{app.module_name}-{app.version}.dist-info",
         )
+
+    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]) -> str:
+        """Path mappings for enhanced debugger support
+
+        :param app: The config object for the app
+        :param app_sources: All source files of the app
+        :return: A code snippet, that adds all path mappings to the
+            'path_mappings' variable.
+        """
+        return ""
 
     def install_image(self, role, variant, size, source, target):
         """Install an icon/image of the requested size at a target location, using the
@@ -897,7 +932,13 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
+    def create_app(
+        self,
+        app: AppConfig,
+        test_mode: bool = False,
+        debug_mode: bool = False,
+        **options,
+    ):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -942,10 +983,12 @@ class CreateCommand(BaseCommand):
         self.verify_app(app)
 
         self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode)
+        self.install_app_code(app=app, test_mode=test_mode, debug_mode=debug_mode)
 
         self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app, test_mode=test_mode)
+        self.install_app_requirements(
+            app=app, test_mode=test_mode, debug_mode=debug_mode
+        )
 
         self.console.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

@@ -17,8 +17,9 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
+from briefcase.debugger import DebuggerConfig, DebuggerMode
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 
@@ -282,6 +283,36 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "features": features,
         }
 
+    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]):
+        """Path mappings for enhanced debugger support
+
+        :param app: The config object for the app
+        :param app_sources: All source files of the app
+        :return: A list of code snippets that add a path mapping to the
+            'path_mappings' variable.
+        """
+        path_mappings = """
+device_app_folder = list(filter(lambda p: True if "AssetFinder/app" in p else False, sys.path))
+if len(device_app_folder) > 0:
+    pass
+"""
+        for src in app_sources:
+            original = self.base_path / src
+            path_mappings += f"""
+    path_mappings.append((r"{original.absolute()}", str(Path(device_app_folder[0]) / "{original.name}")))
+"""
+
+        host_requirements_folder = (
+            self.bundle_path(app) / "app/build/python/pip/debug/common"
+        )
+        path_mappings += f"""
+device_requirements_folder = list(filter(lambda p: True if "AssetFinder/requirements" in p else False, sys.path))
+if len(device_requirements_folder) > 0:
+    path_mappings.append((r"{host_requirements_folder.absolute()}", device_requirements_folder[0]))
+"""
+
+        return path_mappings
+
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
@@ -364,6 +395,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -374,6 +406,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -427,6 +460,10 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
+            if debug_mode:
+                with self.console.wait_bar("Establishing debugger connection..."):
+                    self.establish_debugger_connection(app, adb)
+
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):
                 # capture the earliest time for device logging in case PID not found
@@ -476,6 +513,18 @@ class GradleRunCommand(GradleMixin, RunCommand):
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
+
+    def establish_debugger_connection(self, app: AppConfig, adb: ADB):
+        """Forward/Reverse the ports necessary for remote debugging.
+
+        :param app: The config object for the app
+        :param adb: Access to the adb
+        """
+        debugger_cfg = DebuggerConfig.from_app(app)
+        if debugger_cfg.debugger_mode == DebuggerMode.SERVER:
+            adb.forward(debugger_cfg.port, debugger_cfg.port)
+        elif debugger_cfg.port == DebuggerMode.CLIENT:
+            adb.reverse(debugger_cfg.port, debugger_cfg.port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
