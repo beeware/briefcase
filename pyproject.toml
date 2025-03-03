@@ -98,7 +98,7 @@ dev = [
     "coverage[toml] == 7.6.12",
     "coverage-conditional-plugin == 0.9.0",
     "pre-commit == 4.1.0",
-    "pytest == 8.3.4",
+    "pytest == 8.3.5",
     "pytest-xdist == 3.6.1",
     "setuptools_scm == 8.2.0",
     "tox == 4.24.1",
