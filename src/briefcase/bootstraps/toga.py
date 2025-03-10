@@ -60,18 +60,15 @@ requires = [
         return """\
 requires = [
     "toga-gtk~=0.4.7",
-]
-"""
-
-    def pyproject_table_linux_system_debian(self):
-        return """\
-requires = [
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
     # isn't available on Debian 12/Ubuntu 22.04. If you need to support those (or older)
     # releases, uncomment this version pin. See beeware/toga#3143.
     # "pygobject < 3.52.1",
 ]
+"""
 
+    def pyproject_table_linux_system_debian(self):
+        return """\
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
