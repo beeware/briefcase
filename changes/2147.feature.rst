@@ -1,0 +1,1 @@
+Added debugging support in bundled app through ``run --remote-debugger``.

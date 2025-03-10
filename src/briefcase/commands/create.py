@@ -13,7 +13,7 @@ from pathlib import Path
 
 import briefcase
 from briefcase.config import AppConfig
-from briefcase.debugger import DebuggerConfig, write_debugger_startup_file
+from briefcase.debuggers import BaseDebugger
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidStubBinary,
@@ -668,7 +668,7 @@ class CreateCommand(BaseCommand):
             self.console.info("No application requirements.")
 
     def install_app_requirements(
-        self, app: AppConfig, test_mode: bool, debug_mode: bool
+        self, app: AppConfig, test_mode: bool, debugger: BaseDebugger | None
     ):
         """Handle requirements for the app.
 
@@ -680,19 +680,22 @@ class CreateCommand(BaseCommand):
 
         If ``test_mode`` is True, the test requirements will also be installed.
 
+        If ``debugger`` is provided, the debugger's additional requirements will also
+        be installed.
+
         If the path index doesn't specify either of the path index entries,
         an error is raised.
 
         :param app: The config object for the app
         :param test_mode: Should the test requirements be installed?
+        :param debugger: Debugger to be used or None if no debugger should be used.
         """
         requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
-        if debug_mode:
-            debugger_config = DebuggerConfig.from_app(app)
-            requires.extend(debugger_config.additional_requirements)
+        if debugger:
+            requires.extend(debugger.additional_requirements)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -720,12 +723,14 @@ class CreateCommand(BaseCommand):
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(self, app: AppConfig, test_mode: bool, debug_mode: bool):
+    def install_app_code(
+        self, app: AppConfig, test_mode: bool, debugger: BaseDebugger | None
+    ):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the application test code also be installed?
-        :param debug_mode: Should the application debug code also be installed?
+        :param debugger: Debugger to be used or None if no debugger should be used.
         """
         # Remove existing app folder if it exists
         app_path = self.app_path(app)
@@ -754,7 +759,7 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info(f"No sources defined for {app.app_name}.")
 
-        if debug_mode:
+        if debugger:
             with self.console.wait_bar("Writing debugger startup files..."):
                 # TODO: How to get the "pth_folder_path"?
                 # - On windows "app_path.parent" is working
@@ -763,11 +768,9 @@ class CreateCommand(BaseCommand):
                 #
                 # As long as it is not clear for all platforms we have to call "import __briefcase_startup__" manually
                 # in "main.py"
-
-                write_debugger_startup_file(
+                debugger.write_startup_file(
                     app_path=app_path,
                     pth_folder_path=None,  # TODO: see above
-                    app=app,
                     path_mappings=self.debugger_path_mappings(app, sources),
                 )
 
@@ -947,13 +950,14 @@ class CreateCommand(BaseCommand):
         self,
         app: AppConfig,
         test_mode: bool = False,
-        debug_mode: bool = False,
+        remote_debugger: str | None = None,
         **options,
     ):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
+        :param remote_debugger: Remote debugger that should be used. (default: None)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -992,14 +996,14 @@ class CreateCommand(BaseCommand):
         # Verify the app after the app template and support package
         # are in place since the app tools may be dependent on them.
         self.verify_app(app)
+        self.console.print(f"{remote_debugger=}")
+        debugger = self.create_debugger(remote_debugger) if remote_debugger else None
 
         self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode, debug_mode=debug_mode)
+        self.install_app_code(app=app, test_mode=test_mode, debugger=debugger)
 
         self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(
-            app=app, test_mode=test_mode, debug_mode=debug_mode
-        )
+        self.install_app_requirements(app=app, test_mode=test_mode, debugger=debugger)
 
         self.console.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

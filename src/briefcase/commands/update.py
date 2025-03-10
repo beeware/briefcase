@@ -33,7 +33,7 @@ class UpdateCommand(CreateCommand):
         update_support: bool,
         update_stub: bool,
         test_mode: bool,
-        debug_mode: bool,
+        remote_debugger: str | None,
         **options,
     ) -> dict | None:
         """Update an existing application bundle.
@@ -44,7 +44,7 @@ class UpdateCommand(CreateCommand):
         :param update_support: Should app support be updated?
         :param update_stub: Should stub binary be updated?
         :param test_mode: Should the app be updated in test mode?
-        :param debug_mode: Should the app be updated in debug mode?
+        :param remote_debugger: Remote debugger that should be used.
         """
 
         if not self.bundle_path(app).exists():
@@ -54,14 +54,20 @@ class UpdateCommand(CreateCommand):
             return
 
         self.verify_app(app)
+        self.console.print(f"{remote_debugger=}")
+        debugger = (
+            self.create_debugger(remote_debugger)
+            if remote_debugger is not None
+            else None
+        )
 
         self.console.info("Updating application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode, debug_mode=debug_mode)
+        self.install_app_code(app=app, test_mode=test_mode, debugger=debugger)
 
         if update_requirements:
             self.console.info("Updating requirements...", prefix=app.app_name)
             self.install_app_requirements(
-                app=app, test_mode=test_mode, debug_mode=debug_mode
+                app=app, test_mode=test_mode, debugger=debugger
             )
 
         if update_resources:
@@ -100,7 +106,7 @@ class UpdateCommand(CreateCommand):
         update_support: bool = False,
         update_stub: bool = False,
         test_mode: bool = False,
-        debug_mode: bool = False,
+        remote_debugger: str | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,

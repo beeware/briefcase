@@ -17,7 +17,7 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
-from briefcase.debugger import DebuggerConfig, DebuggerMode
+from briefcase.debuggers.base import BaseDebugger, DebuggerMode
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
@@ -395,7 +395,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        debug_mode: bool,
+        remote_debugger: str | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -406,7 +406,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
-        :param debug_mode: Boolean; Is the app running in debug mode?
+        :param remote_debugger: Remote debugger that should be used.
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -437,6 +437,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 avd, extra_emulator_args
             )
 
+        debugger = self.create_debugger(remote_debugger)
+
         try:
             label = "test suite" if test_mode else "app"
 
@@ -460,9 +462,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
-            if debug_mode:
+            if debugger:
                 with self.console.wait_bar("Establishing debugger connection..."):
-                    self.establish_debugger_connection(app, adb)
+                    self.establish_debugger_connection(adb, debugger)
 
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):
@@ -514,17 +516,16 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
 
-    def establish_debugger_connection(self, app: AppConfig, adb: ADB):
+    def establish_debugger_connection(self, adb: ADB, debugger: BaseDebugger):
         """Forward/Reverse the ports necessary for remote debugging.
 
         :param app: The config object for the app
         :param adb: Access to the adb
         """
-        debugger_cfg = DebuggerConfig.from_app(app)
-        if debugger_cfg.debugger_mode == DebuggerMode.SERVER:
-            adb.forward(debugger_cfg.port, debugger_cfg.port)
-        elif debugger_cfg.port == DebuggerMode.CLIENT:
-            adb.reverse(debugger_cfg.port, debugger_cfg.port)
+        if debugger.mode == DebuggerMode.SERVER:
+            adb.forward(debugger.port, debugger.port)
+        elif debugger.port == DebuggerMode.CLIENT:
+            adb.reverse(debugger.port, debugger.port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
