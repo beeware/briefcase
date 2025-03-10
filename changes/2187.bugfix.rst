@@ -1,1 +1,1 @@
-New Toga projects now enforce an upper version bound of ``pygobject < 3.52.1``. PyGObject 3.52.1 introduced a system requirement of ``libgirepository-2.0-dev``; that library isn't available on Debian 12 or Ubuntu 22.04 LTS. If you have a project that isn't targeting those platforms, you can likely remove this pin.
+New Toga projects on Debian-derived distributions now include ``libgirepository-2.0`` and ``libgirepository-2.0-dev`` as a system requirement. This is needed for support for PyGobject 3.52.1 and later.
