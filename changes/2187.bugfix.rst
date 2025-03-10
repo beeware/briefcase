@@ -1,1 +1,1 @@
-New Toga projects on Debian-derived distributions now include ``libgirepository-2.0`` and ``libgirepository-2.0-dev`` as a system requirement. This is needed for support for PyGobject 3.52.1 and later.
+New Toga projects on Debian-derived distributions now include ``libgirepository-2.0-0`` and ``libgirepository-2.0-dev`` as a system requirement. This is needed for support for PyGObject 3.52.1 and later.

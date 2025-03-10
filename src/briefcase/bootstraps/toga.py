@@ -67,7 +67,7 @@ requires = [
         return """\
 requires = [
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
-    # isn't available on Debian 13/Ubuntu 22.04. If you need to support those (or older)
+    # isn't available on Debian 12/Ubuntu 22.04. If you need to support those (or older)
     # releases, uncomment this version pin. See beeware/toga#3143.
     # "pygobject < 3.52.1",
 ]
@@ -76,7 +76,7 @@ system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
     # One of the following two packages are needed to compile PyGObject wheel.
-    # Debian 13/Ubuntu 22.04 only has the older 1.0 version of the library.
+    # Debian 12/Ubuntu 22.04 only has the older 1.0 version of the library.
     # If you use the older version, you'll also need to apply the pygobject pin
     # (see the linux requires table). See beeware/toga#3143.
     "libgirepository-2.0-dev",
@@ -87,7 +87,7 @@ system_runtime_requires = [
     # Needed to provide GTK and its GI bindings
     "gir1.2-gtk-3.0",
     # One of the following two packages are needed to use PyGObject at runtime.
-    # Debian 13/Ubuntu 22.04 only has the older 1.0 version of the library.
+    # Debian 12/Ubuntu 22.04 only has the older 1.0 version of the library.
     # If you use the older version, you'll also need to apply the pygobject pin
     # (see the linux requires table). See beeware/toga#3143.
     "libgirepository-2.0-0",
