@@ -87,32 +87,30 @@ requires = [
 requires = [
     "toga-gtk~=0.4.7",
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
-    # isn't available on Debian 12/Ubuntu 22.04. If you need to support those (or older)
-    # releases, uncomment this version pin. See beeware/toga#3143.
-    # "pygobject < 3.52.1",
+    # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
+    # older) releases, you can remove this version pin. See beeware/toga#3143.
+    "pygobject < 3.52.1",
 ]
 """,
         pyproject_table_linux_system_debian="""\
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
-    # One of the following two packages are needed to compile PyGObject wheel.
-    # Debian 12/Ubuntu 22.04 only has the older 1.0 version of the library.
-    # If you use the older version, you'll also need to apply the pygobject pin
-    # (see the linux requires table). See beeware/toga#3143.
-    "libgirepository-2.0-dev",
-    # "libgirepository1.0-dev",
+    # One of the following two packages are needed to compile PyGObject wheel. If you
+    # remove the pygobject pin in the requires list, you should also change to the
+    # version 2.0 of the girepository library. See beeware/toga#3143.
+    "libgirepository1.0-dev",
+    # "libgirepository-2.0-dev",
 ]
 
 system_runtime_requires = [
     # Needed to provide GTK and its GI bindings
     "gir1.2-gtk-3.0",
-    # One of the following two packages are needed to use PyGObject at runtime.
-    # Debian 12/Ubuntu 22.04 only has the older 1.0 version of the library.
-    # If you use the older version, you'll also need to apply the pygobject pin
-    # (see the linux requires table). See beeware/toga#3143.
-    "libgirepository-2.0-0",
-    # "libgirepository-1.0-1",
+    # One of the following two packages are needed to use PyGObject at runtime. If you
+    # remove the pygobject pin in the requires list, you should also change to the
+    # version 2.0 of the girepository library. See beeware/toga#3143.
+    "libgirepository-1.0-1",
+    # "libgirepository-2.0-0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-module",
     # Needed to provide WebKit2 at runtime
