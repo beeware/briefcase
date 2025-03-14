@@ -79,13 +79,13 @@ test_requires = [
         pyproject_table_macOS="""\
 universal_build = true
 requires = [
-    "toga-cocoa~=0.4.7",
+    "toga-cocoa~=0.5.0",
     "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_linux="""\
 requires = [
-    "toga-gtk~=0.4.7",
+    "toga-gtk~=0.5.0",
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
     # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
     # older) releases, you can remove this version pin. See beeware/toga#3143.
@@ -211,18 +211,18 @@ flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""\
 requires = [
-    "toga-winforms~=0.4.7",
+    "toga-winforms~=0.5.0",
 ]
 """,
         pyproject_table_iOS="""\
 requires = [
-    "toga-iOS~=0.4.7",
+    "toga-iOS~=0.5.0",
     "std-nslog~=1.0.3",
 ]
 """,
         pyproject_table_android="""\
 requires = [
-    "toga-android~=0.4.7",
+    "toga-android~=0.5.0",
 ]
 
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
@@ -237,7 +237,7 @@ build_gradle_dependencies = [
 """,
         pyproject_table_web="""\
 requires = [
-    "toga-web~=0.4.7",
+    "toga-web~=0.5.0",
 ]
 style_framework = "Shoelace v2.3"
 """,

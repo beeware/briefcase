@@ -1,0 +1,1 @@
+The Toga app bootstrap now generates apps that use Toga 0.5.
