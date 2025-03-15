@@ -762,15 +762,30 @@ class CreateCommand(BaseCommand):
         if debugger:
             with self.console.wait_bar("Writing debugger startup files..."):
                 # TODO: How to get the "pth_folder_path"?
-                # - On windows "app_path.parent" is working
-                # - On android "app_path" is working, but then when running "__briefcase_startup__.py" via .pth file
-                #   importing socket raises an error...
-                #
-                # As long as it is not clear for all platforms we have to call "import __briefcase_startup__" manually
+                # As long as it is not clear for all platforms we have to call "import _briefcase" manually
                 # in "main.py"
+                # This should be placed somewhere else, when it is clear for all platforms.
+                if self.platform == "windows":
+                    # this is working
+                    pth_folder_path = app_path.parent
+                elif self.platform == "android":
+                    # this is working, but when running "_briefcase.py" via .pth file importing socket raises
+                    # an error...
+                    pth_folder_path = app_path
+                elif self.platform == "macos":
+                    pth_folder_path = None  # TODO: find it out...
+                elif self.platform == "ios":
+                    pth_folder_path = None  # TODO: find it out...
+                elif self.platform == "linux":
+                    pth_folder_path = None  # TODO: find it out...
+                elif self.platform == "web":
+                    pth_folder_path = None  # TODO: find it out...
+                else:
+                    pth_folder_path = None
+
                 debugger.write_startup_file(
                     app_path=app_path,
-                    pth_folder_path=None,  # TODO: see above
+                    pth_folder_path=pth_folder_path,
                     path_mappings=self.debugger_path_mappings(app, sources),
                 )
 
@@ -997,7 +1012,8 @@ class CreateCommand(BaseCommand):
         # are in place since the app tools may be dependent on them.
         self.verify_app(app)
         self.console.print(f"{remote_debugger=}")
-        debugger = self.create_debugger(remote_debugger) if remote_debugger else None
+
+        debugger = self.create_debugger(remote_debugger)
 
         self.console.info("Installing application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode, debugger=debugger)

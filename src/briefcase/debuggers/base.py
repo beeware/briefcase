@@ -10,7 +10,7 @@ from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
 
-class DebuggerMode(enum.StrEnum):
+class DebuggerMode(str, enum.Enum):
     SERVER = "server"
     CLIENT = "client"
 

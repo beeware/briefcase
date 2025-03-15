@@ -55,11 +55,7 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app(app)
         self.console.print(f"{remote_debugger=}")
-        debugger = (
-            self.create_debugger(remote_debugger)
-            if remote_debugger is not None
-            else None
-        )
+        debugger = self.create_debugger(remote_debugger)
 
         self.console.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app, test_mode=test_mode, debugger=debugger)
