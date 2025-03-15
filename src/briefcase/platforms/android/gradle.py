@@ -17,8 +17,9 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
+from briefcase.debuggers.base import BaseDebugger, DebuggerMode
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 
@@ -282,6 +283,36 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "features": features,
         }
 
+    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]):
+        """Path mappings for enhanced debugger support
+
+        :param app: The config object for the app
+        :param app_sources: All source files of the app
+        :return: A list of code snippets that add a path mapping to the
+            'path_mappings' variable.
+        """
+        path_mappings = """
+device_app_folder = list(filter(lambda p: True if "AssetFinder/app" in p else False, sys.path))
+if len(device_app_folder) > 0:
+    pass
+"""
+        for src in app_sources:
+            original = self.base_path / src
+            path_mappings += f"""
+    path_mappings.append((r"{original.absolute()}", str(Path(device_app_folder[0]) / "{original.name}")))
+"""
+
+        host_requirements_folder = (
+            self.bundle_path(app) / "app/build/python/pip/debug/common"
+        )
+        path_mappings += f"""
+device_requirements_folder = list(filter(lambda p: True if "AssetFinder/requirements" in p else False, sys.path))
+if len(device_requirements_folder) > 0:
+    path_mappings.append((r"{host_requirements_folder.absolute()}", device_requirements_folder[0]))
+"""
+
+        return path_mappings
+
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
@@ -364,6 +395,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        remote_debugger: str | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -374,6 +406,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param remote_debugger: Remote debugger that should be used.
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -404,6 +437,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 avd, extra_emulator_args
             )
 
+        debugger = self.create_debugger(remote_debugger)
+
         try:
             label = "test suite" if test_mode else "app"
 
@@ -426,6 +461,10 @@ class GradleRunCommand(GradleMixin, RunCommand):
             # Install the latest APK file onto the device.
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
+
+            if debugger:
+                with self.console.wait_bar("Establishing debugger connection..."):
+                    self.establish_debugger_connection(adb, debugger)
 
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):
@@ -476,6 +515,17 @@ class GradleRunCommand(GradleMixin, RunCommand):
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
+
+    def establish_debugger_connection(self, adb: ADB, debugger: BaseDebugger):
+        """Forward/Reverse the ports necessary for remote debugging.
+
+        :param app: The config object for the app
+        :param adb: Access to the adb
+        """
+        if debugger.mode == DebuggerMode.SERVER:
+            adb.forward(debugger.port, debugger.port)
+        elif debugger.port == DebuggerMode.CLIENT:
+            adb.reverse(debugger.port, debugger.port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

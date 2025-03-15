@@ -20,6 +20,12 @@ from packaging.specifiers import InvalidSpecifier, Specifier
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
+from briefcase.debuggers import DEFAULT_DEBUGGER, get_debuggers
+from briefcase.debuggers.base import (
+    BaseDebugger,
+    remote_debugger_config_from_string,
+)
+
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
@@ -690,6 +696,20 @@ any compatibility problems, and then add the compatibility declaration.
                 version_specifier=requires_python, running_version=running_version
             )
 
+    def create_debugger(self, remote_debugger: str | None) -> BaseDebugger | None:
+        """Select and instantiate a debugger for the new project.
+
+        :returns: An instance of the debugger that the user has selected.
+        """
+        if remote_debugger is None:
+            return None
+
+        debugger, config = remote_debugger_config_from_string(remote_debugger)
+
+        debuggers = get_debuggers()
+        debugger_class = debuggers[debugger] if debugger else DEFAULT_DEBUGGER
+        return debugger_class(console=self.console, config=config)
+
     def parse_options(self, extra):
         """Parse the command line arguments for the Command.
 
@@ -864,8 +884,8 @@ any compatibility problems, and then add the compatibility declaration.
                 help=f"Prevent any automated update{context_label}",
             )
 
-    def _add_test_options(self, parser, context_label):
-        """Internal utility method for adding common test-related options.
+    def _add_test_and_debug_options(self, parser, context_label):
+        """Internal utility method for adding common test- and debug-related options.
 
         :param parser: The parser to which options should be added.
         :param context_label: Label text for commands; the capitalized action being
@@ -876,6 +896,15 @@ any compatibility problems, and then add the compatibility declaration.
             dest="test_mode",
             action="store_true",
             help=f"{context_label} the app in test mode",
+        )
+        parser.add_argument(
+            "--remote-debugger",
+            dest="remote_debugger",
+            nargs="?",
+            default=None,
+            const="",
+            metavar="REMOTE-DEBUGGER-CONFIG",
+            help=f"{context_label} the app with remote debugger enabled",
         )
 
     def add_options(self, parser):

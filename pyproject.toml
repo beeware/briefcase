@@ -132,6 +132,10 @@ Console = "briefcase.bootstraps.console:ConsoleBootstrap"
 PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
 Pygame = "briefcase.bootstraps.pygame:PygameGuiBootstrap"
 
+[project.entry-points."briefcase.debuggers"]
+pdb = "briefcase.debuggers.pdb:PdbDebugger"
+debugpy = "briefcase.debuggers.debugpy:DebugpyDebugger"
+
 [project.entry-points."briefcase.platforms"]
 android = "briefcase.platforms.android"
 iOS = "briefcase.platforms.iOS"

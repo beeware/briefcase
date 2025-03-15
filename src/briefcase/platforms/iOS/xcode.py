@@ -382,6 +382,37 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             },
         )
 
+    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]):
+        """Path mappings for enhanced debugger support
+
+        :param app: The config object for the app
+        :param app_sources: All source files of the app
+        :return: A list of code snippets that add a path mapping to the
+            'path_mappings' variable.
+        """
+        path_mappings = """
+device_app_folder = list(filter(lambda p: True if p.endswith("app") else False, sys.path))
+if len(device_app_folder) > 0:
+    pass
+"""
+        for src in app_sources:
+            original = self.base_path / src
+            path_mappings += f"""
+    path_mappings.append((r"{original.absolute()}", str(Path(device_app_folder[0]) / "{original.name}")))
+"""
+
+        host_requirements_folder = self.app_packages_path(app)
+        path_mappings += f"""
+import platform
+host_requirements_folder = "{host_requirements_folder.absolute()}"
+host_requirements_folder += ".iphonesimulator" if platform.ios_ver().is_simulator else ".iphoneos"
+device_requirements_folder = list(filter(lambda p: True if p.endswith("app_packages") else False, sys.path))
+if len(device_requirements_folder) > 0:
+    path_mappings.append((host_requirements_folder, device_requirements_folder[0]))
+"""
+
+        return path_mappings
+
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing iOS Xcode project."

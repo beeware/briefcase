@@ -1628,6 +1628,84 @@ Activity class not found while starting app.
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting ADB logcat.") from e
 
+    def forward(self, host_port: int, device_port: int):
+        """Use the forward command to set up arbitrary port forwarding, which
+        forwards requests on a specific host port to a different port on a device.
+
+        :param host_port: The port on the host that should be forwarded to the device
+        :param device_port: The port on the device
+        """
+        try:
+            # TODO: This prints the port to the terminal. How to remove the output?
+
+            # If the port we are forwarding to the device is also reversed to the host,
+            # it has happened that adb hangs. So we remove the reversed port first.
+            self.tools.subprocess.run(
+                [
+                    self.tools.android_sdk.adb_path,
+                    "-s",
+                    self.device,
+                    "reverse",
+                    "--remove",
+                    f"tcp:{host_port}",
+                ],
+                env=self.tools.android_sdk.env,
+                check=False,  # if the port is not in use an error is returned, but we dont care
+            )
+            self.tools.subprocess.run(
+                [
+                    self.tools.android_sdk.adb_path,
+                    "-s",
+                    self.device,
+                    "forward",
+                    f"tcp:{host_port}",
+                    f"tcp:{device_port}",
+                ],
+                env=self.tools.android_sdk.env,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError("Error starting ADB forward.") from e
+
+    def reverse(self, device_port: int, host_port: int):
+        """Use the reverse command to set up arbitrary port forwarding, which
+        forwards requests on a specific device port to a different port on the host.
+
+        :param device_port: The port on the device that should be forwarded to the host
+        :param host_port: The port on the host
+        """
+        try:
+            # TODO: This prints the port to the terminal. How to remove the output?
+
+            # If the port we are reversing to the host is also forwarded to the device,
+            # it has happened that adb hangs. So we remove the forwarded port first.
+            self.tools.subprocess.run(
+                [
+                    self.tools.android_sdk.adb_path,
+                    "-s",
+                    self.device,
+                    "forward",
+                    "--remove",
+                    f"tcp:{host_port}",
+                ],
+                env=self.tools.android_sdk.env,
+                check=False,  # if the port is not in use an error is returned, but we dont care
+            )
+            self.tools.subprocess.run(
+                [
+                    self.tools.android_sdk.adb_path,
+                    "-s",
+                    self.device,
+                    "reverse",
+                    f"tcp:{device_port}",
+                    f"tcp:{host_port}",
+                ],
+                env=self.tools.android_sdk.env,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError("Error starting ADB reverse.") from e
+
     def pidof(self, package: str, **kwargs) -> str | None:
         """Obtain the PID of a running app by package name.
 
