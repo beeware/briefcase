@@ -762,24 +762,67 @@ class CreateCommand(BaseCommand):
         if debugger:
             with self.console.wait_bar("Writing debugger startup files..."):
                 # TODO: How to get the "pth_folder_path"?
-                # As long as it is not clear for all platforms we have to call "import _briefcase" manually
-                # in "main.py"
-                # This should be placed somewhere else, when it is clear for all platforms.
-                if self.platform == "windows":
-                    # this is working
+                # As long as it is not clear for all platforms we have to call :
+                #
+                #     try:
+                #         import _briefcase
+                #      except Exception:
+                #         pass
+                #
+                # manually in "__main__.py"
+
+                # TODO: This should be placed somewhere else, when it is clear for all platforms.
+                if self.platform == "windows" and self.output_format == "app":
+                    # This is working.
                     pth_folder_path = app_path.parent
+
+                elif (
+                    self.platform == "windows" and self.output_format == "VisualStudio"
+                ):
+                    # TODO: Not tested yet
+                    pth_folder_path = None
+
                 elif self.platform == "android":
-                    # this is working, but when running "_briefcase.py" via .pth file importing socket raises
-                    # an error...
+                    # This is working, but when running "_briefcase.py" via .pth file importing socket raises
+                    # an error... See: https://github.com/chaquo/chaquopy/issues/1338
                     pth_folder_path = app_path
-                elif self.platform == "macos":
-                    pth_folder_path = None  # TODO: find it out...
-                elif self.platform == "ios":
-                    pth_folder_path = None  # TODO: find it out...
-                elif self.platform == "linux":
-                    pth_folder_path = None  # TODO: find it out...
+
+                elif self.platform == "macOS" and self.output_format == "app":
+                    # TODO: Not tested yet
+                    pth_folder_path = None
+
+                elif self.platform == "macOS" and self.output_format == "Xcode":
+                    # TODO: Not tested yet
+                    pth_folder_path = None
+
+                elif self.platform == "iOS" and self.output_format == "Xcode":
+                    # This is working, but makes problems only if `std-nslog` is removed from the dependencies.
+                    pth_folder_path = self.support_path(app) / (
+                        "Python.xcframework/ios-arm64_x86_64-simulator/"
+                        f"lib/python{self.python_version_tag}/site-packages"
+                    )
+
+                elif self.platform == "linux" and self.output_format == "system":
+                    # I could not find a way to get the path of the folder where the .pth file should be located.
+                    # I guess it is not even possible because `config.site_import = 0;` See:
+                    # https://github.com/beeware/briefcase-linux-system-template/blob/a7e1407c15a1c3a3246d10db53f638bf48e1bb26/%7B%7B%20cookiecutter.format%20%7D%7D/bootstrap/main.c#L68C5-L68C28
+                    pth_folder_path = None
+
+                elif self.platform == "linux" and self.output_format == "flatpak":
+                    # This is working.
+                    pth_folder_path = (
+                        self.support_path(app)
+                        / f"python/lib/python{self.python_version_tag}/site-packages"
+                    )
+
+                elif self.platform == "linux" and self.output_format == "appimage":
+                    # TODO: Not tested yet
+                    pth_folder_path = None
+
                 elif self.platform == "web":
-                    pth_folder_path = None  # TODO: find it out...
+                    # TODO: Not tested yet
+                    pth_folder_path = None
+
                 else:
                     pth_folder_path = None
 
