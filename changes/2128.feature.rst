@@ -1,0 +1,1 @@
+Add `boolean_question()` API to Console.
