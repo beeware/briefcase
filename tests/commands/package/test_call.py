@@ -52,11 +52,11 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         "second": second_app,
     }
 
-    # Configure no command line arguments
-    options, _ = package_command.parse_options([])
+    # Pass the app name
+    options, _ = package_command.parse_options(["--app", "first"])
 
-    # Run the build command on a specific app
-    package_command(first_app, **options)
+    # Run the package command
+    package_command(None, **options)
 
     # The right sequence of things will be done
     assert package_command.actions == [
@@ -66,6 +66,8 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # All app configurations are finalized before packaging
+        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified for app

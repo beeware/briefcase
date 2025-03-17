@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
 
@@ -119,6 +120,13 @@ class PackageCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to package (if multiple apps exist in the project)",
+        )
+
+        parser.add_argument(
             "-u",
             "--update",
             action="store_true",
@@ -151,6 +159,7 @@ class PackageCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,  # New argument for filtering
         update: bool = False,
         **options,
     ) -> dict | None:
@@ -158,13 +167,24 @@ class PackageCommand(BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app:
-            state = self._package_app(app, update=update, **options)
+        if app_name:
+            # Package only the specified app
+            if app_name in self.apps:
+                state = self._package_app(
+                    self.apps[app_name],
+                    update=update,
+                    **options,
+                )
+            else:
+                raise BriefcaseCommandError(f"App '{app_name}' not found in project.")
         else:
+            # Default: Package all apps
             state = None
             for app_name, app in sorted(self.apps.items()):
                 state = self._package_app(
-                    app, update=update, **full_options(state, options)
+                    app,
+                    update=update,
+                    **full_options(state, options),
                 )
 
         return state
