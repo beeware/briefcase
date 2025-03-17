@@ -1,39 +1,45 @@
-import pytest
 import re
 
-from briefcase.exceptions import InputDisabled
+import pytest
+
 from tests.utils import DummyConsole
 
+
 def test_boolean_question_yes():
-    """Test that boolean_question returns True when user selects Yes. """
+    """Test that boolean_question returns True when user selects Yes."""
     console = DummyConsole("y")
 
     result = console.boolean_question(
         description="Confirm?",
-        intro = "Are you sure?",
+        intro="Are you sure?",
         default=None,
     )
 
     assert console.prompts == ["Confirm? y/n? "]
     assert result is True
 
+
 def test_boolean_question_no():
-    """Test that boolean_question returns False when user selects No. """
+    """Test that boolean_question returns False when user selects No."""
     console = DummyConsole("n")
 
     result = console.boolean_question(
         description="Confirm?",
-        intro = "Are you sure?",
+        intro="Are you sure?",
         default=None,
     )
 
     assert console.prompts == ["Confirm? y/n? "]
     assert result is False
 
-@pytest.mark.parametrize("default, expected, prompt", [
-    (True, True, "Confirm? [Y/n]? "),  
-    (False, False, "Confirm? [y/N]? "), 
-])
+
+@pytest.mark.parametrize(
+    "default, expected, prompt",
+    [
+        (True, True, "Confirm? [Y/n]? "),
+        (False, False, "Confirm? [y/N]? "),
+    ],
+)
 def test_boolean_question_default_used(default, expected, prompt):
     """If no input is provided, the default value should be used."""
     console = DummyConsole("")
@@ -44,8 +50,9 @@ def test_boolean_question_default_used(default, expected, prompt):
         default=default,
     )
 
-    assert console.prompts == [prompt]  
+    assert console.prompts == [prompt]
     assert result == expected
+
 
 def test_boolean_question_invalid_input():
     """Test boolean_question handles invalid input"""
@@ -62,6 +69,7 @@ def test_boolean_question_invalid_input():
             override_value="invalid_value",
         )
 
+
 def test_boolean_question_override_used(capsys):
     """The override is used if provided and valid."""
     console = DummyConsole()
@@ -75,7 +83,7 @@ def test_boolean_question_override_used(capsys):
     )
 
     output = capsys.readouterr().out
-    assert f"Using override value {override_value!r}" in output  
+    assert f"Using override value {override_value!r}" in output
     assert result is True
     assert console.prompts == []
 
@@ -107,5 +115,5 @@ def test_boolean_question_exception_if_wrong_default():
         console.boolean_question(
             description="Confirm?",
             intro="Are you sure?",
-            default="invalid_value",  
+            default="invalid_value",
         )
