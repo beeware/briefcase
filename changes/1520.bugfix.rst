@@ -1,0 +1,1 @@
+Added an error message when Java is used during a JDK upgrade.
