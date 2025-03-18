@@ -1,0 +1,1 @@
+Added the `-a / --app` option to `briefcase build` and `briefcase package` to allow building/packaging a specific app instead of all apps.
