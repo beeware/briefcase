@@ -11,11 +11,11 @@ def test_specific_app(build_command, first_app, second_app):
         "second": second_app,
     }
 
-    # Configure no command line options
-    options, _ = build_command.parse_options([])
+    # Configure command line options for building a specific app
+    options, _ = build_command.parse_options(["--app", "first"])
 
     # Run the build command
-    build_command(first_app, **options)
+    build_command(**options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -25,6 +25,8 @@ def test_specific_app(build_command, first_app, second_app):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # Finalises all apps
+        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified for app
