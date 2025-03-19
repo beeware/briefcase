@@ -217,7 +217,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         # Starting a flatpak has slightly different startup arguments; however,
         # the rest of the app startup process is the same. Transform the output
         # of the "default" behavior to be in flatpak format.
-        if test_mode:
+        if test_mode or app.remote_debugger:
             kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
         else:
             kwargs = {}
