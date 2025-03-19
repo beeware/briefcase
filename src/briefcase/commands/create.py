@@ -13,7 +13,6 @@ from pathlib import Path
 
 import briefcase
 from briefcase.config import AppConfig
-from briefcase.debuggers import BaseDebugger
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidStubBinary,
@@ -80,6 +79,46 @@ def write_dist_info(app: AppConfig, dist_info_path: Path):
         f.write(f"Summary: {app.description}\n")
     with (dist_info_path / "top_level.txt").open("w", encoding="utf-8") as f:
         f.write(f"{app.module_name}\n")
+
+
+def write_launcher_module(
+    launcher_path: Path,
+    main_module: str,
+    start_remote_debugger_fct: str,
+):
+    """Install the launcher folder for the application.
+
+    :param app: The config object for the app
+    :param launcher_path: The path into which the launcher folder should be written.
+    :main_module: Name of the real main module to run.
+    :param start_remote_debugger_fct: A string to a code snippet, that at least
+        defines a "start_remote_debugger()" function.
+    """
+    # Create launcher folder, and write a minimal launcher file
+    with launcher_path.open("w", encoding="utf-8") as f:
+        f.write(
+            f"""\
+# Generated {datetime.now()}
+
+# #################### REMOTE DEBUGGER CODE - START ###########################
+{start_remote_debugger_fct}
+# #################### REMOTE DEBUGGER CODE - END #############################
+
+def main():
+    print("Launcher started")
+
+    print("Starting remote debugger...")
+    start_remote_debugger()
+
+    # Run main module
+    print(f"Starting main module '{main_module}'...")
+    import runpy
+    runpy._run_module_as_main("{main_module}")
+
+if __name__ == "__main__":
+    main()
+"""
+        )
 
 
 class CreateCommand(BaseCommand):
@@ -667,9 +706,7 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info("No application requirements.")
 
-    def install_app_requirements(
-        self, app: AppConfig, test_mode: bool, debugger: BaseDebugger | None
-    ):
+    def install_app_requirements(self, app: AppConfig, test_mode: bool):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -679,9 +716,6 @@ class CreateCommand(BaseCommand):
            by the ``app_packages_path`` in the template path index.
 
         If ``test_mode`` is True, the test requirements will also be installed.
-
-        If ``debugger`` is provided, the debugger's additional requirements will also
-        be installed.
 
         If the path index doesn't specify either of the path index entries,
         an error is raised.
@@ -694,8 +728,8 @@ class CreateCommand(BaseCommand):
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
-        if debugger:
-            requires.extend(debugger.additional_requirements)
+        if app.remote_debugger:
+            requires.extend(app.remote_debugger.additional_requirements)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -723,14 +757,11 @@ class CreateCommand(BaseCommand):
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(
-        self, app: AppConfig, test_mode: bool, debugger: BaseDebugger | None
-    ):
+    def install_app_code(self, app: AppConfig, test_mode: bool):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the application test code also be installed?
-        :param debugger: Debugger to be used or None if no debugger should be used.
         """
         # Remove existing app folder if it exists
         app_path = self.app_path(app)
@@ -759,77 +790,14 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info(f"No sources defined for {app.app_name}.")
 
-        if debugger:
-            with self.console.wait_bar("Writing debugger startup files..."):
-                # TODO: How to get the "pth_folder_path"?
-                # As long as it is not clear for all platforms we have to call :
-                #
-                #     try:
-                #         import _briefcase
-                #      except Exception:
-                #         pass
-                #
-                # manually in "__main__.py"
-
-                # TODO: This should be placed somewhere else, when it is clear for all platforms.
-                if self.platform == "windows" and self.output_format == "app":
-                    # This is working.
-                    pth_folder_path = app_path.parent
-
-                elif (
-                    self.platform == "windows" and self.output_format == "VisualStudio"
-                ):
-                    # TODO: Not tested yet
-                    pth_folder_path = None
-
-                elif self.platform == "android":
-                    # This is working, but when running "_briefcase.py" via .pth file importing socket raises
-                    # an error... See: https://github.com/chaquo/chaquopy/issues/1338
-                    pth_folder_path = app_path
-
-                elif self.platform == "macOS" and self.output_format == "app":
-                    # TODO: Not tested yet
-                    pth_folder_path = None
-
-                elif self.platform == "macOS" and self.output_format == "Xcode":
-                    # TODO: Not tested yet
-                    pth_folder_path = None
-
-                elif self.platform == "iOS" and self.output_format == "Xcode":
-                    # This is working, but makes problems only if `std-nslog` is removed from the dependencies.
-                    pth_folder_path = self.support_path(app) / (
-                        "Python.xcframework/ios-arm64_x86_64-simulator/"
-                        f"lib/python{self.python_version_tag}/site-packages"
-                    )
-
-                elif self.platform == "linux" and self.output_format == "system":
-                    # I could not find a way to get the path of the folder where the .pth file should be located.
-                    # I guess it is not even possible because `config.site_import = 0;` See:
-                    # https://github.com/beeware/briefcase-linux-system-template/blob/a7e1407c15a1c3a3246d10db53f638bf48e1bb26/%7B%7B%20cookiecutter.format%20%7D%7D/bootstrap/main.c#L68C5-L68C28
-                    pth_folder_path = None
-
-                elif self.platform == "linux" and self.output_format == "flatpak":
-                    # This is working.
-                    pth_folder_path = (
-                        self.support_path(app)
-                        / f"python/lib/python{self.python_version_tag}/site-packages"
-                    )
-
-                elif self.platform == "linux" and self.output_format == "appimage":
-                    # TODO: Not tested yet
-                    pth_folder_path = None
-
-                elif self.platform == "web":
-                    # TODO: Not tested yet
-                    pth_folder_path = None
-
-                else:
-                    pth_folder_path = None
-
-                debugger.write_startup_file(
-                    app_path=app_path,
-                    pth_folder_path=pth_folder_path,
-                    path_mappings=self.debugger_path_mappings(app, sources),
+        if app.remote_debugger:
+            with self.console.wait_bar("Writing launcher files..."):
+                write_launcher_module(
+                    launcher_path=self.app_path(app) / "_briefcase_launcher.py",
+                    main_module=app.main_module(test_mode, include_launcher=False),
+                    start_remote_debugger_fct=app.remote_debugger.generate_startup_code(
+                        self.debugger_path_mappings(app, sources)
+                    ),
                 )
 
         # Write the dist-info folder for the application.
@@ -1008,14 +976,12 @@ class CreateCommand(BaseCommand):
         self,
         app: AppConfig,
         test_mode: bool = False,
-        remote_debugger: str | None = None,
         **options,
     ):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
-        :param remote_debugger: Remote debugger that should be used. (default: None)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -1054,15 +1020,12 @@ class CreateCommand(BaseCommand):
         # Verify the app after the app template and support package
         # are in place since the app tools may be dependent on them.
         self.verify_app(app)
-        self.console.print(f"{remote_debugger=}")
-
-        debugger = self.create_debugger(remote_debugger)
 
         self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode, debugger=debugger)
+        self.install_app_code(app=app, test_mode=test_mode)
 
         self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app, test_mode=test_mode, debugger=debugger)
+        self.install_app_requirements(app=app, test_mode=test_mode)
 
         self.console.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

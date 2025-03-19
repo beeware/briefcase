@@ -1,6 +1,4 @@
 import textwrap
-from datetime import datetime
-from typing import TextIO
 
 from briefcase.debuggers.base import BaseDebugger, DebuggerMode
 
@@ -16,17 +14,18 @@ class DebugpyDebugger(BaseDebugger):
         """Return a list of additional requirements for the debugger."""
         return ["debugpy~=1.8.12"]
 
-    def create_startup_file(self, file: TextIO, path_mappings: str) -> None:
-        """Create the code that is necessary to start the debugger"""
-        file.write(
-            f"""\
-# Generated {datetime.now()}
+    def generate_startup_code(self, path_mappings: str) -> str:
+        """
+        Generate the code that is necessary to start the debugger.
 
+        :param path_mappings: The path mappings that should be used in the startup file.
+        """
+        code = f"""\
 import os
 import sys
 from pathlib import Path
 
-def start_debugger():
+def start_remote_debugger():
     ip = "{self.ip}"
     port = {self.port}
     path_mappings = []
@@ -39,10 +38,8 @@ def start_debugger():
         os.__file__ = ""
 
 """
-        )
         if self.mode == DebuggerMode.CLIENT:
-            file.write(
-                """\
+            code += """\
     print(f'''
 Connecting to debugpy server at {ip}:{port}...
 To create the debugpy server using VSCode add the following configuration to launch.json and start the debugger:
@@ -68,10 +65,8 @@ To create the debugpy server using VSCode add the following configuration to lau
         print("Could not connect to debugpy server. Is it already started? We continue with the app...")
         return
 """
-            )
         elif self.mode == DebuggerMode.SERVER:
-            file.write(
-                """\
+            code += """\
     print(f'''
 The debugpy server started at {ip}:{port}, waiting for connection...
 To connect to debugpy using VSCode add the following configuration to launch.json:
@@ -93,17 +88,13 @@ To connect to debugpy using VSCode add the following configuration to launch.jso
     import debugpy
     debugpy.listen((ip, port), in_process_debug_adapter=True)
 """
-            )
 
-        file.write(
-            """\
+        code += """\
     if (len(path_mappings) > 0):
         # path_mappings has to be applied after connection is established. If no connection is
         # established this import will fail.
         import pydevd_file_utils
 
         pydevd_file_utils.setup_client_server_paths(path_mappings)
-
-start_debugger()
 """
-        )
+        return code

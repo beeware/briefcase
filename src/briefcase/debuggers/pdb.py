@@ -1,6 +1,3 @@
-from datetime import datetime
-from typing import TextIO
-
 from briefcase.debuggers.base import BaseDebugger, DebuggerMode
 
 
@@ -10,12 +7,13 @@ class PdbDebugger(BaseDebugger):
     supported_modes = [DebuggerMode.SERVER]
     default_mode = DebuggerMode.SERVER
 
-    def create_startup_file(self, file: TextIO, path_mappings: str) -> None:
-        """Create the code that is necessary to start the debugger"""
-        file.write(
-            f"""\
-# Generated {datetime.now()}
+    def generate_startup_code(self, path_mappings: str) -> str:
+        """
+        Generate the code that is necessary to start the debugger.
 
+        :param path_mappings: The path mappings that should be used in the startup file.
+        """
+        code = f"""\
 import socket
 import sys
 import re
@@ -48,8 +46,8 @@ class SocketFileWrapper(object):
         for line in lines:
             self.write(line)
 
-def redirect_stdio():
-    f'''Open a socket server and stream all stdio via the connection bidirectional.'''
+def start_remote_debugger():
+    '''Open a socket server and stream all stdio via the connection bidirectional.'''
     ip = "{self.ip}"
     port = {self.port}
     print(f'''
@@ -75,7 +73,5 @@ To connect to stdio redirector use eg.:
     sys.__stderr__ = file_wrapper
     sys.__stdout__ = file_wrapper
     sys.__stdin__ = file_wrapper
-
-redirect_stdio()
 """
-        )
+        return code

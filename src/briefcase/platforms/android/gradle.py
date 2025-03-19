@@ -395,7 +395,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        remote_debugger: str | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -406,7 +405,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
-        :param remote_debugger: Remote debugger that should be used.
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -437,8 +435,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 avd, extra_emulator_args
             )
 
-        debugger = self.create_debugger(remote_debugger)
-
         try:
             label = "test suite" if test_mode else "app"
 
@@ -462,9 +458,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
-            if debugger:
+            if app.remote_debugger:
                 with self.console.wait_bar("Establishing debugger connection..."):
-                    self.establish_debugger_connection(adb, debugger)
+                    self.establish_debugger_connection(adb, app.remote_debugger)
 
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):

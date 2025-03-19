@@ -21,10 +21,7 @@ from packaging.version import Version
 from platformdirs import PlatformDirs
 
 from briefcase.debuggers import DEFAULT_DEBUGGER, get_debuggers
-from briefcase.debuggers.base import (
-    BaseDebugger,
-    remote_debugger_config_from_string,
-)
+from briefcase.debuggers.base import parse_remote_debugger_cfg
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -601,7 +598,9 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(self, app: AppConfig | None = None):
+    def finalize(
+        self, app: AppConfig | None = None, remote_debugger_cfg: str | None = None
+    ):
         """Finalize Briefcase configuration.
 
         This will:
@@ -621,10 +620,12 @@ a custom location for Briefcase's tools.
         if app is None:
             for app in self.apps.values():
                 if hasattr(app, "__draft__"):
+                    self.create_remote_debugger(app, remote_debugger_cfg)
                     self.finalize_app_config(app)
                     delattr(app, "__draft__")
         else:
             if hasattr(app, "__draft__"):
+                self.create_remote_debugger(app, remote_debugger_cfg)
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
@@ -696,19 +697,18 @@ any compatibility problems, and then add the compatibility declaration.
                 version_specifier=requires_python, running_version=running_version
             )
 
-    def create_debugger(self, remote_debugger: str | None) -> BaseDebugger | None:
-        """Select and instantiate a debugger for the new project.
-
-        :returns: An instance of the debugger that the user has selected.
-        """
-        if remote_debugger is None:
+    def create_remote_debugger(self, app: AppConfig, remote_debugger_cfg: str | None):
+        """Select and instantiate a debugger for the project."""
+        if remote_debugger_cfg is None:
             return None
 
-        debugger, config = remote_debugger_config_from_string(remote_debugger)
+        with self.console.wait_bar("Loading remote debugger config..."):
+            debugger, config = parse_remote_debugger_cfg(remote_debugger_cfg)
 
-        debuggers = get_debuggers()
-        debugger_class = debuggers[debugger] if debugger else DEFAULT_DEBUGGER
-        return debugger_class(console=self.console, config=config)
+            debuggers = get_debuggers()
+            debugger_class = debuggers[debugger] if debugger else DEFAULT_DEBUGGER
+            app.remote_debugger = debugger_class(console=self.console, config=config)
+            self.console.info(f"Using '{app.remote_debugger}'")
 
     def parse_options(self, extra):
         """Parse the command line arguments for the Command.
@@ -898,8 +898,8 @@ any compatibility problems, and then add the compatibility declaration.
             help=f"{context_label} the app in test mode",
         )
         parser.add_argument(
-            "--remote-debugger",
-            dest="remote_debugger",
+            "--remote-debug",
+            dest="remote_debugger_cfg",
             nargs="?",
             default=None,
             const="",
