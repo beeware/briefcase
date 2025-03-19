@@ -12,7 +12,7 @@ class BuildCommand(BaseCommand):
 
     def add_options(self, parser):
         self._add_update_options(parser, context_label=" before building")
-        self._add_test_options(parser, context_label="Build")
+        self._add_test_and_debug_options(parser, context_label="Build")
 
     def build_app(self, app: AppConfig, **options):
         """Build an application.
@@ -93,6 +93,7 @@ class BuildCommand(BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
+        remote_debugger_cfg: str | None = None,
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
@@ -121,7 +122,7 @@ class BuildCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, remote_debugger_cfg)
 
         if app:
             state = self._build_app(

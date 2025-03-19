@@ -13,6 +13,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
@@ -299,6 +300,7 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
+        self.remote_debugger: BaseDebugger | None = None
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -403,7 +405,7 @@ class AppConfig(BaseConfig):
                 paths.append(path)
         return paths
 
-    def main_module(self, test_mode: bool):
+    def main_module(self, test_mode: bool, include_launcher: bool = True):
         """The path to the main module for the app.
 
         In normal operation, this is ``app.module_name``; however,
@@ -412,9 +414,14 @@ class AppConfig(BaseConfig):
         :param test_mode: Are we running in test mode?
         """
         if test_mode:
-            return f"tests.{self.module_name}"
+            module_name = f"tests.{self.module_name}"
         else:
-            return self.module_name
+            module_name = self.module_name
+
+        if self.remote_debugger and include_launcher:
+            return "_briefcase_launcher"
+        else:
+            return module_name
 
 
 def merge_config(config, data):

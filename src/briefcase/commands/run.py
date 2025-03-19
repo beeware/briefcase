@@ -218,7 +218,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         )
 
         self._add_update_options(parser, context_label=" before running")
-        self._add_test_options(parser, context_label="Run")
+        self._add_test_and_debug_options(parser, context_label="Run")
 
     def _prepare_app_kwargs(self, app: AppConfig, test_mode: bool):
         """Prepare the kwargs for running an app as a log stream.
@@ -237,8 +237,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         if self.console.is_debug:
             env["BRIEFCASE_DEBUG"] = "1"
 
-        if test_mode:
-            # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
+        if test_mode or app.remote_debugger:
+            # In test or with remote debugger mode, set a BRIEFCASE_MAIN_MODULE environment variable
             # to override the module at startup
             env["BRIEFCASE_MAIN_MODULE"] = app.main_module(test_mode)
             self.console.info("Starting test_suite...", prefix=app.app_name)
@@ -268,6 +268,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
+        remote_debugger_cfg: str | None = None,
         passthrough: list[str] | None = None,
         **options,
     ) -> dict | None:
@@ -290,7 +291,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, remote_debugger_cfg)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
