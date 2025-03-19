@@ -1,0 +1,1 @@
+Cookiecutter has been improved to escape special characters & < and >.
