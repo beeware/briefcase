@@ -29,7 +29,7 @@ def test_boolean_question_no():
         default=None,
     )
 
-    assert console.prompts == ["Confirm? y/n? "]
+    assert console.prompts == ["Confirm? [y/n]? "]
     assert result is False
 
 

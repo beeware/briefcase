@@ -719,6 +719,22 @@ class Console:
 
         return input_value
 
+    def parse_boolean(value: str) -> str:
+        """Takes a string value and attempts to convert to a boolean value"""
+
+        
+        truth_vals = {"true","t","yes","y","1","on"}
+        false_vals = {"false","f","no","n","0","off"}
+
+        normalised_val= value.strip().lower()
+
+        if normalised_val in truth_vals:
+            return True
+        elif normalised_val in false_vals:
+            return False
+        else:
+            raise ValueError(f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}")
+
     def input_boolean(self, question: str, default: bool = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
 
@@ -732,7 +748,7 @@ class Console:
         :returns: True if the user selected "y", or False if they selected "n".
         """
         if default is None:
-            yes_no = "y/n"
+            yes_no = "[y/n]"
             default_text = None
         elif default:
             yes_no = "[Y/n]"
@@ -966,7 +982,7 @@ class Console:
         description,
         intro: str,
         default: bool | None = None,
-        override_value: bool | None = None,
+        override_value: str | None = None,
     ) -> bool:
         """Ask the user a boolean question who's answer requires selecting yes/no
 
@@ -977,28 +993,26 @@ class Console:
         :param override_value: A pre-selected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
-            intro paragraph and option list will not.
+            intro paragraph and option list will not. Will take the provided string and attempt to parse into bool
         :returns: The user's chosen answer or none if closed without input
         """
-        if default not in {True, False, None}:
-            raise ValueError(
-                f"'{default}' is not a valid default value for {description}? Must be True, False, or None."
-            )
+        
+
 
         self.divider(title=description)
 
         if override_value is not None:
             self.print()
             self.print(f"Using override value {override_value!r}")
-            if isinstance(override_value, bool):
-                return override_value
-            else:
-                raise ValueError(
-                    f"Invalid override value for {description}: must be True or False"
-                )
+            try:
+                return self.parse_boolean(override_value)
+            except ValueError as e:
+                raise ValueError(f"Invalid override value for {description}: {e}")
 
         self.prompt()
         self.prompt(self.textwrap(intro))
         self.prompt()
 
         return self.input_boolean(description, default=default)
+
+    
