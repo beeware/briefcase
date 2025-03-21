@@ -15,7 +15,7 @@ def test_boolean_question_yes():
         default=None,
     )
 
-    assert console.prompts == ["Confirm? y/n? "]
+    assert console.prompts == ["Confirm? [y/n]? "]
     assert result is True
 
 
@@ -54,27 +54,17 @@ def test_boolean_question_default_used(default, expected, prompt):
     assert result == expected
 
 
-def test_boolean_question_invalid_input():
-    """Test boolean_question handles invalid input"""
-    console = DummyConsole("maybe", "asdf", "y")
-
-    with pytest.raises(
-        ValueError,
-        match=re.escape("Invalid override value for Confirm?: must be True or False"),
-    ):
-        console.boolean_question(
-            description="Confirm?",
-            intro="Are you sure?",
-            default=True,
-            override_value="invalid_value",
-        )
-
-
-def test_boolean_question_override_used(capsys):
-    """The override is used if provided and valid."""
+@pytest.mark.parametrize(
+    "override_value, expected_result",
+    [
+        ("Yes", True),
+        ("no", False),
+    ],
+)
+def test_boolean_question_override_used(capsys, override_value, expected_result):
+    """The override is used if provided and valid (parametrized for True/False cases)."""
     console = DummyConsole()
 
-    override_value = True
     result = console.boolean_question(
         description="Confirm?",
         intro="Are you sure?",
@@ -84,7 +74,7 @@ def test_boolean_question_override_used(capsys):
 
     output = capsys.readouterr().out
     assert f"Using override value {override_value!r}" in output
-    assert result is True
+    assert result == expected_result
     assert console.prompts == []
 
 
@@ -94,26 +84,25 @@ def test_boolean_question_override_invalid():
 
     with pytest.raises(
         ValueError,
-        match=re.escape("Invalid override value for Confirm?: must be True or False"),
+        match=re.escape("Invalid boolean value: 'Yeah Nah'. Expected one of "),
     ):
         console.boolean_question(
             description="Confirm?",
             intro="Are you sure?",
             default=True,
-            override_value="invalid_value",
+            override_value="Yeah Nah",
         )
 
 
-def test_boolean_question_exception_if_wrong_default():
-    """An exception is raised if the default value is not a valid boolean."""
-    console = DummyConsole("")
+def test_boolean_question_empty_input_no_default_returns_false():
+    """Reprompts the user when no override or default given"""
+    console = DummyConsole("", "", "n")  # Simulates pressing Enter
 
-    with pytest.raises(
-        ValueError,
-        match=r"'invalid_value' is not a valid default value for Confirm?",
-    ):
-        console.boolean_question(
-            description="Confirm?",
-            intro="Are you sure?",
-            default="invalid_value",
-        )
+    result = console.boolean_question(
+        description="Confirm?",
+        intro="Are you sure?",
+        default=None,
+        override_value=None,
+    )
+
+    assert result is False

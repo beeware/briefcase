@@ -719,7 +719,7 @@ class Console:
 
         return input_value
 
-    def parse_boolean(value: str) -> str:
+    def parse_boolean(self, value: str) -> bool:
         """Takes a string value and attempts to convert to a boolean value"""
 
         truth_vals = {"true", "t", "yes", "y", "1", "on"}
