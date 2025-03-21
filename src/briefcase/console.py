@@ -722,18 +722,19 @@ class Console:
     def parse_boolean(value: str) -> str:
         """Takes a string value and attempts to convert to a boolean value"""
 
-        
-        truth_vals = {"true","t","yes","y","1","on"}
-        false_vals = {"false","f","no","n","0","off"}
+        truth_vals = {"true", "t", "yes", "y", "1", "on"}
+        false_vals = {"false", "f", "no", "n", "0", "off"}
 
-        normalised_val= value.strip().lower()
+        normalised_val = value.strip().lower()
 
         if normalised_val in truth_vals:
             return True
         elif normalised_val in false_vals:
             return False
         else:
-            raise ValueError(f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}")
+            raise ValueError(
+                f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}"
+            )
 
     def input_boolean(self, question: str, default: bool = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
@@ -996,8 +997,6 @@ class Console:
             intro paragraph and option list will not. Will take the provided string and attempt to parse into bool
         :returns: The user's chosen answer or none if closed without input
         """
-        
-
 
         self.divider(title=description)
 
@@ -1014,5 +1013,3 @@ class Console:
         self.prompt()
 
         return self.input_boolean(description, default=default)
-
-    
