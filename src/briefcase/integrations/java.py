@@ -318,9 +318,9 @@ Delete {jdk_zip_path} and run briefcase again.
                     self.tools.shutil.rmtree(self.java_home)
         except PermissionError as e:
             raise BriefcaseCommandError(
-                f"""\
-Permission denied when trying to remove {self.java_home}.
+                """\
+Permission denied when trying to remove Java.
 
-Ensure no java processes are running and try again.
+Ensure no Java processes are running and try again.
 """
             ) from e
