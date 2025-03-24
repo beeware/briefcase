@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 name = "x-briefcase-automation"
 description = "A Briefcase plugin for CI automation."
 readme = "README.md"
-license.text = "New BSD"
+license = "BSD-3-Clause"
 classifiers = ["Private :: Do Not Upload"]
 dynamic = ["version", "dependencies"]
 
