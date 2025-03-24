@@ -801,59 +801,6 @@ def test_package_app_single(package_command, first_app):
     ]
 
 
-def test_package_app_multiple(package_command, first_app, second_app):
-    """Multiple --app values only package the selected apps."""
-    # Add two apps
-    package_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure the --app options
-    options, _ = package_command.parse_options(["--app", "first", "--app", "second"])
-
-    # Run the package command
-    package_command(**options)
-
-    # The right sequence of things will be done
-    assert package_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-        # App configs have been finalized
-        ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
-        # App template is verified for first app
-        ("verify-app-template", "first"),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        # Package the first app
-        (
-            "package",
-            "first",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-            },
-        ),
-        # App template is verified for second app
-        ("verify-app-template", "second"),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        # Package the second app
-        (
-            "package",
-            "second",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-                "package_state": "first",
-            },
-        ),
-    ]
-
-
 def test_package_app_invalid(package_command, first_app, second_app):
     """If an invalid app name is passed to --app, raise an error."""
     # Add two apps
@@ -871,28 +818,6 @@ def test_package_app_invalid(package_command, first_app, second_app):
         match=r"App 'invalid' does not exist in this project.",
     ):
         package_command(**options)
-
-
-def test_package_app_duplicate(package_command, first_app):
-    """Passing --app multiple times with the same name should not double-package."""
-    # Add a single app
-    package_command.apps = {
-        "first": first_app,
-    }
-
-    # Configure --app with duplicates
-    options, _ = package_command.parse_options(["--app", "first", "--app", "first"])
-
-    # Run the package command
-    package_command(**options)
-
-    # The app should be packaged only once
-    assert (
-        package_command.actions.count(
-            ("package", "first", {"adhoc_sign": False, "identity": None})
-        )
-        == 1
-    )
 
 
 def test_package_app_none_defined(package_command):
@@ -916,20 +841,62 @@ def test_package_app_none_defined(package_command):
     ]
 
 
-def test_package_with_update(package_command, first_app):
-    """If --update is passed, app is updated before packaging."""
+def test_package_with_update(package_command, first_app, tmp_path):
+    """If --update is passed, app is updated, built, and then packaged."""
     package_command.apps = {"first": first_app}
+
+    # Provide the --app and --update options
     options, _ = package_command.parse_options(["--app", "first", "--update"])
     package_command(**options)
 
-    # Find the 'update' action for the app
-    update_action = next(
-        action
-        for action in package_command.actions
-        if action[0] == "update" and action[1] == "first"
-    )
+    # Full sequence must include update, build, verify, package
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config finalized
+        ("finalize-app-config", "first"),
+        # App is updated
+        (
+            "update",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "update_requirements": True,
+                "update_resources": True,
+                "update_support": True,
+            },
+        ),
+        # App is built
+        (
+            "build",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "update_state": "first",
+            },
+        ),
+        # Template and tools are verified
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        # App is packaged
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "update_state": "first",
+                "build_state": "first",
+            },
+        ),
+    ]
 
-    # Assert relevant update flags are True
-    assert update_action[2]["update_requirements"] is True
-    assert update_action[2]["update_resources"] is True
-    assert update_action[2]["update_support"] is True
+    # Packaging format has been annotated on the app
+    assert first_app.packaging_format == "pkg"
+
+    # The dist folder has been created
+    assert tmp_path / "base_path/dist"

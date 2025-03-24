@@ -122,9 +122,8 @@ class PackageCommand(BaseCommand):
         parser.add_argument(
             "-a",
             "--app",
-            dest="apps",
-            action="append",
-            help="Name of the app(s) to build (if multiple apps exist in the project)",
+            dest="app_name",
+            help="Name of the app to package (if multiple apps exist in the project)",
         )
 
         parser.add_argument(
@@ -160,7 +159,7 @@ class PackageCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
-        apps: list[str] | None = None,
+        app_name: str | None = None,
         update: bool = False,
         **options,
     ) -> dict | None:
@@ -169,15 +168,12 @@ class PackageCommand(BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if apps:
-            selected_apps = {}
-            for name in apps:
-                if name not in self.apps:
-                    raise BriefcaseCommandError(
-                        f"App '{name}' does not exist in this project."
-                    )
-                selected_apps[name] = self.apps[name]
-            apps_to_package = selected_apps
+        if app_name:
+            if app_name not in self.apps:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+            apps_to_package = {app_name: self.apps[app_name]}
         elif app:
             apps_to_package = {app.app_name: app}
         else:
@@ -196,7 +192,7 @@ class PackageCommand(BaseCommand):
     def parse_options(self, extra=None):
         options, overrides = super().parse_options(extra=extra)
 
-        if options.get("apps") is None:
-            options.pop("apps", None)
+        if options.get("app_name") is None:
+            options.pop("app_name", None)
 
         return options, overrides

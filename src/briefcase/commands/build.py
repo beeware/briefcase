@@ -17,9 +17,8 @@ class BuildCommand(BaseCommand):
         parser.add_argument(
             "-a",
             "--app",
-            dest="apps",
-            action="append",
-            help="Name of the app(s) to build (if multiple apps exist in the project)",
+            dest="app_name",
+            help="Name of the app to build (if multiple apps exist in the project)",
         )
 
     def build_app(self, app: AppConfig, **options):
@@ -94,7 +93,7 @@ class BuildCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
-        apps: list[str] | None = None,
+        app_name: str | None = None,
         update: bool = False,
         update_requirements: bool = False,
         update_resources: bool = False,
@@ -132,15 +131,12 @@ class BuildCommand(BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if apps:
-            selected_apps = {}
-            for name in apps:
-                if name not in self.apps:
-                    raise BriefcaseCommandError(
-                        f"App '{name}' does not exist in this project."
-                    )
-                selected_apps[name] = self.apps[name]
-            apps_to_build = selected_apps
+        if app_name:
+            if app_name not in self.apps:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+            apps_to_build = {app_name: self.apps[app_name]}
         elif app:
             apps_to_build = {app.app_name: app}
         else:

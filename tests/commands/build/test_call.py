@@ -1251,44 +1251,6 @@ def test_build_app_single(build_command, first_app, second_app):
     ]
 
 
-def test_build_app_multiple(build_command, first_app, second_app):
-    """Multiple --app flags build the specified apps."""
-    # Add two apps
-    build_command.apps = {
-        "first": first_app,
-        "second": second_app,
-    }
-
-    # Configure command line options
-    options, _ = build_command.parse_options(["--app", "first", "--app", "second"])
-
-    # Run the build command
-    build_command(**options)
-
-    # The right sequence of things will be done
-    assert build_command.actions == [
-        # Host OS is verified
-        ("verify-host",),
-        # Tools are verified
-        ("verify-tools",),
-        # App configs have been finalized
-        ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
-        # App template is verified for first app
-        ("verify-app-template", "first"),
-        # App tools are verified for first app
-        ("verify-app-tools", "first"),
-        # Build the first app
-        ("build", "first", {"test_mode": False}),
-        # App template is verified for second app
-        ("verify-app-template", "second"),
-        # App tools are verified for second app
-        ("verify-app-tools", "second"),
-        # Build the second app
-        ("build", "second", {"build_state": "first", "test_mode": False}),
-    ]
-
-
 def test_build_app_invalid(build_command, first_app, second_app):
     """If an invalid app name is passed to --app, an error is raised."""
     # Add two valid apps
@@ -1306,21 +1268,6 @@ def test_build_app_invalid(build_command, first_app, second_app):
         match=r"App 'invalid' does not exist in this project.",
     ):
         build_command(**options)
-
-
-def test_build_app_duplicate(build_command, first_app):
-    """Duplicate --app flags with the same name do not break the build."""
-    # Add one app
-    build_command.apps = {"first": first_app}
-
-    # Configure command line options
-    options, _ = build_command.parse_options(["--app", "first", "--app", "first"])
-
-    # Run the build command
-    build_command(**options)
-
-    # The app is built only once
-    assert build_command.actions.count(("build", "first", {"test_mode": False})) == 1
 
 
 def test_build_app_none_defined(build_command):
@@ -1353,3 +1300,232 @@ def test_build_app_no_args(build_command):
     # Nothing is built
     assert result is None
     assert build_command.actions == [("verify-host",), ("verify-tools",)]
+
+
+def test_build_with_update(build_command, first_app, second_app):
+    """If --app and --update are used together, only the specified app is updated and built."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with --app and --update
+    options, _ = build_command.parse_options(["--app", "first", "--update"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App is updated before build
+        (
+            "update",
+            "first",
+            {
+                "test_mode": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # App is built
+        ("build", "first", {"update_state": "first", "test_mode": False}),
+    ]
+
+
+def test_build_with_no_update(build_command, first_app, second_app):
+    """If --app and --no-update are used, update is skipped and app is built directly."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with --app and --no-update
+    options, _ = build_command.parse_options(["--app", "first", "--no-update"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # No update step should occur
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # App is built directly
+        ("build", "first", {"test_mode": False}),
+    ]
+
+
+def test_build_with_testmode(build_command, first_app, second_app):
+    """If --app and --test are used, only the specified app is updated and built in test mode."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with --app and --test
+    options, _ = build_command.parse_options(["--app", "first", "--test"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App is updated
+        (
+            "update",
+            "first",
+            {
+                "test_mode": True,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # App is built in test mode
+        ("build", "first", {"update_state": "first", "test_mode": True}),
+    ]
+
+
+def test_build_with_update_requirements(build_command, first_app, second_app):
+    """If --app and --update-requirements are used, only the specified app is updated and built."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with --app and --update-requirements
+    options, _ = build_command.parse_options(
+        ["--app", "first", "--update-requirements"]
+    )
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App is updated
+        (
+            "update",
+            "first",
+            {
+                "test_mode": False,
+                "update_requirements": True,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # App is built
+        ("build", "first", {"update_state": "first", "test_mode": False}),
+    ]
+
+
+def test_build_invalid_flags(build_command, first_app):
+    """If --app is passed along with conflicting update flags, raise an error."""
+    # Add one app
+    build_command.apps = {"first": first_app}
+
+    # Configure invalid combination: --update and --no-update
+    options, _ = build_command.parse_options(
+        ["--app", "first", "--update", "--no-update"]
+    )
+
+    # Run the build command and expect an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Cannot specify both --update and --no-update",
+    ):
+        build_command(**options)
+
+
+def test_build_with_update_support(build_command, first_app, second_app):
+    """If --app and --update-support are used, only the specified app gets support update and build."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with --app and --update-support
+    options, _ = build_command.parse_options(["--app", "first", "--update-support"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # Support update triggered for the selected app
+        (
+            "update",
+            "first",
+            {
+                "test_mode": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": True,
+                "update_stub": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # App is built
+        ("build", "first", {"update_state": "first", "test_mode": False}),
+    ]
