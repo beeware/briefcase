@@ -2,11 +2,31 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-from abc import ABC, abstractmethod
-from typing import ClassVar
+from abc import ABC
+from typing import ClassVar, TypedDict
 
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+
+
+class AppPathMappings(TypedDict):
+    device_sys_path_regex: str
+    device_subfolders: list[str]
+    host_folders: list[str]
+
+
+class AppPackagesPathMappings(TypedDict):
+    sys_path_regex: str
+    host_folder: str
+
+
+class RemoteDebuggerConfig(TypedDict):
+    debugger: str
+    mode: str  # client / server
+    ip: str
+    port: int
+    app_path_mappings: AppPathMappings | None
+    app_packages_path_mappings: AppPackagesPathMappings | None
 
 
 class DebuggerMode(str, enum.Enum):
@@ -76,6 +96,7 @@ def parse_remote_debugger_cfg(
 class BaseDebugger(ABC):
     """Definition for a plugin that defines a new Briefcase debugger."""
 
+    name: str
     supported_modes: ClassVar[list[DebuggerMode]]
     default_mode: ClassVar[DebuggerMode]
     default_ip: ClassVar[str] = "localhost"
@@ -96,13 +117,3 @@ class BaseDebugger(ABC):
     def additional_requirements(self) -> list[str]:
         """Return a list of additional requirements for the debugger."""
         return []
-
-    @abstractmethod
-    def generate_startup_code(self, path_mappings: str) -> str:
-        """
-        Generate the code that is necessary to start the debugger.
-
-        :param file: The file to write the startup code to.
-        :param path_mappings: The path mappings that should be used in the startup file.
-        """
-        raise NotImplementedError()
