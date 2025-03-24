@@ -29,7 +29,8 @@ from rich.progress import (
 )
 from rich.traceback import Trace, Traceback
 
-from briefcase import __version__, config
+from briefcase import __version__
+from briefcase.config import parse_boolean
 from briefcase.exceptions import InputDisabled
 
 # Max width for printing to console; matches argparse's default width
@@ -987,7 +988,7 @@ class Console:
             self.print()
             self.print(f"Using override value {override_value!r}")
             try:
-                return config.parse_boolean(override_value)
+                return parse_boolean(override_value)
             except ValueError as e:
                 raise ValueError(f"Invalid override value for {description}: {e}")
 
