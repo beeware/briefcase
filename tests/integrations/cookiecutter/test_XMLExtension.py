@@ -44,3 +44,23 @@ def test_xml_escape(value, expected):
     env.filters = {}
     XMLExtension(env)
     assert env.filters["xml_escape"](value) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        # A single quote wrapped in double quotes
+        ("Hello ' World", '"Hello \' World"'),
+        # A double quote wrapped in single quotes
+        ('Hello " World', "'Hello \" World'"),
+        # A double quote and a single quote wrapped in single quotes
+        ("Hello \" And ' World", '"Hello &quot; And \' World"'),
+        # A double quote and a single quote wrapped in double quotes
+        ("Hello \" Or ' World", '"Hello &quot; Or \' World"'),
+    ],
+)
+def test_xml_attr(value, expected):
+    env = MagicMock()
+    env.filters = {}
+    XMLExtension(env)
+    assert env.filters["xml_attr"](value) == expected
