@@ -1,3 +1,7 @@
+import pytest
+
+from briefcase.exceptions import BriefcaseCommandError
+
 from ...utils import create_file
 
 
@@ -52,11 +56,11 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         "second": second_app,
     }
 
-    # Pass the app name
-    options, _ = package_command.parse_options(["--app", "first"])
+    # Configure no command line arguments
+    options, _ = package_command.parse_options([])
 
-    # Run the package command
-    package_command(None, **options)
+    # Run the build command on a specific app
+    package_command(first_app, **options)
 
     # The right sequence of things will be done
     assert package_command.actions == [
@@ -66,8 +70,6 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        # All app configurations are finalized before packaging
-        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified for app
@@ -760,3 +762,174 @@ def test_already_packaged(package_command, first_app, tmp_path):
     # package_app() call, no new artefact is created; the absence
     # of this file shows that the old one has been deleted.
     assert not artefact_path.exists()
+
+
+def test_package_app_single(package_command, first_app):
+    """If the --app flag is used, only the selected app is packaged."""
+    # Add a single app
+    package_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure the --app option
+    options, _ = package_command.parse_options(["--app", "first"])
+
+    # Run the package command
+    package_command(**options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Package the app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+            },
+        ),
+    ]
+
+
+def test_package_app_multiple(package_command, first_app, second_app):
+    """Multiple --app values only package the selected apps."""
+    # Add two apps
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure the --app options
+    options, _ = package_command.parse_options(["--app", "first", "--app", "second"])
+
+    # Run the package command
+    package_command(**options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+            },
+        ),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        # Package the second app
+        (
+            "package",
+            "second",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "package_state": "first",
+            },
+        ),
+    ]
+
+
+def test_package_app_invalid(package_command, first_app, second_app):
+    """If an invalid app name is passed to --app, raise an error."""
+    # Add two apps
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure the --app option with an invalid app
+    options, _ = package_command.parse_options(["--app", "invalid"])
+
+    # Running the command should raise an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"App 'invalid' does not exist in this project.",
+    ):
+        package_command(**options)
+
+
+def test_package_app_duplicate(package_command, first_app):
+    """Passing --app multiple times with the same name should not double-package."""
+    # Add a single app
+    package_command.apps = {
+        "first": first_app,
+    }
+
+    # Configure --app with duplicates
+    options, _ = package_command.parse_options(["--app", "first", "--app", "first"])
+
+    # Run the package command
+    package_command(**options)
+
+    # The app should be packaged only once
+    assert (
+        package_command.actions.count(
+            ("package", "first", {"adhoc_sign": False, "identity": None})
+        )
+        == 1
+    )
+
+
+def test_package_app_none_defined(package_command):
+    """Packaging when no apps are defined should be a no-op."""
+    # No apps defined
+    package_command.apps = {}
+
+    # Configure no command line options
+    options, _ = package_command.parse_options([])
+
+    # Run the package command
+    result = package_command(**options)
+
+    # The right sequence of things will be done
+    assert result is None
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+    ]
+
+
+def test_package_with_update(package_command, first_app):
+    """If --update is passed, app is updated before packaging."""
+    package_command.apps = {"first": first_app}
+    options, _ = package_command.parse_options(["--app", "first", "--update"])
+    package_command(**options)
+
+    # Find the 'update' action for the app
+    update_action = next(
+        action
+        for action in package_command.actions
+        if action[0] == "update" and action[1] == "first"
+    )
+
+    # Assert relevant update flags are True
+    assert update_action[2]["update_requirements"] is True
+    assert update_action[2]["update_resources"] is True
+    assert update_action[2]["update_support"] is True

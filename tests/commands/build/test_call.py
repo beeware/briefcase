@@ -11,11 +11,11 @@ def test_specific_app(build_command, first_app, second_app):
         "second": second_app,
     }
 
-    # Configure command line options for building a specific app
-    options, _ = build_command.parse_options(["--app", "first"])
+    # Configure no command line options
+    options, _ = build_command.parse_options([])
 
     # Run the build command
-    build_command(**options)
+    build_command(first_app, **options)
 
     # The right sequence of things will be done
     assert build_command.actions == [
@@ -25,8 +25,6 @@ def test_specific_app(build_command, first_app, second_app):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        # Finalises all apps
-        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified for app
@@ -1219,3 +1217,139 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
             {"update_state": "second", "build_state": "first", "test_mode": True},
         ),
     ]
+
+
+def test_build_app_single(build_command, first_app, second_app):
+    """If the --app flag is used, only the selected app is built."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--app", "first"])
+
+    # Run the build command
+    build_command(**options)
+
+    # Only the selected app is built
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        # Build the first app
+        ("build", "first", {"test_mode": False}),
+    ]
+
+
+def test_build_app_multiple(build_command, first_app, second_app):
+    """Multiple --app flags build the specified apps."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--app", "first", "--app", "second"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App template is verified for first app
+        ("verify-app-template", "first"),
+        # App tools are verified for first app
+        ("verify-app-tools", "first"),
+        # Build the first app
+        ("build", "first", {"test_mode": False}),
+        # App template is verified for second app
+        ("verify-app-template", "second"),
+        # App tools are verified for second app
+        ("verify-app-tools", "second"),
+        # Build the second app
+        ("build", "second", {"build_state": "first", "test_mode": False}),
+    ]
+
+
+def test_build_app_invalid(build_command, first_app, second_app):
+    """If an invalid app name is passed to --app, an error is raised."""
+    # Add two valid apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--app", "invalid"])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"App 'invalid' does not exist in this project.",
+    ):
+        build_command(**options)
+
+
+def test_build_app_duplicate(build_command, first_app):
+    """Duplicate --app flags with the same name do not break the build."""
+    # Add one app
+    build_command.apps = {"first": first_app}
+
+    # Configure command line options
+    options, _ = build_command.parse_options(["--app", "first", "--app", "first"])
+
+    # Run the build command
+    build_command(**options)
+
+    # The app is built only once
+    assert build_command.actions.count(("build", "first", {"test_mode": False})) == 1
+
+
+def test_build_app_none_defined(build_command):
+    """If no apps are defined, do nothing."""
+    # No apps available
+    build_command.apps = {}
+
+    # Configure command line options
+    options, _ = build_command.parse_options([])
+
+    # Run the build command
+    result = build_command(**options)
+
+    # Nothing is built
+    assert result is None
+    assert build_command.actions == [("verify-host",), ("verify-tools",)]
+
+
+def test_build_app_no_args(build_command):
+    """If no args and no apps are present, do nothing."""
+    # No apps available
+    build_command.apps = {}
+
+    # No CLI args
+    options, _ = build_command.parse_options([])
+
+    # Run the build command
+    result = build_command(**options)
+
+    # Nothing is built
+    assert result is None
+    assert build_command.actions == [("verify-host",), ("verify-tools",)]

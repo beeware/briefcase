@@ -122,8 +122,9 @@ class PackageCommand(BaseCommand):
         parser.add_argument(
             "-a",
             "--app",
-            dest="app_name",
-            help="Name of the app to package (if multiple apps exist in the project)",
+            dest="apps",
+            action="append",
+            help="Name of the app(s) to build (if multiple apps exist in the project)",
         )
 
         parser.add_argument(
@@ -159,7 +160,7 @@ class PackageCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
-        app_name: str | None = None,  # New argument for filtering
+        apps: list[str] | None = None,
         update: bool = False,
         **options,
     ) -> dict | None:
@@ -167,24 +168,26 @@ class PackageCommand(BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app_name:
-            # Package only the specified app
-            if app_name in self.apps:
-                state = self._package_app(
-                    self.apps[app_name],
-                    update=update,
-                    **options,
-                )
-            else:
-                raise BriefcaseCommandError(f"App '{app_name}' not found in project.")
+        if apps:
+            selected_apps = {}
+            for name in apps:
+                if name not in self.apps:
+                    raise BriefcaseCommandError(
+                        f"App '{name}' does not exist in this project."
+                    )
+                selected_apps[name] = self.apps[name]
+            apps_to_package = selected_apps
+        elif app:
+            apps_to_package = {app.app_name: app}
         else:
-            # Default: Package all apps
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self._package_app(
-                    app,
-                    update=update,
-                    **full_options(state, options),
-                )
+            apps_to_package = self.apps
+
+        state = None
+        for app_name, app_obj in sorted(apps_to_package.items()):
+            state = self._package_app(
+                app_obj,
+                update=update,
+                **full_options(state, options),
+            )
 
         return state

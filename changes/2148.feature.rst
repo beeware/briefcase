@@ -1,1 +1,1 @@
-Added the `-a / --app` option to `briefcase build` and `briefcase package` to allow building/packaging a specific app instead of all apps.
+The `build` and `package` commands can now be run on a single or multiple app(s) in a project by using the `-a / --app` option

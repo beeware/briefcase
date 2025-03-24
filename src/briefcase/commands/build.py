@@ -17,8 +17,9 @@ class BuildCommand(BaseCommand):
         parser.add_argument(
             "-a",
             "--app",
-            dest="app_name",
-            help="Name of the app to build (if multiple apps exist in the project)",
+            dest="apps",
+            action="append",
+            help="Name of the app(s) to build (if multiple apps exist in the project)",
         )
 
     def build_app(self, app: AppConfig, **options):
@@ -93,7 +94,7 @@ class BuildCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
-        app_name: str | None = None,  # New argument for filtering
+        apps: list[str] | None = None,
         update: bool = False,
         update_requirements: bool = False,
         update_resources: bool = False,
@@ -131,36 +132,32 @@ class BuildCommand(BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app_name:
-            # Build only the specified app
-            if app_name in self.apps:
-                state = self._build_app(
-                    self.apps[app_name],
-                    update=update,
-                    update_requirements=update_requirements,
-                    update_resources=update_resources,
-                    update_support=update_support,
-                    update_stub=update_stub,
-                    no_update=no_update,
-                    test_mode=test_mode,
-                    **options,
-                )
-            else:
-                raise BriefcaseCommandError(f"App '{app_name}' not found in project.")
+        if apps:
+            selected_apps = {}
+            for name in apps:
+                if name not in self.apps:
+                    raise BriefcaseCommandError(
+                        f"App '{name}' does not exist in this project."
+                    )
+                selected_apps[name] = self.apps[name]
+            apps_to_build = selected_apps
+        elif app:
+            apps_to_build = {app.app_name: app}
         else:
-            # Default: Build all apps
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self._build_app(
-                    app,
-                    update=update,
-                    update_requirements=update_requirements,
-                    update_resources=update_resources,
-                    update_support=update_support,
-                    update_stub=update_stub,
-                    no_update=no_update,
-                    test_mode=test_mode,
-                    **full_options(state, options),
-                )
+            apps_to_build = self.apps
+
+        state = None
+        for app_name, app_obj in sorted(apps_to_build.items()):
+            state = self._build_app(
+                app_obj,
+                update=update,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                update_support=update_support,
+                update_stub=update_stub,
+                no_update=no_update,
+                test_mode=test_mode,
+                **full_options(state, options),
+            )
 
         return state
