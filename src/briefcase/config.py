@@ -201,6 +201,24 @@ def parsed_version(version):
     return SimpleNamespace(**groupdict)
 
 
+def parse_boolean(value: str) -> bool:
+    """Takes a string value and attempts to convert to a boolean value"""
+
+    truth_vals = {"true", "t", "yes", "y", "1", "on"}
+    false_vals = {"false", "f", "no", "n", "0", "off"}
+
+    normalised_val = value.strip().lower()
+
+    if normalised_val in truth_vals:
+        return True
+    elif normalised_val in false_vals:
+        return False
+    else:
+        raise ValueError(
+            f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}"
+        )
+
+
 class BaseConfig:
     def __init__(self, **kwargs):
         for attr, value in kwargs.items():
