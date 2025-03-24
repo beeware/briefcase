@@ -29,7 +29,7 @@ from rich.progress import (
 )
 from rich.traceback import Trace, Traceback
 
-from briefcase import __version__
+from briefcase import __version__, config
 from briefcase.exceptions import InputDisabled
 
 # Max width for printing to console; matches argparse's default width
@@ -719,23 +719,6 @@ class Console:
 
         return input_value
 
-    def parse_boolean(self, value: str) -> bool:
-        """Takes a string value and attempts to convert to a boolean value"""
-
-        truth_vals = {"true", "t", "yes", "y", "1", "on"}
-        false_vals = {"false", "f", "no", "n", "0", "off"}
-
-        normalised_val = value.strip().lower()
-
-        if normalised_val in truth_vals:
-            return True
-        elif normalised_val in false_vals:
-            return False
-        else:
-            raise ValueError(
-                f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}"
-            )
-
     def input_boolean(self, question: str, default: bool = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
 
@@ -1004,7 +987,7 @@ class Console:
             self.print()
             self.print(f"Using override value {override_value!r}")
             try:
-                return self.parse_boolean(override_value)
+                return config.parse_boolean(override_value)
             except ValueError as e:
                 raise ValueError(f"Invalid override value for {description}: {e}")
 
