@@ -124,6 +124,7 @@ class PackageCommand(BaseCommand):
             "--app",
             dest="apps",
             action="append",
+            default=None,
             help="Name of the app(s) to build (if multiple apps exist in the project)",
         )
 
@@ -164,6 +165,8 @@ class PackageCommand(BaseCommand):
         update: bool = False,
         **options,
     ) -> dict | None:
+
+        options.pop("apps", None)
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)
@@ -191,3 +194,11 @@ class PackageCommand(BaseCommand):
             )
 
         return state
+
+    def parse_options(self, extra=None):
+        options, overrides = super().parse_options(extra=extra)
+
+        if options.get("apps") is None:
+            options.pop("apps", None)
+
+        return options, overrides
