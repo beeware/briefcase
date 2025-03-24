@@ -18,6 +18,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
@@ -51,6 +52,28 @@ class iOSXcodePassiveMixin(iOSMixin):
             / "Debug-iphonesimulator"
             / f"{app.formal_name}.app"
         )
+
+    def device_and_simulator_platform_site(self, app: AppConfig) -> Path:
+        # Feb 2025: The platform-site was moved into the xcframework as
+        # `platform-config`. Look for the new location; fall back to the old location.
+        device_platform_site = (
+            self.support_path(app)
+            / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+        )
+        simulator_platform_site = (
+            self.support_path(app)
+            / "Python.xcframework/ios-arm64_x86_64-simulator"
+            / f"platform-config/{self.tools.host_arch}-iphonesimulator"
+        )
+        if not device_platform_site.exists():
+            device_platform_site = (
+                self.support_path(app) / "platform-site/iphoneos.arm64"
+            )
+            simulator_platform_site = (
+                self.support_path(app)
+                / f"platform-site/iphonesimulator.{self.tools.host_arch}"
+            )
+        return device_platform_site, simulator_platform_site
 
     def distribution_path(self, app):
         # This path won't ever be *generated*, as distribution artefacts
@@ -341,25 +364,9 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
 
         ios_min_tag = str(ios_min_version).replace(".", "_")
 
-        # Feb 2025: The platform-site was moved into the xcframework as
-        # `platform-config`. Look for the new location; fall back to the old location.
-        device_platform_site = (
-            self.support_path(app)
-            / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+        device_platform_site, simulator_platform_site = (
+            self.device_and_simulator_platform_site(app)
         )
-        simulator_platform_site = (
-            self.support_path(app)
-            / "Python.xcframework/ios-arm64_x86_64-simulator"
-            / f"platform-config/{self.tools.host_arch}-iphonesimulator"
-        )
-        if not device_platform_site.exists():
-            device_platform_site = (
-                self.support_path(app) / "platform-site/iphoneos.arm64"
-            )
-            simulator_platform_site = (
-                self.support_path(app)
-                / f"platform-site/iphonesimulator.{self.tools.host_arch}"
-            )
 
         # Perform the initial install pass targeting the "iphoneos" platform
         super()._install_app_requirements(
@@ -393,37 +400,6 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                 },
             },
         )
-
-    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]):
-        """Path mappings for enhanced debugger support
-
-        :param app: The config object for the app
-        :param app_sources: All source files of the app
-        :return: A list of code snippets that add a path mapping to the
-            'path_mappings' variable.
-        """
-        path_mappings = """
-device_app_folder = list(filter(lambda p: True if p.endswith("app") else False, sys.path))
-if len(device_app_folder) > 0:
-    pass
-"""
-        for src in app_sources:
-            original = self.base_path / src
-            path_mappings += f"""
-    path_mappings.append((r"{original.absolute()}", str(Path(device_app_folder[0]) / "{original.name}")))
-"""
-
-        host_requirements_folder = self.app_packages_path(app)
-        path_mappings += f"""
-import platform
-host_requirements_folder = "{host_requirements_folder.absolute()}"
-host_requirements_folder += ".iphonesimulator" if platform.ios_ver().is_simulator else ".iphoneos"
-device_requirements_folder = list(filter(lambda p: True if p.endswith("app_packages") else False, sys.path))
-if len(device_requirements_folder) > 0:
-    path_mappings.append((host_requirements_folder, device_requirements_folder[0]))
-"""
-
-        return path_mappings
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
@@ -505,6 +481,25 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # External service APIs.
         # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
+
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        # TODO: Add handling to switch between simulator and real device. Currently we only
+        #       support simulator.
+        device_platform_site, simulator_platform_site = (
+            self.device_and_simulator_platform_site(app)
+        )
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=simulator_platform_site,
+        )
 
     def run_app(
         self,

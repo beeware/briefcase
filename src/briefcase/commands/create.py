@@ -81,46 +81,6 @@ def write_dist_info(app: AppConfig, dist_info_path: Path):
         f.write(f"{app.module_name}\n")
 
 
-def write_launcher_module(
-    launcher_path: Path,
-    main_module: str,
-    start_remote_debugger_fct: str,
-):
-    """Install the launcher folder for the application.
-
-    :param app: The config object for the app
-    :param launcher_path: The path into which the launcher folder should be written.
-    :main_module: Name of the real main module to run.
-    :param start_remote_debugger_fct: A string to a code snippet, that at least
-        defines a "start_remote_debugger()" function.
-    """
-    # Create launcher folder, and write a minimal launcher file
-    with launcher_path.open("w", encoding="utf-8") as f:
-        f.write(
-            f"""\
-# Generated {datetime.now()}
-
-# #################### REMOTE DEBUGGER CODE - START ###########################
-{start_remote_debugger_fct}
-# #################### REMOTE DEBUGGER CODE - END #############################
-
-def main():
-    print("Launcher started")
-
-    print("Starting remote debugger...")
-    start_remote_debugger()
-
-    # Run main module
-    print(f"Starting main module '{main_module}'...")
-    import runpy
-    runpy._run_module_as_main("{main_module}")
-
-if __name__ == "__main__":
-    main()
-"""
-        )
-
-
 class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
@@ -769,9 +729,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.all_sources(test_mode)
 
         # Install app code.
         if sources:
@@ -790,32 +748,12 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info(f"No sources defined for {app.app_name}.")
 
-        if app.remote_debugger:
-            with self.console.wait_bar("Writing launcher files..."):
-                write_launcher_module(
-                    launcher_path=self.app_path(app) / "_briefcase_launcher.py",
-                    main_module=app.main_module(test_mode, include_launcher=False),
-                    start_remote_debugger_fct=app.remote_debugger.generate_startup_code(
-                        self.debugger_path_mappings(app, sources)
-                    ),
-                )
-
         # Write the dist-info folder for the application.
         write_dist_info(
             app=app,
             dist_info_path=self.app_path(app)
             / f"{app.module_name}-{app.version}.dist-info",
         )
-
-    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]) -> str:
-        """Path mappings for enhanced debugger support
-
-        :param app: The config object for the app
-        :param app_sources: All source files of the app
-        :return: A code snippet, that adds all path mappings to the
-            'path_mappings' variable.
-        """
-        return ""
 
     def install_image(self, role, variant, size, source, target):
         """Install an icon/image of the requested size at a target location, using the

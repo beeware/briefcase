@@ -283,36 +283,6 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "features": features,
         }
 
-    def debugger_path_mappings(self, app: AppConfig, app_sources: list[str]):
-        """Path mappings for enhanced debugger support
-
-        :param app: The config object for the app
-        :param app_sources: All source files of the app
-        :return: A list of code snippets that add a path mapping to the
-            'path_mappings' variable.
-        """
-        path_mappings = """
-device_app_folder = list(filter(lambda p: True if "AssetFinder/app" in p else False, sys.path))
-if len(device_app_folder) > 0:
-    pass
-"""
-        for src in app_sources:
-            original = self.base_path / src
-            path_mappings += f"""
-    path_mappings.append((r"{original.absolute()}", str(Path(device_app_folder[0]) / "{original.name}")))
-"""
-
-        host_requirements_folder = (
-            self.bundle_path(app) / "app/build/python/pip/debug/common"
-        )
-        path_mappings += f"""
-device_requirements_folder = list(filter(lambda p: True if "AssetFinder/requirements" in p else False, sys.path))
-if len(device_requirements_folder) > 0:
-    path_mappings.append((r"{host_requirements_folder.absolute()}", device_requirements_folder[0]))
-"""
-
-        return path_mappings
-
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."

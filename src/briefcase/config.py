@@ -423,7 +423,18 @@ class AppConfig(BaseConfig):
                 paths.append(path)
         return paths
 
-    def main_module(self, test_mode: bool, include_launcher: bool = True):
+    def all_sources(self, test_mode: bool) -> list[str]:
+        """Get all sources of the application that should be copied to the app.
+
+        :param test_mode: Is the test mode enabled?
+        :returns: The Path to the dist-info folder.
+        """
+        sources = self.sources.copy() if self.sources else []
+        if test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
+
+    def main_module(self, test_mode: bool):
         """The path to the main module for the app.
 
         In normal operation, this is ``app.module_name``; however,
@@ -432,14 +443,9 @@ class AppConfig(BaseConfig):
         :param test_mode: Are we running in test mode?
         """
         if test_mode:
-            module_name = f"tests.{self.module_name}"
+            return f"tests.{self.module_name}"
         else:
-            module_name = self.module_name
-
-        if self.remote_debugger and include_launcher:
-            return "_briefcase_launcher"
-        else:
-            return module_name
+            return self.module_name
 
 
 def merge_config(config, data):
