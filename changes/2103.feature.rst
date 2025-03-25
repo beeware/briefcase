@@ -1,2 +1,1 @@
-A Cookiecutter filter for escaping XML content has been added.
-A Cookiecutter filter for quoting XML attributes appropriately.
+Cookiecutter filters for escaping XML content and attributes have been added.
