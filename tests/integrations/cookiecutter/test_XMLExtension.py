@@ -53,10 +53,8 @@ def test_xml_escape(value, expected):
         ("Hello ' World", '"Hello \' World"'),
         # A double quote wrapped in single quotes
         ('Hello " World', "'Hello \" World'"),
-        # A double quote and a single quote wrapped in single quotes
+        # A double quote and a single quote in the same string value
         ("Hello \" And ' World", '"Hello &quot; And \' World"'),
-        # A double quote and a single quote wrapped in double quotes
-        ("Hello \" Or ' World", '"Hello &quot; Or \' World"'),
     ],
 )
 def test_xml_attr(value, expected):
