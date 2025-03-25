@@ -1,0 +1,1 @@
+Cookiecutter filters for escaping XML content and attributes have been added.

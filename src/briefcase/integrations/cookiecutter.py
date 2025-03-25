@@ -1,6 +1,7 @@
 """Jinja2 extensions."""
 
 import uuid
+from xml.sax.saxutils import escape, quoteattr
 
 from jinja2.ext import Extension
 
@@ -139,7 +140,17 @@ class XMLExtension(Extension):
             """Render value in XML format appropriate for an attribute."""
             return "true" if obj else "false"
 
+        def xml_escape(obj):
+            """Filter to escape characters <, >, &, " and '"""
+            return escape(obj)
+
+        def xml_attr(obj):
+            """ "Filter to quote an XML value appropriately."""
+            return quoteattr(obj)
+
         environment.filters["bool_attr"] = bool_attr
+        environment.filters["xml_escape"] = xml_escape
+        environment.filters["xml_attr"] = xml_attr
 
 
 class UUIDExtension(Extension):
