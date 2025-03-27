@@ -1514,7 +1514,9 @@ class ADB:
                 f"Unable to force stop app {package} on {self.device}"
             ) from e
 
-    def start_app(self, package: str, activity: str, passthrough: list[str]):
+    def start_app(
+        self, package: str, activity: str, passthrough: list[str], env: dict[str, str]
+    ):
         """Start an app, specified as a package name & activity name.
 
         If you have an APK file, and you are not sure of the package or activity
@@ -1543,6 +1545,9 @@ class ADB:
                 "--es",
                 "org.beeware.ARGV",
                 shlex.quote(json.dumps(passthrough)),  # Protect from Android's shell
+                "--es",
+                "org.beeware.ENV",
+                shlex.quote(json.dumps(env)),  # Protect from Android's shell
             )
 
             # `adb shell am start` always exits with status zero. We look for error
