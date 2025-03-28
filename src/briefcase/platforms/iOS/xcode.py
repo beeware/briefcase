@@ -53,7 +53,7 @@ class iOSXcodePassiveMixin(iOSMixin):
             / f"{app.formal_name}.app"
         )
 
-    def device_and_simulator_platform_site(self, app: AppConfig) -> Path:
+    def device_and_simulator_platform_site(self, app: AppConfig) -> tuple[Path, Path]:
         # Feb 2025: The platform-site was moved into the xcframework as
         # `platform-config`. Look for the new location; fall back to the old location.
         device_platform_site = (
@@ -493,12 +493,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         """
         # TODO: Add handling to switch between simulator and real device. Currently we only
         #       support simulator.
-        device_platform_site, simulator_platform_site = (
-            self.device_and_simulator_platform_site(app)
-        )
         return AppPackagesPathMappings(
             sys_path_regex="app_packages$",
-            host_folder=simulator_platform_site,
+            host_folder=str(
+                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
+            ),
         )
 
     def run_app(
@@ -652,6 +651,30 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Wait for the log stream start up
         time.sleep(0.25)
+
+        # Add additional environment variables
+        env = {}
+        if app.remote_debugger:
+            env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
+                app, test_mode
+            )
+
+        # Install additional environment variables
+        if env:
+            with self.console.wait_bar("Setting environment variables..."):
+                for env_key, env_value in env.items():
+                    output = self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "setenv",
+                            f"{env_key}",
+                            f"{env_value}",
+                        ]
+                    )
 
         try:
             self.console.info(f"Starting {label}...", prefix=app.app_name)
