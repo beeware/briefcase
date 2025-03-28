@@ -321,7 +321,7 @@ Delete {jdk_zip_path} and run briefcase again.
         except PermissionError as e:
             raise BriefcaseCommandError(
                 f"""\
-Permission denied when trying to remove {jdk_location}.
+Permission denied when trying to remove {jdk_location!r}
 
 Ensure no Java processes are running and try again.
 """

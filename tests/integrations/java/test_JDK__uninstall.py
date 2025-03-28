@@ -43,7 +43,7 @@ def test_java_running(mock_tools, host_os, java_home, tmp_path):
     # Attempting to uninstall JDK which will fail due to Permission Error
     with pytest.raises(
         BriefcaseCommandError,
-        match=re.escape(f"Permission denied when trying to remove {expected_loc}"),
+        match=re.escape(f"Permission denied when trying to remove {expected_loc!r}"),
     ):
         jdk.uninstall()
 
