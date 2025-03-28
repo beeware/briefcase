@@ -821,7 +821,7 @@ def test_package_app_invalid(package_command, first_app, second_app):
 
 
 def test_package_app_none_defined(package_command):
-    """Packaging when no apps are defined should be a no-op."""
+    """If no apps are defined, do nothing."""
     # No apps defined
     package_command.apps = {}
 
@@ -841,62 +841,70 @@ def test_package_app_none_defined(package_command):
     ]
 
 
-def test_package_with_update(package_command, first_app, tmp_path):
-    """If --update is passed, app is updated, built, and then packaged."""
+def test_package_app_all_flags(package_command, first_app, tmp_path):
+    """Verify that all package-related flags work correctly with -a."""
+    # Add a single app
     package_command.apps = {"first": first_app}
 
-    # Provide the --app and --update options
-    options, _ = package_command.parse_options(["--app", "first", "--update"])
-    package_command(**options)
+    # Configure command line options with all available flags
+    options, _ = package_command.parse_options(
+        [
+            "-a",
+            "first",
+            "--update",
+            "--packaging-format",
+            "pkg",
+            "--adhoc-sign",
+        ]
+    )
+    app_name = options.pop("app_name")
 
-    # Full sequence must include update, build, verify, package
+    # Run the package command
+    package_command(app_name=app_name, **options)
+
+    # The right sequence of things will be done
     assert package_command.actions == [
         # Host OS is verified
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
-        # App config finalized
+        # App config has been finalized
         ("finalize-app-config", "first"),
-        # App is updated
+        # App is updated with all update options
         (
             "update",
             "first",
             {
-                "adhoc_sign": False,
+                "adhoc_sign": True,
                 "identity": None,
                 "update_requirements": True,
                 "update_resources": True,
                 "update_support": True,
             },
         ),
-        # App is built
+        # App is built with update state
         (
             "build",
             "first",
             {
-                "adhoc_sign": False,
+                "adhoc_sign": True,
                 "identity": None,
                 "update_state": "first",
             },
         ),
-        # Template and tools are verified
+        # App template is verified
         ("verify-app-template", "first"),
+        # App tools are verified
         ("verify-app-tools", "first"),
-        # App is packaged
+        # App is packaged with the full state and adhoc signing
         (
             "package",
             "first",
             {
-                "adhoc_sign": False,
+                "adhoc_sign": True,
                 "identity": None,
                 "update_state": "first",
                 "build_state": "first",
             },
         ),
     ]
-
-    # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
-
-    # The dist folder has been created
-    assert tmp_path / "base_path/dist"

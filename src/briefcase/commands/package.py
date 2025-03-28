@@ -169,11 +169,12 @@ class PackageCommand(BaseCommand):
         self.finalize(app)
 
         if app_name:
-            if app_name not in self.apps:
+            try:
+                apps_to_package = {app_name: self.apps[app_name]}
+            except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
                 )
-            apps_to_package = {app_name: self.apps[app_name]}
         elif app:
             apps_to_package = {app.app_name: app}
         else:
