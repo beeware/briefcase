@@ -1,3 +1,7 @@
+import pytest
+
+from briefcase.exceptions import BriefcaseCommandError
+
 from ...utils import create_file
 
 
@@ -758,3 +762,157 @@ def test_already_packaged(package_command, first_app, tmp_path):
     # package_app() call, no new artefact is created; the absence
     # of this file shows that the old one has been deleted.
     assert not artefact_path.exists()
+
+
+# Parametrize both --apps/-a flags
+@pytest.mark.parametrize("app_flags", ["--app", "-a"])
+def test_package_app_single(package_command, first_app, second_app, app_flags):
+    """If the --app or -a flag is used, only the selected app is packaged."""
+    # Add two apps
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with the parameterized flag
+    options, _ = package_command.parse_options([app_flags, "first"])
+
+    # Run the package command
+    package_command(**options)
+
+    # Only the selected app is packaged
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Package the app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+            },
+        ),
+    ]
+
+
+def test_package_app_invalid(package_command, first_app, second_app):
+    """If an invalid app name is passed to --app, raise an error."""
+    # Add two apps
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure the --app option with an invalid app
+    options, _ = package_command.parse_options(["--app", "invalid"])
+
+    # Running the command should raise an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"App 'invalid' does not exist in this project.",
+    ):
+        package_command(**options)
+
+
+def test_package_app_none_defined(package_command):
+    """If no apps are defined, do nothing."""
+    # No apps defined
+    package_command.apps = {}
+
+    # Configure no command line options
+    options, _ = package_command.parse_options([])
+
+    # Run the package command
+    result = package_command(**options)
+
+    # The right sequence of things will be done
+    assert result is None
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+    ]
+
+
+def test_package_app_all_flags(package_command, first_app, second_app):
+    """Verify that all package-related flags work correctly with -a."""
+    # Add a single app
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options with all available flags
+    options, _ = package_command.parse_options(
+        [
+            "-a",
+            "first",
+            "--update",
+            "--packaging-format",
+            "pkg",
+            "--adhoc-sign",
+        ]
+    )
+    app_name = options.pop("app_name")
+
+    # Run the package command
+    package_command(app_name=app_name, **options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
+        # App is updated with all update options
+        (
+            "update",
+            "first",
+            {
+                "adhoc_sign": True,
+                "identity": None,
+                "update_requirements": True,
+                "update_resources": True,
+                "update_support": True,
+            },
+        ),
+        # App is built with update state
+        (
+            "build",
+            "first",
+            {
+                "adhoc_sign": True,
+                "identity": None,
+                "update_state": "first",
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # App is packaged with the full state and adhoc signing
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": True,
+                "identity": None,
+                "update_state": "first",
+                "build_state": "first",
+            },
+        ),
+    ]
