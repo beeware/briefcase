@@ -1219,16 +1219,18 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
     ]
 
 
-def test_build_app_single(build_command, first_app, second_app):
-    """If the --app flag is used, only the selected app is built."""
+# Parametrize both --apps/-a flags
+@pytest.mark.parametrize("app_flags", ["--app", "-a"])
+def test_build_app_single(build_command, first_app, second_app, app_flags):
+    """If the --app or -a flag is used, only the selected app is built."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
         "second": second_app,
     }
 
-    # Configure command line options
-    options, _ = build_command.parse_options(["--app", "first"])
+    # Configure command line options with the parameterized flag
+    options, _ = build_command.parse_options([app_flags, "first"])
 
     # Run the build command
     build_command(**options)
@@ -1291,6 +1293,7 @@ def test_build_app_all_flags(build_command, first_app, second_app):
     # Add two apps
     build_command.apps = {
         "first": first_app,
+        "second": second_app,
     }
 
     # Configure command line with all available flags
@@ -1318,6 +1321,7 @@ def test_build_app_all_flags(build_command, first_app, second_app):
         ("verify-tools",),
         # App configs have been finalized
         ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # First app is updated with all update flags
         (
             "update",

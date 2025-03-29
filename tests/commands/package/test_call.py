@@ -764,20 +764,23 @@ def test_already_packaged(package_command, first_app, tmp_path):
     assert not artefact_path.exists()
 
 
-def test_package_app_single(package_command, first_app):
-    """If the --app flag is used, only the selected app is packaged."""
-    # Add a single app
+# Parametrize both --apps/-a flags
+@pytest.mark.parametrize("app_flags", ["--app", "-a"])
+def test_package_app_single(package_command, first_app, second_app, app_flags):
+    """If the --app or -a flag is used, only the selected app is packaged."""
+    # Add two apps
     package_command.apps = {
         "first": first_app,
+        "second": second_app,
     }
 
-    # Configure the --app option
-    options, _ = package_command.parse_options(["--app", "first"])
+    # Configure command line options with the parameterized flag
+    options, _ = package_command.parse_options([app_flags, "first"])
 
     # Run the package command
     package_command(**options)
 
-    # The right sequence of things will be done
+    # Only the selected app is packaged
     assert package_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -785,6 +788,7 @@ def test_package_app_single(package_command, first_app):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified
@@ -841,10 +845,13 @@ def test_package_app_none_defined(package_command):
     ]
 
 
-def test_package_app_all_flags(package_command, first_app, tmp_path):
+def test_package_app_all_flags(package_command, first_app, second_app):
     """Verify that all package-related flags work correctly with -a."""
     # Add a single app
-    package_command.apps = {"first": first_app}
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
 
     # Configure command line options with all available flags
     options, _ = package_command.parse_options(
@@ -870,6 +877,7 @@ def test_package_app_all_flags(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App is updated with all update options
         (
             "update",
