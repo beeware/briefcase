@@ -372,7 +372,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """
         app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
         return AppPackagesPathMappings(
-            sys_path_regex="app_packages$",
+            sys_path_regex="requirements$",
             host_folder=f"{app_packages_path}",
         )
 
