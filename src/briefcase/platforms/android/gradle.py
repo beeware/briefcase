@@ -17,8 +17,9 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
+from briefcase.debuggers.base import AppPackagesPathMappings, BaseDebugger, DebuggerMode
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 
@@ -360,6 +361,21 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
 
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=f"{app_packages_path}",
+        )
+
     def run_app(
         self,
         app: AppConfig,
@@ -427,12 +443,22 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
+            env = {}
+            if app.remote_debugger:
+                with self.console.wait_bar("Establishing debugger connection..."):
+                    self.establish_debugger_connection(adb, app.remote_debugger)
+                env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
+                    app, test_mode
+                )
+
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):
                 # capture the earliest time for device logging in case PID not found
                 device_start_time = adb.datetime()
 
-                adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
+                adb.start_app(
+                    package, "org.beeware.android.MainActivity", passthrough, env
+                )
 
                 # Try to get the PID for 5 seconds.
                 pid = None
@@ -476,6 +502,17 @@ class GradleRunCommand(GradleMixin, RunCommand):
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
+
+    def establish_debugger_connection(self, adb: ADB, debugger: BaseDebugger):
+        """Forward/Reverse the ports necessary for remote debugging.
+
+        :param app: The config object for the app
+        :param adb: Access to the adb
+        """
+        if debugger.mode == DebuggerMode.SERVER:
+            adb.forward(debugger.port, debugger.port)
+        elif debugger.port == DebuggerMode.CLIENT:
+            adb.reverse(debugger.port, debugger.port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
