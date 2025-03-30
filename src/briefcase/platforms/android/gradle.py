@@ -506,6 +506,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
                 raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
         finally:
+            if app.remote_debugger:
+                with self.console.wait_bar("Stopping debugger connection..."):
+                    self.remove_debugger_connection(adb, app.remote_debugger)
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
@@ -520,6 +523,17 @@ class GradleRunCommand(GradleMixin, RunCommand):
             adb.forward(debugger.port, debugger.port)
         elif debugger.port == DebuggerMode.CLIENT:
             adb.reverse(debugger.port, debugger.port)
+
+    def remove_debugger_connection(self, adb: ADB, debugger: BaseDebugger):
+        """Remove Forward/Reverse of the ports necessary for remote debugging.
+
+        :param app: The config object for the app
+        :param adb: Access to the adb
+        """
+        if debugger.mode == DebuggerMode.SERVER:
+            adb.forward_remove(debugger.port)
+        elif debugger.port == DebuggerMode.CLIENT:
+            adb.reverse_remove(debugger.port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
