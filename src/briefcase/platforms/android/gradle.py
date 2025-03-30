@@ -451,6 +451,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     app, test_mode
                 )
 
+            if self.console.is_debug:
+                env["BRIEFCASE_DEBUG"] = "1"
+
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):
                 # capture the earliest time for device logging in case PID not found
