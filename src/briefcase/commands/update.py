@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import full_options
 from .create import CreateCommand
@@ -13,6 +14,13 @@ class UpdateCommand(CreateCommand):
     def add_options(self, parser):
         self._add_update_options(parser, update=False)
         self._add_test_options(parser, context_label="Update")
+
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to update (if multiple apps exist in the project)",
+        )
 
     def update_app(
         self,
@@ -79,6 +87,7 @@ class UpdateCommand(CreateCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         update_requirements: bool = False,
         update_resources: bool = False,
         update_support: bool = False,
@@ -91,7 +100,7 @@ class UpdateCommand(CreateCommand):
         self.finalize(app)
 
         if app:
-            state = self.update_app(
+            return self.update_app(
                 app,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
@@ -100,17 +109,27 @@ class UpdateCommand(CreateCommand):
                 test_mode=test_mode,
                 **options,
             )
-        else:
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self.update_app(
-                    app,
-                    update_requirements=update_requirements,
-                    update_resources=update_resources,
-                    update_support=update_support,
-                    update_stub=update_stub,
-                    test_mode=test_mode,
-                    **full_options(state, options),
-                )
+
+        try:
+            if app_name:
+                apps_to_update = {app_name: self.apps[app_name]}
+            else:
+                apps_to_update = self.apps
+        except KeyError:
+            raise BriefcaseCommandError(
+                f"App '{app_name}' does not exist in this project."
+            )
+
+        state = None
+        for app_name, app in sorted(apps_to_update.items()):
+            state = self.update_app(
+                app,
+                update_requirements=update_requirements,
+                update_resources=update_resources,
+                update_support=update_support,
+                update_stub=update_stub,
+                test_mode=test_mode,
+                **full_options(state, options),
+            )
 
         return state

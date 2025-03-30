@@ -84,6 +84,15 @@ class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
 
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to create (if multiple apps exist in the project)",
+        )
+
     # app properties that won't be exposed to the context
     hidden_app_properties = {"permission"}
 
@@ -974,6 +983,7 @@ class CreateCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
@@ -981,13 +991,30 @@ class CreateCommand(BaseCommand):
         self.finalize(app)
 
         if app:
-            state = self.create_app(app, **options)
-        else:
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(app, **full_options(state, options))
+            return self.create_app(app, **options)
+
+        if app_name:
+            try:
+                app = self.apps[app_name]
+            except KeyError:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+            return self.create_app(app, **options)
+
+        state = None
+        for app_name, app in sorted(self.apps.items()):
+            state = self.create_app(app, **full_options(state, options))
 
         return state
+
+    def parse_options(self, extra=None):
+        options, overrides = super().parse_options(extra=extra)
+
+        if options.get("app_name") is None:
+            options.pop("app_name", None)
+
+        return options, overrides
 
 
 def _has_url(requirement):
