@@ -1546,7 +1546,7 @@ class ADB:
                 "org.beeware.ARGV",
                 shlex.quote(json.dumps(passthrough)),  # Protect from Android's shell
                 "--es",
-                "org.beeware.ENV",
+                "org.beeware.ENVIRON",
                 shlex.quote(json.dumps(env)),  # Protect from Android's shell
             )
 
