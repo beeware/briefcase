@@ -215,15 +215,19 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
+        extract_sources = app.test_sources or []
+        if app.remote_debugger:
+            # Add sources to the extract_packages so that the debugger can
+            # get the source code at runtime (eg. via 'll' in pdb).
+            extract_sources.extend(app.sources)
+
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
             # Extract test packages, to enable features like test discovery and assertion
             # rewriting.
             "extract_packages": ", ".join(
-                f'"{name}"'
-                for path in (app.test_sources or [])
-                if (name := Path(path).name)
+                [f'"{name}"' for path in extract_sources if (name := Path(path).name)]
             ),
             "build_gradle_dependencies": {"implementation": dependencies},
         }
