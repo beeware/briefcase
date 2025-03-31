@@ -1,0 +1,1 @@
+Briefcase now supports multiple valid changelog filenames when building and packaging applications

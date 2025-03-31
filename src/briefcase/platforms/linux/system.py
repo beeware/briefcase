@@ -760,15 +760,39 @@ app's configuration.
                 )
 
         with self.console.wait_bar("Installing changelog..."):
-            changelog = self.base_path / "CHANGELOG"
-            if changelog.is_file():
-                with changelog.open(encoding="utf-8") as infile:
-                    outfile = gzip.GzipFile(
-                        doc_folder / "changelog.gz", mode="wb", mtime=0
-                    )
-                    outfile.write(infile.read().encode("utf-8"))
-                    outfile.close()
-            else:
+            changelog_name_formats = [
+                "CHANGELOG",
+                "HISTORY",
+                "NEWS",
+                "RELEASES",
+                "CHANGELOG.md",
+                "CHANGELOG.rst",
+                "CHANGELOG.txt",
+                "HISTORY.md",
+                "HISTORY.rst",
+                "HISTORY.txt",
+                "NEWS.md",
+                "NEWS.rst",
+                "NEWS.txt",
+                "RELEASES.md",
+                "RELEASES.rst",
+                "RELEASES.txt",
+            ]
+            matched_changelog_name = None
+
+            for name in changelog_name_formats:
+                changelog = self.base_path / name
+                if changelog.is_file():
+                    with changelog.open(encoding="utf-8") as infile:
+                        outfile = gzip.GzipFile(
+                            doc_folder / "changelog.gz", mode="wb", mtime=0
+                        )
+                        outfile.write(infile.read().encode("utf-8"))
+                        outfile.close()
+                    matched_changelog_name = name
+                    break
+
+            if matched_changelog_name is None:
                 raise BriefcaseCommandError(
                     """\
 Your project does not contain a CHANGELOG file.
@@ -1139,18 +1163,43 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     else:
                         f.write(f'"/{path}"\n')
 
+                changelog_name_formats = [
+                    "CHANGELOG",
+                    "HISTORY",
+                    "NEWS",
+                    "RELEASES",
+                    "CHANGELOG.md",
+                    "CHANGELOG.rst",
+                    "CHANGELOG.txt",
+                    "HISTORY.md",
+                    "HISTORY.rst",
+                    "HISTORY.txt",
+                    "NEWS.md",
+                    "NEWS.rst",
+                    "NEWS.txt",
+                    "RELEASES.md",
+                    "RELEASES.rst",
+                ]
+                matched_changelog_name = None
+                changelog_source = None
+
                 # Add the changelog content to the bottom of the spec file.
                 f.write("\n%changelog\n")
-                changelog_source = self.base_path / "CHANGELOG"
-                if not changelog_source.is_file():
+                for name in changelog_name_formats:
+                    changelog_source = self.base_path / name
+                    if changelog_source.is_file():
+                        matched_changelog_name = name
+                        break
+
+                if matched_changelog_name is None:
                     raise BriefcaseCommandError(
                         """\
-Your project does not contain a CHANGELOG file.
-
-Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
-with details about the release.
-"""
+        Your project does not contain a CHANGELOG file.
+        Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
+        with details about the release.
+        """
                     )
+
                 with changelog_source.open(encoding="utf-8") as c:
                     f.write(c.read())
 
@@ -1200,9 +1249,36 @@ with details about the release.
                 "App configuration does not define `description`. "
                 "Arch projects require a description."
             )
-        # The changelog should exist.
-        changelog_source = self.base_path / "CHANGELOG"
-        if not changelog_source.is_file():
+
+        changelog_name_formats = [
+            "CHANGELOG",
+            "HISTORY",
+            "NEWS",
+            "RELEASES",
+            "CHANGELOG.md",
+            "CHANGELOG.rst",
+            "CHANGELOG.txt",
+            "HISTORY.md",
+            "HISTORY.rst",
+            "HISTORY.txt",
+            "NEWS.md",
+            "NEWS.rst",
+            "NEWS.txt",
+            "RELEASES.md",
+            "RELEASES.rst",
+            "RELEASES.txt",
+        ]
+
+        matched_changelog_name = None
+        changelog_source = None
+
+        for name in changelog_name_formats:
+            changelog_source = self.base_path / name
+            if changelog_source.is_file():
+                matched_changelog_name = name
+                break
+
+        if matched_changelog_name is None:
             raise BriefcaseCommandError(
                 """\
 Your project does not contain a CHANGELOG file.
@@ -1218,8 +1294,10 @@ with details about the release.
                 self.tools.shutil.rmtree(pkgbuild_path)
             pkgbuild_path.mkdir(parents=True)
 
-            # Copy the CHANGELOG file to the pkgbuild_path so that it is visible to PKGBUILD
-            self.tools.shutil.copy(changelog_source, pkgbuild_path / "CHANGELOG")
+            # Copy the CHANGELOG file build_path so that it is visible to PKGBUILD
+            self.tools.shutil.copy(
+                changelog_source, pkgbuild_path / matched_changelog_name
+            )
 
         # Build the source archive
         with self.console.wait_bar("Building source archive..."):

@@ -670,8 +670,33 @@ class ConvertCommand(NewCommand):
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
         # Copy changelog file
-        changelog_file = self.base_path / "CHANGELOG"
-        if not changelog_file.is_file():
+        changelog_name_formats = [
+            "CHANGELOG",
+            "HISTORY",
+            "NEWS",
+            "RELEASES",
+            "CHANGELOG.md",
+            "CHANGELOG.rst",
+            "CHANGELOG.txt",
+            "HISTORY.md",
+            "HISTORY.rst",
+            "HISTORY.txt",
+            "NEWS.md",
+            "NEWS.rst",
+            "NEWS.txt",
+            "RELEASES.md",
+            "RELEASES.rst",
+            "RELEASES.txt",
+        ]
+        matched_changelog_name = None
+
+        for name in changelog_name_formats:
+            changelog = self.base_path / name
+            if changelog.is_file():
+                matched_changelog_name = name
+                break
+
+        if matched_changelog_name is None:
             self.console.warning(
                 f"\nChangelog file not found in '{self.base_path}'. You should either "
                 f"create a new '{self.base_path / 'CHANGELOG'}' file, or rename an "
