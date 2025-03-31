@@ -15,3 +15,5 @@ Want to see examples of Briefcase in use? Here's some:
 
 * `Patent Toolkit <https://patenttk.com/>`_ is a suite of tools for patent professionals.
   It uses Briefcase to prepare Windows and MacOS builds.
+
+* `Wunjo <https://wunjo.online/>`_ is a suite of tools for edit and generation video, image and audio for designers, creators, photographers with ,ore 50+ neural networks inside. It uses Briefcase to prepare Windows, Linux and Web (whl package) builds.
