@@ -3,7 +3,7 @@ Success Stories
 
 Want to see examples of Briefcase in use? Here's some:
 
-* `Wunjo <https://wunjo.online/>`_ is a suite of tools for edit and generation video, image and audio for designers, creators, photographers with ,ore 50+ neural networks inside. It uses Briefcase to prepare Windows, Linux and Web (whl package) builds.
+* `Wunjo <https://wunjo.online/>`_ is a suite of tools for editing and generating video, images, and audio for designers, creators, and photographers, with more than 50 neural networks inside. It uses Briefcase to prepare builds for Windows, Linux, and Web (whl package).
 
 * `Travel Tips <https://apps.apple.com/au/app/travel-tips/id1336372310>`_ is
   an app in the iOS App Store that was packaged for distribution using
