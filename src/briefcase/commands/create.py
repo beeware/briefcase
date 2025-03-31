@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import os
 import platform
@@ -91,6 +92,7 @@ class CreateCommand(BaseCommand):
             "--app",
             dest="app_name",
             help="Name of the app to create (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
         )
 
     # app properties that won't be exposed to the context
@@ -990,31 +992,26 @@ class CreateCommand(BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app:
-            return self.create_app(app, **options)
-
         if app_name:
             try:
-                app = self.apps[app_name]
+                apps_to_create = {app_name: self.apps[app_name]}
             except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
                 )
-            return self.create_app(app, **options)
+        elif app:
+            apps_to_create = {app.app_name: app}
+        else:
+            apps_to_create = self.apps
 
         state = None
-        for app_name, app in sorted(self.apps.items()):
-            state = self.create_app(app, **full_options(state, options))
+        for app_name, app_obj in sorted(apps_to_create.items()):
+            state = self.create_app(
+                app_obj,
+                **full_options(state, options),
+            )
 
         return state
-
-    def parse_options(self, extra=None):
-        options, overrides = super().parse_options(extra=extra)
-
-        if options.get("app_name") is None:
-            options.pop("app_name", None)
-
-        return options, overrides
 
 
 def _has_url(requirement):

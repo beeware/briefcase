@@ -99,31 +99,22 @@ class UpdateCommand(CreateCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app:
-            return self.update_app(
-                app,
-                update_requirements=update_requirements,
-                update_resources=update_resources,
-                update_support=update_support,
-                update_stub=update_stub,
-                test_mode=test_mode,
-                **options,
-            )
-
-        try:
-            if app_name:
+        if app_name:
+            try:
                 apps_to_update = {app_name: self.apps[app_name]}
-            else:
-                apps_to_update = self.apps
-        except KeyError:
-            raise BriefcaseCommandError(
-                f"App '{app_name}' does not exist in this project."
-            )
+            except KeyError:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+        elif app:
+            apps_to_update = {app.app_name: app}
+        else:
+            apps_to_update = self.apps
 
         state = None
-        for app_name, app in sorted(apps_to_update.items()):
+        for app_name, app_obj in sorted(apps_to_update.items()):
             state = self.update_app(
-                app,
+                app_obj,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 update_support=update_support,

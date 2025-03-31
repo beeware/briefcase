@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 from abc import abstractmethod
 
 from briefcase.config import AppConfig
@@ -124,6 +125,7 @@ class PackageCommand(BaseCommand):
             "--app",
             dest="app_name",
             help="Name of the app to package (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
         )
 
         parser.add_argument(
@@ -189,11 +191,3 @@ class PackageCommand(BaseCommand):
             )
 
         return state
-
-    def parse_options(self, extra=None):
-        options, overrides = super().parse_options(extra=extra)
-
-        if options.get("app_name") is None:
-            options.pop("app_name", None)
-
-        return options, overrides
