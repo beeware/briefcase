@@ -1641,8 +1641,7 @@ Activity class not found while starting app.
         :param device_port: The port on the device
         """
         try:
-            # TODO: This prints the port to the terminal. How to remove the output?
-            self.tools.subprocess.run(
+            self.tools.subprocess.check_output(
                 [
                     self.tools.android_sdk.adb_path,
                     "-s",
@@ -1652,7 +1651,6 @@ Activity class not found while starting app.
                     f"tcp:{device_port}",
                 ],
                 env=self.tools.android_sdk.env,
-                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb forward'.") from e
@@ -1660,11 +1658,10 @@ Activity class not found while starting app.
     def forward_remove(self, host_port: int):
         """Remove forwarded port.
 
-        :param host_port: The port on the host that should be forwarded to the device
+        :param host_port: The port on the host that should be removed
         """
         try:
-            # TODO: This prints the port to the terminal. How to remove the output?
-            self.tools.subprocess.run(
+            self.tools.subprocess.check_output(
                 [
                     self.tools.android_sdk.adb_path,
                     "-s",
@@ -1674,7 +1671,6 @@ Activity class not found while starting app.
                     f"tcp:{host_port}",
                 ],
                 env=self.tools.android_sdk.env,
-                check=False,  # if the port is not in use an error is returned, but we dont care
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb forward --remove'.") from e
@@ -1687,8 +1683,7 @@ Activity class not found while starting app.
         :param host_port: The port on the host
         """
         try:
-            # TODO: This prints the port to the terminal. How to remove the output?
-            self.tools.subprocess.run(
+            self.tools.subprocess.check_output(
                 [
                     self.tools.android_sdk.adb_path,
                     "-s",
@@ -1698,7 +1693,6 @@ Activity class not found while starting app.
                     f"tcp:{host_port}",
                 ],
                 env=self.tools.android_sdk.env,
-                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb reverse'.") from e
@@ -1706,11 +1700,10 @@ Activity class not found while starting app.
     def reverse_remove(self, device_port: int):
         """Remove reversed port.
 
-        :param device_port: The port on the device that should be forwarded to the host
+        :param device_port: The port on the device that should be removed
         """
         try:
-            # TODO: This prints the port to the terminal. How to remove the output?
-            self.tools.subprocess.run(
+            self.tools.subprocess.check_output(
                 [
                     self.tools.android_sdk.adb_path,
                     "-s",
@@ -1720,7 +1713,6 @@ Activity class not found while starting app.
                     f"tcp:{device_port}",
                 ],
                 env=self.tools.android_sdk.env,
-                check=False,  # if the port is not in use an error is returned, but we dont care
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb reverse --remove'.") from e
