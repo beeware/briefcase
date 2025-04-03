@@ -310,8 +310,19 @@ Delete {jdk_zip_path} and run briefcase again.
 
     def uninstall(self):
         """Uninstall a JDK."""
-        with self.tools.console.wait_bar("Removing old JDK install..."):
-            if self.tools.host_os == "Darwin":
-                self.tools.shutil.rmtree(self.java_home.parent.parent)
-            else:
-                self.tools.shutil.rmtree(self.java_home)
+        try:
+            with self.tools.console.wait_bar("Removing old JDK install..."):
+                if self.tools.host_os == "Darwin":
+                    jdk_location = self.java_home.parent.parent
+                else:
+                    jdk_location = self.java_home
+                self.tools.shutil.rmtree(jdk_location)
+
+        except PermissionError as e:
+            raise BriefcaseCommandError(
+                f"""\
+Permission denied when trying to remove {jdk_location!r}
+
+Ensure no Java processes are running and try again.
+"""
+            ) from e
