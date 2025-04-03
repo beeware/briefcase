@@ -760,47 +760,24 @@ app's configuration.
                 )
 
         with self.console.wait_bar("Installing changelog..."):
-            changelog_name_formats = [
-                "CHANGELOG",
-                "HISTORY",
-                "NEWS",
-                "RELEASES",
-                "CHANGELOG.md",
-                "CHANGELOG.rst",
-                "CHANGELOG.txt",
-                "HISTORY.md",
-                "HISTORY.rst",
-                "HISTORY.txt",
-                "NEWS.md",
-                "NEWS.rst",
-                "NEWS.txt",
-                "RELEASES.md",
-                "RELEASES.rst",
-                "RELEASES.txt",
-            ]
-            matched_changelog_name = None
+            changelog = find_changelog_filename(self.base_path)
 
-            for name in changelog_name_formats:
-                changelog = self.base_path / name
-                if changelog.is_file():
-                    with changelog.open(encoding="utf-8") as infile:
-                        outfile = gzip.GzipFile(
-                            doc_folder / "changelog.gz", mode="wb", mtime=0
-                        )
-                        outfile.write(infile.read().encode("utf-8"))
-                        outfile.close()
-                    matched_changelog_name = name
-                    break
-
-            if matched_changelog_name is None:
+            if changelog is None:
                 raise BriefcaseCommandError(
                     """\
-Your project does not contain a CHANGELOG file.
-
-Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
+Your project does not contain a changelog file with a valid file name.
+Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
+with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
 with details about the release.
 """
                 )
+
+            changelog_source = self.base_path / changelog
+
+            with changelog_source.open(encoding="utf-8") as infile:
+                outfile = gzip.GzipFile(doc_folder / "changelog.gz", mode="wb", mtime=0)
+                outfile.write(infile.read().encode("utf-8"))
+                outfile.close()
 
         # Make a folder for manpages
         man_folder = (
@@ -1163,42 +1140,21 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     else:
                         f.write(f'"/{path}"\n')
 
-                changelog_name_formats = [
-                    "CHANGELOG",
-                    "HISTORY",
-                    "NEWS",
-                    "RELEASES",
-                    "CHANGELOG.md",
-                    "CHANGELOG.rst",
-                    "CHANGELOG.txt",
-                    "HISTORY.md",
-                    "HISTORY.rst",
-                    "HISTORY.txt",
-                    "NEWS.md",
-                    "NEWS.rst",
-                    "NEWS.txt",
-                    "RELEASES.md",
-                    "RELEASES.rst",
-                ]
-                matched_changelog_name = None
-                changelog_source = None
-
                 # Add the changelog content to the bottom of the spec file.
                 f.write("\n%changelog\n")
-                for name in changelog_name_formats:
-                    changelog_source = self.base_path / name
-                    if changelog_source.is_file():
-                        matched_changelog_name = name
-                        break
+                changelog = find_changelog_filename(self.base_path)
 
-                if matched_changelog_name is None:
+                if changelog is None:
                     raise BriefcaseCommandError(
                         """\
-        Your project does not contain a CHANGELOG file.
-        Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
-        with details about the release.
-        """
+Your project does not contain a changelog file with a valid file name.
+Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
+with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
+with details about the release.
+"""
                     )
+
+                changelog_source = self.base_path / changelog
 
                 with changelog_source.open(encoding="utf-8") as c:
                     f.write(c.read())
@@ -1250,42 +1206,19 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 "Arch projects require a description."
             )
 
-        changelog_name_formats = [
-            "CHANGELOG",
-            "HISTORY",
-            "NEWS",
-            "RELEASES",
-            "CHANGELOG.md",
-            "CHANGELOG.rst",
-            "CHANGELOG.txt",
-            "HISTORY.md",
-            "HISTORY.rst",
-            "HISTORY.txt",
-            "NEWS.md",
-            "NEWS.rst",
-            "NEWS.txt",
-            "RELEASES.md",
-            "RELEASES.rst",
-            "RELEASES.txt",
-        ]
+        changelog = find_changelog_filename(self.base_path)
 
-        matched_changelog_name = None
-        changelog_source = None
-
-        for name in changelog_name_formats:
-            changelog_source = self.base_path / name
-            if changelog_source.is_file():
-                matched_changelog_name = name
-                break
-
-        if matched_changelog_name is None:
+        if changelog is None:
             raise BriefcaseCommandError(
                 """\
-Your project does not contain a CHANGELOG file.
-Create a file named `CHANGELOG` in the same directory as your `pyproject.toml`
+Your project does not contain a changelog file with a valid file name.
+Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
+with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
 with details about the release.
 """
             )
+
+        changelog_source = self.base_path / changelog
 
         # Generate the pkgbuild layout
         pkgbuild_path = self.bundle_path(app) / "pkgbuild"
@@ -1295,9 +1228,7 @@ with details about the release.
             pkgbuild_path.mkdir(parents=True)
 
             # Copy the CHANGELOG file build_path so that it is visible to PKGBUILD
-            self.tools.shutil.copy(
-                changelog_source, pkgbuild_path / matched_changelog_name
-            )
+            self.tools.shutil.copy(changelog_source, pkgbuild_path / changelog)
 
         # Build the source archive
         with self.console.wait_bar("Building source archive..."):
@@ -1371,6 +1302,22 @@ with details about the release.
 
 class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):
     description = "Publish a Linux system project."
+
+
+def find_changelog_filename(base_path):
+
+    changelog_formats = [
+        f"{name}{extension}"
+        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ]
+
+    # Stops checking once a match is found
+    for format in changelog_formats:
+        changelog = base_path / format
+        if changelog.is_file():
+            return format
+    return None
 
 
 # Declare the briefcase command bindings

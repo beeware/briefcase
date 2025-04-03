@@ -669,38 +669,27 @@ class ConvertCommand(NewCommand):
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
-        # Copy changelog file
-        changelog_name_formats = [
-            "CHANGELOG",
-            "HISTORY",
-            "NEWS",
-            "RELEASES",
-            "CHANGELOG.md",
-            "CHANGELOG.rst",
-            "CHANGELOG.txt",
-            "HISTORY.md",
-            "HISTORY.rst",
-            "HISTORY.txt",
-            "NEWS.md",
-            "NEWS.rst",
-            "NEWS.txt",
-            "RELEASES.md",
-            "RELEASES.rst",
-            "RELEASES.txt",
+        # See if changefile exists
+        matched_changelog_name = False
+        changelog_formats = [
+            f"{name}{extension}"
+            for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
+            for extension in ["", ".md", ".rst", ".txt"]
         ]
-        matched_changelog_name = None
 
-        for name in changelog_name_formats:
-            changelog = self.base_path / name
-            if changelog.is_file():
-                matched_changelog_name = name
+        # Stops checking once a match is found
+        for format in changelog_formats:
+            changelog_source = self.base_path / format
+            if changelog_source.is_file():
+                matched_changelog_name = True
                 break
 
-        if matched_changelog_name is None:
+        if matched_changelog_name is False:
             self.console.warning(
                 f"\nChangelog file not found in '{self.base_path}'. You should either "
-                f"create a new '{self.base_path / 'CHANGELOG'}' file, or rename an "
-                "already existing changelog file to 'CHANGELOG'."
+                f"create a new '{self.base_path / 'changelog_file'}' file, or rename an "
+                f"existing changelog file with the following as its name "
+                f"(CHANGELOG, HISTORY, NEWS or RELEASES) with extensions (.md, .rst, .txt or no extension)"
             )
 
         # Copy tests or test entry script

@@ -190,17 +190,27 @@ def test_warning_without_changelog_file(
 
     convert_command.console.warning.assert_called_once_with(
         f"\nChangelog file not found in '{convert_command.base_path}'. You should either "
-        f"create a new '{convert_command.base_path / 'CHANGELOG'}' file, or rename an "
-        "already existing changelog file to 'CHANGELOG'."
+        f"create a new '{convert_command.base_path / 'changelog_file'}' file, or rename an "
+        f"existing changelog file with the following as its name "
+        f"(CHANGELOG, HISTORY, NEWS or RELEASES) with extensions (.md, .rst, .txt or no extension)"
     )
 
 
+@pytest.mark.parametrize(
+    "changelog_filename",
+    [
+        f"{name}{extension}"
+        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ],
+)
 @pytest.mark.parametrize("test_source_dir", ["tests"])
 def test_no_warning_with_license_and_changelog_file(
     convert_command,
     project_dir_with_files,
     dummy_app_name,
     test_source_dir,
+    changelog_filename,
 ):
     """No warning is raised if both license file and changelog file is present."""
     convert_command.console.warning = mock.MagicMock()
@@ -210,7 +220,7 @@ def test_no_warning_with_license_and_changelog_file(
         '[project]\nlicense = { file = "LICENSE.txt" }',
     )
     create_file(convert_command.base_path / "LICENSE.txt", "")
-    create_file(convert_command.base_path / "CHANGELOG", "")
+    create_file(convert_command.base_path / changelog_filename, "")
     convert_command.migrate_necessary_files(
         project_dir_with_files,
         test_source_dir,
@@ -241,8 +251,9 @@ def test_two_warnings_without_license_and_changelog_file(
     )
     changelog_warning = (
         f"\nChangelog file not found in '{convert_command.base_path}'. You should either "
-        f"create a new '{convert_command.base_path / 'CHANGELOG'}' file, or rename an "
-        "already existing changelog file to 'CHANGELOG'."
+        f"create a new '{convert_command.base_path / 'changelog_file'}' file, or rename an "
+        f"existing changelog file with the following as its name "
+        f"(CHANGELOG, HISTORY, NEWS or RELEASES) with extensions (.md, .rst, .txt or no extension)"
     )
     assert convert_command.console.warning.mock_calls == [
         mock.call(license_warning),
