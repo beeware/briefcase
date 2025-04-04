@@ -1,8 +1,7 @@
 import pytest
+from utils import create_file
 
 from briefcase.platforms.linux.system import find_changelog_filename
-
-from ....utils import create_file
 
 
 def test_no_changelog(tmp_path):

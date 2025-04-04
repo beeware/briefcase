@@ -33,25 +33,9 @@ def build_command(tmp_path, first_app):
     return command
 
 
-@pytest.mark.parametrize(
-    "changelog_filename",
-    [
-        f"{name}{extension}"
-        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
-        for extension in ["", ".md", ".rst", ".txt"]
-    ],
-)
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build Linux apps on Windows")
-def test_build_app(build_command, first_app, tmp_path, changelog_filename):
+def test_build_app(build_command, first_app, tmp_path):
     """An app can be built as a deb."""
-
-    # Remove CHANGELOG made in conftest.py and replace with another possible changelog format
-    base_path = tmp_path / "base_path"
-    old_changelog = base_path / "CHANGELOG"
-    new_changelog = base_path / changelog_filename
-    old_changelog.unlink()
-    create_file(new_changelog, "First App Changelog")
-
     # Build the app
     build_command.build_app(first_app)
 
