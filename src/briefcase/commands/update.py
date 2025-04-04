@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
@@ -20,6 +22,7 @@ class UpdateCommand(CreateCommand):
             "--app",
             dest="app_name",
             help="Name of the app to update (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
         )
 
     def update_app(

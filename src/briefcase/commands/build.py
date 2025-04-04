@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
@@ -19,6 +21,7 @@ class BuildCommand(BaseCommand):
             "--app",
             dest="app_name",
             help="Name of the app to build (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
         )
 
     def build_app(self, app: AppConfig, **options):
