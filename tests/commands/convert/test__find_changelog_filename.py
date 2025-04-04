@@ -1,10 +1,12 @@
 import pytest
-from utils import create_file
 
 from briefcase.platforms.linux.system import find_changelog_filename
 
+from ..utils import create_file
+
 
 def test_no_changelog(tmp_path):
+    """Changelog file does not exist"""
     assert find_changelog_filename(tmp_path) is None
 
 
@@ -32,7 +34,6 @@ def test_has_changelog(tmp_path, changelog_filename):
 
 def test_multiple_changefile(tmp_path):
     """If there's more than one changelog, only one if found."""
-
     changelog_file1 = tmp_path / "base_path/NEWS.txt"
     changelog_file2 = tmp_path / "base_path/CHANGELOG.md"
     create_file(changelog_file1, "First App Changelog")

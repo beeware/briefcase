@@ -799,7 +799,8 @@ To run your application, type:
 
 
 def find_changelog_filename(base_path):
-
+    """Search for a valid changelog file in the specified directory
+    and return its format name if it exists, otherwise return None"""
     changelog_formats = [
         f"{name}{extension}"
         for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
