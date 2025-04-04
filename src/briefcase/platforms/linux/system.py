@@ -765,10 +765,11 @@ app's configuration.
             if changelog is None:
                 raise BriefcaseCommandError(
                     """\
-Your project does not contain a changelog file with a valid file name.
-Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
-with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
-with details about the release.
+Your project does not contain a changelog file with a known file name. You
+must provided a changelog file in the same directory as your `pyproject.toml`,
+with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
+'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
+no extension).
 """
                 )
 
@@ -1147,10 +1148,11 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 if changelog is None:
                     raise BriefcaseCommandError(
                         """\
-Your project does not contain a changelog file with a valid file name.
-Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
-with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
-with details about the release.
+Your project does not contain a changelog file with a known file name. You
+must provided a changelog file in the same directory as your `pyproject.toml`,
+with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
+'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
+no extension).
 """
                     )
 

@@ -686,10 +686,10 @@ class ConvertCommand(NewCommand):
 
         if matched_changelog_name is False:
             self.console.warning(
-                f"\nChangelog file not found in '{self.base_path}'. You should either "
-                f"create a new '{self.base_path / 'changelog_file'}' file, or rename an "
-                f"existing changelog file with the following as its name "
-                f"(CHANGELOG, HISTORY, NEWS or RELEASES) with extensions (.md, .rst, .txt or no extension)"
+                f"create a new changelog file in {self.base_path}, or rename an "
+                "existing file to a known changelog file name (one of 'CHANGELOG', "
+                "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
+                "'.md', '.rst', '.txt', or have no extension)"
             )
 
         # Copy tests or test entry script

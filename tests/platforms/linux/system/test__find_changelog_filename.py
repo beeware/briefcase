@@ -32,14 +32,7 @@ def test_has_changelog(tmp_path, changelog_filename):
 
 
 def test_multiple_changefile(tmp_path):
-    """
-    More than one changelog exists but only first one according
-    the below search order is accepted:
-
-    CHANGELOG, CHANGELOG.md, CHANGELOG.rst, CHANGELOG.txt,
-    HISTORY, HISTORY.md, HISTORY.rst, HISTORY.txt,
-    NEWS, NEWS.md, NEWS.rst, NEWS.txt,
-    RELEASES, RELEASES.md, RELEASES.rst, RELEASES.txt"""
+    """If there's more than one changelog, only one if found."""
 
     changelog_file1 = tmp_path / "base_path/NEWS.txt"
     changelog_file2 = tmp_path / "base_path/CHANGELOG.md"
