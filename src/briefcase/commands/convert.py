@@ -670,21 +670,9 @@ class ConvertCommand(NewCommand):
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
         # See if changefile exists
-        matched_changelog_name = False
-        changelog_formats = [
-            f"{name}{extension}"
-            for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
-            for extension in ["", ".md", ".rst", ".txt"]
-        ]
+        changelog = find_changelog_filename(self.base_path)
 
-        # Stops checking once a match is found
-        for format in changelog_formats:
-            changelog_source = self.base_path / format
-            if changelog_source.is_file():
-                matched_changelog_name = True
-                break
-
-        if matched_changelog_name is False:
+        if changelog is None:
             self.console.warning(
                 f"create a new changelog file in {self.base_path}, or rename an "
                 "existing file to a known changelog file name (one of 'CHANGELOG', "
@@ -808,3 +796,19 @@ To run your application, type:
                 project_overrides=parse_project_overrides(project_overrides),
                 **options,
             )
+
+
+def find_changelog_filename(base_path):
+
+    changelog_formats = [
+        f"{name}{extension}"
+        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ]
+
+    # Stops checking once a match is found
+    for format in changelog_formats:
+        changelog = base_path / format
+        if changelog.is_file():
+            return format
+    return None

@@ -14,6 +14,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
+from briefcase.commands.convert import find_changelog_filename
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
@@ -1304,22 +1305,6 @@ with details about the release.
 
 class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):
     description = "Publish a Linux system project."
-
-
-def find_changelog_filename(base_path):
-
-    changelog_formats = [
-        f"{name}{extension}"
-        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
-        for extension in ["", ".md", ".rst", ".txt"]
-    ]
-
-    # Stops checking once a match is found
-    for format in changelog_formats:
-        changelog = base_path / format
-        if changelog.is_file():
-            return format
-    return None
 
 
 # Declare the briefcase command bindings
