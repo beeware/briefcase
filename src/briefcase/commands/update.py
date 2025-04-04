@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import argparse
+
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import full_options
 from .create import CreateCommand
@@ -13,6 +16,14 @@ class UpdateCommand(CreateCommand):
     def add_options(self, parser):
         self._add_update_options(parser, update=False)
         self._add_test_options(parser, context_label="Update")
+
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to update (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
+        )
 
     def update_app(
         self,
@@ -79,6 +90,7 @@ class UpdateCommand(CreateCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         update_requirements: bool = False,
         update_resources: bool = False,
         update_support: bool = False,
@@ -90,27 +102,28 @@ class UpdateCommand(CreateCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app:
+        if app_name:
+            try:
+                apps_to_update = {app_name: self.apps[app_name]}
+            except KeyError:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+        elif app:
+            apps_to_update = {app.app_name: app}
+        else:
+            apps_to_update = self.apps
+
+        state = None
+        for app_name, app_obj in sorted(apps_to_update.items()):
             state = self.update_app(
-                app,
+                app_obj,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
                 update_support=update_support,
                 update_stub=update_stub,
                 test_mode=test_mode,
-                **options,
+                **full_options(state, options),
             )
-        else:
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self.update_app(
-                    app,
-                    update_requirements=update_requirements,
-                    update_resources=update_resources,
-                    update_support=update_support,
-                    update_stub=update_stub,
-                    test_mode=test_mode,
-                    **full_options(state, options),
-                )
 
         return state
