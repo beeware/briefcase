@@ -254,35 +254,19 @@ flatpak run {bundle_identifier}
         self,
         bundle_identifier: str,
         args: list[SubprocessArgT] | None = None,
-        main_module: str | None = None,
         stream_output: bool = True,
+        **kwargs,
     ) -> subprocess.Popen[str]:
         """Run a Flatpak in a way that allows for log streaming.
 
         :param bundle_identifier: The bundle identifier for the app being built.
         :param args: (Optional) The list of arguments to pass to the app
-        :param main_module: (Optional) The main module to run. Only required if you want
-            to override the default main module for the app.
         :param stream_output: Should output be streamed?
         :returns: A Popen object for the running app; or ``None`` if the app isn't
             streaming
         """
-        if main_module:
-            # Set a BRIEFCASE_MAIN_MODULE environment variable
-            # to override the module at startup
-            kwargs = {
-                "env": {
-                    "BRIEFCASE_MAIN_MODULE": main_module,
-                }
-            }
-        else:
-            kwargs = {}
-
         flatpak_run_cmd = ["flatpak", "run", bundle_identifier]
         flatpak_run_cmd.extend([] if args is None else args)
-
-        if self.tools.console.is_debug:
-            kwargs.setdefault("env", {})["BRIEFCASE_DEBUG"] = "1"
 
         if self.tools.console.is_deep_debug:
             # Must come before bundle identifier; otherwise, it's passed as an arg to app

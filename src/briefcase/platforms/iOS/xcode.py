@@ -16,6 +16,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
@@ -463,6 +464,24 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
 
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        # TODO: Add handling to switch between simulator and real device. Currently we only
+        #       support simulator.
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=str(
+                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
+            ),
+        )
+
     def run_app(
         self,
         app: AppConfig,
@@ -614,6 +633,30 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Wait for the log stream start up
         time.sleep(0.25)
+
+        # Add additional environment variables
+        env = {}
+        if app.remote_debugger:
+            env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
+                app, test_mode
+            )
+
+        # Install additional environment variables
+        if env:
+            with self.console.wait_bar("Setting environment variables..."):
+                for env_key, env_value in env.items():
+                    output = self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "setenv",
+                            f"{env_key}",
+                            f"{env_value}",
+                        ]
+                    )
 
         try:
             self.console.info(f"Starting {label}...", prefix=app.app_name)
