@@ -674,7 +674,8 @@ class ConvertCommand(NewCommand):
 
         if changelog is None:
             self.console.warning(
-                f"Create a new changelog file in {self.base_path}, or rename an "
+                f"\nChangelog file not found in {self.base_path!r}. You should either "
+                f"create a new changelog file in {self.base_path!r}, or rename an "
                 "existing file to a known changelog file name (one of 'CHANGELOG', "
                 "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
                 "'.md', '.rst', '.txt', or have no extension)"
