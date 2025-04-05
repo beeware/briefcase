@@ -801,7 +801,7 @@ To run your application, type:
 
 def find_changelog_filename(base_path):
     """Find a valid changelog file in a given directory.
-    
+
     :param base_path: The directory to search
     :returns: The filename of the changelog that was found; None if a changelog
         with a known name could not be found.

@@ -189,7 +189,8 @@ def test_warning_without_changelog_file(
     )
 
     convert_command.console.warning.assert_called_once_with(
-        f"Create a new changelog file in {convert_command.base_path}, or rename an "
+        f"\nChangelog file not found in {convert_command.base_path!r}. You should either "
+        f"create a new changelog file in {convert_command.base_path!r}, or rename an "
         "existing file to a known changelog file name (one of 'CHANGELOG', "
         "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
         "'.md', '.rst', '.txt', or have no extension)"
@@ -198,9 +199,7 @@ def test_warning_without_changelog_file(
 
 @pytest.mark.parametrize(
     "changelog_filename",
-    [
-        format_name for name in ["CHANGELOG", "NEWS.txt"]
-    ],
+    [format for format in ["CHANGELOG", "NEWS.txt"]],
 )
 @pytest.mark.parametrize("test_source_dir", ["tests"])
 def test_no_warning_with_license_and_changelog_file(
@@ -248,7 +247,8 @@ def test_two_warnings_without_license_and_changelog_file(
         "Briefcase will create a template 'LICENSE' file."
     )
     changelog_warning = (
-        f"Create a new changelog file in {convert_command.base_path}, or rename an "
+        f"\nChangelog file not found in {convert_command.base_path!r}. You should either "
+        f"create a new changelog file in {convert_command.base_path!r}, or rename an "
         "existing file to a known changelog file name (one of 'CHANGELOG', "
         "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
         "'.md', '.rst', '.txt', or have no extension)"

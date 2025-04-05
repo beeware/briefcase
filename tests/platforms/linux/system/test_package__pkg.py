@@ -148,10 +148,7 @@ def test_verify_docker(package_command, first_app_pkg, monkeypatch):
 
 @pytest.mark.parametrize(
     "changelog_filename",
-    [
-        format_name
-        for name in ["HISTORY", "NEWS.txt"]
-    ],
+    [format for format in ["HISTORY", "NEWS.txt"]],
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
 def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filename):
@@ -164,7 +161,7 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filenam
     new_changelog = base_path / changelog_filename
     old_changelog.unlink()
     create_file(new_changelog, "First App Changelog")
-    
+
     # Package the app
     package_command.package_app(first_app_pkg)
 
