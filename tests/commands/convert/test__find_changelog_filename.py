@@ -33,7 +33,8 @@ def test_has_changelog(tmp_path, changelog_filename):
 
 
 def test_multiple_changefile(tmp_path):
-    """If there's more than one changelog, only one if found."""
+    """If there's more than one changelog, only one is found."""
+
     changelog_file1 = tmp_path / "base_path/NEWS.txt"
     changelog_file2 = tmp_path / "base_path/CHANGELOG.md"
     create_file(changelog_file1, "First App Changelog")
