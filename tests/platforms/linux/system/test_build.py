@@ -225,7 +225,7 @@ def test_missing_changelog(build_command, first_app, tmp_path):
     # Build the app; it will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Your project does not contain a CHANGELOG file.",
+        match=r"Your project does not contain a changelog file.",
     ):
         build_command.build_app(first_app)
 
