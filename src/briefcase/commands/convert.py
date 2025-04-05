@@ -799,8 +799,12 @@ To run your application, type:
 
 
 def find_changelog_filename(base_path):
-    """Search for a valid changelog file in the specified directory
-    and return its format name if it exists, otherwise return None"""
+    """Find a valid changelog file in a given directory.
+    
+    :param base_path: The directory to search
+    :returns: The filename of the changelog that was found; None if a changelog
+        with a known name could not be found.
+    """
     changelog_formats = [
         f"{name}{extension}"
         for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
