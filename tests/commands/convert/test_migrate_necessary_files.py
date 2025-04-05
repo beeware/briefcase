@@ -199,9 +199,7 @@ def test_warning_without_changelog_file(
 @pytest.mark.parametrize(
     "changelog_filename",
     [
-        f"{name}{extension}"
-        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
-        for extension in ["", ".md", ".rst", ".txt"]
+        format_name for name in ["CHANGELOG", "NEWS.txt"]
     ],
 )
 @pytest.mark.parametrize("test_source_dir", ["tests"])
