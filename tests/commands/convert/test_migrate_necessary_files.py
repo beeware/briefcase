@@ -199,7 +199,7 @@ def test_warning_without_changelog_file(
 
 @pytest.mark.parametrize(
     "changelog_filename",
-    [format for format in ["CHANGELOG", "NEWS.txt"]],
+    ["CHANGELOG", "NEWS.txt"],
 )
 @pytest.mark.parametrize("test_source_dir", ["tests"])
 def test_no_warning_with_license_and_changelog_file(

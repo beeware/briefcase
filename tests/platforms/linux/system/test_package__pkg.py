@@ -148,7 +148,7 @@ def test_verify_docker(package_command, first_app_pkg, monkeypatch):
 
 @pytest.mark.parametrize(
     "changelog_filename",
-    [format for format in ["HISTORY", "NEWS.txt"]],
+    ["HISTORY", "NEWS.txt"],
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
 def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filename):

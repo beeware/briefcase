@@ -147,7 +147,8 @@ def test_verify_docker(package_command, first_app_rpm, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "changelog_filename", [format for format in ["HISTORY", "NEWS.txt"]]
+    "changelog_filename",
+    ["HISTORY", "NEWS.txt"],
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_rpm_package(package_command, first_app_rpm, tmp_path, changelog_filename):
