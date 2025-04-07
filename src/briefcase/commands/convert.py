@@ -669,13 +669,16 @@ class ConvertCommand(NewCommand):
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
-        # Copy changelog file
-        changelog_file = self.base_path / "CHANGELOG"
-        if not changelog_file.is_file():
+        # See if changefile exists
+        changelog = find_changelog_filename(self.base_path)
+
+        if changelog is None:
             self.console.warning(
-                f"\nChangelog file not found in '{self.base_path}'. You should either "
-                f"create a new '{self.base_path / 'CHANGELOG'}' file, or rename an "
-                "already existing changelog file to 'CHANGELOG'."
+                f"\nChangelog file not found in {self.base_path!r}. You should either "
+                f"create a new changelog file in {self.base_path!r}, or rename an "
+                "existing file to a known changelog file name (one of 'CHANGELOG', "
+                "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
+                "'.md', '.rst', '.txt', or have no extension)"
             )
 
         # Copy tests or test entry script
@@ -794,3 +797,24 @@ To run your application, type:
                 project_overrides=parse_project_overrides(project_overrides),
                 **options,
             )
+
+
+def find_changelog_filename(base_path):
+    """Find a valid changelog file in a given directory.
+
+    :param base_path: The directory to search
+    :returns: The filename of the changelog that was found; None if a changelog
+        with a known name could not be found.
+    """
+    changelog_formats = [
+        f"{name}{extension}"
+        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ]
+
+    # Stops checking once a match is found
+    for format in changelog_formats:
+        changelog = base_path / format
+        if changelog.is_file():
+            return format
+    return None

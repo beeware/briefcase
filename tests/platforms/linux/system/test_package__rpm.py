@@ -146,10 +146,21 @@ def test_verify_docker(package_command, first_app_rpm, monkeypatch):
     rpmbuild.exists.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "changelog_filename",
+    ["HISTORY", "NEWS.txt"],
+)
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_rpm_package(package_command, first_app_rpm, tmp_path):
+def test_rpm_package(package_command, first_app_rpm, tmp_path, changelog_filename):
     """A rpm app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+
+    # Remove CHANGELOG made in conftest.py and replace with another possible changelog format
+    base_path = tmp_path / "base_path"
+    old_changelog = base_path / "CHANGELOG"
+    new_changelog = base_path / changelog_filename
+    old_changelog.unlink()
+    create_file(new_changelog, "First App Changelog")
 
     # Package the app
     package_command.package_app(first_app_rpm)
@@ -619,7 +630,7 @@ def test_no_changelog(package_command, first_app_rpm, tmp_path):
 
     # Package the app; this will fail
     with pytest.raises(
-        BriefcaseCommandError, match=r"Your project does not contain a CHANGELOG file."
+        BriefcaseCommandError, match=r"Your project does not contain a changelog file."
     ):
         package_command.package_app(first_app_rpm)
 
