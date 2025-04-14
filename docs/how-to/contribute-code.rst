@@ -633,8 +633,8 @@ making modifications.
 
 Instead, you should make your changes on a *feature branch*. A feature branch
 has a simple name to identify the change that you've made. For example, if
-you've found a bug in Briefcase's layout algorithm, you might create a feature branch
-``fix-windows-signing``. If your bug relates to a specific issue that has been
+you've found a bug in Briefcase's create package, you might create a feature branch
+``fix-create-bug``. If your bug relates to a specific issue that has been
 reported, it's also common to reference that issue number in the branch name
 (e.g., ``fix-1234``).
 
