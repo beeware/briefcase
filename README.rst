@@ -97,9 +97,9 @@ Contributing
 ------------
 
 If you experience problems with Toga, `log them on GitHub
-<https://github.com/beeware/toga/issues>`__.
+<https://github.com/beeware/briefcase/issues>`__.
 
 If you'd like to contribute to Toga development, our `contribution guide
-<https://toga.readthedocs.io/en/latest/how-to/contribute/index.html>`__
+<https://briefcase.readthedocs.io/en/latest/how-to/contribute/index.html>`__
 details how to set up a development environment, and other requirements we have
 as part of our contribution process.
