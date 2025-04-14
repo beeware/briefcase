@@ -2,11 +2,10 @@
 
 BeeWare <3's contributions!
 
-Please be aware, BeeWare operates under a Code of Conduct.
+Please be aware that BeeWare operates under a [Code of
+Conduct](https://beeware.org/community/behavior/code-of-conduct/).
 
-See [CONTRIBUTING to BeeWare](https://beeware.org/contributing) for details.
-
-See also the Briefcase specific contributing guides for contributing
-[code](https://briefcase.readthedocs.io/en/latest/how-to/contribute-code.html)
-and
-[documentation](https://briefcase.readthedocs.io/en/latest/how-to/contribute-docs.html)
+If you'd like to contribute to Briefcase development, our [contribution
+guide](https://briefcase.readthedocs.io/en/latest/how-to/contribute/index.html) details how
+to set up a development environment, and other requirements we have as part of our
+contribution process.

@@ -18,6 +18,5 @@ stand alone.
    ci
    publishing/index
    upgrade-from-v0.2
-   contribute-code
-   contribute-docs
+   contribute/index
    internal/index

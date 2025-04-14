@@ -398,7 +398,7 @@ Features
 * The base image used to build AppImages is now user-configurable. (`#947 <https://github.com/beeware/briefcase/issues/947>`__)
 * Support for Arch ``.pkg.tar.zst`` packaging was added to the Linux system backend. (`#1064 <https://github.com/beeware/briefcase/issues/1064>`__)
 * Pygame was added as an explicit option for a GUI toolkit. (`#1125 <https://github.com/beeware/briefcase/pull/1125>`__)
-* AppImage and Flatpak builds now use `indygreg's Python Standalone Builds <https://github.com/indygreg/python-build-standalone>`__ to provide Python support. (`#1132 <https://github.com/beeware/briefcase/pull/1132>`__)
+* AppImage and Flatpak builds now use `indygreg's Python Standalone Builds <https://github.com/astral-sh/python-build-standalone>`__ to provide Python support. (`#1132 <https://github.com/beeware/briefcase/pull/1132>`__)
 * BeeWare now has a presence on Mastodon. (`#1142 <https://github.com/beeware/briefcase/pull/1142>`__)
 
 

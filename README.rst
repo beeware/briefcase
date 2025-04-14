@@ -75,12 +75,14 @@ tools useful, please consider becoming a financial member.
 Documentation
 -------------
 
-Documentation for Briefcase can be found on `Read The Docs`_.
+Documentation for Briefcase can be found on `Read The Docs
+<https://briefcase.readthedocs.io>`__.
 
 Community
 ---------
 
-Briefcase is part of the `BeeWare suite`_. You can talk to the community through:
+Briefcase is part of the `BeeWare suite <https://beeware.org>`__. You can talk to the
+community through:
 
 * `@beeware@fosstodon.org on Mastodon <https://fosstodon.org/@beeware>`__
 
@@ -88,18 +90,16 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
 * The Briefcase `Github Discussions forum <https://github.com/beeware/briefcase/discussions>`__
 
-We foster a welcoming and respectful community as described in our
-`BeeWare Community Code of Conduct`_.
+We foster a welcoming and respectful community as described in our `BeeWare Community
+Code of Conduct <https://beeware.org/community/behavior/>`__.
 
 Contributing
 ------------
 
-If you experience problems with Briefcase, `log them on GitHub`_. If you
-want to contribute code, please `fork the code`_ and `submit a pull request`_.
+If you experience problems with Toga, `log them on GitHub
+<https://github.com/beeware/briefcase/issues>`__.
 
-.. _BeeWare suite: https://beeware.org
-.. _Read The Docs: https://briefcase.readthedocs.io
-.. _BeeWare Community Code of Conduct: https://beeware.org/community/behavior/
-.. _log them on Github: https://github.com/beeware/briefcase/issues
-.. _fork the code: https://github.com/beeware/briefcase
-.. _submit a pull request: https://github.com/beeware/briefcase/pulls
+If you'd like to contribute to Toga development, our `contribution guide
+<https://briefcase.readthedocs.io/en/latest/how-to/contribute/index.html>`__
+details how to set up a development environment, and other requirements we have
+as part of our contribution process.
