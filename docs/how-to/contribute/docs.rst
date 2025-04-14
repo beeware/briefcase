@@ -16,9 +16,8 @@ sure that it is referenced in the index of the corresponding category, so it
 will show on in the documentation. If you have no idea how to do this, study
 the other index files for clues.
 
-Build documentation locally
----------------------------
-
+Building Briefcase’s documentation
+==================================
 .. Docs are always built on Python 3.12. See also the RTD and tox config.
 
 To build the documentation locally, :ref:`set up a development environment
@@ -72,6 +71,9 @@ You'll also need to install the Enchant spell checking library.
     Enchant is installed automatically when you set up your development
     environment.
 
+
+Build documentation locally
+---------------------------
 Once your development environment is set up, run:
 
 .. tabs::
@@ -190,3 +192,24 @@ To force a rebuild for all of the documentation:
 
 The documentation should be fully rebuilt in the ``docs/_build/html`` folder.
 If there are any markup problems, they'll raise an error.
+
+
+What to work on?
+================
+
+If you're looking for specific areas to improve, there are `tickets tagged
+"documentation"
+<https://github.com/beeware/briefcase/issues?q=is%3Aissue%20state%3Aopen%20label%3Adocumentation>`__
+in Briefcase's issue tracker.
+
+However, you don't need to be constrained by these tickets. If you can identify
+a gap in Briefcase's documentation, or an improvement that can be made, start
+writing! Anything that improves the experience of the end user is a welcome
+change.
+
+Submitting a pull request
+=========================
+
+Before you submit a pull request, there's a few bits of housekeeping to do. See the
+section on submitting a pull request in the :ref:`code contribution guide
+<pr-housekeeping>` for details on our submission process.
