@@ -250,6 +250,14 @@ will result in an ``AndroidManifest.xml`` declaration of::
 The use of some cross-platform permissions will imply the addition of features; see
 :ref:`the discussion on Android permissions <android-permissions>` for more details.
 
+``min_os_version``
+------------------
+
+The minimum SDK version that the app will support. This is *not* the Android version; it
+is the underlying SDK version. For example, Android 9 uses an SDK version of 28; if you
+wanted to specify Android 9 as your minimum supported version, you would define
+``min_os_version = "28"``.
+
 ``permission``
 --------------
 
@@ -265,6 +273,14 @@ For example, specifying::
 will result in an ``AndroidManifest.xml`` declaration of::
 
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
+
+``target_sdk_version``
+----------------------
+
+The SDK version that the app will target. This controls the APIs that are available for
+use in your application. This is *not* the Android version; it is the underlying SDK
+version. For example, Android 15 uses an SDK version of 35; if you wanted to specify
+Android 15 as your target SDK version, you would define ``target_sdk_version = "35"``.
 
 ``version_code``
 ----------------
