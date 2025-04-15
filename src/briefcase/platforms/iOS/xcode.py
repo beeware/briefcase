@@ -6,6 +6,8 @@ import time
 from pathlib import Path
 from uuid import UUID
 
+from packaging.version import Version
+
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -327,7 +329,17 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             )
             if ": " in line
         )
-        ios_min_tag = versions.get("Min iOS version", "13.0").replace(".", "_")
+        support_min_version = Version(versions.get("Min iOS version", "13.0"))
+
+        # Check that the app's definition is compatible with the support package
+        ios_min_version = Version(getattr(app, "min_os_version", "13.0"))
+        if ios_min_version < support_min_version:
+            raise BriefcaseCommandError(
+                f"Your iOS app specifies a minimum iOS version of {ios_min_version}, "
+                f"but the support package only supports {support_min_version}"
+            )
+
+        ios_min_tag = str(ios_min_version).replace(".", "_")
 
         # Feb 2025: The platform-site was moved into the xcframework as
         # `platform-config`. Look for the new location; fall back to the old location.
