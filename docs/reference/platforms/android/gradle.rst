@@ -253,10 +253,10 @@ The use of some cross-platform permissions will imply the addition of features; 
 ``min_os_version``
 ------------------
 
-The minimum SDK version that the app will support. This is *not* the Android version; it
-is the underlying SDK version. For example, Android 9 uses an SDK version of 28; if you
-wanted to specify Android 9 as your minimum supported version, you would define
-``min_os_version = "28"``.
+The minimum API level that the app will support (i.e., the ``minSdkVersion`` for the
+app). This is *not* the Android version; it is the underlying API level. For example,
+Android 9 uses an API level of 28; if you wanted to specify Android 9 as your minimum
+supported version, you would define ``min_os_version = "28"``.
 
 ``permission``
 --------------
@@ -274,13 +274,15 @@ will result in an ``AndroidManifest.xml`` declaration of::
 
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
 
-``target_sdk_version``
+``target_os_version``
 ----------------------
 
-The SDK version that the app will target. This controls the APIs that are available for
-use in your application. This is *not* the Android version; it is the underlying SDK
-version. For example, Android 15 uses an SDK version of 35; if you wanted to specify
-Android 15 as your target SDK version, you would define ``target_sdk_version = "35"``.
+The API level that the app will target. This controls the version of Android tools that
+are used to build your app (by setting the ``compileSdkVersion`` for your app), and the
+forwards compatibility behavioral changes your app will enable (by setting the
+``targetSdkVersion`` setting). This is *not* the Android version; it is the underlying
+API level. For example, Android 15 uses an API level of 35; if you wanted to specify
+Android 15 as your target API level, you would define ``target_os_version = "35"``.
 
 ``version_code``
 ----------------
