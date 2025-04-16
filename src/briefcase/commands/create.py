@@ -682,10 +682,14 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         :param test_mode: Should the test requirements be installed?
+        :param debugger: Debugger to be used or None if no debugger should be used.
         """
         requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
+
+        if app.remote_debugger:
+            requires.extend(app.remote_debugger.additional_requirements)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -725,9 +729,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.all_sources(test_mode)
 
         # Install app code.
         if sources:
@@ -908,7 +910,12 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
+    def create_app(
+        self,
+        app: AppConfig,
+        test_mode: bool = False,
+        **options,
+    ):
         """Create an application bundle.
 
         :param app: The config object for the app
