@@ -1,0 +1,1 @@
+An app can now enforce a minimum supported OS version by defining a ``min_os_version`` configuration item on a per-platform basis. This minimum value will be used on macOS, iOS and Android deployments.

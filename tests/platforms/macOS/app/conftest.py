@@ -78,7 +78,7 @@ entitlements_path="Entitlements.plist"
             [
                 "Python version: 3.10.15",
                 "Build: b11",
-                "Min macOS version: 15.2",
+                "Min macOS version: 10.12",
                 "",
             ]
         ),
