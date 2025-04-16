@@ -277,8 +277,8 @@ will result in an ``AndroidManifest.xml`` declaration of::
 ``target_os_version``
 ----------------------
 
-The API level that the app will target. This controls the version of Android tools that
-are used to build your app (by setting the ``compileSdkVersion`` for your app), and the
+The API level that the app will target. This controls the version of the Android SDK that
+is used to build your app (by setting the ``compileSdkVersion`` for your app), and the
 forwards compatibility behavioral changes your app will enable (by setting the
 ``targetSdkVersion`` setting). This is *not* the Android version; it is the underlying
 API level. For example, Android 15 uses an API level of 35; if you wanted to specify
