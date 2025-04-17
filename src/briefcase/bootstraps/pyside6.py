@@ -60,6 +60,7 @@ test_requires = [
     def pyproject_table_macOS(self):
         return """\
 universal_build = true
+# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
 min_os_version = "12.0"
 requires = [
     "std-nslog~=1.0.3",
