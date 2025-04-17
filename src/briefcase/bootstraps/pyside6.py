@@ -47,8 +47,8 @@ def main():
     def pyproject_table_briefcase_app_extra_content(self):
         return """
 requires = [
-    "PySide6-Essentials~=6.7",
-    # "PySide6-Addons~=6.7",
+    "PySide6-Essentials~=6.8",
+    # "PySide6-Addons~=6.8",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -60,6 +60,7 @@ test_requires = [
     def pyproject_table_macOS(self):
         return """\
 universal_build = true
+min_os_version = "12.0"
 requires = [
     "std-nslog~=1.0.3",
 ]
