@@ -358,7 +358,7 @@ Bugfixes
 * An "Invalid Keystore format" error is no longer raised when signing an app if the local Android keystore was generated with a recent version of Java. (`#1112 <https://github.com/beeware/briefcase/issues/1112>`__)
 * Content before a closing square bracket (``]``) or ``.so)`` is no longer stripped by the macOS and iOS log filter. (`#1179 <https://github.com/beeware/briefcase/issues/1179>`__)
 * The option to run Linux system packages through Docker was removed. (`#1207 <https://github.com/beeware/briefcase/issues/1207>`__)
-* Error handling for incomplete or corrupted Github clones of templates has been improved. (`#1210 <https://github.com/beeware/briefcase/pull/1210>`__)
+* Error handling for incomplete or corrupted GitHub clones of templates has been improved. (`#1210 <https://github.com/beeware/briefcase/pull/1210>`__)
 * Application/Bundle IDs are normalized to replace underscores with dashes when possible (`#1234 <https://github.com/beeware/briefcase/pull/1234>`__)
 * Filenames and directories in RPM package definitions are quoted in order to include filenames that include white space. (`#1236 <https://github.com/beeware/briefcase/issues/1236>`__)
 * Briefcase will no longer display progress bars if the ``FORCE_COLOR`` environment variable is set. (`#1267 <https://github.com/beeware/briefcase/pull/1267>`__)
