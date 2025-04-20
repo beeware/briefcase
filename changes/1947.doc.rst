@@ -1,1 +1,1 @@
-A tutorial for writing command-line apps was added.
+A how to guide for command-line apps was added.
