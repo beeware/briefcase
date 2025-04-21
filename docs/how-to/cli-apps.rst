@@ -28,7 +28,7 @@ Start by generating a new Briefcase project with:
     $ briefcase new
 
 When prompted to select a GUI framework, enter ``4`` to choose **Console**.
-This changes how Briefcase structures the app and configures the project.
+This changes the code that Briefcase generates for the new app, and the configuration for the new project.
 
 The most important change is that your ``pyproject.toml`` will include:
 
@@ -119,8 +119,9 @@ Once you've tested your app, you can package it for distribution using:
     $ briefcase build
     $ briefcase package
 
-For **macOS**, console apps are packaged as ``.pkg`` files, rather than the ``.app``
-bundles used for GUI apps. This is another major distinction.
+On **macOS**, console apps *must* be packaged as ``.pkg`` files, rather than the
+``.app`` or ``.dmg`` bundles used for GUI apps. This is required to install a
+entry on the user's path so that the app can be executed from the command line.
 
 .. code-block:: console
 
