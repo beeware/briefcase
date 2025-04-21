@@ -27,8 +27,10 @@ Start by generating a new Briefcase project with:
 
     $ briefcase new
 
-When prompted to select a GUI framework, enter ``4`` to choose **Console**.
-This changes the code that Briefcase generates for the new app, and the configuration for the new project.
+When prompted to select a GUI framework, choose the option corresponding to **Console**.
+The exact number may vary depending on the plugins installed in your environment.
+This changes the code that Briefcase generates for the new app, and the configuration
+for the new project.
 
 The most important change is that your ``pyproject.toml`` will include:
 
@@ -43,7 +45,8 @@ console or display windows.
 Inspecting the File Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Your generated project will have a layout similar to:
+Your generated project will have a layout similar to the following, assuming your app's
+formal name is `Hello CLI` and its app name is `hello-cli`:
 
 .. code-block:: text
 
@@ -56,6 +59,25 @@ Your generated project will have a layout similar to:
     └── ...
 
 Note the ``app.py`` file contains a simple ``print("Hello, World.")`` statement by default.
+
+Handling Command-line Arguments
+-------------------------------
+
+You can use any standard Python tool to parse CLI arguments. Here's a simple example
+using :any:`argparse`:
+
+.. code-block:: python
+
+    import argparse
+
+    def main():
+        parser = argparse.ArgumentParser(description="A simple CLI app.")
+        parser.add_argument("name", help="Your name")
+        args = parser.parse_args()
+
+        print(f"Hello, {args.name}!")
+
+Update your ``app.py`` file with this logic. You can now pass a name when running the app.
 
 Running the App with Briefcase
 ------------------------------
@@ -82,31 +104,6 @@ And similarly after packaging:
 
 This is a key difference from GUI apps, which are usually launched without passing
 arguments and display a graphical window.
-
-Handling Command-line Arguments
--------------------------------
-
-You can use any standard Python tool to parse CLI arguments. Here's a simple example
-using :any:`argparse`:
-
-.. code-block:: python
-
-    import argparse
-
-    def main():
-        parser = argparse.ArgumentParser(description="A simple CLI app.")
-        parser.add_argument("name", help="Your name")
-        args = parser.parse_args()
-
-        print(f"Hello, {args.name}!")
-
-Update your ``app.py`` file with this logic. You can now pass a name when running the app:
-
-.. code-block:: console
-
-    $ briefcase dev -- John
-    ===========================================================================
-    Hello, John!
 
 Packaging and Distribution
 ---------------------------
@@ -136,6 +133,13 @@ This ``.pkg`` file installs the app globally, and it can run from the terminal:
     $ hello-cli John
     Hello, John!
 
+.. note::
+
+    The executable name of your app will be the app name, not the formal name.
+    For example, in this guide, the formal name is `Hello CLI`, but the executable
+    name is `hello-cli`. This is the name you will use to run your app from the
+    terminal, as shown in the examples above.
+
 On **Linux**, you'll get a ``.deb`` package, and on **Windows**, a ``.msi`` installer.
 
 Console App Behavior Summary
@@ -155,4 +159,7 @@ What's next?
 Now that you've built a simple console app with Briefcase, you can use these
 principles to build more complex CLI tools or integrate other libraries like
 `Click <https://click.palletsprojects.com/>`_, `Typer <https://typer.tiangolo.com/>`_,
-or any other Python CLI framework.
+or any other Python CLI framework. For more advanced text-based interfaces, you
+might also explore libraries like `curses <https://docs.python.org/3/library/curses.html>`_
+or `Textual <https://textual.textualize.io/>`_, which allow you to create "GUI-like"
+applications in the terminal.
