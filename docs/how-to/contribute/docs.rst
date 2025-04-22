@@ -1,3 +1,4 @@
+=================================
 Contributing to the documentation
 =================================
 
@@ -192,7 +193,6 @@ To force a rebuild for all of the documentation:
 
 The documentation should be fully rebuilt in the ``docs/_build/html`` folder.
 If there are any markup problems, they'll raise an error.
-
 
 What to work on?
 ================

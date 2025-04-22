@@ -1,3 +1,4 @@
+==============================
 Contributing code to Briefcase
 ==============================
 
@@ -72,8 +73,8 @@ Invoke CI checks and tests by running:
 
 .. _setup-dev-environment:
 
-Setting up your development environment
----------------------------------------
+Set up your development environment
+===================================
 
 The recommended way of setting up your development environment for Briefcase is
 to use a `virtual environment <https://docs.python.org/3/library/venv.html>`__,
