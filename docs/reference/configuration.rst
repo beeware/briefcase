@@ -36,6 +36,9 @@ Changes to these options will not take effect until you run the appropriate
   ``briefcase build`` or ``briefcase run``.
 * For ``requires``, run ``briefcase update -r``, or pass the ``-r`` option to
   ``briefcase build`` or ``briefcase run``.
+* For ``icon`` (including an ``icon`` definition in a document type), run ``briefcase
+  update --update-resources``, or pass the ``--update-resources`` option to ``briefcase
+  build`` or ``briefcase run``.
 * For any other options, you'll need to re-run ``briefcase create``.
 
 
