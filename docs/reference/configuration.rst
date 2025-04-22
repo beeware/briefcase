@@ -29,6 +29,19 @@ project definition. Briefcase should be invoked in a directory that contains a
 ``pyproject.toml`` file will be interpreted relative to the directory that
 contains the ``pyproject.toml`` file.
 
+Changes to these options will not take effect until you run the appropriate
+``briefcase`` command:
+
+* For ``sources``, run ``briefcase update``, or pass the ``-u`` option to
+  ``briefcase build`` or ``briefcase run``.
+* For ``requires``, run ``briefcase update -r``, or pass the ``-r`` option to
+  ``briefcase build`` or ``briefcase run``.
+* For ``icon`` (including an ``icon`` definition in a document type), run ``briefcase
+  update --update-resources``, or pass the ``--update-resources`` option to ``briefcase
+  build`` or ``briefcase run``.
+* For any other options, you'll need to re-run ``briefcase create``.
+
+
 Configuration sections
 ======================
 
