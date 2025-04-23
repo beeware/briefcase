@@ -1,4 +1,3 @@
-==============================
 Contributing code to Briefcase
 ==============================
 
@@ -74,7 +73,7 @@ Invoke CI checks and tests by running:
 .. _setup-dev-environment:
 
 Set up your development environment
-===================================
+-----------------------------------
 
 The recommended way of setting up your development environment for Briefcase is
 to use a `virtual environment <https://docs.python.org/3/library/venv.html>`__,
@@ -375,6 +374,9 @@ running tox in parallel, by running ``tox p`` (or ``tox run-parallel``). When
 you run the test suite in parallel, you'll get less feedback on the progress of
 the test suite as it runs, but you'll still get a summary of any problems found
 at the end of the test run.
+
+Running test variations
+-----------------------
 
 Run tests for multiple versions of Python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
