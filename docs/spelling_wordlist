@@ -82,6 +82,7 @@ runtimes
 Runtimes
 sandboxed
 sandboxing
+scrollable
 Setuptools
 subdirectories
 subdirectory
@@ -95,11 +96,14 @@ toml
 toolkits
 towncrier
 tox
+Triaging
 TTY
 tvOS
 unallocated
 untrusted
 vendored
+verbing
+visionOS
 VisualStudio
 watchOS
 Wayland
