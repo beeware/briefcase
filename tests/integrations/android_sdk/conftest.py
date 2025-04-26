@@ -10,8 +10,8 @@ from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
 
 # current versions of Android SDK Manager
-SDK_MGR_VER = "12.0"
-SDK_MGR_DL_VER = "11076708"
+SDK_MGR_VER = "19.0"
+SDK_MGR_DL_VER = "13114758"
 
 
 @pytest.fixture
