@@ -148,7 +148,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.kde.Platform"
-flatpak_runtime_version = "6.7"
+flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
 """
 
