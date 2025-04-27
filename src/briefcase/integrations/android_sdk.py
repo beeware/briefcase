@@ -60,10 +60,10 @@ class AndroidSDK(ManagedTool):
     name = "android_sdk"
     full_name = "Android SDK"
 
-    # Latest version for Command-Line Tools download as of May 2024
+    # Latest version for Command-Line Tools download as of May 2025
     # **Be sure the gradle.rst docs stay in sync with version updates here**
-    SDK_MANAGER_DOWNLOAD_VER = "11076708"
-    SDK_MANAGER_VER = "12.0"
+    SDK_MANAGER_DOWNLOAD_VER = "13114758"
+    SDK_MANAGER_VER = "19.0"
 
     def __init__(self, tools: ToolCache, root_path: Path):
         super().__init__(tools=tools)

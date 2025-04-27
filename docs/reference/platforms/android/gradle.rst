@@ -37,7 +37,7 @@ If you have an existing install of the Android SDK, it will be used by Briefcase
 if the ``ANDROID_HOME`` environment variable is set. If ``ANDROID_HOME`` is not
 present in the environment, Briefcase will honor the deprecated
 ``ANDROID_SDK_ROOT`` environment variable. Additionally, an existing SDK install
-must have version 12.0 of Command-line Tools installed; this version can be
+must have version 19.0 of Command-line Tools installed; this version can be
 installed in the SDK Manager in Android Studio.
 
 Packaging format
