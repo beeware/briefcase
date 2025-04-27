@@ -206,7 +206,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "47"
+flatpak_runtime_version = "48"
 flatpak_sdk = "org.gnome.Sdk"
 """,
         pyproject_table_windows="""\
@@ -491,7 +491,7 @@ linuxdeploy_plugins = [
 """,
         pyproject_table_linux_flatpak="""\
 flatpak_runtime = "org.kde.Platform"
-flatpak_runtime_version = "6.7"
+flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
 """,
         pyproject_table_windows="""\
