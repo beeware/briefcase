@@ -365,6 +365,7 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("description", None),
         )
 
+        _git_username = self.get_git_config_value("user", "name")
         author = self.console.text_question(
             intro=(
                 "Who do you want to be credited as the author of this application?\n"
@@ -372,10 +373,11 @@ class NewCommand(BaseCommand):
                 "This could be your own name, or the name of your company you work for."
             ),
             description="Author",
-            default="Jane Developer",
+            default=_git_username or "Jane Developer",
             override_value=project_overrides.pop("author", None),
         )
 
+        _git_email = self.get_git_config_value("user", "email")
         author_email = self.console.text_question(
             intro=(
                 "What email address should people use to contact the developers of "
@@ -385,7 +387,7 @@ class NewCommand(BaseCommand):
                 "you set up specifically for this application."
             ),
             description="Author's Email",
-            default=self.make_author_email(author, bundle),
+            default=_git_email or self.make_author_email(author, bundle),
             validator=self.validate_email,
             override_value=project_overrides.pop("author_email", None),
         )

@@ -1156,3 +1156,25 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 output_path=output_path,
                 extra_context=extra_context,
             )
+
+    def get_git_config_value(self, section: str, option: str) -> str | None:
+        """Get the requested git config value, if available.
+
+        :param section: The configuration section.
+        :param option: The configuration option.
+        :returns: The configuration value, or None.
+        """
+        git = self.tools.git
+
+        git_config_paths = [
+            git.config.get_config_path("system"),
+            git.config.get_config_path("global"),
+            git.config.get_config_path("user"),
+            ".git/config",
+        ]
+
+        with git.config.GitConfigParser(git_config_paths) as git_config:
+            if git_config.has_option(section, option):
+                return git_config.get_value(section, option)
+
+        return None
