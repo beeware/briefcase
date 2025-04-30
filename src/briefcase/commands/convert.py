@@ -387,8 +387,16 @@ class ConvertCommand(NewCommand):
             if "name" in author
         ]
 
-        default_author = self.get_git_config_value("user", "name") or "Jane Developer"
+        default_author = "Jane Developer"
         if not options or override_value is not None:
+            git_username = self.get_git_config_value("user", "name")
+            if git_username is not None:
+                default_author = git_username
+                intro = (
+                    f"{intro}\n\n"
+                    + f"Based on the git configuration, we believe it could be '{git_username}'"
+                )
+
             return self.console.text_question(
                 intro=intro,
                 description="Author",
@@ -434,12 +442,12 @@ class ConvertCommand(NewCommand):
 
         :returns: author email
         """
-        git_username = self.get_git_config_value("user", "name")
-        if git_username is None:
+        git_email = self.get_git_config_value("user", "email")
+        if git_email is None:
             default = self.make_author_email(author, bundle)
             default_source = "the author name and bundle"
         else:
-            default = git_username
+            default = git_email
             default_source = "the git configuration"
 
         for author_info in self.pep621_data.get("authors", []):

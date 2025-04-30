@@ -209,3 +209,32 @@ def test_prompted_author_with_pyproject_other(convert_command):
     )
     convert_command.console.values = ["5", "Some Author"]
     assert convert_command.input_author(None) == "Some Author"
+
+
+def test_default_author_from_git_config(convert_command, monkeypatch):
+    """If git integration is configured, and a config value 'user.name' is available,
+    use that value as default."""
+    convert_command.tools.git = object()
+    convert_command.get_git_config_value = MagicMock(return_value="Some Author")
+    convert_command.console.values = [""]
+
+    assert convert_command.input_author(None) == "Some Author"
+    convert_command.get_git_config_value.assert_called_once_with("user", "name")
+
+
+def test_git_config_is_mentioned_as_source(convert_command, monkeypatch):
+    """If git config is used as default value, this shall be mentioned to the user."""
+    convert_command.tools.git = object()
+    convert_command.get_git_config_value = MagicMock(return_value="Some Author")
+
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
+
+    convert_command.input_author(None)
+
+    mock_text_question.assert_called_once_with(
+        intro=PartialMatchString("Based on the git configuration"),
+        description="Author",
+        default="Some Author",
+        override_value=None,
+    )

@@ -94,3 +94,33 @@ def test_prompted_email(convert_command):
         convert_command.input_email("Some name", "com.some.bundle", None)
         == "my@email.com"
     )
+
+
+def test_default_email_from_git_config(convert_command, monkeypatch):
+    """If git integration is configured, and a config value 'user.email' is available,
+    use that value as default."""
+    convert_command.tools.git = object()
+    convert_command.get_git_config_value = MagicMock(return_value="my@email.com")
+    convert_command.console.values = [""]
+
+    assert (
+        convert_command.input_email("Some name", "com.some.bundle", None)
+        == "my@email.com"
+    )
+    convert_command.get_git_config_value.assert_called_once_with("user", "email")
+
+
+def test_git_config_is_mentioned_as_source(convert_command, monkeypatch):
+    """If git config is used as default value, this shall be mentioned to the user."""
+    convert_command.tools.git = object()
+    convert_command.get_git_config_value = MagicMock(return_value="my@email.com")
+
+    mock_text_question = MagicMock()
+    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
+
+    convert_command.input_email("Some name", "com.some.bundle", None)
+
+    mock_text_question.assert_called_once()
+    assert mock_text_question.call_args_list[0].kwargs["intro"] == PartialMatchString(
+        "Based on the git configuration"
+    )
