@@ -1,0 +1,1 @@
+``briefcase new`` and ``briefcase convert`` try to infer the Author and Author's Email from the git configuration.
