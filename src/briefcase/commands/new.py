@@ -268,13 +268,13 @@ class NewCommand(BaseCommand):
 
     def input_license(self, override_value: str | None):
         licenses = [
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
+            'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
+            "MIT License (MIT)",
+            "Apache License 2.0 (Apache-2.0)",
+            "GNU General Public License v2.0 only (GPL-2.0)",
+            "GNU General Public License v2.0 or later (GPL-2.0+)",
+            "GNU General Public License v3.0 only (GPL-3.0)",
+            "GNU General Public License v3.0 or later (GPL-3.0+)",
             "Proprietary",
             "Other",
         ]

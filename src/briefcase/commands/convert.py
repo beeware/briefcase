@@ -465,28 +465,28 @@ class ConvertCommand(NewCommand):
         # LIMITED will generate a false match.
 
         hint_patterns = {
-            "Apache Software License": ["Apache"],
-            "BSD license": [
+            "Apache License 2.0 (Apache-2.0)": ["Apache"],
+            'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)': [
                 "Redistribution and use in source and binary forms",
                 "BSD",
             ],
-            "GNU General Public License v2 or later (GPLv2+)": [
+            "GNU General Public License v2.0 or later (GPL-2.0+)": [
                 "Free Software Foundation, either version 2 of the License",
                 "GPLv2+",
             ],
-            "GNU General Public License v2 (GPLv2)": [
+            "GNU General Public License v2.0 only (GPL-2.0)": [
                 "version 2 of the GNU General Public License",
                 "GPLv2",
             ],
-            "GNU General Public License v3 or later (GPLv3+)": [
+            "GNU General Public License v3.0 or later (GPL-3.0+)": [
                 "either version 3 of the License",
                 "GPLv3+",
             ],
-            "GNU General Public License v3 (GPLv3)": [
+            "GNU General Public License v3.0 only (GPL-3.0)": [
                 "version 3 of the GNU General Public License",
                 "GPLv3",
             ],
-            "MIT license": [
+            "MIT License (MIT)": [
                 "Permission is hereby granted, free of charge",
                 "MIT",
             ],
@@ -540,13 +540,13 @@ class ConvertCommand(NewCommand):
         """
         default, intro = self.get_license_hint()
         options = [
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
+            'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
+            "MIT License (MIT)",
+            "Apache License 2.0 (Apache-2.0)",
+            "GNU General Public License v2.0 only (GPL-2.0)",
+            "GNU General Public License v2.0 or later (GPL-2.0+)",
+            "GNU General Public License v3.0 only (GPL-3.0)",
+            "GNU General Public License v3.0 or later (GPL-3.0+)",
             "Proprietary",
             "Other",
         ]
