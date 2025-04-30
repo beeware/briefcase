@@ -1,8 +1,8 @@
 from unittest import mock
 
 
-def test_all_config_files_are_used(base_command, mock_git):
-    """Read the system, global, user, and repo config files."""
+def test_all_config_files_are_read(base_command, mock_git):
+    """All git config files are read (system, global, user, repo)."""
     base_command.tools.git = mock_git
     mock_git.config.get_config_path.side_effect = ["file1", "file2", "file3"]
 
