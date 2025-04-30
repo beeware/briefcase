@@ -1,3 +1,8 @@
+from unittest import mock
+
+from ...utils import PartialMatchString
+
+
 def test_question_sequence(new_command):
     """Questions are asked, a context is constructed."""
 
@@ -132,4 +137,59 @@ def test_question_sequence_with_no_user_input(new_command):
         test_source_dir="tests",
         project_name="Hello World",
         url="https://example.com/helloworld",
+    )
+
+
+def test_author_and_email_use_git_config_as_fallback(new_command):
+    """If no user input is provided, git config values 'git.user' and 'git.email' are used if
+    available."""
+    new_command.tools.git = object()
+    new_command.get_git_config_value = mock.MagicMock()
+    new_command.get_git_config_value.side_effect = ["Some Author", "my@email.com"]
+
+    new_command.console.input_enabled = False
+
+    context = new_command.build_app_context(project_overrides={})
+
+    assert context["author"] == "Some Author"
+    assert context["author_email"] == "my@email.com"
+    assert new_command.get_git_config_value.call_args_list == [
+        mock.call("user", "name"),
+        mock.call("user", "email"),
+    ]
+
+
+def test_git_config_is_mentioned_as_source(new_command, monkeypatch):
+    """If git config is used as default value, this shall be mentioned to the user."""
+    new_command.tools.git = object()
+    new_command.get_git_config_value = mock.MagicMock()
+    new_command.get_git_config_value.side_effect = ["Some Author", "my@email.com"]
+
+    new_command.console.input_enabled = False
+
+    mock_text_question = mock.MagicMock()
+    mock_text_question.side_effect = lambda *args, **kwargs: kwargs["default"]
+    monkeypatch.setattr(new_command.console, "text_question", mock_text_question)
+
+    new_command.build_app_context(project_overrides={})
+
+    assert (
+        mock.call(
+            intro=PartialMatchString("Based on the git configuration"),
+            description="Author",
+            default="Some Author",
+            override_value=None,
+        )
+        in mock_text_question.call_args_list
+    )
+
+    assert (
+        mock.call(
+            intro=PartialMatchString("Based on the git configuration"),
+            description="Author's Email",
+            default="my@email.com",
+            override_value=None,
+            validator=new_command.validate_email,
+        )
+        in mock_text_question.call_args_list
     )
