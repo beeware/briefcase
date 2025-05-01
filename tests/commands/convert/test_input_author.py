@@ -233,7 +233,7 @@ def test_git_config_is_mentioned_as_source(convert_command, monkeypatch):
     convert_command.input_author(None)
 
     mock_text_question.assert_called_once_with(
-        intro=PartialMatchString("Based on the git configuration"),
+        intro=PartialMatchString("Based on your git configuration"),
         description="Author",
         default="Some Author",
         override_value=None,

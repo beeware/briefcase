@@ -122,5 +122,5 @@ def test_git_config_is_mentioned_as_source(convert_command, monkeypatch):
 
     mock_text_question.assert_called_once()
     assert mock_text_question.call_args_list[0].kwargs["intro"] == PartialMatchString(
-        "Based on the git configuration"
+        "Based on your git configuration"
     )

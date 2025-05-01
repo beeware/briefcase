@@ -376,7 +376,7 @@ class NewCommand(BaseCommand):
             default_author = git_username
             author_intro = (
                 f"{author_intro}\n\n"
-                f"Based on the git configuration, we believe it could be '{git_username}'."
+                f"Based on your git configuration, we believe it could be '{git_username}'."
             )
         author = self.console.text_question(
             intro=author_intro,
@@ -399,7 +399,7 @@ class NewCommand(BaseCommand):
             default_author_email = git_email
             author_email_intro = (
                 f"{author_email_intro}\n\n"
-                f"Based on the git configuration, we believe it could be '{git_email}'."
+                f"Based on your git configuration, we believe it could be '{git_email}'."
             )
         author_email = self.console.text_question(
             intro=author_email_intro,

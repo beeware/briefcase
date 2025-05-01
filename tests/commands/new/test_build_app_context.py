@@ -175,7 +175,7 @@ def test_git_config_is_mentioned_as_source(new_command, monkeypatch):
 
     assert (
         mock.call(
-            intro=PartialMatchString("Based on the git configuration"),
+            intro=PartialMatchString("Based on your git configuration"),
             description="Author",
             default="Some Author",
             override_value=None,
@@ -185,7 +185,7 @@ def test_git_config_is_mentioned_as_source(new_command, monkeypatch):
 
     assert (
         mock.call(
-            intro=PartialMatchString("Based on the git configuration"),
+            intro=PartialMatchString("Based on your git configuration"),
             description="Author's Email",
             default="my@email.com",
             override_value=None,

@@ -394,7 +394,7 @@ class ConvertCommand(NewCommand):
                 default_author = git_username
                 intro = (
                     f"{intro}\n\n"
-                    + f"Based on the git configuration, we believe it could be '{git_username}'."
+                    + f"Based on your git configuration, we believe it could be '{git_username}'."
                 )
 
             return self.console.text_question(
@@ -448,7 +448,7 @@ class ConvertCommand(NewCommand):
             default_source = "the author name and bundle"
         else:
             default = git_email
-            default_source = "the git configuration"
+            default_source = "your git configuration"
 
         for author_info in self.pep621_data.get("authors", []):
             if author_info.get("name") == author and author_info.get("email"):
