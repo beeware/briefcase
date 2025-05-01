@@ -465,36 +465,36 @@ class ConvertCommand(NewCommand):
         # LIMITED will generate a false match.
 
         hint_patterns = {
-            "Apache License 2.0 (Apache-2.0)": ["Apache"],
-            'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)': [
+            "Apache-2.0": ["Apache"],
+            "BSD-3-Clause": [
                 "Redistribution and use in source and binary forms",
                 "BSD",
             ],
-            "GNU General Public License v2.0 or later (GPL-2.0+)": [
+            "GPL-2.0+": [
                 "Free Software Foundation, either version 2 of the License",
                 "GPLv2+",
             ],
-            "GNU General Public License v2.0 only (GPL-2.0)": [
+            "GPL-2.0": [
                 "version 2 of the GNU General Public License",
                 "GPLv2",
             ],
-            "GNU General Public License v3.0 or later (GPL-3.0+)": [
+            "GPL-3.0+": [
                 "either version 3 of the License",
                 "GPLv3+",
             ],
-            "GNU General Public License v3.0 only (GPL-3.0)": [
+            "GPL-3.0": [
                 "version 3 of the GNU General Public License",
                 "GPLv3",
             ],
-            "MIT License (MIT)": [
+            "MIT": [
                 "Permission is hereby granted, free of charge",
                 "MIT",
             ],
         }
-        for hint, license_patterns in hint_patterns.items():
+        for license_id, license_patterns in hint_patterns.items():
             for license_pattern in license_patterns:
                 if license_pattern.lower() in license_text.lower():
-                    return hint
+                    return license_id
 
         return "Other"
 
@@ -539,17 +539,17 @@ class ConvertCommand(NewCommand):
         :returns: The project
         """
         default, intro = self.get_license_hint()
-        options = [
-            'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
-            "MIT License (MIT)",
-            "Apache License 2.0 (Apache-2.0)",
-            "GNU General Public License v2.0 only (GPL-2.0)",
-            "GNU General Public License v2.0 or later (GPL-2.0+)",
-            "GNU General Public License v3.0 only (GPL-3.0)",
-            "GNU General Public License v3.0 or later (GPL-3.0+)",
-            "Proprietary",
-            "Other",
-        ]
+        options = {
+            "BSD-3-Clause": 'BSD-3-Clause: BSD 3-Clause "New" or "Revised" License',
+            "MIT": "MIT: MIT License",
+            "Apache-2.0": "Apache-2.0: Apache License 2.0",
+            "GPL-2.0": "GPL-2.0: GNU General Public License v2.0 only",
+            "GPL-2.0+": "GPL-2.0+: GNU General Public License v2.0 or later",
+            "GPL-3.0": "GPL-3.0: GNU General Public License v3.0 only",
+            "GPL-3.0+": "GPL-3.0+: GNU General Public License v3.0 or later",
+            "Proprietary": "Proprietary",
+            "Other": "Other",
+        }
 
         return self.console.selection_question(
             intro=intro,
