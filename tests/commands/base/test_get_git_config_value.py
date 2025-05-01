@@ -33,9 +33,11 @@ def test_config_values_are_parsed(base_command, tmp_path, monkeypatch):
 
     # create local two config files
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "config-1").write_text("[user]\n\tname = Some User\n")
+    (tmp_path / "config-1").write_text("[user]\n\tname = Some User\n", encoding="utf-8")
     (tmp_path / ".git").mkdir()
-    (tmp_path / ".git" / "config").write_text("[user]\n\temail = my@email.com\n")
+    (tmp_path / ".git" / "config").write_text(
+        "[user]\n\temail = my@email.com\n", encoding="utf-8"
+    )
 
     # expect values are parsed from all existing config files
     assert base_command.get_git_config_value("user", "name") == "Some User"
