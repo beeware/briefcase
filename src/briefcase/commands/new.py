@@ -26,13 +26,13 @@ from briefcase.integrations.git import Git
 from .base import BaseCommand
 
 LICENSE_OPTIONS = {
-    "BSD-3-Clause": 'BSD-3-Clause: BSD 3-Clause "New" or "Revised" License',
-    "MIT": "MIT: MIT License",
-    "Apache-2.0": "Apache-2.0: Apache License 2.0",
-    "GPL-2.0": "GPL-2.0: GNU General Public License v2.0 only",
-    "GPL-2.0+": "GPL-2.0+: GNU General Public License v2.0 or later",
-    "GPL-3.0": "GPL-3.0: GNU General Public License v3.0 only",
-    "GPL-3.0+": "GPL-3.0+: GNU General Public License v3.0 or later",
+    "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
+    "MIT": "MIT License (MIT)",
+    "Apache-2.0": "Apache License 2.0 (Apache-2.0)",
+    "GPL-2.0": "GNU General Public License v2.0 only (GPL-2.0)",
+    "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
+    "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
+    "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
     "Proprietary": "Proprietary",
     "Other": "Other",
 }
