@@ -1164,21 +1164,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         :param option: The configuration option.
         :returns: The configuration value, or None.
         """
-        git = getattr(self.tools, "git", None)
-        if git is None:
-            self.console.warning(
-                "Usage of git was requested before tools were configured"
-            )
-            return None
-
         git_config_paths = [
-            git.config.get_config_path("system"),
-            git.config.get_config_path("global"),
-            git.config.get_config_path("user"),
+            self.tools.git.config.get_config_path("system"),
+            self.tools.git.config.get_config_path("global"),
+            self.tools.git.config.get_config_path("user"),
             ".git/config",
         ]
 
-        with git.config.GitConfigParser(git_config_paths) as git_config:
+        with self.tools.git.config.GitConfigParser(git_config_paths) as git_config:
             if git_config.has_option(section, option):
                 return git_config.get_value(section, option)
 
