@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from packaging.utils import canonicalize_name
 
 from ..config import is_valid_app_name
-from .new import NewCommand, parse_project_overrides
+from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -539,22 +539,11 @@ class ConvertCommand(NewCommand):
         :returns: The project
         """
         default, intro = self.get_license_hint()
-        options = {
-            "BSD-3-Clause": 'BSD-3-Clause: BSD 3-Clause "New" or "Revised" License',
-            "MIT": "MIT: MIT License",
-            "Apache-2.0": "Apache-2.0: Apache License 2.0",
-            "GPL-2.0": "GPL-2.0: GNU General Public License v2.0 only",
-            "GPL-2.0+": "GPL-2.0+: GNU General Public License v2.0 or later",
-            "GPL-3.0": "GPL-3.0: GNU General Public License v3.0 only",
-            "GPL-3.0+": "GPL-3.0+: GNU General Public License v3.0 or later",
-            "Proprietary": "Proprietary",
-            "Other": "Other",
-        }
 
         return self.console.selection_question(
             intro=intro,
             description="Project License",
-            options=options,
+            options=LICENSE_OPTIONS,
             default=default,
             override_value=override_value,
         )

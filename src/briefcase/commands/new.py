@@ -25,6 +25,18 @@ from briefcase.integrations.git import Git
 
 from .base import BaseCommand
 
+LICENSE_OPTIONS = {
+    "BSD-3-Clause": 'BSD-3-Clause: BSD 3-Clause "New" or "Revised" License',
+    "MIT": "MIT: MIT License",
+    "Apache-2.0": "Apache-2.0: Apache License 2.0",
+    "GPL-2.0": "GPL-2.0: GNU General Public License v2.0 only",
+    "GPL-2.0+": "GPL-2.0+: GNU General Public License v2.0 or later",
+    "GPL-3.0": "GPL-3.0: GNU General Public License v3.0 only",
+    "GPL-3.0+": "GPL-3.0+: GNU General Public License v3.0 or later",
+    "Proprietary": "Proprietary",
+    "Other": "Other",
+}
+
 
 def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
     """Loads built-in and third-party GUI bootstraps."""
@@ -267,21 +279,10 @@ class NewCommand(BaseCommand):
         )
 
     def input_license(self, override_value: str | None) -> str:
-        licenses = {
-            "BSD-3-Clause": 'BSD-3-Clause: BSD 3-Clause "New" or "Revised" License',
-            "MIT": "MIT: MIT License",
-            "Apache-2.0": "Apache-2.0: Apache License 2.0",
-            "GPL-2.0": "GPL-2.0: GNU General Public License v2.0 only",
-            "GPL-2.0+": "GPL-2.0+: GNU General Public License v2.0 or later",
-            "GPL-3.0": "GPL-3.0: GNU General Public License v3.0 only",
-            "GPL-3.0+": "GPL-3.0+: GNU General Public License v3.0 or later",
-            "Proprietary": "Proprietary",
-            "Other": "Other",
-        }
         return self.console.selection_question(
             intro="What license do you want to use for this project's code?",
             description="Project License",
-            options=licenses,
+            options=LICENSE_OPTIONS,
             default="BSD-3-Clause",
             override_value=override_value,
         )
