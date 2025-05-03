@@ -209,3 +209,18 @@ def test_prompted_author_with_pyproject_other(convert_command):
     )
     convert_command.console.values = ["5", "Some Author"]
     assert convert_command.input_author(None) == "Some Author"
+
+
+def test_default_author_from_git_config(convert_command, monkeypatch, capsys):
+    """If git integration is configured, and a config value 'user.name' is available,
+    use that value as default."""
+    convert_command.tools.git = object()
+    convert_command.get_git_config_value = MagicMock(return_value="Some Author")
+    convert_command.console.values = [""]
+
+    assert convert_command.input_author(None) == "Some Author"
+    convert_command.get_git_config_value.assert_called_once_with("user", "name")
+
+    # RichConsole wraps long lines, so we have to unwrap before we check
+    stdout = capsys.readouterr().out.replace("\n", " ")
+    assert stdout == PartialMatchString("Based on your git configuration")

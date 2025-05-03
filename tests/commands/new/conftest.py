@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from briefcase.commands import NewCommand
@@ -42,4 +44,6 @@ class DummyNewCommand(NewCommand):
 
 @pytest.fixture
 def new_command(tmp_path):
-    return DummyNewCommand(base_path=tmp_path)
+    command = DummyNewCommand(base_path=tmp_path)
+    command.get_git_config_value = MagicMock(return_value=None)
+    return command

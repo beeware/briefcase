@@ -365,27 +365,46 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("description", None),
         )
 
+        author_intro = (
+            "Who do you want to be credited as the author of this application?\n"
+            "\n"
+            "This could be your own name, or the name of your company you work for."
+        )
+        default_author = "Jane Developer"
+        git_username = self.get_git_config_value("user", "name")
+        if git_username is not None:
+            default_author = git_username
+            author_intro = (
+                f"{author_intro}\n\n"
+                f"Based on your git configuration, we believe it could be '{git_username}'."
+            )
         author = self.console.text_question(
-            intro=(
-                "Who do you want to be credited as the author of this application?\n"
-                "\n"
-                "This could be your own name, or the name of your company you work for."
-            ),
+            intro=author_intro,
             description="Author",
-            default="Jane Developer",
+            default=default_author,
             override_value=project_overrides.pop("author", None),
         )
 
+        author_email_intro = (
+            "What email address should people use to contact the developers of "
+            "this application?\n"
+            "\n"
+            "This might be your own email address, or a generic contact address "
+            "you set up specifically for this application."
+        )
+        git_email = self.get_git_config_value("user", "email")
+        if git_email is None:
+            default_author_email = self.make_author_email(author, bundle)
+        else:
+            default_author_email = git_email
+            author_email_intro = (
+                f"{author_email_intro}\n\n"
+                f"Based on your git configuration, we believe it could be '{git_email}'."
+            )
         author_email = self.console.text_question(
-            intro=(
-                "What email address should people use to contact the developers of "
-                "this application?\n"
-                "\n"
-                "This might be your own email address, or a generic contact address "
-                "you set up specifically for this application."
-            ),
+            intro=author_email_intro,
             description="Author's Email",
-            default=self.make_author_email(author, bundle),
+            default=default_author_email,
             validator=self.validate_email,
             override_value=project_overrides.pop("author_email", None),
         )
