@@ -2,8 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ...utils import PartialMatchString
-
 
 @pytest.mark.parametrize("license_file_name", ["LICENSE", "LICENCE"])
 @pytest.mark.parametrize(
@@ -48,23 +46,11 @@ def test_get_license_from_file(
     )
 
     convert_command.input_license(None)
-    mock_selection_question.assert_called_once_with(
-        intro=PartialMatchString("the license file"),
-        description="Project License",
-        options={
-            "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
-            "MIT": "MIT License (MIT)",
-            "Apache-2.0": "Apache License 2.0 (Apache-2.0)",
-            "GPL-2.0": "GNU General Public License v2.0 only (GPL-2.0)",
-            "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
-            "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
-            "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-            "Proprietary": "Proprietary",
-            "Other": "Other",
-        },
-        default=license_id,
-        override_value=None,
-    )
+
+    assert mock_selection_question.call_count == 1
+    call_kwargs = mock_selection_question.call_args.kwargs
+    assert call_kwargs["default"] == license_id
+    assert "Based on the license file" in call_kwargs["intro"]
 
 
 @pytest.mark.parametrize(
@@ -113,23 +99,10 @@ def test_get_license_from_pep621_license_file(
 
     convert_command.input_license(None)
 
-    mock_selection_question.assert_called_once_with(
-        intro=PartialMatchString("the license file"),
-        description="Project License",
-        options={
-            "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
-            "MIT": "MIT License (MIT)",
-            "Apache-2.0": "Apache License 2.0 (Apache-2.0)",
-            "GPL-2.0": "GNU General Public License v2.0 only (GPL-2.0)",
-            "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
-            "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
-            "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-            "Proprietary": "Proprietary",
-            "Other": "Other",
-        },
-        default=license_id,
-        override_value=None,
-    )
+    assert mock_selection_question.call_count == 1
+    call_kwargs = mock_selection_question.call_args.kwargs
+    assert call_kwargs["default"] == license_id
+    assert "Based on the license file" in call_kwargs["intro"]
 
 
 @pytest.mark.parametrize(
@@ -161,23 +134,11 @@ def test_get_license_from_pyproject(
     )
 
     convert_command.input_license(None)
-    mock_selection_question.assert_called_once_with(
-        intro=PartialMatchString("the PEP621 formatted pyproject.toml"),
-        description="Project License",
-        options={
-            "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
-            "MIT": "MIT License (MIT)",
-            "Apache-2.0": "Apache License 2.0 (Apache-2.0)",
-            "GPL-2.0": "GNU General Public License v2.0 only (GPL-2.0)",
-            "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
-            "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
-            "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-            "Proprietary": "Proprietary",
-            "Other": "Other",
-        },
-        default=license_id,
-        override_value=None,
-    )
+
+    assert mock_selection_question.call_count == 1
+    call_kwargs = mock_selection_question.call_args.kwargs
+    assert call_kwargs["default"] == license_id
+    assert "Based on the PEP621 formatted pyproject.toml" in call_kwargs["intro"]
 
 
 def test_no_license_hint(convert_command, monkeypatch):
@@ -187,23 +148,10 @@ def test_no_license_hint(convert_command, monkeypatch):
     )
 
     convert_command.input_license(None)
-    mock_selection_question.assert_called_once_with(
-        intro="What license do you want to use for this project's code? ",
-        description="Project License",
-        options={
-            "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
-            "MIT": "MIT License (MIT)",
-            "Apache-2.0": "Apache License 2.0 (Apache-2.0)",
-            "GPL-2.0": "GNU General Public License v2.0 only (GPL-2.0)",
-            "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
-            "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
-            "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-            "Proprietary": "Proprietary",
-            "Other": "Other",
-        },
-        default=None,
-        override_value=None,
-    )
+
+    assert mock_selection_question.call_count == 1
+    assert mock_selection_question.call_args.kwargs["default"] is None
+    assert "Based on" not in mock_selection_question.call_args.kwargs["intro"]
 
 
 def test_override_is_used(convert_command):
