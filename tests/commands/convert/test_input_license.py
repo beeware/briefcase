@@ -2,6 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.commands.new import LICENSE_OPTIONS
+
+from ...utils import PartialMatchString
+
 
 @pytest.mark.parametrize("license_file_name", ["LICENSE", "LICENCE"])
 @pytest.mark.parametrize(
@@ -31,7 +35,11 @@ import pytest
     ],
 )
 def test_get_license_from_file(
-    convert_command, license_text, license_id, license_file_name, monkeypatch
+    convert_command,
+    license_text,
+    license_id,
+    license_file_name,
+    monkeypatch,
 ):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
@@ -47,10 +55,13 @@ def test_get_license_from_file(
 
     convert_command.input_license(None)
 
-    assert mock_selection_question.call_count == 1
-    call_kwargs = mock_selection_question.call_args.kwargs
-    assert call_kwargs["default"] == license_id
-    assert "Based on the license file" in call_kwargs["intro"]
+    mock_selection_question.assert_called_once_with(
+        intro=PartialMatchString("Based on the license file"),
+        description="Project License",
+        options=LICENSE_OPTIONS,
+        default=license_id,
+        override_value=None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -80,7 +91,10 @@ def test_get_license_from_file(
     ],
 )
 def test_get_license_from_pep621_license_file(
-    convert_command, license_text, license_id, monkeypatch
+    convert_command,
+    license_text,
+    license_id,
+    monkeypatch,
 ):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
@@ -99,10 +113,13 @@ def test_get_license_from_pep621_license_file(
 
     convert_command.input_license(None)
 
-    assert mock_selection_question.call_count == 1
-    call_kwargs = mock_selection_question.call_args.kwargs
-    assert call_kwargs["default"] == license_id
-    assert "Based on the license file" in call_kwargs["intro"]
+    mock_selection_question.assert_called_once_with(
+        intro=PartialMatchString("Based on the license file"),
+        description="Project License",
+        options=LICENSE_OPTIONS,
+        default=license_id,
+        override_value=None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -135,10 +152,13 @@ def test_get_license_from_pyproject(
 
     convert_command.input_license(None)
 
-    assert mock_selection_question.call_count == 1
-    call_kwargs = mock_selection_question.call_args.kwargs
-    assert call_kwargs["default"] == license_id
-    assert "Based on the PEP621 formatted pyproject.toml" in call_kwargs["intro"]
+    mock_selection_question.assert_called_once_with(
+        intro=PartialMatchString("Based on the PEP621 formatted pyproject.toml"),
+        description="Project License",
+        options=LICENSE_OPTIONS,
+        default=license_id,
+        override_value=None,
+    )
 
 
 def test_no_license_hint(convert_command, monkeypatch):
