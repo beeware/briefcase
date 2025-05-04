@@ -44,8 +44,8 @@ branch of the template.
 
 Override the answer to a prompt with the provided value.
 
-For instance, if ``-Q "license=MIT license"`` is specified, then the question
-to choose a license will not be presented to the user and the MIT license will
+For instance, if ``-Q "license=MIT"`` is specified, then the question
+to choose a license will not be presented to the user and the MIT License will
 be automatically used for the project. When used in conjunction with
 ``--no-input``, the provided value overrides the default answer.
 

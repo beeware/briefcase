@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from packaging.utils import canonicalize_name
 
 from ..config import is_valid_app_name
-from .new import NewCommand, parse_project_overrides
+from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -480,36 +480,36 @@ class ConvertCommand(NewCommand):
         # LIMITED will generate a false match.
 
         hint_patterns = {
-            "Apache Software License": ["Apache"],
-            "BSD license": [
+            "Apache-2.0": ["Apache"],
+            "BSD-3-Clause": [
                 "Redistribution and use in source and binary forms",
                 "BSD",
             ],
-            "GNU General Public License v2 or later (GPLv2+)": [
+            "GPL-2.0+": [
                 "Free Software Foundation, either version 2 of the License",
                 "GPLv2+",
             ],
-            "GNU General Public License v2 (GPLv2)": [
+            "GPL-2.0": [
                 "version 2 of the GNU General Public License",
                 "GPLv2",
             ],
-            "GNU General Public License v3 or later (GPLv3+)": [
+            "GPL-3.0+": [
                 "either version 3 of the License",
                 "GPLv3+",
             ],
-            "GNU General Public License v3 (GPLv3)": [
+            "GPL-3.0": [
                 "version 3 of the GNU General Public License",
                 "GPLv3",
             ],
-            "MIT license": [
+            "MIT": [
                 "Permission is hereby granted, free of charge",
                 "MIT",
             ],
         }
-        for hint, license_patterns in hint_patterns.items():
+        for license_id, license_patterns in hint_patterns.items():
             for license_pattern in license_patterns:
                 if license_pattern.lower() in license_text.lower():
-                    return hint
+                    return license_id
 
         return "Other"
 
@@ -554,22 +554,11 @@ class ConvertCommand(NewCommand):
         :returns: The project
         """
         default, intro = self.get_license_hint()
-        options = [
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ]
 
         return self.console.selection_question(
             intro=intro,
             description="Project License",
-            options=options,
+            options=LICENSE_OPTIONS,
             default=default,
             override_value=override_value,
         )
