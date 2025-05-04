@@ -36,6 +36,7 @@ LICENSE_OPTIONS = {
     "Proprietary": "Proprietary",
     "Other": "Other",
 }
+DEFAULT_LICENSE = "BSD-3-Clause"
 
 
 def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
@@ -283,7 +284,7 @@ class NewCommand(BaseCommand):
             intro="What license do you want to use for this project's code?",
             description="Project License",
             options=LICENSE_OPTIONS,
-            default="BSD-3-Clause",
+            default=DEFAULT_LICENSE,
             override_value=override_value,
         )
 
