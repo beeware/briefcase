@@ -102,7 +102,7 @@ dev = [
     "pre-commit == 4.2.0",
     "pytest == 8.3.5",
     "pytest-xdist == 3.6.1",
-    "setuptools_scm == 8.2.0",
+    "setuptools_scm == 8.3.1",
     "tox == 4.25.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
