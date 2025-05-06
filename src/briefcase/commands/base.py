@@ -401,9 +401,12 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        return self.binary_executable_path(app).parent / (
-            "Stub" + self.binary_executable_path(app).suffix
-        )
+        if sys.platform == "win32":
+            return self.binary_executable_path(app).parent / (
+                "Stub" + self.binary_executable_path(app).suffix
+            )
+        else:
+            return self.binary_executable_path(app).parent / ("Stub")
 
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
         """Load the ``briefcase.toml`` file provided by the app template.
