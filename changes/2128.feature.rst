@@ -1,1 +1,0 @@
-It's now possible to ask boolean question using the Console Interface.

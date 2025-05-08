@@ -1,1 +1,0 @@
-The iOS app template no longer uses the ``iphoneos_deployment_target`` setting to configure the minimum OS version. This variable was undocumented; you should modify any usage of this variable to the newly added (and documented) ``min_os_version`` setting.

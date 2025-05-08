@@ -1,1 +1,0 @@
-The iOS log filter was improved to hide an ignorable message about ``getpwuid_r``.

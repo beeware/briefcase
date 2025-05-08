@@ -1,1 +1,0 @@
-The `create`, `build`, `package` and `update` commands can now be run on a single app within a multi-app project by using the `-a / --app` option.

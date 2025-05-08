@@ -1,1 +1,0 @@
-The Briefcase contribution guides now include the missing sections, eliminating gaps with Toga's guides and reducing duplication.

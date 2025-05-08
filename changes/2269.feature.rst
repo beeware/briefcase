@@ -1,1 +1,0 @@
-When creating a new project with ``briefcase new``, or converting an existing project with ``briefcase convert``, Briefcase will now try to infer the author's name and email address from the git configuration.

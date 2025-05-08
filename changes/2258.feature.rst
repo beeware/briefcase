@@ -1,1 +1,0 @@
-The Flatpak runtimes for new projects were updated. ``org.gnome.Platform`` will now default to 47; and ``org.kde.Platform`` will now default to 6.9.

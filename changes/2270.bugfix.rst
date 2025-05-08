@@ -1,1 +1,0 @@
-License names now follow the `SPDX License List <https://spdx.org/licenses/>`_.

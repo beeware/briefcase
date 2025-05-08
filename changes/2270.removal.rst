@@ -1,1 +1,0 @@
-The ``new`` command now uses `SPDX identifiers <https://spdx.org/licenses/>`_ when referring to licenses. If you have been using the ``-Q license=XXX`` option to automate application creation, you will need to modify the value provided to match the SPDX specifier for that license (e.g., ``MIT`` instead of ``MIT license``, and ``BSD-3-Clause`` instead of ``BSD``).

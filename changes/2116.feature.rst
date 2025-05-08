@@ -1,1 +1,0 @@
-Briefcase now supports the use of ``HISTORY``, ``NEWS`` and ``RELEASES`` as filenames for the change log of a project (in addition to ``CHANGELOG``). It also supports the use of ``.md``, ``.rst`` and ``.txt`` extensions on those files.

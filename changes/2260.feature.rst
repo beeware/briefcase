@@ -1,1 +1,0 @@
-Android packages are now built using version 19.0 of Android's Command-line Tools; this version will be automatically installed at first use.

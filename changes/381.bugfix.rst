@@ -1,1 +1,0 @@
-``.pth`` files created by packages installed as dependencies are now correctly processed during application startup on macOS, Windows, Linux and iOS.

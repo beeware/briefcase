@@ -1,1 +1,0 @@
-The ``app_packages`` folder now occurs *after* the ``app`` folder in the package resolution path on Windows, Linux, macOS and iOS. This will result in subtle changes in behavior if you have packages defined in your ``sources``  that have the same name as packages installed from your ``requires``.

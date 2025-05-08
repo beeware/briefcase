@@ -1,1 +1,0 @@
-The structure of contribution documentation was normalized across BeeWare projects.
