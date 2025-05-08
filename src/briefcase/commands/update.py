@@ -15,7 +15,7 @@ class UpdateCommand(CreateCommand):
 
     def add_options(self, parser):
         self._add_update_options(parser, update=False)
-        self._add_test_options(parser, context_label="Update")
+        self._add_test_and_debug_options(parser, context_label="Update")
 
         parser.add_argument(
             "-a",
@@ -96,11 +96,12 @@ class UpdateCommand(CreateCommand):
         update_support: bool = False,
         update_stub: bool = False,
         test_mode: bool = False,
+        remote_debugger_cfg: str | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, remote_debugger_cfg)
 
         if app_name:
             try:
