@@ -3,6 +3,8 @@ from __future__ import annotations
 import concurrent
 import email
 import hashlib
+import pathlib
+import plistlib
 import subprocess
 from pathlib import Path
 
@@ -272,3 +274,33 @@ class AppPackagesMergeMixin:
                             raise future.exception()
         else:
             self.console.info("No libraries require merging.")
+
+
+def mime_type_to_UTI(mime_type: str) -> str | None:
+    """Convert a MIME type to a Uniform Type Identifier (UTI).
+
+    This function reads the system's CoreTypes Info.plist file to determine the
+    UTI for a given MIME type.
+
+    Args:
+        mime_type: The MIME type to convert.
+
+    Returns:
+        The UTI for the MIME type, or None if the UTI cannot be determined.
+    """
+    plist_data = pathlib.Path(
+        "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
+    ).read_bytes()
+    plist = plistlib.loads(plist_data)
+    for type_declaration in (
+        plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
+    ):
+        match type_declaration.get("UTTypeTagSpecification", {}).get(
+            "public.mime-type", []
+        ):
+            case [*types]:
+                if mime_type in types:
+                    return type_declaration["UTTypeIdentifier"]
+            case type_:
+                if type_ == mime_type:
+                    return type_declaration["UTTypeIdentifier"]
