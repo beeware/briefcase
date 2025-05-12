@@ -109,7 +109,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / device_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -139,7 +140,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / sim_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]
@@ -193,7 +195,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
                     / "base_path/build/first-app/ios/xcode/Support"
                     / "Python.xcframework/ios-arm64"
                     / "platform-config/arm64-iphoneos"
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -224,7 +227,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
                     / "base_path/build/first-app/ios/xcode/Support"
                     / "Python.xcframework/ios-arm64_x86_64-simulator"
                     / "platform-config/wonky-iphonesimulator"
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]

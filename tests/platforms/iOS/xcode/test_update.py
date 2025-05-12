@@ -90,7 +90,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / device_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -120,7 +121,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / sim_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]
