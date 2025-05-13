@@ -303,19 +303,19 @@ def mime_type_to_UTI(mime_type: str) -> str | None:
         # matches the single MIME type. If we find a match, we return the UTI
         # identifier. If we don't find a match, we return None.
 
-        match type_declaration.get("UTTypeTagSpecification", {}).get(
+        mime_types = type_declaration.get("UTTypeTagSpecification", {}).get(
             "public.mime-type", []
-        ):
-            case [*types]:
-                # Most MIME types are declared as a list even if they are a
-                # single type. Some types define multiple closely-related MIME
-                # types.
-                if mime_type in types:
-                    return type_declaration["UTTypeIdentifier"]
-            case type_:
-                # some MIME types are declared as a single type
-                if type_ == mime_type:
-                    return type_declaration["UTTypeIdentifier"]
+        )
+        if isinstance(mime_types, list):
+            # Most MIME types are declared as a list even if they are a
+            # single type. Some types define multiple closely-related MIME
+            # types.
+            if mime_type in mime_types:
+                return type_declaration["UTTypeIdentifier"]
+        else:
+            # some MIME types are declared as a single type
+            if mime_types == mime_type:
+                return type_declaration["UTTypeIdentifier"]
 
     # If no match is found in the entire list, return None
     return None
