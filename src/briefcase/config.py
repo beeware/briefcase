@@ -149,13 +149,18 @@ def validate_document_type_config(document_type_id, document_type):
     if sys.platform == "darwin":
         from briefcase.platforms.macOS.utils import mime_type_to_UTI
 
-        if UTI := mime_type_to_UTI(document_type["mime_type"]) is not None:
-            document_type.setdefault("macOS.LSItemContentType", UTI)
-            document_type.setdefault("macOS.LSHandlerRank", "Alternate")
+        macOS = document_type.setdefault("macOS", {})
+        if (UTI := mime_type_to_UTI(document_type.get("mime_type", None))) is not None:
+            macOS.setdefault("LSItemContentType", UTI)
+            macOS.setdefault("LSHandlerRank", "Alternate")
+            macOS.setdefault("UTTypeConformsTo", ["public.xyz"])
         else:
             # LSItemContentType will default to bundle.app_name.document_type_id
             # in the Info.plist template if it is not provided.
-            document_type.setdefault("macOS.LSHandlerRank", "Owner")
+            macOS.setdefault("LSHandlerRank", "Owner")
+            macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
+
+        macOS.setdefault("CFBundleTypeRole", "Viewer")
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")

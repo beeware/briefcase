@@ -295,12 +295,29 @@ def mime_type_to_UTI(mime_type: str) -> str | None:
     for type_declaration in (
         plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
     ):
+        # We check both the system built-in types (exported) and the known
+        # third-party types (imported) to find the UTI for the given MIME type.
+        # Most type declarations will have a UTTypeTagSpecification dictionary
+        # with a "public.mime-type" key. That can be either a list of MIME types
+        # or a single MIME type. We check if the MIME type is in the list or
+        # matches the single MIME type. If we find a match, we return the UTI
+        # identifier. If we don't find a match, we return None.
+
         match type_declaration.get("UTTypeTagSpecification", {}).get(
             "public.mime-type", []
         ):
             case [*types]:
+                # Most MIME types are declared as a list even if they are a
+                # single type. Some types define multiple closely-related MIME
+                # types.
                 if mime_type in types:
+                    print(f"{type_declaration['UTTypeIdentifier']=}")
                     return type_declaration["UTTypeIdentifier"]
             case type_:
+                # some MIME types are declared as a single type
                 if type_ == mime_type:
+                    print(f"{type_declaration['UTTypeIdentifier']=}")
                     return type_declaration["UTTypeIdentifier"]
+
+    # If no match is found in the entire list, return None
+    return None
