@@ -16,8 +16,8 @@ stand alone.
    code-signing/index
    access-packaging-metadata
    ci
+   cli-apps
    publishing/index
    upgrade-from-v0.2
-   contribute-code
-   contribute-docs
+   contribute/index
    internal/index

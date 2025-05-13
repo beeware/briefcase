@@ -40,7 +40,7 @@ def first_app_generated(first_app_config, tmp_path):
             [
                 "Python version: 3.10.15",
                 "Build: b11",
-                "Min iOS version: 14.2",
+                "Min iOS version: 12.0",
                 "---------------------",
                 "BZip2: 1.0.8-1",
                 "libFFI: 3.4.6-1",
@@ -64,4 +64,5 @@ def first_app_generated(first_app_config, tmp_path):
         xcframework_path
         / "ios-arm64_x86_64-simulator/platform-config/x86_64-iphonesimulator"
     ).mkdir(parents=True)
+
     return first_app_config

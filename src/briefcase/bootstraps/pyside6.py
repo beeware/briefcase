@@ -47,8 +47,8 @@ def main():
     def pyproject_table_briefcase_app_extra_content(self):
         return """
 requires = [
-    "PySide6-Essentials~=6.7",
-    # "PySide6-Addons~=6.7",
+    "PySide6-Essentials~=6.8",
+    # "PySide6-Addons~=6.8",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -60,6 +60,8 @@ test_requires = [
     def pyproject_table_macOS(self):
         return """\
 universal_build = true
+# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
+min_os_version = "12.0"
 requires = [
     "std-nslog~=1.0.3",
 ]
@@ -146,7 +148,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.kde.Platform"
-flatpak_runtime_version = "6.7"
+flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
 """
 

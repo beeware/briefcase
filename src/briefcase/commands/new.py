@@ -25,6 +25,19 @@ from briefcase.integrations.git import Git
 
 from .base import BaseCommand
 
+LICENSE_OPTIONS = {
+    "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
+    "MIT": "MIT License (MIT)",
+    "Apache-2.0": "Apache License 2.0 (Apache-2.0)",
+    "GPL-2.0": "GNU General Public License v2.0 only (GPL-2.0)",
+    "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
+    "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
+    "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
+    "Proprietary": "Proprietary",
+    "Other": "Other",
+}
+DEFAULT_LICENSE = "BSD-3-Clause"
+
 
 def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
     """Loads built-in and third-party GUI bootstraps."""
@@ -266,23 +279,12 @@ class NewCommand(BaseCommand):
             override_value=override_value,
         )
 
-    def input_license(self, override_value: str | None):
-        licenses = [
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ]
+    def input_license(self, override_value: str | None) -> str:
         return self.console.selection_question(
             intro="What license do you want to use for this project's code?",
             description="Project License",
-            options=licenses,
-            default=licenses[0],
+            options=LICENSE_OPTIONS,
+            default=DEFAULT_LICENSE,
             override_value=override_value,
         )
 
@@ -365,27 +367,46 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("description", None),
         )
 
+        author_intro = (
+            "Who do you want to be credited as the author of this application?\n"
+            "\n"
+            "This could be your own name, or the name of your company you work for."
+        )
+        default_author = "Jane Developer"
+        git_username = self.get_git_config_value("user", "name")
+        if git_username is not None:
+            default_author = git_username
+            author_intro = (
+                f"{author_intro}\n\n"
+                f"Based on your git configuration, we believe it could be '{git_username}'."
+            )
         author = self.console.text_question(
-            intro=(
-                "Who do you want to be credited as the author of this application?\n"
-                "\n"
-                "This could be your own name, or the name of your company you work for."
-            ),
+            intro=author_intro,
             description="Author",
-            default="Jane Developer",
+            default=default_author,
             override_value=project_overrides.pop("author", None),
         )
 
+        author_email_intro = (
+            "What email address should people use to contact the developers of "
+            "this application?\n"
+            "\n"
+            "This might be your own email address, or a generic contact address "
+            "you set up specifically for this application."
+        )
+        git_email = self.get_git_config_value("user", "email")
+        if git_email is None:
+            default_author_email = self.make_author_email(author, bundle)
+        else:
+            default_author_email = git_email
+            author_email_intro = (
+                f"{author_email_intro}\n\n"
+                f"Based on your git configuration, we believe it could be '{git_email}'."
+            )
         author_email = self.console.text_question(
-            intro=(
-                "What email address should people use to contact the developers of "
-                "this application?\n"
-                "\n"
-                "This might be your own email address, or a generic contact address "
-                "you set up specifically for this application."
-            ),
+            intro=author_email_intro,
             description="Author's Email",
-            default=self.make_author_email(author, bundle),
+            default=default_author_email,
             validator=self.validate_email,
             override_value=project_overrides.pop("author_email", None),
         )

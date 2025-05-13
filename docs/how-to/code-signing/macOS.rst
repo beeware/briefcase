@@ -59,7 +59,7 @@ charged on an annual basis.
 
   If you're registering as a non-profit organization, an educational institution or a
   government entity, you may be eligible for a fee waiver, which you can read more about
-  `here <https://developer.apple.com/support/membership-fee-waiver/>`__.
+  `here <https://developer.apple.com/help/account/membership/fee-waivers/>`__.
 
 Generating a certificate request on Keychain Access
 ---------------------------------------------------
@@ -133,7 +133,7 @@ certificate on this page.
    If you've been registered as an organization, there's a chance that
    the option to choose the Developer ID Application certificate is unavailable.
    This may happen if you're not assigned the role of the `Account Holder
-   <https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution>`__.
+   <https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution>`__.
    You can access and change these roles using `App Store Connect
    <https://appstoreconnect.apple.com/login>`__.
 

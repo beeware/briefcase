@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
@@ -92,7 +92,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_14_2_arm64_iphoneos",
+                "--platform=ios_13_0_arm64_iphoneos",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
@@ -122,7 +122,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_14_2_wonky_iphonesimulator",
+                "--platform=ios_13_0_wonky_iphonesimulator",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
@@ -137,6 +137,116 @@ def test_extra_pip_args(
             },
         ),
     ]
+
+
+def test_min_os_version(create_command, first_app_generated, tmp_path):
+    """If a minimum iOS version is specified, it is used for wheel installs."""
+
+    # Hard code the current architecture for testing. We only install simulator
+    # requirements for the current platform.
+    create_command.tools.host_arch = "wonky"
+
+    first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+
+    # Set a minimum OS version
+    first_app_generated.min_os_version = "15.2"
+
+    create_command.tools[first_app_generated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+
+    create_command.install_app_requirements(first_app_generated, test_mode=False)
+
+    bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
+    assert create_command.tools[first_app_generated].app_context.run.mock_calls == [
+        call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.iphoneos'}",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+                "--platform=ios_15_2_arm64_iphoneos",
+                "something==1.2.3",
+                "other>=2.3.4",
+            ],
+            check=True,
+            encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path/build/first-app/ios/xcode/Support"
+                    / "Python.xcframework/ios-arm64"
+                    / "platform-config/arm64-iphoneos"
+                )
+            },
+        ),
+        call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.iphonesimulator'}",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+                "--platform=ios_15_2_wonky_iphonesimulator",
+                "something==1.2.3",
+                "other>=2.3.4",
+            ],
+            check=True,
+            encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path/build/first-app/ios/xcode/Support"
+                    / "Python.xcframework/ios-arm64_x86_64-simulator"
+                    / "platform-config/wonky-iphonesimulator"
+                )
+            },
+        ),
+    ]
+
+
+def test_incompatible_min_os_version(create_command, first_app_generated, tmp_path):
+    """If the app's iOS version isn't compatible with the support package, an error is raised."""
+    # Hard code the current architecture for testing. We only install simulator
+    # requirements for the current platform.
+    create_command.tools.host_arch = "wonky"
+
+    first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+    first_app_generated.min_os_version = "8.0"
+
+    create_command.tools[first_app_generated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Your iOS app specifies a minimum iOS version of 8.0, "
+            r"but the support package only supports 12.0"
+        ),
+    ):
+        create_command.install_app_requirements(first_app_generated, test_mode=False)
+
+    create_command.tools[first_app_generated].app_context.run.assert_not_called()
 
 
 @pytest.mark.parametrize(

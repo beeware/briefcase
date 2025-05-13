@@ -57,7 +57,10 @@ def main():
         # for details.
         return """\
 universal_build = true
+# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
+min_os_version = "12.0"
 requires = [
-    "PySide6-Addons~=6.5",
+    "PySide6-Addons~=6.8",
+    "std-nslog~=1.0.3",
 ]
 """

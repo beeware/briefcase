@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import os
 import platform
@@ -83,6 +84,16 @@ def write_dist_info(app: AppConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to create (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
+        )
 
     # app properties that won't be exposed to the context
     hidden_app_properties = {"permission"}
@@ -974,18 +985,31 @@ class CreateCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app:
-            state = self.create_app(app, **options)
+        if app_name:
+            try:
+                apps_to_create = {app_name: self.apps[app_name]}
+            except KeyError:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+        elif app:
+            apps_to_create = {app.app_name: app}
         else:
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self.create_app(app, **full_options(state, options))
+            apps_to_create = self.apps
+
+        state = None
+        for app_name, app_obj in sorted(apps_to_create.items()):
+            state = self.create_app(
+                app_obj,
+                **full_options(state, options),
+            )
 
         return state
 

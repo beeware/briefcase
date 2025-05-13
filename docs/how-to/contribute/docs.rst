@@ -1,23 +1,18 @@
+=================================
 Contributing to the documentation
 =================================
 
-Here are some tips for working on this documentation. You're welcome to add
-more and help us out!
+You might have the best software in the world - but if nobody knows how to use
+it, what's the point? Documentation can always be improved - and we need need
+your help!
 
-First of all, you should check the `reStructuredText (reST) Primer
-<https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ to learn how
-to write your .rst file.
+Briefcase's documentation is written using `Sphinx and reStructuredText
+<https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`__. We
+aim to follow the `Diataxis <https://diataxis.fr>`__ framework for structuring
+documentation.
 
-Create a .rst file
----------------------
-
-Look at the structure and choose the best category to put your .rst file. Make
-sure that it is referenced in the index of the corresponding category, so it
-will show on in the documentation. If you have no idea how to do this, study
-the other index files for clues.
-
-Build documentation locally
----------------------------
+Building Briefcase's documentation
+==================================
 
 .. Docs are always built on Python 3.12. See also the RTD and tox config.
 
@@ -48,12 +43,12 @@ You'll also need to install the Enchant spell checking library.
 
     Enchant can be installed as a system package:
 
-    **Ubuntu 20.04+ / Debian 10+**
+    **Ubuntu / Debian**
 
     .. code-block:: console
 
-      $ sudo apt-get update
-      $ sudo apt-get install enchant-2
+      $ sudo apt update
+      $ sudo apt install enchant-2
 
     **Fedora**
 
@@ -61,16 +56,25 @@ You'll also need to install the Enchant spell checking library.
 
       $ sudo dnf install enchant
 
-    **Arch, Manjaro**
+    **Arch / Manjaro**
 
     .. code-block:: console
 
       $ sudo pacman -Syu enchant
 
+    **OpenSUSE Tumbleweed**
+
+    .. code-block:: console
+
+      $ sudo zypper install enchant
+
   .. group-tab:: Windows
 
     Enchant is installed automatically when you set up your development
     environment.
+
+Build documentation locally
+---------------------------
 
 Once your development environment is set up, run:
 
@@ -130,8 +134,8 @@ will be automatically refreshed.
 Documentation linting
 ---------------------
 
-Before committing and pushing documentation updates, run linting for the
-documentation:
+The build process will identify reStructuredText problems, but Briefcase performs some
+additional "lint" checks. To run the lint checks:
 
 .. tabs::
 
@@ -161,7 +165,14 @@ This will validate the documentation does not contain:
 
 If a valid spelling of a word is identified as misspelled, then add the word to
 the list in ``docs/spelling_wordlist``. This will add the word to the
-spellchecker's dictionary.
+spellchecker's dictionary. When adding to this list, remember:
+
+* We prefer US spelling, with some liberties for programming-specific
+  colloquialism (e.g., "apps") and verbing of nouns (e.g., "scrollable")
+* Any reference to a product name should use the product's preferred
+  capitalization. (e.g., "macOS", "GTK", "pytest", "Pygame", "PyScript").
+* If a term is being used "as code", then it should be quoted as a literal
+  rather than being added to the dictionary.
 
 Rebuilding all documentation
 ----------------------------
@@ -190,3 +201,23 @@ To force a rebuild for all of the documentation:
 
 The documentation should be fully rebuilt in the ``docs/_build/html`` folder.
 If there are any markup problems, they'll raise an error.
+
+What to work on?
+================
+
+If you're looking for specific areas to improve, there are `tickets tagged
+"documentation"
+<https://github.com/beeware/briefcase/issues?q=is%3Aissue%20state%3Aopen%20label%3Adocumentation>`__
+in Briefcase's issue tracker.
+
+However, you don't need to be constrained by these tickets. If you can identify
+a gap in Briefcase's documentation, or an improvement that can be made, start
+writing! Anything that improves the experience of the end user is a welcome
+change.
+
+Submitting a pull request
+=========================
+
+Before you submit a pull request, there's a few bits of housekeeping to do. See the
+section on submitting a pull request in the :ref:`code contribution guide
+<pr-housekeeping>` for details on our submission process.

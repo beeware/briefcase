@@ -29,6 +29,19 @@ project definition. Briefcase should be invoked in a directory that contains a
 ``pyproject.toml`` file will be interpreted relative to the directory that
 contains the ``pyproject.toml`` file.
 
+Changes to these options will not take effect until you run the appropriate
+``briefcase`` command:
+
+* For ``sources``, run ``briefcase update``, or pass the ``-u`` option to
+  ``briefcase build`` or ``briefcase run``.
+* For ``requires``, run ``briefcase update -r``, or pass the ``-r`` option to
+  ``briefcase build`` or ``briefcase run``.
+* For ``icon`` (including an ``icon`` definition in a document type), run ``briefcase
+  update --update-resources``, or pass the ``--update-resources`` option to ``briefcase
+  build`` or ``briefcase run``.
+* For any other options, you'll need to re-run ``briefcase create``.
+
+
 Configuration sections
 ======================
 
@@ -308,6 +321,15 @@ A longer description of the purpose of the application. This description can be
 multiple paragraphs, if necessary. The long description *must not* be a copy of
 the ``description``, or include the ``description`` as the first line of the
 ``long_description``.
+
+``min_os_version``
+~~~~~~~~~~~~~~~~~~
+
+A string describing the minimum OS version that the generated app will support. This
+value is only used on platforms that have a clear mechanism for specifying OS version
+compatibility; on the platforms where it *is* used, the interpretation of the value is
+platform specific. Refer to individual platform guides for details on how the provided
+value is interpreted.
 
 ``requirement_installer_args``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

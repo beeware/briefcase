@@ -1,4 +1,5 @@
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -54,7 +55,9 @@ class DummyConvertCommand(ConvertCommand):
 @pytest.fixture
 def convert_command(tmp_path):
     (tmp_path / "project").mkdir()
-    return DummyConvertCommand(base_path=tmp_path / "project")
+    command = DummyConvertCommand(base_path=tmp_path / "project")
+    command.get_git_config_value = MagicMock(return_value=None)
+    return command
 
 
 @pytest.fixture

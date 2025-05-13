@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import argparse
 from abc import abstractmethod
 
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
 
@@ -119,6 +121,14 @@ class PackageCommand(BaseCommand):
 
     def add_options(self, parser):
         parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to package (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
+        )
+
+        parser.add_argument(
             "-u",
             "--update",
             action="store_true",
@@ -151,20 +161,33 @@ class PackageCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         update: bool = False,
         **options,
     ) -> dict | None:
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)
 
-        if app:
-            state = self._package_app(app, update=update, **options)
-        else:
-            state = None
-            for app_name, app in sorted(self.apps.items()):
-                state = self._package_app(
-                    app, update=update, **full_options(state, options)
+        if app_name:
+            try:
+                apps_to_package = {app_name: self.apps[app_name]}
+            except KeyError:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
                 )
+        elif app:
+            apps_to_package = {app.app_name: app}
+        else:
+            apps_to_package = self.apps
+
+        state = None
+        for app_name, app_obj in sorted(apps_to_package.items()):
+            state = self._package_app(
+                app_obj,
+                update=update,
+                **full_options(state, options),
+            )
 
         return state

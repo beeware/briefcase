@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from packaging.utils import canonicalize_name
 
 from ..config import is_valid_app_name
-from .new import NewCommand, parse_project_overrides
+from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -387,11 +387,20 @@ class ConvertCommand(NewCommand):
             if "name" in author
         ]
 
+        default_author = "Jane Developer"
         if not options or override_value is not None:
+            git_username = self.get_git_config_value("user", "name")
+            if git_username is not None:
+                default_author = git_username
+                intro = (
+                    f"{intro}\n\n"
+                    + f"Based on your git configuration, we believe it could be '{git_username}'."
+                )
+
             return self.console.text_question(
                 intro=intro,
                 description="Author",
-                default="Jane Developer",
+                default=default_author,
                 override_value=override_value,
             )
         elif len(options) > 1:
@@ -421,7 +430,7 @@ class ConvertCommand(NewCommand):
             author = self.console.text_question(
                 intro="Who do you want to be credited as the author of this application?",
                 description="Author",
-                default="Jane Developer",
+                default=default_author,
                 override_value=None,
             )
 
@@ -433,8 +442,14 @@ class ConvertCommand(NewCommand):
 
         :returns: author email
         """
-        default = self.make_author_email(author, bundle)
-        default_source = "the author name and bundle"
+        git_email = self.get_git_config_value("user", "email")
+        if git_email is None:
+            default = self.make_author_email(author, bundle)
+            default_source = "the author name and bundle"
+        else:
+            default = git_email
+            default_source = "your git configuration"
+
         for author_info in self.pep621_data.get("authors", []):
             if author_info.get("name") == author and author_info.get("email"):
                 default = author_info["email"]
@@ -465,36 +480,36 @@ class ConvertCommand(NewCommand):
         # LIMITED will generate a false match.
 
         hint_patterns = {
-            "Apache Software License": ["Apache"],
-            "BSD license": [
+            "Apache-2.0": ["Apache"],
+            "BSD-3-Clause": [
                 "Redistribution and use in source and binary forms",
                 "BSD",
             ],
-            "GNU General Public License v2 or later (GPLv2+)": [
+            "GPL-2.0+": [
                 "Free Software Foundation, either version 2 of the License",
                 "GPLv2+",
             ],
-            "GNU General Public License v2 (GPLv2)": [
+            "GPL-2.0": [
                 "version 2 of the GNU General Public License",
                 "GPLv2",
             ],
-            "GNU General Public License v3 or later (GPLv3+)": [
+            "GPL-3.0+": [
                 "either version 3 of the License",
                 "GPLv3+",
             ],
-            "GNU General Public License v3 (GPLv3)": [
+            "GPL-3.0": [
                 "version 3 of the GNU General Public License",
                 "GPLv3",
             ],
-            "MIT license": [
+            "MIT": [
                 "Permission is hereby granted, free of charge",
                 "MIT",
             ],
         }
-        for hint, license_patterns in hint_patterns.items():
+        for license_id, license_patterns in hint_patterns.items():
             for license_pattern in license_patterns:
                 if license_pattern.lower() in license_text.lower():
-                    return hint
+                    return license_id
 
         return "Other"
 
@@ -539,22 +554,11 @@ class ConvertCommand(NewCommand):
         :returns: The project
         """
         default, intro = self.get_license_hint()
-        options = [
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ]
 
         return self.console.selection_question(
             intro=intro,
             description="Project License",
-            options=options,
+            options=LICENSE_OPTIONS,
             default=default,
             override_value=override_value,
         )
@@ -669,13 +673,16 @@ class ConvertCommand(NewCommand):
             )
             copy2(project_dir / "LICENSE", self.base_path / "LICENSE")
 
-        # Copy changelog file
-        changelog_file = self.base_path / "CHANGELOG"
-        if not changelog_file.is_file():
+        # See if changefile exists
+        changelog = find_changelog_filename(self.base_path)
+
+        if changelog is None:
             self.console.warning(
-                f"\nChangelog file not found in '{self.base_path}'. You should either "
-                f"create a new '{self.base_path / 'CHANGELOG'}' file, or rename an "
-                "already existing changelog file to 'CHANGELOG'."
+                f"\nChangelog file not found in {self.base_path!r}. You should either "
+                f"create a new changelog file in {self.base_path!r}, or rename an "
+                "existing file to a known changelog file name (one of 'CHANGELOG', "
+                "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
+                "'.md', '.rst', '.txt', or have no extension)"
             )
 
         # Copy tests or test entry script
@@ -794,3 +801,24 @@ To run your application, type:
                 project_overrides=parse_project_overrides(project_overrides),
                 **options,
             )
+
+
+def find_changelog_filename(base_path):
+    """Find a valid changelog file in a given directory.
+
+    :param base_path: The directory to search
+    :returns: The filename of the changelog that was found; None if a changelog
+        with a known name could not be found.
+    """
+    changelog_formats = [
+        f"{name}{extension}"
+        for name in ["CHANGELOG", "HISTORY", "NEWS", "RELEASES"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ]
+
+    # Stops checking once a match is found
+    for format in changelog_formats:
+        changelog = base_path / format
+        if changelog.is_file():
+            return format
+    return None

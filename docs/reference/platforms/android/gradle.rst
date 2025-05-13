@@ -37,7 +37,7 @@ If you have an existing install of the Android SDK, it will be used by Briefcase
 if the ``ANDROID_HOME`` environment variable is set. If ``ANDROID_HOME`` is not
 present in the environment, Briefcase will honor the deprecated
 ``ANDROID_SDK_ROOT`` environment variable. Additionally, an existing SDK install
-must have version 12.0 of Command-line Tools installed; this version can be
+must have version 19.0 of Command-line Tools installed; this version can be
 installed in the SDK Manager in Android Studio.
 
 Packaging format
@@ -250,6 +250,14 @@ will result in an ``AndroidManifest.xml`` declaration of::
 The use of some cross-platform permissions will imply the addition of features; see
 :ref:`the discussion on Android permissions <android-permissions>` for more details.
 
+``min_os_version``
+------------------
+
+The minimum API level that the app will support (i.e., the ``minSdkVersion`` for the
+app). This is *not* the Android version; it is the underlying API level. For example,
+Android 9 uses an API level of 28; if you wanted to specify Android 9 as your minimum
+supported version, you would define ``min_os_version = "28"``.
+
 ``permission``
 --------------
 
@@ -265,6 +273,16 @@ For example, specifying::
 will result in an ``AndroidManifest.xml`` declaration of::
 
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
+
+``target_os_version``
+----------------------
+
+The API level that the app will target. This controls the version of the Android SDK that
+is used to build your app (by setting the ``compileSdkVersion`` for your app), and the
+forwards compatibility behavioral changes your app will enable (by setting the
+``targetSdkVersion`` setting). This is *not* the Android version; it is the underlying
+API level. For example, Android 15 uses an API level of 35; if you wanted to specify
+Android 15 as your target API level, you would define ``target_os_version = "35"``.
 
 ``version_code``
 ----------------

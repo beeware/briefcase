@@ -30,6 +30,7 @@ from rich.progress import (
 from rich.traceback import Trace, Traceback
 
 from briefcase import __version__
+from briefcase.config import parse_boolean
 from briefcase.exceptions import InputDisabled
 
 # Max width for printing to console; matches argparse's default width
@@ -732,7 +733,7 @@ class Console:
         :returns: True if the user selected "y", or False if they selected "n".
         """
         if default is None:
-            yes_no = "y/n"
+            yes_no = "[y/n]"
             default_text = None
         elif default:
             yes_no = "[Y/n]"
@@ -960,3 +961,39 @@ class Console:
         )
 
         return ordered[int(index) - 1][0]
+
+    def boolean_question(
+        self,
+        description,
+        intro: str,
+        default: bool | None = None,
+        override_value: str | None = None,
+    ) -> bool:
+        """Ask the user a boolean question who's answer requires selecting yes/no
+
+        :param description: A short description of the question being asked. This text
+            is used in prompts and a header bar prefacing the question.
+        :param intro: An introductory paragraph explaining the question being asked.
+        :param default: The default option for empty user input.
+        :param override_value: A pre-selected answer for the question. This can be used
+            to shortcut asking the question, such as when a command line option provides
+            a value. If provided and valid, the header bar will be displayed, but the
+            intro paragraph and option list will not. Will take the provided string and attempt to parse into bool
+        :returns: The user's chosen answer or none if closed without input
+        """
+
+        self.divider(title=description)
+
+        if override_value is not None:
+            self.print()
+            self.print(f"Using override value {override_value!r}")
+            try:
+                return parse_boolean(override_value)
+            except ValueError as e:
+                raise ValueError(f"Invalid override value for {description}: {e}")
+
+        self.prompt()
+        self.prompt(self.textwrap(intro))
+        self.prompt()
+
+        return self.input_boolean(description, default=default)

@@ -146,16 +146,27 @@ def test_verify_docker(package_command, first_app_pkg, monkeypatch):
     makepkg.exists.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "changelog_filename",
+    ["HISTORY", "NEWS.txt"],
+)
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_pkg_package(package_command, first_app_pkg, tmp_path):
+def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filename):
     """A pkg app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+
+    # Remove CHANGELOG made in conftest.py and replace with another possible changelog format
+    base_path = tmp_path / "base_path"
+    old_changelog = base_path / "CHANGELOG"
+    new_changelog = base_path / changelog_filename
+    old_changelog.unlink()
+    create_file(new_changelog, "First App Changelog")
 
     # Package the app
     package_command.package_app(first_app_pkg)
 
     # The CHANGELOG file is copied
-    assert (bundle_path / "pkgbuild/CHANGELOG").exists()
+    assert (bundle_path / f"pkgbuild/{changelog_filename}").exists()
 
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
@@ -465,7 +476,7 @@ def test_no_changelog(package_command, first_app_pkg, tmp_path):
 
     # Package the app; this will fail
     with pytest.raises(
-        BriefcaseCommandError, match=r"Your project does not contain a CHANGELOG file."
+        BriefcaseCommandError, match=r"Your project does not contain a changelog file."
     ):
         package_command.package_app(first_app_pkg)
 

@@ -87,6 +87,12 @@ will result in an ``Info.plist`` declaration of::
 
 Any Boolean or string value can be used for an ``Info.plist`` value.
 
+``min_os_version``
+------------------
+
+The minimum iOS version that the app will support. This controls the value of
+``IPHONEOS_DEPLOYMENT_TARGET`` used when building the app.
+
 Permissions
 ===========
 

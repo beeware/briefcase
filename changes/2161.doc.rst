@@ -1,1 +1,0 @@
-Platform notes were added on removing static binary content from iOS and macOS apps.

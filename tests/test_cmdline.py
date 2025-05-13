@@ -406,7 +406,7 @@ def test_bare_command_help(monkeypatch, capsys, console):
     output = capsys.readouterr().out
     assert output.startswith(
         "usage: briefcase create macOS app [-h] [-C KEY=VALUE] [-v] [-V] [--no-input]\n"
-        "                                  [--log]\n"
+        "                                  [--log] [-a APP_NAME]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -481,7 +481,7 @@ def test_command_explicit_platform_help(monkeypatch, capsys, console):
     output = capsys.readouterr().out
     assert output.startswith(
         "usage: briefcase create macOS app [-h] [-C KEY=VALUE] [-v] [-V] [--no-input]\n"
-        "                                  [--log]\n"
+        "                                  [--log] [-a APP_NAME]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )
@@ -547,7 +547,7 @@ def test_command_explicit_format_help(monkeypatch, capsys, console):
     output = capsys.readouterr().out
     assert output.startswith(
         "usage: briefcase create macOS app [-h] [-C KEY=VALUE] [-v] [-V] [--no-input]\n"
-        "                                  [--log]\n"
+        "                                  [--log] [-a APP_NAME]\n"
         "\n"
         "Create and populate a macOS app.\n"
     )

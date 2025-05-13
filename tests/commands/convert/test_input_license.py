@@ -2,50 +2,44 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.commands.new import LICENSE_OPTIONS
+
 from ...utils import PartialMatchString
 
 
 @pytest.mark.parametrize("license_file_name", ["LICENSE", "LICENCE"])
 @pytest.mark.parametrize(
-    "license_text, license",
+    "license_text, license_id",
     [
-        ("MIT", "MIT license"),
-        ("MIT license", "MIT license"),
-        ("Permission is hereby granted, free of charge", "MIT license"),
-        ("Apache license", "Apache Software License"),
-        ("BSD", "BSD license"),
-        ("BSD license", "BSD license"),
+        ("MIT", "MIT"),
+        ("MIT license", "MIT"),
+        ("Permission is hereby granted, free of charge", "MIT"),
+        ("Apache license", "Apache-2.0"),
+        ("BSD", "BSD-3-Clause"),
+        ("BSD license", "BSD-3-Clause"),
         # Includes some extra text to ensure it doesn't get caught as MIT because of
         # perMITted
         (
             "Redistribution and use in source and binary forms, with or without modification, are permitted",
-            "BSD license",
+            "BSD-3-Clause",
         ),
-        ("GPLv2", "GNU General Public License v2 (GPLv2)"),
-        (
-            "version 2 of the GNU General Public License",
-            "GNU General Public License v2 (GPLv2)",
-        ),
-        ("GPLv2+", "GNU General Public License v2 or later (GPLv2+)"),
-        (
-            "Free Software Foundation, either version 2 of the License",
-            "GNU General Public License v2 or later (GPLv2+)",
-        ),
-        ("GPLv3", "GNU General Public License v3 (GPLv3)"),
-        (
-            "version 3 of the GNU General Public License",
-            "GNU General Public License v3 (GPLv3)",
-        ),
-        ("GPLv3+", "GNU General Public License v3 or later (GPLv3+)"),
-        (
-            "either version 3 of the License",
-            "GNU General Public License v3 or later (GPLv3+)",
-        ),
+        ("GPLv2", "GPL-2.0"),
+        ("version 2 of the GNU General Public License", "GPL-2.0"),
+        ("GPLv2+", "GPL-2.0+"),
+        ("Free Software Foundation, either version 2 of the License", "GPL-2.0+"),
+        ("GPLv3", "GPL-3.0"),
+        ("version 3 of the GNU General Public License", "GPL-3.0"),
+        ("GPLv3+", "GPL-3.0+"),
+        ("either version 3 of the License", "GPL-3.0+"),
         ("Some text", "Other"),
     ],
 )
 def test_get_license_from_file(
-    convert_command, license_text, license, license_file_name, monkeypatch
+    convert_command,
+    license_text,
+    license_id,
+    license_file_name,
+    monkeypatch,
 ):
     mock_selection_question = MagicMock()
     monkeypatch.setattr(
@@ -60,67 +54,46 @@ def test_get_license_from_file(
     )
 
     convert_command.input_license(None)
+
     mock_selection_question.assert_called_once_with(
-        intro=PartialMatchString("the license file"),
+        intro=PartialMatchString("Based on the license file"),
         description="Project License",
-        options=[
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ],
-        default=license,
+        options=LICENSE_OPTIONS,
+        default=license_id,
         override_value=None,
     )
 
 
 @pytest.mark.parametrize(
-    "license_text, license",
+    "license_text, license_id",
     [
-        ("MIT", "MIT license"),
-        ("MIT license", "MIT license"),
-        ("Permission is hereby granted, free of charge", "MIT license"),
-        ("Apache license", "Apache Software License"),
-        ("BSD", "BSD license"),
-        ("BSD license", "BSD license"),
+        ("MIT", "MIT"),
+        ("MIT license", "MIT"),
+        ("Permission is hereby granted, free of charge", "MIT"),
+        ("Apache license", "Apache-2.0"),
+        ("BSD", "BSD-3-Clause"),
+        ("BSD license", "BSD-3-Clause"),
         # Includes some extra text to ensure it doesn't get caught as MIT because of
         # perMITted
         (
             "Redistribution and use in source and binary forms, with or without modification, are permitted",
-            "BSD license",
+            "BSD-3-Clause",
         ),
-        ("GPLv2", "GNU General Public License v2 (GPLv2)"),
-        (
-            "version 2 of the GNU General Public License",
-            "GNU General Public License v2 (GPLv2)",
-        ),
-        ("GPLv2+", "GNU General Public License v2 or later (GPLv2+)"),
-        (
-            "Free Software Foundation, either version 2 of the License",
-            "GNU General Public License v2 or later (GPLv2+)",
-        ),
-        ("GPLv3", "GNU General Public License v3 (GPLv3)"),
-        (
-            "version 3 of the GNU General Public License",
-            "GNU General Public License v3 (GPLv3)",
-        ),
-        ("GPLv3+", "GNU General Public License v3 or later (GPLv3+)"),
-        (
-            "either version 3 of the License",
-            "GNU General Public License v3 or later (GPLv3+)",
-        ),
+        ("GPLv2", "GPL-2.0"),
+        ("version 2 of the GNU General Public License", "GPL-2.0"),
+        ("GPLv2+", "GPL-2.0+"),
+        ("Free Software Foundation, either version 2 of the License", "GPL-2.0+"),
+        ("GPLv3", "GPL-3.0"),
+        ("version 3 of the GNU General Public License", "GPL-3.0"),
+        ("GPLv3+", "GPL-3.0+"),
+        ("either version 3 of the License", "GPL-3.0+"),
         ("Some text", "Other"),
     ],
 )
 def test_get_license_from_pep621_license_file(
     convert_command,
     license_text,
-    license,
+    license_id,
     monkeypatch,
 ):
     mock_selection_question = MagicMock()
@@ -141,42 +114,32 @@ def test_get_license_from_pep621_license_file(
     convert_command.input_license(None)
 
     mock_selection_question.assert_called_once_with(
-        intro=PartialMatchString("the license file"),
+        intro=PartialMatchString("Based on the license file"),
         description="Project License",
-        options=[
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ],
-        default=license,
+        options=LICENSE_OPTIONS,
+        default=license_id,
         override_value=None,
     )
 
 
 @pytest.mark.parametrize(
-    "license_text, license",
+    "license_text, license_id",
     [
-        ("MIT", "MIT license"),
-        ("MIT license", "MIT license"),
-        ("BSD", "BSD license"),
-        ("BSD license", "BSD license"),
-        ("GPLv2", "GNU General Public License v2 (GPLv2)"),
-        ("GPLv2+", "GNU General Public License v2 or later (GPLv2+)"),
-        ("GPLv3", "GNU General Public License v3 (GPLv3)"),
-        ("GPLv3+", "GNU General Public License v3 or later (GPLv3+)"),
+        ("MIT", "MIT"),
+        ("MIT license", "MIT"),
+        ("BSD", "BSD-3-Clause"),
+        ("BSD license", "BSD-3-Clause"),
+        ("GPLv2", "GPL-2.0"),
+        ("GPLv2+", "GPL-2.0+"),
+        ("GPLv3", "GPL-3.0"),
+        ("GPLv3+", "GPL-3.0+"),
         ("Some text", "Other"),
     ],
 )
 def test_get_license_from_pyproject(
     convert_command,
     license_text,
-    license,
+    license_id,
     monkeypatch,
 ):
     mock_selection_question = MagicMock()
@@ -188,21 +151,12 @@ def test_get_license_from_pyproject(
     )
 
     convert_command.input_license(None)
+
     mock_selection_question.assert_called_once_with(
-        intro=PartialMatchString("the PEP621 formatted pyproject.toml"),
+        intro=PartialMatchString("Based on the PEP621 formatted pyproject.toml"),
         description="Project License",
-        options=[
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ],
-        default=license,
+        options=LICENSE_OPTIONS,
+        default=license_id,
         override_value=None,
     )
 
@@ -214,23 +168,10 @@ def test_no_license_hint(convert_command, monkeypatch):
     )
 
     convert_command.input_license(None)
-    mock_selection_question.assert_called_once_with(
-        intro="What license do you want to use for this project's code? ",
-        description="Project License",
-        options=[
-            "BSD license",
-            "MIT license",
-            "Apache Software License",
-            "GNU General Public License v2 (GPLv2)",
-            "GNU General Public License v2 or later (GPLv2+)",
-            "GNU General Public License v3 (GPLv3)",
-            "GNU General Public License v3 or later (GPLv3+)",
-            "Proprietary",
-            "Other",
-        ],
-        default=None,
-        override_value=None,
-    )
+
+    assert mock_selection_question.call_count == 1
+    assert mock_selection_question.call_args.kwargs["default"] is None
+    assert "Based on" not in mock_selection_question.call_args.kwargs["intro"]
 
 
 def test_override_is_used(convert_command):
