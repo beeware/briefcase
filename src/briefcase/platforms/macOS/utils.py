@@ -311,12 +311,10 @@ def mime_type_to_UTI(mime_type: str) -> str | None:
                 # single type. Some types define multiple closely-related MIME
                 # types.
                 if mime_type in types:
-                    print(f"{type_declaration['UTTypeIdentifier']=}")
                     return type_declaration["UTTypeIdentifier"]
             case type_:
                 # some MIME types are declared as a single type
                 if type_ == mime_type:
-                    print(f"{type_declaration['UTTypeIdentifier']=}")
                     return type_declaration["UTTypeIdentifier"]
 
     # If no match is found in the entire list, return None
