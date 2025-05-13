@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from abc import abstractmethod
 from contextlib import suppress
+from pathlib import Path
 
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import (
+    AppPackagesPathMappings,
+    AppPathMappings,
+    RemoteDebuggerConfig,
+)
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 from briefcase.integrations.subprocess import StopStreaming
 
@@ -218,7 +225,64 @@ class RunCommand(RunAppMixin, BaseCommand):
         )
 
         self._add_update_options(parser, context_label=" before running")
-        self._add_test_options(parser, context_label="Run")
+        self._add_test_and_debug_options(parser, context_label="Run")
+
+    def remote_debugger_app_path_mappings(
+        self, app: AppConfig, test_mode: bool
+    ) -> AppPathMappings:
+        """
+        Get the path mappings for the app code.
+
+        :param app: The config object for the app
+        :param test_mode: Is the test mode enabled?
+        :returns: The path mappings for the app code
+        """
+        device_subfolders = []
+        host_folders = []
+        for src in app.all_sources(test_mode):
+            original = Path(self.base_path / src)
+            device_subfolders.append(original.name)
+            host_folders.append(f"{original.absolute()}")
+        return AppPathMappings(
+            device_sys_path_regex="app$",
+            device_subfolders=device_subfolders,
+            host_folders=host_folders,
+        )
+
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        app_packages_path = self.app_packages_path(app)
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=f"{app_packages_path}",
+        )
+
+    def remote_debugger_config(self, app: AppConfig, test_mode: bool) -> str:
+        """
+        Create the remote debugger configuration that should be saved as environment variable for this run.
+
+        :param app: The app to be debugged
+        :param test_mode: Is the test mode enabled?
+        :returns: The remote debugger configuration
+        """
+        app_path_mappings = self.remote_debugger_app_path_mappings(app, test_mode)
+        app_packages_path_mappings = self.remote_debugger_app_packages_path_mapping(app)
+        config = RemoteDebuggerConfig(
+            debugger=app.remote_debugger.name,
+            mode=app.remote_debugger.mode,
+            ip=app.remote_debugger.ip,
+            port=app.remote_debugger.port,
+            app_path_mappings=app_path_mappings,
+            app_packages_path_mappings=app_packages_path_mappings,
+        )
+        return json.dumps(config)
 
     def _prepare_app_kwargs(self, app: AppConfig, test_mode: bool):
         """Prepare the kwargs for running an app as a log stream.
@@ -236,6 +300,12 @@ class RunCommand(RunAppMixin, BaseCommand):
         # If we're in debug mode, put BRIEFCASE_DEBUG into the environment
         if self.console.is_debug:
             env["BRIEFCASE_DEBUG"] = "1"
+
+        # If we're in remote debug mode, save the remote debugger config
+        if app.remote_debugger:
+            env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
+                app, test_mode
+            )
 
         if test_mode:
             # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
@@ -268,6 +338,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
+        remote_debugger_cfg: str | None = None,
         passthrough: list[str] | None = None,
         **options,
     ) -> dict | None:
@@ -290,7 +361,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, remote_debugger_cfg)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)

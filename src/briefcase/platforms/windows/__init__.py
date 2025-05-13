@@ -126,6 +126,17 @@ class WindowsCreateCommand(CreateCommand):
 
 
 class WindowsRunCommand(RunCommand):
+    def remote_debugger_app_packages_path_mapping(self, app: AppConfig) -> None:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        # No path mapping is required. The paths are automatically found, because
+        # developing an windows app also requires a windows host.
+        return None
+
     def run_app(
         self,
         app: AppConfig,
