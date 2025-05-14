@@ -288,9 +288,15 @@ def mime_type_to_UTI(mime_type: str) -> str | None:  # pragma: no-cover-if-not-m
     Returns:
         The UTI for the MIME type, or None if the UTI cannot be determined.
     """
-    plist_data = pathlib.Path(
-        "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
-    ).read_bytes()
+    try:
+        plist_data = pathlib.Path(
+            "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
+        ).read_bytes()
+    except FileNotFoundError:
+        # If the file is not found, we assume that the system is not macOS
+        # or the file has been moved in recent macOS versions.
+        # In this case, we return None to indicate that the UTI cannot be determined.
+        return None
     plist = plistlib.loads(plist_data)
     for type_declaration in (
         plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
