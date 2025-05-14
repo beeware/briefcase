@@ -276,7 +276,7 @@ class AppPackagesMergeMixin:
             self.console.info("No libraries require merging.")
 
 
-def mime_type_to_UTI(mime_type: str) -> str | None:
+def mime_type_to_UTI(mime_type: str) -> str | None:  # pragma: no-cover-if-not-macos
     """Convert a MIME type to a Uniform Type Identifier (UTI).
 
     This function reads the system's CoreTypes Info.plist file to determine the
