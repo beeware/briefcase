@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.config import AppConfig
@@ -78,22 +80,33 @@ def test_extra_attrs():
     # Properties that are derived by default have been set explicitly
     assert config.formal_name == "My App!"
     assert config.class_name == "MyApp"
-    assert config.document_types == {
-        "document": {
-            "icon": "icon",
-            "extension": "doc",
-            "description": "A document",
-            "url": "https://testurl.com",
-            "macOS": {
-                "CFBundleTypeRole": "Viewer",
-                "LSHandlerRank": "Owner",
-                "UTTypeConformsTo": [
-                    "public.data",
-                    "public.content",
-                ],
-            },
+
+    if sys.platform == "darwin":
+        assert config.document_types == {
+            "document": {
+                "icon": "icon",
+                "extension": "doc",
+                "description": "A document",
+                "url": "https://testurl.com",
+                "macOS": {
+                    "CFBundleTypeRole": "Viewer",
+                    "LSHandlerRank": "Owner",
+                    "UTTypeConformsTo": [
+                        "public.data",
+                        "public.content",
+                    ],
+                },
+            }
         }
-    }
+    else:
+        assert config.document_types == {
+            "document": {
+                "icon": "icon",
+                "extension": "doc",
+                "description": "A document",
+                "url": "https://testurl.com",
+            }
+        }
 
     # Explicit additional properties have been set
     assert config.first == "value 1"

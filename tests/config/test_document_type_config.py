@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.config import validate_document_type_config
@@ -163,6 +165,7 @@ def test_validate_document_invalid_extension(invalid_extension, valid_document):
         validate_document_type_config("ext", valid_document)
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 def test_document_type_macOS_config_with_mimetype_single(valid_document):
     """Valid document types don't raise an exception when validated.
 
@@ -174,6 +177,7 @@ def test_document_type_macOS_config_with_mimetype_single(valid_document):
     assert valid_document["macOS"]["LSItemContentType"] == "com.adobe.pdf"
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 def test_document_type_macOS_config_with_mimetype_list(valid_document):
     """Valid document types don't raise an exception when validated.
 
@@ -187,6 +191,7 @@ def test_document_type_macOS_config_with_mimetype_list(valid_document):
     assert valid_document["macOS"]["LSItemContentType"] == "public.vcard"
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     """Valid document types don't raise an exception when validated.
 
@@ -198,6 +203,7 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     assert "LSItemContentType" not in valid_document["macOS"].keys()
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 def test_mime_type_to_uti_with_nonexisting_coretypes_file(monkeypatch):
     """Test that mime_type_to_UTI returns None if the coretypes file doesn't exist."""
     monkeypatch.setattr(utils, "CORETYPES_PATH", "/does/not/exist")
