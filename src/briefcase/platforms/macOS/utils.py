@@ -10,6 +10,8 @@ from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 
+CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
+
 
 def sha256_file_digest(path: Path) -> str:
     """Compute a sha256 checksum digest of a file.
@@ -289,9 +291,7 @@ def mime_type_to_UTI(mime_type: str) -> str | None:  # pragma: no-cover-if-not-m
         The UTI for the MIME type, or None if the UTI cannot be determined.
     """
     try:
-        plist_data = pathlib.Path(
-            "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
-        ).read_bytes()
+        plist_data = pathlib.Path(CORETYPES_PATH).read_bytes()
     except FileNotFoundError:
         # If the file is not found, we assume that the system is not macOS
         # or the file has been moved in recent macOS versions.

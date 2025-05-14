@@ -2,6 +2,7 @@ import pytest
 
 from briefcase.config import validate_document_type_config
 from briefcase.exceptions import BriefcaseConfigError
+from briefcase.platforms.macOS import utils
 
 
 @pytest.fixture
@@ -195,3 +196,9 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     valid_document["mime_type"] = "custom/mytype"
     validate_document_type_config("ext", valid_document)
     assert "LSItemContentType" not in valid_document["macOS"].keys()
+
+
+def test_mime_type_to_uti_with_nonexisting_coretypes_file(monkeypatch):
+    """Test that mime_type_to_UTI returns None if the coretypes file doesn't exist."""
+    monkeypatch.setattr(utils, "CORETYPES_PATH", "/does/not/exist")
+    assert utils.mime_type_to_UTI("application/pdf") is None

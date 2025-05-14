@@ -161,6 +161,8 @@ def validate_document_type_config(document_type_id, document_type):
             macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
 
         macOS.setdefault("CFBundleTypeRole", "Viewer")
+    else:  # pragma: no-cover-if-is-macos
+        pass
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
