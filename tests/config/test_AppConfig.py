@@ -84,6 +84,14 @@ def test_extra_attrs():
             "extension": "doc",
             "description": "A document",
             "url": "https://testurl.com",
+            "macOS": {
+                "CFBundleTypeRole": "Viewer",
+                "LSHandlerRank": "Owner",
+                "UTTypeConformsTo": [
+                    "public.data",
+                    "public.content",
+                ],
+            },
         }
     }
 
