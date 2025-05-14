@@ -150,8 +150,9 @@ def validate_document_type_config(document_type_id, document_type):
         from briefcase.platforms.macOS.utils import mime_type_to_UTI
 
         macOS = document_type.setdefault("macOS", {})
-        if (UTI := mime_type_to_UTI(document_type.get("mime_type", None))) is not None:
-            macOS.setdefault("LSItemContentType", UTI)
+        mime_type = document_type.get("mime_type", None)
+        if (uti := mime_type_to_UTI(mime_type)) is not None:
+            macOS.setdefault("LSItemContentType", uti)
             macOS.setdefault("LSHandlerRank", "Alternate")
         else:
             # LSItemContentType will default to bundle.app_name.document_type_id
