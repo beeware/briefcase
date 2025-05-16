@@ -1,7 +1,10 @@
+import sys
+
 import pytest
 
 from briefcase.config import validate_document_type_config
 from briefcase.exceptions import BriefcaseConfigError
+from briefcase.platforms.macOS import utils
 
 
 @pytest.fixture
@@ -160,3 +163,48 @@ def test_validate_document_invalid_extension(invalid_extension, valid_document):
         match=r"The extension provided for document type .* is not alphanumeric.",
     ):
         validate_document_type_config("ext", valid_document)
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_document_type_macOS_config_with_mimetype_single(valid_document):
+    """Valid document types don't raise an exception when validated.
+
+    application/pdf is the only valid MIME type for PDF files.
+    """
+    valid_document["mime_type"] = "application/pdf"
+    validate_document_type_config("ext", valid_document)
+    assert "LSItemContentType" in valid_document["macOS"].keys()
+    assert valid_document["macOS"]["LSItemContentType"] == "com.adobe.pdf"
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_document_type_macOS_config_with_mimetype_list(valid_document):
+    """Valid document types don't raise an exception when validated.
+
+    text/vcard is _not_ the only valid MIME type for vCard files, others are
+    text/directory and text/x-vcard so a list if MIME types is returned
+    internally but should still resolve to public.vcard
+    """
+    valid_document["mime_type"] = "text/vcard"
+    validate_document_type_config("ext", valid_document)
+    assert "LSItemContentType" in valid_document["macOS"].keys()
+    assert valid_document["macOS"]["LSItemContentType"] == "public.vcard"
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
+    """Valid document types don't raise an exception when validated.
+
+    Here, a MIME type is provided that is not known to be valid for any file.
+    That means that LSItemContentType should _not_ be set.
+    """
+    valid_document["mime_type"] = "custom/mytype"
+    validate_document_type_config("ext", valid_document)
+    assert "LSItemContentType" not in valid_document["macOS"].keys()
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_mime_type_to_uti_with_nonexisting_coretypes_file(monkeypatch):
+    """Test that mime_type_to_UTI returns None if the coretypes file doesn't exist."""
+    monkeypatch.setattr(utils, "CORETYPES_PATH", "/does/not/exist")
+    assert utils.mime_type_to_UTI("application/pdf") is None

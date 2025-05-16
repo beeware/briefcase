@@ -146,6 +146,25 @@ def validate_document_type_config(document_type_id, document_type):
             f"The URL associated with document type {document_type_id!r} is invalid: {e}"
         )
 
+    if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
+        from briefcase.platforms.macOS.utils import mime_type_to_UTI
+
+        macOS = document_type.setdefault("macOS", {})
+        mime_type = document_type.get("mime_type", None)
+        if (uti := mime_type_to_UTI(mime_type)) is not None:
+            macOS.setdefault("LSItemContentType", uti)
+            macOS.setdefault("LSHandlerRank", "Alternate")
+            macOS.setdefault("builtin_type", True)
+        else:
+            # LSItemContentType will default to bundle.app_name.document_type_id
+            # in the Info.plist template if it is not provided.
+            macOS.setdefault("LSHandlerRank", "Owner")
+            macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
+
+        macOS.setdefault("CFBundleTypeRole", "Viewer")
+    else:  # pragma: no-cover-if-is-macos
+        pass
+
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
