@@ -154,6 +154,7 @@ def validate_document_type_config(document_type_id, document_type):
         if (uti := mime_type_to_UTI(mime_type)) is not None:
             macOS.setdefault("LSItemContentType", uti)
             macOS.setdefault("LSHandlerRank", "Alternate")
+            macOS.setdefault("builtin_type", True)
         else:
             # LSItemContentType will default to bundle.app_name.document_type_id
             # in the Info.plist template if it is not provided.
