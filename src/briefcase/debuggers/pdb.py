@@ -1,10 +1,8 @@
-from briefcase.debuggers.base import BaseDebugger, DebuggerMode
+from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 
 
 class PdbDebugger(BaseDebugger):
     """Definition for a plugin that defines a new Briefcase debugger."""
-
-    name = "pdb"
 
     @property
     def additional_requirements(self) -> list[str]:
@@ -14,6 +12,6 @@ class PdbDebugger(BaseDebugger):
         ]
 
     @property
-    def debugger_mode(self) -> DebuggerMode:
-        """Return the mode of the debugger."""
-        return DebuggerMode.SERVER
+    def connection_mode(self) -> DebuggerConnectionMode:
+        """Return the connection mode of the debugger."""
+        return DebuggerConnectionMode.SERVER

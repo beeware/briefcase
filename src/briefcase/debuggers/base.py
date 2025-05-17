@@ -23,22 +23,13 @@ class DebuggerConfig(TypedDict):
     app_packages_path_mappings: AppPackagesPathMappings | None
 
 
-class DebuggerMode(str, enum.Enum):
+class DebuggerConnectionMode(str, enum.Enum):
     SERVER = "server"
     CLIENT = "client"
 
 
-# @dataclasses.dataclass
-# class DebuggerOptions:
-#     mode: str
-#     host: str
-#     port: int
-
-
 class BaseDebugger(ABC):
     """Definition for a plugin that defines a new Briefcase debugger."""
-
-    name: str
 
     @property
     @abstractmethod
@@ -48,28 +39,6 @@ class BaseDebugger(ABC):
 
     @property
     @abstractmethod
-    def debugger_mode(self) -> DebuggerMode:
-        """Return the mode of the debugger."""
+    def connection_mode(self) -> DebuggerConnectionMode:
+        """Return the connection mode of the debugger."""
         raise NotImplementedError
-
-    # def validate_run_options(self, mode: str | None, host: str | None, port: int | None) -> DebuggerOptions:
-    #     """Validate the run options for the debugger."""
-    #     if mode is None:
-    #         mode = self.default_mode.value
-    #     elif mode not in [m.value for m in self.supported_modes]:
-    #         raise BriefcaseCommandError(
-    #             f"Invalid mode '{mode}'. Supported modes are: {', '.join([m.value for m in self.supported_modes])}."
-    #         )
-
-    #     if host is None:
-    #         host = self.default_host
-
-    #     if port is None:
-    #         port = self.default_port
-
-    #     return DebuggerOptions(mode=mode, host=host, port=port)
-
-    # @abstractmethod
-    # def get_env(self) -> dict[str, str]:
-    #     """Return environment variables to set before running the debugger."""
-    #     return {}
