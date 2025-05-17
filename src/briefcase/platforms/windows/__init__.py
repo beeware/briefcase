@@ -59,7 +59,7 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -141,6 +141,9 @@ class WindowsRunCommand(RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -151,7 +154,13 @@ class WindowsRunCommand(RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(
+            app=app,
+            test_mode=test_mode,
+            debug_mode=debug_mode,
+            debugger_host=debugger_host,
+            debugger_port=debugger_port,
+        )
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

@@ -50,7 +50,7 @@ class StaticWebMixin:
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Add style framework details to the app template."""
         return {
             "style_framework": getattr(app, "style_framework", "None"),
@@ -311,6 +311,9 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         host,
         port,

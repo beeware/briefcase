@@ -1,5 +1,7 @@
 import sys
 
+from briefcase.exceptions import BriefcaseCommandError
+
 if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     from importlib.metadata import entry_points
 else:  # pragma: no-cover-if-gte-py310
@@ -11,8 +13,6 @@ from briefcase.debuggers.base import BaseDebugger
 from briefcase.debuggers.debugpy import DebugpyDebugger  # noqa: F401
 from briefcase.debuggers.pdb import PdbDebugger  # noqa: F401
 
-DEFAULT_DEBUGGER = PdbDebugger
-
 
 def get_debuggers() -> dict[str, type[BaseDebugger]]:
     """Loads built-in and third-party debuggers."""
@@ -20,3 +20,11 @@ def get_debuggers() -> dict[str, type[BaseDebugger]]:
         entry_point.name: entry_point.load()
         for entry_point in entry_points(group="briefcase.debuggers")
     }
+
+
+def get_debugger(name: str) -> BaseDebugger:
+    """Get a debugger by name."""
+    debuggers = get_debuggers()
+    if name not in debuggers:
+        raise BriefcaseCommandError(f"Unknown debugger: {name}")
+    return debuggers[name]()

@@ -106,7 +106,7 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
     hidden_app_properties = {"permission", "finish_arg"}
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Add flatpak runtime/SDK details to the app template."""
         return {
             "flatpak_runtime": self.flatpak_runtime(app),
@@ -218,6 +218,9 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -228,7 +231,13 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(
+            app=app,
+            test_mode=test_mode,
+            debug_mode=debug_mode,
+            debugger_host=debugger_host,
+            debugger_port=debugger_port,
+        )
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

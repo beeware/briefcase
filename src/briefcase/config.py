@@ -13,7 +13,6 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
-from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
@@ -282,6 +281,7 @@ class AppConfig(BaseConfig):
         template_branch=None,
         test_sources=None,
         test_requires=None,
+        debug_requires=None,
         supported=True,
         long_description=None,
         console_app=False,
@@ -311,6 +311,7 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.test_sources = test_sources
         self.test_requires = test_requires
+        self.debug_requires = debug_requires
         self.supported = supported
         self.long_description = long_description
         self.license = license
@@ -318,7 +319,6 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
-        self.remote_debugger: BaseDebugger | None = None
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(

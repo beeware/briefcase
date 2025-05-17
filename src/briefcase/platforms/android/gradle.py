@@ -159,7 +159,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -216,7 +216,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             ]
 
         extract_sources = app.test_sources or []
-        if app.remote_debugger:
+        if debug_mode:
             # Add sources to the extract_packages so that the debugger can
             # get the source code at runtime (eg. via 'll' in pdb).
             extract_sources.extend(app.sources)
@@ -384,6 +384,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -448,11 +451,11 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 adb.install_apk(self.binary_path(app))
 
             env = {}
-            if app.remote_debugger:
+            if debug_mode:
                 with self.console.wait_bar("Establishing debugger connection..."):
                     self.establish_debugger_connection(adb, app.remote_debugger)
-                env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
-                    app, test_mode
+                env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
+                    app, test_mode, debugger_host, debugger_port
                 )
 
             if self.console.is_debug:

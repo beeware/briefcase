@@ -498,6 +498,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         udid=None,
         **kwargs,
@@ -648,9 +651,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Add additional environment variables
         env = {}
-        if app.remote_debugger:
-            env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
-                app, test_mode
+        if debug_mode:
+            env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
+                app, test_mode, debugger_host, debugger_port
             )
 
         # Install additional environment variables

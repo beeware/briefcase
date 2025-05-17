@@ -11,7 +11,7 @@ from briefcase.config import AppConfig
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
     AppPathMappings,
-    RemoteDebuggerConfig,
+    DebuggerConfig,
 )
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 from briefcase.integrations.subprocess import StopStreaming
@@ -225,7 +225,23 @@ class RunCommand(RunAppMixin, BaseCommand):
         )
 
         self._add_update_options(parser, context_label=" before running")
-        self._add_test_and_debug_options(parser, context_label="Run")
+        self._add_test_options(parser, context_label="Run")
+        self._add_debug_options(parser, context_label="Run")
+
+        parser.add_argument(
+            "--debugger-host",
+            default="localhost",
+            help="The host on which to run the debug server (default: localhost)",
+            required=False,
+        )
+        parser.add_argument(
+            "-dp",
+            "--debugger-port",
+            default=5678,
+            type=int,
+            help="The port on which to run the debug server (default: 8080)",
+            required=False,
+        )
 
     def remote_debugger_app_path_mappings(
         self, app: AppConfig, test_mode: bool
@@ -264,7 +280,13 @@ class RunCommand(RunAppMixin, BaseCommand):
             host_folder=f"{app_packages_path}",
         )
 
-    def remote_debugger_config(self, app: AppConfig, test_mode: bool) -> str:
+    def remote_debugger_config(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        debugger_host: str,
+        debugger_port: int,
+    ) -> str:
         """
         Create the remote debugger configuration that should be saved as environment variable for this run.
 
@@ -274,17 +296,22 @@ class RunCommand(RunAppMixin, BaseCommand):
         """
         app_path_mappings = self.remote_debugger_app_path_mappings(app, test_mode)
         app_packages_path_mappings = self.remote_debugger_app_packages_path_mapping(app)
-        config = RemoteDebuggerConfig(
-            debugger=app.remote_debugger.name,
-            mode=app.remote_debugger.mode,
-            ip=app.remote_debugger.ip,
-            port=app.remote_debugger.port,
+        config = DebuggerConfig(
+            host=debugger_host,
+            port=debugger_port,
             app_path_mappings=app_path_mappings,
             app_packages_path_mappings=app_packages_path_mappings,
         )
         return json.dumps(config)
 
-    def _prepare_app_kwargs(self, app: AppConfig, test_mode: bool):
+    def _prepare_app_kwargs(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
+    ):
         """Prepare the kwargs for running an app as a log stream.
 
         This won't be used by every backend; but it's a sufficiently common default that
@@ -302,9 +329,9 @@ class RunCommand(RunAppMixin, BaseCommand):
             env["BRIEFCASE_DEBUG"] = "1"
 
         # If we're in remote debug mode, save the remote debugger config
-        if app.remote_debugger:
-            env["BRIEFCASE_REMOTE_DEBUGGER"] = self.remote_debugger_config(
-                app, test_mode
+        if debug_mode:
+            env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
+                app, test_mode, debugger_host, debugger_port
             )
 
         if test_mode:
@@ -322,7 +349,16 @@ class RunCommand(RunAppMixin, BaseCommand):
         return args
 
     @abstractmethod
-    def run_app(self, app: AppConfig, **options) -> dict | None:
+    def run_app(
+        self,
+        app: AppConfig,
+        test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
+        passthrough: list[str],
+        **options,
+    ) -> dict | None:
         """Start an application.
 
         :param app: The application to start
@@ -338,7 +374,9 @@ class RunCommand(RunAppMixin, BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
-        remote_debugger_cfg: str | None = None,
+        debug_mode: str | None = None,
+        debugger_host: str | None = None,
+        debugger_port: int | None = None,
         passthrough: list[str] | None = None,
         **options,
     ) -> dict | None:
@@ -361,7 +399,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, remote_debugger_cfg)
+        self.finalize(app, debug_mode)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
@@ -386,6 +424,7 @@ class RunCommand(RunAppMixin, BaseCommand):
                 update_stub=update_stub,
                 no_update=no_update,
                 test_mode=test_mode,
+                debug_mode=debug_mode,
                 **options,
             )
         else:
@@ -396,6 +435,9 @@ class RunCommand(RunAppMixin, BaseCommand):
         state = self.run_app(
             app,
             test_mode=test_mode,
+            debug_mode=debug_mode,
+            debugger_host=debugger_host,
+            debugger_port=debugger_port,
             passthrough=[] if passthrough is None else passthrough,
             **full_options(state, options),
         )

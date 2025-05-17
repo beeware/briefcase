@@ -20,8 +20,7 @@ from packaging.specifiers import InvalidSpecifier, Specifier
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
-from briefcase.debuggers import DEFAULT_DEBUGGER, get_debuggers
-from briefcase.debuggers.base import parse_remote_debugger_cfg
+from briefcase.debuggers import get_debugger, get_debuggers
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -598,9 +597,7 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(
-        self, app: AppConfig | None = None, remote_debugger_cfg: str | None = None
-    ):
+    def finalize(self, app: AppConfig | None = None, debug_mode: str | None = None):
         """Finalize Briefcase configuration.
 
         This will:
@@ -620,14 +617,26 @@ a custom location for Briefcase's tools.
         if app is None:
             for app in self.apps.values():
                 if hasattr(app, "__draft__"):
-                    self.create_remote_debugger(app, remote_debugger_cfg)
+                    self.finalze_debug_mode(app, debug_mode)
                     self.finalize_app_config(app)
                     delattr(app, "__draft__")
         else:
             if hasattr(app, "__draft__"):
-                self.create_remote_debugger(app, remote_debugger_cfg)
+                self.finalze_debug_mode(app, debug_mode)
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
+
+    def finalze_debug_mode(self, app: AppConfig, debug_mode: str | None = None):
+        """Finalize the debugger configuration.
+
+        This will ensure that the debugger is available and that the app
+        configuration is valid.
+
+        :param app: The app configuration to finalize.
+        """
+        if debug_mode and debug_mode != "":
+            debugger = get_debugger(debug_mode)
+            app.debug_requires.extend(debugger.additional_requirements)
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
@@ -696,19 +705,6 @@ any compatibility problems, and then add the compatibility declaration.
             raise UnsupportedPythonVersion(
                 version_specifier=requires_python, running_version=running_version
             )
-
-    def create_remote_debugger(self, app: AppConfig, remote_debugger_cfg: str | None):
-        """Select and instantiate a debugger for the project."""
-        if remote_debugger_cfg is None:
-            return None
-
-        with self.console.wait_bar("Loading remote debugger config..."):
-            debugger, config = parse_remote_debugger_cfg(remote_debugger_cfg)
-
-            debuggers = get_debuggers()
-            debugger_class = debuggers[debugger] if debugger else DEFAULT_DEBUGGER
-            app.remote_debugger = debugger_class(console=self.console, config=config)
-            self.console.info(f"Using '{app.remote_debugger}'")
 
     def parse_options(self, extra):
         """Parse the command line arguments for the Command.
@@ -884,8 +880,8 @@ any compatibility problems, and then add the compatibility declaration.
                 help=f"Prevent any automated update{context_label}",
             )
 
-    def _add_test_and_debug_options(self, parser, context_label):
-        """Internal utility method for adding common test- and debug-related options.
+    def _add_test_options(self, parser, context_label):
+        """Internal utility method for adding common test-related options.
 
         :param parser: The parser to which options should be added.
         :param context_label: Label text for commands; the capitalized action being
@@ -897,14 +893,26 @@ any compatibility problems, and then add the compatibility declaration.
             action="store_true",
             help=f"{context_label} the app in test mode",
         )
+
+    def _add_debug_options(self, parser, context_label):
+        """Internal utility method for adding common debug-related options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text for commands; the capitalized action being
+            performed (e.g., "Build", "Run",...)
+        """
+        debuggers = get_debuggers()
+        debugger_names = list(reversed(debuggers.keys()))
+
         parser.add_argument(
-            "--remote-debug",
-            dest="remote_debugger_cfg",
+            "--debug",
+            dest="debug_mode",
             nargs="?",
             default=None,
             const="",
-            metavar="REMOTE-DEBUGGER-CONFIG",
-            help=f"{context_label} the app with remote debugger enabled",
+            choices=["", *debugger_names],
+            metavar="DEBUGGER",
+            help=f"{context_label} the app with the specified debugger ({', '.join(debugger_names)})",
         )
 
     def add_options(self, parser):
