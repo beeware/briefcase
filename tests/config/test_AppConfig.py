@@ -95,6 +95,7 @@ def test_extra_attrs():
                         "public.data",
                         "public.content",
                     ],
+                    "is_core_type": False,
                 },
             }
         }
