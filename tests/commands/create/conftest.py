@@ -86,7 +86,9 @@ class DummyCreateCommand(CreateCommand):
         return "3.X"
 
     # Define output format-specific template context.
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(
+        self, app: AppConfig, debug_mode: str | None = None
+    ):
         return {"output_format": "dummy"}
 
     # Handle platform-specific permissions.
@@ -152,7 +154,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 
     # Override all the body methods of a CreateCommand
     # with versions that we can use to track actions performed.
-    def generate_app_template(self, app):
+    def generate_app_template(self, app, debug_mode=None):
         self.actions.append(("generate", app.app_name))
 
         # A mock version of template generation.
@@ -161,7 +163,7 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
 
-    def install_app_requirements(self, app, test_mode):
+    def install_app_requirements(self, app, test_mode, debug_mode):
         self.actions.append(("requirements", app.app_name, test_mode))
 
     def install_app_code(self, app, test_mode):

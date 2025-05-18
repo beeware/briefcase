@@ -207,14 +207,16 @@ class CreateCommand(BaseCommand):
         """
         return {}
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(
+        self, app: AppConfig, debug_mode: str | None = None
+    ):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
-    def generate_app_template(self, app: AppConfig, debug_mode: bool = False):
+    def generate_app_template(self, app: AppConfig, debug_mode: str | None = None):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -919,7 +921,7 @@ class CreateCommand(BaseCommand):
         self,
         app: AppConfig,
         test_mode: bool = False,
-        debug_mode: bool = False,
+        debug_mode: str | None = None,
         **options,
     ):
         """Create an application bundle.

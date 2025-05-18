@@ -163,7 +163,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(
+        self, app: AppConfig, debug_mode: str | None = None
+    ):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -388,7 +390,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        debug_mode: bool,
+        debug_mode: str | None,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],

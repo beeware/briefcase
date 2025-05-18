@@ -639,7 +639,9 @@ class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
 class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
     description = "Create and populate a Linux system project."
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(
+        self, app: AppConfig, debug_mode: str | None = None
+    ):
         context = super().output_format_template_context(app, debug_mode)
 
         # Linux system templates use the target codename, rather than

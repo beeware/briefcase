@@ -30,7 +30,7 @@ def test_start_app_launches_app(adb, capsys, passthrough):
 
     # Invoke start_app
     adb.start_app(
-        "com.example.sample.package", "com.example.sample.activity", passthrough
+        "com.example.sample.package", "com.example.sample.activity", passthrough, {}
     )
 
     # Validate call parameters.
@@ -69,7 +69,9 @@ MainActivity} does not exist.
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
+        adb.start_app(
+            "com.example.sample.package", "com.example.sample.activity", [], {}
+        )
 
     assert "Activity class not found" in str(exc_info.value)
 
@@ -81,7 +83,9 @@ def test_invalid_device(adb):
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     with pytest.raises(InvalidDeviceError):
-        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
+        adb.start_app(
+            "com.example.sample.package", "com.example.sample.activity", [], {}
+        )
 
 
 def test_unable_to_start(adb):
@@ -92,4 +96,6 @@ def test_unable_to_start(adb):
         BriefcaseCommandError,
         match=r"Unable to start com.example.sample.package/com.example.sample.activity on exampleDevice",
     ):
-        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
+        adb.start_app(
+            "com.example.sample.package", "com.example.sample.activity", [], {}
+        )

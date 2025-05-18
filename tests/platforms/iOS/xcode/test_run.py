@@ -46,6 +46,9 @@ def test_device_option(run_command):
         "update_stub": False,
         "no_update": False,
         "test_mode": False,
+        "debug_mode": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "passthrough": [],
         "appname": None,
     }
@@ -72,7 +75,14 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
         BriefcaseCommandError,
         match=r"Input has been disabled; can't select a device to target.",
     ):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
 
 @pytest.mark.usefixtures("sleep_zero")
@@ -106,7 +116,14 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -238,7 +255,14 @@ def test_run_app_simulator_booted_underscore(
     ]
 
     # Run the app
-    run_command.run_app(underscore_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        underscore_app_config,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # slept 4 times for uninstall/install and 1 time for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -365,6 +389,9 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -498,7 +525,14 @@ def test_run_app_simulator_shut_down(
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # slept 4 times for uninstall/install and 1 time for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -640,7 +674,14 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # We should have slept 4 times for shutting down and 4 time for uninstall/install
     assert time.sleep.call_count == 4 + 4
@@ -757,7 +798,14 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # No sleeps
     assert time.sleep.call_count == 0
@@ -801,7 +849,14 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # No sleeps
     assert time.sleep.call_count == 0
@@ -852,7 +907,14 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # Sleep twice for uninstall failure
     assert time.sleep.call_count == 2
@@ -924,7 +986,14 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # Sleep twice for uninstall and twice for install failure
     assert time.sleep.call_count == 4
@@ -1017,7 +1086,14 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1138,7 +1214,14 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1261,7 +1344,14 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1383,7 +1473,14 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1496,6 +1593,9 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     run_command.run_app(
         first_app_config,
         test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 

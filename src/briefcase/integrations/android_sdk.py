@@ -1545,9 +1545,15 @@ class ADB:
                 "--es",
                 "org.beeware.ARGV",
                 shlex.quote(json.dumps(passthrough)),  # Protect from Android's shell
-                "--es",
-                "org.beeware.ENVIRON",
-                shlex.quote(json.dumps(env)),  # Protect from Android's shell
+                *(
+                    [
+                        "--es",
+                        "org.beeware.ENVIRON",
+                        shlex.quote(json.dumps(env)),  # Protect from Android's shell
+                    ]
+                    if env
+                    else []
+                ),
             )
 
             # `adb shell am start` always exits with status zero. We look for error

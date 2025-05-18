@@ -46,7 +46,14 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -108,6 +115,9 @@ def test_run_app_with_passthrough(
     run_command.run_app(
         first_app_config,
         test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -167,7 +177,14 @@ def test_run_app_test_mode(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -230,6 +247,9 @@ def test_run_app_test_mode_with_passthrough(
     run_command.run_app(
         first_app_config,
         test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 

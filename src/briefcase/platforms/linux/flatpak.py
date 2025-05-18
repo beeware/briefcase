@@ -106,7 +106,9 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
     hidden_app_properties = {"permission", "finish_arg"}
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(
+        self, app: AppConfig, debug_mode: str | None = None
+    ):
         """Add flatpak runtime/SDK details to the app template."""
         return {
             "flatpak_runtime": self.flatpak_runtime(app),

@@ -245,7 +245,14 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -285,7 +292,14 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=["foo", "--bar"])
+    run_command.run_app(
+        first_app,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=["foo", "--bar"],
+    )
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -327,7 +341,14 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # The run command was still invoked
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -356,7 +377,14 @@ def test_run_console_app(run_command, first_app, tmp_path):
     run_command.verify_app_tools(app=first_app)
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # The process was started
     run_command.tools.subprocess.run.mock_calls == [
@@ -385,7 +413,14 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
     run_command.verify_app_tools(app=first_app)
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=["foo", "--bar"])
+    run_command.run_app(
+        first_app,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=["foo", "--bar"],
+    )
 
     # The process was started
     run_command.tools.subprocess.run.mock_calls == [
@@ -417,7 +452,14 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess.run.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # The run command was still invoked
     run_command.tools.subprocess.run.mock_calls == [
@@ -459,7 +501,14 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -520,7 +569,14 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app,
+            test_mode=False,
+            debug_mode=None,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # The run command was still invoked
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -580,7 +636,14 @@ def test_run_app_test_mode(
     monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
 
     # Run the app
-    run_command.run_app(first_app, test_mode=True, passthrough=[])
+    run_command.run_app(
+        first_app,
+        test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -639,7 +702,14 @@ def test_run_app_test_mode_docker(
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=True, passthrough=[])
+    run_command.run_app(
+        first_app,
+        test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -709,6 +779,9 @@ def test_run_app_test_mode_with_args(
     run_command.run_app(
         first_app,
         test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -774,6 +847,9 @@ def test_run_app_test_mode_with_args_docker(
     run_command.run_app(
         first_app,
         test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 

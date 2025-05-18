@@ -34,7 +34,14 @@ def test_run_app(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # Popen was called
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -69,6 +76,9 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -104,7 +114,14 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app in test mode
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # Popen was called
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -140,6 +157,9 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=True,
+        debug_mode=None,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
