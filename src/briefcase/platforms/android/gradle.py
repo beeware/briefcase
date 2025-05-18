@@ -17,9 +17,9 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
-from briefcase.debuggers import get_debugger
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
+    BaseDebugger,
     DebuggerConnectionMode,
 )
 from briefcase.exceptions import BriefcaseCommandError
@@ -524,7 +524,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     adb.kill()
 
     def establish_debugger_connection(
-        self, adb: ADB, debugger: str, debugger_port: int
+        self, adb: ADB, debugger: BaseDebugger, debugger_port: int
     ):
         """Forward/Reverse the ports necessary for remote debugging.
 
@@ -533,13 +533,14 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param debugger: The debugger to use
         :param debugger_port: The port to forward/reverse for the debugger
         """
-        debugger = get_debugger(debugger)
         if debugger.connection_mode == DebuggerConnectionMode.SERVER:
             adb.forward(debugger_port, debugger_port)
         elif debugger.connection_mode == DebuggerConnectionMode.CLIENT:
             adb.reverse(debugger_port, debugger_port)
 
-    def remove_debugger_connection(self, adb: ADB, debugger: str, debugger_port: int):
+    def remove_debugger_connection(
+        self, adb: ADB, debugger: BaseDebugger, debugger_port: int
+    ):
         """Remove Forward/Reverse of the ports necessary for remote debugging.
 
         :param app: The config object for the app
@@ -547,7 +548,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param debugger: The debugger to use
         :param debugger_port: The port to forward/reverse for the debugger
         """
-        debugger = get_debugger(debugger)
         if debugger.connection_mode == DebuggerConnectionMode.SERVER:
             adb.forward_remove(debugger_port)
         elif debugger.connection_mode == DebuggerConnectionMode.CLIENT:
