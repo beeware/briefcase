@@ -167,19 +167,17 @@ def validate_document_type_config(document_type_id, document_type):
         content_types = macOS.get("LSItemContentTypes", None)
         if isinstance(content_types, list):
             if len(content_types) > 1:
-                raise BriefcaseConfigError(f"""
+                raise BriefcaseConfigError(
+                    f"""
 Document type {document_type_id!r} has multiple content types. Specifying
 multiple values in a LSItemContentTypes key is only valid when multiple document
 types are manually grouped together in the Info.plist file. For Briefcase apps,
 document types are always separately declared in the configuration file, so only
 a single value should be provided.
-                """)
+                """
+                )
             else:
                 macOS["LSItemContentTypes"] = content_types[0]
-        else:
-            # if I don't include an assignment here, coverage complains that
-            # the branch is never reached
-            reached = True
     else:  # pragma: no-cover-if-is-macos
         pass
 
