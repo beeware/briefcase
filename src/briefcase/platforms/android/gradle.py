@@ -434,6 +434,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 avd, extra_emulator_args
             )
 
+        debugger_connection_established = False
         try:
             label = "test suite" if test_mode else "app"
 
@@ -459,8 +460,12 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             env = {}
             if debug_mode:
-                with self.console.wait_bar("Establishing debugger connection..."):
-                    self.establish_debugger_connection(adb, app.debugger, debugger_port)
+                if debugger_host == "localhost":
+                    with self.console.wait_bar("Establishing debugger connection..."):
+                        self.establish_debugger_connection(
+                            adb, app.debugger, debugger_port
+                        )
+                        debugger_connection_established = True
                 env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
                     app, test_mode, debugger_host, debugger_port
                 )
@@ -516,7 +521,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
                 raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
         finally:
-            if debug_mode:
+            if debugger_connection_established:
                 with self.console.wait_bar("Stopping debugger connection..."):
                     self.remove_debugger_connection(adb, app.debugger, debugger_port)
             if shutdown_on_exit:
