@@ -236,7 +236,6 @@ def test_document_type_macOS_config_with_list_of_single_content_type(valid_docum
     valid_document.setdefault("macOS", {})["LSItemContentTypes"] = "com.adobe.pdf"
     validate_document_type_config("ext", valid_document)
     assert valid_document["macOS"]["LSItemContentTypes"] == "com.adobe.pdf"
-    # assert valid_document["macOS"]["else_reached"] is True
 
     valid_document["macOS"]["LSItemContentTypes"] = ["com.adobe.pdf"]
     validate_document_type_config("ext", valid_document)
