@@ -184,9 +184,7 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
 
-    def output_format_template_context(
-        self, app: AppConfig, debug_mode: str | None = None
-    ):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         context = super().output_format_template_context(app, debug_mode)
 
         try:

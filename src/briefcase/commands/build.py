@@ -42,7 +42,7 @@ class BuildCommand(BaseCommand):
         update_stub: bool,
         no_update: bool,
         test_mode: bool,
-        debug_mode: str | None,
+        debugger: str | None,
         **options,
     ) -> dict | None:
         """Internal method to invoke a build on a single app. Ensures the app exists,
@@ -59,17 +59,17 @@ class BuildCommand(BaseCommand):
         :param update_stub: Should the stub binary be updated?
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
-        :param debug_mode: Is the app being build in debug mode?
         """
+        debug_mode = debugger is not None
         if not self.bundle_path(app).exists():
             state = self.create_command(
-                app, test_mode=test_mode, debug_mode=debug_mode, **options
+                app, test_mode=test_mode, debugger=debugger, **options
             )
         elif (
             update  # An explicit update has been requested
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
-            or update_support  # An explicit update of app support has been requested
+            or update_support  # An explicit update of app support has been rdebuggerequested
             or update_stub  # An explicit update of the stub binary has been requested
             or (
                 test_mode and not no_update
@@ -85,7 +85,7 @@ class BuildCommand(BaseCommand):
                 update_support=update_support,
                 update_stub=update_stub,
                 test_mode=test_mode,
-                debug_mode=debug_mode,
+                debugger=debugger,
                 **options,
             )
         else:
@@ -119,7 +119,7 @@ class BuildCommand(BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
-        debug_mode: str | None = None,
+        debugger: str | None = None,
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
@@ -148,7 +148,7 @@ class BuildCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, debug_mode)
+        self.finalize(app, debugger)
 
         if app_name:
             try:
@@ -173,7 +173,7 @@ class BuildCommand(BaseCommand):
                 update_stub=update_stub,
                 no_update=no_update,
                 test_mode=test_mode,
-                debug_mode=debug_mode,
+                debugger=debugger,
                 **full_options(state, options),
             )
 

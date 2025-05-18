@@ -280,7 +280,7 @@ def test_run_command(
         "update_stub": False,
         "no_update": False,
         "test_mode": False,
-        "debug_mode": None,
+        "debugger": None,
         "debugger_host": "localhost",
         "debugger_port": 5678,
         "passthrough": [],

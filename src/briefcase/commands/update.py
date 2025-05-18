@@ -101,12 +101,13 @@ class UpdateCommand(CreateCommand):
         update_support: bool = False,
         update_stub: bool = False,
         test_mode: bool = False,
-        debug_mode: str | None = None,
+        debugger: str | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, debug_mode)
+        self.finalize(app, debugger)
+        debug_mode = debugger is not None
 
         if app_name:
             try:

@@ -305,6 +305,9 @@ class macOSRunMixin:
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         """
         # Console apps must operate in non-streaming mode so that console input can

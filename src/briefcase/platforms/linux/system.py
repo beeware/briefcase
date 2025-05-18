@@ -639,9 +639,7 @@ class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
 class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
     description = "Create and populate a Linux system project."
 
-    def output_format_template_context(
-        self, app: AppConfig, debug_mode: str | None = None
-    ):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         context = super().output_format_template_context(app, debug_mode)
 
         # Linux system templates use the target codename, rather than
@@ -852,6 +850,9 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream

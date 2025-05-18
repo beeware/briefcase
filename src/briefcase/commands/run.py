@@ -319,6 +319,9 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         :param app: The app to be launched
         :param test_mode: Are we launching in test mode?
+        :param debug_mode: Are we launching in debug mode?
+        :param debugger_host: The host on which to run the debug server
+        :param debugger_port: The port on which to run the debug server
         :returns: A dictionary of additional arguments to pass to the Popen
         """
         args = {}
@@ -362,6 +365,11 @@ class RunCommand(RunAppMixin, BaseCommand):
         """Start an application.
 
         :param app: The application to start
+        :param test_mode: Is the test mode enabled?
+        :param debug_mode: Is the debug mode enabled?
+        :param debugger_host: The host on which to run the debug server
+        :param debugger_port: The port on which to run the debug server
+        :param passthrough: Any passthrough arguments
         """
 
     def __call__(
@@ -374,7 +382,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
-        debug_mode: str | None = None,
+        debugger: str | None = None,
         debugger_host: str | None = None,
         debugger_port: int | None = None,
         passthrough: list[str] | None = None,
@@ -399,7 +407,8 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, debug_mode)
+        self.finalize(app, debugger)
+        debug_mode = debugger is not None
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
@@ -424,7 +433,7 @@ class RunCommand(RunAppMixin, BaseCommand):
                 update_stub=update_stub,
                 no_update=no_update,
                 test_mode=test_mode,
-                debug_mode=debug_mode,
+                debugger=debugger,
                 **options,
             )
         else:

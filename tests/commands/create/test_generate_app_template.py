@@ -32,6 +32,7 @@ def full_context():
         "test_sources": None,
         "test_requires": None,
         "debug_requires": None,
+        "debugger": None,
         "url": "https://example.com",
         "author": "First Last",
         "author_email": "first@example.com",

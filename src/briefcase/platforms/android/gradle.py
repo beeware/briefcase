@@ -163,9 +163,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(
-        self, app: AppConfig, debug_mode: str | None = None
-    ):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -390,7 +388,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
-        debug_mode: str | None,
+        debug_mode: bool,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],
@@ -403,6 +401,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -459,7 +460,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             env = {}
             if debug_mode:
                 with self.console.wait_bar("Establishing debugger connection..."):
-                    self.establish_debugger_connection(adb, debug_mode, debugger_port)
+                    self.establish_debugger_connection(adb, app.debugger, debugger_port)
                 env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
                     app, test_mode, debugger_host, debugger_port
                 )
@@ -517,32 +518,36 @@ class GradleRunCommand(GradleMixin, RunCommand):
         finally:
             if debug_mode:
                 with self.console.wait_bar("Stopping debugger connection..."):
-                    self.remove_debugger_connection(adb, debug_mode, debugger_port)
+                    self.remove_debugger_connection(adb, app.debugger, debugger_port)
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
 
     def establish_debugger_connection(
-        self, adb: ADB, debug_mode: str, debugger_port: int
+        self, adb: ADB, debugger: str, debugger_port: int
     ):
         """Forward/Reverse the ports necessary for remote debugging.
 
         :param app: The config object for the app
         :param adb: Access to the adb
+        :param debugger: The debugger to use
+        :param debugger_port: The port to forward/reverse for the debugger
         """
-        debugger = get_debugger(debug_mode)
+        debugger = get_debugger(debugger)
         if debugger.connection_mode == DebuggerConnectionMode.SERVER:
             adb.forward(debugger_port, debugger_port)
         elif debugger.connection_mode == DebuggerConnectionMode.CLIENT:
             adb.reverse(debugger_port, debugger_port)
 
-    def remove_debugger_connection(self, adb: ADB, debug_mode: str, debugger_port: int):
+    def remove_debugger_connection(self, adb: ADB, debugger: str, debugger_port: int):
         """Remove Forward/Reverse of the ports necessary for remote debugging.
 
         :param app: The config object for the app
         :param adb: Access to the adb
+        :param debugger: The debugger to use
+        :param debugger_port: The port to forward/reverse for the debugger
         """
-        debugger = get_debugger(debug_mode)
+        debugger = get_debugger(debugger)
         if debugger.connection_mode == DebuggerConnectionMode.SERVER:
             adb.forward_remove(debugger_port)
         elif debugger.connection_mode == DebuggerConnectionMode.CLIENT:

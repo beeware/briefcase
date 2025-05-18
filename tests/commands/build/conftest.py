@@ -70,7 +70,7 @@ class DummyBuildCommand(BuildCommand):
         self.actions.append(("create", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
         kwargs.pop("test_mode", None)
-        kwargs.pop("debug_mode", None)
+        kwargs.pop("debugger", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
@@ -81,7 +81,7 @@ class DummyBuildCommand(BuildCommand):
         kwargs.pop("update_support", None)
         kwargs.pop("update_stub", None)
         kwargs.pop("test_mode", None)
-        kwargs.pop("debug_mode", None)
+        kwargs.pop("debugger", None)
         return full_options({"update_state": app.app_name}, kwargs)
 
 

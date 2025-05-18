@@ -207,16 +207,14 @@ class CreateCommand(BaseCommand):
         """
         return {}
 
-    def output_format_template_context(
-        self, app: AppConfig, debug_mode: str | None = None
-    ):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
-    def generate_app_template(self, app: AppConfig, debug_mode: str | None = None):
+    def generate_app_template(self, app: AppConfig, debug_mode: bool = False):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -671,7 +669,7 @@ class CreateCommand(BaseCommand):
             self.console.info("No application requirements.")
 
     def install_app_requirements(
-        self, app: AppConfig, test_mode: bool, debug_mode: str | None
+        self, app: AppConfig, test_mode: bool, debug_mode: bool
     ):
         """Handle requirements for the app.
 
@@ -695,7 +693,7 @@ class CreateCommand(BaseCommand):
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
-        if debug_mode:
+        if debug_mode and app.debug_requires:
             requires.extend(app.debug_requires)
 
         try:
@@ -921,7 +919,7 @@ class CreateCommand(BaseCommand):
         self,
         app: AppConfig,
         test_mode: bool = False,
-        debug_mode: str | None = None,
+        debug_mode: bool = False,
         **options,
     ):
         """Create an application bundle.

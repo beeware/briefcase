@@ -86,9 +86,7 @@ class DummyCreateCommand(CreateCommand):
         return "3.X"
 
     # Define output format-specific template context.
-    def output_format_template_context(
-        self, app: AppConfig, debug_mode: str | None = None
-    ):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         return {"output_format": "dummy"}
 
     # Handle platform-specific permissions.

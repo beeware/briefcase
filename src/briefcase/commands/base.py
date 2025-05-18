@@ -597,7 +597,7 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(self, app: AppConfig | None = None, debug_mode: str | None = None):
+    def finalize(self, app: AppConfig | None = None, debugger: str | None = None):
         """Finalize Briefcase configuration.
 
         This will:
@@ -614,19 +614,14 @@ a custom location for Briefcase's tools.
         self.verify_host()
         self.verify_tools()
 
-        if app is None:
-            for app in self.apps.values():
-                if hasattr(app, "__draft__"):
-                    self.finalze_debug_mode(app, debug_mode)
-                    self.finalize_app_config(app)
-                    delattr(app, "__draft__")
-        else:
+        apps = self.apps.values() if app is None else [app]
+        for app in apps:
             if hasattr(app, "__draft__"):
-                self.finalze_debug_mode(app, debug_mode)
+                self.finalze_debugger(app, debugger)
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
-    def finalze_debug_mode(self, app: AppConfig, debug_mode: str | None = None):
+    def finalze_debugger(self, app: AppConfig, debugger: str | None = None):
         """Finalize the debugger configuration.
 
         This will ensure that the debugger is available and that the app
@@ -634,9 +629,10 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
-        if debug_mode and debug_mode != "":
-            debugger = get_debugger(debug_mode)
+        if debugger and debugger != "":
+            debugger = get_debugger(debugger)
             app.debug_requires.extend(debugger.additional_requirements)
+            app.debugger = debugger
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
@@ -903,16 +899,18 @@ any compatibility problems, and then add the compatibility declaration.
         """
         debuggers = get_debuggers()
         debugger_names = list(reversed(debuggers.keys()))
+        choices = ["", *debugger_names]
+        choices_help = [f"'{choice}'" for choice in choices]
 
         parser.add_argument(
             "--debug",
-            dest="debug_mode",
+            dest="debugger",
             nargs="?",
             default=None,
             const="",
-            choices=["", *debugger_names],
+            choices=choices,
             metavar="DEBUGGER",
-            help=f"{context_label} the app with the specified debugger ({', '.join(debugger_names)})",
+            help=f"{context_label} the app with the specified debugger ({', '.join(choices_help)})",
         )
 
     def add_options(self, parser):
