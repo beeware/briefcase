@@ -173,8 +173,8 @@ def test_document_type_macOS_config_with_mimetype_single(valid_document):
     """
     valid_document["mime_type"] = "application/pdf"
     validate_document_type_config("ext", valid_document)
-    assert "LSItemContentType" in valid_document["macOS"].keys()
-    assert valid_document["macOS"]["LSItemContentType"] == "com.adobe.pdf"
+    assert "LSItemContentTypes" in valid_document["macOS"].keys()
+    assert valid_document["macOS"]["LSItemContentTypes"] == "com.adobe.pdf"
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -187,8 +187,8 @@ def test_document_type_macOS_config_with_mimetype_list(valid_document):
     """
     valid_document["mime_type"] = "text/vcard"
     validate_document_type_config("ext", valid_document)
-    assert "LSItemContentType" in valid_document["macOS"].keys()
-    assert valid_document["macOS"]["LSItemContentType"] == "public.vcard"
+    assert "LSItemContentTypes" in valid_document["macOS"].keys()
+    assert valid_document["macOS"]["LSItemContentTypes"] == "public.vcard"
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -196,11 +196,11 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     """Valid document types don't raise an exception when validated.
 
     Here, a MIME type is provided that is not known to be valid for any file.
-    That means that LSItemContentType should _not_ be set.
+    That means that LSItemContentTypes should _not_ be set.
     """
     valid_document["mime_type"] = "custom/mytype"
     validate_document_type_config("ext", valid_document)
-    assert "LSItemContentType" not in valid_document["macOS"].keys()
+    assert "LSItemContentTypes" not in valid_document["macOS"].keys()
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")

@@ -153,16 +153,29 @@ def validate_document_type_config(document_type_id, document_type):
         mime_type = document_type.get("mime_type", None)
         if (uti := mime_type_to_UTI(mime_type)) is not None:
             macOS.setdefault("is_core_type", True)
-            macOS.setdefault("LSItemContentType", uti)
+            macOS.setdefault("LSItemContentTypes", uti)
             macOS.setdefault("LSHandlerRank", "Alternate")
         else:
-            # LSItemContentType will default to bundle.app_name.document_type_id
+            # LSItemContentTypes will default to bundle.app_name.document_type_id
             # in the Info.plist template if it is not provided.
             macOS.setdefault("is_core_type", False)
             macOS.setdefault("LSHandlerRank", "Owner")
             macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
 
         macOS.setdefault("CFBundleTypeRole", "Viewer")
+
+        content_types = macOS.get("LSItemContentTypes", None)
+        if isinstance(content_types, list):
+            if len(content_types) > 1:
+                raise BriefcaseConfigError(f"""
+Document type {document_type_id!r} has multiple content types. Specifying
+multiple values in a LSItemContentTypes key is only valid when multiple document
+types are manually grouped together in the Info.plist file. For Briefcase apps,
+document types are always separately declared in the configuration file, so only
+a single value should be provided.
+                """)
+            else:
+                macOS["LSItemContentTypes"] = content_types[0]
     else:  # pragma: no-cover-if-is-macos
         pass
 
