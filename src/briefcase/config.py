@@ -152,12 +152,13 @@ def validate_document_type_config(document_type_id, document_type):
         macOS = document_type.setdefault("macOS", {})
         mime_type = document_type.get("mime_type", None)
         if (uti := mime_type_to_UTI(mime_type)) is not None:
+            macOS.setdefault("is_core_type", True)
             macOS.setdefault("LSItemContentType", uti)
             macOS.setdefault("LSHandlerRank", "Alternate")
-            macOS.setdefault("builtin_type", True)
         else:
             # LSItemContentType will default to bundle.app_name.document_type_id
             # in the Info.plist template if it is not provided.
+            macOS.setdefault("is_core_type", False)
             macOS.setdefault("LSHandlerRank", "Owner")
             macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
 
