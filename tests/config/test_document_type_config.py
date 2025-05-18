@@ -208,3 +208,36 @@ def test_mime_type_to_uti_with_nonexisting_coretypes_file(monkeypatch):
     """Test that mime_type_to_UTI returns None if the coretypes file doesn't exist."""
     monkeypatch.setattr(utils, "CORETYPES_PATH", "/does/not/exist")
     assert utils.mime_type_to_UTI("application/pdf") is None
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_document_type_macOS_config_with_list_of_content_types(valid_document):
+    """Multiple content types are not allowed.
+
+    If a document type has multiple content types, an exception is raised.
+    """
+    valid_document.setdefault("macOS", {})["LSItemContentTypes"] = [
+        "com.adobe.pdf",
+        "public.vcard",
+    ]
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Document type 'ext' has multiple content types.",
+    ):
+        validate_document_type_config("ext", valid_document)
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_document_type_macOS_config_with_list_of_single_content_type(valid_document):
+    """Single content type is allowed, even if a list is provided.
+
+    If a document type has a single content type, it is converted to a string.
+    """
+    valid_document.setdefault("macOS", {})["LSItemContentTypes"] = "com.adobe.pdf"
+    validate_document_type_config("ext", valid_document)
+    assert valid_document["macOS"]["LSItemContentTypes"] == "com.adobe.pdf"
+    # assert valid_document["macOS"]["else_reached"] is True
+
+    valid_document["macOS"]["LSItemContentTypes"] = ["com.adobe.pdf"]
+    validate_document_type_config("ext", valid_document)
+    assert valid_document["macOS"]["LSItemContentTypes"] == "com.adobe.pdf"

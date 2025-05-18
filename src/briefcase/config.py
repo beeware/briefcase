@@ -176,6 +176,10 @@ a single value should be provided.
                 """)
             else:
                 macOS["LSItemContentTypes"] = content_types[0]
+        else:
+            # if I don't include an assignment here, coverage complains that
+            # the branch is never reached
+            reached = True
     else:  # pragma: no-cover-if-is-macos
         pass
 
