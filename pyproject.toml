@@ -228,7 +228,7 @@ filterwarnings = [
 norecursedirs = []
 
 [tool.ruff.lint]
-select = ["I", "UP"]
+select = ["E4", "E7", "E9", "F", "I", "UP"]
 
 [tool.setuptools_scm]
 # To enable SCM versioning, we need an empty tool configuration for setuptools_scm
