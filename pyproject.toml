@@ -228,7 +228,61 @@ filterwarnings = [
 norecursedirs = []
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I", "UP"]
+# E, W   pycodestyle
+# F      Pyflakes
+# UP     pyupgrade
+# B      flake8-bugbear
+# SIM    flake8-simplify
+# YTT    flake8-2020
+# ASYNC  flake8-async
+# C4     flake8-comprehensions
+# I      isort
+extend-select = ["E" ,"W", "F", "UP", "B", "SIM", "YTT", "ASYNC", "C4", "I"]
+# E501      line length
+# SIM905    use list literal instead of str.split
+# C408      use dict literal instead of dict()
+# SIM117    combine with statements
+# B904      raise ... from ...
+# SIM108    use ternary operators
+# C416      unnecessary list comprehension
+# B018      useless expression
+# B019      memory leaks from functools.lru_cache / functools.cache
+# SIM300    Yoda condition (0 != x)
+# C400      unnecessary generator
+# SIM105    use contextlib.suppress() instead of try-except-pass
+# B007      loop control variable not used
+# SIM102    combine if statements
+# SIM115    use context manager for opening files
+# B027      empty method in abstract base class
+# B024      abstract base class without abstract methods / properties
+# SIM103    return condition directly
+# C414      unnecessary list() use within sorted()
+# SIM201    use "x != y" instead of "not x == y"
+# SIM118    use "key in dict" instead of "key in dict.keys()"
+ignore = [
+    "E501",
+    "SIM905",
+    "C408",
+    "SIM117",
+    "B904",
+    "SIM108",
+    "C416",
+    "B018",
+    "B019",
+    "SIM300",
+    "C400",
+    "SIM105",
+    "B007",
+    "SIM102",
+    "SIM115",
+    "B027",
+    "B024",
+    "SIM103",
+    "C414",
+    "SIM201",
+    "SIM118",
+]
+
 
 [tool.setuptools_scm]
 # To enable SCM versioning, we need an empty tool configuration for setuptools_scm
