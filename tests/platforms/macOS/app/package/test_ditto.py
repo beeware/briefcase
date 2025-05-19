@@ -36,7 +36,13 @@ def test_ditto(
 
     # The archive contains the app as the only top level element.
     with ZipFile(archive_path) as archive:
-        assert sorted(archive.namelist()) == [
+        # zip file can include a “__MACOSX” folder for each document that contains information about
+        # the file useful for Finder and will not be in the unzipped set of files
+        archived_files = [
+            fn for fn in archive.namelist() if not fn.startswith("__MACOSX/")
+        ]
+
+        assert sorted(archived_files) == [
             "First App.app/",
             "First App.app/Contents/",
             "First App.app/Contents/Frameworks/",
