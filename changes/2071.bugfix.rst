@@ -1,0 +1,1 @@
+Handle paths on MacOS with double quotes.
