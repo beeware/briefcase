@@ -33,7 +33,7 @@ def test_run_gui_app(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -70,7 +70,7 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -109,7 +109,7 @@ def test_run_gui_app_failed(run_command, first_app_config, tmp_path):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -141,7 +141,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -170,7 +170,7 @@ def test_run_console_app_with_passthrough(run_command, first_app_config, tmp_pat
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -204,7 +204,7 @@ def test_run_console_app_failed(run_command, first_app_config, tmp_path):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -237,7 +237,7 @@ def test_run_app_test_mode(run_command, first_app_config, is_console_app, tmp_pa
     run_command.run_app(
         first_app_config,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -283,7 +283,7 @@ def test_run_app_test_mode_with_passthrough(
     run_command.run_app(
         first_app_config,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],

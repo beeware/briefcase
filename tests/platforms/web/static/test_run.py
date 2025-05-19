@@ -114,7 +114,7 @@ def test_run(monkeypatch, run_command, first_app_built):
     run_command.run_app(
         first_app_built,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -182,7 +182,7 @@ def test_run_with_fallback_port(
     run_command.run_app(
         first_app_built,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -239,7 +239,7 @@ def test_run_with_args(monkeypatch, run_command, first_app_built):
     run_command.run_app(
         first_app_built,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -337,7 +337,7 @@ def test_cleanup_server_error(
         run_command.run_app(
             first_app_built,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -389,7 +389,7 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
         run_command.run_app(
             first_app_built,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -442,7 +442,7 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
     run_command.run_app(
         first_app_built,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -496,7 +496,7 @@ def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
     run_command.run_app(
         first_app_built,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -596,7 +596,7 @@ def test_test_mode(run_command, first_app_built):
         run_command.run_app(
             first_app_built,
             test_mode=True,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],

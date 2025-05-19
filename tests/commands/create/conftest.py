@@ -152,7 +152,7 @@ class TrackingCreateCommand(DummyCreateCommand):
 
     # Override all the body methods of a CreateCommand
     # with versions that we can use to track actions performed.
-    def generate_app_template(self, app, debug_mode=None):
+    def generate_app_template(self, app, debug_mode=False):
         self.actions.append(("generate", app.app_name))
 
         # A mock version of template generation.

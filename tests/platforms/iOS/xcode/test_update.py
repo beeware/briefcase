@@ -60,7 +60,7 @@ def test_extra_pip_args(
     )
 
     update_command.install_app_requirements(
-        first_app_generated, test_mode=False, debug_mode=None
+        first_app_generated, test_mode=False, debug_mode=False
     )
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"

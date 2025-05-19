@@ -350,7 +350,7 @@ def test_install_app_packages(
     create_command.merge_app_packages = mock.Mock()
 
     create_command.install_app_requirements(
-        first_app_templated, test_mode=False, debug_mode=None
+        first_app_templated, test_mode=False, debug_mode=False
     )
 
     # We looked for binary packages in the host app_packages
@@ -464,7 +464,7 @@ def test_min_os_version(create_command, first_app_templated, tmp_path):
     create_command.merge_app_packages = mock.Mock()
 
     create_command.install_app_requirements(
-        first_app_templated, test_mode=False, debug_mode=None
+        first_app_templated, test_mode=False, debug_mode=False
     )
 
     # We looked for binary packages in the host app_packages
@@ -567,7 +567,7 @@ def test_invalid_min_os_version(create_command, first_app_templated):
         ),
     ):
         create_command.install_app_requirements(
-            first_app_templated, test_mode=False, debug_mode=None
+            first_app_templated, test_mode=False, debug_mode=False
         )
 
     # No request was made to install requirements
@@ -607,7 +607,7 @@ def test_install_app_packages_no_binary(
     create_command.merge_app_packages = mock.Mock()
 
     create_command.install_app_requirements(
-        first_app_templated, test_mode=False, debug_mode=None
+        first_app_templated, test_mode=False, debug_mode=False
     )
 
     # We looked for binary packages in the host app_packages
@@ -709,7 +709,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
         ),
     ):
         create_command.install_app_requirements(
-            first_app_templated, test_mode=False, debug_mode=None
+            first_app_templated, test_mode=False, debug_mode=False
         )
 
     # We looked for binary packages in the host app_packages
@@ -815,7 +815,7 @@ def test_install_app_packages_non_universal(
     create_command.merge_app_packages = mock.Mock()
 
     create_command.install_app_requirements(
-        first_app_templated, test_mode=False, debug_mode=None
+        first_app_templated, test_mode=False, debug_mode=False
     )
 
     # We didn't search for binary packages

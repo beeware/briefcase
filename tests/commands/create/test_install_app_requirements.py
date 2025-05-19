@@ -80,7 +80,9 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
         BriefcaseCommandError,
         match=r"Application path index file does not define `app_requirements_path` or `app_packages_path`",
     ):
-        create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+        create_command.install_app_requirements(
+            myapp, test_mode=False, debug_mode=False
+        )
 
     # pip wasn't invoked
     create_command.tools[myapp].app_context.run.assert_not_called()
@@ -102,7 +104,7 @@ def test_app_packages_no_requires(
     """If an app has no requirements, install_app_requirements is a no-op."""
     myapp.requires = None
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # No request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_not_called()
@@ -117,7 +119,7 @@ def test_app_packages_empty_requires(
     """If an app has an empty requirements list, install_app_requirements is a no-op."""
     myapp.requires = []
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # No request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_not_called()
@@ -132,7 +134,7 @@ def test_app_packages_valid_requires(
     """If an app has a valid list of requirements, pip is invoked."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -173,7 +175,7 @@ def test_app_packages_requirement_installer_args_no_paths(
     myapp.requirement_installer_args = ["--no-cache"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -210,7 +212,7 @@ def test_app_packages_requirement_installer_args_path_transformed(
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -248,7 +250,7 @@ def test_app_packages_requirement_installer_args_coincidental_path_not_transform
     myapp.requirement_installer_args = ["-f./wheels"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -285,7 +287,7 @@ def test_app_packages_requirement_installer_args_path_not_transformed(
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -323,7 +325,7 @@ def test_app_packages_requirement_installer_args_combined_argument_not_transform
     myapp.requirement_installer_args = ["--extra-index-url=./packages"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -362,7 +364,7 @@ def test_app_packages_valid_requires_no_support_package(
         "paths": {"app_packages_path": "path/to/app_packages"}
     }
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -410,7 +412,9 @@ def test_app_packages_invalid_requires(
     )
 
     with pytest.raises(RequirementsInstallError):
-        create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+        create_command.install_app_requirements(
+            myapp, test_mode=False, debug_mode=False
+        )
 
     # But the request to install was still made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -456,7 +460,9 @@ def test_app_packages_offline(
     )
 
     with pytest.raises(RequirementsInstallError):
-        create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+        create_command.install_app_requirements(
+            myapp, test_mode=False, debug_mode=False
+        )
 
     # But the request to install was still made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -506,7 +512,7 @@ def test_app_packages_install_requirements(
     )
 
     # Install the requirements
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # The request to install was made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -561,7 +567,7 @@ def test_app_packages_replace_existing_requirements(
     )
 
     # Install the requirements
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # The request to install was still made
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -613,7 +619,7 @@ def test_app_requirements_no_requires(
     myapp.requires = None
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -637,7 +643,7 @@ def test_app_requirements_empty_requires(
     myapp.requires = []
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -661,7 +667,7 @@ def test_app_requirements_requires(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -688,7 +694,7 @@ def test_app_requirements_requirement_installer_args_no_template_support(
     myapp.requires = ["my-favourite-package"]
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -715,7 +721,7 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     myapp.requires = ["my-favourite-package"]
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -749,7 +755,7 @@ def test_app_requirements_requirement_installer_args_without_requires_no_templat
     myapp.requires = []
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -779,7 +785,7 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
     myapp.requires = []
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -833,7 +839,7 @@ def _test_app_requirements_paths(
         converted = requirement
     myapp.requires = ["first", requirement, "third"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
     with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == (
             "\n".join(
@@ -972,7 +978,7 @@ def test_app_packages_test_requires(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
-    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -1011,7 +1017,7 @@ def test_app_packages_test_requires_test_mode(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
-    create_command.install_app_requirements(myapp, test_mode=True, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=True, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -1053,7 +1059,7 @@ def test_app_packages_only_test_requires_test_mode(
     myapp.requires = None
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
-    create_command.install_app_requirements(myapp, test_mode=True, debug_mode=None)
+    create_command.install_app_requirements(myapp, test_mode=True, debug_mode=False)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(

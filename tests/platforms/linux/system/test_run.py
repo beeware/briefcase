@@ -248,7 +248,7 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     run_command.run_app(
         first_app,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -295,7 +295,7 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     run_command.run_app(
         first_app,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -344,7 +344,7 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
         run_command.run_app(
             first_app,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -380,7 +380,7 @@ def test_run_console_app(run_command, first_app, tmp_path):
     run_command.run_app(
         first_app,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -416,7 +416,7 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
     run_command.run_app(
         first_app,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -455,7 +455,7 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
         run_command.run_app(
             first_app,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -504,7 +504,7 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     run_command.run_app(
         first_app,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -572,7 +572,7 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
         run_command.run_app(
             first_app,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -639,7 +639,7 @@ def test_run_app_test_mode(
     run_command.run_app(
         first_app,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -705,7 +705,7 @@ def test_run_app_test_mode_docker(
     run_command.run_app(
         first_app,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -779,7 +779,7 @@ def test_run_app_test_mode_with_args(
     run_command.run_app(
         first_app,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -847,7 +847,7 @@ def test_run_app_test_mode_with_args_docker(
     run_command.run_app(
         first_app,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],

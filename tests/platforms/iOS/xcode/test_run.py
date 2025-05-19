@@ -78,7 +78,7 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -119,7 +119,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -258,7 +258,7 @@ def test_run_app_simulator_booted_underscore(
     run_command.run_app(
         underscore_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -389,7 +389,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -528,7 +528,7 @@ def test_run_app_simulator_shut_down(
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -677,7 +677,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -801,7 +801,7 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -852,7 +852,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -910,7 +910,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -989,7 +989,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -1089,7 +1089,7 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -1217,7 +1217,7 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -1347,7 +1347,7 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
         run_command.run_app(
             first_app_config,
             test_mode=False,
-            debug_mode=None,
+            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -1476,7 +1476,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -1593,7 +1593,7 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     run_command.run_app(
         first_app_config,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],

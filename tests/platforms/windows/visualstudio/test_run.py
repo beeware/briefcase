@@ -37,7 +37,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -76,7 +76,7 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=False,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -117,7 +117,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -157,7 +157,7 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     run_command.run_app(
         first_app_config,
         test_mode=True,
-        debug_mode=None,
+        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],

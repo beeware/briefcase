@@ -91,7 +91,7 @@ def test_command_warning(monkeypatch, pyproject_toml, tmp_path, capsys):
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch a warning into the create command
-    def sort_of_bad_generate_app_template(self, app, debug_mode=None):
+    def sort_of_bad_generate_app_template(self, app, debug_mode=False):
         raise BriefcaseWarning(error_code=0, msg="This is bad, but not *really* bad")
 
     monkeypatch.setattr(
@@ -134,7 +134,7 @@ def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch an error into the create command
-    def bad_generate_app_template(self, app, debug_mode=None):
+    def bad_generate_app_template(self, app, debug_mode=False):
         raise ValueError("Bad value")
 
     monkeypatch.setattr(
@@ -151,7 +151,7 @@ def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
     # Monkeypatch a keyboard interrupt into the create command
-    def interrupted_generate_app_template(self, app, debug_mode=None):
+    def interrupted_generate_app_template(self, app, debug_mode=False):
         raise KeyboardInterrupt()
 
     monkeypatch.setattr(
@@ -173,7 +173,7 @@ def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, cap
     monkeypatch.setattr(sys, "argv", ["briefcase", "create", "--log"])
 
     # Monkeypatch a keyboard interrupt into the create command
-    def interrupted_generate_app_template(self, app, debug_mode=None):
+    def interrupted_generate_app_template(self, app, debug_mode=False):
         raise KeyboardInterrupt()
 
     monkeypatch.setattr(
