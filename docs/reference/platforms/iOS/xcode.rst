@@ -223,18 +223,18 @@ Deployment to Physical iOS Devices
 
 **Version 1**
 
-Briefcase provides support for deployment to iOS devices through XCode but first
+Briefcase provides support for deployment to iOS devices through Xcode but first
 requires that you to setup your Apple Developer account with your certificate in
-XCode.
+Xcode.
 
 **Version 2**
 
-Briefcase provides support for deployment to iOS devices through XCode.
+Briefcase provides support for deployment to iOS devices through Xcode.
 the following steps.
 
-1. Setup your Apple Developer account with your certificate in XCode.
-2. Run ``briefcase open ios``. This will open your application in XCode.
+1. Setup your Apple Developer account with your certificate in Xcode.
+2. Run ``briefcase open ios``. This will open your application in Xcode.
 3. Select your application.
 4. Select the `Signing and Capabilities` tab.
-5. Select your Apple Develoepr team or account from the `Team` dropdown.
+5. Select your Apple Developer team or account from the `Team` drop-down.
 6. Select your specific device.
