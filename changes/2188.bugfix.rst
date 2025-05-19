@@ -1,0 +1,1 @@
+Linux users can now set distribution-specific config settings.
