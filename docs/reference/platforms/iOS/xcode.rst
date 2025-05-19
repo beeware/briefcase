@@ -216,3 +216,25 @@ can do this using the ``cleanup_paths`` configuration option::
 
 This will find and purge all ``.a`` content in your app's dependencies. You can add
 additional patterns to remove other problematic content.
+
+
+Deployment to Physical iOS Devices
+-----------------------------------
+
+**Version 1**
+
+Briefcase provides support for deployment to iOS devices through XCode but first
+requires that you to setup your Apple Developer account with your certificate in
+XCode.
+
+**Version 2**
+
+Briefcase provides support for deployment to iOS devices through XCode.
+the following steps.
+
+1. Setup your Apple Developer account with your certificate in XCode.
+2. Run ``briefcase open ios``. This will open your application in XCode.
+3. Select your application.
+4. Select the `Signing and Capabilities` tab.
+5. Select your Apple Develoepr team or account from the `Team` dropdown.
+6. Select your specific device.
