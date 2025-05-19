@@ -166,8 +166,6 @@ pre-commit will make the changes needed to correct the problems it has found:
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      pyupgrade................................................................Passed
-      isort....................................................................Passed
       ruff format..............................................................Failed
       - hook id: ruff-format
       - files were modified by this hook
@@ -188,8 +186,6 @@ pre-commit will make the changes needed to correct the problems it has found:
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      pyupgrade................................................................Passed
-      isort....................................................................Passed
       ruff format..............................................................Failed
       - hook id: ruff-format
       - files were modified by this hook
@@ -210,8 +206,6 @@ pre-commit will make the changes needed to correct the problems it has found:
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      pyupgrade................................................................Passed
-      isort....................................................................Passed
       ruff format..............................................................Failed
       - hook id: ruff-format
       - files were modified by this hook
@@ -237,8 +231,6 @@ and re-commit the change.
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      pyupgrade................................................................Passed
-      isort....................................................................Passed
       ruff format..............................................................Passed
       ruff check...............................................................Passed
       [bugfix e3e0f73] Minor change
@@ -256,8 +248,6 @@ and re-commit the change.
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      pyupgrade................................................................Passed
-      isort....................................................................Passed
       ruff format..............................................................Passed
       ruff check...............................................................Passed
       [bugfix e3e0f73] Minor change
@@ -275,8 +265,6 @@ and re-commit the change.
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      pyupgrade................................................................Passed
-      isort....................................................................Passed
       ruff format..............................................................Passed
       ruff check...............................................................Passed
 

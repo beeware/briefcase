@@ -218,15 +218,6 @@ no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COVERAGE_EX
 no-cover-if-lt-py310 = "sys_version_info < (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-gte-py310 = "sys_version_info > (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
-[tool.isort]
-profile = "black"
-skip_glob = [
-    "docs/conf.py",
-    "venv*",
-    "local",
-]
-multi_line_output = 3
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
@@ -235,6 +226,9 @@ filterwarnings = [
 
 # need to ensure build directories aren't excluded from recursion
 norecursedirs = []
+
+[tool.ruff.lint]
+select = ["I", "UP"]
 
 [tool.setuptools_scm]
 # To enable SCM versioning, we need an empty tool configuration for setuptools_scm
