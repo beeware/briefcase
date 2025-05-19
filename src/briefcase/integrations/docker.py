@@ -6,7 +6,7 @@ import socket
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping
-from functools import cache, lru_cache
+from functools import cache
 from pathlib import Path, PosixPath, PurePosixPath
 
 from packaging.version import InvalidVersion, Version
