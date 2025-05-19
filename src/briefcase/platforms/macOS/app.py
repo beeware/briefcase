@@ -127,9 +127,14 @@ class macOSAppBuildCommand(
         # macOS apps don't have anything to compile, but they do need to be
         # signed to be able to execute on Apple Silicon hardware - even if it's only an
         # ad-hoc signing identity. Apply an ad-hoc signing identity to the
-        # app bundle.
-        self.console.info("Ad-hoc signing app...", prefix=app.app_name)
-        self.sign_app(app=app, identity=SigningIdentity())
+        # app bundle. However, the app only needs to be signed once. If the build is
+        # being done as part of a package command, the signing will happen during
+        # packaging. The two case can be distinguished because "adhoc_sign" will
+        # be absent from kwargs if only doing a build command, but will be present if
+        # the build is being done as part of a package command.
+        if "adhoc_sign" not in kwargs:
+            self.console.info("Ad-hoc signing app...", prefix=app.app_name)
+            self.sign_app(app=app, identity=SigningIdentity())
 
 
 class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
