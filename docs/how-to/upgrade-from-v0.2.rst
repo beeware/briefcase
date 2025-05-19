@@ -108,8 +108,8 @@ However, the following pointers may help port other values.
 
 Once you've created and tested your ``pyproject.toml``, you can delete your
 ``setup.py`` file. You may also be able to delete your ``setup.cfg`` file,
-depending on whether it defines any tool configurations (e.g., ``flake8`` or
-``pytest`` configurations).
+depending on whether it defines any tool configurations (e.g., ``pytest``
+configurations).
 
 Invocation
 ==========
