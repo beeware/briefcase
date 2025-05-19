@@ -108,7 +108,7 @@ def test_get_license_from_pep621_license_file(
         dummy_license_text, encoding="utf-8"
     )
     (convert_command.base_path / "pyproject.toml").write_text(
-        "[project]\n" 'license = {file = "LICENSE.txt"}', encoding="utf-8"
+        '[project]\nlicense = {file = "LICENSE.txt"}', encoding="utf-8"
     )
 
     convert_command.input_license(None)
@@ -147,7 +147,7 @@ def test_get_license_from_pyproject(
         convert_command.console, "selection_question", mock_selection_question
     )
     (convert_command.base_path / "pyproject.toml").write_text(
-        "[project]\n" f'license = {{text = "{license_text}"}}', encoding="utf-8"
+        f'[project]\nlicense = {{text = "{license_text}"}}', encoding="utf-8"
     )
 
     convert_command.input_license(None)

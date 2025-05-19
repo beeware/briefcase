@@ -594,7 +594,7 @@ def parse_config(config_file, platform, output_format, console):
     The current configuration for {section_name} has a 'license' field
     that is specified as a string:
 
-        license = "{config['license']}"
+        license = "{config["license"]}"
 
     To use the PEP 621 format (and to remove this warning), specify that
     the LICENSE file contains the license for {section_name}:

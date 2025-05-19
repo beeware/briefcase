@@ -19,7 +19,7 @@ def test_wait_bar_done_message_non_interactive(non_interactive_console, capsys):
         pass
 
     assert capsys.readouterr().out == (
-        "Wait message... started\n" "Wait message... finished\n\n"
+        "Wait message... started\nWait message... finished\n\n"
     )
 
 
@@ -29,7 +29,7 @@ def test_wait_bar_done_message_nested_interactive(console, capsys):
         with console.wait_bar("Wait message 2...", done_message="finished"):
             pass
 
-    expected = "Wait message 2... finished\n" "Wait message 1... finished\n\n"
+    expected = "Wait message 2... finished\nWait message 1... finished\n\n"
     assert capsys.readouterr().out == expected
 
 
@@ -326,7 +326,6 @@ def test_wait_bar_alive_messages_interactive(
 ):
     """Wait Bar keep_alive prints keep alive messages."""
     for test_console in [console, non_interactive_console]:
-
         # initialization will set interval to a small number
         # update() will see time at a large number and print the message
         # then interval is reset back to a small number

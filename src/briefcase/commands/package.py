@@ -165,7 +165,6 @@ class PackageCommand(BaseCommand):
         update: bool = False,
         **options,
     ) -> dict | None:
-
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)
