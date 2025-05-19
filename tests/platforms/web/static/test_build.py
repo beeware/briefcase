@@ -42,33 +42,27 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
         if args[0][5] == "wheel":
-            (
-                create_wheel(
-                    bundle_path / "www/static/wheels",
-                    "first_app",
-                    extra_content=[
-                        ("dependency/static/style.css", "span { margin: 10px; }\n"),
-                    ],
-                ),
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                ],
             )
         elif args[0][5] == "pip":
-            (
-                create_wheel(
-                    bundle_path / "www/static/wheels",
-                    "dependency",
-                    extra_content=[
-                        ("dependency/static/style.css", "div { margin: 10px; }\n"),
-                    ],
-                ),
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
             )
-            (
-                create_wheel(
-                    bundle_path / "www/static/wheels",
-                    "other",
-                    extra_content=[
-                        ("other/static/style.css", "div { padding: 10px; }\n"),
-                    ],
-                ),
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "other",
+                extra_content=[
+                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                ],
             )
         else:
             raise ValueError("Unknown command")
@@ -357,14 +351,12 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
     # Invoking build will create wheels as a side effect.
     def mock_run(*args, **kwargs):
         if args[0][5] == "wheel":
-            (
-                create_wheel(
-                    bundle_path / "www/static/wheels",
-                    "first_app",
-                    extra_content=[
-                        ("dependency/static/style.css", "span { margin: 10px; }\n"),
-                    ],
-                ),
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                ],
             )
         elif args[0][5] == "pip":
             pass
