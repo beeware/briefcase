@@ -96,10 +96,10 @@ Code of Conduct <https://beeware.org/community/behavior/>`__.
 Contributing
 ------------
 
-If you experience problems with Toga, `log them on GitHub
+If you experience problems with Briefcase, `log them on GitHub
 <https://github.com/beeware/briefcase/issues>`__.
 
-If you'd like to contribute to Toga development, our `contribution guide
+If you'd like to contribute to Briefcase development, our `contribution guide
 <https://briefcase.readthedocs.io/en/latest/how-to/contribute/index.html>`__
 details how to set up a development environment, and other requirements we have
 as part of our contribution process.
