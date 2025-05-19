@@ -191,10 +191,8 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
     assert mock_tools.java.java_home == Path("/path/to/java")
 
     # A single call to check output
-    (
-        mock_tools.subprocess.check_output.assert_called_once_with(
-            [Path("/path/to/java/bin/javac"), "-version"],
-        ),
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [Path("/path/to/java/bin/javac"), "-version"],
     )
 
     # No console output
@@ -219,10 +217,8 @@ def test_valid_provided_java_home(mock_tools, capsys):
     assert mock_tools.java.java_home == Path("/path/to/java")
 
     # A single call to check output
-    (
-        mock_tools.subprocess.check_output.assert_called_once_with(
-            [Path("/path/to/java/bin/javac"), "-version"],
-        ),
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [Path("/path/to/java/bin/javac"), "-version"],
     )
 
     # No console output
@@ -308,10 +304,8 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
     assert mock_tools.java.java_home == tmp_path / java_home
 
     # A single call was made to check javac
-    (
-        mock_tools.subprocess.check_output.assert_called_once_with(
-            [Path("/path/to/nowhere/bin/javac"), "-version"],
-        ),
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [Path("/path/to/nowhere/bin/javac"), "-version"],
     )
 
     # Warning is shown for invalid JAVA_HOME
@@ -352,10 +346,8 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
     assert mock_tools.java.java_home == tmp_path / java_home
 
     # A single call was made to check javac
-    (
-        mock_tools.subprocess.check_output.assert_called_once_with(
-            [Path("/path/to/nowhere/bin/javac"), "-version"],
-        ),
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [Path("/path/to/nowhere/bin/javac"), "-version"],
     )
 
     # Warning is shown for invalid JAVA_HOME
@@ -394,10 +386,8 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
     assert jdk.java_home == tmp_path / java_home
 
     # A single call was made to check javac
-    (
-        mock_tools.subprocess.check_output.assert_called_once_with(
-            [Path("/path/to/nowhere/bin/javac"), "-version"],
-        ),
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [Path("/path/to/nowhere/bin/javac"), "-version"],
     )
 
     # No console output (because Briefcase JDK exists)
