@@ -1,0 +1,1 @@
+Updates readme to state briefcase instead of toga
