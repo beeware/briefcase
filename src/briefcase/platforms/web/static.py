@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import errno
 import subprocess
 import sys
@@ -238,7 +240,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 class HTTPHandler(SimpleHTTPRequestHandler):
     """Convert any HTTP request into a path request on the static content folder."""
 
-    server: "LocalHTTPServer"
+    server: LocalHTTPServer
 
     def translate_path(self, path):
         return str(self.server.base_path / path[1:])
