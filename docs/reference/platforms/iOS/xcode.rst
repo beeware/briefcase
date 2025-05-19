@@ -218,23 +218,19 @@ This will find and purge all ``.a`` content in your app's dependencies. You can 
 additional patterns to remove other problematic content.
 
 
-Deployment to Physical iOS Devices
------------------------------------
+Deployment to Simulated and Physical iOS Devices
+------------------------------------------------
 
-**Version 1**
+Briefcase provides support for deployment to simulated iOS devices through the
+command line.
 
-Briefcase provides support for deployment to iOS devices through Xcode but first
-requires that you to setup your Apple Developer account with your certificate in
-Xcode.
+If you want to deploy to a physical iOS device, you will need need to use Xcode through
+the following steps:
 
-**Version 2**
-
-Briefcase provides support for deployment to iOS devices through Xcode.
-the following steps.
-
-1. Setup your Apple Developer account with your certificate in Xcode.
-2. Run ``briefcase open ios``. This will open your application in Xcode.
-3. Select your application.
-4. Select the `Signing and Capabilities` tab.
-5. Select your Apple Developer team or account from the `Team` drop-down.
+1. Run ``briefcase open ios`` in the command line. This will open your application in Xcode.
+2. Setup your Apple Developer account with your certificate in Xcode.
+3. In the project navigator, select your application at the top level (the root of the project).
+4. Select the `Signing and Capabilities` tab in the editor area.
+5. Select your Apple Developer team or individual account from the `Team` drop-down.
 6. Select your specific device.
+7. Press the run button.

@@ -1,1 +1,1 @@
-Updates Documentation for iOS Physical Devices Support
+Updated Documentation to Clarify iOS Physical vs. Simulated Devices Support
