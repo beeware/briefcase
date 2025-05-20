@@ -8,7 +8,7 @@ from ...utils import create_file
 def get_stub_name():
     stub = "Stub"
     if sys.platform == "win32":
-        stub += "."
+        stub += ".exe"
     return stub
 
 
