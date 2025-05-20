@@ -12,6 +12,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -365,6 +366,17 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Linux AppImages can only be executed on Linux."
+
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        return None  # TODO: Where are the app packages located?
 
     def run_app(
         self,

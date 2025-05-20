@@ -31,7 +31,7 @@ def full_context():
         "sources": ["src/my_app"],
         "test_sources": None,
         "test_requires": None,
-        "debug_requires": None,
+        "debug_requires": [],
         "debugger": None,
         "url": "https://example.com",
         "author": "First Last",

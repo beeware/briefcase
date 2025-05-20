@@ -604,3 +604,23 @@ def test_test_mode(run_command, first_app_built):
             port=8080,
             open_browser=True,
         )
+
+
+def test_debug_mode(run_command, first_app_built):
+    """Debug mode raises an error (at least for now)."""
+    # Run the app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Briefcase can't run web apps in debug mode.",
+    ):
+        run_command.run_app(
+            first_app_built,
+            test_mode=False,
+            debug_mode=True,
+            debugger_host="somehost",
+            debugger_port=9999,
+            passthrough=[],
+            host="localhost",
+            port=8080,
+            open_browser=True,
+        )

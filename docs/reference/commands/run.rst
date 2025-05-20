@@ -58,7 +58,7 @@ Currently the following debuggers are supported:
     - ``socat readline tcp:localhost:5678``
   The app will start after the connection is established.
 
-- ``debugpy``: This is used for debugging via VSCode (see TODO)
+- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debugging with VSCode </how-to/debugging_vscode>`)
 
 
 Usage

@@ -219,17 +219,17 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
+        # Extract test packages, to enable features like test discovery and assertion rewriting.
         extract_sources = app.test_sources or []
+
+        # In debug mode extract all source packages so that the debugger can get the source code
+        # at runtime (eg. via 'll' in pdb).
         if debug_mode:
-            # Add sources to the extract_packages so that the debugger can
-            # get the source code at runtime (eg. via 'll' in pdb).
             extract_sources.extend(app.sources)
 
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
-            # Extract test packages, to enable features like test discovery and assertion
-            # rewriting.
             "extract_packages": ", ".join(
                 [f'"{name}"' for path in extract_sources if (name := Path(path).name)]
             ),
@@ -540,7 +540,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """
         if debugger.connection_mode == DebuggerConnectionMode.SERVER:
             adb.forward(debugger_port, debugger_port)
-        elif debugger.connection_mode == DebuggerConnectionMode.CLIENT:
+        else:
             adb.reverse(debugger_port, debugger_port)
 
     def remove_debugger_connection(
@@ -555,7 +555,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """
         if debugger.connection_mode == DebuggerConnectionMode.SERVER:
             adb.forward_remove(debugger_port)
-        elif debugger.connection_mode == DebuggerConnectionMode.CLIENT:
+        else:
             adb.reverse_remove(debugger_port)
 
 

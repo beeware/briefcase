@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -367,6 +368,77 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
 
     # No attempt to stream was made
     run_command._stream_app_logs.assert_not_called()
+
+
+def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkeypatch):
+    """A bootstrap binary for a GUI app can be started in debug mode."""
+
+    # Set up tool cache
+    run_command.verify_app_tools(app=first_app)
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.subprocess._subprocess.Popen = mock.MagicMock(
+        return_value=log_popen
+    )
+
+    # Mock out the environment
+    monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
+
+    # Run the app
+    run_command.run_app(
+        first_app,
+        test_mode=False,
+        debug_mode=True,
+        debugger_host="somehost",
+        debugger_port=9999,
+        passthrough=[],
+    )
+
+    # The process was started
+    run_command.tools.subprocess._subprocess.Popen.assert_called_with(
+        [
+            os.fsdecode(
+                tmp_path
+                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+            )
+        ],
+        cwd=os.fsdecode(tmp_path / "home"),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        env={
+            "ENVVAR": "Value",
+            "BRIEFCASE_DEBUGGER": json.dumps(
+                {
+                    "host": "somehost",
+                    "port": 9999,
+                    "app_path_mappings": {
+                        "device_sys_path_regex": "app$",
+                        "device_subfolders": ["first_app"],
+                        "host_folders": [str(tmp_path / "base_path/src/first_app")],
+                    },
+                    "app_packages_path_mappings": {
+                        "sys_path_regex": "app_packages$",
+                        "host_folder": str(
+                            tmp_path
+                            / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/"
+                            "lib/first-app/app_packages"
+                        ),
+                    },
+                }
+            ),
+        },
+        **sub_kw,
+    )
+
+    # The streamer was started
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app,
+        popen=log_popen,
+        test_mode=False,
+        clean_output=False,
+    )
 
 
 def test_run_console_app(run_command, first_app, tmp_path):

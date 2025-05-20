@@ -1085,3 +1085,43 @@ def test_app_packages_only_test_requires_test_mode(
     # Original app definitions haven't changed
     assert myapp.requires is None
     assert myapp.test_requires == ["pytest", "pytest-tldr"]
+
+
+def test_app_packages_debug_requires_debug_mode(
+    create_command,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app has debug requirements and we're in debug mode, they are installed."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp.debug_requires = ["debugpy"]
+
+    create_command.install_app_requirements(myapp, test_mode=False, debug_mode=True)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+            "debugpy",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.debug_requires == ["debugpy"]

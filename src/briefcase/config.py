@@ -311,7 +311,7 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.test_sources = test_sources
         self.test_requires = test_requires
-        self.debug_requires = debug_requires
+        self.debug_requires = [] if debug_requires is None else debug_requires
         self.supported = supported
         self.long_description = long_description
         self.license = license
