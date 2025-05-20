@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -94,6 +95,7 @@ def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch):
     assert isinstance(build_command.tools.windows_sdk, WindowsSDK)
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 @pytest.mark.parametrize("pre_existing", [True, False])
 @pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_without_windows_sdk(
