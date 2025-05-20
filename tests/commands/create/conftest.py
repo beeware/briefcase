@@ -179,8 +179,11 @@ class TrackingCreateCommand(DummyCreateCommand):
 
     def install_stub_binary(self, app):
         self.actions.append(("stub", app.app_name))
+        stub = "Stub"
+        if sys.platform == "win32":
+            stub += ".bin"
         # A mock version of a stub binary
-        create_file(self.bundle_path(app) / self.exe_name(app), "stub binary")
+        create_file(self.bundle_path(app) / stub, "stub binary")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
