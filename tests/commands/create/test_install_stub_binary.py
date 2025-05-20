@@ -65,7 +65,7 @@ def test_install_stub_binary_formal_name(
 def get_stub_name():
     stub = "Stub"
     if sys.platform == "win32":
-        stub += "."
+        stub += ".exe"
     return stub
 
 
