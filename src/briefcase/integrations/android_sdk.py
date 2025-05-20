@@ -1656,7 +1656,6 @@ Activity class not found while starting app.
                     f"tcp:{host_port}",
                     f"tcp:{device_port}",
                 ],
-                env=self.tools.android_sdk.env,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb forward'.") from e
@@ -1676,7 +1675,6 @@ Activity class not found while starting app.
                     "--remove",
                     f"tcp:{host_port}",
                 ],
-                env=self.tools.android_sdk.env,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb forward --remove'.") from e
@@ -1698,7 +1696,6 @@ Activity class not found while starting app.
                     f"tcp:{device_port}",
                     f"tcp:{host_port}",
                 ],
-                env=self.tools.android_sdk.env,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb reverse'.") from e
@@ -1718,7 +1715,6 @@ Activity class not found while starting app.
                     "--remove",
                     f"tcp:{device_port}",
                 ],
-                env=self.tools.android_sdk.env,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting 'adb reverse --remove'.") from e
