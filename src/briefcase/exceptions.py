@@ -241,7 +241,9 @@ class RequirementsInstallError(BriefcaseCommandError):
             f"""\
 Unable to install requirements. This may be because one of your
 requirements is invalid, or because pip was unable to connect
-to the PyPI server.{install_hint}
+to the PyPI server.
+
+{install_hint}
 """
         )
 

@@ -149,6 +149,14 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                     "--platform",
                     f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
                 ],
+                install_hint=f"""
+If an {self.tools.host_arch} wheel has not been published for one or more of your requirements,
+you must compile those wheels yourself, or build a non-universal app by setting:
+
+    universal_build = False
+
+in the macOS configuration section of your pyproject.toml.
+""",
             )
 
             # Find all the packages with binary components.
