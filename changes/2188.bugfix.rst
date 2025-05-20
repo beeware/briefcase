@@ -1,0 +1,1 @@
+Distribution-specific cumulative settings (such as `requires`) now correctly accumulate, rather than overwriting more general values.

@@ -224,6 +224,32 @@ class BaseConfig:
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
+    def update(self, data):
+        """Add fields and values from data to BaseConfig instance.
+
+        Any existing fields named in data will be overwritten. To merge
+        data with existing configs, use the `merge_config` function.
+
+        :param data: The new configuration data dictionary.
+        """
+        for key, configs in data.items():
+            setattr(self, key, configs)
+
+    def setdefault(self, field_name, default_value):
+        """Return the field_name field or, if it does not exist, create it
+        to hold default_value.
+
+        Behaves similarly to dict.setdefault().
+
+        :param field_name: The name of the desired/new field.
+        :param default_value: The value to assign to self.field_name if it
+            does not already exist.
+        """
+        if not hasattr(self, field_name):
+            setattr(self, field_name, default_value)
+
+        return getattr(self, field_name)
+
 
 class GlobalConfig(BaseConfig):
     def __init__(
