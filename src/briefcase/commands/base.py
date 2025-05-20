@@ -402,9 +402,9 @@ a custom location for Briefcase's tools.
         :param app: The app config
         """
 
-        if sys.platform == "win32":
+        if sys.platform == "win32":  # pragma: no-cover-if-is-macos
             suffix = self.binary_executable_path(app).suffix
-        else:
+        else:  # pragma: no-cover-if-is-windows
             suffix = ""
 
         return self.binary_executable_path(app).parent / (f"Stub{suffix}")
