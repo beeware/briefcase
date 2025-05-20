@@ -56,7 +56,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
         # Move the stub binary in to the final executable location
         unbuilt_binary_path = self.unbuilt_executable_path(app)
-        if unbuilt_binary_path.exists():
+        if unbuilt_binary_path.exists():  # pragma: no-cover-if-not-windows
             with self.console.wait_bar("Renaming stub binary..."):
                 unbuilt_binary_path.rename(self.binary_executable_path(app))
 
