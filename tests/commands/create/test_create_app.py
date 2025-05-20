@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.config import AppConfig
@@ -189,7 +191,9 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
         ("resources", "first"),
         ("cleanup", "first"),
     ]
-
+    stub = "Stub"
+    if sys.platform == "win32":
+        stub += ".bin"
     # New app content and stub binary has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
-    assert (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()
+    assert (tmp_path / "base_path/build/first/tester/dummy" / stub).exists()
