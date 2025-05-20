@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from unittest import mock
 
 import pytest
@@ -77,8 +78,14 @@ class DummyCreateCommand(CreateCommand):
             ("arch", self.tools.host_arch),
         ]
 
+    def exe_name(self, app):
+        if sys.platform == "win32":
+            return f"{app.formal_name}.exe"
+        else:
+            return app.app_name
+
     def binary_path(self, app):
-        return self.bundle_path(app) / f"{app.app_name}.bin"
+        return self.bundle_path(app) / self.exe_name(app)
 
     # Hard code the python version to make testing easier.
     @property
@@ -173,7 +180,7 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_stub_binary(self, app):
         self.actions.append(("stub", app.app_name))
         # A mock version of a stub binary
-        create_file(self.bundle_path(app) / "Stub.bin", "stub binary")
+        create_file(self.bundle_path(app) / self.exe_name(app), "stub binary")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
