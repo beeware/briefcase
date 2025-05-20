@@ -402,9 +402,11 @@ a custom location for Briefcase's tools.
         :param app: The app config
         """
 
-        suffix = ""
         if sys.platform == "win32":
             suffix = self.binary_executable_path(app).suffix
+        else:
+            suffix = ""
+
         return self.binary_executable_path(app).parent / (f"Stub{suffix}")
 
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
