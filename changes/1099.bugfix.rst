@@ -1,0 +1,1 @@
+For MacOS app, remove redundant adhoc signing during ``briefcase package`` or ``briefcase package -u``
