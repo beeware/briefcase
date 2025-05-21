@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools
 import os
 import shutil
+import ssl
 import sys
 import tempfile
 from collections.abc import Iterable, Sequence
@@ -11,6 +12,12 @@ from email.message import Message
 from pathlib import Path
 
 import httpx
+
+if sys.version_info > (3, 10):  # pragma: no-cover-if-lt-py310
+    import truststore
+else:  # pragma: no-cover-if-gte-py310
+    # truststore is only available for python 3.10+
+    pass
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -93,6 +100,22 @@ class File(Tool):
             )
         )
 
+    @property
+    def ssl_context(self):
+        """The SSL context to use for downloads."""
+        try:
+            return self._ssl_context
+        except AttributeError:
+            if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
+                # Set up a TLS trust store based on the system root certificates
+                self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            else:  # pragma: no-cover-if-gte-py310
+                # Truststore requires Python 3.10; on older versions, fall back to the
+                # certifi-based store.
+                self._ssl_context = True
+
+            return self._ssl_context
+
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?
 
@@ -174,7 +197,12 @@ class File(Tool):
         download_path.mkdir(parents=True, exist_ok=True)
         filename: Path = None
         try:
-            with self.tools.httpx.stream("GET", url, follow_redirects=True) as response:
+            with self.tools.httpx.stream(
+                "GET",
+                url,
+                follow_redirects=True,
+                verify=self.ssl_context,
+            ) as response:
                 if response.status_code == 404:
                     raise MissingNetworkResourceError(url=url)
                 elif response.status_code != 200:

@@ -74,6 +74,8 @@ dependencies = [
     "setuptools >= 60",
     "wheel >= 0.37",
     "build >= 0.10",
+    # truststore is only available on 3.10+
+    "truststore >= 0.10.1; python_version >= '3.10'",
     #
     # For the remaining packages: We set the lower version limit to the lowest possible
     # version that satisfies our API needs. If the package uses semver, we set a limit
