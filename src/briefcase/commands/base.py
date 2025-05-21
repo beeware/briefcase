@@ -407,7 +407,7 @@ a custom location for Briefcase's tools.
         else:  # pragma: no-cover-if-is-windows
             suffix = ""
 
-        return self.binary_executable_path(app).parent / (f"Stub{suffix}")
+        return self.binary_executable_path(app).parent / f"Stub{suffix}"
 
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
         """Load the ``briefcase.toml`` file provided by the app template.
