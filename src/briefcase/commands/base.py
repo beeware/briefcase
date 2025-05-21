@@ -303,9 +303,18 @@ a custom location for Briefcase's tools.
         if datetime.today() > datetime(EOL_year, 10, 1):
             self.console.warning(
                 f"""
-WARNING: The current Python version ({py_version}) is past its end of life.
+*************************************************************************
+** WARNING: Your Python version is unsupported!                        **
+*************************************************************************
 
-Update to a supported Python version according to https://devguide.python.org/versions/.
+    The version of Python you are using ({py_version}) is past its 
+    end of life. As a result, it is highly likely your Briefcase 
+    version is also out of date. 
+
+    See https://devguide.python.org/versions/ for details on currently 
+    supported Python versions.
+
+*************************************************************************
 """
             )
             return False
