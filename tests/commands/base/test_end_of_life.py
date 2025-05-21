@@ -21,7 +21,7 @@ def _create_version_info(major, minor, patch=0):
         (9, datetime(2025, 10, 2), False),  # after EOL
         (10, datetime(2026, 9, 30), True),  # before EOL
         (10, datetime(2026, 10, 2), False),  # after EOL
-        (14, datetime(2030, 9, 30), False),  # before EOL
+        (14, datetime(2030, 9, 30), True),  # before EOL
         (14, datetime(2030, 10, 2), False),  # after EOL
     ],
 )
