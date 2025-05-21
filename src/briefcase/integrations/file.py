@@ -17,7 +17,7 @@ if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     import truststore
 else:  # pragma: no-cover-if-gte-py310
     # truststore is only available for python 3.10+
-    pass
+    truststore = None
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
