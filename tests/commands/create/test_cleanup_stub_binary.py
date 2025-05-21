@@ -1,15 +1,6 @@
-import sys
-
 import pytest
 
 from ...utils import create_file
-
-
-def get_stub_name():
-    stub = "Stub"
-    if sys.platform == "win32":
-        stub += ".exe"
-    return stub
 
 
 @pytest.mark.parametrize(
@@ -26,12 +17,16 @@ def test_cleanup_stubs(create_command, unbuilt, built, myapp, tmp_path):
     # Mock a existing stubs
     if unbuilt:
         create_file(
-            tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name(),
+            tmp_path
+            / "base_path/build/my-app/tester/dummy"
+            / create_command.exe_name("Stub"),
             "Unbuilt stub",
         )
     if built:
         create_file(
-            tmp_path / "base_path/build/my-app/tester/dummy/my-app.bin",
+            tmp_path
+            / "base_path/build/my-app/tester/dummy"
+            / create_command.exe_name(myapp.formal_name),
             "Built stub",
         )
 
@@ -40,8 +35,12 @@ def test_cleanup_stubs(create_command, unbuilt, built, myapp, tmp_path):
 
     # No matter the starting state, the stubs don't exist after cleanup.
     assert not (
-        tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
     ).exists()
     assert not (
-        tmp_path / "base_path/build/my-app/tester/dummy" / myapp.formal_name
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name(myapp.formal_name)
     ).exists()

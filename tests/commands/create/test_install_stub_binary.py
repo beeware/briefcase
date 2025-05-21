@@ -17,7 +17,8 @@ from ...utils import create_file, create_tgz_file, create_zip_file, mock_zip_dow
 
 
 @pytest.mark.parametrize(
-    "formal_name", ["App 4.2", "App 4.2.4", "App .", "App A.B", "App 42."]
+    "formal_name",
+    ["App 4.2", "App 4.2.4", "App .", "App A.B", "App 42."],
 )
 def test_install_stub_binary_formal_name(
     create_command,
@@ -36,7 +37,7 @@ def test_install_stub_binary_formal_name(
     create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b37.zip",
-            [(get_stub_name(), "stub binary")],
+            [(create_command.exe_name("Stub"), "stub binary")],
         )
     )
     # Wrap shutil so we can confirm that unpack is called
@@ -59,14 +60,11 @@ def test_install_stub_binary_formal_name(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
-
-
-def get_stub_name():
-    stub = "Stub"
-    if sys.platform == "win32":
-        stub += ".exe"
-    return stub
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 @pytest.mark.parametrize("console_app", [True, False])
@@ -86,7 +84,7 @@ def test_install_stub_binary(
     create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b37.zip",
-            [(get_stub_name(), "stub binary")],
+            [(create_command.exe_name("Stub"), "stub binary")],
         )
     )
     # Wrap shutil so we can confirm that unpack is called
@@ -109,7 +107,11 @@ def test_install_stub_binary(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 @pytest.mark.parametrize("console_app", [True, False])
@@ -129,7 +131,7 @@ def test_install_stub_binary_unpack_failure(
     create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b37.zip",
-            [(get_stub_name(), "stub binary")],
+            [(create_command.exe_name(myapp.formal_name), "stub binary")],
         )
     )
 
@@ -175,7 +177,7 @@ def test_install_pinned_stub_binary(
     create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             f"{stub_name}-3.X-b42.zip",
-            [(get_stub_name(), "stub binary")],
+            [(create_command.exe_name("Stub"), "stub binary")],
         )
     )
 
@@ -199,7 +201,11 @@ def test_install_pinned_stub_binary(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 def test_install_stub_binary_missing(
@@ -238,7 +244,7 @@ def test_install_custom_stub_binary_url(
     create_command.tools.file.download = mock.MagicMock(
         side_effect=mock_zip_download(
             "My-Stub.zip",
-            [(get_stub_name(), "stub binary")],
+            [(create_command.exe_name("Stub"), "stub binary")],
         )
     )
 
@@ -264,7 +270,11 @@ def test_install_custom_stub_binary_url(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 def test_install_custom_stub_binary_file(
@@ -297,7 +307,11 @@ def test_install_custom_stub_binary_file(
     create_command.tools.shutil.unpack_archive.assert_not_called()
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 def test_install_custom_stub_binary_zip(
@@ -313,7 +327,7 @@ def test_install_custom_stub_binary_zip(
     # Write a temporary stub zip file
     stub_file = create_zip_file(
         tmp_path / "custom/stub.zip",
-        [(get_stub_name(), "Custom stub")],
+        [(create_command.exe_name("Stub"), "Custom stub")],
     )
 
     # Modify download.file to return the temp zipfile
@@ -336,7 +350,11 @@ def test_install_custom_stub_binary_zip(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 @pytest.mark.parametrize("stub_filename", ("stub.tar", "stub.tar.gz"))
@@ -354,7 +372,7 @@ def test_install_custom_stub_binary_tar(
     # Write a temporary stub zip file
     stub_file = create_tgz_file(
         tmp_path / f"custom/{stub_filename}",
-        [(get_stub_name(), "Custom stub")],
+        [(create_command.exe_name("Stub"), "Custom stub")],
     )
 
     # Modify download.file to return the temp zipfile
@@ -378,7 +396,11 @@ def test_install_custom_stub_binary_tar(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
 
 def test_install_custom_stub_binary_with_revision(
@@ -397,7 +419,7 @@ def test_install_custom_stub_binary_with_revision(
     # Write a temporary stub zip file
     stub_file = create_zip_file(
         tmp_path / "custom/stub.zip",
-        [(get_stub_name(), "Custom stub")],
+        [(create_command.exe_name("Stub"), "Custom stub")],
     )
 
     # Modify download.file to return the temp zipfile
@@ -420,7 +442,11 @@ def test_install_custom_stub_binary_with_revision(
     )
 
     # Confirm that the full path to the stub file has been unpacked.
-    assert (tmp_path / "base_path/build/my-app/tester/dummy" / get_stub_name()).exists()
+    assert (
+        tmp_path
+        / "base_path/build/my-app/tester/dummy"
+        / create_command.exe_name("Stub")
+    ).exists()
 
     # A warning about the stub revision was generated.
     assert "stub binary revision will be ignored." in capsys.readouterr().out

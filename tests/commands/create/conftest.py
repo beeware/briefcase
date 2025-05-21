@@ -78,14 +78,14 @@ class DummyCreateCommand(CreateCommand):
             ("arch", self.tools.host_arch),
         ]
 
-    def exe_name(self, app):
+    def exe_name(self, app_name=None):
         if sys.platform == "win32":
-            return f"{app.formal_name}.exe"
+            return f"{'Stub' if app_name is None else app_name}.exe"
         else:
-            return app.app_name
+            return "Stub" if app_name is None else app_name
 
     def binary_path(self, app):
-        return self.bundle_path(app) / self.exe_name(app)
+        return self.bundle_path(app) / self.exe_name(app.formal_name)
 
     # Hard code the python version to make testing easier.
     @property
@@ -179,11 +179,8 @@ class TrackingCreateCommand(DummyCreateCommand):
 
     def install_stub_binary(self, app):
         self.actions.append(("stub", app.app_name))
-        stub = "Stub"
-        if sys.platform == "win32":
-            stub += ".bin"
         # A mock version of a stub binary
-        create_file(self.bundle_path(app) / stub, "stub binary")
+        create_file(self.binary_path(app), "stub binary")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
