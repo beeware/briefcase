@@ -59,7 +59,7 @@ def test_gui_app(
     package_command.package_app(first_app_with_binaries)
 
     # Two signing identities were selected; the second is an installer identity
-    package_command.select_identity.mock_calls == [
+    assert package_command.select_identity.mock_calls == [
         mock.call(identity=None),
         mock.call(identity=None, app_identity=sekrit_identity),
     ]
@@ -264,7 +264,7 @@ def test_console_app(
     package_command.package_app(first_app_with_binaries)
 
     # Two signing identities were selected; the second is an installer identity
-    package_command.select_identity.mock_calls == [
+    assert package_command.select_identity.mock_calls == [
         mock.call(identity=None),
         mock.call(identity=None, app_identity=sekrit_identity),
     ]

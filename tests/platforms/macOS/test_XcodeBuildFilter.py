@@ -1,6 +1,3 @@
-# This file contains raw log lines, which are extremely long. Turn of the flake8 rule
-# for line length.
-# flake8: noqa: E501
 import pytest
 
 from briefcase.platforms.macOS.filters import XcodeBuildFilter

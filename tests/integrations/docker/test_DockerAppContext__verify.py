@@ -100,7 +100,7 @@ def test_docker_verify_fail(mock_tools, first_app_config, verify_kwargs, monkeyp
 def test_docker_image_build_fail(mock_tools, first_app_config, verify_kwargs):
     """Failure if Docker image build fails."""
     mock_tools.subprocess._subprocess.Popen.side_effect = subprocess.CalledProcessError(
-        returncode=80, cmd=["docker" "build"]
+        returncode=80, cmd=["docker", "build"]
     )
 
     with pytest.raises(

@@ -23,5 +23,5 @@ def test_pid_does_not_exist(adb):
     not existing."""
     adb.run = Mock(side_effect=subprocess.CalledProcessError(returncode=1, cmd="test"))
 
-    assert not adb.pid_exists("9999") is None
+    assert not adb.pid_exists("9999")
     adb.run.assert_called_once_with("shell", "test", "-e", "/proc/9999")

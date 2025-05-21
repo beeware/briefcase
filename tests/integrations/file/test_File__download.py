@@ -4,6 +4,7 @@ import shutil
 import stat
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 
 import httpx
@@ -46,7 +47,7 @@ def _make_httpx_response(
     status_code: int,
     stream: list[bytes],
     method: str = "GET",
-    headers: dict = {},
+    headers: Optional[dict] = None,
 ) -> httpx.Response:
     """Create a real ``httpx.Response`` with key methods wrapped by ``mock.Mock`` for spying.
 
@@ -55,6 +56,9 @@ def _make_httpx_response(
         response.iter_bytes
         response.headers.get
     """
+    if headers is None:
+        headers = {}
+
     response = httpx.Response(
         request=httpx.Request(
             method=method,
