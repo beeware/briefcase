@@ -11,6 +11,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -170,6 +171,7 @@ class BaseCommand(ABC):
             console=console,
             base_path=self.data_path / "tools",
         )
+        self.validate_python_version()
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
@@ -286,6 +288,29 @@ a custom location for Briefcase's tools.
 *************************************************************************
 """
             )
+
+    def validate_python_version(self) -> bool:
+        """Validate the system's Python version is within its end-of-life date.
+
+        :return: True if the Python version is within its end-of-life date.
+        """
+        py_version = sys.version_info
+
+        # Python EOL dates are provided on: https://devguide.python.org/versions/
+        # EOL for Python 3.8 was October 2024. Assuming Python releases occur on the
+        # same yearly cadence, the EOL for Python 3.x is October of 2024 + (x - 8)
+        EOL_year = 2024 + (py_version.minor - 8)
+        if datetime.today() > datetime(EOL_year, 10, 1):
+            self.console.warning(
+                f"""
+WARNING: The current Python version ({py_version}) is past its end of life.
+
+Update to a supported Python version according to https://devguide.python.org/versions/.
+"""
+            )
+            return False
+
+        return True
 
     def _command_factory(self, command_name: str):
         """Command factory for the current platform and format.
