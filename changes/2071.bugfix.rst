@@ -1,1 +1,1 @@
-Handle paths on MacOS with double quotes.
+Apps whose formal name includes a `"` are now correctly handled on macOS.
