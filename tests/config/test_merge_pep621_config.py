@@ -1,11 +1,18 @@
+import os
+import pathlib
+from unittest.mock import Mock
+
+import pytest
+
 from briefcase.config import merge_pep621_config
+from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_empty():
     "Merging a PEP621 config with no interesting keys causes no changes"
     briefcase_config = {"key": "value"}
 
-    merge_pep621_config(briefcase_config, {"other": "thingy"})
+    merge_pep621_config(briefcase_config, {"other": "thingy"}, console=Mock())
 
     assert briefcase_config == {"key": "value"}
 
@@ -23,6 +30,7 @@ def test_base_keys():
             "license": {"text": "BSD License"},
             "requires-python": ">=3.9",
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -53,6 +61,7 @@ def test_base_keys_override():
             "urls": {"Homepage": "https://example.com"},
             "license": {"text": "GPL3"},
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -73,12 +82,13 @@ def test_missing_subkeys():
         {
             "urls": {"Sponsorship": "https://example.com"},
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {"key": "value"}
 
 
-def test_specified_license_file():
+def test_specified_license_file_pep621():
     "The license file is included in the briefcase config if specified in the PEP621 config"
     briefcase_config = {"key": "value"}
 
@@ -87,9 +97,90 @@ def test_specified_license_file():
         {
             "license": {"file": "license.txt"},
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {"key": "value", "license": {"file": "license.txt"}}
+
+
+@pytest.fixture
+def dir_with_license(tmp_path):
+    (tmp_path / "LICENSE").write_text("LICENSE", encoding="utf-8")
+    (tmp_path / "AUTHORS").write_text("AUTHORS", encoding="utf-8")
+    return tmp_path.absolute()
+
+
+@pytest.mark.parametrize(
+    "pep621_config",
+    [
+        pytest.param({"license-files": ["LICENSE"]}, id="single_existing_file"),
+        pytest.param(
+            {"license-files": ["LICENSE", "NON_EXISTING"]}, id="many_files_first_exists"
+        ),
+        pytest.param(
+            {"license-files": ["LICENSE", "AUTHORS"]}, id="many_files_all_exists"
+        ),
+        pytest.param(
+            {"license-files": ["NON_EXISTING", "LICENSE"]}, id="many_files_last_exists"
+        ),
+        pytest.param({"license-files": ["LICEN[SC]E"]}, id="glob_pattern"),
+    ],
+)
+@pytest.mark.parametrize(
+    "briefcase_config",
+    [
+        pytest.param({"key": "value"}, id="without_briefcase_license_file"),
+        pytest.param(
+            {"key": "value", "license": {"file": "OLD_LICENSE"}},
+            id="with_briefcase_license_file",
+        ),
+    ],
+)
+def test_first_specified_license_file_pep639(
+    pep621_config, briefcase_config, dir_with_license
+):
+    """The first file in license-files is used if no license in briefcase_config"""
+    briefcase_config = briefcase_config.copy()
+    pep621_config = pep621_config.copy()
+    supposed_license = "LICENSE"
+    if "license" in briefcase_config:
+        supposed_license = briefcase_config["license"]["file"]
+
+    merge_pep621_config(
+        briefcase_config, pep621_config, console=Mock(), cwd=dir_with_license
+    )
+    assert briefcase_config == {"key": "value", "license": {"file": supposed_license}}
+
+
+def test_specified_license_file_doesnt_exist_pep639_fails():
+    """An exception is raised if no license file match the 'license-files' glob"""
+    pep621_config = {"license-files": ["NON_EXISTING"]}
+    with pytest.raises(BriefcaseConfigError):
+        merge_pep621_config({}, pep621_config, console=Mock())
+
+
+def test_more_than_one_license_file_pep639_warns(dir_with_license):
+    """A warning is shown if multiple license files match the 'license-files' glob"""
+    (dir_with_license / "AUTHORS").write_text("AUTHORS", encoding="utf-8")
+    pep621_config = {"license-files": ["LICEN[SC]E", "AUTHORS"]}
+    mock_console = Mock()
+    merge_pep621_config({}, pep621_config, console=mock_console)
+
+
+def test_both_license_file_and_license_dict(dir_with_license):
+    """An error is raised if the license-files field is set and license is a dict
+
+    PEP639 specifies that an exception MUST be raised if the license-files attribute
+    is set while the license field is a dict.
+    """
+    (dir_with_license / "LICENSE").write_text("", encoding="utf-8")
+    pep621_config = {
+        "license-files": ["LICEN[SC]E", "AUTHORS"],
+        "license": {"file": "LICENSE"},
+    }
+    mock_console = Mock()
+    with pytest.raises(BriefcaseConfigError):
+        merge_pep621_config({}, pep621_config, console=mock_console)
 
 
 def test_empty_authors():
@@ -99,6 +190,7 @@ def test_empty_authors():
     merge_pep621_config(
         briefcase_config,
         {"authors": []},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -120,6 +212,7 @@ def test_single_author():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -147,6 +240,7 @@ def test_multiple_authors():
                 },
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -169,6 +263,7 @@ def test_mising_author_name():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -190,6 +285,7 @@ def test_missing_author_email():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -212,6 +308,7 @@ def test_existing_author_name():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -235,6 +332,7 @@ def test_existing_author_email():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -251,6 +349,7 @@ def test_no_dependencies():
     merge_pep621_config(
         briefcase_config,
         {},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -266,6 +365,7 @@ def test_dependencies_without_requires():
     merge_pep621_config(
         briefcase_config,
         {"dependencies": ["dep1", "dep2"]},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -281,6 +381,7 @@ def test_dependencies_with_requires():
     merge_pep621_config(
         briefcase_config,
         {"dependencies": ["dep1", "dep2"]},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -296,6 +397,7 @@ def test_no_test_dependencies():
     merge_pep621_config(
         briefcase_config,
         {},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -311,6 +413,7 @@ def test_optional_non_test_dependencies():
     merge_pep621_config(
         briefcase_config,
         {"optional-dependencies": {"other": ["dep1", "dep2"]}},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -326,6 +429,7 @@ def test_test_dependencies_without_requires():
     merge_pep621_config(
         briefcase_config,
         {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -341,6 +445,7 @@ def test_test_dependencies_with_requires():
     merge_pep621_config(
         briefcase_config,
         {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        console=Mock(),
     )
 
     assert briefcase_config == {

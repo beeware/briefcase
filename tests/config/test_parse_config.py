@@ -729,32 +729,28 @@ def test_license_is_string_project():
         "appvalue": "the app",
         "license": {"file": "LICENSE"},
     }
-    console.warning.assert_called_once_with(
-        """
+    msg = """
 *************************************************************************
-** WARNING: License Definition for the Project is Deprecated           **
+** WARNING: No license file specified for the Project                  **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier (see
+    the official documentation for more information:
+    https://packaging.python.org/en/latest/specifications/license-expression/.)
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    The current configuration for the Project has a 'license' field
-    that is specified as a string:
-
-        license = "Some license"
-
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for the Project:
-
-        license.file = "LICENSE"
+        license-files = "LICENSE"  # or some other path
 
 *************************************************************************
 """
-    )
+    console.warning.assert_called_once_with(msg)
 
 
 def test_license_is_string_project_and_app():
@@ -791,25 +787,22 @@ def test_license_is_string_project_and_app():
             call(
                 """
 *************************************************************************
-** WARNING: License Definition for the Project is Deprecated           **
+** WARNING: No license file specified for the Project                  **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier (see
+    the official documentation for more information:
+    https://packaging.python.org/en/latest/specifications/license-expression/.)
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    The current configuration for the Project has a 'license' field
-    that is specified as a string:
-
-        license = "Some license"
-
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for the Project:
-
-        license.file = "LICENSE"
+        license-files = "LICENSE"  # or some other path
 
 *************************************************************************
 """
@@ -817,28 +810,61 @@ def test_license_is_string_project_and_app():
             call(
                 """
 *************************************************************************
-** WARNING: License Definition for 'my_app' is Deprecated              **
+** WARNING: No license file specified for 'my_app'                     **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier (see
+    the official documentation for more information:
+    https://packaging.python.org/en/latest/specifications/license-expression/.)
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    The current configuration for 'my_app' has a 'license' field
-    that is specified as a string:
-
-        license = "Another license"
-
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for 'my_app':
-
-        license.file = "LICENSE"
+        license-files = "LICENSE"  # or some other path
 
 *************************************************************************
 """
             ),
         ]
     )
+
+
+def test_pep639_license_in_app_config(tmp_path):
+    config_file = BytesIO(
+        b"""
+        [tool.briefcase]
+        value = 0
+        license-files = ["MY-LICENSE"]
+
+        [tool.briefcase.app.my_app]
+        appvalue = "the app"
+        license-files = ["MY-LICENSE"]
+        """
+    )
+    (tmp_path / "MY-LICENSE").write_text("SOME LICENSE TEXT", encoding="utf-8")
+
+    console = Mock()
+    global_options, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+        cwd=tmp_path,
+    )
+    assert global_options == {
+        "value": 0,
+        "license-files": ["MY-LICENSE"],
+        "license": {"file": "MY-LICENSE"},
+    }
+    assert apps["my_app"] == {
+        "app_name": "my_app",
+        "value": 0,
+        "appvalue": "the app",
+        "license-files": ["MY-LICENSE"],
+        "license": {"file": "MY-LICENSE"},
+    }
