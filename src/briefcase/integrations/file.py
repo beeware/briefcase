@@ -13,7 +13,7 @@ from pathlib import Path
 
 import httpx
 
-if sys.version_info > (3, 10):  # pragma: no-cover-if-lt-py310
+if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
     import truststore
 else:  # pragma: no-cover-if-gte-py310
     # truststore is only available for python 3.10+
