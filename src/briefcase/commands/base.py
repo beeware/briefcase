@@ -294,12 +294,10 @@ a custom location for Briefcase's tools.
 
         :return: True if the Python version is within its end-of-life date.
         """
-        py_version = sys.version_info
-
         # Python EOL dates are provided on: https://devguide.python.org/versions/
         # EOL for Python 3.8 was October 2024. Assuming Python releases occur on the
         # same yearly cadence, the EOL for Python 3.x is October of 2024 + (x - 8)
-        EOL_year = 2024 + (py_version.minor - 8)
+        EOL_year = 2024 + (sys.version_info.minor - 8)
         if datetime.today() > datetime(EOL_year, 10, 1):
             self.console.warning(
                 f"""
@@ -307,7 +305,7 @@ a custom location for Briefcase's tools.
 ** WARNING: Your Python version is unsupported!                        **
 *************************************************************************
 
-    The version of Python you are using ({py_version}) is past its
+    The version of Python you are using ({platform.python_version()}) is past its
     end of life. As a result, it is highly likely your Briefcase
     version is also out of date.
 
