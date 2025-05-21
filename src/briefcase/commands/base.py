@@ -307,11 +307,11 @@ a custom location for Briefcase's tools.
 ** WARNING: Your Python version is unsupported!                        **
 *************************************************************************
 
-    The version of Python you are using ({py_version}) is past its 
-    end of life. As a result, it is highly likely your Briefcase 
-    version is also out of date. 
+    The version of Python you are using ({py_version}) is past its
+    end of life. As a result, it is highly likely your Briefcase
+    version is also out of date.
 
-    See https://devguide.python.org/versions/ for details on currently 
+    See https://devguide.python.org/versions/ for details on currently
     supported Python versions.
 
 *************************************************************************
