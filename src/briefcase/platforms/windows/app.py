@@ -56,6 +56,11 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
         # Move the stub binary in to the final executable location
         unbuilt_binary_path = self.unbuilt_executable_path(app)
+
+        # We can run this test on non-Windows platforms, but when we run on
+        # non-windows platforms, the ".exe" suffix doesn't exist, so it doesn't
+        # hit this branch. That's not actually a problem, as long as we *are*
+        # hitting the branch under Windows.
         if unbuilt_binary_path.exists():  # pragma: no-cover-if-not-windows
             with self.console.wait_bar("Renaming stub binary..."):
                 unbuilt_binary_path.rename(self.binary_executable_path(app))
