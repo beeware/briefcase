@@ -500,10 +500,10 @@ def get_pep639_license_info(config, console, *, cwd=None):
     has_pep621_license_dict = isinstance(config.get("license"), dict)
     if has_pep639_license_file and has_pep621_license_dict:
         raise BriefcaseConfigError(
-            "Invalid `pyproject.toml`-file: a `pyproject.toml`-file cannot contain both"
-            " a dictionary for the `project.license` attribute and a "
-            "`project.license-files` list. For more information, see the"
-            " 'Add `license-files` key' section of PEP-639.\n"
+            "Invalid `pyproject.toml` file: a `pyproject.toml` file cannot contain both "
+            "a dictionary for the `project.license` attribute and a "
+            "`project.license-files` list. For more information, see the "
+            "'Add `license-files` key' section of PEP 639: "
             "https://peps.python.org/pep-0639/#add-license-files-key"
         )
     if cwd is None:
@@ -522,12 +522,15 @@ def get_pep639_license_info(config, console, *, cwd=None):
         console.warning(
             """
 *************************************************************************
-**              WARNING: More than one license file found              **
+** WARNING: More than one license file found                           **
 *************************************************************************
-    Found more than one license matching the glob pattern specified in
-    project.license-files. The first of these files ({license_file})
-    will be chosen, and the rest will be ignored. Consider merging all
+
+    More than one license matches the glob patterns specified in
+    `project.license-files`. The first of these files ({license_file})
+    will be used, and the rest will be ignored. Consider merging all
     files in to one combined file if you need to include all licenses.
+
+*************************************************************************
 """
         )
     return {"file": str(license_file)}
@@ -681,7 +684,7 @@ def parse_config(config_file, platform, output_format, console, *, cwd=None):
     can do that by replacing the license line in your pyproject.toml-file
     with the following line:
 
-        license-files = "LICENSE"  # or some other path
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
