@@ -459,7 +459,7 @@ def test_run_console_app(run_command, first_app, tmp_path):
     )
 
     # The process was started
-    run_command.tools.subprocess.run.mock_calls == [
+    assert run_command.tools.subprocess.run.mock_calls == [
         mock.call(
             [
                 tmp_path
@@ -495,7 +495,7 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
     )
 
     # The process was started
-    run_command.tools.subprocess.run.mock_calls == [
+    assert run_command.tools.subprocess.run.mock_calls == [
         mock.call(
             [
                 tmp_path
@@ -534,7 +534,7 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
         )
 
     # The run command was still invoked
-    run_command.tools.subprocess.run.mock_calls == [
+    assert run_command.tools.subprocess.run.mock_calls == [
         mock.call(
             [
                 tmp_path

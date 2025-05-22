@@ -15,7 +15,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.commands.convert import find_changelog_filename
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, merge_config
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
@@ -198,8 +198,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             vendor_config,
             codename_config,
         ]:
-            for key, value in config.items():
-                setattr(app, key, value)
+            merge_config(app, config)
 
         with self.console.wait_bar("Determining glibc version..."):
             app.glibc_version = self.target_glibc_version(app)

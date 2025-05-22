@@ -32,10 +32,7 @@ def test_match(create_command, first_app_config, capsys):
         [
             "python3",
             "-c",
-            (
-                "import sys; "
-                "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-            ),
+            ("import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"),
         ]
     )
 
@@ -71,10 +68,7 @@ def test_mismatch(create_command, first_app_config, capsys):
         [
             "python3",
             "-c",
-            (
-                "import sys; "
-                "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-            ),
+            ("import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"),
         ]
     )
 
@@ -116,9 +110,6 @@ def test_target_too_old(create_command, first_app_config):
         [
             "python3",
             "-c",
-            (
-                "import sys; "
-                "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-            ),
+            ("import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"),
         ]
     )

@@ -11,6 +11,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -172,6 +173,7 @@ class BaseCommand(ABC):
             console=console,
             base_path=self.data_path / "tools",
         )
+        self.validate_python_version()
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
@@ -289,6 +291,36 @@ a custom location for Briefcase's tools.
 """
             )
 
+    def validate_python_version(self) -> bool:
+        """Validate the system's Python version is within its end-of-life date.
+
+        :return: True if the Python version is within its end-of-life date.
+        """
+        # Python EOL dates are provided on: https://devguide.python.org/versions/
+        # EOL for Python 3.8 was October 2024. Assuming Python releases occur on the
+        # same yearly cadence, the EOL for Python 3.x is October of 2024 + (x - 8)
+        EOL_year = 2024 + (sys.version_info.minor - 8)
+        if datetime.today() > datetime(EOL_year, 10, 1):
+            self.console.warning(
+                f"""
+*************************************************************************
+** WARNING: Your Python version is unsupported!                        **
+*************************************************************************
+
+    The version of Python you are using ({platform.python_version()}) is past its
+    end of life. As a result, it is highly likely your Briefcase
+    version is also out of date.
+
+    See https://devguide.python.org/versions/ for details on currently
+    supported Python versions.
+
+*************************************************************************
+"""
+            )
+            return False
+
+        return True
+
     def _command_factory(self, command_name: str):
         """Command factory for the current platform and format.
 
@@ -403,9 +435,13 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        return self.binary_executable_path(app).parent / (
-            "Stub" + self.binary_executable_path(app).suffix
-        )
+
+        if sys.platform == "win32":  # pragma: no-cover-if-not-windows
+            suffix = self.binary_executable_path(app).suffix
+        else:  # pragma: no-cover-if-is-windows
+            suffix = ""
+
+        return self.binary_executable_path(app).parent / f"Stub{suffix}"
 
     def briefcase_toml(self, app: AppConfig) -> dict[str, ...]:
         """Load the ``briefcase.toml`` file provided by the app template.

@@ -72,7 +72,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "WixUIExtension",
                     "-arch",
                     "x64",
-                    f'-dSourceDir={os.fsdecode(Path("x64/Release"))}',
+                    f"-dSourceDir={os.fsdecode(Path('x64/Release'))}",
                     "first-app.wxs",
                     "first-app-manifest.wxs",
                 ],

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import locale
 import os
 import platform
@@ -10,7 +11,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, DefaultDict, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import httpx
 from cookiecutter.main import cookiecutter
@@ -199,7 +200,7 @@ class ToolCache(Mapping):
         # Python is 32bit if its pointers can only address with 32 bits or fewer
         self.is_32bit_python = self.sys.maxsize <= 2**32
 
-        self.app_tools: DefaultDict[AppConfig, ToolCache] = defaultdict(
+        self.app_tools: collections.defaultdict[AppConfig, ToolCache] = defaultdict(
             lambda: ToolCache(
                 console=self.console,
                 base_path=self.base_path,

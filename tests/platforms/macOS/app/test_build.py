@@ -22,6 +22,9 @@ def build_command(tmp_path):
     return command
 
 
+@pytest.mark.parametrize(
+    "extra_args", [{}, {"adhoc_sign": True}, {"adhoc_sign": False}]
+)
 @pytest.mark.parametrize("universal_build", [True, False])
 @pytest.mark.parametrize("pre_existing", [True, False])
 @pytest.mark.parametrize("console_app", [True, False])
@@ -31,6 +34,7 @@ def test_build_app(
     console_app,
     universal_build,
     pre_existing,
+    extra_args,
     tmp_path,
 ):
     """A macOS App is ad-hoc signed as part of the build process."""
@@ -49,7 +53,9 @@ def test_build_app(
     build_command.ensure_thin_binary = mock.Mock()
 
     # Build the app
-    build_command.build_app(first_app_with_binaries, test_mode=False)
+    base_args = {"test_mode": False}
+    kwargs = base_args | extra_args
+    build_command.build_app(first_app_with_binaries, **kwargs)
 
     # The stub binary has been renamed
     assert not (exec_path / "Stub").is_file()
@@ -64,11 +70,17 @@ def test_build_app(
             arch="gothic",
         )
 
-    # A request has been made to sign the app
-    build_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries,
-        identity=SigningIdentity(),
-    )
+    # Verify that a request has been made to sign the app, but only when it is as part of a direct build command
+    if "adhoc_sign" in kwargs:
+        # build command was called as part of package command.
+        # expect no signing now since it will happen during packaging
+        build_command.sign_app.assert_not_called()
+    else:
+        # build command was called directly so expect signing
+        build_command.sign_app.assert_called_once_with(
+            app=first_app_with_binaries,
+            identity=SigningIdentity(),
+        )
 
     # No request to select a signing identity was made
     build_command.select_identity.assert_not_called()

@@ -4,6 +4,7 @@ import shutil
 import stat
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 
 import httpx
@@ -46,7 +47,7 @@ def _make_httpx_response(
     status_code: int,
     stream: list[bytes],
     method: str = "GET",
-    headers: dict = {},
+    headers: Optional[dict] = None,
 ) -> httpx.Response:
     """Create a real ``httpx.Response`` with key methods wrapped by ``mock.Mock`` for spying.
 
@@ -55,6 +56,9 @@ def _make_httpx_response(
         response.iter_bytes
         response.headers.get
     """
+    if headers is None:
+        headers = {}
+
     response = httpx.Response(
         request=httpx.Request(
             method=method,
@@ -157,6 +161,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
         "GET",
         "https://example.com/support?useful=Yes",
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
     response.headers.get.assert_called_with("content-length")
     response.read.assert_called_once()
@@ -209,6 +214,7 @@ def test_new_download_chunked(mock_tools, file_perms):
         "GET",
         "https://example.com/support?useful=Yes",
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
     response.headers.get.assert_called_with("content-length")
     response.iter_bytes.assert_called_once_with(chunk_size=1048576)
@@ -272,6 +278,7 @@ def test_already_downloaded(mock_tools):
         "GET",
         url,
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
 
     # The request's Content-Disposition header is consumed to
@@ -312,6 +319,7 @@ def test_missing_resource(mock_tools):
         "GET",
         url,
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
     response.headers.get.assert_not_called()
 
@@ -347,6 +355,7 @@ def test_bad_resource(mock_tools):
         "GET",
         url,
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
     response.headers.get.assert_not_called()
 
@@ -385,6 +394,7 @@ def test_iter_bytes_connection_error(mock_tools):
         "GET",
         "https://example.com/something.zip?useful=Yes",
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
     response.headers.get.assert_called_with("content-length")
 
@@ -426,6 +436,7 @@ def test_connection_error(mock_tools):
         "GET",
         url,
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -462,6 +473,7 @@ def test_redirect_connection_error(mock_tools):
         "GET",
         "https://example.com/something.zip?useful=Yes",
         follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
     )
 
     # The file doesn't exist as a result of the download failure

@@ -731,7 +731,7 @@ def test_sign_app_with_failure(
 
     # There has been at least 1 call to sign files. We can't know how many are
     # actually signed, as threads are involved.
-    dummy_command.tools.subprocess.run.call_count > 0
+    assert dummy_command.tools.subprocess.run.call_count > 0
 
     # Output only happens if in debug mode.
     output = capsys.readouterr().out
