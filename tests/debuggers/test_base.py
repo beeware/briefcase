@@ -1,3 +1,5 @@
+import pytest
+
 from briefcase.debuggers import (
     DebugpyDebugger,
     PdbDebugger,
@@ -26,17 +28,31 @@ def test_get_debugger():
         assert str(e) == "Unknown debugger: unknown"
 
 
-def test_pdb():
-    debugger = PdbDebugger()
-    debugger.additional_requirements == [
-        "git+https://github.com/timrid/briefcase-debugadapter#subdirectory=briefcase-pdb-debugadapter"
-    ]
-    debugger.connection_mode == DebuggerConnectionMode.SERVER
-
-
-def test_debugpy():
-    debugger = DebugpyDebugger()
-    debugger.additional_requirements == [
-        "git+https://github.com/timrid/briefcase-debugadapter#subdirectory=briefcase-debugpy-debugadapter"
-    ]
-    debugger.connection_mode == DebuggerConnectionMode.SERVER
+@pytest.mark.parametrize(
+    "debugger_name, expected_class, additional_requirements, connection_mode",
+    [
+        (
+            "pdb",
+            PdbDebugger,
+            [
+                "git+https://github.com/timrid/briefcase-debugadapter#subdirectory=briefcase-pdb-debugadapter"
+            ],
+            DebuggerConnectionMode.SERVER,
+        ),
+        (
+            "debugpy",
+            DebugpyDebugger,
+            [
+                "git+https://github.com/timrid/briefcase-debugadapter#subdirectory=briefcase-debugpy-debugadapter"
+            ],
+            DebuggerConnectionMode.SERVER,
+        ),
+    ],
+)
+def test_debugger(
+    debugger_name, expected_class, additional_requirements, connection_mode
+):
+    debugger = get_debugger(debugger_name)
+    assert isinstance(debugger, expected_class)
+    assert debugger.additional_requirements == additional_requirements
+    assert debugger.connection_mode == connection_mode
