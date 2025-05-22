@@ -179,7 +179,8 @@ a single value should be provided.
             else:
                 macOS["LSItemContentTypes"] = content_types[0]
         else:
-            True is True
+            # This is basically a no-op to satisfy coverage checkers
+            content_types = "string or None"
     else:  # pragma: no-cover-if-is-macos
         pass
 
