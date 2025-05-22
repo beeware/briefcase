@@ -1,11 +1,16 @@
 import shutil
 import sys
+from subprocess import CalledProcessError
 from unittest.mock import MagicMock, call
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    RequirementsInstallError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
@@ -438,3 +443,34 @@ def test_permissions_context(create_command, first_app, permissions, info, conte
     x_permissions = create_command._x_permissions(first_app)
     # Check that the final platform permissions are rendered as expected.
     assert context == create_command.permissions_context(first_app, x_permissions)
+
+
+def test_install_requirements_error_adds_install_hint(create_command, first_app):
+    """Ensure that install_hint is added when RequirementsInstallError exception is raised
+    while running create command for iOS."""
+    first_app.requires = ["package-one", "package_two", "packagethree"]
+
+    create_command.tools.subprocess.run.side_effect = CalledProcessError(
+        returncode=-1, cmd="pip"
+    )
+
+    with pytest.raises(RequirementsInstallError, match="wheel could not be found"):
+        create_command.install_dev_requirements(app=first_app)
+
+    create_command.tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "package-one",
+            "package_two",
+            "packagethree",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )

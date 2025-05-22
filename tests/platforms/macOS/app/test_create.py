@@ -2,12 +2,13 @@ import os
 import subprocess
 import sys
 import time
+from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
@@ -1012,3 +1013,37 @@ def test_install_support_package(
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
+
+
+def test_install_requirements_error_adds_install_hint(create_command, first_app):
+    """Ensure that install_hint is added when RequirementsInstallError exception is raised
+    while running create command for macOS."""
+    first_app.requires = ["package-one", "package_two", "packagethree"]
+
+    create_command.tools.subprocess.run.side_effect = CalledProcessError(
+        returncode=-1, cmd="pip"
+    )
+
+    with pytest.raises(
+        RequirementsInstallError,
+        match="wheel has not been published for one or more of your requirements",
+    ):
+        create_command.install_dev_requirements(app=first_app)
+
+    create_command.tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "package-one",
+            "package_two",
+            "packagethree",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
