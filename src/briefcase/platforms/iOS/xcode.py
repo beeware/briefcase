@@ -389,8 +389,11 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_args=[
                 f"--platform=ios_{ios_min_tag}_{self.tools.host_arch}_iphonesimulator",
             ],
-            install_hint="It may also indicate that an `iphoneos` wheel could be found, "
-            "but an `iphonesimulator` wheel could not be found.",
+            install_hint="""
+
+It may also indicate that an `iphoneos` wheel could be found, but an
+`iphonesimulator` wheel could not be found.
+"""
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(simulator_platform_site),
