@@ -671,7 +671,9 @@ def parse_config(config_file, platform, output_format, console, *, cwd=None):
     information found in the pyproject.toml file was the `license`
     attribute, which should contain an SPDX license identifier (see
     the official documentation for more information:
-    https://packaging.python.org/en/latest/specifications/license-expression/.)
+
+    https://packaging.python.org/en/latest/specifications/license-expression/
+
 
     Not knowing where the license file is, Briefcase will attempt its
     default license file path: 'LICENSE'. Specify the path to the license
