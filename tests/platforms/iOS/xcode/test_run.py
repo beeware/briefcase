@@ -1767,6 +1767,18 @@ def test_run_app_debug_mode(run_command, first_app_generated, tmp_path):
                     "com.example.first-app",
                 ],
             ),
+            # Remove the environment variables for the debugger
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "launchctl",
+                    "unsetenv",
+                    "BRIEFCASE_DEBUGGER",
+                ],
+            ),
         ]
     )
 

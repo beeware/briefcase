@@ -710,6 +710,22 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             raise BriefcaseCommandError(
                 f"Unable to launch {label} {app.app_name}."
             ) from e
+        finally:
+            # Remove additional environment variables
+            if env:
+                with self.console.wait_bar("Setting environment variables..."):
+                    for env_key in env.keys():
+                        output = self.tools.subprocess.check_output(
+                            [
+                                "xcrun",
+                                "simctl",
+                                "spawn",
+                                udid,
+                                "launchctl",
+                                "unsetenv",
+                                f"{env_key}",
+                            ]
+                        )
 
         # Preserve the device selection as state.
         return {"udid": udid}
