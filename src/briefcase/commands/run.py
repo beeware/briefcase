@@ -239,7 +239,7 @@ class RunCommand(RunAppMixin, BaseCommand):
             "--debugger-port",
             default=5678,
             type=int,
-            help="The port on which to run the debug server (default: 8080)",
+            help="The port on which to run the debug server (default: 5678)",
             required=False,
         )
 
