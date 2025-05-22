@@ -644,10 +644,10 @@ class CreateCommand(BaseCommand):
             requirements should be installed.
         :param progress_message: The waitbar progress message to display to the user.
         :param pip_args: Any additional command line arguments to use when invoking pip.
-        :param install_hint: Additional hint information to provide in the exception
-            message if the pip install call fails.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
