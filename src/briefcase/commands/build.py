@@ -15,6 +15,7 @@ class BuildCommand(BaseCommand):
     def add_options(self, parser):
         self._add_update_options(parser, context_label=" before building")
         self._add_test_options(parser, context_label="Build")
+        self._add_debug_options(parser, context_label="Build")
 
         parser.add_argument(
             "-a",
@@ -41,6 +42,7 @@ class BuildCommand(BaseCommand):
         update_stub: bool,
         no_update: bool,
         test_mode: bool,
+        debugger: str | None,
         **options,
     ) -> dict | None:
         """Internal method to invoke a build on a single app. Ensures the app exists,
@@ -58,17 +60,23 @@ class BuildCommand(BaseCommand):
         :param no_update: Should automated updates be disabled?
         :param test_mode: Is the app being build in test mode?
         """
+        debug_mode = debugger is not None
         if not self.bundle_path(app).exists():
-            state = self.create_command(app, test_mode=test_mode, **options)
+            state = self.create_command(
+                app, test_mode=test_mode, debugger=debugger, **options
+            )
         elif (
             update  # An explicit update has been requested
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
-            or update_support  # An explicit update of app support has been requested
+            or update_support  # An explicit update of app support has been rdebuggerequested
             or update_stub  # An explicit update of the stub binary has been requested
             or (
                 test_mode and not no_update
             )  # Test mode, but updates have not been disabled
+            or (
+                debug_mode and not no_update
+            )  # Debug mode, but updates have not been disabled
         ):
             state = self.update_command(
                 app,
@@ -77,6 +85,7 @@ class BuildCommand(BaseCommand):
                 update_support=update_support,
                 update_stub=update_stub,
                 test_mode=test_mode,
+                debugger=debugger,
                 **options,
             )
         else:
@@ -84,9 +93,15 @@ class BuildCommand(BaseCommand):
 
         self.verify_app(app)
 
-        state = self.build_app(app, test_mode=test_mode, **full_options(state, options))
+        state = self.build_app(
+            app,
+            test_mode=test_mode,
+            debug_mode=debug_mode,
+            **full_options(state, options),
+        )
 
         qualifier = " (test mode)" if test_mode else ""
+        qualifier += " (debug mode)" if debug_mode else ""
         self.console.info(
             f"Built {self.binary_path(app).relative_to(self.base_path)}{qualifier}",
             prefix=app.app_name,
@@ -104,6 +119,7 @@ class BuildCommand(BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
+        debugger: str | None = None,
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
@@ -132,7 +148,7 @@ class BuildCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, debugger)
 
         if app_name:
             try:
@@ -157,6 +173,7 @@ class BuildCommand(BaseCommand):
                 update_stub=update_stub,
                 no_update=no_update,
                 test_mode=test_mode,
+                debugger=debugger,
                 **full_options(state, options),
             )
 

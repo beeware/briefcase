@@ -93,6 +93,7 @@ class DummyRunCommand(RunCommand):
         kwargs.pop("update_stub", None)
         kwargs.pop("no_update", None)
         kwargs.pop("test_mode", None)
+        kwargs.pop("debug_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
 
 

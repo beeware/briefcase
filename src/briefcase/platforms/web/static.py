@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import errno
 import subprocess
 import sys
@@ -50,7 +52,7 @@ class StaticWebMixin:
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Add style framework details to the app template."""
         return {
             "style_framework": getattr(app, "style_framework", "None"),
@@ -238,7 +240,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 class HTTPHandler(SimpleHTTPRequestHandler):
     """Convert any HTTP request into a path request on the static content folder."""
 
-    server: "LocalHTTPServer"
+    server: LocalHTTPServer
 
     def translate_path(self, path):
         return str(self.server.base_path / path[1:])
@@ -311,6 +313,9 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         host,
         port,
@@ -321,6 +326,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
         :param passthrough: The list of arguments to pass to the app
         :param host: The host on which to run the server
         :param port: The port on which to run the server
@@ -328,6 +334,8 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         """
         if test_mode:
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
+        if debug_mode:
+            raise BriefcaseCommandError("Briefcase can't run web apps in debug mode.")
 
         self.console.info("Starting web server...", prefix=app.app_name)
 

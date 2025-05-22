@@ -17,8 +17,13 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
+from briefcase.debuggers.base import (
+    AppPackagesPathMappings,
+    BaseDebugger,
+    DebuggerConnectionMode,
+)
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 
@@ -158,7 +163,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -214,15 +219,19 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
+        # Extract test packages, to enable features like test discovery and assertion rewriting.
+        extract_sources = app.test_sources or []
+
+        # In debug mode extract all source packages so that the debugger can get the source code
+        # at runtime (eg. via 'll' in pdb).
+        if debug_mode:
+            extract_sources.extend(app.sources)
+
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
-            # Extract test packages, to enable features like test discovery and assertion
-            # rewriting.
             "extract_packages": ", ".join(
-                f'"{name}"'
-                for path in (app.test_sources or [])
-                if (name := Path(path).name)
+                [f'"{name}"' for path in extract_sources if (name := Path(path).name)]
             ),
             "build_gradle_dependencies": {"implementation": dependencies},
         }
@@ -360,10 +369,28 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
 
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
+        return AppPackagesPathMappings(
+            sys_path_regex="requirements$",
+            host_folder=f"{app_packages_path}",
+        )
+
     def run_app(
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -374,6 +401,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -404,6 +434,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 avd, extra_emulator_args
             )
 
+        debugger_connection_established = False
         try:
             label = "test suite" if test_mode else "app"
 
@@ -427,12 +458,29 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
+            env = {}
+            if debug_mode:
+                if debugger_host == "localhost":
+                    with self.console.wait_bar("Establishing debugger connection..."):
+                        self.establish_debugger_connection(
+                            adb, app.debugger, debugger_port
+                        )
+                        debugger_connection_established = True
+                env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
+                    app, test_mode, debugger_host, debugger_port
+                )
+
+            if self.console.is_debug:
+                env["BRIEFCASE_DEBUG"] = "1"
+
             # To start the app, we launch `org.beeware.android.MainActivity`.
             with self.console.wait_bar(f"Launching {label}..."):
                 # capture the earliest time for device logging in case PID not found
                 device_start_time = adb.datetime()
 
-                adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
+                adb.start_app(
+                    package, "org.beeware.android.MainActivity", passthrough, env
+                )
 
                 # Try to get the PID for 5 seconds.
                 pid = None
@@ -473,9 +521,42 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
                 raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
         finally:
+            if debugger_connection_established:
+                with self.console.wait_bar("Stopping debugger connection..."):
+                    self.remove_debugger_connection(adb, app.debugger, debugger_port)
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
+
+    def establish_debugger_connection(
+        self, adb: ADB, debugger: BaseDebugger, debugger_port: int
+    ):
+        """Forward/Reverse the ports necessary for remote debugging.
+
+        :param app: The config object for the app
+        :param adb: Access to the adb
+        :param debugger: The debugger to use
+        :param debugger_port: The port to forward/reverse for the debugger
+        """
+        if debugger.connection_mode == DebuggerConnectionMode.SERVER:
+            adb.forward(debugger_port, debugger_port)
+        else:
+            adb.reverse(debugger_port, debugger_port)
+
+    def remove_debugger_connection(
+        self, adb: ADB, debugger: BaseDebugger, debugger_port: int
+    ):
+        """Remove Forward/Reverse of the ports necessary for remote debugging.
+
+        :param app: The config object for the app
+        :param adb: Access to the adb
+        :param debugger: The debugger to use
+        :param debugger_port: The port to forward/reverse for the debugger
+        """
+        if debugger.connection_mode == DebuggerConnectionMode.SERVER:
+            adb.forward_remove(debugger_port)
+        else:
+            adb.reverse_remove(debugger_port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

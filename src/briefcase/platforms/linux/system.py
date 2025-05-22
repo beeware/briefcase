@@ -638,8 +638,8 @@ class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
 class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
     description = "Create and populate a Linux system project."
 
-    def output_format_template_context(self, app: AppConfig):
-        context = super().output_format_template_context(app)
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+        context = super().output_format_template_context(app, debug_mode)
 
         # Linux system templates use the target codename, rather than
         # the format "system" as the leaf of the bundle path
@@ -839,6 +839,9 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -846,10 +849,19 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
 
         :param app: The config object for the app
         :param test_mode: Boolean; Is the app running in test mode?
+        :param debug_mode: Boolean; Is the app running in debug mode?
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(
+            app=app,
+            test_mode=test_mode,
+            debug_mode=debug_mode,
+            debugger_host=debugger_host,
+            debugger_port=debugger_port,
+        )
 
         with self.tools[app].app_context.run_app_context(kwargs) as kwargs:
             # Console apps must operate in non-streaming mode so that console input can
