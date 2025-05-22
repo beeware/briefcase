@@ -834,7 +834,14 @@ def test_license_is_string_project_and_app():
     )
 
 
-def test_pep639_license_in_app_config(tmp_path):
+@pytest.fixture
+def dir_with_license(tmp_path):
+    (tmp_path / "MY-LICENSE").write_text("MY-LICENSE", encoding="utf-8")
+    (tmp_path / "AUTHORS").write_text("AUTHORS", encoding="utf-8")
+    return tmp_path.absolute()
+
+
+def test_pep639_license_in_app_config(dir_with_license):
     config_file = BytesIO(
         b"""
         [tool.briefcase]
@@ -846,7 +853,6 @@ def test_pep639_license_in_app_config(tmp_path):
         license-files = ["MY-LICENSE"]
         """
     )
-    (tmp_path / "MY-LICENSE").write_text("SOME LICENSE TEXT", encoding="utf-8")
 
     console = Mock()
     global_options, apps = parse_config(
@@ -854,7 +860,7 @@ def test_pep639_license_in_app_config(tmp_path):
         platform="macOS",
         output_format="app",
         console=console,
-        cwd=tmp_path,
+        cwd=dir_with_license,
     )
     assert global_options == {
         "value": 0,
@@ -868,3 +874,130 @@ def test_pep639_license_in_app_config(tmp_path):
         "license-files": ["MY-LICENSE"],
         "license": {"file": "MY-LICENSE"},
     }
+
+
+@pytest.mark.parametrize(
+    "config_file_content",
+    [
+        pytest.param(
+            "[project]\nlicense-files = ['MY-LICENSE']", id="single_existing_file"
+        ),
+        pytest.param(
+            "[project]\nlicense-files = ['MY-LICENSE', 'NON_EXISTING']",
+            id="many_files_first_exists",
+        ),
+        pytest.param(
+            "[project]\nlicense-files = ['MY-LICENSE', 'AUTHORS']",
+            id="many_files_all_exists",
+        ),
+        pytest.param(
+            "[project]\nlicense-files = ['NON_EXISTING','MY-LICENSE']",
+            id="many_files_last_exists",
+        ),
+        pytest.param("[project]\nlicense-files = ['MY-LICEN[CS]E']", id="glob_pattern"),
+    ],
+)
+@pytest.mark.parametrize(
+    "license, global_config",
+    [
+        pytest.param(None, "", id="without_briefcase_license_file"),
+        pytest.param(
+            "OLD_LICENSE",
+            "license= { file = 'OLD_LICENSE' }",
+            id="with_briefcase_license_file",
+        ),
+    ],
+)
+def test_first_specified_license_file_pep639(
+    config_file_content, license, global_config, dir_with_license
+):
+    """The first file in license-files is used if no license in briefcase_config"""
+    supposed_license = "MY-LICENSE"
+    briefcase_config = (
+        f"[tool.briefcase]\n{global_config}\n[tool.briefcase.app.my_app]\n"
+    )
+    if license:
+        supposed_license = license
+
+    config_file = BytesIO(f"{config_file_content}\n{briefcase_config}".encode())
+    console = Mock()
+    global_options, _ = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+        cwd=dir_with_license,
+    )
+    assert global_options == {"license": {"file": supposed_license}}
+
+
+def test_specified_license_file_doesnt_exist_pep639_fails(dir_with_license):
+    """An exception is raised if no license file match the 'license-files' glob"""
+    briefcase_config = "[tool.briefcase]\n[tool.briefcase.app.my_app]\n"
+    config_file = BytesIO(
+        f"[project]\nlicense-files=['NON_EXISTING']\n{briefcase_config}".encode()
+    )
+    with pytest.raises(BriefcaseConfigError):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+            cwd=dir_with_license,
+        )
+
+
+def test_more_than_one_license_file_pep639_warns(dir_with_license):
+    """A warning is shown if multiple license files match the 'license-files' glob"""
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = ['MY-LICENSE', 'AUTHORS']
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+        cwd=dir_with_license,
+    )
+    console.warning.assert_called_once_with("""
+*************************************************************************
+**              WARNING: More than one license file found              **
+*************************************************************************
+    Found more than one license matching the glob pattern specified in
+    project.license-files. The first of these files (MY-LICENSE)
+    will be chosen, and the rest will be ignored. Consider merging all
+    files in to one combined file if you need to include all licenses.
+""")
+
+
+def test_both_license_file_and_license_dict(dir_with_license):
+    """An error is raised if the license-files field is set and license is a dict
+
+    PEP639 specifies that an exception MUST be raised if the license-files attribute
+    is set while the license field is a dict.
+    """
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = ['MY-LICENSE']
+license = { text = 'SOME_TEXT' }
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+
+    with pytest.raises(BriefcaseConfigError):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+            cwd=dir_with_license,
+        )

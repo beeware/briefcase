@@ -520,7 +520,7 @@ def get_pep639_license_info(config, console, *, cwd=None):
 
     if next(all_licenses, None) is not None:
         console.warning(
-            """
+            f"""
 *************************************************************************
 ** WARNING: More than one license file found                           **
 *************************************************************************
@@ -536,15 +536,10 @@ def get_pep639_license_info(config, console, *, cwd=None):
     return {"file": str(license_file)}
 
 
-def merge_pep621_config(global_config, pep621_config, console, *, cwd=None):
+def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
     if requires_python := pep621_config.get("requires-python"):
         global_config["requires_python"] = requires_python
-
-    if pep639_license := get_pep639_license_info(
-        pep621_config, console=console, cwd=cwd
-    ):
-        pep621_config["license"] = pep639_license
 
     # Then: we add all PEP621-based metadata fields.
     # We do it in this order, since then we will ignore the license field here
@@ -640,10 +635,11 @@ def parse_config(config_file, platform, output_format, console, *, cwd=None):
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
     # Merge the PEP621 configuration (if it exists)
+    project_config = pyproject.get("project", {})
+    if pep639_info := get_pep639_license_info(project_config, console=console, cwd=cwd):
+        pyproject["project"]["license"] = pep639_info
     try:
-        merge_pep621_config(
-            global_config, pyproject["project"], console=console, cwd=cwd
-        )
+        merge_pep621_config(global_config, project_config)
     except KeyError:
         pass
 
@@ -656,11 +652,9 @@ def parse_config(config_file, platform, output_format, console, *, cwd=None):
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
-    # GJØREMÅL: Test denne funksjonen krasjer dersom både license-files er satt og
-    # license er en dictionary
     for name, config in [("project", global_config)] + list(all_apps.items()):
-        if pep639_license_info := get_pep639_license_info(config, console, cwd=cwd):
-            config["license"] = pep639_license_info
+        if pep639_info := get_pep639_license_info(config, console, cwd=cwd):
+            config["license"] = pep639_info
 
         if isinstance(config.get("license"), str):
             section_name = "the Project" if name == "project" else f"{name!r}"
