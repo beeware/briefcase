@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import keyword
 import re
 import sys
 import unicodedata
+from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import urlparse
 
@@ -490,12 +492,70 @@ def merge_config(config, data):
     config.update(data)
 
 
+def get_pep639_license_info(config, console, *, cwd=None):
+    if "license-files" not in config:
+        return
+
+    has_pep639_license_file = config.get("license-files") is not None
+    has_pep621_license_dict = isinstance(config.get("license"), dict)
+    if has_pep639_license_file and has_pep621_license_dict:
+        raise BriefcaseConfigError(
+            "Invalid `pyproject.toml` file: a `pyproject.toml` file cannot contain both "
+            "a dictionary for the `project.license` attribute and a "
+            "`project.license-files` list. For more information, see the "
+            "'Add `license-files` key' section of PEP 639: "
+            "https://peps.python.org/pep-0639/#add-license-files-key"
+        )
+    if cwd is None:
+        cwd = Path()
+    if not isinstance(config["license-files"], list):
+        raise BriefcaseConfigError(
+            f"""
+Found license-files in pyproject.toml, but it is a string, while it should be a list.
+Did you mean
+
+license-files = ['{config["license-files"]}']
+
+instead?
+"""
+        )
+
+    all_globs = (cwd.glob(pattern) for pattern in config["license-files"])
+    all_licenses = (
+        p.relative_to(cwd) for p in itertools.chain.from_iterable(all_globs)
+    )
+    license_file = next(all_licenses, None)
+    if license_file is None:
+        raise BriefcaseConfigError(
+            "No license matching the glob patterns in `project.license-files`"
+        )
+
+    if next(all_licenses, None) is not None:
+        console.warning(
+            f"""
+*************************************************************************
+** WARNING: More than one license file found                           **
+*************************************************************************
+
+    More than one license matches the glob patterns specified in
+    `project.license-files`. The first of these files ({license_file})
+    will be used, and the rest will be ignored. Consider merging all
+    files in to one combined file if you need to include all licenses.
+
+*************************************************************************
+"""
+        )
+    return {"file": str(license_file)}
+
+
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
-
     if requires_python := pep621_config.get("requires-python"):
         global_config["requires_python"] = requires_python
 
+    # Then: we add all PEP621-based metadata fields.
+    # We do it in this order, since then we will ignore the license field here
+    # if it was set above.
     def maybe_update(field, *project_fields):
         # If there's an existing key in the Briefcase config, it takes priority.
         if field in global_config:
@@ -547,7 +607,7 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
-def parse_config(config_file, platform, output_format, console):
+def parse_config(config_file, platform, output_format, console, *, cwd=None):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
@@ -587,8 +647,11 @@ def parse_config(config_file, platform, output_format, console):
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
     # Merge the PEP621 configuration (if it exists)
+    project_config = pyproject.get("project", {})
+    if pep639_info := get_pep639_license_info(project_config, console=console, cwd=cwd):
+        pyproject["project"]["license"] = pep639_info
     try:
-        merge_pep621_config(global_config, pyproject["project"])
+        merge_pep621_config(global_config, project_config)
     except KeyError:
         pass
 
@@ -602,30 +665,32 @@ def parse_config(config_file, platform, output_format, console):
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
     for name, config in [("project", global_config)] + list(all_apps.items()):
+        if pep639_info := get_pep639_license_info(config, console, cwd=cwd):
+            config["license"] = pep639_info
+
         if isinstance(config.get("license"), str):
             section_name = "the Project" if name == "project" else f"{name!r}"
             console.warning(
                 f"""
 *************************************************************************
-** {f"WARNING: License Definition for {section_name} is Deprecated":67} **
+** {f"WARNING: No license file specified for {section_name}":67} **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier. See
+    the official documentation for more information:
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    https://packaging.python.org/en/latest/specifications/license-expression/
 
-    The current configuration for {section_name} has a 'license' field
-    that is specified as a string:
 
-        license = "{config["license"]}"
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for {section_name}:
-
-        license.file = "LICENSE"
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
