@@ -1,0 +1,1 @@
+App 'formal_name' can now except names with '.' characters

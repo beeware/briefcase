@@ -374,7 +374,7 @@ def test_calledprocesserror_exception_logging_no_output(mock_sub, capsys, caplog
         mock_sub.check_output(["hello", "world"])
 
     assert capsys.readouterr().out == (
-        "\n" "Running Command:\n" "    hello world\n" "Return code: -1\n" "\n"
+        "\nRunning Command:\n    hello world\nReturn code: -1\n\n"
     )
     assert "".join(caplog) == (
         "\n"

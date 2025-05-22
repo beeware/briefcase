@@ -3,7 +3,8 @@ import pytest
 from briefcase.commands import BuildCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
-from ...utils import create_file, DummyConsole
+
+from ...utils import DummyConsole, create_file
 
 
 class DummyBuildCommand(BuildCommand):

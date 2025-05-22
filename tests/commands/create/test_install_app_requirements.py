@@ -403,10 +403,10 @@ def test_app_packages_invalid_requires(
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
     # failures.
-    create_command.tools[myapp].app_context.run.side_effect = (
-        subprocess.CalledProcessError(
-            cmd=["python", "-u", "-m", "pip", "..."], returncode=1
-        )
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
+        cmd=["python", "-u", "-m", "pip", "..."], returncode=1
     )
 
     with pytest.raises(RequirementsInstallError):
@@ -449,10 +449,10 @@ def test_app_packages_offline(
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
     # failures.
-    create_command.tools[myapp].app_context.run.side_effect = (
-        subprocess.CalledProcessError(
-            cmd=["python", "-u", "-m", "pip", "..."], returncode=1
-        )
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
+        cmd=["python", "-u", "-m", "pip", "..."], returncode=1
     )
 
     with pytest.raises(RequirementsInstallError):
@@ -501,8 +501,10 @@ def test_app_packages_install_requirements(
     myapp.requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
-    create_command.tools[myapp].app_context.run.side_effect = (
-        create_installation_artefacts(app_packages_path, myapp.requires)
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = create_installation_artefacts(
+        app_packages_path, myapp.requires
     )
 
     # Install the requirements
@@ -556,8 +558,10 @@ def test_app_packages_replace_existing_requirements(
     myapp.requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
-    create_command.tools[myapp].app_context.run.side_effect = (
-        create_installation_artefacts(app_packages_path, myapp.requires)
+    create_command.tools[
+        myapp
+    ].app_context.run.side_effect = create_installation_artefacts(
+        app_packages_path, myapp.requires
     )
 
     # Install the requirements

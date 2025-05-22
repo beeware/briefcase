@@ -536,3 +536,46 @@ def test_passive_mixin(first_app_config, tmp_path):
 
     # For tests of other properties merged in finalization, see
     # test_properties
+
+
+def test_cascading_distribution_properties(create_command, first_app_config):
+    """Properties should be cascading/accumulating, and vendor-level
+    properties should overwrite os-level ones when in a dictionary.
+    """
+    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    create_command.target_image = "somevendor:surprising"
+    create_command.tools.docker = MagicMock()
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
+
+    # Modify the app config with distribution-level properties
+    first_app_config.requires = []
+    first_app_config.permission = {}
+
+    first_app_config.debian = {
+        "requires": ["debian level prop"],
+        "permission": {"prop1": "debian level prop 1", "prop2": "debian level prop 2"},
+    }
+    first_app_config.somevendor = {
+        "requires": ["vendor level prop"],
+        "permission": {"prop1": "vendor level prop 1"},
+    }
+
+    create_command.finalize_app_config(first_app_config)
+
+    # The target's config attributes have been merged into the app
+    # List properties should be accumulated
+    assert first_app_config.requires == ["debian level prop", "vendor level prop"]
+    # Dictionary properties should overwrite higher-level ones and accumulate
+    assert first_app_config.permission == {
+        "prop1": "vendor level prop 1",
+        "prop2": "debian level prop 2",
+    }

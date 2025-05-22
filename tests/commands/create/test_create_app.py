@@ -26,7 +26,11 @@ def test_create_app(tracking_create_command, tmp_path):
     # New app content has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     # A stub binary has *not* been created
-    assert not (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()
+    assert not (
+        tmp_path
+        / "base_path/build/first/tester/dummy"
+        / tracking_create_command.exe_name("first")
+    ).exists()
 
 
 def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
@@ -168,11 +172,13 @@ def test_create_app_not_supported(tracking_create_command, tmp_path):
 def test_create_app_with_stub(tracking_create_command, tmp_path):
     """If an app template defines a stub revision, the stub will be created."""
     # Add an entry to the path index indicating a stub is required
-    tracking_create_command._briefcase_toml[tracking_create_command.apps["first"]] = {
+    first_app = tracking_create_command.apps["first"]
+
+    tracking_create_command._briefcase_toml[first_app] = {
         "paths": {"stub_binary_revision": "b1"}
     }
 
-    tracking_create_command.create_app(tracking_create_command.apps["first"])
+    tracking_create_command.create_app(first_app)
 
     # Input wasn't required by the user
     assert tracking_create_command.console.prompts == []
@@ -192,4 +198,8 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
 
     # New app content and stub binary has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
-    assert (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()
+    assert (
+        tmp_path
+        / "base_path/build/first/tester/dummy"
+        / tracking_create_command.exe_name("first")
+    ).exists()

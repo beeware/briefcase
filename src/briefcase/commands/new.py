@@ -587,7 +587,7 @@ class NewCommand(BaseCommand):
             f"""
 To run your application, type:
 
-    $ cd {context['app_name']}
+    $ cd {context["app_name"]}
     $ briefcase dev
 
 """
