@@ -508,6 +508,18 @@ def get_pep639_license_info(config, console, *, cwd=None):
         )
     if cwd is None:
         cwd = Path()
+    if not isinstance(config["license-files"], list):
+        raise BriefcaseConfigError(
+            f"""
+Found license-files in pyproject.toml, but it is a string, while it should be a list.
+Did you mean
+
+license-files = ['{config["license-files"]}']
+
+instead?
+"""
+        )
+
     all_globs = (cwd.glob(pattern) for pattern in config["license-files"])
     all_licenses = (
         p.relative_to(cwd) for p in itertools.chain.from_iterable(all_globs)
@@ -666,7 +678,7 @@ def parse_config(config_file, platform, output_format, console, *, cwd=None):
 
     Briefcase requires a license file. However, the only license
     information found in the pyproject.toml file was the `license`
-    attribute, which should contain an SPDX license identifier (see
+    attribute, which should contain an SPDX license identifier. See
     the official documentation for more information:
 
     https://packaging.python.org/en/latest/specifications/license-expression/

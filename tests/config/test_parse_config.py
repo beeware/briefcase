@@ -736,9 +736,11 @@ def test_license_is_string_project():
 
     Briefcase requires a license file. However, the only license
     information found in the pyproject.toml file was the `license`
-    attribute, which should contain an SPDX license identifier (see
+    attribute, which should contain an SPDX license identifier. See
     the official documentation for more information:
-    https://packaging.python.org/en/latest/specifications/license-expression/.)
+
+    https://packaging.python.org/en/latest/specifications/license-expression/
+
 
     Not knowing where the license file is, Briefcase will attempt its
     default license file path: 'LICENSE'. Specify the path to the license
@@ -746,7 +748,7 @@ def test_license_is_string_project():
     can do that by replacing the license line in your pyproject.toml-file
     with the following line:
 
-        license-files = "LICENSE"  # or some other path
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
@@ -792,9 +794,11 @@ def test_license_is_string_project_and_app():
 
     Briefcase requires a license file. However, the only license
     information found in the pyproject.toml file was the `license`
-    attribute, which should contain an SPDX license identifier (see
+    attribute, which should contain an SPDX license identifier. See
     the official documentation for more information:
-    https://packaging.python.org/en/latest/specifications/license-expression/.)
+
+    https://packaging.python.org/en/latest/specifications/license-expression/
+
 
     Not knowing where the license file is, Briefcase will attempt its
     default license file path: 'LICENSE'. Specify the path to the license
@@ -802,7 +806,7 @@ def test_license_is_string_project_and_app():
     can do that by replacing the license line in your pyproject.toml-file
     with the following line:
 
-        license-files = "LICENSE"  # or some other path
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
@@ -815,9 +819,11 @@ def test_license_is_string_project_and_app():
 
     Briefcase requires a license file. However, the only license
     information found in the pyproject.toml file was the `license`
-    attribute, which should contain an SPDX license identifier (see
+    attribute, which should contain an SPDX license identifier. See
     the official documentation for more information:
-    https://packaging.python.org/en/latest/specifications/license-expression/.)
+
+    https://packaging.python.org/en/latest/specifications/license-expression/
+
 
     Not knowing where the license file is, Briefcase will attempt its
     default license file path: 'LICENSE'. Specify the path to the license
@@ -825,7 +831,7 @@ def test_license_is_string_project_and_app():
     can do that by replacing the license line in your pyproject.toml-file
     with the following line:
 
-        license-files = "LICENSE"  # or some other path
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
@@ -968,12 +974,15 @@ license-files = ['MY-LICENSE', 'AUTHORS']
     )
     console.warning.assert_called_once_with("""
 *************************************************************************
-**              WARNING: More than one license file found              **
+** WARNING: More than one license file found                           **
 *************************************************************************
-    Found more than one license matching the glob pattern specified in
-    project.license-files. The first of these files (MY-LICENSE)
-    will be chosen, and the rest will be ignored. Consider merging all
+
+    More than one license matches the glob patterns specified in
+    `project.license-files`. The first of these files (MY-LICENSE)
+    will be used, and the rest will be ignored. Consider merging all
     files in to one combined file if you need to include all licenses.
+
+*************************************************************************
 """)
 
 
@@ -987,6 +996,28 @@ def test_both_license_file_and_license_dict(dir_with_license):
         b"""
 [project]
 license-files = ['MY-LICENSE']
+license = { text = 'SOME_TEXT' }
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+
+    with pytest.raises(BriefcaseConfigError):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+            cwd=dir_with_license,
+        )
+
+
+def test_non_list_licence_files(dir_with_license):
+    """An error is raised if the license-files field is something other than a list"""
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = 'MY-LICENSE'
 license = { text = 'SOME_TEXT' }
 [tool.briefcase]
 [tool.briefcase.app.my_app]
