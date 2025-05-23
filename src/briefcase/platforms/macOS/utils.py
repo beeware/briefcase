@@ -278,7 +278,36 @@ class AppPackagesMergeMixin:
             self.console.info("No libraries require merging.")
 
 
-def mime_type_to_UTI(mime_type: str) -> str | None:  # pragma: no-cover-if-not-macos
+def is_uti_core_type(uti: str) -> bool:
+    """Check if a UTI is a built-in Core Type.
+
+    This function checks if a given UTI is a built-in Core Type by reading the
+    system's CoreTypes Info.plist file. If the file is not found, it assumes
+    that the system is not macOS or the file has been moved in recent macOS
+    versions, and returns False.
+
+    Args:
+        uti: The UTI to check.
+
+    Returns:
+        True if the UTI is a built-in Core Type, False otherwise.
+    """
+    try:
+        plist_data = pathlib.Path(CORETYPES_PATH).read_bytes()
+    except FileNotFoundError:
+        # If the file is not found, we assume that the system is not macOS
+        # or the file has been moved in recent macOS versions.
+        # In this case, we return False to indicate that the UTI is not built-in.
+        return False
+    plist = plistlib.loads(plist_data)
+    return uti in {
+        type_declaration["UTTypeIdentifier"]
+        for type_declaration in plist["UTExportedTypeDeclarations"]
+        + plist["UTImportedTypeDeclarations"]
+    }
+
+
+def mime_type_to_uti(mime_type: str) -> str | None:  # pragma: no-cover-if-not-macos
     """Convert a MIME type to a Uniform Type Identifier (UTI).
 
     This function reads the system's CoreTypes Info.plist file to determine the

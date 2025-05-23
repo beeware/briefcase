@@ -147,11 +147,21 @@ def validate_document_type_config(document_type_id, document_type):
         )
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
-        from briefcase.platforms.macOS.utils import mime_type_to_UTI
+        from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
 
         macOS = document_type.setdefault("macOS", {})
+        content_types = macOS.get("LSItemContentTypes", None)
         mime_type = document_type.get("mime_type", None)
-        if (uti := mime_type_to_UTI(mime_type)) is not None:
+
+        if isinstance(content_types, list):
+            uti = content_types[0]
+        elif isinstance(content_types, str):
+            uti = content_types
+        else:
+            uti = None
+
+        # if an UTI is provided in LSItemContentTypes, that takes precedence over a MIME type
+        if is_uti_core_type(uti) or ((uti := mime_type_to_uti(mime_type)) is not None):
             macOS.setdefault("is_core_type", True)
             macOS.setdefault("LSItemContentTypes", uti)
             macOS.setdefault("LSHandlerRank", "Alternate")
@@ -177,10 +187,14 @@ a single value should be provided.
                 """
                 )
             else:
-                macOS["LSItemContentTypes"] = content_types[0]
+                # This is basically a no-op to satisfy coverage checkers
+                content_types = "is a list with a single value"
+        elif isinstance(content_types, str):
+            # If the content type is a string, convert it to a list
+            macOS["LSItemContentTypes"] = [content_types]
         else:
             # This is basically a no-op to satisfy coverage checkers
-            content_types = "string or None"
+            content_types = "is None or something unexpected"
     else:  # pragma: no-cover-if-is-macos
         pass
 
