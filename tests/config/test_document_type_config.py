@@ -234,6 +234,13 @@ def test_mime_type_to_uti_with_nonexisting_coretypes_file(monkeypatch):
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
+def test_is_uti_core_type_with_nonexisting_coretypes_file(monkeypatch):
+    """Test that mime_type_to_UTI returns None if the coretypes file doesn't exist."""
+    monkeypatch.setattr(utils, "CORETYPES_PATH", "/does/not/exist")
+    assert utils.is_uti_core_type("com.adobe.pdf") is False
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 def test_document_type_macOS_config_with_list_of_content_types(valid_document):
     """Multiple content types are not allowed.
 
