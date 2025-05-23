@@ -634,6 +634,7 @@ class CreateCommand(BaseCommand):
         progress_message: str = "Installing app requirements...",
         pip_args: list[str] | None = None,
         pip_kwargs: dict[str, str] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements for the app with pip.
 
@@ -645,6 +646,8 @@ class CreateCommand(BaseCommand):
         :param pip_args: Any additional command line arguments to use when invoking pip.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
@@ -661,6 +664,7 @@ class CreateCommand(BaseCommand):
                         ([] if pip_args is None else pip_args)
                         + self._pip_requires(app, requires)
                     ),
+                    install_hint=install_hint,
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:

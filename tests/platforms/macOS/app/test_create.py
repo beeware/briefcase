@@ -2,12 +2,14 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
+from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
@@ -1012,3 +1014,30 @@ def test_install_support_package(
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
+
+
+def test_install_app_requirements_error_adds_install_hint(
+    create_command, first_app_templated
+):
+    """Install_hint is added when RequirementsInstallError is raised
+    by _install_app_requirements in the macOS create command."""
+    first_app_templated.requires = ["package-one", "package_two", "packagethree"]
+
+    # Mock app_context for the generated app to simulate pip failure
+    mock_app_context = mock.MagicMock(spec=Subprocess)
+    mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
+    create_command.tools[first_app_templated].app_context = mock_app_context
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError,
+        match="wheel has not been published for one or more of your requirements",
+    ):
+        create_command._install_app_requirements(
+            app=first_app_templated,
+            requires=first_app_templated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    mock_app_context.run.assert_called_once()

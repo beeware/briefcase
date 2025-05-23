@@ -373,8 +373,13 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(device_platform_site),
-                },
+                }
             },
+            install_hint="""
+
+It may also indicate that an `iphonesimulator` wheel could be found, but an
+`iphoneos` wheel could not be found.
+""",
         )
 
         # Perform a second install pass targeting the "iphonesimulator" platform for the
@@ -392,6 +397,11 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                     "PYTHONPATH": str(simulator_platform_site),
                 },
             },
+            install_hint="""
+
+It may also indicate that an `iphoneos` wheel could be found, but an
+`iphonesimulator` wheel could not be found.
+""",
         )
 
 
