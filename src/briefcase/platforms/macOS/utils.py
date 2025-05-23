@@ -278,7 +278,7 @@ class AppPackagesMergeMixin:
             self.console.info("No libraries require merging.")
 
 
-def is_uti_core_type(uti: str) -> bool:
+def is_uti_core_type(uti: str) -> bool:  # pragma: no-cover-if-not-macos
     """Check if a UTI is a built-in Core Type.
 
     This function checks if a given UTI is a built-in Core Type by reading the
