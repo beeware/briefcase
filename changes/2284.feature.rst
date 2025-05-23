@@ -1,1 +1,1 @@
-Added improved document types (file associations) for Windows and macOS platforms
+Improved document types and file associations for macOS platforms.
