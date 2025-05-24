@@ -1,0 +1,1 @@
+Fixed error on first run after iOS simulator update.
