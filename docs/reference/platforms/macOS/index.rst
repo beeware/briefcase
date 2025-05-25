@@ -195,7 +195,8 @@ the document type is custom for your app, or defined by another app. You can
 also change some default assumptions, like whether your app can *edit* the
 document type or not. We will discuss this in more detail below.
 
-For reference, the following web pages from Apple provide more background information, while the implications for Briefcase are described below:
+For reference, the following web pages from Apple provide more background
+information, while the implications for Briefcase are described below:
 
 * `Standard UTIs defined by macOS <https://developer.apple.com/documentation/uniformtypeidentifiers/system-declared-uniform-type-identifiers>`_
 * `Defining file and data types for your app <https://developer.apple.com/documentation/uniformtypeidentifiers/defining-file-and-data-types-for-your-app>`_
@@ -206,7 +207,13 @@ For reference, the following web pages from Apple provide more background inform
 Configuration
 ~~~~~~~~~~~~~
 
-By defining a MIME type in your app's configuration, Briefcase will automatically determine whether the type is a core type, a type defined by another app, or a custom type for your app. It will then generate the appropriate entries in the ``Info.plist`` file for your app. For example, if you provide a MIME type of ``application/pdf``, Briefcase will determine that this is a core type and has a UTI ``com.adobe.pdf``. You can override the generated values by defining the following keys in your app's configuration:
+By defining a MIME type in your app's configuration, Briefcase will
+automatically determine whether the type is a core type, a type defined by
+another app, or a custom type for your app. It will then generate the
+appropriate entries in the ``Info.plist`` file for your app. For example, if you
+provide a MIME type of ``application/pdf``, Briefcase will determine that this
+is a core type and has a UTI ``com.adobe.pdf``. You can override the generated
+values by defining the following keys in your app's configuration:
 
 .. list-table::
   :header-rows: 1
@@ -240,7 +247,10 @@ Core Types
 ----------
 
 When the document type is a core type, Briefcase will automatically set the
-``macOS.is_core_type`` key to ``True``, ``macOS.LSItemContentTypes`` to the UTI of the core type, and ``macOS.LSHandlerRank`` to ``Alternate`` since your app is not the primary handler for that type. Since core types are defined by macOS, you do not need to provide  any other information about the type.
+``macOS.is_core_type`` key to ``True``, ``macOS.LSItemContentTypes`` to the UTI
+of the core type, and ``macOS.LSHandlerRank`` to ``Alternate`` since your app is
+not the primary handler for that type. Since core types are defined by macOS,
+you do not need to provide  any other information about the type.
 
 Custom Types
 ------------

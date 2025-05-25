@@ -687,8 +687,11 @@ A URL for help related to the document format.
 Platform support
 ----------------
 
-Some platforms have specific configuration options that are only relevant to that
-platform. Currently Apple platforms (macOS, iOS) have a more elaborate system for document types. If you want to support document types on these platforms, you will need to read the macOS :ref:`macOS-document-types` section for more information.
+Some platforms have specific configuration options that are only relevant to
+that platform. Currently Apple platforms (macOS, iOS) have a more elaborate
+system for document types. If you want to support document types on these
+platforms, you will need to read the macOS :ref:`macOS-document-types` section
+for more information.
 
 
 PEP621 compatibility
