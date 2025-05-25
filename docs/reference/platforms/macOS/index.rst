@@ -223,7 +223,7 @@ values by defining the following keys in your app's configuration:
     - Possible Values
     - Description
   * - ``macOS.is_core_type``
-    - ``True``, ``False``    
+    - ``True``, ``False``
     - Whether the document type is a core type defined by macOS.
   * - `macOS.CFBundleTypeRole <https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/cfbundletyperole>`_
     - ``Editor``, ``Viewer``, ``Shell``, ``QLGenerator``, ``None``
