@@ -121,6 +121,10 @@ enable library validation, you could add the following to your ``pyproject.toml`
 
     entitlement."com.apple.security.cs.disable-library-validation" = false
 
+Entitlements are interpolated into the macOS template by `briefcase create` but are not
+updated on each build. In order to incororate changed entitlements into your builds you
+should re-run `briefcase create` or remove the existing macOS build files.
+
 ``info``
 ~~~~~~~~
 
