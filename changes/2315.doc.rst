@@ -1,0 +1,1 @@
+Add explanation for why entitlement changes aren't incorporated on rebuild to macOS docs
