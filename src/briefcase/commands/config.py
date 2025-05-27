@@ -4,7 +4,7 @@ from pathlib import Path
 import tomli_w
 from platformdirs import PlatformDirs
 
-from briefcase.commands.base import BaseCommand
+from .base import BaseCommand
 
 
 class ConfigCommand(BaseCommand):

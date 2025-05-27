@@ -5,6 +5,10 @@ from platformdirs import PlatformDirs
 
 
 class Config:
+    """Resolve configuration values from CLI, project config,
+    global config and pyproject.toml, in that order
+    """
+
     def __init__(self, tools):
         self.tools = tools
         self._project_config = None
@@ -17,6 +21,9 @@ class Config:
         return {}
 
     def get(self, key: str, cli_value=None, prompt=None, choices=None):
+        """Retrieve a config value with full precedence resolution and
+        optional prompt support.
+        """
         if cli_value == "?":
             return self.tools.input.selection(prompt, choices)
 
@@ -48,6 +55,7 @@ class Config:
         return value
 
     def _get_nested(self, config, dotted_key):
+        """Traverse a nested dictionary using a dotted key like 'iOS.device'"""
         parts = dotted_key.split(".")
         for part in parts:
             if not isinstance(config, dict) or part not in config:
