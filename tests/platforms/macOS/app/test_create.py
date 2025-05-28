@@ -1016,11 +1016,13 @@ def test_install_support_package(
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
 
 
-def test_install_app_requirements_error_adds_install_hint(
+def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     create_command, first_app_templated
 ):
-    """Install_hint is added when RequirementsInstallError is raised
+    """Install_hint (mentioning a missing x86_64 wheel) is added when RequirementsInstallError is raised
     by _install_app_requirements in the macOS create command."""
+
+    create_command.tools.host_arch = "x86_64"
     first_app_templated.requires = ["package-one", "package_two", "packagethree"]
 
     # Mock app_context for the generated app to simulate pip failure
@@ -1031,7 +1033,7 @@ def test_install_app_requirements_error_adds_install_hint(
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
-        match="wheel has not been published for one or more of your requirements",
+        match="x86_64 wheel has not been published for one or more of your requirements",
     ):
         create_command._install_app_requirements(
             app=first_app_templated,
@@ -1041,3 +1043,38 @@ def test_install_app_requirements_error_adds_install_hint(
 
     # Ensure the mocked subprocess was called as expected
     mock_app_context.run.assert_called_once()
+
+
+def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
+    create_command, first_app_templated
+):
+    """Install_hint (mentioning a missing arm64 wheel) is added when RequirementsInstallError is raised
+    by _install_app_requirements in the macOS create command."""
+
+    create_command.tools.host_arch = "x86_64"
+    first_app_templated.requires = ["package-one", "package_two", "packagethree"]
+
+    # Fake a found binary package (so second install is triggered)
+    create_command.find_binary_packages = mock.Mock(
+        return_value=[("package-one", "1.0")]
+    )
+
+    # First call (host arch x86_64) succeeds, second (other arch arm64) fails
+    create_command.tools[first_app_templated].app_context.run.side_effect = [
+        None,
+        CalledProcessError(returncode=1, cmd="pip"),
+    ]
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError,
+        match="arm64 wheel has not been published for one or more of your requirements",
+    ):
+        create_command._install_app_requirements(
+            app=first_app_templated,
+            requires=first_app_templated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    assert create_command.tools[first_app_templated].app_context.run.call_count == 2

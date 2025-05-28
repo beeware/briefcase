@@ -446,12 +446,12 @@ def test_permissions_context(create_command, first_app, permissions, info, conte
     assert context == create_command.permissions_context(first_app, x_permissions)
 
 
-def test_install_app_requirements_error_adds_install_hint(
+def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel(
     create_command, first_app_generated
 ):
-    """Install_hint is added when RequirementsInstallError is raised
+    """Install_hint (mentioning a missing iphoneos wheel) is added when RequirementsInstallError is raised
     by _install_app_requirements in the iOS create command."""
-    first_app_generated.requires = ["package-one", "package_two", "packagethree"]
+    first_app_generated.requires = ["package-one", "package_two", "package_three"]
 
     # Mock app_context for the generated app to simulate pip failure
     mock_app_context = MagicMock(spec=Subprocess)
@@ -459,7 +459,9 @@ def test_install_app_requirements_error_adds_install_hint(
     create_command.tools[first_app_generated].app_context = mock_app_context
 
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
-    with pytest.raises(RequirementsInstallError, match="wheel could not be found"):
+    with pytest.raises(
+        RequirementsInstallError, match="`iphoneos` wheel could not be found"
+    ):
         create_command._install_app_requirements(
             app=first_app_generated,
             requires=first_app_generated.requires,
@@ -468,3 +470,32 @@ def test_install_app_requirements_error_adds_install_hint(
 
     # Ensure the mocked subprocess was called as expected
     mock_app_context.run.assert_called_once()
+
+
+def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulator_wheel(
+    create_command, first_app_generated
+):
+    """Install_hint (mentioning a missing iphonesimulator wheel) is added when RequirementsInstallError is raised
+    by _install_app_requirements in the iOS create command."""
+    first_app_generated.requires = ["package-one", "package_two", "package_three"]
+
+    # Mock app_context for the generated app to simulate pip failure
+    mock_app_context = MagicMock(spec=Subprocess)
+    mock_app_context.run.side_effect = [
+        None,
+        CalledProcessError(returncode=1, cmd="pip"),
+    ]
+    create_command.tools[first_app_generated].app_context = mock_app_context
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError, match="`iphonesimulator` wheel could not be found"
+    ):
+        create_command._install_app_requirements(
+            app=first_app_generated,
+            requires=first_app_generated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    assert mock_app_context.run.call_count == 2
