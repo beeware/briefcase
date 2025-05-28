@@ -9,6 +9,7 @@ from .base import BaseCommand
 
 class ConfigCommand(BaseCommand):
     command = "config"
+    description = "Set and store per-user configuration values for Briefcase."
     help = "Configure per-project or global settings."
 
     def add_options(self, parser):
