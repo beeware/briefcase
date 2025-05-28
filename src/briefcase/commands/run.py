@@ -216,6 +216,12 @@ class RunCommand(RunAppMixin, BaseCommand):
             dest="appname",
             help="The app to run",
         )
+        # Add a command-line option to specify a target simulator/emulator device
+        # This option can be overridden by configuration or prompt logic in __call__()
+        parser.add_argument(
+            "--device",
+            help="The simulator/emulator device to use when running the app",
+        )
 
         self._add_update_options(parser, context_label=" before running")
         self._add_test_options(parser, context_label="Run")
@@ -292,6 +298,27 @@ class RunCommand(RunAppMixin, BaseCommand):
         # and that the app configuration is finalized.
         self.finalize(app)
 
+        # TODO: Add support for other platforms like Android using a similar pattern
+        # For now, this device configuration is only used for iOS simulators
+
+        """Retrieve the target simulator/emulator device to use when running the app
+        Resolution order:
+        1. Command-line argument (--device)
+        2. Project-specific config in .briefcase/config.toml
+        3. Global config
+        4. Prompt the user (if "?" is passed or no default is available)
+        """
+        device = self.tools.config.get(
+            "iOS.device",
+            cli_value=options.get("device"),
+            prompt="Select a simulator to run your app on",
+            choices=[
+                "iPhone 14",
+                "iPhone 15",
+                "iPhone 16",
+            ],  # TODO: Dynamically fetch from self.tools.xcode
+        )
+
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
         if (
@@ -325,6 +352,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         state = self.run_app(
             app,
             test_mode=test_mode,
+            device=device,
             passthrough=[] if passthrough is None else passthrough,
             **full_options(state, options),
         )
