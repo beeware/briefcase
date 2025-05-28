@@ -152,11 +152,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 install_hint=f"""
 
 If an {self.tools.host_arch} wheel has not been published for one or more of your requirements,
-you must compile those wheels yourself, or build a non-universal app by setting:
-
-    universal_build = False
-
-in the macOS configuration section of your pyproject.toml.
+you must compile those wheels yourself.
 """,
             )
 
