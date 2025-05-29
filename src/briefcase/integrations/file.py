@@ -254,11 +254,11 @@ class File(Tool):
             elif isinstance(e, httpx.ConnectError):
                 try:
                     # It's a little difficult to verify exactly what might cause httpx
-                    # to raise a ConnectError, but we know that `__context__.args[0]`
-                    # will be an SSLCerVerificationError if there's a certificate problem.
+                    # to raise a ConnectError, but `__context__.__context__` should be
+                    # an SSLCertVerificationError if there's a certificate problem.
                     # Catch that case, and print the raw exception in other cases.
-                    context = e.__context__.args[0]
-                except (AttributeError, IndexError):
+                    context = e.__context__.__context__
+                except AttributeError:
                     context = None
 
                 if isinstance(context, ssl.SSLCertVerificationError):

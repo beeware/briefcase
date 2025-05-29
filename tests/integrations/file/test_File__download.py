@@ -491,7 +491,8 @@ def test_ssl_verification_error(mock_tools):
     """NetworkFailure is raised if the request fails due to SSL."""
     # Mock an SSL verification error
     error = httpx.ConnectError("connection error")
-    error.__context__ = httpcore.ConnectError(ssl.SSLCertVerificationError())
+    error.__context__ = httpcore.ConnectError()
+    error.__context__.__context__ = ssl.SSLCertVerificationError()
     mock_tools.httpx.stream.side_effect = [error]
 
     # Download the file
@@ -564,7 +565,8 @@ def test_unknown_httpcore_connectionerror(mock_tools):
 def test_unknown_httpx_connectionerror(mock_tools):
     """NetworkFailure is raised if an unknown httpx connection error occurs."""
     # Mock a connection error at the level of httpx
-    mock_tools.httpx.stream.side_effect = [httpx.ConnectError("connection error")]
+    error = httpx.ConnectError("connection error")
+    mock_tools.httpx.stream.side_effect = [error]
 
     # Download the file
     with pytest.raises(
