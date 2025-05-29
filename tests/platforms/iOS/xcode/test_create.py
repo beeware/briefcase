@@ -451,6 +451,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel
 ):
     """Install_hint (mentioning a missing iphoneos wheel) is added when RequirementsInstallError is raised
     by _install_app_requirements in the iOS create command."""
+    first_app_generated.min_os_version = "15.4"
     first_app_generated.requires = ["package-one", "package_two", "package_three"]
 
     # Mock app_context for the generated app to simulate pip failure
@@ -460,7 +461,11 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel
 
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
-        RequirementsInstallError, match="`iphoneos` wheel could not be found"
+        RequirementsInstallError,
+        match=(
+            r"This may be because the `iphoneos` wheels that are available are not compatible\n"
+            r"with a minimum iOS version of 15.4."
+        ),
     ):
         create_command._install_app_requirements(
             app=first_app_generated,
@@ -477,6 +482,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulato
 ):
     """Install_hint (mentioning a missing iphonesimulator wheel) is added when RequirementsInstallError is raised
     by _install_app_requirements in the iOS create command."""
+    first_app_generated.min_os_version = "15.4"
     first_app_generated.requires = ["package-one", "package_two", "package_three"]
 
     # Mock app_context for the generated app to simulate pip failure
@@ -489,7 +495,13 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulato
 
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
-        RequirementsInstallError, match="`iphonesimulator` wheel could not be found"
+        RequirementsInstallError,
+        match=(
+            r"This may indicate that an `iphoneos` wheel could be found, but an\n"
+            r"`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
+            r"binary wheels that are available are not compatible with a minimum iOS\n"
+            r"version of 15.4.\n"
+        ),
     ):
         create_command._install_app_requirements(
             app=first_app_generated,

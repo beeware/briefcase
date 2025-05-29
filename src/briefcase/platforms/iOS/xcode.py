@@ -375,10 +375,10 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                     "PYTHONPATH": str(device_platform_site),
                 }
             },
-            install_hint="""
+            install_hint=f"""
 
-It may also indicate that an `iphonesimulator` wheel could be found, but an
-`iphoneos` wheel could not be found.
+This may be because the `iphoneos` wheels that are available are not compatible
+with a minimum iOS version of {ios_min_version}.
 """,
         )
 
@@ -397,10 +397,12 @@ It may also indicate that an `iphonesimulator` wheel could be found, but an
                     "PYTHONPATH": str(simulator_platform_site),
                 },
             },
-            install_hint="""
+            install_hint=f"""
 
-It may also indicate that an `iphoneos` wheel could be found, but an
-`iphonesimulator` wheel could not be found.
+This may indicate that an `iphoneos` wheel could be found, but an
+`iphonesimulator` wheel could not be found; or that the `iphonesimulator`
+binary wheels that are available are not compatible with a minimum iOS
+version of {ios_min_version}.
 """,
         )
 

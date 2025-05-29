@@ -151,8 +151,8 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 ],
                 install_hint=f"""
 
-If an {self.tools.host_arch} wheel has not been published for one or more of your requirements,
-you must compile those wheels yourself.
+This may be because an {self.tools.host_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
 """,
             )
 
@@ -197,8 +197,10 @@ you must compile those wheels yourself.
                         ],
                         install_hint=f"""
 
-If an {other_arch} wheel has not been published for one or more of your requirements,
-you must compile those wheels yourself, or build a non-universal app by setting:
+This may be because an {other_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+
+You may need to build a non-universal app by setting:
 
     universal_build = False
 

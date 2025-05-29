@@ -1023,6 +1023,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     by _install_app_requirements in the macOS create command."""
 
     create_command.tools.host_arch = "x86_64"
+    first_app_templated.min_os_version = "12.0"
     first_app_templated.requires = ["package-one", "package_two", "packagethree"]
 
     # Mock app_context for the generated app to simulate pip failure
@@ -1033,7 +1034,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
-        match="x86_64 wheel has not been published for one or more of your requirements",
+        match=r"x86_64 wheel that is compatible with a minimum\nmacOS version of 12.0",
     ):
         create_command._install_app_requirements(
             app=first_app_templated,
@@ -1052,6 +1053,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
     by _install_app_requirements in the macOS create command."""
 
     create_command.tools.host_arch = "x86_64"
+    first_app_templated.min_os_version = "12.0"
     first_app_templated.requires = ["package-one", "package_two", "packagethree"]
 
     # Fake a found binary package (so second install is triggered)
@@ -1068,7 +1070,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
-        match="arm64 wheel has not been published for one or more of your requirements",
+        match=r"arm64 wheel that is compatible with a minimum\nmacOS version of 12.0",
     ):
         create_command._install_app_requirements(
             app=first_app_templated,
