@@ -21,3 +21,4 @@ stand alone.
    upgrade-from-v0.2
    contribute/index
    internal/index
+   debugging_vscode

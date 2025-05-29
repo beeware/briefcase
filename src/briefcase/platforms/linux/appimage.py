@@ -12,6 +12,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -184,8 +185,8 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
 
-    def output_format_template_context(self, app: AppConfig):
-        context = super().output_format_template_context(app)
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+        context = super().output_format_template_context(app, debug_mode)
 
         try:
             manylinux_arch = {
@@ -366,10 +367,24 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        return None  # TODO: Where are the app packages located?
+
     def run_app(
         self,
         app: AppConfig,
         test_mode: bool,
+        debug_mode: bool,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -380,7 +395,14 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(
+            app=app,
+            test_mode=test_mode,
+            debug_mode=debug_mode,
+            debugger_host=debugger_host,
+            debugger_port=debugger_port,
+            **kwargs,
+        )
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

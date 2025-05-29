@@ -307,6 +307,7 @@ class AppConfig(BaseConfig):
         template_branch=None,
         test_sources=None,
         test_requires=None,
+        debug_requires=None,
         supported=True,
         long_description=None,
         console_app=False,
@@ -336,6 +337,7 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.test_sources = test_sources
         self.test_requires = test_requires
+        self.debug_requires = [] if debug_requires is None else debug_requires
         self.supported = supported
         self.long_description = long_description
         self.license = license
@@ -343,6 +345,7 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
+        self.debugger = None
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -446,6 +449,17 @@ class AppConfig(BaseConfig):
             if path not in paths:
                 paths.append(path)
         return paths
+
+    def all_sources(self, test_mode: bool) -> list[str]:
+        """Get all sources of the application that should be copied to the app.
+
+        :param test_mode: Is the test mode enabled?
+        :returns: The Path to the dist-info folder.
+        """
+        sources = self.sources.copy() if self.sources else []
+        if test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
 
     def main_module(self, test_mode: bool):
         """The path to the main module for the app.

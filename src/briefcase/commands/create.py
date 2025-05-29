@@ -207,14 +207,14 @@ class CreateCommand(BaseCommand):
         """
         return {}
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
-    def generate_app_template(self, app: AppConfig):
+    def generate_app_template(self, app: AppConfig, debug_mode: bool = False):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -258,7 +258,9 @@ class CreateCommand(BaseCommand):
         extra_context.update(self.permissions_context(app, self._x_permissions(app)))
 
         # Add in any extra template context required by the output format.
-        extra_context.update(self.output_format_template_context(app))
+        extra_context.update(
+            self.output_format_template_context(app, debug_mode=debug_mode)
+        )
 
         # Create the platform directory (if it doesn't already exist)
         output_path = self.bundle_path(app).parent
@@ -670,7 +672,9 @@ class CreateCommand(BaseCommand):
         else:
             self.console.info("No application requirements.")
 
-    def install_app_requirements(self, app: AppConfig, test_mode: bool):
+    def install_app_requirements(
+        self, app: AppConfig, test_mode: bool, debug_mode: bool
+    ):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -680,16 +684,21 @@ class CreateCommand(BaseCommand):
            by the ``app_packages_path`` in the template path index.
 
         If ``test_mode`` is True, the test requirements will also be installed.
+        If ``debug_mode`` is True, the debug requirements will also be installed.
 
         If the path index doesn't specify either of the path index entries,
         an error is raised.
 
         :param app: The config object for the app
         :param test_mode: Should the test requirements be installed?
+        :param debug_mode: Should the debug requirements be installed?
         """
         requires = app.requires.copy() if app.requires else []
         if test_mode and app.test_requires:
             requires.extend(app.test_requires)
+
+        if debug_mode and app.debug_requires:
+            requires.extend(app.debug_requires)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -729,9 +738,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.all_sources(test_mode)
 
         # Install app code.
         if sources:
@@ -912,11 +919,18 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
+    def create_app(
+        self,
+        app: AppConfig,
+        test_mode: bool = False,
+        debug_mode: bool = False,
+        **options,
+    ):
         """Create an application bundle.
 
         :param app: The config object for the app
         :param test_mode: Should the app be updated in test mode? (default: False)
+        :param debug_mode: Should the app be updated in debug mode? (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -936,7 +950,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(bundle_path)
 
         self.console.info("Generating application template...", prefix=app.app_name)
-        self.generate_app_template(app=app)
+        self.generate_app_template(app=app, debug_mode=debug_mode)
 
         self.console.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
@@ -960,7 +974,9 @@ class CreateCommand(BaseCommand):
         self.install_app_code(app=app, test_mode=test_mode)
 
         self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app, test_mode=test_mode)
+        self.install_app_requirements(
+            app=app, test_mode=test_mode, debug_mode=debug_mode
+        )
 
         self.console.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

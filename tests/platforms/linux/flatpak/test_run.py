@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 
 import pytest
@@ -30,7 +31,14 @@ def test_run_gui_app(run_command, first_app_config):
     run_command.tools.flatpak.run.return_value = log_popen
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=False,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # App is executed
     run_command.tools.flatpak.run.assert_called_once_with(
@@ -60,6 +68,9 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         test_mode=False,
+        debug_mode=False,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -68,6 +79,7 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config):
         bundle_identifier="com.example.first-app",
         args=["foo", "--bar"],
         stream_output=True,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # The streamer was started
@@ -84,7 +96,14 @@ def test_run_gui_app_failed(run_command, first_app_config, tmp_path):
     run_command.tools.flatpak.run.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=False,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # The run command was still invoked
     run_command.tools.flatpak.run.assert_called_once_with(
@@ -102,7 +121,14 @@ def test_run_console_app(run_command, first_app_config):
     first_app_config.console_app = True
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=False,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # App is executed
     run_command.tools.flatpak.run.assert_called_once_with(
@@ -124,6 +150,9 @@ def test_run_console_app_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         test_mode=False,
+        debug_mode=False,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -132,6 +161,7 @@ def test_run_console_app_with_passthrough(run_command, first_app_config):
         bundle_identifier="com.example.first-app",
         args=["foo", "--bar"],
         stream_output=False,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # No attempt to stream was made
@@ -145,7 +175,14 @@ def test_run_console_app_failed(run_command, first_app_config, tmp_path):
     run_command.tools.flatpak.run.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(
+            first_app_config,
+            test_mode=False,
+            debug_mode=False,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
+        )
 
     # The run command was still invoked
     run_command.tools.flatpak.run.assert_called_once_with(
@@ -169,14 +206,21 @@ def test_run_test_mode(run_command, first_app_config, is_console_app):
     run_command.tools.flatpak.run.return_value = log_popen
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(
+        first_app_config,
+        test_mode=True,
+        debug_mode=False,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
+    )
 
     # App is executed
     run_command.tools.flatpak.run.assert_called_once_with(
         bundle_identifier="com.example.first-app",
         args=[],
-        main_module="tests.first_app",
         stream_output=True,
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
     )
 
     # The streamer was started
@@ -202,6 +246,9 @@ def test_run_test_mode_with_args(run_command, first_app_config, is_console_app):
     run_command.run_app(
         first_app_config,
         test_mode=True,
+        debug_mode=False,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -209,8 +256,8 @@ def test_run_test_mode_with_args(run_command, first_app_config, is_console_app):
     run_command.tools.flatpak.run.assert_called_once_with(
         bundle_identifier="com.example.first-app",
         args=["foo", "--bar"],
-        main_module="tests.first_app",
         stream_output=True,
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
     )
 
     # The streamer was started
@@ -218,5 +265,57 @@ def test_run_test_mode_with_args(run_command, first_app_config, is_console_app):
         first_app_config,
         popen=log_popen,
         test_mode=True,
+        clean_output=False,
+    )
+
+
+def test_run_debug_mode(run_command, first_app_config, tmp_path):
+    """A flatpak can be executed in debug mode."""
+    # Set up the log streamer to return a known stream and a good return code
+    log_popen = mock.MagicMock()
+    run_command.tools.flatpak.run.return_value = log_popen
+
+    # Run the app
+    run_command.run_app(
+        first_app_config,
+        test_mode=False,
+        debug_mode=True,
+        debugger_host="somehost",
+        debugger_port=9999,
+        passthrough=[],
+    )
+
+    # App is executed
+    run_command.tools.flatpak.run.assert_called_once_with(
+        bundle_identifier="com.example.first-app",
+        args=[],
+        stream_output=True,
+        env={
+            "BRIEFCASE_DEBUGGER": json.dumps(
+                {
+                    "host": "somehost",
+                    "port": 9999,
+                    "app_path_mappings": {
+                        "device_sys_path_regex": "app$",
+                        "device_subfolders": ["first_app"],
+                        "host_folders": [str(tmp_path / "base_path/src/first_app")],
+                    },
+                    "app_packages_path_mappings": {
+                        "sys_path_regex": "app_packages$",
+                        "host_folder": str(
+                            tmp_path
+                            / "base_path/build/first-app/linux/flatpak/build/files/briefcase/app_packages"
+                        ),
+                    },
+                }
+            )
+        },
+    )
+
+    # The streamer was started
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        test_mode=False,
         clean_output=False,
     )
