@@ -251,10 +251,35 @@ class File(Tool):
                 hint = "exceeded redirects when downloading the file.\n\nPlease report this as a bug to Briefcase."
             elif isinstance(e, httpx.DecodingError):
                 hint = "the server sent a malformed response."
+            elif isinstance(e, httpx.ConnectError):
+                try:
+                    # It's a little difficult to verify exactly what might cause httpx
+                    # to raise a ConnectError, but we know that `__context__.args[0]`
+                    # will be an SSLCerVerificationError if there's a certificate problem.
+                    # Catch that case, and print the raw exception in other cases.
+                    context = e.__context__.args[0]
+                except (AttributeError, IndexError):
+                    context = None
+
+                if isinstance(context, ssl.SSLCertVerificationError):
+                    hint = (
+                        "a connection to the server could not be established due to "
+                        "a certificate verification problem.\n\n"
+                        "This probably indicates an issue with a proxy configuration "
+                        "on your computer."
+                    )
+                else:
+                    hint = (
+                        "a connection to the server could not be established.\n\n"
+                        f"The reported cause of the problem was {e}"
+                    )
             else:
                 # httpx.TransportError
                 # Use the default hint for generic network communication errors
-                hint = None
+                hint = (
+                    "is your computer offline?\n\n"
+                    f"The reported cause of the problem was {e}"
+                )
 
             raise NetworkFailure(
                 f"download {description}",

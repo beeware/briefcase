@@ -1,12 +1,14 @@
 import os
 import platform
 import shutil
+import ssl
 import stat
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Optional
 from unittest import mock
 
+import httpcore
 import httpx
 import pytest
 
@@ -472,6 +474,115 @@ def test_redirect_connection_error(mock_tools):
     mock_tools.httpx.stream.assert_called_with(
         "GET",
         "https://example.com/something.zip?useful=Yes",
+        follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
+    )
+
+    # The file doesn't exist as a result of the download failure
+    assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not created, moved, or deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
+
+def test_ssl_verification_error(mock_tools):
+    """NetworkFailure is raised if the request fails due to SSL."""
+    # Mock an SSL verification error
+    error = httpx.ConnectError("connection error")
+    error.__context__ = httpcore.ConnectError(ssl.SSLCertVerificationError())
+    mock_tools.httpx.stream.side_effect = [error]
+
+    # Download the file
+    with pytest.raises(
+        NetworkFailure,
+        match=(
+            r"a connection to the server could not be established "
+            r"due to a certificate verification problem"
+        ),
+    ):
+        mock_tools.file.download(
+            url="https://example.com/something.zip",
+            download_path=mock_tools.base_path,
+        )
+
+    # httpx.stream has been invoked, but nothing else.
+    mock_tools.httpx.stream.assert_called_with(
+        "GET",
+        "https://example.com/something.zip",
+        follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
+    )
+
+    # The file doesn't exist as a result of the download failure
+    assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not created, moved, or deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
+
+def test_unknown_httpcore_connectionerror(mock_tools):
+    """NetworkFailure is raised if an unknown core connection error occurs."""
+    # Mock a connection error at the level of httpcore
+    error = httpx.ConnectError("connection error")
+    error.__context__ = httpcore.ConnectError()
+    mock_tools.httpx.stream.side_effect = [error]
+
+    # Download the file
+    with pytest.raises(
+        NetworkFailure,
+        match=(
+            r"a connection to the server could not be established.\n\n"
+            r"The reported cause of the problem "
+        ),
+    ):
+        mock_tools.file.download(
+            url="https://example.com/something.zip",
+            download_path=mock_tools.base_path,
+        )
+
+    # httpx.stream has been invoked, but nothing else.
+    mock_tools.httpx.stream.assert_called_with(
+        "GET",
+        "https://example.com/something.zip",
+        follow_redirects=True,
+        verify=mock_tools.file.ssl_context,
+    )
+
+    # The file doesn't exist as a result of the download failure
+    assert not (mock_tools.base_path / "something.zip").exists()
+
+    # Temporary file was not created, moved, or deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
+
+def test_unknown_httpx_connectionerror(mock_tools):
+    """NetworkFailure is raised if an unknown httpx connection error occurs."""
+    # Mock a connection error at the level of httpx
+    mock_tools.httpx.stream.side_effect = [httpx.ConnectError("connection error")]
+
+    # Download the file
+    with pytest.raises(
+        NetworkFailure,
+        match=(
+            r"a connection to the server could not be established.\n\n"
+            r"The reported cause of the problem "
+        ),
+    ):
+        mock_tools.file.download(
+            url="https://example.com/something.zip",
+            download_path=mock_tools.base_path,
+        )
+
+    # httpx.stream has been invoked, but nothing else.
+    mock_tools.httpx.stream.assert_called_with(
+        "GET",
+        "https://example.com/something.zip",
         follow_redirects=True,
         verify=mock_tools.file.ssl_context,
     )
