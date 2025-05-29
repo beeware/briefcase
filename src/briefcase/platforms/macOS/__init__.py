@@ -149,6 +149,11 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                     "--platform",
                     f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
                 ],
+                install_hint=f"""
+
+This may be because an {self.tools.host_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+""",
             )
 
             # Find all the packages with binary components.
@@ -192,8 +197,10 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                         ],
                         install_hint=f"""
 
-If an {other_arch} wheel has not been published for one or more of your requirements,
-you must compile those wheels yourself, or build a non-universal app by setting:
+This may be because an {other_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+
+You may need to build a non-universal app by setting:
 
     universal_build = False
 
