@@ -648,12 +648,8 @@ a custom location for Briefcase's tools.
         self.verify_host()
         self.verify_tools()
 
-        if app is None:
-            for app in self.apps.values():
-                if hasattr(app, "__draft__"):
-                    self.finalize_app_config(app)
-                    delattr(app, "__draft__")
-        else:
+        apps = self.apps.values() if app is None else [app]
+        for app in apps:
             if hasattr(app, "__draft__"):
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
