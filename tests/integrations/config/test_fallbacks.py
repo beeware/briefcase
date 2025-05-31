@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,7 +10,7 @@ from briefcase.integrations.config import Config
 @pytest.fixture
 def mock_tools():
     tools = Mock()
-    tools.base_path = "project/root"
+    tools.base_path = Path("project/root")
     tools.input.selection = Mock(return_value="prompt-val")
     tools.app_configs = {"myapp": Mock()}
     tools.app_configs["myapp"].author = "pyproject-val"
@@ -34,7 +35,10 @@ def test_missing_pyproject_attribute(mock_load_toml, mock_tools):
 
 @patch("briefcase.integrations.config.Config.load_toml")
 def test_toml_decode_error(mock_load_toml, mock_tools):
-    mock_load_toml.side_effect = tomli.TOMLDecodeError("Invalid TOML", b"content", 1, 1)
+    mock_load_toml.side_effect = tomli.TOMLDecodeError(
+        msg="Invalid TOML", doc="content", pos=1
+    )
+
     config = Config(mock_tools)
     with pytest.raises(tomli.TOMLDecodeError):
         config.get("author")
@@ -43,7 +47,7 @@ def test_toml_decode_error(mock_load_toml, mock_tools):
 @patch("briefcase.integrations.config.Config.load_toml")
 def test_multiple_apps_suppresses_pyproject(mock_load_toml):
     tools = Mock()
-    tools.base_path = "project/root"
+    tools.base_path = Path("project/root")
     tools.input.selection = Mock(return_value="prompt-val")
     tools.app_configs = {"a": Mock(), "b": Mock()}  # Multiple apps
     mock_load_toml.side_effect = [{}, {}]
