@@ -1,6 +1,7 @@
 # import argparse
 from pathlib import Path
 
+import tomli
 import tomli_w
 from platformdirs import PlatformDirs
 
@@ -9,6 +10,7 @@ from .base import BaseCommand
 
 class ConfigCommand(BaseCommand):
     command = "config"
+    platform = None
     description = "Set and store per-user configuration values for Briefcase."
     help = "Configure per-project or global settings."
 
@@ -32,7 +34,7 @@ class ConfigCommand(BaseCommand):
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config = {}
         if config_path.exists():
-            config = self.tools.toml.load(config_path.open("rb"))
+            config = tomli.load(config_path.open("rb"))
 
         # Split key into nested structure
         keys = key.split(".")
@@ -44,7 +46,7 @@ class ConfigCommand(BaseCommand):
         with config_path.open("wb") as f:
             tomli_w.dump(config, f)
 
-    def __call__(self, key, value, global_config=False, **options):
+    def __call__(self, key: str, value: str, global_config: bool = False, **options):
         if global_config:
             config_path = (
                 Path(PlatformDirs("org.beeware.briefcase", "Beeware").user_config_dir)
@@ -54,6 +56,21 @@ class ConfigCommand(BaseCommand):
             config_path = self.base_path / ".briefcase" / "config.toml"
 
         self.write_config(config_path, key, value)
-        self.logger.info(
+        self.console.info(
             f"Set {'global' if global_config else 'project'} config: {key} = {value}"
         )
+
+    def binary_path(self, app):
+        raise NotImplementedError("ConfigCommand does not use binary_path.")
+
+    def output_format(self):
+        raise NotImplementedError("ConfigCommand does not use output_format.")
+
+    def distribution_path(self, app):
+        raise NotImplementedError("ConfigCommand does not use distribution_path.")
+
+    def bundle_path(self, app):
+        raise NotImplementedError("ConfigCommand does not use bundle_path.")
+
+    def binary_executable_path(self, app):
+        raise NotImplementedError("ConfigCommand does not use binary_executable_path.")

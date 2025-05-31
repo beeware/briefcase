@@ -51,8 +51,16 @@ class Config:
             return value
 
         # pyproject.toml
-        value = self._get_nested(self.tools.config.project, key)
-        return value
+        if len(self.tools.app_configs) == 1:  # Check if there's only one app
+            app_config = list(self.tools.app_configs.values())[0]
+            try:
+                for part in key.split("."):
+                    app_config = getattr(app_config, part)
+                return app_config
+            except AttributeError:
+                pass
+
+        return None
 
     def _get_nested(self, config, dotted_key):
         """Traverse a nested dictionary using a dotted key like 'iOS.device'"""
