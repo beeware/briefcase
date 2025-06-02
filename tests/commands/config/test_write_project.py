@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 import tomli
@@ -16,19 +16,20 @@ def config_command(tmp_path):
     return ConfigCommand(tools=tools, console=console)
 
 
-def test_write_project_config(tmp_path, config_command):
-    # Set up project directory structure
-    project_dir = tmp_path / "myapp"
-    config_path = project_dir / ".briefcase" / "config.toml"
-    config_path.parent.mkdir(parents=True, exist_ok=True)
+def test_write_project_config(config_command, monkeypatch, tmp_path):
+    # Simulate running inside a valid Briefcase project
+    monkeypatch.chdir(tmp_path)
 
-    # Set config_command base path
-    config_command.tools.base_path = project_dir
+    # Create a minimal valid pyproject.toml
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.briefcase]\nproject_name = 'test'\n"
+    )
 
-    with patch("briefcase.commands.config.tomli.load", return_value={}):
-        config_command(key="iOS.device", value="iPhone 15", global_config=False)
+    config_command.__call__(key="iOS.device", value="iPhone 15", global_config=False)
 
+    # Load and verify the project-level config
+    config_path = tmp_path / ".briefcase" / "config.toml"
     with config_path.open("rb") as f:
         config = tomli.load(f)
 
-    assert config["iOS"]["device"] == "iPhone 15"
+    assert config == {"iOS": {"device": "iPhone 15"}}
