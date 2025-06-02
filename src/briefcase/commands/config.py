@@ -1,14 +1,22 @@
-# import argparse
 from pathlib import Path
 
 import tomli
 import tomli_w
 from platformdirs import PlatformDirs
 
+from briefcase.exceptions import BriefcaseConfigError
+
 from .base import BaseCommand
 
 
 class ConfigCommand(BaseCommand):
+    """Command to modify Briefcase configuration settings.
+
+    Allows setting of individual configuration keys within either a
+    project-level or global configuration file. Useful for scripting
+    or user-driven configuration outside of interactive prompts.
+    """
+
     command = "config"
     platform = None
     description = "Set and store per-user configuration values for Briefcase."
@@ -34,7 +42,11 @@ class ConfigCommand(BaseCommand):
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config = {}
         if config_path.exists():
-            config = tomli.load(config_path.open("rb"))
+            try:
+                with config_path.open("rb") as f:
+                    config = tomli.load(f)
+            except PermissionError as e:
+                raise BriefcaseConfigError(f"Unable to read config file: {e}")
 
         # Split key into nested structure
         keys = key.split(".")
@@ -43,17 +55,34 @@ class ConfigCommand(BaseCommand):
             current = current.setdefault(k, {})
         current[keys[-1]] = value
 
-        with config_path.open("wb") as f:
-            tomli_w.dump(config, f)
+        try:
+            with config_path.open("wb") as f:
+                tomli_w.dump(config, f)
+        except PermissionError as e:
+            raise BriefcaseConfigError(f"Unable to write config file: {e}")
 
     def __call__(self, key: str, value: str, global_config: bool = False, **options):
+        """Set a configuration value in a Briefcase project or global config.
+
+        Stores the provided key-value pair in either the project's config.toml
+        or the user's global config.toml file, depending on the --global flag.
+
+        :param key: The configuration key to set, as a dot-delimited path.
+        :param value: The value to assign to the configuration key.
+        :param global_config: Should the global config file be modified instead of the
+        project-level one?
+        :param options: Additional keyword options passed to the command (unused).
+        """
+        if "." not in key:
+            raise BriefcaseConfigError("Key must be in the format 'section.option")
+
         if global_config:
             config_path = (
                 Path(PlatformDirs("org.beeware.briefcase", "Beeware").user_config_dir)
                 / "config.toml"
             )
         else:
-            config_path = self.base_path / ".briefcase" / "config.toml"
+            config_path = self.tools.base_path / ".briefcase" / "config.toml"
 
         self.write_config(config_path, key, value)
         self.console.info(
