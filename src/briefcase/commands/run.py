@@ -219,7 +219,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         # Add a command-line option to specify a target simulator/emulator device
         # This option can be overridden by configuration or prompt logic in __call__()
         parser.add_argument(
-            "--device",
+            "--simulator-device",
+            dest="simulator_device",
             help="The simulator/emulator device to use when running the app",
         )
 
@@ -256,6 +257,46 @@ class RunCommand(RunAppMixin, BaseCommand):
             args["env"] = env
 
         return args
+
+    def get_device_choices(self):
+        """Return a list of valid devices for the current platform.
+
+        This list is used for interactive prompts and defaults when a device
+        isn't explicitly specified via CLI or config. The list should be
+        overridden or extended to dynamically fetch available devices
+        (e.g., from Xcode or AVD manager).
+        """
+        if self.platform == "iOS":
+            return ["iPhone 14", "iPhone 15", "iPhone 16"]  # TODO: fetch dynamically
+        elif self.platform == "android":
+            return [
+                "Pixel_5",
+                "Nexus_5X_API_28",
+                "Galaxy_Nexus_API_27",
+            ]  # TODO: fetch dynamically
+        elif self.platform == "wearos":
+            return ["WearOS_3", "WearOS_4"]  # TODO: fetch dynamically
+        # No emulators options needed for desktop or web
+        return []
+
+    def get_run_device(self, cli_value=None):
+        """Retrieve the target simulator/emulator device to use when running the app
+        Resolution order:
+        1. Command-line argument (--simulator_device)
+        2. Project-specific config in .briefcase/config.toml
+        3. Global config (platform-specific user config)
+        4. Prompt the user (if "?" is passed or no default is available)
+
+        The resolved device is passed to platform backends as the launch target.
+        """
+        config_key = f"{self.platform}.device"
+
+        return self.tools.config.get(
+            config_key,
+            cli_value=cli_value,
+            prompt="Select a device to run your app on",
+            choices=self.get_device_choices(),
+        )
 
     @abstractmethod
     def run_app(self, app: AppConfig, **options) -> dict | None:
@@ -294,30 +335,11 @@ class RunCommand(RunAppMixin, BaseCommand):
                 "Project specifies more than one application; use --app to specify which one to start."
             )
 
+        device = self.get_run_device(cli_value=options.get("simulator_device"))
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app)
-
-        # TODO: Add support for other platforms like Android using a similar pattern
-        # For now, this device configuration is only used for iOS simulators
-
-        """Retrieve the target simulator/emulator device to use when running the app
-        Resolution order:
-        1. Command-line argument (--device)
-        2. Project-specific config in .briefcase/config.toml
-        3. Global config
-        4. Prompt the user (if "?" is passed or no default is available)
-        """
-        device = self.tools.config.get(
-            "iOS.device",
-            cli_value=options.get("device"),
-            prompt="Select a simulator to run your app on",
-            choices=[
-                "iPhone 14",
-                "iPhone 15",
-                "iPhone 16",
-            ],  # TODO: Dynamically fetch from self.tools.xcode
-        )
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
