@@ -82,6 +82,17 @@ class ConfigCommand(BaseCommand):
                 / "config.toml"
             )
         else:
+            pyproject = Path.cwd() / "pyproject.toml"
+            # Ensure base_path is valid
+            if (
+                not pyproject.exists()
+                or "[tool.briefcase]" not in pyproject.read_text()
+            ):
+                raise BriefcaseConfigError(
+                    "Not a valid Briefcase project: pyproject.toml missing or invalid."
+                )
+
+            self.tools.base_path = Path.cwd()
             config_path = self.tools.base_path / ".briefcase" / "config.toml"
 
         self.write_config(config_path, key, value)
