@@ -17,8 +17,26 @@ def config_command(tmp_path):
     return ConfigCommand(tools=tools, console=console)
 
 
+@pytest.mark.parametrize(
+    "key,value,expected",
+    [
+        ("author.name", "Jane Smith", {"author": {"name": "Jane Smith"}}),
+        ("author.email", "jane@example.com", {"author": {"email": "jane@example.com"}}),
+        (
+            "macOS.identity",
+            "Apple Dev: Jane (TEAM123)",
+            {"macOS": {"identity": "Apple Dev: Jane (TEAM123)"}},
+        ),
+        ("iOS.identity", "iOS Signing Cert", {"iOS": {"identity": "iOS Signing Cert"}}),
+        ("android.device", "Pixel_5", {"android": {"device": "Pixel_5"}}),
+        ("windows.identity", "Windows Cert", {"windows": {"identity": "Windows Cert"}}),
+        ("linux.identity", "Linux Cert", {"linux": {"identity": "Linux Cert"}}),
+    ],
+)
 @patch("briefcase.commands.config.PlatformDirs")
-def test_write_global_config(mock_platform_dirs, tmp_path, config_command):
+def test_write_global_config(
+    mock_platform_dirs, tmp_path, config_command, key, value, expected
+):
     # Set up a fake global config directory
     global_config_dir = tmp_path / "user_config"
     config_path = global_config_dir / "config.toml"
@@ -32,13 +50,10 @@ def test_write_global_config(mock_platform_dirs, tmp_path, config_command):
 
     config_command.tools.path = mock_instance
 
-    config_command(
-        key="android.sdk_path", value="/usr/local/android-sdk", global_config=True
-    )
+    config_command(key=key, value=value, global_config=True)
 
     assert config_path.exists()
     with config_path.open("rb") as f:
         config = tomli.load(f)
 
-    assert "android" in config
-    assert config["android"]["sdk_path"] == "/usr/local/android-sdk"
+    assert config == expected

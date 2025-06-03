@@ -16,7 +16,25 @@ def config_command(tmp_path):
     return ConfigCommand(tools=tools, console=console)
 
 
-def test_write_project_config(config_command, monkeypatch, tmp_path):
+@pytest.mark.parametrize(
+    "key,value,expected",
+    [
+        ("author.name", "Jane Smith", {"author": {"name": "Jane Smith"}}),
+        ("author.email", "jane@example.com", {"author": {"email": "jane@example.com"}}),
+        (
+            "macOS.identity",
+            "Apple Dev: Jane (TEAM123)",
+            {"macOS": {"identity": "Apple Dev: Jane (TEAM123)"}},
+        ),
+        ("iOS.identity", "iOS Signing Cert", {"iOS": {"identity": "iOS Signing Cert"}}),
+        ("android.device", "Pixel_5", {"android": {"device": "Pixel_5"}}),
+        ("windows.identity", "Windows Cert", {"windows": {"identity": "Windows Cert"}}),
+        ("linux.identity", "Linux Cert", {"linux": {"identity": "Linux Cert"}}),
+    ],
+)
+def test_write_project_config(
+    config_command, monkeypatch, tmp_path, key, value, expected
+):
     # Simulate running inside a valid Briefcase project
     monkeypatch.chdir(tmp_path)
 
@@ -25,11 +43,11 @@ def test_write_project_config(config_command, monkeypatch, tmp_path):
         "[tool.briefcase]\nproject_name = 'test'\n"
     )
 
-    config_command.__call__(key="iOS.device", value="iPhone 15", global_config=False)
+    config_command.__call__(key=key, value=value, global_config=False)
 
     # Load and verify the project-level config
     config_path = tmp_path / ".briefcase" / "config.toml"
     with config_path.open("rb") as f:
         config = tomli.load(f)
 
-    assert config == {"iOS": {"device": "iPhone 15"}}
+    assert config == expected

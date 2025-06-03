@@ -19,23 +19,36 @@ class ConfigCommand(BaseCommand):
 
     command = "config"
     platform = None
-    description = "Set and store per-user configuration values for Briefcase."
+    output_format = None
+    description = (
+        "Set a configuration value for the current project or globally using the --global flag.\n\n"
+        "Configuration is stored in .briefcase/config.toml or the global config path.\n"
+        "Use keys like:\n"
+        "  - author.name\n"
+        "  - author.email\n"
+        "  - iOS.device\n"
+        "  - android.device\n"
+        "  - macOS.identity\n"
+        "  - network.proxy\n"
+        "  - network.cache_path\n\n"
+        "Precedence: CLI > project config > global config."
+    )
     help = "Configure per-project or global settings."
 
     def add_options(self, parser):
         parser.add_argument(
             "key",
-            help="The configuration key (e.g., iOS.device)",
+            help="The configuration key (e.g., author.name, iOS.device)",
         )
         parser.add_argument(
             "value",
-            help="The value to set",
+            help="The value to assign to the key",
         )
         parser.add_argument(
             "--global",
             dest="global_config",
             action="store_true",
-            help="Set the configuration value globally instead of for this this project.",
+            help="Set the configuration value globally instead of for this project.",
         )
 
     def write_config(self, config_path, key, value):
@@ -73,8 +86,9 @@ class ConfigCommand(BaseCommand):
         project-level one?
         :param options: Additional keyword options passed to the command (unused).
         """
-        if "." not in key:
-            raise BriefcaseConfigError("Key must be in the format 'section.option")
+        parts = key.split(".")
+        if len(parts) < 2 or any(not part.strip() for part in parts):
+            raise BriefcaseConfigError(f"Invalid configuration key: '{key}'")
 
         if global_config:
             config_path = (
@@ -95,16 +109,19 @@ class ConfigCommand(BaseCommand):
             self.tools.base_path = Path.cwd()
             config_path = self.tools.base_path / ".briefcase" / "config.toml"
 
-        self.write_config(config_path, key, value)
+        try:
+            self.write_config(config_path, key, value)
+        except PermissionError:
+            raise BriefcaseConfigError(
+                "Unable to write configuration file due to permission error."
+            )
+
         self.console.info(
             f"Set {'global' if global_config else 'project'} config: {key} = {value}"
         )
 
     def binary_path(self, app):
         raise NotImplementedError("ConfigCommand does not use binary_path.")
-
-    def output_format(self):
-        raise NotImplementedError("ConfigCommand does not use output_format.")
 
     def distribution_path(self, app):
         raise NotImplementedError("ConfigCommand does not use distribution_path.")
