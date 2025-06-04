@@ -68,6 +68,7 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config):
         bundle_identifier="com.example.first-app",
         args=["foo", "--bar"],
         stream_output=True,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # The streamer was started
@@ -132,6 +133,7 @@ def test_run_console_app_with_passthrough(run_command, first_app_config):
         bundle_identifier="com.example.first-app",
         args=["foo", "--bar"],
         stream_output=False,
+        env={"BRIEFCASE_DEBUG": "1"},
     )
 
     # No attempt to stream was made
@@ -175,8 +177,8 @@ def test_run_test_mode(run_command, first_app_config, is_console_app):
     run_command.tools.flatpak.run.assert_called_once_with(
         bundle_identifier="com.example.first-app",
         args=[],
-        main_module="tests.first_app",
         stream_output=True,
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
     )
 
     # The streamer was started
@@ -209,8 +211,8 @@ def test_run_test_mode_with_args(run_command, first_app_config, is_console_app):
     run_command.tools.flatpak.run.assert_called_once_with(
         bundle_identifier="com.example.first-app",
         args=["foo", "--bar"],
-        main_module="tests.first_app",
         stream_output=True,
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
     )
 
     # The streamer was started
