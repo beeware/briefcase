@@ -1,0 +1,1 @@
+The presence of a ``PIP_REQUIRE_VIRTUALENV`` environment marker no longer influences the operation of dependency installation on iOS. The iOS installation environments is inherently isolated, so this flag is redundant; but in some circumstances, it would prevent the installation of dependencies into a project.
