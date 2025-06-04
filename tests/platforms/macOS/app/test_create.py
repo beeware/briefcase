@@ -351,7 +351,7 @@ def test_install_app_packages(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -463,7 +463,7 @@ def test_min_os_version(create_command, first_app_templated, tmp_path):
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -564,7 +564,7 @@ def test_invalid_min_os_version(create_command, first_app_templated):
             r"but the support package only supports 10.12"
         ),
     ):
-        create_command.install_app_requirements(first_app_templated, test_mode=False)
+        create_command.install_app_requirements(first_app_templated)
 
     # No request was made to install requirements
     create_command.tools[first_app_templated].app_context.run.assert_not_called()
@@ -602,7 +602,7 @@ def test_install_app_packages_no_binary(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -702,7 +702,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
             r"to the PyPI server.\n"
         ),
     ):
-        create_command.install_app_requirements(first_app_templated, test_mode=False)
+        create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -806,7 +806,7 @@ def test_install_app_packages_non_universal(
     # Mock the merge command so we can confirm it wasn't invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We didn't search for binary packages
     create_command.find_binary_packages.assert_not_called()

@@ -26,7 +26,7 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
         build_command.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    build_command.build_app(first_app_generated, test_mode=False)
+    build_command.build_app(first_app_generated)
 
     build_command.tools.subprocess.run.assert_called_with(
         [
@@ -59,7 +59,7 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        build_command.build_app(first_app_generated, test_mode=False)
+        build_command.build_app(first_app_generated)
 
     build_command.tools.subprocess.run.assert_called_with(
         [

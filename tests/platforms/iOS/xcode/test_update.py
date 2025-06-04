@@ -59,7 +59,7 @@ def test_extra_pip_args(
         spec_set=Subprocess
     )
 
-    update_command.install_app_requirements(first_app_generated, test_mode=False)
+    update_command.install_app_requirements(first_app_generated)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
     assert update_command.tools[first_app_generated].app_context.run.mock_calls == [
