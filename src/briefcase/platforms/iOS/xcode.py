@@ -373,6 +373,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(device_platform_site),
+                    "PIP_REQUIRE_VIRTUALENV": None,
                 }
             },
             install_hint=f"""
@@ -395,6 +396,7 @@ with a minimum iOS version of {ios_min_version}.
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(simulator_platform_site),
+                    "PIP_REQUIRE_VIRTUALENV": None,
                 },
             },
             install_hint=f"""
