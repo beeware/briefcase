@@ -58,3 +58,25 @@ def test_multiple_apps_suppresses_pyproject(mock_load_toml):
         config.get("author")
 
     assert "specifies more than one application" in str(excinfo.value)
+
+
+@patch("briefcase.integrations.config.Config.load_toml")
+def test_project_config_reading(mock_load_toml, mock_tools):
+    mock_load_toml.side_effect = [{"some": {"key": "project_val"}}, {}]
+    config = Config(mock_tools)
+    result = config.get("some.key")
+    assert result == "project_val"
+
+
+@patch("briefcase.integrations.config.PlatformDirs")
+@patch("briefcase.integrations.config.Config.load_toml")
+def test_global_config_reading(
+    mock_load_toml, mock_platform_dirs, mock_tools, tmp_path
+):
+    mock_instance = mock_platform_dirs.return_value
+    mock_instance.user_config_dir = str(tmp_path)
+
+    mock_load_toml.side_effect = [{}, {"some": {"key": "global_val"}}]
+    config = Config(mock_tools)
+    result = config.get("some.key")
+    assert result == "global_val"
