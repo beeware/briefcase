@@ -169,7 +169,9 @@ class TrackingCreateCommand(DummyCreateCommand):
         self.actions.append(("support", app.app_name))
 
     def install_app_requirements(self, app):
-        self.actions.append(("requirements", app.app_name, app.test_mode, app.debugger))
+        self.actions.append(
+            ("requirements", app.app_name, app.test_mode, app.debugger is not None)
+        )
 
     def install_app_code(self, app):
         self.actions.append(("code", app.app_name, app.test_mode))

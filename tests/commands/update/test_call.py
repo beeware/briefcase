@@ -91,13 +91,13 @@ def test_update_with_requirements(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("cleanup", "first"),
         # Update the second app
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
-        ("requirements", "second", False),
+        ("requirements", "second", False, False),
         ("cleanup", "second"),
     ]
 
@@ -265,7 +265,7 @@ def test_update_app_all_flags(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup-support", "first"),
         ("support", "first"),
