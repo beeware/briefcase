@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import datetime
 import re
 import subprocess
@@ -19,7 +20,6 @@ from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
-    BaseDebugger,
     DebuggerConnectionMode,
 )
 from briefcase.exceptions import BriefcaseCommandError
@@ -429,7 +429,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 avd, extra_emulator_args
             )
 
-        debugger_connection_established = False
         try:
             label = "test suite" if app.test_mode else "app"
 
@@ -454,103 +453,109 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 adb.install_apk(self.binary_path(app))
 
             env = {}
+            if self.console.is_debug:
+                env["BRIEFCASE_DEBUG"] = "1"
+
             if app.debug_mode:
-                if debugger_host == "localhost":
-                    with self.console.wait_bar("Establishing debugger connection..."):
-                        self.establish_debugger_connection(
-                            adb, app.debugger, debugger_port
-                        )
-                        debugger_connection_established = True
                 env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
                     app, debugger_host, debugger_port
                 )
 
-            if self.console.is_debug:
-                env["BRIEFCASE_DEBUG"] = "1"
+            # Forward port for debugger connection if configured. Else this is a no-op.
+            with self.forward_port_for_debugger(app, debugger_host, debugger_port, adb):
+                # To start the app, we launch `org.beeware.android.MainActivity`.
+                with self.console.wait_bar(f"Launching {label}..."):
+                    # capture the earliest time for device logging in case PID not found
+                    device_start_time = adb.datetime()
 
-            # To start the app, we launch `org.beeware.android.MainActivity`.
-            with self.console.wait_bar(f"Launching {label}..."):
-                # capture the earliest time for device logging in case PID not found
-                device_start_time = adb.datetime()
+                    adb.start_app(
+                        package, "org.beeware.android.MainActivity", passthrough, env
+                    )
 
-                adb.start_app(
-                    package, "org.beeware.android.MainActivity", passthrough, env
-                )
+                    # Try to get the PID for 5 seconds.
+                    pid = None
+                    fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
+                    while not pid and datetime.datetime.now() < fail_time:
+                        # Try to get the PID; run in quiet mode because we may
+                        # need to do this a lot in the next 5 seconds.
+                        pid = adb.pidof(package, quiet=2)
+                        if not pid:
+                            time.sleep(0.01)
 
-                # Try to get the PID for 5 seconds.
-                pid = None
-                fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
-                while not pid and datetime.datetime.now() < fail_time:
-                    # Try to get the PID; run in quiet mode because we may
-                    # need to do this a lot in the next 5 seconds.
-                    pid = adb.pidof(package, quiet=2)
-                    if not pid:
-                        time.sleep(0.01)
+                if pid:
+                    self.console.info(
+                        "Following device log output (type CTRL-C to stop log)...",
+                        prefix=app.app_name,
+                    )
+                    # Start adb's logcat in a way that lets us stream the logs
+                    log_popen = adb.logcat(pid=pid)
 
-            if pid:
-                self.console.info(
-                    "Following device log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-                # Start adb's logcat in a way that lets us stream the logs
-                log_popen = adb.logcat(pid=pid)
+                    # Stream the app logs.
+                    self._stream_app_logs(
+                        app,
+                        popen=log_popen,
+                        clean_filter=android_log_clean_filter,
+                        clean_output=False,
+                        # Check for the PID in quiet mode so logs aren't corrupted.
+                        stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
+                        log_stream=True,
+                    )
+                else:
+                    self.console.error(
+                        "Unable to find PID for app", prefix=app.app_name
+                    )
+                    self.console.error("Logs for launch attempt follow...")
+                    self.console.error("=" * 75)
 
-                # Stream the app logs.
-                self._stream_app_logs(
-                    app,
-                    popen=log_popen,
-                    clean_filter=android_log_clean_filter,
-                    clean_output=False,
-                    # Check for the PID in quiet mode so logs aren't corrupted.
-                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
-                    log_stream=True,
-                )
-            else:
-                self.console.error("Unable to find PID for app", prefix=app.app_name)
-                self.console.error("Logs for launch attempt follow...")
-                self.console.error("=" * 75)
+                    # Show the log from the start time of the app
+                    adb.logcat_tail(since=device_start_time)
 
-                # Show the log from the start time of the app
-                adb.logcat_tail(since=device_start_time)
+                    raise BriefcaseCommandError(
+                        f"Problem starting app {app.app_name!r}"
+                    )
 
-                raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
         finally:
-            if debugger_connection_established:
-                with self.console.wait_bar("Stopping debugger connection..."):
-                    self.remove_debugger_connection(adb, app.debugger, debugger_port)
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
 
-    def establish_debugger_connection(
-        self, adb: ADB, debugger: BaseDebugger, debugger_port: int
+    @contextlib.contextmanager
+    def forward_port_for_debugger(
+        self, app: AppConfig, debugger_host: str, debugger_port: int, adb: ADB
     ):
-        """Forward/Reverse the ports necessary for remote debugging.
-
+        """Establish a port forwarding for the debugger connection.
         :param app: The config object for the app
-        :param adb: Access to the adb
-        :param debugger: The debugger to use
-        :param debugger_port: The port to forward/reverse for the debugger
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
+        :param adb: The ADB wrapper for the device
         """
-        if debugger.connection_mode == DebuggerConnectionMode.SERVER:
-            adb.forward(debugger_port, debugger_port)
-        else:
-            adb.reverse(debugger_port, debugger_port)
+        if app.debug_mode and app.debugger and debugger_host == "localhost":
+            if app.debugger.connection_mode == DebuggerConnectionMode.SERVER:
+                with self.console.wait_bar(
+                    f"Start forwarding port '{debugger_port}' from host to device for debugger connection..."
+                ):
+                    adb.forward(debugger_port, debugger_port)
 
-    def remove_debugger_connection(
-        self, adb: ADB, debugger: BaseDebugger, debugger_port: int
-    ):
-        """Remove Forward/Reverse of the ports necessary for remote debugging.
+                yield
 
-        :param app: The config object for the app
-        :param adb: Access to the adb
-        :param debugger: The debugger to use
-        :param debugger_port: The port to forward/reverse for the debugger
-        """
-        if debugger.connection_mode == DebuggerConnectionMode.SERVER:
-            adb.forward_remove(debugger_port)
+                with self.console.wait_bar(
+                    f"Stop forwarding port '{debugger_port}' from host to device for debugger connection..."
+                ):
+                    adb.forward_remove(debugger_port)
+            else:
+                with self.console.wait_bar(
+                    f"Start reversing port '{debugger_port}' from device to host for debugger connection..."
+                ):
+                    adb.reverse(debugger_port, debugger_port)
+
+                yield
+
+                with self.console.wait_bar(
+                    f"Stop reversing port '{debugger_port}' from device to host for debugger connection..."
+                ):
+                    adb.reverse_remove(debugger_port)
         else:
-            adb.reverse_remove(debugger_port)
+            yield  # no-op if no debugger is configured
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
