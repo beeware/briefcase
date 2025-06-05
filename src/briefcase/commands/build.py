@@ -41,8 +41,6 @@ class BuildCommand(BaseCommand):
         update_support: bool,
         update_stub: bool,
         no_update: bool,
-        test_mode: bool,
-        debugger: str | None,
         **options,
     ) -> dict | None:
         """Internal method to invoke a build on a single app. Ensures the app exists,
@@ -58,13 +56,9 @@ class BuildCommand(BaseCommand):
         :param update_support: Should the application support be updated?
         :param update_stub: Should the stub binary be updated?
         :param no_update: Should automated updates be disabled?
-        :param test_mode: Is the app being build in test mode?
         """
-        debug_mode = debugger is not None
         if not self.bundle_path(app).exists():
-            state = self.create_command(
-                app, test_mode=test_mode, debugger=debugger, **options
-            )
+            state = self.create_command(app, **options)
         elif (
             update  # An explicit update has been requested
             or update_requirements  # An explicit update of requirements has been requested
@@ -72,10 +66,10 @@ class BuildCommand(BaseCommand):
             or update_support  # An explicit update of app support has been rdebuggerequested
             or update_stub  # An explicit update of the stub binary has been requested
             or (
-                test_mode and not no_update
+                app.test_mode and not no_update
             )  # Test mode, but updates have not been disabled
             or (
-                debug_mode and not no_update
+                app.debugger and not no_update
             )  # Debug mode, but updates have not been disabled
         ):
             state = self.update_command(
@@ -84,8 +78,6 @@ class BuildCommand(BaseCommand):
                 update_resources=update_resources,
                 update_support=update_support,
                 update_stub=update_stub,
-                test_mode=test_mode,
-                debugger=debugger,
                 **options,
             )
         else:
@@ -93,15 +85,10 @@ class BuildCommand(BaseCommand):
 
         self.verify_app(app)
 
-        state = self.build_app(
-            app,
-            test_mode=test_mode,
-            debug_mode=debug_mode,
-            **full_options(state, options),
-        )
+        state = self.build_app(app, **full_options(state, options))
 
-        qualifier = " (test mode)" if test_mode else ""
-        qualifier += " (debug mode)" if debug_mode else ""
+        qualifier = " (test mode)" if app.test_mode else ""
+        qualifier += " (debug mode)" if app.debugger else ""
         self.console.info(
             f"Built {self.binary_path(app).relative_to(self.base_path)}{qualifier}",
             prefix=app.app_name,
@@ -148,7 +135,7 @@ class BuildCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, debugger)
+        self.finalize(app, test_mode, debugger)
 
         if app_name:
             try:
@@ -172,8 +159,6 @@ class BuildCommand(BaseCommand):
                 update_support=update_support,
                 update_stub=update_stub,
                 no_update=no_update,
-                test_mode=test_mode,
-                debugger=debugger,
                 **full_options(state, options),
             )
 

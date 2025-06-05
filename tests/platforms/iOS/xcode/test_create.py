@@ -1,11 +1,17 @@
 import shutil
 import sys
+from pathlib import Path
+from subprocess import CalledProcessError
 from unittest.mock import MagicMock, call
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    RequirementsInstallError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
@@ -72,9 +78,7 @@ def test_extra_pip_args(
         spec_set=Subprocess
     )
 
-    create_command.install_app_requirements(
-        first_app_generated, test_mode=False, debug_mode=False
-    )
+    create_command.install_app_requirements(first_app_generated)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
     assert create_command.tools[first_app_generated].app_context.run.mock_calls == [
@@ -105,7 +109,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / device_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -135,7 +140,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / sim_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]
@@ -157,9 +163,7 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
         spec_set=Subprocess
     )
 
-    create_command.install_app_requirements(
-        first_app_generated, test_mode=False, debug_mode=False
-    )
+    create_command.install_app_requirements(first_app_generated)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
     assert create_command.tools[first_app_generated].app_context.run.mock_calls == [
@@ -191,7 +195,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
                     / "base_path/build/first-app/ios/xcode/Support"
                     / "Python.xcframework/ios-arm64"
                     / "platform-config/arm64-iphoneos"
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -222,7 +227,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
                     / "base_path/build/first-app/ios/xcode/Support"
                     / "Python.xcframework/ios-arm64_x86_64-simulator"
                     / "platform-config/wonky-iphonesimulator"
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]
@@ -248,9 +254,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             r"but the support package only supports 12.0"
         ),
     ):
-        create_command.install_app_requirements(
-            first_app_generated, test_mode=False, debug_mode=False
-        )
+        create_command.install_app_requirements(first_app_generated)
 
     create_command.tools[first_app_generated].app_context.run.assert_not_called()
 
@@ -444,3 +448,70 @@ def test_permissions_context(create_command, first_app, permissions, info, conte
     x_permissions = create_command._x_permissions(first_app)
     # Check that the final platform permissions are rendered as expected.
     assert context == create_command.permissions_context(first_app, x_permissions)
+
+
+def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel(
+    create_command, first_app_generated
+):
+    """Install_hint (mentioning a missing iphoneos wheel) is added when RequirementsInstallError is raised
+    by _install_app_requirements in the iOS create command."""
+    first_app_generated.min_os_version = "15.4"
+    first_app_generated.requires = ["package-one", "package_two", "package_three"]
+
+    # Mock app_context for the generated app to simulate pip failure
+    mock_app_context = MagicMock(spec=Subprocess)
+    mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
+    create_command.tools[first_app_generated].app_context = mock_app_context
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError,
+        match=(
+            r"This may be because the `iphoneos` wheels that are available are not compatible\n"
+            r"with a minimum iOS version of 15.4."
+        ),
+    ):
+        create_command._install_app_requirements(
+            app=first_app_generated,
+            requires=first_app_generated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    mock_app_context.run.assert_called_once()
+
+
+def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulator_wheel(
+    create_command, first_app_generated
+):
+    """Install_hint (mentioning a missing iphonesimulator wheel) is added when RequirementsInstallError is raised
+    by _install_app_requirements in the iOS create command."""
+    first_app_generated.min_os_version = "15.4"
+    first_app_generated.requires = ["package-one", "package_two", "package_three"]
+
+    # Mock app_context for the generated app to simulate pip failure
+    mock_app_context = MagicMock(spec=Subprocess)
+    mock_app_context.run.side_effect = [
+        None,
+        CalledProcessError(returncode=1, cmd="pip"),
+    ]
+    create_command.tools[first_app_generated].app_context = mock_app_context
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError,
+        match=(
+            r"This may indicate that an `iphoneos` wheel could be found, but an\n"
+            r"`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
+            r"binary wheels that are available are not compatible with a minimum iOS\n"
+            r"version of 15.4.\n"
+        ),
+    ):
+        create_command._install_app_requirements(
+            app=first_app_generated,
+            requires=first_app_generated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    assert mock_app_context.run.call_count == 2

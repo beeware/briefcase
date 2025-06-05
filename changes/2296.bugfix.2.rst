@@ -1,0 +1,1 @@
+Briefcase now provides richer error information when it is unable to complete a download. In particular, issues associated with SSL verification are now reported as such, rather than as a generic "are you offline?" message.

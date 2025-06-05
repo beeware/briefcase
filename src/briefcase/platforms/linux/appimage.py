@@ -185,8 +185,8 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
-        context = super().output_format_template_context(app, debug_mode)
+    def output_format_template_context(self, app: AppConfig):
+        context = super().output_format_template_context(app)
 
         try:
             manylinux_arch = {
@@ -381,8 +381,6 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
-        debug_mode: bool,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],
@@ -391,23 +389,19 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
         kwargs = self._prepare_app_kwargs(
             app=app,
-            test_mode=test_mode,
-            debug_mode=debug_mode,
             debugger_host=debugger_host,
             debugger_port=debugger_port,
-            **kwargs,
         )
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
-        if app.console_app and not test_mode:
+        if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
                 [self.binary_path(app)] + passthrough,
@@ -431,7 +425,6 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
             self._stream_app_logs(
                 app,
                 popen=app_popen,
-                test_mode=test_mode,
                 clean_output=False,
             )
 

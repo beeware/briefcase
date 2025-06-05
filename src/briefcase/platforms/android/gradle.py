@@ -163,7 +163,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -224,7 +224,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
         # In debug mode extract all source packages so that the debugger can get the source code
         # at runtime (eg. via 'll' in pdb).
-        if debug_mode:
+        if app.debugger:
             extract_sources.extend(app.sources)
 
         return {
@@ -306,7 +306,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     def metadata_resource_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
-    def update_app_metadata(self, app: AppConfig, test_mode: bool):
+    def update_app_metadata(self, app: AppConfig):
         with self.console.wait_bar("Setting main module..."):
             with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
                 # Set the name of the app's main module; this will depend
@@ -314,19 +314,18 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 f.write(
                     f"""\
 <resources>
-    <string name="main_module">{app.main_module(test_mode)}</string>
+    <string name="main_module">{app.main_module()}</string>
 </resources>
 """
                 )
 
-    def build_app(self, app: AppConfig, test_mode: bool, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
-        :param test_mode: Should the app be updated in test mode? (default: False)
         """
         self.console.info("Updating app metadata...", prefix=app.app_name)
-        self.update_app_metadata(app=app, test_mode=test_mode)
+        self.update_app_metadata(app=app)
 
         self.console.info("Building Android APK...", prefix=app.app_name)
         with self.console.wait_bar("Building..."):
@@ -387,8 +386,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
-        debug_mode: bool,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],
@@ -400,8 +397,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
-        :param debug_mode: Boolean; Is the app running in debug mode?
         :param debugger_host: The host to use for the debugger
         :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
@@ -436,7 +431,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         debugger_connection_established = False
         try:
-            label = "test suite" if test_mode else "app"
+            label = "test suite" if app.test_mode else "app"
 
             self.console.info(
                 f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
@@ -459,7 +454,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 adb.install_apk(self.binary_path(app))
 
             env = {}
-            if debug_mode:
+            if app.debugger:
                 if debugger_host == "localhost":
                     with self.console.wait_bar("Establishing debugger connection..."):
                         self.establish_debugger_connection(
@@ -467,7 +462,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                         )
                         debugger_connection_established = True
                 env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
-                    app, test_mode, debugger_host, debugger_port
+                    app, debugger_host, debugger_port
                 )
 
             if self.console.is_debug:
@@ -504,7 +499,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 self._stream_app_logs(
                     app,
                     popen=log_popen,
-                    test_mode=test_mode,
                     clean_filter=android_log_clean_filter,
                     clean_output=False,
                     # Check for the PID in quiet mode so logs aren't corrupted.

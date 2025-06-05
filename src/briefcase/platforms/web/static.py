@@ -52,7 +52,7 @@ class StaticWebMixin:
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(self, app: AppConfig):
         """Add style framework details to the app template."""
         return {
             "style_framework": getattr(app, "style_framework", "None"),
@@ -312,8 +312,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
-        debug_mode: bool,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],
@@ -325,16 +323,14 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
-        :param debug_mode: Boolean; Is the app running in debug mode?
         :param passthrough: The list of arguments to pass to the app
         :param host: The host on which to run the server
         :param port: The port on which to run the server
         :param open_browser: Should a browser be opened on the newly started server.
         """
-        if test_mode:
+        if app.test_mode:
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
-        if debug_mode:
+        if app.debugger:
             raise BriefcaseCommandError("Briefcase can't run web apps in debug mode.")
 
         self.console.info("Starting web server...", prefix=app.app_name)

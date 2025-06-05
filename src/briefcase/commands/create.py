@@ -207,14 +207,14 @@ class CreateCommand(BaseCommand):
         """
         return {}
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
+    def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
         """
         return {}
 
-    def generate_app_template(self, app: AppConfig, debug_mode: bool = False):
+    def generate_app_template(self, app: AppConfig):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -258,9 +258,7 @@ class CreateCommand(BaseCommand):
         extra_context.update(self.permissions_context(app, self._x_permissions(app)))
 
         # Add in any extra template context required by the output format.
-        extra_context.update(
-            self.output_format_template_context(app, debug_mode=debug_mode)
-        )
+        extra_context.update(self.output_format_template_context(app))
 
         # Create the platform directory (if it doesn't already exist)
         output_path = self.bundle_path(app).parent
@@ -636,6 +634,7 @@ class CreateCommand(BaseCommand):
         progress_message: str = "Installing app requirements...",
         pip_args: list[str] | None = None,
         pip_kwargs: dict[str, str] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements for the app with pip.
 
@@ -647,6 +646,8 @@ class CreateCommand(BaseCommand):
         :param pip_args: Any additional command line arguments to use when invoking pip.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
@@ -663,14 +664,13 @@ class CreateCommand(BaseCommand):
                         ([] if pip_args is None else pip_args)
                         + self._pip_requires(app, requires)
                     ),
+                    install_hint=install_hint,
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:
             self.console.info("No application requirements.")
 
-    def install_app_requirements(
-        self, app: AppConfig, test_mode: bool, debug_mode: bool
-    ):
+    def install_app_requirements(self, app: AppConfig):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -679,21 +679,16 @@ class CreateCommand(BaseCommand):
          * requirements being installed with pip into the location specified
            by the ``app_packages_path`` in the template path index.
 
-        If ``test_mode`` is True, the test requirements will also be installed.
-        If ``debug_mode`` is True, the debug requirements will also be installed.
-
         If the path index doesn't specify either of the path index entries,
         an error is raised.
 
         :param app: The config object for the app
-        :param test_mode: Should the test requirements be installed?
-        :param debug_mode: Should the debug requirements be installed?
         """
         requires = app.requires.copy() if app.requires else []
-        if test_mode and app.test_requires:
+        if app.test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
-        if debug_mode and app.debug_requires:
+        if app.debugger and app.debug_requires:
             requires.extend(app.debug_requires)
 
         try:
@@ -722,11 +717,10 @@ class CreateCommand(BaseCommand):
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(self, app: AppConfig, test_mode: bool):
+    def install_app_code(self, app: AppConfig):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
-        :param test_mode: Should the application test code also be installed?
         """
         # Remove existing app folder if it exists
         app_path = self.app_path(app)
@@ -734,7 +728,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.all_sources(test_mode)
+        sources = app.all_sources()
 
         # Install app code.
         if sources:
@@ -915,18 +909,10 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(
-        self,
-        app: AppConfig,
-        test_mode: bool = False,
-        debug_mode: bool = False,
-        **options,
-    ):
+    def create_app(self, app: AppConfig, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
-        :param test_mode: Should the app be updated in test mode? (default: False)
-        :param debug_mode: Should the app be updated in debug mode? (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -946,7 +932,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(bundle_path)
 
         self.console.info("Generating application template...", prefix=app.app_name)
-        self.generate_app_template(app=app, debug_mode=debug_mode)
+        self.generate_app_template(app=app)
 
         self.console.info("Installing support package...", prefix=app.app_name)
         self.install_app_support_package(app=app)
@@ -967,12 +953,10 @@ class CreateCommand(BaseCommand):
         self.verify_app(app)
 
         self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode)
+        self.install_app_code(app=app)
 
         self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(
-            app=app, test_mode=test_mode, debug_mode=debug_mode
-        )
+        self.install_app_requirements(app=app)
 
         self.console.info("Installing application resources...", prefix=app.app_name)
         self.install_app_resources(app=app)

@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console
+from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.web.static import (
     HTTPHandler,
@@ -113,8 +114,6 @@ def test_run(monkeypatch, run_command, first_app_built):
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -181,8 +180,6 @@ def test_run_with_fallback_port(
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -238,8 +235,6 @@ def test_run_with_args(monkeypatch, run_command, first_app_built):
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -336,8 +331,6 @@ def test_cleanup_server_error(
     with pytest.raises(BriefcaseCommandError, match=message):
         run_command.run_app(
             first_app_built,
-            test_mode=False,
-            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -388,8 +381,6 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     with pytest.raises(ValueError):
         run_command.run_app(
             first_app_built,
-            test_mode=False,
-            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -441,8 +432,6 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -495,8 +484,6 @@ def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
     # Run the app on an autoselected port
     run_command.run_app(
         first_app_built,
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -588,6 +575,8 @@ def test_log_requests_to_logger(monkeypatch):
 
 def test_test_mode(run_command, first_app_built):
     """Test mode raises an error (at least for now)."""
+    first_app_built.test_mode = True
+
     # Run the app
     with pytest.raises(
         BriefcaseCommandError,
@@ -595,8 +584,6 @@ def test_test_mode(run_command, first_app_built):
     ):
         run_command.run_app(
             first_app_built,
-            test_mode=True,
-            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -606,8 +593,20 @@ def test_test_mode(run_command, first_app_built):
         )
 
 
+class DummyDebugger(BaseDebugger):
+    @property
+    def additional_requirements(self) -> list[str]:
+        raise NotImplementedError
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        raise NotImplementedError
+
+
 def test_debug_mode(run_command, first_app_built):
     """Debug mode raises an error (at least for now)."""
+    first_app_built.debugger = DummyDebugger()
+
     # Run the app
     with pytest.raises(
         BriefcaseCommandError,
@@ -615,8 +614,6 @@ def test_debug_mode(run_command, first_app_built):
     ):
         run_command.run_app(
             first_app_built,
-            test_mode=False,
-            debug_mode=True,
             debugger_host="somehost",
             debugger_port=9999,
             passthrough=[],

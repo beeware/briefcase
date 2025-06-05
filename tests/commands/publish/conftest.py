@@ -69,13 +69,11 @@ class DummyPublishCommand(PublishCommand):
     def create_command(self, app, **kwargs):
         self.actions.append(("create", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
-        kwargs.pop("test_mode", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
         self.actions.append(("update", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to update_app()
-        kwargs.pop("test_mode", None)
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("update_support", None)
@@ -84,7 +82,6 @@ class DummyPublishCommand(PublishCommand):
     def build_command(self, app, **kwargs):
         self.actions.append(("build", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to build_app()
-        kwargs.pop("test_mode", None)
         kwargs.pop("update", None)
         return full_options({"build_state": app.app_name}, kwargs)
 

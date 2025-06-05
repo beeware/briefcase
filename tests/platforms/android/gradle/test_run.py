@@ -203,8 +203,6 @@ def test_run_existing_device(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -242,7 +240,6 @@ def test_run_existing_device(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -279,8 +276,6 @@ def test_run_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -318,7 +313,6 @@ def test_run_with_passthrough(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -346,8 +340,6 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=False,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -363,7 +355,6 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -403,8 +394,6 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
         run_command.run_app(
             first_app_config,
             device_or_avd="exampleDevice",
-            test_mode=False,
-            debug_mode=False,
             debugger_host=None,
             debugger_port=None,
             passthrough=[],
@@ -445,12 +434,7 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # Invoke run_app
     run_command.run_app(
-        first_app_config,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # A new emulator was created
@@ -488,7 +472,6 @@ def test_run_created_emulator(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -516,12 +499,7 @@ def test_run_idle_device(run_command, first_app_config):
 
     # Invoke run_app
     run_command.run_app(
-        first_app_config,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # No attempt was made to create a new emulator
@@ -558,7 +536,6 @@ def test_run_idle_device(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -603,6 +580,8 @@ def test_log_file_extra(run_command, monkeypatch):
 
 def test_run_test_mode(run_command, first_app_config):
     """An app can be run in test mode."""
+    first_app_config.test_mode = True
+
     # Set up device selection to return a running physical device.
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
@@ -627,8 +606,6 @@ def test_run_test_mode(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=True,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -667,7 +644,6 @@ def test_run_test_mode(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=True,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -680,6 +656,8 @@ def test_run_test_mode(run_command, first_app_config):
 
 def test_run_test_mode_with_passthrough(run_command, first_app_config):
     """An app can be run in test mode with passthrough args."""
+    first_app_config.test_mode = True
+
     # Set up device selection to return a running physical device.
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
@@ -704,8 +682,6 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=True,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -744,7 +720,6 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=True,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -757,6 +732,8 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
 
 def test_run_test_mode_created_emulator(run_command, first_app_config):
     """The user can choose to run in test mode on a newly created emulator."""
+    first_app_config.test_mode = True
+
     # Set up device selection to return a completely new emulator
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=(None, None, None)
@@ -776,8 +753,6 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     # Invoke run_app
     run_command.run_app(
         first_app_config,
-        test_mode=True,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=[],
@@ -821,7 +796,6 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=True,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -830,6 +804,16 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
 
     # The emulator was killed at the end of the test
     run_command.tools.mock_adb.kill.assert_called_once_with()
+
+
+class DummyDebugger(BaseDebugger):
+    @property
+    def additional_requirements(self) -> list[str]:
+        raise NotImplementedError
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        raise NotImplementedError
 
 
 def test_run_debug_mode(run_command, first_app_config, tmp_path):
@@ -853,13 +837,12 @@ def test_run_debug_mode(run_command, first_app_config, tmp_path):
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
     first_app_config.bundle = "com.ex-ample"
+    first_app_config.debugger = DummyDebugger()
 
     # Invoke run_app with args.
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=False,
-        debug_mode=True,
         debugger_host="somehost",
         debugger_port=9999,
         passthrough=[],
@@ -978,13 +961,12 @@ def test_run_debug_mode_localhost(run_command, first_app_config, tmp_path, debug
 
     # Set up the debugger
     first_app_config.debugger = debugger
+    first_app_config.debugger = DummyDebugger()
 
     # Invoke run_app with args.
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        test_mode=False,
-        debug_mode=True,
         debugger_host="localhost",
         debugger_port=9999,
         passthrough=[],

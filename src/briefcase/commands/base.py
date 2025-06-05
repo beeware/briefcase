@@ -145,7 +145,7 @@ class BaseCommand(ABC):
         self,
         console: Console,
         tools: ToolCache = None,
-        apps: dict = None,
+        apps: dict[str, AppConfig] = None,
         base_path: Path = None,
         data_path: Path = None,
         is_clone: bool = False,
@@ -633,7 +633,12 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(self, app: AppConfig | None = None, debugger: str | None = None):
+    def finalize(
+        self,
+        app: AppConfig | None = None,
+        test_mode: bool = False,
+        debugger: str | None = None,
+    ):
         """Finalize Briefcase configuration.
 
         This will:
@@ -653,11 +658,12 @@ a custom location for Briefcase's tools.
         apps = self.apps.values() if app is None else [app]
         for app in apps:
             if hasattr(app, "__draft__"):
-                self.finalze_debugger(app, debugger)
+                self.finalize_debugger(app, debugger)
+                app.test_mode = test_mode
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
-    def finalze_debugger(self, app: AppConfig, debugger: str | None = None):
+    def finalize_debugger(self, app: AppConfig, debugger_name: str | None = None):
         """Finalize the debugger configuration.
 
         This will ensure that the debugger is available and that the app
@@ -665,8 +671,8 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
-        if debugger and debugger != "":
-            debugger = get_debugger(debugger)
+        if debugger_name and debugger_name != "":
+            debugger = get_debugger(debugger_name)
             app.debug_requires.extend(debugger.additional_requirements)
             app.debugger = debugger
 

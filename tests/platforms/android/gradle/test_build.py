@@ -75,7 +75,7 @@ def test_build_app(
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
-    build_command.build_app(first_app_generated, test_mode=False)
+    build_command.build_app(first_app_generated)
     build_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     build_command.tools.subprocess.run.assert_called_once_with(
         [
@@ -134,6 +134,8 @@ def test_build_app_test_mode(
     tmp_path,
 ):
     """The app can be built in test mode, invoking gradle and rewriting app metadata."""
+    first_app_generated.test_mode = True
+
     # Mock out `host_os` so we can validate which name is used for gradlew.
     build_command.tools.host_os = host_os
     # Enable verbose tool logging
@@ -142,7 +144,7 @@ def test_build_app_test_mode(
     # Create mock environment with `key`, which we expect to be preserved, and
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     build_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
-    build_command.build_app(first_app_generated, test_mode=True)
+    build_command.build_app(first_app_generated)
     build_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     build_command.tools.subprocess.run.assert_called_once_with(
         [
@@ -192,4 +194,4 @@ def test_print_gradle_errors(build_command, first_app_generated):
         cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
-        build_command.build_app(first_app_generated, test_mode=False)
+        build_command.build_app(first_app_generated)

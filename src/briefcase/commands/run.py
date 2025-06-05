@@ -137,7 +137,6 @@ class RunAppMixin:
         self,
         app: AppConfig,
         popen,
-        test_mode=False,
         clean_filter=None,
         clean_output=False,
         stop_func=lambda: False,
@@ -150,7 +149,6 @@ class RunAppMixin:
         :param app: The app to be launched
         :param popen: The Popen object for the stream we are monitoring; this Popen
             process will be closed after log streaming completes.
-        :param test_mode: Are we launching in test mode?
         :param clean_filter: The log cleaning filter to use; see ``LogFilter``
             for details.
         :param clean_output: Should the cleaned output be presented to the user?
@@ -186,7 +184,7 @@ class RunAppMixin:
 
             # If we're in test mode, and log streaming ends,
             # check for the status of the test suite.
-            if test_mode:
+            if app.test_mode:
                 if log_filter.returncode == 0:
                     self.console.info("Test suite passed!", prefix=app.app_name)
                 else:
@@ -243,19 +241,16 @@ class RunCommand(RunAppMixin, BaseCommand):
             required=False,
         )
 
-    def remote_debugger_app_path_mappings(
-        self, app: AppConfig, test_mode: bool
-    ) -> AppPathMappings:
+    def remote_debugger_app_path_mappings(self, app: AppConfig) -> AppPathMappings:
         """
         Get the path mappings for the app code.
 
         :param app: The config object for the app
-        :param test_mode: Is the test mode enabled?
         :returns: The path mappings for the app code
         """
         device_subfolders = []
         host_folders = []
-        for src in app.all_sources(test_mode):
+        for src in app.all_sources():
             original = Path(self.base_path / src)
             device_subfolders.append(original.name)
             host_folders.append(f"{original.absolute()}")
@@ -283,7 +278,6 @@ class RunCommand(RunAppMixin, BaseCommand):
     def remote_debugger_config(
         self,
         app: AppConfig,
-        test_mode: bool,
         debugger_host: str,
         debugger_port: int,
     ) -> str:
@@ -291,10 +285,9 @@ class RunCommand(RunAppMixin, BaseCommand):
         Create the remote debugger configuration that should be saved as environment variable for this run.
 
         :param app: The app to be debugged
-        :param test_mode: Is the test mode enabled?
         :returns: The remote debugger configuration
         """
-        app_path_mappings = self.remote_debugger_app_path_mappings(app, test_mode)
+        app_path_mappings = self.remote_debugger_app_path_mappings(app)
         app_packages_path_mappings = self.remote_debugger_app_packages_path_mapping(app)
         config = DebuggerConfig(
             host=debugger_host,
@@ -305,12 +298,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         return json.dumps(config)
 
     def _prepare_app_kwargs(
-        self,
-        app: AppConfig,
-        test_mode: bool,
-        debug_mode: bool,
-        debugger_host: str | None,
-        debugger_port: int | None,
+        self, app: AppConfig, debugger_host: str | None, debugger_port: int | None
     ):
         """Prepare the kwargs for running an app as a log stream.
 
@@ -318,8 +306,6 @@ class RunCommand(RunAppMixin, BaseCommand):
         it's been factored out.
 
         :param app: The app to be launched
-        :param test_mode: Are we launching in test mode?
-        :param debug_mode: Are we launching in debug mode?
         :param debugger_host: The host on which to run the debug server
         :param debugger_port: The port on which to run the debug server
         :returns: A dictionary of additional arguments to pass to the Popen
@@ -332,15 +318,15 @@ class RunCommand(RunAppMixin, BaseCommand):
             env["BRIEFCASE_DEBUG"] = "1"
 
         # If we're in remote debug mode, save the remote debugger config
-        if debug_mode:
+        if app.debugger:
             env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
-                app, test_mode, debugger_host, debugger_port
+                app, debugger_host, debugger_port
             )
 
-        if test_mode:
+        if app.test_mode:
             # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
             # to override the module at startup
-            env["BRIEFCASE_MAIN_MODULE"] = app.main_module(test_mode)
+            env["BRIEFCASE_MAIN_MODULE"] = app.main_module()
             self.console.info("Starting test_suite...", prefix=app.app_name)
         else:
             self.console.info("Starting app...", prefix=app.app_name)
@@ -355,8 +341,6 @@ class RunCommand(RunAppMixin, BaseCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
-        debug_mode: bool,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],
@@ -365,8 +349,6 @@ class RunCommand(RunAppMixin, BaseCommand):
         """Start an application.
 
         :param app: The application to start
-        :param test_mode: Is the test mode enabled?
-        :param debug_mode: Is the debug mode enabled?
         :param debugger_host: The host on which to run the debug server
         :param debugger_port: The port on which to run the debug server
         :param passthrough: Any passthrough arguments
@@ -407,8 +389,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, debugger)
-        debug_mode = debugger is not None
+        self.finalize(app, test_mode, debugger)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
@@ -421,7 +402,7 @@ class RunCommand(RunAppMixin, BaseCommand):
             or update_stub  # An explicit update of the stub binary has been requested
             or (not exec_file.exists())  # Executable binary doesn't exist yet
             or (
-                test_mode and not no_update
+                app.test_mode and not no_update
             )  # Test mode, but updates have not been disabled
         ):
             state = self.build_command(
@@ -432,8 +413,6 @@ class RunCommand(RunAppMixin, BaseCommand):
                 update_support=update_support,
                 update_stub=update_stub,
                 no_update=no_update,
-                test_mode=test_mode,
-                debugger=debugger,
                 **options,
             )
         else:
@@ -443,8 +422,6 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         state = self.run_app(
             app,
-            test_mode=test_mode,
-            debug_mode=debug_mode,
             debugger_host=debugger_host,
             debugger_port=debugger_port,
             passthrough=[] if passthrough is None else passthrough,

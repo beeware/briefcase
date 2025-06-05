@@ -30,7 +30,7 @@ def test_specific_app(build_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Build the first app; no state
-        ("build", "first", {"test_mode": False, "debug_mode": False}),
+        ("build", "first", False, False, {}),
     ]
 
 
@@ -62,17 +62,13 @@ def test_multiple_apps(build_command, first_app, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Build the first app; no state
-        ("build", "first", {"test_mode": False, "debug_mode": False}),
+        ("build", "first", False, False, {}),
         # App template is verified for second app
         ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Build the second apps; state from previous build.
-        (
-            "build",
-            "second",
-            {"build_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "second", False, False, {"build_state": "first"}),
     ]
 
 
@@ -100,16 +96,12 @@ def test_non_existent(build_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", {"test_mode": False, "debugger": None}),
+        ("create", "first", False, False, {}),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"create_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"create_state": "first"}),
         # App template is verified for second app
         ("verify-app-template", "second"),
         # App tools are verified for second app
@@ -118,12 +110,9 @@ def test_non_existent(build_command, first_app_config, second_app):
         (
             "build",
             "second",
-            {
-                "create_state": "first",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"create_state": "first", "build_state": "first"},
         ),
     ]
 
@@ -157,17 +146,13 @@ def test_unbuilt(build_command, first_app_unbuilt, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # First App exists, but hasn't been built; it will be built.
-        ("build", "first", {"test_mode": False, "debug_mode": False}),
+        ("build", "first", False, False, {}),
         # App template is verified for second app
         ("verify-app-template", "second"),
         # App tools are verified for second app
         ("verify-app-tools", "second"),
         # Second app has been built before; it will be built again.
-        (
-            "build",
-            "second",
-            {"build_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "second", False, False, {"build_state": "first"}),
     ]
 
 
@@ -198,9 +183,9 @@ def test_update_app(build_command, first_app, second_app):
         (
             "update",
             "first",
+            False,
+            False,
             {
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -211,20 +196,16 @@ def test_update_app(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -238,12 +219,9 @@ def test_update_app(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -275,9 +253,9 @@ def test_update_app_requirements(build_command, first_app, second_app):
         (
             "update",
             "first",
+            False,
+            False,
             {
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
@@ -288,20 +266,16 @@ def test_update_app_requirements(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
@@ -315,12 +289,9 @@ def test_update_app_requirements(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -352,9 +323,9 @@ def test_update_app_support(build_command, first_app, second_app):
         (
             "update",
             "first",
+            False,
+            False,
             {
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": True,
@@ -365,20 +336,16 @@ def test_update_app_support(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": True,
@@ -392,12 +359,9 @@ def test_update_app_support(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -429,9 +393,9 @@ def test_update_app_stub(build_command, first_app, second_app):
         (
             "update",
             "first",
+            False,
+            False,
             {
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -442,20 +406,16 @@ def test_update_app_stub(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -469,12 +429,9 @@ def test_update_app_stub(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -506,9 +463,9 @@ def test_update_app_resources(build_command, first_app, second_app):
         (
             "update",
             "first",
+            False,
+            False,
             {
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
@@ -519,20 +476,16 @@ def test_update_app_resources(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
@@ -546,12 +499,9 @@ def test_update_app_resources(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -580,32 +530,21 @@ def test_update_non_existent(build_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
-        (
-            "create",
-            "first",
-            {
-                "test_mode": False,
-                "debugger": None,
-            },
-        ),
+        ("create", "first", False, False, {}),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"create_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"create_state": "first"}),
         # Second app *does* exist, so it will be updated, then built
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "create_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -619,12 +558,12 @@ def test_update_non_existent(build_command, first_app_config, second_app):
         (
             "build",
             "second",
+            False,
+            False,
             {
                 "create_state": "first",
                 "build_state": "first",
                 "update_state": "second",
-                "test_mode": False,
-                "debug_mode": False,
             },
         ),
     ]
@@ -657,9 +596,9 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
         (
             "update",
             "first",
+            False,
+            False,
             {
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -670,20 +609,16 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": False},
-        ),
+        ("build", "first", False, False, {"update_state": "first"}),
         # Second app has been built before; it will be built again.
         (
             "update",
             "second",
+            False,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -697,12 +632,9 @@ def test_update_unbuilt(build_command, first_app_unbuilt, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": False,
-                "debug_mode": False,
-            },
+            False,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -734,9 +666,9 @@ def test_build_test(build_command, first_app, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -747,20 +679,16 @@ def test_build_test(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -774,12 +702,9 @@ def test_build_test(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": True,
-                "debug_mode": False,
-            },
+            True,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -813,7 +738,7 @@ def test_build_test_no_update(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        ("build", "first", {"test_mode": True, "debug_mode": False}),
+        ("build", "first", True, False, {}),
         # No update of the second app
         # App template is verified for second app
         ("verify-app-template", "second"),
@@ -822,7 +747,9 @@ def test_build_test_no_update(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {"build_state": "first", "test_mode": True, "debug_mode": False},
+            True,
+            False,
+            {"build_state": "first"},
         ),
     ]
 
@@ -855,9 +782,9 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
@@ -868,20 +795,16 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": True,
                 "update_resources": False,
                 "update_support": False,
@@ -895,12 +818,9 @@ def test_build_test_update_dependencies(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": True,
-                "debug_mode": False,
-            },
+            True,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -933,9 +853,9 @@ def test_build_test_update_resources(build_command, first_app, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
@@ -946,20 +866,16 @@ def test_build_test_update_resources(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": True,
                 "update_support": False,
@@ -973,12 +889,9 @@ def test_build_test_update_resources(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": True,
-                "debug_mode": False,
-            },
+            True,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -1011,9 +924,9 @@ def test_build_test_update_support(build_command, first_app, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": True,
@@ -1024,20 +937,16 @@ def test_build_test_update_support(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": True,
@@ -1051,12 +960,9 @@ def test_build_test_update_support(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": True,
-                "debug_mode": False,
-            },
+            True,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -1089,9 +995,9 @@ def test_build_test_update_stub(build_command, first_app, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1102,20 +1008,16 @@ def test_build_test_update_stub(build_command, first_app, second_app):
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"update_state": "first"}),
         # Update then build the second app
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1129,12 +1031,9 @@ def test_build_test_update_stub(build_command, first_app, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": True,
-                "debug_mode": False,
-            },
+            True,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -1166,9 +1065,9 @@ def test_build_debug(build_command, first_app, second_app):
         (
             "update",
             "first",
+            False,
+            True,
             {
-                "test_mode": False,
-                "debugger": "pdb",
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1182,17 +1081,19 @@ def test_build_debug(build_command, first_app, second_app):
         (
             "build",
             "first",
-            {"update_state": "first", "test_mode": False, "debug_mode": True},
+            False,
+            True,
+            {"update_state": "first"},
         ),
         # Update then build the second app
         (
             "update",
             "second",
+            False,
+            True,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": False,
-                "debugger": "pdb",
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1206,11 +1107,11 @@ def test_build_debug(build_command, first_app, second_app):
         (
             "build",
             "second",
+            False,
+            True,
             {
                 "update_state": "second",
                 "build_state": "first",
-                "test_mode": False,
-                "debug_mode": True,
             },
         ),
     ]
@@ -1339,25 +1240,21 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", {"test_mode": True, "debugger": None}),
+        ("create", "first", True, False, {}),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
         ("verify-app-tools", "first"),
-        (
-            "build",
-            "first",
-            {"create_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"create_state": "first"}),
         # Second app *does* exist, so it will be updated, then built
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "create_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1371,12 +1268,12 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
         (
             "build",
             "second",
+            True,
+            False,
             {
                 "create_state": "first",
                 "build_state": "first",
                 "update_state": "second",
-                "test_mode": True,
-                "debug_mode": False,
             },
         ),
     ]
@@ -1410,9 +1307,9 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1426,17 +1323,19 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
         (
             "build",
             "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
+            True,
+            False,
+            {"update_state": "first"},
         ),
         # Second app has been built before; it will be built again.
         (
             "update",
             "second",
+            True,
+            False,
             {
                 "update_state": "first",
                 "build_state": "first",
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": False,
                 "update_resources": False,
                 "update_support": False,
@@ -1450,12 +1349,9 @@ def test_test_app_unbuilt(build_command, first_app_unbuilt, second_app):
         (
             "build",
             "second",
-            {
-                "update_state": "second",
-                "build_state": "first",
-                "test_mode": True,
-                "debug_mode": False,
-            },
+            True,
+            False,
+            {"update_state": "second", "build_state": "first"},
         ),
     ]
 
@@ -1490,7 +1386,7 @@ def test_build_app_single(build_command, first_app, second_app, app_flags):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # Build the first app
-        ("build", "first", {"test_mode": False, "debug_mode": False}),
+        ("build", "first", False, False, {}),
     ]
 
 
@@ -1567,9 +1463,9 @@ def test_build_app_all_flags(build_command, first_app, second_app):
         (
             "update",
             "first",
+            True,
+            False,
             {
-                "test_mode": True,
-                "debugger": None,
                 "update_requirements": True,
                 "update_resources": True,
                 "update_support": True,
@@ -1581,9 +1477,5 @@ def test_build_app_all_flags(build_command, first_app, second_app):
         # App tools are verified for first app
         ("verify-app-tools", "first"),
         # First app is built in test mode
-        (
-            "build",
-            "first",
-            {"update_state": "first", "test_mode": True, "debug_mode": False},
-        ),
+        ("build", "first", True, False, {"update_state": "first"}),
     ]

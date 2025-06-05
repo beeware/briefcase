@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, LogLevel
+from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
@@ -153,7 +154,6 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -228,7 +228,6 @@ def test_supported_host_os_docker(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -247,12 +246,7 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # The process was started
@@ -274,7 +268,6 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -294,12 +287,7 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=["foo", "--bar"],
+        first_app, debugger_host=None, debugger_port=None, passthrough=["foo", "--bar"]
     )
 
     # The process was started
@@ -328,7 +316,6 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -343,12 +330,7 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
 
     with pytest.raises(OSError):
         run_command.run_app(
-            first_app,
-            test_mode=False,
-            debug_mode=False,
-            debugger_host=None,
-            debugger_port=None,
-            passthrough=[],
+            first_app, debugger_host=None, debugger_port=None, passthrough=[]
         )
 
     # The run command was still invoked
@@ -370,6 +352,16 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_not_called()
 
 
+class DummyDebugger(BaseDebugger):
+    @property
+    def additional_requirements(self) -> list[str]:
+        raise NotImplementedError
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        raise NotImplementedError
+
+
 def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     """A bootstrap binary for a GUI app can be started in debug mode."""
 
@@ -385,11 +377,11 @@ def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkey
     # Mock out the environment
     monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
 
+    first_app.debugger = DummyDebugger()
+
     # Run the app
     run_command.run_app(
         first_app,
-        test_mode=False,
-        debug_mode=True,
         debugger_host="somehost",
         debugger_port=9999,
         passthrough=[],
@@ -450,12 +442,7 @@ def test_run_console_app(run_command, first_app, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # The process was started
@@ -486,12 +473,7 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=["foo", "--bar"],
+        first_app, debugger_host=None, debugger_port=None, passthrough=["foo", "--bar"]
     )
 
     # The process was started
@@ -525,12 +507,7 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
 
     with pytest.raises(OSError):
         run_command.run_app(
-            first_app,
-            test_mode=False,
-            debug_mode=False,
-            debugger_host=None,
-            debugger_port=None,
-            passthrough=[],
+            first_app, debugger_host=None, debugger_port=None, passthrough=[]
         )
 
     # The run command was still invoked
@@ -574,12 +551,7 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=False,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # The process was started
@@ -616,7 +588,6 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -642,12 +613,7 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
 
     with pytest.raises(OSError):
         run_command.run_app(
-            first_app,
-            test_mode=False,
-            debug_mode=False,
-            debugger_host=None,
-            debugger_port=None,
-            passthrough=[],
+            first_app, debugger_host=None, debugger_port=None, passthrough=[]
         )
 
     # The run command was still invoked
@@ -696,6 +662,7 @@ def test_run_app_test_mode(
     """A linux App can be started in test mode."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -709,12 +676,7 @@ def test_run_app_test_mode(
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=True,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # The process was started
@@ -737,7 +699,6 @@ def test_run_app_test_mode(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -755,6 +716,7 @@ def test_run_app_test_mode_docker(
     """A linux App can be started in Docker in test mode."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
@@ -775,12 +737,7 @@ def test_run_app_test_mode_docker(
 
     # Run the app
     run_command.run_app(
-        first_app,
-        test_mode=True,
-        debug_mode=False,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
+        first_app, debugger_host=None, debugger_port=None, passthrough=[]
     )
 
     # The process was started
@@ -819,7 +776,6 @@ def test_run_app_test_mode_docker(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -836,6 +792,7 @@ def test_run_app_test_mode_with_args(
     """A linux App can be started in test mode with args."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -850,8 +807,6 @@ def test_run_app_test_mode_with_args(
     # Run the app with args
     run_command.run_app(
         first_app,
-        test_mode=True,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -879,7 +834,6 @@ def test_run_app_test_mode_with_args(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -897,6 +851,7 @@ def test_run_app_test_mode_with_args_docker(
     """A linux App can be started in Docker in test mode with args."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
@@ -918,8 +873,6 @@ def test_run_app_test_mode_with_args_docker(
     # Run the app with args
     run_command.run_app(
         first_app,
-        test_mode=True,
-        debug_mode=False,
         debugger_host=None,
         debugger_port=None,
         passthrough=["foo", "--bar"],
@@ -963,6 +916,5 @@ def test_run_app_test_mode_with_args_docker(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )

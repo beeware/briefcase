@@ -638,8 +638,8 @@ class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
 class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
     description = "Create and populate a Linux system project."
 
-    def output_format_template_context(self, app: AppConfig, debug_mode: bool = False):
-        context = super().output_format_template_context(app, debug_mode)
+    def output_format_template_context(self, app: AppConfig):
+        context = super().output_format_template_context(app)
 
         # Linux system templates use the target codename, rather than
         # the format "system" as the leaf of the bundle path
@@ -838,8 +838,6 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
-        debug_mode: bool,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],
@@ -848,8 +846,6 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
-        :param debug_mode: Boolean; Is the app running in debug mode?
         :param debugger_host: The host to use for the debugger
         :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
@@ -857,8 +853,6 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
         # Set up the log stream
         kwargs = self._prepare_app_kwargs(
             app=app,
-            test_mode=test_mode,
-            debug_mode=debug_mode,
             debugger_host=debugger_host,
             debugger_port=debugger_port,
         )
@@ -867,7 +861,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
             # Console apps must operate in non-streaming mode so that console input can
             # be handled correctly. However, if we're in test mode, we *must* stream so
             # that we can see the test exit sentinel
-            if app.console_app and not test_mode:
+            if app.console_app and not app.test_mode:
                 self.console.info("=" * 75)
                 self.tools[app].app_context.run(
                     [self.binary_path(app)] + passthrough,
@@ -891,7 +885,6 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
                 self._stream_app_logs(
                     app,
                     popen=app_popen,
-                    test_mode=test_mode,
                     clean_output=False,
                 )
 
