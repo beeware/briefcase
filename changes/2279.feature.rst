@@ -1,0 +1,1 @@
+Added a `briefcase config` command for setting and retrieving per-user and per-project configuration options. This supports setting defaults for values like author details, preferred simulators, and signing identities outside of `pyproject.toml`.
