@@ -63,13 +63,13 @@ class BuildCommand(BaseCommand):
             update  # An explicit update has been requested
             or update_requirements  # An explicit update of requirements has been requested
             or update_resources  # An explicit update of resources has been requested
-            or update_support  # An explicit update of app support has been rdebuggerequested
+            or update_support  # An explicit update of app support has been requested
             or update_stub  # An explicit update of the stub binary has been requested
             or (
                 app.test_mode and not no_update
             )  # Test mode, but updates have not been disabled
             or (
-                app.debugger and not no_update
+                app.debug_mode and not no_update
             )  # Debug mode, but updates have not been disabled
         ):
             state = self.update_command(
@@ -88,7 +88,7 @@ class BuildCommand(BaseCommand):
         state = self.build_app(app, **full_options(state, options))
 
         qualifier = " (test mode)" if app.test_mode else ""
-        qualifier += " (debug mode)" if app.debugger else ""
+        qualifier += " (debug mode)" if app.debug_mode else ""
         self.console.info(
             f"Built {self.binary_path(app).relative_to(self.base_path)}{qualifier}",
             prefix=app.app_name,

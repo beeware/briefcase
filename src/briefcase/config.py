@@ -347,6 +347,7 @@ class AppConfig(BaseConfig):
             [] if requirement_installer_args is None else requirement_installer_args
         )
         self.test_mode: bool = False
+        self.debug_mode: bool = False
         self.debugger: BaseDebugger | None = None
 
         if not is_valid_app_name(self.app_name):

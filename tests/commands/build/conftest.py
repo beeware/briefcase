@@ -57,7 +57,7 @@ class DummyBuildCommand(BuildCommand):
                 "build",
                 app.app_name,
                 app.test_mode,
-                app.debugger is not None,
+                app.debug_mode,
                 kwargs.copy(),
             )
         )
@@ -79,7 +79,7 @@ class DummyBuildCommand(BuildCommand):
                 "create",
                 app.app_name,
                 app.test_mode,
-                app.debugger is not None,
+                app.debug_mode,
                 kwargs.copy(),
             )
         )
@@ -92,7 +92,7 @@ class DummyBuildCommand(BuildCommand):
                 "update",
                 app.app_name,
                 app.test_mode,
-                app.debugger is not None,
+                app.debug_mode,
                 kwargs.copy(),
             )
         )

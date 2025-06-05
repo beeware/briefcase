@@ -806,16 +806,6 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.kill.assert_called_once_with()
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 def test_run_debug_mode(run_command, first_app_config, tmp_path):
     """An app can be run in debug mode."""
     # Set up device selection to return a running physical device.
@@ -837,7 +827,7 @@ def test_run_debug_mode(run_command, first_app_config, tmp_path):
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
     first_app_config.bundle = "com.ex-ample"
-    first_app_config.debugger = DummyDebugger()
+    first_app_config.debug_mode = True
 
     # Invoke run_app with args.
     run_command.run_app(
@@ -899,7 +889,6 @@ def test_run_debug_mode(run_command, first_app_config, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,
@@ -960,8 +949,8 @@ def test_run_debug_mode_localhost(run_command, first_app_config, tmp_path, debug
     first_app_config.bundle = "com.ex-ample"
 
     # Set up the debugger
+    first_app_config.debug_mode = True
     first_app_config.debugger = debugger
-    first_app_config.debugger = DummyDebugger()
 
     # Invoke run_app with args.
     run_command.run_app(
@@ -1041,7 +1030,6 @@ def test_run_debug_mode_localhost(run_command, first_app_config, tmp_path, debug
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_filter=android_log_clean_filter,
         clean_output=False,
         stop_func=mock.ANY,

@@ -8,7 +8,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, LogLevel
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
@@ -352,16 +351,6 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_not_called()
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     """A bootstrap binary for a GUI app can be started in debug mode."""
 
@@ -377,7 +366,7 @@ def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkey
     # Mock out the environment
     monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
 
-    first_app.debugger = DummyDebugger()
+    first_app.debug_mode = True
 
     # Run the app
     run_command.run_app(
@@ -428,7 +417,6 @@ def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkey
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 

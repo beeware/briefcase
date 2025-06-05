@@ -47,6 +47,7 @@ def full_context():
         "license": {"file": "LICENSE"},
         "requirement_installer_args": [],
         "test_mode": False,
+        "debug_mode": False,
         # Properties of the generating environment
         "python_version": platform.python_version(),
         "host_arch": "gothic",

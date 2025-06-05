@@ -4,7 +4,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console, LogLevel
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.flatpak import LinuxFlatpakRunCommand
@@ -237,23 +236,13 @@ def test_run_test_mode_with_args(run_command, first_app_config, is_console_app):
     )
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 def test_run_debug_mode(run_command, first_app_config, tmp_path):
     """A flatpak can be executed in debug mode."""
     # Set up the log streamer to return a known stream and a good return code
     log_popen = mock.MagicMock()
     run_command.tools.flatpak.run.return_value = log_popen
 
-    first_app_config.debugger = DummyDebugger()
+    first_app_config.debug_mode = True
 
     # Run the app
     run_command.run_app(
@@ -294,6 +283,5 @@ def test_run_debug_mode(run_command, first_app_config, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )

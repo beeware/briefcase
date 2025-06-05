@@ -6,7 +6,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.xcode import DeviceState
@@ -1608,16 +1607,6 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     )
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 @pytest.mark.usefixtures("sleep_zero")
 def test_run_app_debug_mode(run_command, first_app_generated, tmp_path):
     """An iOS App can be started in debug mode."""
@@ -1648,7 +1637,7 @@ def test_run_app_debug_mode(run_command, first_app_generated, tmp_path):
         log_stream_process,
     ]
 
-    first_app_generated.debugger = DummyDebugger()
+    first_app_generated.debug_mode = True
 
     # Run the app
     run_command.run_app(
@@ -1773,7 +1762,6 @@ def test_run_app_debug_mode(run_command, first_app_generated, tmp_path):
     run_command._stream_app_logs.assert_called_with(
         first_app_generated,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,

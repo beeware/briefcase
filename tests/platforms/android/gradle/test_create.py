@@ -204,6 +204,7 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
 def test_extract_packages_debug_mode(create_command, first_app_config):
     first_app_config.test_sources = ["one", "two", "three"]
     first_app_config.sources = ["four", "five", "six"]
+    first_app_config.debug_mode = True
     context = create_command.output_format_template_context(first_app_config)
     assert context["extract_packages"] == '"one", "two", "three", "four", "five", "six"'
 

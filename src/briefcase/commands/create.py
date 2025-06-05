@@ -688,7 +688,7 @@ class CreateCommand(BaseCommand):
         if app.test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
-        if app.debugger and app.debug_requires:
+        if app.debug_mode and app.debug_requires:
             requires.extend(app.debug_requires)
 
         try:

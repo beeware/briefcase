@@ -10,7 +10,6 @@ import tomli_w
 import briefcase
 from briefcase.commands.create import _is_local_path
 from briefcase.console import LogLevel
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 
@@ -1088,16 +1087,6 @@ def test_app_packages_only_test_requires_test_mode(
     assert myapp.test_requires == ["pytest", "pytest-tldr"]
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 def test_app_packages_debug_requires_debug_mode(
     create_command,
     myapp,
@@ -1107,7 +1096,7 @@ def test_app_packages_debug_requires_debug_mode(
     """If an app has debug requirements and we're in debug mode, they are installed."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.debug_requires = ["debugpy"]
-    myapp.debugger = DummyDebugger()
+    myapp.debug_mode = True
 
     create_command.install_app_requirements(myapp)
 

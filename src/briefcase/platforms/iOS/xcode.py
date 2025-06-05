@@ -663,7 +663,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Add additional environment variables
         env = {}
-        if app.debugger:
+        if app.debug_mode:
             env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
                 app, debugger_host, debugger_port
             )

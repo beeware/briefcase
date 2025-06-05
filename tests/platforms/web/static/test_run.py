@@ -6,7 +6,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.web.static import (
     HTTPHandler,
@@ -593,19 +592,9 @@ def test_test_mode(run_command, first_app_built):
         )
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 def test_debug_mode(run_command, first_app_built):
     """Debug mode raises an error (at least for now)."""
-    first_app_built.debugger = DummyDebugger()
+    first_app_built.debug_mode = True
 
     # Run the app
     with pytest.raises(

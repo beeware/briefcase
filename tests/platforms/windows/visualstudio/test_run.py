@@ -8,7 +8,6 @@ from unittest import mock
 import pytest
 
 from briefcase.console import Console
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioRunCommand
 
@@ -174,18 +173,9 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     )
 
 
-class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-
 def test_run_app_debug_mode(run_command, first_app_config, tmp_path):
     """A windows Visual Studio project app can be started in debug mode."""
+    first_app_config.debug_mode = True
 
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()
@@ -230,6 +220,5 @@ def test_run_app_debug_mode(run_command, first_app_config, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app_config,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )

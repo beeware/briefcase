@@ -224,7 +224,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
         # In debug mode extract all source packages so that the debugger can get the source code
         # at runtime (eg. via 'll' in pdb).
-        if app.debugger:
+        if app.debug_mode:
             extract_sources.extend(app.sources)
 
         return {
@@ -454,7 +454,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 adb.install_apk(self.binary_path(app))
 
             env = {}
-            if app.debugger:
+            if app.debug_mode:
                 if debugger_host == "localhost":
                     with self.console.wait_bar("Establishing debugger connection..."):
                         self.establish_debugger_connection(
