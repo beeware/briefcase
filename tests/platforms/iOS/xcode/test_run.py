@@ -48,6 +48,7 @@ def test_device_option(run_command):
         "test_mode": False,
         "passthrough": [],
         "appname": None,
+        "simulator_device": None,
     }
     assert overrides == {}
 

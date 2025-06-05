@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import tomli
 
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.config import Config
 
 
@@ -53,5 +54,7 @@ def test_multiple_apps_suppresses_pyproject(mock_load_toml):
     mock_load_toml.side_effect = [{}, {}]
 
     config = Config(tools)
-    result = config.get("author")
-    assert result is None
+    with pytest.raises(BriefcaseCommandError) as excinfo:
+        config.get("author")
+
+    assert "specifies more than one application" in str(excinfo.value)

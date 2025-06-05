@@ -50,6 +50,7 @@ def test_default_options(run_command):
         "host": "localhost",
         "port": 8080,
         "open_browser": True,
+        "simulator_device": None,
     }
     assert overrides == {}
 
@@ -73,6 +74,7 @@ def test_options(run_command):
         "host": "myhost",
         "port": 1234,
         "open_browser": False,
+        "simulator_device": None,
     }
     assert overrides == {}
 

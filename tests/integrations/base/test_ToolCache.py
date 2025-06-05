@@ -21,13 +21,14 @@ from .test_tool_registry import integrations_modules, tools_for_module
 def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
     # Tools that are intentionally not annotated in ToolCache.
-    tools_unannotated = {"cookiecutter"}
+    tools_unannotated = {"cookiecutter", "config"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
     tool_names_skip_dynamic_check = {
         "app_context",  # Tested by the Docker module
         "git",  # An external API, not a Briefcase Tool
         "xcode_cli",  # Tested by the Xcode module
         "ETC_OS_RELEASE",  # A constant, not a tool
+        "config",  # Not a Tool subclass
     }
     # Tool classes to exclude from dynamic annotation checks.
     tool_klasses_skip_dynamic_checks = {

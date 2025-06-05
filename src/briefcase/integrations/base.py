@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     import git as git_
 
     from briefcase.integrations.android_sdk import AndroidSDK
+    from briefcase.integrations.config import Config
     from briefcase.integrations.docker import Docker, DockerAppContext
     from briefcase.integrations.file import File
     from briefcase.integrations.flatpak import Flatpak
@@ -148,6 +149,7 @@ class ToolCache(Mapping):
     # Briefcase tools
     android_sdk: AndroidSDK
     app_context: Subprocess | DockerAppContext
+    config: Config
     docker: Docker
     file: File
     flatpak: Flatpak
