@@ -3,10 +3,14 @@ from __future__ import annotations
 import concurrent
 import email
 import hashlib
+import pathlib
+import plistlib
 import subprocess
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
+
+CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
 
 
 def sha256_file_digest(path: Path) -> str:
@@ -272,3 +276,81 @@ class AppPackagesMergeMixin:
                             raise future.exception()
         else:
             self.console.info("No libraries require merging.")
+
+
+def is_uti_core_type(uti: str) -> bool:  # pragma: no-cover-if-not-macos
+    """Check if a UTI is a built-in Core Type.
+
+    This function checks if a given UTI is a built-in Core Type by reading the
+    system's CoreTypes Info.plist file. If the file is not found, it assumes
+    that the system is not macOS or the file has been moved in recent macOS
+    versions, and returns False.
+
+    Args:
+        uti: The UTI to check.
+
+    Returns:
+        True if the UTI is a built-in Core Type, False otherwise.
+    """
+    try:
+        plist_data = pathlib.Path(CORETYPES_PATH).read_bytes()
+    except FileNotFoundError:
+        # If the file is not found, we assume that the system is not macOS
+        # or the file has been moved in recent macOS versions.
+        # In this case, we return False to indicate that the UTI is not built-in.
+        return False
+    plist = plistlib.loads(plist_data)
+    return uti in {
+        type_declaration["UTTypeIdentifier"]
+        for type_declaration in plist["UTExportedTypeDeclarations"]
+        + plist["UTImportedTypeDeclarations"]
+    }
+
+
+def mime_type_to_uti(mime_type: str) -> str | None:  # pragma: no-cover-if-not-macos
+    """Convert a MIME type to a Uniform Type Identifier (UTI).
+
+    This function reads the system's CoreTypes Info.plist file to determine the
+    UTI for a given MIME type.
+
+    Args:
+        mime_type: The MIME type to convert.
+
+    Returns:
+        The UTI for the MIME type, or None if the UTI cannot be determined.
+    """
+    try:
+        plist_data = pathlib.Path(CORETYPES_PATH).read_bytes()
+    except FileNotFoundError:
+        # If the file is not found, we assume that the system is not macOS
+        # or the file has been moved in recent macOS versions.
+        # In this case, we return None to indicate that the UTI cannot be determined.
+        return None
+    plist = plistlib.loads(plist_data)
+    for type_declaration in (
+        plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
+    ):
+        # We check both the system built-in types (exported) and the known
+        # third-party types (imported) to find the UTI for the given MIME type.
+        # Most type declarations will have a UTTypeTagSpecification dictionary
+        # with a "public.mime-type" key. That can be either a list of MIME types
+        # or a single MIME type. We check if the MIME type is in the list or
+        # matches the single MIME type. If we find a match, we return the UTI
+        # identifier. If we don't find a match, we return None.
+
+        mime_types = type_declaration.get("UTTypeTagSpecification", {}).get(
+            "public.mime-type", []
+        )
+        if isinstance(mime_types, list):
+            # Most MIME types are declared as a list even if they are a
+            # single type. Some types define multiple closely-related MIME
+            # types.
+            if mime_type in mime_types:
+                return type_declaration["UTTypeIdentifier"]
+        else:
+            # some MIME types are declared as a single type
+            if mime_types == mime_type:
+                return type_declaration["UTTypeIdentifier"]
+
+    # If no match is found in the entire list, return None
+    return None
