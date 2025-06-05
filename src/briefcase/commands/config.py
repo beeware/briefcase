@@ -98,9 +98,8 @@ class ConfigCommand(BaseCommand):
         else:
             pyproject = Path.cwd() / "pyproject.toml"
             # Ensure base_path is valid
-            if (
-                not pyproject.exists()
-                or "[tool.briefcase]" not in pyproject.read_text()
+            if not pyproject.exists() or "[tool.briefcase]" not in pyproject.read_text(
+                encoding="utf-8"
             ):
                 raise BriefcaseConfigError(
                     "Not a valid Briefcase project: pyproject.toml missing or invalid."

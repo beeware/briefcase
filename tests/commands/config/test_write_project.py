@@ -40,7 +40,7 @@ def test_write_project_config(
 
     # Create a minimal valid pyproject.toml
     (tmp_path / "pyproject.toml").write_text(
-        "[tool.briefcase]\nproject_name = 'test'\n"
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
     )
 
     config_command.__call__(key=key, value=value, global_config=False)

@@ -17,7 +17,7 @@ def config_command(tmp_path):
     return ConfigCommand(tools=tools, console=console)
 
 
-def test_nested_key_merging(tmp_path, config_command):
+def test_nested_key_merging(tmp_path, config_command, monkeypatch):
     # Create existing project config with partial section
     config_dir = tmp_path / ".briefcase"
     config_path = config_dir / "config.toml"
@@ -26,8 +26,13 @@ def test_nested_key_merging(tmp_path, config_command):
         tomli_w.dumps({"iOS": {"existing": "yes"}}), encoding="utf-8"
     )
 
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
+    )
+
     # Set tool base path
     config_command.tools.base_path = tmp_path
+    monkeypatch.chdir(tmp_path)
 
     config_command(key="iOS.device", value="iPhone 15", global_config=False)
 

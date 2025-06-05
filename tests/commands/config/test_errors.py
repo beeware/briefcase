@@ -32,12 +32,16 @@ def test_missing_pyproject_toml(config_command, tmp_path, monkeypatch):
     assert "Not a valid Briefcase project" in str(exc.value)
 
 
-def test_permission_error_on_read(tmp_path, config_command):
+def test_permission_error_on_read(tmp_path, config_command, monkeypatch):
     config_path = tmp_path / ".briefcase" / "config.toml"
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.touch()
 
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
+    )
     config_command.tools.base_path = tmp_path
+    monkeypatch.chdir(tmp_path)
 
     # Simulate a read permission error
     with patch("briefcase.commands.config.tomli.load", side_effect=PermissionError):
@@ -48,7 +52,7 @@ def test_permission_error_on_read(tmp_path, config_command):
 def test_permission_error_on_write(tmp_path, config_command, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pyproject.toml").write_text(
-        "[tool.briefcase]\nproject_name = 'test'\n"
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
     )
     config_command.tools.base_path = tmp_path
 
@@ -63,7 +67,7 @@ def test_permission_error_on_write(tmp_path, config_command, monkeypatch):
 def test_double_dot_key(config_command, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pyproject.toml").write_text(
-        "[tool.briefcase]\nproject_name = 'test'\n"
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
     )
 
     with pytest.raises(BriefcaseConfigError) as exc:
