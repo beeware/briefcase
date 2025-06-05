@@ -18,6 +18,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
@@ -488,9 +489,29 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
 
+    def remote_debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        # TODO: Add handling to switch between simulator and real device. Currently we only
+        #       support simulator.
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=str(
+                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
+            ),
+        )
+
     def run_app(
         self,
         app: AppConfig,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         udid=None,
         **kwargs,
@@ -498,6 +519,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
@@ -638,6 +661,30 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Wait for the log stream start up
         time.sleep(0.25)
 
+        # Add additional environment variables
+        env = {}
+        if app.debug_mode:
+            env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
+                app, debugger_host, debugger_port
+            )
+
+        # Install additional environment variables
+        if env:
+            with self.console.wait_bar("Setting environment variables..."):
+                for env_key, env_value in env.items():
+                    output = self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "setenv",
+                            f"{env_key}",
+                            f"{env_value}",
+                        ]
+                    )
+
         try:
             self.console.info(f"Starting {label}...", prefix=app.app_name)
             with self.console.wait_bar(f"Launching {label}..."):
@@ -671,6 +718,22 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             raise BriefcaseCommandError(
                 f"Unable to launch {label} {app.app_name}."
             ) from e
+        finally:
+            # Remove additional environment variables
+            if env:
+                with self.console.wait_bar("Setting environment variables..."):
+                    for env_key in env.keys():
+                        output = self.tools.subprocess.check_output(
+                            [
+                                "xcrun",
+                                "simctl",
+                                "spawn",
+                                udid,
+                                "launchctl",
+                                "unsetenv",
+                                f"{env_key}",
+                            ]
+                        )
 
         # Preserve the device selection as state.
         return {"udid": udid}

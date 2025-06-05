@@ -688,6 +688,9 @@ class CreateCommand(BaseCommand):
         if app.test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
+        if app.debug_mode and app.debug_requires:
+            requires.extend(app.debug_requires)
+
         try:
             requirements_path = self.app_requirements_path(app)
         except KeyError:
@@ -725,9 +728,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if app.test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.all_sources()
 
         # Install app code.
         if sources:

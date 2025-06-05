@@ -13,6 +13,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
@@ -307,6 +308,7 @@ class AppConfig(BaseConfig):
         template_branch=None,
         test_sources=None,
         test_requires=None,
+        debug_requires=None,
         supported=True,
         long_description=None,
         console_app=False,
@@ -336,6 +338,7 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.test_sources = test_sources
         self.test_requires = test_requires
+        self.debug_requires = [] if debug_requires is None else debug_requires
         self.supported = supported
         self.long_description = long_description
         self.license = license
@@ -344,6 +347,8 @@ class AppConfig(BaseConfig):
             [] if requirement_installer_args is None else requirement_installer_args
         )
         self.test_mode: bool = False
+        self.debug_mode: bool = False
+        self.debugger: BaseDebugger | None = None
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -444,6 +449,13 @@ class AppConfig(BaseConfig):
             if path not in paths:
                 paths.append(path)
         return paths
+
+    def all_sources(self) -> list[str]:
+        """Get all sources of the application that should be copied to the app."""
+        sources = self.sources.copy() if self.sources else []
+        if self.test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
 
     def main_module(self):
         """The path to the main module for the app.
