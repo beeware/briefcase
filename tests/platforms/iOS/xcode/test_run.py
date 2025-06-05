@@ -73,7 +73,7 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
         BriefcaseCommandError,
         match=r"Input has been disabled; can't select a device to target.",
     ):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
 
 @pytest.mark.usefixtures("sleep_zero")
@@ -107,7 +107,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -192,7 +192,6 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -239,7 +238,7 @@ def test_run_app_simulator_booted_underscore(
     ]
 
     # Run the app
-    run_command.run_app(underscore_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(underscore_app_config, passthrough=[])
 
     # slept 4 times for uninstall/install and 1 time for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -324,7 +323,6 @@ def test_run_app_simulator_booted_underscore(
     run_command._stream_app_logs.assert_called_with(
         underscore_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -365,7 +363,6 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     # Run the app with passthrough args.
     run_command.run_app(
         first_app_config,
-        test_mode=False,
         passthrough=["foo", "--bar"],
     )
 
@@ -454,7 +451,6 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -499,7 +495,7 @@ def test_run_app_simulator_shut_down(
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # slept 4 times for uninstall/install and 1 time for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -590,7 +586,6 @@ def test_run_app_simulator_shut_down(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -641,7 +636,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # We should have slept 4 times for shutting down and 4 time for uninstall/install
     assert time.sleep.call_count == 4 + 4
@@ -732,7 +727,6 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -758,7 +752,7 @@ def test_run_app_simulator_boot_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # No sleeps
     assert time.sleep.call_count == 0
@@ -802,7 +796,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # No sleeps
     assert time.sleep.call_count == 0
@@ -853,7 +847,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Sleep twice for uninstall failure
     assert time.sleep.call_count == 2
@@ -925,7 +919,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Sleep twice for uninstall and twice for install failure
     assert time.sleep.call_count == 4
@@ -1018,7 +1012,7 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1139,7 +1133,7 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1262,7 +1256,7 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
 
     # Run the app
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1356,6 +1350,8 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
 @pytest.mark.usefixtures("sleep_zero")
 def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     """An iOS App can be started in test mode."""
+    first_app_config.test_mode = True
+
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
@@ -1384,7 +1380,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     ]
 
     # Run the app
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Sleep four times for uninstall/install and once for log stream start
     assert time.sleep.call_count == 4 + 1
@@ -1455,7 +1451,6 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -1466,6 +1461,8 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
 @pytest.mark.usefixtures("sleep_zero")
 def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_path):
     """An iOS App can be started in test mode with passthrough args."""
+    first_app_config.test_mode = True
+
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
@@ -1496,7 +1493,6 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     # Run the app with args.
     run_command.run_app(
         first_app_config,
-        test_mode=True,
         passthrough=["foo", "--bar"],
     )
 
@@ -1571,7 +1567,6 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,

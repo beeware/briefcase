@@ -201,31 +201,21 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
-
-        # Starting a flatpak has slightly different startup arguments; however,
-        # the rest of the app startup process is the same. Transform the output
-        # of the "default" behavior to be in flatpak format.
-        if test_mode:
-            kwargs = {"main_module": kwargs["env"]["BRIEFCASE_MAIN_MODULE"]}
-        else:
-            kwargs = {}
+        kwargs = self._prepare_app_kwargs(app=app)
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
-        if app.console_app and not test_mode:
+        if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.flatpak.run(
                 bundle_identifier=app.bundle_identifier,
@@ -246,7 +236,6 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
             self._stream_app_logs(
                 app,
                 popen=app_popen,
-                test_mode=test_mode,
                 clean_output=False,
             )
 

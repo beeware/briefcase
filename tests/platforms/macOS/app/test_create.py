@@ -2,12 +2,14 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
+from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
@@ -349,7 +351,7 @@ def test_install_app_packages(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -461,7 +463,7 @@ def test_min_os_version(create_command, first_app_templated, tmp_path):
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -562,7 +564,7 @@ def test_invalid_min_os_version(create_command, first_app_templated):
             r"but the support package only supports 10.12"
         ),
     ):
-        create_command.install_app_requirements(first_app_templated, test_mode=False)
+        create_command.install_app_requirements(first_app_templated)
 
     # No request was made to install requirements
     create_command.tools[first_app_templated].app_context.run.assert_not_called()
@@ -600,7 +602,7 @@ def test_install_app_packages_no_binary(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -700,7 +702,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
             r"to the PyPI server.\n"
         ),
     ):
-        create_command.install_app_requirements(first_app_templated, test_mode=False)
+        create_command.install_app_requirements(first_app_templated)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -804,7 +806,7 @@ def test_install_app_packages_non_universal(
     # Mock the merge command so we can confirm it wasn't invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated, test_mode=False)
+    create_command.install_app_requirements(first_app_templated)
 
     # We didn't search for binary packages
     create_command.find_binary_packages.assert_not_called()
@@ -1012,3 +1014,69 @@ def test_install_support_package(
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
+
+
+def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
+    create_command, first_app_templated
+):
+    """Install_hint (mentioning a missing x86_64 wheel) is added when RequirementsInstallError is raised
+    by _install_app_requirements in the macOS create command."""
+
+    create_command.tools.host_arch = "x86_64"
+    first_app_templated.min_os_version = "12.0"
+    first_app_templated.requires = ["package-one", "package_two", "packagethree"]
+
+    # Mock app_context for the generated app to simulate pip failure
+    mock_app_context = mock.MagicMock(spec=Subprocess)
+    mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
+    create_command.tools[first_app_templated].app_context = mock_app_context
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError,
+        match=r"x86_64 wheel that is compatible with a minimum\nmacOS version of 12.0",
+    ):
+        create_command._install_app_requirements(
+            app=first_app_templated,
+            requires=first_app_templated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    mock_app_context.run.assert_called_once()
+
+
+def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
+    create_command, first_app_templated
+):
+    """Install_hint (mentioning a missing arm64 wheel) is added when RequirementsInstallError is raised
+    by _install_app_requirements in the macOS create command."""
+
+    create_command.tools.host_arch = "x86_64"
+    first_app_templated.min_os_version = "12.0"
+    first_app_templated.requires = ["package-one", "package_two", "packagethree"]
+
+    # Fake a found binary package (so second install is triggered)
+    create_command.find_binary_packages = mock.Mock(
+        return_value=[("package-one", "1.0")]
+    )
+
+    # First call (host arch x86_64) succeeds, second (other arch arm64) fails
+    create_command.tools[first_app_templated].app_context.run.side_effect = [
+        None,
+        CalledProcessError(returncode=1, cmd="pip"),
+    ]
+
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    with pytest.raises(
+        RequirementsInstallError,
+        match=r"arm64 wheel that is compatible with a minimum\nmacOS version of 12.0",
+    ):
+        create_command._install_app_requirements(
+            app=first_app_templated,
+            requires=first_app_templated.requires,
+            app_packages_path=Path("/test/path"),
+        )
+
+    # Ensure the mocked subprocess was called as expected
+    assert create_command.tools[first_app_templated].app_context.run.call_count == 2

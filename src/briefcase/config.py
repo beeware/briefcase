@@ -343,6 +343,7 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
+        self.test_mode: bool = False
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -431,14 +432,11 @@ class AppConfig(BaseConfig):
         `module_name`."""
         return self.bundle.replace("-", "_")
 
-    def PYTHONPATH(self, test_mode):
-        """The PYTHONPATH modifications needed to run this app.
-
-        :param test_mode: Should test_mode sources be included?
-        """
+    def PYTHONPATH(self):
+        """The PYTHONPATH modifications needed to run this app."""
         paths = []
         sources = self.sources
-        if test_mode and self.test_sources:
+        if self.test_mode and self.test_sources:
             sources.extend(self.test_sources)
 
         for source in sources:
@@ -447,15 +445,13 @@ class AppConfig(BaseConfig):
                 paths.append(path)
         return paths
 
-    def main_module(self, test_mode: bool):
+    def main_module(self):
         """The path to the main module for the app.
 
         In normal operation, this is ``app.module_name``; however,
         in test mode, it is prefixed with ``tests.``.
-
-        :param test_mode: Are we running in test mode?
         """
-        if test_mode:
+        if self.test_mode:
             return f"tests.{self.module_name}"
         else:
             return self.module_name

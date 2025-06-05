@@ -114,7 +114,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         self,
         app: AppConfig,
         env: dict,
-        test_mode: bool,
         passthrough: list[str],
         **options,
     ):
@@ -122,10 +121,9 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         :param app: The config object for the app
         :param env: environment dictionary for sub command
-        :param test_mode: Run the test suite, rather than the app?
         :param passthrough: A list of arguments to pass to the app
         """
-        main_module = app.main_module(test_mode)
+        main_module = app.main_module()
 
         # Add in the environment settings to get Python in the state we want.
         env.update(self.DEV_ENVIRONMENT)
@@ -145,7 +143,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so
         # that we can see the test exit sentinel
-        if app.console_app and not test_mode:
+        if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
                 cmdline,
@@ -170,16 +168,15 @@ class DevCommand(RunAppMixin, BaseCommand):
             self._stream_app_logs(
                 app,
                 popen=app_popen,
-                test_mode=test_mode,
                 clean_output=False,
             )
 
-    def get_environment(self, app, test_mode: bool):
+    def get_environment(self, app: AppConfig):
         # Create a shell environment where PYTHONPATH points to the source
         # directories described by the app config.
         env = {
             "PYTHONPATH": os.pathsep.join(
-                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH(test_mode)
+                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()
             )
         }
 
@@ -223,7 +220,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             )
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, test_mode)
 
         self.verify_app(app)
 
@@ -243,17 +240,16 @@ class DevCommand(RunAppMixin, BaseCommand):
             write_dist_info(app, dist_info_path)
 
         if run_app:
-            if test_mode:
+            if app.test_mode:
                 self.console.info(
                     "Running test suite in dev environment...", prefix=app.app_name
                 )
             else:
                 self.console.info("Starting in dev mode...", prefix=app.app_name)
-            env = self.get_environment(app, test_mode=test_mode)
+            env = self.get_environment(app)
             return self.run_dev_app(
                 app,
                 env,
-                test_mode=test_mode,
                 passthrough=[] if passthrough is None else passthrough,
                 **options,
             )

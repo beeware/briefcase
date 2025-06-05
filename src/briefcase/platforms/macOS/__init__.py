@@ -149,6 +149,11 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                     "--platform",
                     f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
                 ],
+                install_hint=f"""
+
+This may be because an {self.tools.host_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+""",
             )
 
             # Find all the packages with binary components.
@@ -192,8 +197,10 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                         ],
                         install_hint=f"""
 
-If an {other_arch} wheel has not been published for one or more of your requirements,
-you must compile those wheels yourself, or build a non-universal app by setting:
+This may be because an {other_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+
+You may need to build a non-universal app by setting:
 
     universal_build = False
 
@@ -294,14 +301,12 @@ class macOSRunMixin:
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Console apps must operate in non-streaming mode so that console input can
@@ -310,14 +315,12 @@ class macOSRunMixin:
         if app.console_app:
             self.run_console_app(
                 app,
-                test_mode=test_mode,
                 passthrough=passthrough,
                 **kwargs,
             )
         else:
             self.run_gui_app(
                 app,
-                test_mode=test_mode,
                 passthrough=passthrough,
                 **kwargs,
             )
@@ -325,21 +328,19 @@ class macOSRunMixin:
     def run_console_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the console application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
-        sub_kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        sub_kwargs = self._prepare_app_kwargs(app=app)
         cmdline = [self.binary_path(app) / f"Contents/MacOS/{app.formal_name}"]
         cmdline.extend(passthrough)
 
-        if test_mode:
+        if app.test_mode:
             # Stream the app's output for testing.
             # When a console app runs normally, its stdout should be connected
             # directly to the terminal to properly display the app. When its test
@@ -353,7 +354,7 @@ class macOSRunMixin:
                 bufsize=1,
                 **sub_kwargs,
             )
-            self._stream_app_logs(app, popen=app_popen, test_mode=test_mode)
+            self._stream_app_logs(app, popen=app_popen)
 
         else:
             try:
@@ -374,14 +375,12 @@ class macOSRunMixin:
     def run_gui_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the GUI application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Start log stream for the app.
@@ -423,7 +422,7 @@ class macOSRunMixin:
         app_pid = None
         try:
             # Set up the log stream
-            sub_kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+            sub_kwargs = self._prepare_app_kwargs(app=app)
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
@@ -450,7 +449,6 @@ class macOSRunMixin:
             self._stream_app_logs(
                 app,
                 popen=log_popen,
-                test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
                 clean_output=True,
                 stop_func=lambda: is_process_dead(app_pid),

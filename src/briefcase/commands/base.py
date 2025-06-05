@@ -143,7 +143,7 @@ class BaseCommand(ABC):
         self,
         console: Console,
         tools: ToolCache = None,
-        apps: dict = None,
+        apps: dict[str, AppConfig] = None,
         base_path: Path = None,
         data_path: Path = None,
         is_clone: bool = False,
@@ -631,7 +631,7 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(self, app: AppConfig | None = None):
+    def finalize(self, app: AppConfig | None = None, test_mode: bool = False):
         """Finalize Briefcase configuration.
 
         This will:
@@ -648,13 +648,10 @@ a custom location for Briefcase's tools.
         self.verify_host()
         self.verify_tools()
 
-        if app is None:
-            for app in self.apps.values():
-                if hasattr(app, "__draft__"):
-                    self.finalize_app_config(app)
-                    delattr(app, "__draft__")
-        else:
+        apps = self.apps.values() if app is None else [app]
+        for app in apps:
             if hasattr(app, "__draft__"):
+                app.test_mode = test_mode
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 

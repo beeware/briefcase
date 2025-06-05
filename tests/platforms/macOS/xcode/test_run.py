@@ -46,7 +46,7 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -76,7 +76,6 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -107,7 +106,6 @@ def test_run_app_with_passthrough(
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        test_mode=False,
         passthrough=["foo", "--bar"],
     )
 
@@ -139,7 +137,6 @@ def test_run_app_with_passthrough(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -158,6 +155,8 @@ def test_run_app_test_mode(
     monkeypatch,
 ):
     """A macOS Xcode app can be started in test mode."""
+    first_app_config.test_mode = True
+
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -167,7 +166,7 @@ def test_run_app_test_mode(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -198,7 +197,6 @@ def test_run_app_test_mode(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -217,6 +215,8 @@ def test_run_app_test_mode_with_passthrough(
     monkeypatch,
 ):
     """A macOS Xcode app can be started in test mode with args."""
+    first_app_config.test_mode = True
+
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -229,7 +229,6 @@ def test_run_app_test_mode_with_passthrough(
     # Run app in test mode with args
     run_command.run_app(
         first_app_config,
-        test_mode=True,
         passthrough=["foo", "--bar"],
     )
 
@@ -262,7 +261,6 @@ def test_run_app_test_mode_with_passthrough(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,

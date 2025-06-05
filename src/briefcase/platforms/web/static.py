@@ -310,7 +310,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         host,
         port,
@@ -320,13 +319,12 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         :param host: The host on which to run the server
         :param port: The port on which to run the server
         :param open_browser: Should a browser be opened on the newly started server.
         """
-        if test_mode:
+        if app.test_mode:
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
 
         self.console.info("Starting web server...", prefix=app.app_name)
