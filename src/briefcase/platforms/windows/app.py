@@ -18,6 +18,7 @@ from briefcase.platforms.windows import (
 class WindowsAppMixin(WindowsMixin):
     output_format = "app"
     packaging_root = Path("src")
+    supports_external_packaging = True
 
     def project_path(self, app):
         return self.bundle_path(app)

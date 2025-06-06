@@ -88,6 +88,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def binary_path(self, app):
         return self.project_path(app) / "usr/bin" / app.app_name
 
+    def bundle_package_path(self, app):
+        return self.project_path(app)
+
     def rpm_tag(self, app):
         if app.target_vendor == "fedora":
             return f"fc{app.target_codename}"
@@ -967,7 +970,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.console.wait_bar("Write Debian package control file..."):
-            DEBIAN_path = self.project_path(app) / "DEBIAN"
+            DEBIAN_path = self.package_path(app) / "DEBIAN"
 
             if DEBIAN_path.exists():
                 self.tools.shutil.rmtree(DEBIAN_path)
@@ -1014,10 +1017,10 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                         "dpkg-deb",
                         "--build",
                         "--root-owner-group",
-                        f"{app.app_name}-{app.version}",
+                        self.package_path(app).name,
                     ],
                     check=True,
-                    cwd=self.bundle_path(app),
+                    cwd=self.package_path(app).parent,
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -1026,7 +1029,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
             # Move the deb file to its final location
             self.tools.shutil.move(
-                self.bundle_path(app) / f"{app.app_name}-{app.version}.deb",
+                self.package_path(app).parent / f"{app.app_name}-{app.version}.deb",
                 self.distribution_path(app),
             )
 
@@ -1041,7 +1044,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
         # Generate the rpmbuild layout
-        rpmbuild_path = self.bundle_path(app) / "rpmbuild"
+        rpmbuild_path = self.package_path(app).parent / "rpmbuild"
         with self.console.wait_bar("Generating rpmbuild layout..."):
             if rpmbuild_path.exists():
                 self.tools.shutil.rmtree(rpmbuild_path)
@@ -1129,8 +1132,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
                 # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
                 # *not* cleaned up, as they're part of more general system structures.
-                for filename in sorted(self.project_path(app).glob("**/*")):
-                    path = filename.relative_to(self.project_path(app))
+                for filename in sorted(self.package_path(app).parent.glob("**/*")):
+                    path = filename.relative_to(self.package_path(app).parent)
 
                     if filename.is_dir():
                         if app.app_name in path.parts:
@@ -1162,8 +1165,8 @@ no extension).
             self.tools.shutil.make_archive(
                 rpmbuild_path / "SOURCES" / f"{app.app_name}-{app.version}",
                 format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
+                root_dir=self.package_path(app).parent,
+                base_dir=self.package_path(app).name,
             )
 
         with self.console.wait_bar("Building RPM package..."):
@@ -1174,11 +1177,11 @@ no extension).
                         "rpmbuild",
                         "-bb",
                         "--define",
-                        f"_topdir {self.bundle_path(app) / 'rpmbuild'}",
+                        f"_topdir {self.package_path(app).parent / 'rpmbuild'}",
                         f"./rpmbuild/SPECS/{app.app_name}.spec",
                     ],
                     check=True,
-                    cwd=self.bundle_path(app),
+                    cwd=self.package_path(app).parent,
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -1220,7 +1223,7 @@ with details about the release.
         changelog_source = self.base_path / changelog
 
         # Generate the pkgbuild layout
-        pkgbuild_path = self.bundle_path(app) / "pkgbuild"
+        pkgbuild_path = self.package_path(app).parent / "pkgbuild"
         with self.console.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
@@ -1234,8 +1237,8 @@ with details about the release.
             self.tools.shutil.make_archive(
                 pkgbuild_path / f"{app.app_name}-{app.version}",
                 format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
+                root_dir=self.package_path(app).parent,
+                base_dir=self.package_path(app).name,
             )
 
         # Write the arch PKGBUILD file.
