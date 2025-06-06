@@ -25,6 +25,7 @@ from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
 
 class macOSAppMixin(macOSMixin):
     output_format = "app"
+    supports_external_packaging = True
 
     def project_path(self, app):
         return self.binary_path(app) / "Contents"

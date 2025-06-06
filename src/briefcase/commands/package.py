@@ -12,6 +12,7 @@ from .base import BaseCommand, full_options
 class PackageCommand(BaseCommand):
     command = "package"
     description = "Package an app for distribution."
+    supports_external_packaging = False
 
     ADHOC_SIGN_HELP = "Ignored; signing is not supported"
     IDENTITY_HELP = "Ignored; signing is not supported"
@@ -68,6 +69,7 @@ class PackageCommand(BaseCommand):
         app: AppConfig,
         update: bool,
         packaging_format: str,
+        package_path: str | None = None,
         **options,
     ) -> dict | None:
         """Internal method to invoke packaging on a single app. Ensures the app exists,
@@ -77,11 +79,34 @@ class PackageCommand(BaseCommand):
         :param app: The application to package
         :param update: Should the application be updated (and rebuilt) first?
         :param packaging_format: The format of the packaging artefact to create.
+        :param package_path: An explicit external location to be packaged. If provided,
+            it is assumed to be a fully-formed app, ready for bundling.
         """
-
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
-        if not template_file.exists():
+
+        if package_path:
+            if not self.supports_external_packaging:
+                raise BriefcaseCommandError(
+                    f"Briefcase cannot package external {self.platform} apps "
+                    f"in {self.output_format} format."
+                )
+
+            self.console.info(
+                f"Packaging external content from {self.package_path(app)}",
+                prefix=app.app_name,
+            )
+
+            # Annotate the package path onto the app config
+            app.package_path = package_path
+
+            # A minimal template is required to provide packaging
+            # configuration files and other metadata.
+            if not template_file.exists():
+                state = self.create_command(app, minimal=True, **options)
+            else:
+                state = None
+        elif not template_file.exists():
             state = self.create_command(app, **options)
             state = self.build_command(app, **full_options(state, options))
         elif update:
@@ -158,11 +183,19 @@ class PackageCommand(BaseCommand):
             required=False,
         )
 
+        parser.add_argument(
+            "--package-path",
+            dest="package_path",
+            help="The path to bundle in the packaged artefact. ",
+            required=False,
+        )
+
     def __call__(
         self,
         app: AppConfig | None = None,
         app_name: str | None = None,
         update: bool = False,
+        package_path: str | None = None,
         **options,
     ) -> dict | None:
         # Confirm host compatibility, that all required tools are available,
@@ -181,11 +214,18 @@ class PackageCommand(BaseCommand):
         else:
             apps_to_package = self.apps
 
+        if package_path:
+            if len(apps_to_package) > 1:
+                raise BriefcaseCommandError(
+                    "--package-path can only be used to package a single app."
+                )
+
         state = None
         for app_name, app_obj in sorted(apps_to_package.items()):
             state = self._package_app(
                 app_obj,
                 update=update,
+                package_path=package_path,
                 **full_options(state, options),
             )
 

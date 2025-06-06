@@ -906,10 +906,15 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, **options):
+    def create_app(self, app: AppConfig, minimal=False, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
+        :param minimal: Generate a minimal template. This is only used for
+            packaging external artefacts. It generates the template, but does
+            not install a support package, app requirements, or resources; and
+            the content in the app that would ordinarily be packaged is
+            removed.
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -931,35 +936,41 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        self.console.info("Installing support package...", prefix=app.app_name)
-        self.install_app_support_package(app=app)
-
-        try:
-            # If the platform uses a stub binary, the template will define a binary
-            # revision. If this template configuration item doesn't exist, no stub
-            # binary is required.
-            self.stub_binary_revision(app)
-        except KeyError:
-            pass
+        if minimal:
+            self.console.info("Removing generated app content...", prefix=app.app_name)
+            self.tools.shutil.rmtree(self.bundle_package_path(app))
         else:
-            self.console.info("Installing stub binary...", prefix=app.app_name)
-            self.install_stub_binary(app=app)
+            self.console.info("Installing support package...", prefix=app.app_name)
+            self.install_app_support_package(app=app)
 
-        # Verify the app after the app template and support package
-        # are in place since the app tools may be dependent on them.
-        self.verify_app(app)
+            try:
+                # If the platform uses a stub binary, the template will define a binary
+                # revision. If this template configuration item doesn't exist, no stub
+                # binary is required.
+                self.stub_binary_revision(app)
+            except KeyError:
+                pass
+            else:
+                self.console.info("Installing stub binary...", prefix=app.app_name)
+                self.install_stub_binary(app=app)
 
-        self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app)
+            # Verify the app after the app template and support package
+            # are in place since the app tools may be dependent on them.
+            self.verify_app(app)
 
-        self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app)
+            self.console.info("Installing application code...", prefix=app.app_name)
+            self.install_app_code(app=app)
 
-        self.console.info("Installing application resources...", prefix=app.app_name)
-        self.install_app_resources(app=app)
+            self.console.info("Installing requirements...", prefix=app.app_name)
+            self.install_app_requirements(app=app)
 
-        self.console.info("Removing unneeded app content...", prefix=app.app_name)
-        self.cleanup_app_content(app=app)
+            self.console.info(
+                "Installing application resources...", prefix=app.app_name
+            )
+            self.install_app_resources(app=app)
+
+            self.console.info("Removing unneeded app content...", prefix=app.app_name)
+            self.cleanup_app_content(app=app)
 
         self.console.info(
             f"Created {bundle_path.relative_to(self.base_path)}",

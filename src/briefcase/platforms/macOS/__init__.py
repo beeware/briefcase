@@ -82,6 +82,9 @@ class macOSMixin:
     # 0.3.20 introduced a framework-based support package.
     platform_target_version = "0.3.20"
 
+    def bundle_package_path(self, app) -> Path:
+        return self.binary_path(app)
+
 
 class macOSCreateMixin(AppPackagesMergeMixin):
     hidden_app_properties = {"permission", "entitlement"}
@@ -663,7 +666,7 @@ or
         :param app: The app to sign
         :param identity: The signing identity to use
         """
-        bundle_path = self.binary_path(app)
+        bundle_path = self.package_path(app)
         resources_path = bundle_path / "Contents/Resources"
         frameworks_path = bundle_path / "Contents/Frameworks"
 
@@ -755,7 +758,7 @@ class macOSPackageMixin(macOSSigningMixin):
             # Notarization for bare .app's is applied to the binary, not the
             # distribution artefact, with the distribution artefact being
             # created after notarization has completed.
-            return self.binary_path(app)
+            return self.package_path(app)
         else:
             return self.distribution_path(app)
 
@@ -1352,9 +1355,9 @@ password:
         """Finalize the zip packaging process."""
         # Build the final archive for distribution
         with self.console.wait_bar(
-            f"Building final distribution archive for {self.binary_path(app).name}..."
+            f"Building final distribution archive for {self.package_path(app).name}..."
         ):
-            self.ditto_archive(self.binary_path(app), self.distribution_path(app))
+            self.ditto_archive(self.package_path(app), self.distribution_path(app))
 
     def package_pkg(
         self,
@@ -1397,11 +1400,11 @@ with your app's licensing terms.
         # the products you want to install. So - we need to copy the built app to a
         # "clean" packaging location.
         with self.console.wait_bar("Copying app into products folder..."):
-            installed_app_path = installer_path / "root" / self.binary_path(app).name
+            installed_app_path = installer_path / "root" / self.package_path(app).name
             if installed_app_path.exists():
                 self.tools.shutil.rmtree(installed_app_path)
             self.tools.shutil.copytree(
-                self.binary_path(app),
+                self.package_path(app),
                 installed_app_path,
                 # Ensure that symlinks are preserved in the duplication.
                 symlinks=True,
@@ -1418,7 +1421,7 @@ with your app's licensing terms.
                             "BundleIsRelocatable": False,
                             "BundleIsVersionChecked": True,
                             "BundleOverwriteAction": "upgrade",
-                            "RootRelativeBundlePath": self.binary_path(app).name,
+                            "RootRelativeBundlePath": self.package_path(app).name,
                         }
                     ],
                     components_plist,
@@ -1505,10 +1508,10 @@ with your app's licensing terms.
 
         with self.console.wait_bar(f"Building {dist_path.name}..."):
             dmg_settings = {
-                "files": [os.fsdecode(self.binary_path(app))],
+                "files": [os.fsdecode(self.package_path(app))],
                 "symlinks": {"Applications": "/Applications"},
                 "icon_locations": {
-                    f"{app.formal_name}.app": (75, 75),
+                    self.package_path(app).name: (75, 75),
                     "Applications": (225, 75),
                 },
                 "window_rect": ((600, 600), (350, 150)),
