@@ -725,9 +725,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if app.test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.all_sources()
 
         # Install app code.
         if sources:
