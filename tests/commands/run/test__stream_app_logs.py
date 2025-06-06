@@ -22,7 +22,6 @@ def test_run_app(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=False,
         clean_filter=clean_filter,
         clean_output=False,
     )
@@ -56,7 +55,6 @@ def test_run_app_custom_stop_func(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=False,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,
@@ -81,6 +79,8 @@ def test_run_app_custom_stop_func(run_command, first_app):
 
 def test_test_mode_success(run_command, first_app):
     """An app can be streamed in test mode."""
+    first_app.test_mode = True
+
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -97,7 +97,6 @@ def test_test_mode_success(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=True,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,
@@ -122,6 +121,8 @@ def test_test_mode_success(run_command, first_app):
 
 def test_test_mode_failure(run_command, first_app):
     """An app can be streamed in test mode, resulting in test failure."""
+    first_app.test_mode = True
+
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -139,7 +140,6 @@ def test_test_mode_failure(run_command, first_app):
         run_command._stream_app_logs(
             first_app,
             popen=popen,
-            test_mode=True,
             clean_filter=clean_filter,
             clean_output=False,
             stop_func=stop_func,
@@ -164,6 +164,8 @@ def test_test_mode_failure(run_command, first_app):
 
 def test_test_mode_no_result(run_command, first_app):
     """An app can be streamed in test mode, but with no test result being found."""
+    first_app.test_mode = True
+
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -184,7 +186,6 @@ def test_test_mode_no_result(run_command, first_app):
         run_command._stream_app_logs(
             first_app,
             popen=popen,
-            test_mode=True,
             clean_filter=clean_filter,
             clean_output=False,
             stop_func=stop_func,
@@ -209,6 +210,8 @@ def test_test_mode_no_result(run_command, first_app):
 
 def test_test_mode_custom_filters(run_command, first_app):
     """An app can define custom success/failure regexes."""
+    first_app.test_mode = True
+
     popen = mock.MagicMock()
     popen.returncode = 0
     clean_filter = mock.MagicMock()
@@ -227,7 +230,6 @@ def test_test_mode_custom_filters(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=True,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,
@@ -266,7 +268,6 @@ def test_run_app_failure(run_command, first_app):
         run_command._stream_app_logs(
             first_app,
             popen=popen,
-            test_mode=False,
             clean_filter=clean_filter,
             clean_output=False,
             stop_func=stop_func,
@@ -301,7 +302,6 @@ def test_run_app_log_stream_stream_failure(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=False,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,
@@ -343,7 +343,6 @@ def test_run_app_log_stream_success(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=False,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,
@@ -389,7 +388,6 @@ def test_run_app_log_stream_failure(run_command, first_app):
         run_command._stream_app_logs(
             first_app,
             popen=popen,
-            test_mode=False,
             clean_filter=clean_filter,
             clean_output=False,
             stop_func=stop_func,
@@ -431,7 +429,6 @@ def test_run_app_log_stream_no_result(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=False,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,
@@ -470,7 +467,6 @@ def test_run_app_ctrl_c(run_command, first_app):
     run_command._stream_app_logs(
         first_app,
         popen=popen,
-        test_mode=False,
         clean_filter=clean_filter,
         clean_output=False,
         stop_func=stop_func,

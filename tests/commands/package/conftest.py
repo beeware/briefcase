@@ -92,7 +92,6 @@ class DummyPackageCommand(PackageCommand):
     def create_command(self, app, **kwargs):
         self.actions.append(("create", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
-        kwargs.pop("test_mode", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
@@ -102,7 +101,6 @@ class DummyPackageCommand(PackageCommand):
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("update_support", None)
-        kwargs.pop("test_mode", None)
         return full_options({"update_state": app.app_name}, kwargs)
 
     def build_command(self, app, **kwargs):
@@ -112,7 +110,6 @@ class DummyPackageCommand(PackageCommand):
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("update_support", None)
-        kwargs.pop("test_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
 
 

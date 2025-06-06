@@ -130,7 +130,6 @@ class RunAppMixin:
         self,
         app: AppConfig,
         popen,
-        test_mode=False,
         clean_filter=None,
         clean_output=False,
         stop_func=lambda: False,
@@ -143,7 +142,6 @@ class RunAppMixin:
         :param app: The app to be launched
         :param popen: The Popen object for the stream we are monitoring; this Popen
             process will be closed after log streaming completes.
-        :param test_mode: Are we launching in test mode?
         :param clean_filter: The log cleaning filter to use; see ``LogFilter``
             for details.
         :param clean_output: Should the cleaned output be presented to the user?
@@ -179,7 +177,7 @@ class RunAppMixin:
 
             # If we're in test mode, and log streaming ends,
             # check for the status of the test suite.
-            if test_mode:
+            if app.test_mode:
                 if log_filter.returncode == 0:
                     self.console.info("Test suite passed!", prefix=app.app_name)
                 else:
@@ -220,14 +218,13 @@ class RunCommand(RunAppMixin, BaseCommand):
         self._add_update_options(parser, context_label=" before running")
         self._add_test_options(parser, context_label="Run")
 
-    def _prepare_app_kwargs(self, app: AppConfig, test_mode: bool):
+    def _prepare_app_kwargs(self, app: AppConfig):
         """Prepare the kwargs for running an app as a log stream.
 
         This won't be used by every backend; but it's a sufficiently common default that
         it's been factored out.
 
         :param app: The app to be launched
-        :param test_mode: Are we launching in test mode?
         :returns: A dictionary of additional arguments to pass to the Popen
         """
         args = {}
@@ -237,10 +234,10 @@ class RunCommand(RunAppMixin, BaseCommand):
         if self.console.is_debug:
             env["BRIEFCASE_DEBUG"] = "1"
 
-        if test_mode:
+        if app.test_mode:
             # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
             # to override the module at startup
-            env["BRIEFCASE_MAIN_MODULE"] = app.main_module(test_mode)
+            env["BRIEFCASE_MAIN_MODULE"] = app.main_module()
             self.console.info("Starting test_suite...", prefix=app.app_name)
         else:
             self.console.info("Starting app...", prefix=app.app_name)
@@ -290,7 +287,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        self.finalize(app, test_mode)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
@@ -303,7 +300,7 @@ class RunCommand(RunAppMixin, BaseCommand):
             or update_stub  # An explicit update of the stub binary has been requested
             or (not exec_file.exists())  # Executable binary doesn't exist yet
             or (
-                test_mode and not no_update
+                app.test_mode and not no_update
             )  # Test mode, but updates have not been disabled
         ):
             state = self.build_command(
@@ -314,7 +311,6 @@ class RunCommand(RunAppMixin, BaseCommand):
                 update_support=update_support,
                 update_stub=update_stub,
                 no_update=no_update,
-                test_mode=test_mode,
                 **options,
             )
         else:
@@ -324,7 +320,6 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         state = self.run_app(
             app,
-            test_mode=test_mode,
             passthrough=[] if passthrough is None else passthrough,
             **full_options(state, options),
         )

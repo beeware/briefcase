@@ -373,6 +373,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(device_platform_site),
+                    "PIP_REQUIRE_VIRTUALENV": None,
                 }
             },
             install_hint=f"""
@@ -395,6 +396,7 @@ with a minimum iOS version of {ios_min_version}.
             pip_kwargs={
                 "env": {
                     "PYTHONPATH": str(simulator_platform_site),
+                    "PIP_REQUIRE_VIRTUALENV": None,
                 },
             },
             install_hint=f"""
@@ -426,7 +428,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         """
         return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
-    def update_app_metadata(self, app: AppConfig, test_mode: bool):
+    def update_app_metadata(self, app: AppConfig):
         with self.console.wait_bar("Setting main module..."):
             # Load the original plist
             with self.info_plist_path(app).open("rb") as f:
@@ -434,20 +436,19 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
 
             # Set the name of the app's main module; this will depend
             # on whether we're in test mode.
-            info_plist["MainModule"] = app.main_module(test_mode)
+            info_plist["MainModule"] = app.main_module()
 
             # Write the modified plist
             with self.info_plist_path(app).open("wb") as f:
                 plistlib.dump(info_plist, f)
 
-    def build_app(self, app: AppConfig, test_mode: bool = False, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
-        :param test_mode: Should the app be updated in test mode? (default: False)
         """
         self.console.info("Updating app metadata...", prefix=app.app_name)
-        self.update_app_metadata(app=app, test_mode=test_mode)
+        self.update_app_metadata(app=app)
 
         self.console.info("Building Xcode project...", prefix=app.app_name)
         with self.console.wait_bar("Building..."):
@@ -490,7 +491,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         udid=None,
         **kwargs,
@@ -498,7 +498,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
@@ -510,7 +509,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Input has been disabled; can't select a device to target."
             ) from e
 
-        if test_mode:
+        if app.test_mode:
             label = "test suite"
         else:
             label = "app"
@@ -544,7 +543,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     f"Unable to boot {device} simulator running {iOS_version}"
                 ) from e
 
-        if not test_mode:
+        if not app.test_mode:
             # We now know the simulator is *running*, so we can open it.
             # We don't need to open the simulator to run the test suite.
             try:
@@ -663,7 +662,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self._stream_app_logs(
                 app,
                 popen=simulator_log_popen,
-                test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
                 clean_output=True,
                 stop_func=lambda: is_process_dead(app_pid),

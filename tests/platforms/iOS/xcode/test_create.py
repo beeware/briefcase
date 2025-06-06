@@ -78,7 +78,7 @@ def test_extra_pip_args(
         spec_set=Subprocess
     )
 
-    create_command.install_app_requirements(first_app_generated, test_mode=False)
+    create_command.install_app_requirements(first_app_generated)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
     assert create_command.tools[first_app_generated].app_context.run.mock_calls == [
@@ -109,7 +109,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / device_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -139,7 +140,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / sim_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]
@@ -161,7 +163,7 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
         spec_set=Subprocess
     )
 
-    create_command.install_app_requirements(first_app_generated, test_mode=False)
+    create_command.install_app_requirements(first_app_generated)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
     assert create_command.tools[first_app_generated].app_context.run.mock_calls == [
@@ -193,7 +195,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
                     / "base_path/build/first-app/ios/xcode/Support"
                     / "Python.xcframework/ios-arm64"
                     / "platform-config/arm64-iphoneos"
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -224,7 +227,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
                     / "base_path/build/first-app/ios/xcode/Support"
                     / "Python.xcframework/ios-arm64_x86_64-simulator"
                     / "platform-config/wonky-iphonesimulator"
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]
@@ -250,7 +254,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             r"but the support package only supports 12.0"
         ),
     ):
-        create_command.install_app_requirements(first_app_generated, test_mode=False)
+        create_command.install_app_requirements(first_app_generated)
 
     create_command.tools[first_app_generated].app_context.run.assert_not_called()
 
