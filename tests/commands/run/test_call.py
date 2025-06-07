@@ -32,6 +32,7 @@ def test_no_args_one_app(run_command, first_app):
         (
             "run",
             "first",
+            False,
             {
                 "test_mode": False,
                 "device": None,
@@ -72,6 +73,7 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
         (
             "run",
             "first",
+            False,
             {
                 "test_mode": False,
                 "device": None,
@@ -130,6 +132,7 @@ def test_with_arg_one_app(run_command, first_app):
         (
             "run",
             "first",
+            False,
             {
                 "test_mode": False,
                 "device": None,
@@ -170,6 +173,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
         (
             "run",
             "second",
+            False,
             {
                 "test_mode": False,
                 "device": None,
@@ -251,6 +255,7 @@ def test_create_app_before_start(run_command, first_app_config):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -306,6 +311,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -361,6 +367,7 @@ def test_update_app(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -416,6 +423,7 @@ def test_update_app_requirements(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -471,6 +479,7 @@ def test_update_app_resources(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -526,6 +535,7 @@ def test_update_app_support(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -581,6 +591,7 @@ def test_update_app_stub(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -637,6 +648,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -693,6 +705,7 @@ def test_update_non_existent(run_command, first_app_config):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": False,
             },
         ),
     ]
@@ -748,6 +761,7 @@ def test_test_mode_existing_app(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": True,
             },
         ),
     ]
@@ -803,6 +817,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": ["foo", "--bar"],
+                "test_mode": True,
             },
         ),
     ]
@@ -838,6 +853,7 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
         (
             "run",
             "first",
+            True,
             {
                 "test_mode": True,
                 "simulator_device": None,
@@ -898,6 +914,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": True,
             },
         ),
     ]
@@ -953,6 +970,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": True,
             },
         ),
     ]
@@ -1008,6 +1026,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
                 "simulator_device": None,
                 "device": None,
                 "passthrough": [],
+                "test_mode": True,
             },
         ),
     ]
@@ -1063,6 +1082,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
                 "device": None,
                 "simulator_device": None,
                 "passthrough": [],
+                "test_mode": True,
             },
         ),
     ]

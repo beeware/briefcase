@@ -119,14 +119,18 @@ class ConfigCommand(BaseCommand):
             f"Set {'global' if global_config else 'project'} config: {key} = {value}"
         )
 
+    def bundle_path(self, app):
+        """A placeholder; Config command doesn't have a bundle path."""
+        raise NotImplementedError()
+
     def binary_path(self, app):
-        raise NotImplementedError("ConfigCommand does not use binary_path.")
+        """A placeholder; Config command doesn't have a binary path."""
+        raise NotImplementedError()
 
     def distribution_path(self, app):
-        raise NotImplementedError("ConfigCommand does not use distribution_path.")
-
-    def bundle_path(self, app):
-        raise NotImplementedError("ConfigCommand does not use bundle_path.")
+        """A placeholder; Config command doesn't have a distribution path."""
+        raise NotImplementedError()
 
     def binary_executable_path(self, app):
-        raise NotImplementedError("ConfigCommand does not use binary_executable_path.")
+        """A placeholder; Config command doesn't have a binary executable path."""
+        raise NotImplementedError()

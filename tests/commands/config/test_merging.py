@@ -42,3 +42,24 @@ def test_nested_key_merging(tmp_path, config_command, monkeypatch):
 
     assert config["iOS"]["existing"] == "yes"
     assert config["iOS"]["device"] == "iPhone 15"
+
+
+def test_write_merges_existing_nested_keys(tmp_path, config_command, monkeypatch):
+    config_dir = tmp_path / ".briefcase"
+    config_path = config_dir / "config.toml"
+    config_dir.mkdir(parents=True)
+    config_path.write_text(tomli_w.dumps({"iOS": {"device": "old"}}), encoding="utf-8")
+
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
+    )
+
+    config_command.tools.base_path = tmp_path
+    monkeypatch.chdir(tmp_path)
+
+    config_command(key="iOS.device", value="new", global_config=False)
+
+    with config_path.open("rb") as f:
+        config = tomli.load(f)
+
+    assert config["iOS"]["device"] == "new"

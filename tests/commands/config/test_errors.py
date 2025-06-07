@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,13 +15,6 @@ def config_command(tmp_path):
     tools.input = Mock()
     console = Mock()
     return ConfigCommand(tools=tools, console=console)
-
-
-def test_invalid_key_format(tmp_path, config_command):
-    config_command.tools.base_path = tmp_path
-
-    with pytest.raises(BriefcaseConfigError):
-        config_command(key="invalidkey", value="value", global_config=False)
 
 
 def test_missing_pyproject_toml(config_command, tmp_path, monkeypatch):
@@ -64,6 +58,13 @@ def test_permission_error_on_write(tmp_path, config_command, monkeypatch):
         assert "Unable to write configuration file" in str(exc.value)
 
 
+def test_invalid_key_format(tmp_path, config_command):
+    config_command.tools.base_path = tmp_path
+
+    with pytest.raises(BriefcaseConfigError):
+        config_command(key="invalidkey", value="value", global_config=False)
+
+
 def test_double_dot_key(config_command, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pyproject.toml").write_text(
@@ -74,3 +75,36 @@ def test_double_dot_key(config_command, tmp_path, monkeypatch):
         config_command(key="author..name", value="Jane", global_config=False)
 
     assert "Invalid configuration key" in str(exc.value)
+
+
+def test_invalid_key_leading_dot(config_command, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
+    )
+
+    with pytest.raises(BriefcaseConfigError) as exc:
+        config_command(key=".author.name", value="Jane", global_config=False)
+
+    assert "Invalid configuration key" in str(exc.value)
+
+
+def test_invalid_key_trailing_dot(config_command, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.briefcase]\nproject_name = 'test'\n", encoding="utf-8"
+    )
+
+    with pytest.raises(BriefcaseConfigError) as exc:
+        config_command(key="author.name.", value="Jane", global_config=False)
+
+    assert "Invalid configuration key" in str(exc.value)
+
+
+def test_add_options_parses_arguments(config_command):
+    parser = ArgumentParser()
+    config_command.add_options(parser)
+
+    args = parser.parse_args(["iOS.device", "iPhone 15"])
+    assert args.key == "iOS.device"
+    assert args.value == "iPhone 15"

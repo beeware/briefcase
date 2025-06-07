@@ -57,3 +57,21 @@ def test_write_global_config(
         config = tomli.load(f)
 
     assert config == expected
+
+
+@patch("briefcase.commands.config.PlatformDirs")
+def test_write_global_creates_file(mock_platform_dirs, tmp_path, config_command):
+    global_dir = tmp_path / "user_config"
+    config_path = global_dir / "config.toml"
+
+    mock_instance = Mock()
+    mock_instance.user_config_dir = str(global_dir)
+    mock_platform_dirs.return_value = mock_instance
+
+    config_command.tools.path = mock_instance
+    config_command(key="cli.value", value="enabled", global_config=True)
+
+    with config_path.open("rb") as f:
+        config = tomli.load(f)
+
+    assert config["cli"]["value"] == "enabled"

@@ -80,3 +80,33 @@ def test_global_config_reading(
     config = Config(mock_tools)
     result = config.get("some.key")
     assert result == "global_val"
+
+
+def test_project_config_loads_and_misses(mock_tools, tmp_path):
+    config_dir = tmp_path / ".briefcase"
+    config_dir.mkdir()
+    (config_dir / "config.toml").write_text("", encoding="utf-8")
+
+    mock_tools.base_path = tmp_path
+    mock_tools.app_configs = {}
+
+    config = Config(mock_tools)
+    result = config.get("some.missing.key")
+    assert result is None
+
+
+@patch("briefcase.integrations.config.PlatformDirs")
+def test_global_config_loads_and_misses(mock_platform_dirs, mock_tools, tmp_path):
+    global_path = tmp_path / "user_config"
+    global_path.mkdir()
+    (global_path / "config.toml").write_text("", encoding="utf-8")
+
+    mock_instance = mock_platform_dirs.return_value
+    mock_instance.user_config_dir = str(global_path)
+
+    mock_tools.base_path = tmp_path
+    mock_tools.app_configs = {}
+
+    config = Config(mock_tools)
+    result = config.get("missing.key")
+    assert result is None

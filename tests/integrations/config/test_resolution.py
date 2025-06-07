@@ -74,3 +74,14 @@ def test_invalid_nested_key(mock_load_toml, mock_tools):
     config = Config(mock_tools)
     result = config.get("invalid.key")
     assert result is None
+
+
+def test_pyproject_nested_attribute_missing(mock_tools):
+    class DummyAppConfig:
+        existing = "value"
+
+    mock_tools.app_configs = {"myapp": DummyAppConfig()}
+    config = Config(mock_tools)
+
+    result = config.get("myapp.existing.missing_attr")
+    assert result is None
