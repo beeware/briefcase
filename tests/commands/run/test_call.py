@@ -29,7 +29,17 @@ def test_no_args_one_app(run_command, first_app):
         # App tools are verified
         ("verify-app-tools", "first"),
         # Run the first app
-        ("run", "first", False, {"passthrough": []}),
+        (
+            "run",
+            "first",
+            False,
+            {
+                "test_mode": False,
+                "device": None,
+                "passthrough": [],
+                "simulator_device": None,
+            },
+        ),
     ]
 
 
@@ -60,7 +70,17 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
         # App tools have been verified
         ("verify-app-tools", "first"),
         # Run the first app
-        ("run", "first", False, {"passthrough": ["foo", "--bar"]}),
+        (
+            "run",
+            "first",
+            False,
+            {
+                "test_mode": False,
+                "device": None,
+                "passthrough": ["foo", "--bar"],
+                "simulator_device": None,
+            },
+        ),
     ]
 
 
@@ -109,7 +129,17 @@ def test_with_arg_one_app(run_command, first_app):
         # App tools are verified
         ("verify-app-tools", "first"),
         # Run the first app
-        ("run", "first", False, {"passthrough": []}),
+        (
+            "run",
+            "first",
+            False,
+            {
+                "test_mode": False,
+                "device": None,
+                "passthrough": [],
+                "simulator_device": None,
+            },
+        ),
     ]
 
 
@@ -140,7 +170,17 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
         # App tools have been verified
         ("verify-app-tools", "second"),
         # Run the second app
-        ("run", "second", False, {"passthrough": []}),
+        (
+            "run",
+            "second",
+            False,
+            {
+                "test_mode": False,
+                "device": None,
+                "passthrough": [],
+                "simulator_device": None,
+            },
+        ),
     ]
 
 
@@ -198,6 +238,7 @@ def test_create_app_before_start(run_command, first_app_config):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -209,7 +250,13 @@ def test_create_app_before_start(run_command, first_app_config):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -247,6 +294,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -258,7 +306,13 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -296,6 +350,7 @@ def test_update_app(run_command, first_app):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -307,7 +362,13 @@ def test_update_app(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -345,6 +406,7 @@ def test_update_app_requirements(run_command, first_app):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -356,7 +418,13 @@ def test_update_app_requirements(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -394,6 +462,7 @@ def test_update_app_resources(run_command, first_app):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -405,7 +474,13 @@ def test_update_app_resources(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -443,6 +518,7 @@ def test_update_app_support(run_command, first_app):
                 "update_support": True,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -454,7 +530,13 @@ def test_update_app_support(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -492,6 +574,7 @@ def test_update_app_stub(run_command, first_app):
                 "update_support": False,
                 "update_stub": True,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -503,7 +586,13 @@ def test_update_app_stub(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -542,6 +631,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -553,7 +643,13 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -592,6 +688,7 @@ def test_update_non_existent(run_command, first_app_config):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -603,7 +700,13 @@ def test_update_non_existent(run_command, first_app_config):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": False,
+            },
         ),
     ]
 
@@ -641,6 +744,7 @@ def test_test_mode_existing_app(run_command, first_app):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -652,7 +756,13 @@ def test_test_mode_existing_app(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": True,
+            },
         ),
     ]
 
@@ -690,6 +800,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -703,7 +814,10 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
             True,
             {
                 "build_state": "first",
+                "simulator_device": None,
+                "device": None,
                 "passthrough": ["foo", "--bar"],
+                "test_mode": True,
             },
         ),
     ]
@@ -740,7 +854,12 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
             "run",
             "first",
             True,
-            {"passthrough": []},
+            {
+                "test_mode": True,
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -772,6 +891,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
             "first",
             True,
             {
+                "simulator_device": None,
                 "update": False,
                 "update_requirements": True,
                 "update_resources": False,
@@ -789,7 +909,13 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": True,
+            },
         ),
     ]
 
@@ -821,6 +947,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
             "first",
             True,
             {
+                "simulator_device": None,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": True,
@@ -838,7 +965,13 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": True,
+            },
         ),
     ]
 
@@ -870,6 +1003,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
             "first",
             True,
             {
+                "simulator_device": None,
                 "update": True,
                 "update_requirements": False,
                 "update_resources": False,
@@ -887,7 +1021,13 @@ def test_test_mode_update_existing_app(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "simulator_device": None,
+                "device": None,
+                "passthrough": [],
+                "test_mode": True,
+            },
         ),
     ]
 
@@ -925,6 +1065,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
                 "update_support": False,
                 "update_stub": False,
                 "no_update": False,
+                "simulator_device": None,
             },
         ),
         # App template is verified
@@ -936,6 +1077,12 @@ def test_test_mode_non_existent(run_command, first_app_config):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            {
+                "build_state": "first",
+                "device": None,
+                "simulator_device": None,
+                "passthrough": [],
+                "test_mode": True,
+            },
         ),
     ]

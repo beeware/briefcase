@@ -7,6 +7,7 @@ from argparse import RawDescriptionHelpFormatter
 from briefcase import __version__
 from briefcase.commands import (
     BuildCommand,
+    ConfigCommand,
     ConvertCommand,
     CreateCommand,
     DevCommand,
@@ -41,6 +42,7 @@ COMMANDS = [
     PackageCommand,
     PublishCommand,
     UpgradeCommand,
+    ConfigCommand,
 ]
 
 
@@ -135,6 +137,8 @@ def parse_cmdline(args, console: Console | None = None):
         Command = DevCommand
     elif options.command == "upgrade":
         Command = UpgradeCommand
+    elif options.command == "config":
+        Command = ConfigCommand
     else:
         # Commands dependent on the platform and format. The general form of such a
         # command is `briefcase <cmd> <platform> <format>`; but the format will be
