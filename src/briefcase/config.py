@@ -445,6 +445,16 @@ class AppConfig(BaseConfig):
                 paths.append(path)
         return paths
 
+    def all_sources(self) -> list[str]:
+        """Get all sources of the application that should be copied to the app.
+
+        :returns: The Path to the dist-info folder.
+        """
+        sources = self.sources.copy() if self.sources else []
+        if self.test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
+
     def main_module(self):
         """The path to the main module for the app.
 
