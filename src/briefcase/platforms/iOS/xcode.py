@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import plistlib
 import subprocess
 import time
@@ -668,11 +669,56 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 app, debugger_host, debugger_port
             )
 
-        # Install additional environment variables
-        if env:
-            with self.console.wait_bar("Setting environment variables..."):
-                for env_key, env_value in env.items():
+        # Set additional environment variables while the app is running (no-op if no environment variables are set).
+        with self.setup_env(env, udid):
+            try:
+                self.console.info(f"Starting {label}...", prefix=app.app_name)
+                with self.console.wait_bar(f"Launching {label}..."):
                     output = self.tools.subprocess.check_output(
+                        ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
+                        + passthrough
+                    )
+                    try:
+                        app_pid = int(output.split(":")[1].strip())
+                    except (IndexError, ValueError) as e:
+                        raise BriefcaseCommandError(
+                            f"Unable to determine PID of {label} {app.app_name}."
+                        ) from e
+
+                # Start streaming logs for the app.
+                self.console.info(
+                    "Following simulator log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
+                )
+
+                # Stream the app logs,
+                self._stream_app_logs(
+                    app,
+                    popen=simulator_log_popen,
+                    clean_filter=macOS_log_clean_filter,
+                    clean_output=True,
+                    stop_func=lambda: is_process_dead(app_pid),
+                    log_stream=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to launch {label} {app.app_name}."
+                ) from e
+
+        # Preserve the device selection as state.
+        return {"udid": udid}
+
+    @contextlib.contextmanager
+    def setup_env(
+        self,
+        env: dict[str, str] | None,
+        udid: str,
+    ):
+        """Context manager to set up the environment for the command."""
+        if env:
+            with self.console.wait_bar("Setting environment variables in simulator..."):
+                for env_key, env_value in env.items():
+                    self.tools.subprocess.check_output(
                         [
                             "xcrun",
                             "simctl",
@@ -685,58 +731,25 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                         ]
                     )
 
-        try:
-            self.console.info(f"Starting {label}...", prefix=app.app_name)
-            with self.console.wait_bar(f"Launching {label}..."):
-                output = self.tools.subprocess.check_output(
-                    ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
-                    + passthrough
-                )
-                try:
-                    app_pid = int(output.split(":")[1].strip())
-                except (IndexError, ValueError) as e:
-                    raise BriefcaseCommandError(
-                        f"Unable to determine PID of {label} {app.app_name}."
-                    ) from e
+            yield
 
-            # Start streaming logs for the app.
-            self.console.info(
-                "Following simulator log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
-            )
-
-            # Stream the app logs,
-            self._stream_app_logs(
-                app,
-                popen=simulator_log_popen,
-                clean_filter=macOS_log_clean_filter,
-                clean_output=True,
-                stop_func=lambda: is_process_dead(app_pid),
-                log_stream=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to launch {label} {app.app_name}."
-            ) from e
-        finally:
-            # Remove additional environment variables
-            if env:
-                with self.console.wait_bar("Setting environment variables..."):
-                    for env_key in env.keys():
-                        output = self.tools.subprocess.check_output(
-                            [
-                                "xcrun",
-                                "simctl",
-                                "spawn",
-                                udid,
-                                "launchctl",
-                                "unsetenv",
-                                f"{env_key}",
-                            ]
-                        )
-
-        # Preserve the device selection as state.
-        return {"udid": udid}
+            with self.console.wait_bar(
+                "Removing environment variables from simulator..."
+            ):
+                for env_key in env.keys():
+                    self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "unsetenv",
+                            f"{env_key}",
+                        ]
+                    )
+        else:
+            yield  # no-op if no environment variables are set
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
