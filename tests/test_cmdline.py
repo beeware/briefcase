@@ -245,12 +245,20 @@ def test_dev_command(
     "cmdline, expected_options, expected_overrides",
     dev_run_parameters("run")
     + [
-        ("run -u", {"update": True}, {}),
-        ("run --update", {"update": True}, {}),
-        ("run --update-resources", {"update_resources": True}, {}),
-        ("run --update-support", {"update_support": True}, {}),
-        ("run --update-stub", {"update_stub": True}, {}),
-        ("run --no-update", {"no_update": True}, {}),
+        ("run -u", {"update": True, "simulator_device": None}, {}),
+        ("run --update", {"update": True, "simulator_device": None}, {}),
+        (
+            "run --update-resources",
+            {"update_resources": True, "simulator_device": None},
+            {},
+        ),
+        (
+            "run --update-support",
+            {"update_support": True, "simulator_device": None},
+            {},
+        ),
+        ("run --update-stub", {"update_stub": True, "simulator_device": None}, {}),
+        ("run --no-update", {"no_update": True, "simulator_device": None}, {}),
     ],
 )
 def test_run_command(
@@ -281,6 +289,7 @@ def test_run_command(
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "simulator_device": None,
         **expected_options,
     }
     assert overrides == expected_overrides
