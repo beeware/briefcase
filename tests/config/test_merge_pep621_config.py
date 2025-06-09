@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from briefcase.config import merge_pep621_config
 
 
@@ -23,6 +25,7 @@ def test_base_keys():
             "license": {"text": "BSD License"},
             "requires-python": ">=3.9",
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -53,6 +56,7 @@ def test_base_keys_override():
             "urls": {"Homepage": "https://example.com"},
             "license": {"text": "GPL3"},
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -73,12 +77,13 @@ def test_missing_subkeys():
         {
             "urls": {"Sponsorship": "https://example.com"},
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {"key": "value"}
 
 
-def test_specified_license_file():
+def test_specified_license_file_pep621():
     "The license file is included in the briefcase config if specified in the PEP621 config"
     briefcase_config = {"key": "value"}
 
@@ -87,6 +92,7 @@ def test_specified_license_file():
         {
             "license": {"file": "license.txt"},
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {"key": "value", "license": {"file": "license.txt"}}
@@ -99,6 +105,7 @@ def test_empty_authors():
     merge_pep621_config(
         briefcase_config,
         {"authors": []},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -120,6 +127,7 @@ def test_single_author():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -147,6 +155,7 @@ def test_multiple_authors():
                 },
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -169,6 +178,7 @@ def test_mising_author_name():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -190,6 +200,7 @@ def test_missing_author_email():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -212,6 +223,7 @@ def test_existing_author_name():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -235,6 +247,7 @@ def test_existing_author_email():
                 }
             ]
         },
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -251,6 +264,7 @@ def test_no_dependencies():
     merge_pep621_config(
         briefcase_config,
         {},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -266,6 +280,7 @@ def test_dependencies_without_requires():
     merge_pep621_config(
         briefcase_config,
         {"dependencies": ["dep1", "dep2"]},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -281,6 +296,7 @@ def test_dependencies_with_requires():
     merge_pep621_config(
         briefcase_config,
         {"dependencies": ["dep1", "dep2"]},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -296,6 +312,7 @@ def test_no_test_dependencies():
     merge_pep621_config(
         briefcase_config,
         {},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -311,6 +328,7 @@ def test_optional_non_test_dependencies():
     merge_pep621_config(
         briefcase_config,
         {"optional-dependencies": {"other": ["dep1", "dep2"]}},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -326,6 +344,7 @@ def test_test_dependencies_without_requires():
     merge_pep621_config(
         briefcase_config,
         {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        console=Mock(),
     )
 
     assert briefcase_config == {
@@ -341,6 +360,7 @@ def test_test_dependencies_with_requires():
     merge_pep621_config(
         briefcase_config,
         {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        console=Mock(),
     )
 
     assert briefcase_config == {
