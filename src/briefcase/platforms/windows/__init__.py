@@ -18,16 +18,17 @@ class WindowsMixin:
     supported_host_os = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
 
+    def bundle_package_binary_path(self, app):
+        if app.console_app:
+            return f"{app.app_name}.exe"
+        else:
+            return f"{app.formal_name}.exe"
+
     def bundle_package_path(self, app):
-        return self.format_path(app) / self.packaging_root
+        return self.bundle_path(app) / self.packaging_root
 
     def binary_path(self, app):
-        if app.package_binary_path:
-            return self.packaging_path(app) / app.package_binary_path
-        elif app.console_app:
-            return self.packaging_path(app) / f"{app.app_name}.exe"
-        else:
-            return self.packaging_path(app) / f"{app.formal_name}.exe"
+        return self.package_path(app) / self.package_binary_path(app)
 
     def distribution_path(self, app):
         suffix = "zip" if app.packaging_format == "zip" else "msi"
@@ -102,6 +103,7 @@ class WindowsCreateCommand(CreateCommand):
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
+            "binary_path": self.package_binary_path(app),
         }
 
     def _cleanup_app_support_package(self, support_path):

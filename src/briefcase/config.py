@@ -312,6 +312,7 @@ class AppConfig(BaseConfig):
         console_app=False,
         requirement_installer_args: list[str] | None = None,
         package_path: str | None = None,
+        package_binary_path: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -345,6 +346,7 @@ class AppConfig(BaseConfig):
             [] if requirement_installer_args is None else requirement_installer_args
         )
         self.package_path = package_path
+        self.package_binary_path = package_binary_path
 
         self.test_mode: bool = False
 
