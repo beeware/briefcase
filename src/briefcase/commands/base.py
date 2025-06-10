@@ -705,6 +705,18 @@ a custom location for Briefcase's tools.
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
+                if app.package_path:
+                    if app.sources is not None:
+                        raise BriefcaseConfigError(
+                            f"{app.app_name!r} is declared as an external app, but also "
+                            "defines `sources`. External apps (apps defining `package_path`) "
+                            "cannot define sources."
+                        )
+                elif app.sources is None:
+                    raise BriefcaseConfigError(
+                        f"{app.app_name!r} does not define either `sources` or `package_path`."
+                    )
+
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
 

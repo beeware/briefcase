@@ -4,6 +4,7 @@ import gzip
 import re
 import subprocess
 import sys
+import tarfile
 from pathlib import Path
 
 from briefcase.commands import (
@@ -40,6 +41,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     supported_host_os_reason = (
         "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
+    supports_external_packaging = True
 
     @property
     def use_docker(self):
@@ -925,6 +927,11 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 )
 
     def verify_app_tools(self, app):
+        if app.package_path and self.use_docker:
+            raise BriefcaseCommandError(
+                "Briefcase can't currently package external apps as Linux system packages."
+            )
+
         super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
         if app.packaging_format == "system":
@@ -1017,10 +1024,10 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                         "dpkg-deb",
                         "--build",
                         "--root-owner-group",
-                        self.package_path(app).name,
+                        self.package_path(app),
                     ],
                     check=True,
-                    cwd=self.package_path(app).parent,
+                    cwd=self.bundle_path(app),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -1029,7 +1036,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
             # Move the deb file to its final location
             self.tools.shutil.move(
-                self.package_path(app).parent / f"{app.app_name}-{app.version}.deb",
+                f"{self.package_path(app)}.deb",
                 self.distribution_path(app),
             )
 
@@ -1044,7 +1051,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
             )
 
         # Generate the rpmbuild layout
-        rpmbuild_path = self.package_path(app).parent / "rpmbuild"
+        rpmbuild_path = self.bundle_path(app) / "rpmbuild"
         with self.console.wait_bar("Generating rpmbuild layout..."):
             if rpmbuild_path.exists():
                 self.tools.shutil.rmtree(rpmbuild_path)
@@ -1132,8 +1139,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
                 # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
                 # *not* cleaned up, as they're part of more general system structures.
-                for filename in sorted(self.package_path(app).parent.glob("**/*")):
-                    path = filename.relative_to(self.package_path(app).parent)
+                for filename in sorted(self.package_path(app).glob("**/*")):
+                    path = filename.relative_to(self.package_path(app))
 
                     if filename.is_dir():
                         if app.app_name in path.parts:
@@ -1162,26 +1169,28 @@ no extension).
                     f.write(c.read())
 
         with self.console.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                rpmbuild_path / "SOURCES" / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.package_path(app).parent,
-                base_dir=self.package_path(app).name,
-            )
+            with tarfile.open(
+                rpmbuild_path / f"SOURCES/{self.bundle_package_path(app).name}.tar.gz",
+                "w:gz",
+            ) as archive:
+                archive.add(
+                    self.package_path(app),
+                    arcname=self.bundle_package_path(app).name,
+                )
 
         with self.console.wait_bar("Building RPM package..."):
             try:
-                # Build the dpkg.
+                # Build the rpm.
                 self.tools[app].app_context.run(
                     [
                         "rpmbuild",
                         "-bb",
                         "--define",
-                        f"_topdir {self.package_path(app).parent / 'rpmbuild'}",
+                        f"_topdir {self.bundle_path(app) / 'rpmbuild'}",
                         f"./rpmbuild/SPECS/{app.app_name}.spec",
                     ],
                     check=True,
-                    cwd=self.package_path(app).parent,
+                    cwd=self.bundle_path(app),
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
@@ -1223,7 +1232,7 @@ with details about the release.
         changelog_source = self.base_path / changelog
 
         # Generate the pkgbuild layout
-        pkgbuild_path = self.package_path(app).parent / "pkgbuild"
+        pkgbuild_path = self.bundle_path(app) / "pkgbuild"
         with self.console.wait_bar("Generating pkgbuild layout..."):
             if pkgbuild_path.exists():
                 self.tools.shutil.rmtree(pkgbuild_path)
@@ -1234,12 +1243,14 @@ with details about the release.
 
         # Build the source archive
         with self.console.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                pkgbuild_path / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.package_path(app).parent,
-                base_dir=self.package_path(app).name,
-            )
+            with tarfile.open(
+                pkgbuild_path / f"{self.bundle_package_path(app).name}.tar.gz",
+                "w:gz",
+            ) as archive:
+                archive.add(
+                    self.package_path(app),
+                    arcname=self.bundle_package_path(app).name,
+                )
 
         # Write the arch PKGBUILD file.
         with self.console.wait_bar("Write PKGBUILD file..."):

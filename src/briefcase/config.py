@@ -378,16 +378,7 @@ class AppConfig(BaseConfig):
                 "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
-        # If we specify a package path, we can't have sources. If there's no package path,
-        # sources can't contain duplicate names.
-        if self.package_path:
-            if self.sources is not None:
-                raise BriefcaseConfigError(
-                    f"{self.app_name!r} is declared as an external app, but also "
-                    "defines `sources`. External apps (apps defining `package_path`) "
-                    "cannot define sources."
-                )
-        else:
+        if self.sources:
             # Sources list doesn't include any duplicates
             source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
             if len(self.sources) != len(source_modules):
