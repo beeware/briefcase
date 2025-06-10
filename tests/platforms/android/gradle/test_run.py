@@ -806,7 +806,7 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.kill.assert_called_once_with()
 
 
-def test_run_debug_mode(run_command, first_app_config, tmp_path):
+def test_run_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
     """An app can be run in debug mode."""
     # Set up device selection to return a running physical device.
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
@@ -827,7 +827,7 @@ def test_run_debug_mode(run_command, first_app_config, tmp_path):
     # Set up app config to have a `-` in the `bundle`, to ensure it gets
     # normalized into a `_` via `package_name`.
     first_app_config.bundle = "com.ex-ample"
-    first_app_config.debug_mode = True
+    first_app_config.debugger = dummy_debugger
 
     # Invoke run_app with args.
     run_command.run_app(
@@ -924,7 +924,7 @@ class ClientDebugger(BaseDebugger):
         ClientDebugger(),
     ],
 )
-def test_run_debug_mode_localhost(run_command, first_app_config, tmp_path, debugger):
+def test_run_debugger_mode_localhost(run_command, first_app_config, tmp_path, debugger):
     """An app can be run in debug mode."""
     run_command.console.verbosity = LogLevel.DEBUG
 
@@ -949,7 +949,6 @@ def test_run_debug_mode_localhost(run_command, first_app_config, tmp_path, debug
     first_app_config.bundle = "com.ex-ample"
 
     # Set up the debugger
-    first_app_config.debug_mode = True
     first_app_config.debugger = debugger
 
     # Invoke run_app with args.

@@ -330,8 +330,10 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         """
         if app.test_mode:
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
-        if app.debug_mode:
-            raise BriefcaseCommandError("Briefcase can't run web apps in debug mode.")
+        if app.debugger:
+            raise BriefcaseCommandError(
+                "Briefcase can't run web apps with an debugger."
+            )
 
         self.console.info("Starting web server...", prefix=app.app_name)
 

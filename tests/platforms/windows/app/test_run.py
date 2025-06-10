@@ -282,13 +282,13 @@ def test_run_app_test_mode_with_passthrough(
     )
 
 
-def test_run_gui_app_debug_mode(run_command, first_app_config, tmp_path):
+def test_run_gui_app_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
     """A Windows app can be started in debug mode."""
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_popen
 
-    first_app_config.debug_mode = True
+    first_app_config.debugger = dummy_debugger
 
     # Run the app
     run_command.run_app(

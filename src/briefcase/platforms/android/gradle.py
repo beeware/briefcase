@@ -224,7 +224,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
         # In debug mode extract all source packages so that the debugger can get the source code
         # at runtime (eg. via 'll' in pdb).
-        if app.debug_mode:
+        if app.debugger:
             extract_sources.extend(app.sources)
 
         return {
@@ -456,7 +456,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             if self.console.is_debug:
                 env["BRIEFCASE_DEBUG"] = "1"
 
-            if app.debug_mode:
+            if app.debugger:
                 env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
                     app, debugger_host, debugger_port
                 )
@@ -529,7 +529,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param debugger_port: The port to use for the debugger
         :param adb: The ADB wrapper for the device
         """
-        if app.debug_mode and app.debugger and debugger_host == "localhost":
+        if app.debugger and debugger_host == "localhost":
             if app.debugger.connection_mode == DebuggerConnectionMode.SERVER:
                 with self.console.wait_bar(
                     f"Start forwarding port '{debugger_port}' from host to device for debugger connection..."

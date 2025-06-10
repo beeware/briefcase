@@ -1,6 +1,7 @@
 import pytest
 
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 
 
 @pytest.fixture
@@ -54,3 +55,21 @@ def underscore_app_config(first_app_config):
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
     )
+
+
+class DummyDebugger(BaseDebugger):
+    @property
+    def additional_requirements(self) -> list[str]:
+        """Return a list of additional requirements for the debugger."""
+        raise NotImplementedError
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        """Return the connection mode of the debugger."""
+        raise NotImplementedError
+
+
+@pytest.fixture
+def dummy_debugger():
+    """A dummy debugger for testing purposes."""
+    return DummyDebugger()

@@ -308,7 +308,6 @@ class AppConfig(BaseConfig):
         template_branch=None,
         test_sources=None,
         test_requires=None,
-        debug_requires=None,
         supported=True,
         long_description=None,
         console_app=False,
@@ -338,7 +337,6 @@ class AppConfig(BaseConfig):
         self.template_branch = template_branch
         self.test_sources = test_sources
         self.test_requires = test_requires
-        self.debug_requires = [] if debug_requires is None else debug_requires
         self.supported = supported
         self.long_description = long_description
         self.license = license
@@ -347,7 +345,7 @@ class AppConfig(BaseConfig):
             [] if requirement_installer_args is None else requirement_installer_args
         )
         self.test_mode: bool = False
-        self.debug_mode: bool = False
+
         self.debugger: BaseDebugger | None = None
 
         if not is_valid_app_name(self.app_name):

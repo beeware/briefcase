@@ -1608,7 +1608,7 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
 
 
 @pytest.mark.usefixtures("sleep_zero")
-def test_run_app_debug_mode(run_command, first_app_generated, tmp_path):
+def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debugger):
     """An iOS App can be started in debug mode."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
@@ -1637,7 +1637,7 @@ def test_run_app_debug_mode(run_command, first_app_generated, tmp_path):
         log_stream_process,
     ]
 
-    first_app_generated.debug_mode = True
+    first_app_generated.debugger = dummy_debugger
 
     # Run the app
     run_command.run_app(

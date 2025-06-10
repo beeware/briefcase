@@ -673,8 +673,6 @@ a custom location for Briefcase's tools.
         """
         if debugger_name and debugger_name != "":
             debugger = get_debugger(debugger_name)
-            app.debug_requires.extend(debugger.additional_requirements)
-            app.debug_mode = True
             app.debugger = debugger
 
     def verify_app(self, app: AppConfig):

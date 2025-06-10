@@ -592,14 +592,14 @@ def test_test_mode(run_command, first_app_built):
         )
 
 
-def test_debug_mode(run_command, first_app_built):
+def test_debugger(run_command, first_app_built, dummy_debugger):
     """Debug mode raises an error (at least for now)."""
-    first_app_built.debug_mode = True
+    first_app_built.debugger = dummy_debugger
 
     # Run the app
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase can't run web apps in debug mode.",
+        match=r"Briefcase can't run web apps with an debugger.",
     ):
         run_command.run_app(
             first_app_built,

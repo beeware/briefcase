@@ -31,7 +31,6 @@ def full_context():
         "sources": ["src/my_app"],
         "test_sources": None,
         "test_requires": None,
-        "debug_requires": [],
         "debugger": None,
         "url": "https://example.com",
         "author": "First Last",
@@ -47,7 +46,6 @@ def full_context():
         "license": {"file": "LICENSE"},
         "requirement_installer_args": [],
         "test_mode": False,
-        "debug_mode": False,
         # Properties of the generating environment
         "python_version": platform.python_version(),
         "host_arch": "gothic",

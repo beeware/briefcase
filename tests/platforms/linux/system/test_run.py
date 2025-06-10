@@ -351,7 +351,9 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_not_called()
 
 
-def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkeypatch):
+def test_run_gui_app_debugger(
+    run_command, first_app, sub_kw, tmp_path, monkeypatch, dummy_debugger
+):
     """A bootstrap binary for a GUI app can be started in debug mode."""
 
     # Set up tool cache
@@ -366,7 +368,7 @@ def test_run_gui_app_debug_mode(run_command, first_app, sub_kw, tmp_path, monkey
     # Mock out the environment
     monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
 
-    first_app.debug_mode = True
+    first_app.debugger = dummy_debugger
 
     # Run the app
     run_command.run_app(

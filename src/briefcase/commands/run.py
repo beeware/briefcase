@@ -318,7 +318,7 @@ class RunCommand(RunAppMixin, BaseCommand):
             env["BRIEFCASE_DEBUG"] = "1"
 
         # If we're in remote debug mode, save the remote debugger config
-        if app.debug_mode:
+        if app.debugger:
             env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
                 app, debugger_host, debugger_port
             )

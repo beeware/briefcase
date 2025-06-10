@@ -173,9 +173,9 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     )
 
 
-def test_run_app_debug_mode(run_command, first_app_config, tmp_path):
+def test_run_app_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
     """A windows Visual Studio project app can be started in debug mode."""
-    first_app_config.debug_mode = True
+    first_app_config.debugger = dummy_debugger
 
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()

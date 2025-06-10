@@ -57,7 +57,7 @@ class DummyRunCommand(RunCommand):
                 "run",
                 app.app_name,
                 app.test_mode,
-                app.debug_mode,
+                app.debugger is not None,
                 kwargs.copy(),
             )
         )
@@ -94,7 +94,7 @@ class DummyRunCommand(RunCommand):
                 "build",
                 app.app_name,
                 app.test_mode,
-                app.debug_mode,
+                app.debugger is not None,
                 kwargs.copy(),
             )
         )

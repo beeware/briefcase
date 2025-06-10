@@ -236,13 +236,13 @@ def test_run_test_mode_with_args(run_command, first_app_config, is_console_app):
     )
 
 
-def test_run_debug_mode(run_command, first_app_config, tmp_path):
+def test_run_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
     """A flatpak can be executed in debug mode."""
     # Set up the log streamer to return a known stream and a good return code
     log_popen = mock.MagicMock()
     run_command.tools.flatpak.run.return_value = log_popen
 
-    first_app_config.debug_mode = True
+    first_app_config.debugger = dummy_debugger
 
     # Run the app
     run_command.run_app(
