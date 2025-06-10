@@ -43,6 +43,12 @@ class UpdateCommand(CreateCommand):
         :param update_stub: Should stub binary be updated?
         """
 
+        if app.package_path:
+            raise BriefcaseCommandError(
+                f"{self.app_name!r} is declared as an external app. External apps "
+                "(apps defining `package_path`) cannot be updated."
+            )
+
         if not self.bundle_path(app).exists():
             self.console.error(
                 "Application does not exist; call create first!", prefix=app.app_name

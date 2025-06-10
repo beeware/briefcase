@@ -906,15 +906,10 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, minimal=False, **options):
+    def create_app(self, app: AppConfig, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
-        :param minimal: Generate a minimal template. This is only used for
-            packaging external artefacts. It generates the template, but does
-            not install a support package, app requirements, or resources; and
-            the content in the app that would ordinarily be packaged is
-            removed.
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -936,9 +931,17 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        if minimal:
+        # External apps (apps that define `package_path`) need the packaging metadata
+        # from the template, but not the app content, dependencies, support package etc.
+        if app.package_path:
             self.console.info("Removing generated app content...", prefix=app.app_name)
             self.tools.shutil.rmtree(self.bundle_package_path(app))
+
+            self.console.info(
+                "Created configuration for an externally packaged app "
+                f"in {bundle_path.relative_to(self.base_path)}",
+                prefix=app.app_name,
+            )
         else:
             self.console.info("Installing support package...", prefix=app.app_name)
             self.install_app_support_package(app=app)
@@ -972,10 +975,10 @@ class CreateCommand(BaseCommand):
             self.console.info("Removing unneeded app content...", prefix=app.app_name)
             self.cleanup_app_content(app=app)
 
-        self.console.info(
-            f"Created {bundle_path.relative_to(self.base_path)}",
-            prefix=app.app_name,
-        )
+            self.console.info(
+                f"Created {bundle_path.relative_to(self.base_path)}",
+                prefix=app.app_name,
+            )
 
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.

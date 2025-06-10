@@ -293,8 +293,8 @@ class AppConfig(BaseConfig):
         version,
         bundle,
         description,
-        sources,
         license,
+        sources=None,
         formal_name=None,
         url=None,
         author=None,
@@ -311,6 +311,7 @@ class AppConfig(BaseConfig):
         long_description=None,
         console_app=False,
         requirement_installer_args: list[str] | None = None,
+        package_path: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -343,6 +344,8 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
+        self.package_path = package_path
+
         self.test_mode: bool = False
 
         if not is_valid_app_name(self.app_name):
@@ -373,20 +376,30 @@ class AppConfig(BaseConfig):
                 "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
-        # Sources list doesn't include any duplicates
-        source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
-        if len(self.sources) != len(source_modules):
-            raise BriefcaseConfigError(
-                f"The `sources` list for {self.app_name!r} contains duplicated "
-                "package names."
-            )
+        # If we specify a package path, we can't have sources. If there's no package path,
+        # sources can't contain duplicate names.
+        if self.package_path:
+            if self.sources is not None:
+                raise BriefcaseConfigError(
+                    f"{self.app_name!r} is declared as an external app, but also "
+                    "defines `sources`. External apps (apps defining `package_path`) "
+                    "cannot define sources."
+                )
+        else:
+            # Sources list doesn't include any duplicates
+            source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
+            if len(self.sources) != len(source_modules):
+                raise BriefcaseConfigError(
+                    f"The `sources` list for {self.app_name!r} contains duplicated "
+                    "package names."
+                )
 
-        # There is, at least, a source for the app module
-        if self.module_name not in source_modules:
-            raise BriefcaseConfigError(
-                f"The `sources` list for {self.app_name!r} does not include a "
-                f"package named {self.module_name!r}."
-            )
+            # There is, at least, a source for the app module
+            if self.module_name not in source_modules:
+                raise BriefcaseConfigError(
+                    f"The `sources` list for {self.app_name!r} does not include a "
+                    f"package named {self.module_name!r}."
+                )
 
     def __repr__(self):
         return f"<{self.bundle_identifier} v{self.version} AppConfig>"
