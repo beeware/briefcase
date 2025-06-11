@@ -39,4 +39,7 @@ def external_first_app(first_app_with_binaries, first_app_config, tmp_path):
         tmp_path / "base_path/external/First App.app",
     )
 
+    # And purge the original package path, so we have a "clean" template directory
+    shutil.rmtree(tmp_path / "base_path/build/first-app/macos/app")
+
     return first_app_config

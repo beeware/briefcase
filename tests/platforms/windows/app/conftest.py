@@ -22,7 +22,7 @@ def external_first_app(first_app_config, tmp_path):
 
     # Create the binary
     create_file(
-        tmp_path / "base_path/build/first-app/windows/app/src/internal/app.exe",
+        tmp_path / "base_path/external/src/internal/app.exe",
         "external binary",
     )
 
