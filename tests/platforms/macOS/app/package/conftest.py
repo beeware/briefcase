@@ -16,6 +16,7 @@ def package_command(tmp_path):
         data_path=tmp_path / "briefcase",
     )
 
+    command._command_factory = mock.MagicMock()
     command.select_identity = mock.MagicMock()
     command.sign_app = mock.MagicMock()
     command.sign_file = mock.MagicMock()
