@@ -1,4 +1,3 @@
-from pathlib import Path
 from subprocess import CalledProcessError
 from unittest import mock
 from zipfile import ZipFile
@@ -207,13 +206,14 @@ def test_package_msi(package_command, first_app_config, kwargs, tmp_path):
 
     package_command.package_app(first_app_config, **kwargs)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -243,7 +243,7 @@ def test_package_msi(package_command, first_app_config, kwargs, tmp_path):
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -345,6 +345,7 @@ def test_package_msi_with_codesigning(
         timestamp_digest="sha56",
     )
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Codesign app exe
         mock.call(
@@ -389,7 +390,7 @@ def test_package_msi_with_codesigning(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -419,7 +420,7 @@ def test_package_msi_with_codesigning(
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -608,13 +609,14 @@ def test_package_msi_failed_manifest(package_command, first_app_config, tmp_path
     ):
         package_command.package_app(first_app_config)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -650,13 +652,14 @@ def test_package_msi_failed_compile(package_command, first_app_config, tmp_path)
     ):
         package_command.package_app(first_app_config)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -686,7 +689,7 @@ def test_package_msi_failed_compile(package_command, first_app_config, tmp_path)
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -711,13 +714,14 @@ def test_package_msi_failed_link(package_command, first_app_config, tmp_path):
     ):
         package_command.package_app(first_app_config)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -747,7 +751,7 @@ def test_package_msi_failed_link(package_command, first_app_config, tmp_path):
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -797,6 +801,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
             timestamp_digest="sha56",
         )
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Codesign app exe
         mock.call(
@@ -831,7 +836,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -861,7 +866,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],

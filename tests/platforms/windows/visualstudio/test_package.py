@@ -1,8 +1,6 @@
 # The package command inherits most of its behavior from the common base
 # implementation. Do a surface-level verification here, but the app
 # tests provide the actual test coverage.
-import os
-from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -30,6 +28,9 @@ def test_package_msi(package_command, first_app_config, tmp_path):
 
     package_command.package_app(first_app_config)
 
+    package_path = (
+        tmp_path / "base_path/build/first-app/windows/visualstudio/x64/Release"
+    )
     package_command.tools.subprocess.run.assert_has_calls(
         [
             # Collect manifest
@@ -37,7 +38,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 [
                     tmp_path / "wix/bin/heat.exe",
                     "dir",
-                    Path("x64/Release"),
+                    package_path,
                     "-nologo",
                     "-gg",
                     "-sfrag",
@@ -72,7 +73,7 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                     "WixUIExtension",
                     "-arch",
                     "x64",
-                    f"-dSourceDir={os.fsdecode(Path('x64/Release'))}",
+                    f"-dSourceDir={package_path}",
                     "first-app.wxs",
                     "first-app-manifest.wxs",
                 ],

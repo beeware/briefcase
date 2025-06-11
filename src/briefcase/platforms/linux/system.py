@@ -1036,7 +1036,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
             # Move the deb file to its final location
             self.tools.shutil.move(
-                f"{self.package_path(app)}.deb",
+                self.package_path(app).parent / f"{self.package_path(app).name}.deb",
                 self.distribution_path(app),
             )
 
