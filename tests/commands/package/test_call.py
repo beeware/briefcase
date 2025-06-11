@@ -977,6 +977,15 @@ def test_package_external_app(package_command, first_app, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
+        # App has been created
+        (
+            "create",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+            },
+        ),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified for app
@@ -987,6 +996,7 @@ def test_package_external_app(package_command, first_app, tmp_path):
             "first",
             {
                 "adhoc_sign": False,
+                "create_state": "first",
                 "identity": None,
             },
         ),

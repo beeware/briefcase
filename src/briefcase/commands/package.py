@@ -94,12 +94,11 @@ class PackageCommand(BaseCommand):
                 prefix=app.app_name,
             )
 
-            # A minimal template is required to provide packaging
-            # configuration files and other metadata.
-            if not template_file.exists():
-                state = self.create_command(app, **options)
-            else:
-                state = None
+            # A minimal template is required to provide packaging configuration files
+            # and other metadata. We *always* generate the template to ensure that
+            # packaging metadata is up-to-date. If the app has been packaged before,
+            # it will be necessary to confirm deletion of the old folder.
+            state = self.create_command(app, **options)
         elif not template_file.exists():
             state = self.create_command(app, **options)
             state = self.build_command(app, **full_options(state, options))
