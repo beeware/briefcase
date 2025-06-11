@@ -21,5 +21,6 @@ def package_command(tmp_path):
     command.notarize = mock.MagicMock()
     command.dmgbuild = mock.MagicMock()
     command.tools.subprocess = mock.MagicMock(spec=Subprocess)
+    command.verify_not_on_icloud = mock.MagicMock()
 
     return command

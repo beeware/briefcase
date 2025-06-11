@@ -175,6 +175,17 @@ keys:
 Platform quirks
 ===============
 
+Use of iCloud-synchronized folders
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+iCloud stores and maintains metadata on some content stored in iCloud-synchronized
+folders. Unfortunately, this metadata prevents apps from being signed and notarized, and
+app signing is a requirement for all apps on macOS. As a result, Briefcase cannot be
+used to generate macOS apps in a folder that is synchronized with iCloud.
+
+This most commonly affects the `Documents` and `Desktop` folders (and subfolders), but
+can affect other locations if they are synchronized with iCloud.
+
 Packaging with ``--adhoc-sign``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
