@@ -146,7 +146,7 @@ def test_external_and_internal(base_command, first_app):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"'first' is declared as an external app, but also defines `sources",
+        match=r"'first' is declared as an external app, but also defines 'sources'",
     ):
         base_command.finalize(first_app)
 
@@ -157,6 +157,17 @@ def test_not_external_or_internal(base_command, first_app):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"'first' does not define either `sources` or `package_path`.",
+        match=r"'first' does not define either 'sources' or 'package_path'.",
+    ):
+        base_command.finalize(first_app)
+
+
+def test_binary_path_internal_app(base_command, first_app):
+    """If an internal app defines package_binary_path, an error is raised."""
+    first_app.package_binary_path = "internal/app.exe"
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"'first' defines 'package_binary_path', but not 'package_path'",
     ):
         base_command.finalize(first_app)

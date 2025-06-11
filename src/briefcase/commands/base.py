@@ -461,7 +461,7 @@ a custom location for Briefcase's tools.
         :param app: The app config
         """
         if app.package_path:
-            return Path(app.package_path).resolve()
+            return Path(app.package_path).absolute().resolve()
         else:
             return self.bundle_package_path(app)
 
@@ -706,16 +706,25 @@ a custom location for Briefcase's tools.
                 delattr(app, "__draft__")
 
                 if app.package_path:
+                    # Package path is defined
                     if app.sources is not None:
+                        # sources is not defined
                         raise BriefcaseConfigError(
                             f"{app.app_name!r} is declared as an external app, but also "
-                            "defines `sources`. External apps (apps defining `package_path`) "
+                            "defines 'sources'. External apps (apps defining 'package_path') "
                             "cannot define sources."
                         )
                 elif app.sources is None:
+                    # Neither sources or package_path is defined
                     raise BriefcaseConfigError(
-                        f"{app.app_name!r} does not define either `sources` or `package_path`."
+                        f"{app.app_name!r} does not define either 'sources' or 'package_path'."
                     )
+                else:
+                    # sources is defined, package_path is not
+                    if app.package_binary_path:
+                        raise BriefcaseConfigError(
+                            f"{app.app_name!r} defines 'package_binary_path', but not 'package_path'."
+                        )
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
