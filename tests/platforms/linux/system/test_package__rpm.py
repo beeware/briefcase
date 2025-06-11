@@ -673,6 +673,7 @@ def test_no_changelog(package_command, first_app_rpm, tmp_path):
     package_command.tools.shutil.move.assert_not_called()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_external_rpm_package(package_command, external_first_app_rpm, tmp_path):
     """An external app can be published as an RPM."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
