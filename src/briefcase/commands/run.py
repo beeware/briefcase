@@ -320,7 +320,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         if app.package_path:
             raise BriefcaseCommandError(
-                f"{self.app_name!r} is declared as an external app. External apps "
+                f"{app.app_name!r} is declared as an external app. External apps "
                 "(apps defining `package_path`) cannot be run."
             )
 

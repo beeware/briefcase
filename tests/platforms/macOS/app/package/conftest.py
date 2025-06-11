@@ -1,3 +1,4 @@
+import shutil
 from unittest import mock
 
 import pytest
@@ -23,3 +24,19 @@ def package_command(tmp_path):
     command.tools.subprocess = mock.MagicMock(spec=Subprocess)
 
     return command
+
+
+@pytest.fixture
+def external_first_app(first_app_with_binaries, first_app_config, tmp_path):
+    # Convert the first_app_config into an external app
+    first_app_config.sources = None
+    first_app_config.package_path = tmp_path / "base_path/external/First App.app"
+
+    # Move the binaries from the compiled first app to the external location
+    first_app_config.package_path.parent.mkdir(parents=True)
+    shutil.move(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/external/First App.app",
+    )
+
+    return first_app_config

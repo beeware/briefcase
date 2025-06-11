@@ -441,7 +441,7 @@ class AppConfig(BaseConfig):
     def PYTHONPATH(self):
         """The PYTHONPATH modifications needed to run this app."""
         paths = []
-        sources = self.sources
+        sources = self.sources.copy() if self.sources else []
         if self.test_mode and self.test_sources:
             sources.extend(self.test_sources)
 

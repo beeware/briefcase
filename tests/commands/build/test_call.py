@@ -1356,3 +1356,25 @@ def test_build_app_all_flags(build_command, first_app, second_app):
         # First app is built in test mode
         ("build", "first", True, {"update_state": "first"}),
     ]
+
+
+def test_build_external_app(build_command, first_app, second_app):
+    """If the user requests a build an external app, an error is raised."""
+    # Add an apps
+    build_command.apps = {
+        "first": first_app,
+    }
+
+    # Make first_app an external app
+    first_app.sources = None
+    first_app.package_path = "path/to/package"
+
+    # Configure no command line options
+    options, _ = build_command.parse_options([])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"'first' is declared as an external app",
+    ):
+        build_command(**options)

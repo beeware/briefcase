@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from .conftest import DummyCommand
 
 
@@ -9,6 +11,46 @@ def test_bundle_path(base_command, my_app, tmp_path):
     bundle_path = base_command.bundle_path(my_app)
 
     assert bundle_path == tmp_path / "base_path/build/my-app/tester/dummy"
+
+
+def test_package_path(base_command, my_app, tmp_path):
+    package_path = base_command.package_path(my_app)
+    bundle_package_path = base_command.bundle_package_path(my_app)
+
+    assert package_path == tmp_path / "base_path/build/my-app/tester/dummy/src/package"
+    assert (
+        bundle_package_path
+        == tmp_path / "base_path/build/my-app/tester/dummy/src/package"
+    )
+
+
+def test_external_package_path(base_command, my_app, tmp_path):
+    my_app.package_path = "path/to/package"
+    package_path = base_command.package_path(my_app)
+    bundle_package_path = base_command.bundle_package_path(my_app)
+
+    assert package_path == (Path.cwd() / "path/to/package")
+    assert (
+        bundle_package_path
+        == tmp_path / "base_path/build/my-app/tester/dummy/src/package"
+    )
+
+
+def test_package_binary_path(base_command, my_app, tmp_path):
+    package_binary_path = base_command.package_binary_path(my_app)
+    bundle_package_binary_path = base_command.bundle_package_binary_path(my_app)
+
+    assert package_binary_path == "internal/my-app.exe"
+    assert bundle_package_binary_path == "internal/my-app.exe"
+
+
+def test_external_package_binary_path(base_command, my_app, tmp_path):
+    my_app.package_binary_path = "alternate/the_app.exe"
+    package_binary_path = base_command.package_binary_path(my_app)
+    bundle_package_binary_path = base_command.bundle_package_binary_path(my_app)
+
+    assert package_binary_path == "alternate/the_app.exe"
+    assert bundle_package_binary_path == "internal/my-app.exe"
 
 
 def test_create_command(base_command):

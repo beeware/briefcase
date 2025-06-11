@@ -155,6 +155,11 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
         else:
+            if app.package_path:
+                raise BriefcaseCommandError(
+                    "Briefcase can't currently package external apps as Linux system packages."
+                )
+
             # If we're building for Arch, and Docker does user mapping, we can't build,
             # because Arch won't let makepkg run as root. Docker on macOS *does* map the
             # user, but introducing a step-down user doesn't alter behavior, so we can
@@ -927,11 +932,6 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 )
 
     def verify_app_tools(self, app):
-        if app.package_path and self.use_docker:
-            raise BriefcaseCommandError(
-                "Briefcase can't currently package external apps as Linux system packages."
-            )
-
         super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
         if app.packaging_format == "system":

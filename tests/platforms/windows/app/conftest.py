@@ -12,3 +12,18 @@ def first_app_templated(first_app_config, tmp_path):
     create_file(app_path / "Stub.exe", "Stub binary")
 
     return first_app_config
+
+
+@pytest.fixture
+def external_first_app(first_app_config, tmp_path):
+    first_app_config.sources = None
+    first_app_config.package_path = tmp_path / "base_path/external/src"
+    first_app_config.package_binary_path = "internal/app.exe"
+
+    # Create the binary
+    create_file(
+        tmp_path / "base_path/build/first-app/windows/app/src/internal/app.exe",
+        "external binary",
+    )
+
+    return first_app_config

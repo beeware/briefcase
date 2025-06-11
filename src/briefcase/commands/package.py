@@ -97,7 +97,7 @@ class PackageCommand(BaseCommand):
             # A minimal template is required to provide packaging
             # configuration files and other metadata.
             if not template_file.exists():
-                state = self.create_command(app, minimal=True, **options)
+                state = self.create_command(app, **options)
             else:
                 state = None
         elif not template_file.exists():

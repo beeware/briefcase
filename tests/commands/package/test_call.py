@@ -45,7 +45,7 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_package_one_explicit_app(package_command, first_app, second_app, tmp_path):
@@ -90,7 +90,7 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
     assert not hasattr(second_app, "packaging_format")
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_no_args_package_two_app(package_command, first_app, second_app, tmp_path):
@@ -151,7 +151,7 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
@@ -195,7 +195,7 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
@@ -239,7 +239,7 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_adhoc_sign_args_package_two_app(
@@ -305,7 +305,7 @@ def test_adhoc_sign_args_package_two_app(
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_identity_sign_args_package_two_app(
@@ -369,7 +369,7 @@ def test_identity_sign_args_package_two_app(
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_package_alternate_format(package_command, first_app, tmp_path):
@@ -412,7 +412,7 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "box"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_create_before_package(package_command, first_app_config, tmp_path):
@@ -475,7 +475,7 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
     assert first_app_config.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_update_package_one_app(package_command, first_app, tmp_path):
@@ -541,7 +541,7 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_update_package_two_app(package_command, first_app, second_app, tmp_path):
@@ -655,7 +655,7 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
     assert second_app.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
@@ -708,7 +708,7 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
     assert first_app_unbuilt.packaging_format == "pkg"
 
     # The dist folder has been created.
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
 
 def test_already_packaged(package_command, first_app, tmp_path):
@@ -755,7 +755,7 @@ def test_already_packaged(package_command, first_app, tmp_path):
     assert first_app.packaging_format == "pkg"
 
     # The dist folder still exists
-    assert tmp_path / "base_path/dist"
+    assert (tmp_path / "base_path/dist").exists()
 
     # But the artefact has been deleted.
     # NOTE: This is a testing quirk - because we're mocking the
@@ -916,3 +916,146 @@ def test_package_app_all_flags(package_command, first_app, second_app):
             },
         ),
     ]
+
+
+def test_package_external_not_supported(package_command, first_app, tmp_path):
+    """If the backend doesn't explicitly support external packaging, an error is raised."""
+    # Add a single external app
+    package_command.apps = {
+        "first": first_app,
+    }
+    first_app.package_path = "path/to/package"
+    first_app.sources = None
+
+    # Configure no command line arguments
+    options, _ = package_command.parse_options([])
+
+    # Run the build command on a specific app
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Briefcase cannot package external Tester apps in Dummy format.",
+    ):
+        package_command(first_app, **options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+    ]
+
+    # The dist folder has not been created.
+    assert not (tmp_path / "base_path/dist").exists()
+
+
+def test_package_external_app(package_command, first_app, tmp_path):
+    """An external app can be packaged."""
+    # Enable external packaging
+    package_command.supports_external_packaging = True
+
+    # Add a single external app
+    package_command.apps = {
+        "first": first_app,
+    }
+    first_app.package_path = "path/to/package"
+    first_app.sources = None
+
+    # Configure no command line arguments
+    options, _ = package_command.parse_options([])
+
+    # Run the build command on a specific app
+    package_command(first_app, **options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+            },
+        ),
+    ]
+
+    # Packaging format has been annotated on the first app, not the second.
+    assert first_app.packaging_format == "pkg"
+
+    # The dist folder has been created.
+    assert (tmp_path / "base_path/dist").exists()
+
+
+def test_create_before_package_external_app(
+    package_command,
+    first_app_config,
+    tmp_path,
+):
+    """If an external app hasn't been created before packaging, it is created first."""
+    # Enable external packaging
+    package_command.supports_external_packaging = True
+
+    # Add a single external app
+    package_command.apps = {
+        "first": first_app_config,
+    }
+    first_app_config.package_path = "path/to/package"
+    first_app_config.sources = None
+
+    # Configure no command line arguments
+    options, _ = package_command.parse_options([])
+
+    # Run the build command on a specific app
+    package_command(first_app_config, **options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App has been created
+        (
+            "create",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "create_state": "first",
+                "identity": None,
+            },
+        ),
+    ]
+
+    # Packaging format has been annotated on the first app, not the second.
+    assert first_app_config.packaging_format == "pkg"
+
+    # The dist folder has been created.
+    assert (tmp_path / "base_path/dist").exists()
