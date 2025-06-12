@@ -689,7 +689,8 @@ class CreateCommand(BaseCommand):
             requires.extend(app.test_requires)
 
         if app.debugger:
-            requires.extend(app.debugger.additional_requirements)
+            debugger_support_pkg = self.create_debugger_support_pkg(app)
+            requires.append(str(debugger_support_pkg.absolute()))
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -753,6 +754,29 @@ class CreateCommand(BaseCommand):
             dist_info_path=self.app_path(app)
             / f"{app.module_name}-{app.version}.dist-info",
         )
+
+    def create_debugger_support_pkg(self, app: AppConfig) -> Path:
+        """
+        Create the debugger support package.
+
+        This package is used to inject debugger support into the app when it is
+        run in debug mode. It is necessary to create this as own package, because
+        the code is automatically started via an .pth file and the .pth file
+        has to be located in the app's site-packages directory, that it is executed
+        correctly.
+        """
+        if app.debugger is None:
+            return
+
+        debugger_support_path = self.bundle_path(app) / ".debugger_support_package"
+        if debugger_support_path.exists():
+            self.tools.shutil.rmtree(debugger_support_path)
+        self.tools.os.mkdir(debugger_support_path)
+
+        # Create files for the debugger support package
+        app.debugger.create_debugger_support_pkg(debugger_support_path)
+
+        return debugger_support_path
 
     def install_image(self, role, variant, size, source, target):
         """Install an icon/image of the requested size at a target location, using the
