@@ -16,7 +16,7 @@ def test_on_icloud(dummy_command, first_app_templated, tmp_path):
         BriefcaseCommandError,
         match=(
             r"Briefcase cannot be used on an iCloud-mounted drive \(such as your "
-            r"Documents folder\).\nDelete the build/first-app/macos/app folder, "
+            r"Documents folder\).\nDelete the build[/\\]first-app[/\\]macos[/\\]app folder, "
         ),
     ):
         dummy_command.verify_not_on_icloud(first_app_templated)
