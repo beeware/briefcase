@@ -31,7 +31,7 @@ Guides and recipes for common problems and tasks, including how to contribute.
 :ref:`Topic guides <topic>`
 ---------------------------
 
-Thorough explanations of a single topic.
+Deeper explorations of concepts and issues related to Briefcase usage.
 
 :ref:`Background <background>`
 ------------------------------
