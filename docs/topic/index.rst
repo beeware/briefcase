@@ -4,10 +4,9 @@
 Topic guides
 ============
 
-Topic guides thoroughly explain the details of a single topic.
-They are more advanced than tutorials and assume a lot more about what the user
-already knows than tutorials do, and unlike documents in the tutorial they can
-stand alone.
+Topic guides are deeper explorations of concepts and issues related to Briefcase usage.
+They aim to provide thorough explanations and background information, rather than a
+step-by-step guide of accomplishing specific tasks.
 
 .. toctree::
    :maxdepth: 1
