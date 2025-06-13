@@ -1,0 +1,1 @@
+Document type and file associations have been improved on macOS.
