@@ -154,28 +154,6 @@ def validate_document_type_config(document_type_id, document_type):
         mime_type = document_type.get("mime_type", None)
 
         if isinstance(content_types, list):
-            uti = content_types[0]
-        elif isinstance(content_types, str):
-            uti = content_types
-        else:
-            uti = None
-
-        # if an UTI is provided in LSItemContentTypes, that takes precedence over a MIME type
-        if is_uti_core_type(uti) or ((uti := mime_type_to_uti(mime_type)) is not None):
-            macOS.setdefault("is_core_type", True)
-            macOS.setdefault("LSItemContentTypes", uti)
-            macOS.setdefault("LSHandlerRank", "Alternate")
-        else:
-            # LSItemContentTypes will default to bundle.app_name.document_type_id
-            # in the Info.plist template if it is not provided.
-            macOS.setdefault("is_core_type", False)
-            macOS.setdefault("LSHandlerRank", "Owner")
-            macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
-
-        macOS.setdefault("CFBundleTypeRole", "Viewer")
-
-        content_types = macOS.get("LSItemContentTypes", None)
-        if isinstance(content_types, list):
             if len(content_types) > 1:
                 raise BriefcaseConfigError(
                     f"""
@@ -186,15 +164,29 @@ document types are always separately declared in the configuration file, so only
 a single value should be provided.
                 """
                 )
-            else:
-                # This is basically a no-op to satisfy coverage checkers
-                content_types = "is a list with a single value"
+
+            macOS["LSItemContentTypes"] = content_types
+            uti = content_types[0]
         elif isinstance(content_types, str):
             # If the content type is a string, convert it to a list
             macOS["LSItemContentTypes"] = [content_types]
+            uti = content_types
         else:
-            # This is basically a no-op to satisfy coverage checkers
-            content_types = "is None or something unexpected"
+            uti = None
+
+        # If an UTI is provided in LSItemContentTypes, that takes precedence over a MIME type
+        if is_uti_core_type(uti) or ((uti := mime_type_to_uti(mime_type)) is not None):
+            macOS.setdefault("is_core_type", True)
+            macOS.setdefault("LSItemContentTypes", [uti])
+            macOS.setdefault("LSHandlerRank", "Alternate")
+        else:
+            # LSItemContentTypes will default to bundle.app_name.document_type_id
+            # in the Info.plist template if it is not provided.
+            macOS.setdefault("is_core_type", False)
+            macOS.setdefault("LSHandlerRank", "Owner")
+            macOS.setdefault("UTTypeConformsTo", ["public.data", "public.content"])
+
+        macOS.setdefault("CFBundleTypeRole", "Viewer")
     else:  # pragma: no-cover-if-is-macos
         pass
 
