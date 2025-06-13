@@ -324,8 +324,10 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
     # Mock a packaging failure
-    package_command.tools.app_tools[first_app_deb].app_context.run.side_effect = (
-        subprocess.CalledProcessError(cmd="dpkg-deb ...", returncode=-1)
+    package_command.tools.app_tools[
+        first_app_deb
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
+        cmd="dpkg-deb ...", returncode=-1
     )
 
     # Package the app

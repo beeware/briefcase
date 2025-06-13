@@ -107,7 +107,6 @@ def test_run(monkeypatch, run_command, first_app_built):
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
         passthrough=[],
         host="localhost",
         port=8080,
@@ -172,7 +171,6 @@ def test_run_with_fallback_port(
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
         passthrough=[],
         host="localhost",
         port=8080,
@@ -226,7 +224,6 @@ def test_run_with_args(monkeypatch, run_command, first_app_built):
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
         passthrough=["foo", "--bar"],
         host="localhost",
         port=8080,
@@ -321,7 +318,6 @@ def test_cleanup_server_error(
     with pytest.raises(BriefcaseCommandError, match=message):
         run_command.run_app(
             first_app_built,
-            test_mode=False,
             passthrough=[],
             host=host,
             port=port,
@@ -370,7 +366,6 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     with pytest.raises(ValueError):
         run_command.run_app(
             first_app_built,
-            test_mode=False,
             passthrough=[],
             host="localhost",
             port=8080,
@@ -420,7 +415,6 @@ def test_run_without_browser(monkeypatch, run_command, first_app_built):
     # Run the app
     run_command.run_app(
         first_app_built,
-        test_mode=False,
         passthrough=[],
         host="localhost",
         port=8080,
@@ -471,7 +465,6 @@ def test_run_autoselect_port(monkeypatch, run_command, first_app_built):
     # Run the app on an autoselected port
     run_command.run_app(
         first_app_built,
-        test_mode=False,
         passthrough=[],
         host="localhost",
         port=0,
@@ -561,6 +554,8 @@ def test_log_requests_to_logger(monkeypatch):
 
 def test_test_mode(run_command, first_app_built):
     """Test mode raises an error (at least for now)."""
+    first_app_built.test_mode = True
+
     # Run the app
     with pytest.raises(
         BriefcaseCommandError,
@@ -568,7 +563,6 @@ def test_test_mode(run_command, first_app_built):
     ):
         run_command.run_app(
             first_app_built,
-            test_mode=True,
             passthrough=[],
             host="localhost",
             port=8080,

@@ -576,8 +576,10 @@ def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
     # Mock a packaging failure
-    package_command.tools.app_tools[first_app_rpm].app_context.run.side_effect = (
-        subprocess.CalledProcessError(cmd="rpmbuild ...", returncode=-1)
+    package_command.tools.app_tools[
+        first_app_rpm
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
+        cmd="rpmbuild ...", returncode=-1
     )
 
     # Package the app; this will fail

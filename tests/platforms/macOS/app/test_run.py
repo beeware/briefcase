@@ -44,7 +44,7 @@ def test_run_gui_app(run_command, first_app_config, sleep_zero, tmp_path, monkey
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -74,7 +74,6 @@ def test_run_gui_app(run_command, first_app_config, sleep_zero, tmp_path, monkey
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -107,7 +106,6 @@ def test_run_gui_app_with_passthrough(
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        test_mode=False,
         passthrough=["foo", "--bar"],
     )
 
@@ -140,7 +138,6 @@ def test_run_gui_app_with_passthrough(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=False,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -160,7 +157,7 @@ def test_run_gui_app_failed(run_command, first_app_config, sleep_zero, tmp_path)
     )
 
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -207,7 +204,7 @@ def test_run_gui_app_find_pid_failed(
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -249,6 +246,8 @@ def test_run_gui_app_test_mode(
     monkeypatch,
 ):
     """A macOS GUI app can be started in test mode."""
+    first_app_config.test_mode = True
+
     # Mock a popen object that represents the log stream
     log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = log_stream_process
@@ -258,7 +257,7 @@ def test_run_gui_app_test_mode(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -289,7 +288,6 @@ def test_run_gui_app_test_mode(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=log_stream_process,
-        test_mode=True,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
         stop_func=mock.ANY,
@@ -305,7 +303,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
     # Set the app to be a console app
     first_app_config.console_app = True
 
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -334,7 +332,6 @@ def test_run_console_app_with_passthrough(
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        test_mode=False,
         passthrough=["foo", "--bar"],
     )
 
@@ -355,12 +352,13 @@ def test_run_console_app_with_passthrough(
 def test_run_console_app_test_mode(run_command, first_app_config, sleep_zero, tmp_path):
     """A macOS console app can be started in test mode."""
     first_app_config.console_app = True
+    first_app_config.test_mode = True
 
     # Mock a popen object that represents the app
     app_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = app_process
 
-    run_command.run_app(first_app_config, test_mode=True, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -377,7 +375,6 @@ def test_run_console_app_test_mode(run_command, first_app_config, sleep_zero, tm
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=app_process,
-        test_mode=True,
     )
 
 
@@ -392,12 +389,13 @@ def test_run_console_app_test_mode_with_passthrough(
     run_command.console.verbosity = LogLevel.DEBUG
 
     first_app_config.console_app = True
+    first_app_config.test_mode = True
 
     # Mock a popen object that represents the app
     app_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = app_process
 
-    run_command.run_app(first_app_config, test_mode=True, passthrough=["foo", "--bar"])
+    run_command.run_app(first_app_config, passthrough=["foo", "--bar"])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -414,7 +412,6 @@ def test_run_console_app_test_mode_with_passthrough(
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
         popen=app_process,
-        test_mode=True,
     )
 
 
@@ -431,7 +428,7 @@ def test_run_console_app_failed(run_command, first_app_config, sleep_zero, tmp_p
 
     # Although the command raises an error, this could be because the script itself
     # raised an error.
-    run_command.run_app(first_app_config, test_mode=False, passthrough=[])
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)

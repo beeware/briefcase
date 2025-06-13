@@ -216,3 +216,21 @@ can do this using the ``cleanup_paths`` configuration option::
 
 This will find and purge all ``.a`` content in your app's dependencies. You can add
 additional patterns to remove other problematic content.
+
+
+Deployment to Simulated and Physical iOS Devices
+------------------------------------------------
+
+Briefcase provides support for deployment to simulated iOS devices through the
+command line.
+
+If you want to deploy to a physical iOS device, you will need need to use Xcode through
+the following steps:
+
+1. Run ``briefcase open ios`` in the command line. This will open your application in Xcode.
+2. Setup your Apple Developer account with your certificate in Xcode.
+3. In the project navigator, select your application at the top level (the root of the project).
+4. Select the `Signing and Capabilities` tab in the editor area.
+5. Select your Apple Developer team or individual account from the `Team` drop-down.
+6. Select your specific device.
+7. Press the run button.

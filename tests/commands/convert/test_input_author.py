@@ -127,7 +127,7 @@ def test_no_pep621_author(convert_command, monkeypatch, write_empty_pyproject):
 
     if write_empty_pyproject:
         (convert_command.base_path / "pyproject.toml").write_text(
-            "[project]\n" "authors = [\n" '    {email="mail1@tld.com"},\n' "]",
+            '[project]\nauthors = [\n    {email="mail1@tld.com"},\n]',
             encoding="utf-8",
         )
     convert_command.input_author(None)

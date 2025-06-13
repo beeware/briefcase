@@ -160,25 +160,19 @@ pre-commit will make the changes needed to correct the problems it has found:
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
-      black....................................................................Failed
-      - hook id: black
-      - files were modified by this hook
-
-      reformatted some/interesting_file.py
-
-      All done! ✨ 🍰 ✨
-      1 file reformatted.
-
-      flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
       check for case conflicts.................................................Passed
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+      ruff format..............................................................Failed
+      - hook id: ruff-format
+      - files were modified by this hook
+
+      1 file reformatted, 488 files left unchanged
+
+      ruff check...............................................................Passed
 
   .. group-tab:: Linux
 
@@ -186,25 +180,19 @@ pre-commit will make the changes needed to correct the problems it has found:
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
-      black....................................................................Failed
-      - hook id: black
-      - files were modified by this hook
-
-      reformatted some/interesting_file.py
-
-      All done! ✨ 🍰 ✨
-      1 file reformatted.
-
-      flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
       check for case conflicts.................................................Passed
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+      ruff format..............................................................Failed
+      - hook id: ruff-format
+      - files were modified by this hook
+
+      1 file reformatted, 488 files left unchanged
+
+      ruff check...............................................................Passed
 
   .. group-tab:: Windows
 
@@ -212,25 +200,19 @@ pre-commit will make the changes needed to correct the problems it has found:
 
       (venv) C:\...>git add some/interesting_file.py
       (venv) C:\...>git commit -m "Minor change"
-      black....................................................................Failed
-      - hook id: black
-      - files were modified by this hook
-
-      reformatted some\interesting_file.py
-
-      All done! ✨ 🍰 ✨
-      1 file reformatted.
-
-      flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
       check for case conflicts.................................................Passed
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+      ruff format..............................................................Failed
+      - hook id: ruff-format
+      - files were modified by this hook
+
+      1 file reformatted, 488 files left unchanged
+
+      ruff check...............................................................Passed
 
 You can then re-add any files that were modified as a result of the pre-commit checks,
 and re-commit the change.
@@ -243,17 +225,14 @@ and re-commit the change.
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
-      black....................................................................Passed
-      flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
       check for case conflicts.................................................Passed
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+      ruff format..............................................................Passed
+      ruff check...............................................................Passed
       [bugfix e3e0f73] Minor change
       1 file changed, 4 insertions(+), 2 deletions(-)
 
@@ -263,17 +242,14 @@ and re-commit the change.
 
       (venv) $ git add some/interesting_file.py
       (venv) $ git commit -m "Minor change"
-      black....................................................................Passed
-      flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
       check for case conflicts.................................................Passed
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+      ruff format..............................................................Passed
+      ruff check...............................................................Passed
       [bugfix e3e0f73] Minor change
       1 file changed, 4 insertions(+), 2 deletions(-)
 
@@ -283,17 +259,14 @@ and re-commit the change.
 
       (venv) C:\...>git add some\interesting_file.py
       (venv) C:\...>git commit -m "Minor change"
-      black....................................................................Passed
-      flake8...................................................................Passed
-      check toml...........................................(no files to check)Skipped
-      check yaml...........................................(no files to check)Skipped
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
       check for case conflicts.................................................Passed
       check docstring is first.................................................Passed
       fix end of files.........................................................Passed
       trim trailing whitespace.................................................Passed
-      isort....................................................................Passed
-      pyupgrade................................................................Passed
-      docformatter.............................................................Passed
+      ruff format..............................................................Passed
+      ruff check...............................................................Passed
 
 Now you are ready to start hacking on Briefcase!
 

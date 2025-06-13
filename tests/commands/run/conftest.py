@@ -52,7 +52,7 @@ class DummyRunCommand(RunCommand):
         self.actions.append(("verify-app-tools", app.app_name))
 
     def run_app(self, app, **kwargs):
-        self.actions.append(("run", app.app_name, kwargs.copy()))
+        self.actions.append(("run", app.app_name, app.test_mode, kwargs.copy()))
         # Remove arguments consumed by the underlying call to run_app()
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
@@ -60,7 +60,6 @@ class DummyRunCommand(RunCommand):
         kwargs.pop("update_support", None)
         kwargs.pop("update_stub", None)
         kwargs.pop("no_update", None)
-        kwargs.pop("test_mode", None)
         kwargs.pop("passthrough", None)
         return full_options({"run_state": app.app_name}, kwargs)
 
@@ -68,23 +67,21 @@ class DummyRunCommand(RunCommand):
     # they were invoked, rather than instantiating a Create/Update/Build command.
     # This is for testing purposes.
     def create_command(self, app, **kwargs):
-        self.actions.append(("create", app.app_name, kwargs.copy()))
+        self.actions.append(("create", app.app_name, app.test_mode, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
-        kwargs.pop("test_mode", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
-        self.actions.append(("update", app.app_name, kwargs.copy()))
+        self.actions.append(("update", app.app_name, app.test_mode, kwargs.copy()))
         # Remove arguments consumed by the underlying call to update_app()
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("update_support", None)
         kwargs.pop("update_stub", None)
-        kwargs.pop("test_mode", None)
         return full_options({"update_state": app.app_name}, kwargs)
 
     def build_command(self, app, **kwargs):
-        self.actions.append(("build", app.app_name, kwargs.copy()))
+        self.actions.append(("build", app.app_name, app.test_mode, kwargs.copy()))
         # Remove arguments consumed by the underlying call to build_app()
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
@@ -92,7 +89,6 @@ class DummyRunCommand(RunCommand):
         kwargs.pop("update_support", None)
         kwargs.pop("update_stub", None)
         kwargs.pop("no_update", None)
-        kwargs.pop("test_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
 
 

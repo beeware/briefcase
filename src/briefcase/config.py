@@ -268,6 +268,32 @@ class BaseConfig:
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
+    def update(self, data):
+        """Add fields and values from data to BaseConfig instance.
+
+        Any existing fields named in data will be overwritten. To merge
+        data with existing configs, use the `merge_config` function.
+
+        :param data: The new configuration data dictionary.
+        """
+        for key, configs in data.items():
+            setattr(self, key, configs)
+
+    def setdefault(self, field_name, default_value):
+        """Return the field_name field or, if it does not exist, create it
+        to hold default_value.
+
+        Behaves similarly to dict.setdefault().
+
+        :param field_name: The name of the desired/new field.
+        :param default_value: The value to assign to self.field_name if it
+            does not already exist.
+        """
+        if not hasattr(self, field_name):
+            setattr(self, field_name, default_value)
+
+        return getattr(self, field_name)
+
 
 class GlobalConfig(BaseConfig):
     def __init__(
@@ -361,6 +387,7 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
+        self.test_mode: bool = False
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -449,14 +476,11 @@ class AppConfig(BaseConfig):
         `module_name`."""
         return self.bundle.replace("-", "_")
 
-    def PYTHONPATH(self, test_mode):
-        """The PYTHONPATH modifications needed to run this app.
-
-        :param test_mode: Should test_mode sources be included?
-        """
+    def PYTHONPATH(self):
+        """The PYTHONPATH modifications needed to run this app."""
         paths = []
         sources = self.sources
-        if test_mode and self.test_sources:
+        if self.test_mode and self.test_sources:
             sources.extend(self.test_sources)
 
         for source in sources:
@@ -465,15 +489,23 @@ class AppConfig(BaseConfig):
                 paths.append(path)
         return paths
 
-    def main_module(self, test_mode: bool):
+    def all_sources(self) -> list[str]:
+        """Get all sources of the application that should be copied to the app.
+
+        :returns: The Path to the dist-info folder.
+        """
+        sources = self.sources.copy() if self.sources else []
+        if self.test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
+
+    def main_module(self):
         """The path to the main module for the app.
 
         In normal operation, this is ``app.module_name``; however,
         in test mode, it is prefixed with ``tests.``.
-
-        :param test_mode: Are we running in test mode?
         """
-        if test_mode:
+        if self.test_mode:
             return f"tests.{self.module_name}"
         else:
             return self.module_name
@@ -638,7 +670,7 @@ def parse_config(config_file, platform, output_format, console):
     The current configuration for {section_name} has a 'license' field
     that is specified as a string:
 
-        license = "{config['license']}"
+        license = "{config["license"]}"
 
     To use the PEP 621 format (and to remove this warning), specify that
     the LICENSE file contains the license for {section_name}:

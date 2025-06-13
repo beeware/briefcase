@@ -152,7 +152,7 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
     """If Docker is in use, a docker context is used to invoke pip."""
 
     # Install requirements
-    create_command.install_app_requirements(first_app_config, test_mode=False)
+    create_command.install_app_requirements(first_app_config)
 
     # pip was invoked inside docker.
     create_command.tools.subprocess.run.assert_called_once_with(
@@ -204,7 +204,7 @@ def test_install_app_requirements_no_docker(
     no_docker_create_command.verify_app_tools(first_app_config)
 
     # Install requirements
-    no_docker_create_command.install_app_requirements(first_app_config, test_mode=False)
+    no_docker_create_command.install_app_requirements(first_app_config)
 
     # Docker is not verified.
     assert not hasattr(no_docker_create_command.tools, "docker")
@@ -282,7 +282,7 @@ def test_install_app_requirements_with_locals(
     create_command.tools.subprocess.check_output.side_effect = build_sdist
 
     # Install requirements
-    create_command.install_app_requirements(first_app_config, test_mode=False)
+    create_command.install_app_requirements(first_app_config)
 
     # An sdist was built for the local package
     create_command.tools.subprocess.check_output.assert_called_once_with(
@@ -383,7 +383,7 @@ def test_install_app_requirements_with_bad_local(
         BriefcaseCommandError,
         match=r"Unable to build sdist for .*/local/first",
     ):
-        create_command.install_app_requirements(first_app_config, test_mode=False)
+        create_command.install_app_requirements(first_app_config)
 
     # An attempt to build the sdist was made
     create_command.tools.subprocess.check_output.assert_called_once_with(
@@ -428,7 +428,7 @@ def test_install_app_requirements_with_missing_local_build(
         BriefcaseCommandError,
         match=r"Unable to find local requirement .*/local/first",
     ):
-        create_command.install_app_requirements(first_app_config, test_mode=False)
+        create_command.install_app_requirements(first_app_config)
 
     # No attempt to build the sdist was made
     create_command.tools.subprocess.check_output.assert_not_called()
@@ -460,7 +460,7 @@ def test_install_app_requirements_with_bad_local_file(
         BriefcaseCommandError,
         match=r"Unable to find local requirement .*/local/missing-2.3.4.tar.gz",
     ):
-        create_command.install_app_requirements(first_app_config, test_mode=False)
+        create_command.install_app_requirements(first_app_config)
 
     # An attempt was made to copy the package
     create_command.tools.shutil.copy.assert_called_once_with(

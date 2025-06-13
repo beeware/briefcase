@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==80.4.0",
+    "setuptools==80.9.0",
     "setuptools_scm==8.3.1",
 ]
 build-backend = "setuptools.build_meta"
@@ -74,6 +74,8 @@ dependencies = [
     "setuptools >= 60",
     "wheel >= 0.37",
     "build >= 0.10",
+    # truststore is only available on 3.10+
+    "truststore >= 0.10.1; python_version >= '3.10'",
     #
     # For the remaining packages: We set the lower version limit to the lowest possible
     # version that satisfies our API needs. If the package uses semver, we set a limit
@@ -97,13 +99,13 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.8.0",
+    "coverage[toml] == 7.8.2",
     "coverage-conditional-plugin == 0.9.0",
     "pre-commit == 4.2.0",
-    "pytest == 8.3.5",
-    "pytest-xdist == 3.6.1",
+    "pytest == 8.4.0",
+    "pytest-xdist == 3.7.0",
     "setuptools_scm == 8.3.1",
-    "tox == 4.25.0",
+    "tox == 4.26.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
@@ -218,15 +220,6 @@ no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COVERAGE_EX
 no-cover-if-lt-py310 = "sys_version_info < (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-gte-py310 = "sys_version_info > (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
-[tool.isort]
-profile = "black"
-skip_glob = [
-    "docs/conf.py",
-    "venv*",
-    "local",
-]
-multi_line_output = 3
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
@@ -235,6 +228,50 @@ filterwarnings = [
 
 # need to ensure build directories aren't excluded from recursion
 norecursedirs = []
+
+[tool.ruff.lint]
+# In addition to the default rules, these additional rules will be used:
+extend-select = [
+    "E",      # pycodestyle
+    "W",      # pycodestyle
+    "F",      # pyflakes
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "YTT",    # flake8-2020
+    "ASYNC",  # flake8-async
+    "C4",     # flake8-comprehensions
+    "I",      # isort
+]
+
+# Below is a list of ignored rules.  Many (if not all) of these have been disabled
+# to facilitate a smooth transition from tools like black and isort to ruff, where
+# instances of these errors were caught.  Many if not all of these are candidates
+# for future fixes throughout the project.
+ignore = [
+    "E501",    # line length
+    "B007",    # loop control variable not used
+    "B018",    # useless expression
+    "B019",    # memory leaks from functools.lru_cache / functools.cache
+    "B024",    # abstract base class without abstract methods / properties
+    "B027",    # empty method in abstract base class
+    "B904",    # use raise ... from ...
+    "SIM102",  # combine if statements
+    "SIM103",  # return condition directly
+    "SIM105",  # use contextlib.suppress() instead of try-except-pass
+    "SIM108",  # use ternary operators
+    "SIM115",  # use context manager for opening files
+    "SIM117",  # combine with statements
+    "SIM118",  # use "key in dict" instead of "key in dict.keys()"
+    "SIM201",  # use "x != y" instead of "not x == y"
+    "SIM300",  # Yoda condition (0 != x)
+    "SIM905",  # use list literal instead of str.split()
+    "C400",    # unnecessary generator
+    "C408",    # use dict literal instead of dict()
+    "C414",    # unnecessary list() use within sorted()
+    "C416",    # unnecessary list comprehension
+]
+
 
 [tool.setuptools_scm]
 # To enable SCM versioning, we need an empty tool configuration for setuptools_scm

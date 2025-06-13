@@ -10,7 +10,6 @@ from briefcase.integrations.base import ToolCache
 
 @pytest.fixture
 def mock_tools(tmp_path, mock_tools) -> ToolCache:
-
     # For default test purposes, assume we're on macOS x86_64
     mock_tools.host_os = "Darwin"
     mock_tools.host_arch = "x86_64"

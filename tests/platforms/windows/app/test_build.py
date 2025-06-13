@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -94,6 +95,7 @@ def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch):
     assert isinstance(build_command.tools.windows_sdk, WindowsSDK)
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 @pytest.mark.parametrize("pre_existing", [True, False])
 @pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_without_windows_sdk(
@@ -226,14 +228,16 @@ def test_build_app_without_any_digital_signatures(
     but app build succeeds."""
     build_command.tools.windows_sdk = windows_sdk
 
-    build_command.tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1,
-        cmd="signtool.exe remove -s app.exe",
-        output="""
+    build_command.tools.subprocess.check_output.side_effect = (
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd="signtool.exe remove -s app.exe",
+            output="""
     Number of errors: 1
     SignTool Error: CryptSIPRemoveSignedDataMsg returned error: 0x00000057
             The parameter is incorrect.
 """,
+        )
     )
 
     build_command.build_app(first_app_templated)
@@ -293,13 +297,15 @@ def test_build_app_error_remove_signature(
     raises an unexpected error, then the build fails."""
     build_command.tools.windows_sdk = windows_sdk
 
-    build_command.tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        returncode=1,
-        cmd="signtool.exe remove /s filepath",
-        output="""
+    build_command.tools.subprocess.check_output.side_effect = (
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd="signtool.exe remove /s filepath",
+            output="""
     Number of errors: 1
     Unknown and unexpected error
 """,
+        )
     )
 
     error_message = (
