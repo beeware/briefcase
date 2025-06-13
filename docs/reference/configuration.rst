@@ -660,24 +660,21 @@ look for ``resource/round-icon-42.png``, ``resource/square-icon-42.png``,
 ``mime_type``
 -------------
 
-A MIME type for the document format. This is used to register the document type
-with the operating system. For example, ``image/png`` for PNG image files, or
-``application/pdf`` for PDF files. A list of common MIME types is found in
-`Mozilla's list
-<https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types>`__.
-A full list is available at `IANA
-<https://www.iana.org/assignments/media-types/media-types.xhtml>`__. Please
-specify the MIME type of existing document types since they can be used by the
-operating system to find more information about the document type.
+A MIME type for the document format. This is used to register the document type with the
+operating system. For example, ``image/png`` for PNG image files, or ``application/pdf``
+for PDF files. A list of common MIME types is found in `Mozilla's list
+<https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types>`__. A
+full list is available at `IANA
+<https://www.iana.org/assignments/media-types/media-types.xhtml>`__. Where platforms allow,
+this MIME type will be used to determine other details about the document type.
 
-If you do not specify a MIME type, Briefcase will generate a default MIME type
-of the *unregistered* type ``application/x-<app name>-<document type id>``, e.g.
-``application/x-myapp-data``. This is not a valid MIME type, and should not be
-used for production applications. It is only used for testing purposes, to allow
-applications to be registered as document handlers without requiring a
-registered MIME type. You can apply for a registered MIME type at `IANA
-<https://www.iana.org/form/media-types>`__, but be sure to read all the RFCs.
-
+If you do not specify a MIME type, Briefcase will generate a default MIME type of the
+*unregistered* type ``application/x-<app name>-<document type id>``, e.g.
+``application/x-myapp-data``. The ``x-`` prefix is specified by `RFC 2046
+<https://www.rfc-editor.org/rfc/rfc2046.html>`__ for "private" MIME types. If you are
+not using a formally registered mime type, you *must* use the ``x-`` prefix, or
+`formally apply to IANA <https://www.iana.org/form/media-types>`__ for a new registered
+MIME type.
 
 ``url``
 -------
@@ -687,12 +684,11 @@ A URL for help related to the document format.
 Platform support
 ----------------
 
-Some platforms have specific configuration options that are only relevant to
-that platform. Currently Apple platforms (macOS, iOS) have a more elaborate
-system for document types. If you want to support document types on these
-platforms, you will need to read the macOS :ref:`macOS-document-types` section
-for more information.
-
+Some platforms have specific configuration options that are only relevant to that
+platform. In particular, Apple platforms (macOS, iOS) have a more elaborate system for
+document types, and require additional configuration to use document types. If you want
+to support document types on these platforms, you will need to read the macOS
+:ref:`macOS-document-types` section for more information.
 
 PEP621 compatibility
 ====================
