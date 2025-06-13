@@ -1,0 +1,1 @@
+The code template generated for a new Toga project has been simplified.
