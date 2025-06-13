@@ -6,13 +6,19 @@ from briefcase.platforms.macOS import utils
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
-def test_is_uti_core_type():
+@pytest.mark.parametrize(
+    "uti, result",
+    [
+        (None, False),
+        ("com.unknown.data", False),
+        ("public.data", True),
+        ("public.content", True),
+        ("com.adobe.pdf", True),
+    ],
+)
+def test_is_uti_core_type(uti, result):
     """Check if a UTI is a core type."""
-    assert utils.is_uti_core_type(None) is False
-    assert utils.is_uti_core_type("public.data") is True
-    assert utils.is_uti_core_type("public.content") is True
-    assert utils.is_uti_core_type("com.adobe.pdf") is True
-    assert utils.is_uti_core_type("com.unknown.data") is False
+    assert utils.is_uti_core_type(uti) == result
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")

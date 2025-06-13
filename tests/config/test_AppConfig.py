@@ -62,7 +62,7 @@ def test_extra_attrs():
                 "extension": "doc",
                 "description": "A document",
                 "url": "https://testurl.com",
-                "mime_type": "text/x.my-doc-type",
+                "mime_type": "application/x-my-doc-type",
             }
         },
         first="value 1",
@@ -89,7 +89,7 @@ def test_extra_attrs():
                 "extension": "doc",
                 "description": "A document",
                 "url": "https://testurl.com",
-                "mime_type": "text/x.my-doc-type",
+                "mime_type": "application/x-my-doc-type",
                 "macOS": {
                     "CFBundleTypeRole": "Viewer",
                     "LSHandlerRank": "Owner",
@@ -108,7 +108,7 @@ def test_extra_attrs():
                 "extension": "doc",
                 "description": "A document",
                 "url": "https://testurl.com",
-                "mime_type": "text/x.my-doc-type",
+                "mime_type": "application/x-my-doc-type",
             }
         }
 

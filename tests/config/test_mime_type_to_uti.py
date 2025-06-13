@@ -6,13 +6,19 @@ from briefcase.platforms.macOS import utils
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
-def test_mime_type_to_uti():
+@pytest.mark.parametrize(
+    "mime_type, uti",
+    [
+        (None, None),
+        ("application/pdf", "com.adobe.pdf"),
+        ("text/plain", "public.plain-text"),
+        ("image/png", "public.png"),
+        ("application/unknown", None),
+    ],
+)
+def test_mime_type_to_uti(mime_type, uti):
     """Check if a MIME type can be converted to a UTI."""
-    assert utils.mime_type_to_uti(None) is None
-    assert utils.mime_type_to_uti("application/pdf") == "com.adobe.pdf"
-    assert utils.mime_type_to_uti("text/plain") == "public.plain-text"
-    assert utils.mime_type_to_uti("image/png") == "public.png"
-    assert utils.mime_type_to_uti("application/unknown") is None
+    assert utils.mime_type_to_uti(mime_type) == uti
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
