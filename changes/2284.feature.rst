@@ -1,1 +1,1 @@
-Improved document types and file associations for macOS platforms.
+Document type and file associations have been improved on macOS.
