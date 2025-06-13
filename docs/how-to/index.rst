@@ -14,7 +14,6 @@ stand alone.
    :glob:
 
    code-signing/index
-   access-packaging-metadata
    ci
    cli-apps
    publishing/index

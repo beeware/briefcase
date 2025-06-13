@@ -1,4 +1,4 @@
-.. _background:
+.. _about:
 
 ===============
 About Briefcase
