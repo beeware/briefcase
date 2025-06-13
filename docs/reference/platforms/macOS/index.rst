@@ -240,6 +240,20 @@ an example of a package document type.
 To define a package type, set ``macOS.UTTypeConformsTo`` to ``["com.apple.package",
 "public.content"]``. If other UTI types apply, they can also be added to this list.
 
+Further customization
+~~~~~~~~~~~~~~~~~~~~~
+
+For more details on macOS document type declarations, see the following web pages from
+Apple provide more background information. They may be helpful in determining how to
+expose content types for your application:
+
+ * `Defining file and data types for your app
+   <https://developer.apple.com/documentation/uniformtypeidentifiers/defining-file-and-data-types-for-your-app>`_
+ * `Uniform Type Identifiers — a reintroduction
+   <https://developer.apple.com/videos/play/tech-talks/10696/?time=549>`_
+ * `Core Foundation Keys (archived)
+   <https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html>`_
+
 Permissions
 ===========
 
