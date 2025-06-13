@@ -223,7 +223,7 @@ the conforming types).
 ``macOS.is_core_type``
 ----------------------
 
-A boolean, used to explicitly declare a content type as a core type. This flag is used
+A Boolean, used to explicitly declare a content type as a core type. This flag is used
 to determine whether a ``UTImportedTypeDeclarations`` entry is required in macOS app
 metadata.
 
