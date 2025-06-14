@@ -192,7 +192,10 @@ def test_merge_problem(dummy_command, tmp_path):
     )
 
     # Merge the two sources into a final location. This will raise an exception.
-    with pytest.raises(BriefcaseCommandError, match=r""):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to create fat library for second[/\\]sub1[/\\]module1.dylib",
+    ):
         merged_path = tmp_path / "merged_app_packages"
         dummy_command.merge_app_packages(
             merged_path,
