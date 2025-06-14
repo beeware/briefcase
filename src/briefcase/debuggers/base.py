@@ -36,7 +36,6 @@ class BaseDebugger(ABC):
     @abstractmethod
     def connection_mode(self) -> DebuggerConnectionMode:
         """Return the connection mode of the debugger."""
-        raise NotImplementedError
 
     @abstractmethod
     def create_debugger_support_pkg(self, dir: Path) -> None:

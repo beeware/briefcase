@@ -2,6 +2,7 @@ import datetime
 import os
 import subprocess
 import sys
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -1089,15 +1090,14 @@ def test_app_packages_only_test_requires_test_mode(
 
 
 class DummyDebugger(BaseDebugger):
-    @property
-    def additional_requirements(self) -> list[str]:
-        """Return a list of additional requirements for the debugger."""
-        return ["debugpy"]
+    debugger_support_pkg_dir = None
 
     @property
     def connection_mode(self) -> DebuggerConnectionMode:
-        """Return the connection mode of the debugger."""
         raise NotImplementedError
+
+    def create_debugger_support_pkg(self, dir: Path) -> None:
+        self.debugger_support_pkg_dir = dir
 
 
 def test_app_packages_debugger_debugger(
@@ -1111,6 +1111,8 @@ def test_app_packages_debugger_debugger(
     myapp.debugger = DummyDebugger()
 
     create_command.install_app_requirements(myapp)
+
+    bundle_path = create_command.bundle_path(myapp)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -1129,7 +1131,7 @@ def test_app_packages_debugger_debugger(
             "first",
             "second==1.2.3",
             "third>=3.2.1",
-            "debugpy",
+            f"{bundle_path / '.debugger_support_package'}",
         ],
         check=True,
         encoding="UTF-8",
@@ -1137,4 +1139,9 @@ def test_app_packages_debugger_debugger(
 
     # Original app definitions haven't changed
     assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
-    assert isinstance(myapp.debugger, DummyDebugger)
+
+    # The debugger support package directory was created
+    assert (
+        myapp.debugger.debugger_support_pkg_dir
+        == bundle_path / ".debugger_support_package"
+    )

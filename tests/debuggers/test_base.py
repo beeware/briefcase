@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import pytest
 
 from briefcase.debuggers import (
@@ -29,30 +32,31 @@ def test_get_debugger():
 
 
 @pytest.mark.parametrize(
-    "debugger_name, expected_class, additional_requirements, connection_mode",
+    "debugger_name, expected_class, connection_mode",
     [
         (
             "pdb",
             PdbDebugger,
-            [
-                "git+https://github.com/timrid/briefcase-debugadapter#subdirectory=briefcase-pdb-debugadapter"
-            ],
             DebuggerConnectionMode.SERVER,
         ),
         (
             "debugpy",
             DebugpyDebugger,
-            [
-                "git+https://github.com/timrid/briefcase-debugadapter#subdirectory=briefcase-debugpy-debugadapter"
-            ],
             DebuggerConnectionMode.SERVER,
         ),
     ],
 )
-def test_debugger(
-    debugger_name, expected_class, additional_requirements, connection_mode
-):
+def test_debugger(debugger_name, expected_class, connection_mode):
     debugger = get_debugger(debugger_name)
     assert isinstance(debugger, expected_class)
-    assert debugger.additional_requirements == additional_requirements
     assert debugger.connection_mode == connection_mode
+
+    with TemporaryDirectory() as tmp_path:
+        tmp_path = Path(tmp_path)
+        debugger.create_debugger_support_pkg(tmp_path)
+        assert (tmp_path / "pyproject.toml").exists()
+        assert (tmp_path / "setup.py").exists()
+        assert (tmp_path / "briefcase_debugger_support" / "__init__.py").exists()
+        assert (
+            tmp_path / "briefcase_debugger_support" / "_remote_debugger.py"
+        ).exists()

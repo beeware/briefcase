@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from briefcase.config import AppConfig
@@ -59,13 +61,10 @@ def underscore_app_config(first_app_config):
 
 class DummyDebugger(BaseDebugger):
     @property
-    def additional_requirements(self) -> list[str]:
-        """Return a list of additional requirements for the debugger."""
+    def connection_mode(self) -> DebuggerConnectionMode:
         raise NotImplementedError
 
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        """Return the connection mode of the debugger."""
+    def create_debugger_support_pkg(self, dir: Path) -> None:
         raise NotImplementedError
 
 
