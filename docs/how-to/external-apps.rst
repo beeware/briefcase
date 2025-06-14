@@ -1,6 +1,6 @@
-============================
-Packaging non-Briefcase apps
-============================
+=======================
+Packaging external apps
+=======================
 
 By default, Briefcase assumes that you will be using Briefcase to manage the full app
 packaging life cycle. In this mode, your Briefcase configuration defines all your app's
