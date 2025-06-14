@@ -114,16 +114,16 @@ If you have previously run the app in "normal" mode, you may need to pass ``-r``
 your testing requirements are present in the test app.
 
 ``--debug <debugger>``
-----------
+----------------------
 
 Build the app in debug mode in the bundled app environment and establish an
 debugger connection via a socket. This installs the selected debugger in the
 bundled app.
 
-Currently the following debuggers are supported:
+Currently the following debuggers are supported (default is ``pdb``):
 
- - ``'pdb'``: This is used for debugging via console.
- - ``'debugpy'``: This is used for debugging via VSCode.
+ - ``pdb``: This is used for debugging via console.
+ - ``debugpy``: This is used for debugging via VSCode.
 
 It also optimizes the app for debugging. E.g. on android it ensures, that all
 `.py` files are extracted from the apk and are accessible for the debugger.

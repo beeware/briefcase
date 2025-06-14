@@ -53,9 +53,8 @@ Currently the following debuggers are supported:
 
 - ``pdb``: This is used for debugging via console. After starting the app
   you can connect to it depending on your host system via
-    - ``telnet localhost 5678``
-    - ``nc -C localhost 5678``
-    - ``socat readline tcp:localhost:5678``
+    - ``telnet localhost 5678`` (Windows, Linux)
+    - ``rlwrap socat - tcp:localhost:5678`` (Linux, macOS)
   The app will start after the connection is established.
 
 - ``debugpy``: This is used for debugging via VSCode (see :doc:`Debugging with VSCode </how-to/debugging_vscode>`)
@@ -170,10 +169,10 @@ specifying by the ``--test`` option.
 Run the app in debug mode in the bundled app environment and establish an
 debugger connection via a socket.
 
-Currently the following debuggers are supported:
+Currently the following debuggers are supported (default is ``pdb``):
 
- - ``'pdb'``: This is used for debugging via console.
- - ``'debugpy'``: This is used for debugging via VSCode.
+ - ``pdb``: This is used for debugging via console.
+ - ``debugpy``: This is used for debugging via VSCode.
 
 For ``debugpy`` there is also a mapping of the source code from your bundled
 app to your local copy of the apps source code in the ``build`` folder. This
