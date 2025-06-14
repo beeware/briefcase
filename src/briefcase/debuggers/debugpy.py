@@ -22,8 +22,8 @@ class DebugpyDebugger(BaseDebugger):
             dependencies=["debugpy>=1.8.14,<2.0.0"],
         )
 
-        debugger_support = dir / "briefcase_debugger_support.py"
-        debugger_support.write_text(
+        remote_debugger = dir / "briefcase_debugger_support" / "_remote_debugger.py"
+        remote_debugger.write_text(
             '''\
 import json
 import os
@@ -34,8 +34,6 @@ from pathlib import Path
 from typing import List, Optional, Tuple, TypedDict
 
 import debugpy
-
-REMOTE_DEBUGGER_STARTED = False
 
 class AppPathMappings(TypedDict):
     device_sys_path_regex: str
@@ -106,7 +104,7 @@ def _load_path_mappings(config: DebuggerConfig, verbose: bool) -> List[Tuple[str
     return mappings_list
 
 
-def _start_debugpy(config_str: str, verbose: bool):
+def _start_remote_debugger(config_str: str, verbose: bool):
     # Parsing config json
     debugger_config: dict = json.loads(config_str)
 
@@ -157,43 +155,5 @@ To connect to debugpy using VSCode add the following configuration to launch.jso
     debugpy.wait_for_client()
 
     print("Debugger attached.")
-
-
-def start_remote_debugger():
-    global REMOTE_DEBUGGER_STARTED
-    REMOTE_DEBUGGER_STARTED = True
-
-    # check verbose output
-    verbose = True if os.environ.get("BRIEFCASE_DEBUG", "0") == "1" else False
-
-    # reading config
-    config_str = os.environ.get("BRIEFCASE_DEBUGGER", None)
-
-    # skip debugger if no config is set
-    if config_str is None:
-        if verbose:
-            print("No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting.")
-        return  # If BRIEFCASE_DEBUGGER is not set, this packages does nothing...
-
-    if verbose:
-        print(f"'BRIEFCASE_DEBUGGER'={config_str}")
-
-    # start debugger
-    print("Starting remote debugger...")
-    _start_debugpy(config_str, verbose)
-
-
-def autostart_remote_debugger():
-    try:
-        start_remote_debugger()
-    except Exception:
-        # Show exception and stop the whole application when an error occurs
-        print(traceback.format_exc())
-        sys.exit(-1)
-
-
-# only start remote debugger on the first import
-if REMOTE_DEBUGGER_STARTED == False:
-    autostart_remote_debugger()
 '''
         )
