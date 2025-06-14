@@ -1,0 +1,62 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import pytest
+
+from briefcase.debuggers import (
+    DebugpyDebugger,
+    PdbDebugger,
+    get_debugger,
+    get_debuggers,
+)
+from briefcase.debuggers.base import DebuggerConnectionMode
+from briefcase.exceptions import BriefcaseCommandError
+
+
+def test_get_debuggers():
+    debuggers = get_debuggers()
+    assert isinstance(debuggers, dict)
+    assert debuggers["pdb"] is PdbDebugger
+    assert debuggers["debugpy"] is DebugpyDebugger
+
+
+def test_get_debugger():
+    assert isinstance(get_debugger("pdb"), PdbDebugger)
+    assert isinstance(get_debugger("debugpy"), DebugpyDebugger)
+
+    # Test with an unknown debugger name
+    try:
+        get_debugger("unknown")
+    except BriefcaseCommandError as e:
+        assert str(e) == "Unknown debugger: unknown"
+
+
+@pytest.mark.parametrize(
+    "debugger_name, expected_class, connection_mode",
+    [
+        (
+            "pdb",
+            PdbDebugger,
+            DebuggerConnectionMode.SERVER,
+        ),
+        (
+            "debugpy",
+            DebugpyDebugger,
+            DebuggerConnectionMode.SERVER,
+        ),
+    ],
+)
+def test_debugger(debugger_name, expected_class, connection_mode):
+    debugger = get_debugger(debugger_name)
+    assert isinstance(debugger, expected_class)
+    assert debugger.connection_mode == connection_mode
+
+    with TemporaryDirectory() as tmp_path:
+        tmp_path = Path(tmp_path)
+        debugger.create_debugger_support_pkg(tmp_path)
+        assert (tmp_path / "pyproject.toml").exists()
+        assert (tmp_path / "setup.py").exists()
+        assert (tmp_path / "briefcase_debugger_support" / "__init__.py").exists()
+        assert (
+            tmp_path / "briefcase_debugger_support" / "_remote_debugger.py"
+        ).exists()

@@ -34,6 +34,32 @@ corresponding to test suite completion. Briefcase has built-in support for
 other test frameworks can be added using the ``test_success_regex`` and
 ``test_failure_regex`` settings.
 
+Debug mode
+----------
+
+The debug mode can be used to (remote) debug an bundled app. The debugger to
+use can be configured via ``pyproject.toml`` an can then be activated through
+``briefcase run --debug <debugger>``.
+
+This is useful when developing an iOS or Android app that can't be debugged
+via ``briefcase dev``.
+
+To debug an bundled app you need a socket connection from your host system to
+the device running your bundled app. For the iOS simulator the host pc and the
+iOS simulator share the same network. For Android briefcase ensures that the
+port is forwarded from the android device to the host pc via adb.
+
+Currently the following debuggers are supported:
+
+- ``pdb``: This is used for debugging via console. After starting the app
+  you can connect to it depending on your host system via
+    - ``telnet localhost 5678`` (Windows, Linux)
+    - ``rlwrap socat - tcp:localhost:5678`` (Linux, macOS)
+  The app will start after the connection is established.
+
+- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debugging with VSCode </how-to/debugging_vscode>`)
+
+
 Usage
 =====
 
@@ -136,6 +162,41 @@ contains the most recent test code. To prevent this update and build, use the
 
 Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
+
+``--debug <debugger>``
+----------------------
+
+Run the app in debug mode in the bundled app environment and establish an
+debugger connection via a socket.
+
+Currently the following debuggers are supported (default is ``pdb``):
+
+ - ``pdb``: This is used for debugging via console.
+ - ``debugpy``: This is used for debugging via VSCode.
+
+For ``debugpy`` there is also a mapping of the source code from your bundled
+app to your local copy of the apps source code in the ``build`` folder. This
+is useful for devices like iOS and Android, where the running source code is
+not available on the host system.
+
+``--debugger-host <host>``
+--------------------------
+
+Specifies the host of the socket connection for the debugger. This
+option is only used when the ``--debug <debugger>`` option is specified. The
+default value is ``localhost``.
+
+``--debugger-port <port>``
+--------------------------
+
+Specifies the port of the socket connection for the debugger. This
+option is only used when the ``--debug <debugger>`` option is specified. The
+default value is ``5678``.
+
+On Android this also forwards the port from the android device to the host pc
+via adb if the port is ``localhost``.
+
+
 
 Passthrough arguments
 ---------------------
