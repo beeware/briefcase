@@ -41,7 +41,7 @@ def _start_remote_debugger(config_str: str, verbose: bool):
         f"""
 Remote PDB server opened at {host}:{port}, waiting for connection...
 To connect to remote PDB use eg.:
-    - telnet {host} {port} (Windows)
+    - telnet {host} {port} (Windows, Linux)
     - rlwrap socat - tcp:{host}:{port} (Linux, macOS)
 """
     )
