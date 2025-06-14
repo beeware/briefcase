@@ -940,18 +940,17 @@ any compatibility problems, and then add the compatibility declaration.
         """
         debuggers = get_debuggers()
         debugger_names = list(reversed(debuggers.keys()))
-        choices = ["", *debugger_names]
-        choices_help = [f"'{choice}'" for choice in choices]
+        choices_help = [f"'{choice}'" for choice in debugger_names]
 
         parser.add_argument(
             "--debug",
             dest="debugger",
             nargs="?",
             default=None,
-            const="",
-            choices=choices,
+            const="pdb",
+            choices=debugger_names,
             metavar="DEBUGGER",
-            help=f"{context_label} the app with the specified debugger ({', '.join(choices_help)})",
+            help=f"{context_label} the app with the specified debugger. One of {', '.join(choices_help)} (default: pdb)",
         )
 
     def add_options(self, parser):
