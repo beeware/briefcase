@@ -177,6 +177,11 @@ def test_package_app(
         packaging_format="dmg",
     )
 
+    # We verified we aren't on iCloud
+    package_command.verify_not_on_icloud.assert_called_once_with(
+        first_app_with_binaries
+    )
+
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
         app=first_app_with_binaries,

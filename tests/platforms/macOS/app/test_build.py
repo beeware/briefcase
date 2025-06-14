@@ -18,6 +18,7 @@ def build_command(tmp_path):
     command.select_identity = mock.MagicMock()
     command.sign_app = mock.MagicMock()
     command.sign_file = mock.MagicMock()
+    command.verify_not_on_icloud = mock.MagicMock()
 
     return command
 
@@ -56,6 +57,9 @@ def test_build_app(
     base_args = {"test_mode": False}
     kwargs = base_args | extra_args
     build_command.build_app(first_app_with_binaries, **kwargs)
+
+    # We verified we aren't on iCloud
+    build_command.verify_not_on_icloud.assert_called_once_with(first_app_with_binaries)
 
     # The stub binary has been renamed
     assert not (exec_path / "Stub").is_file()

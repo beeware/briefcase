@@ -26,6 +26,8 @@ def create_command(tmp_path, first_app_templated):
 
     # mock subprocess app context for this app
     command.tools[first_app_templated].app_context = mock.MagicMock(spec_set=Subprocess)
+    command.generate_template = mock.MagicMock()
+    command.verify_not_on_icloud = mock.MagicMock()
 
     return command
 
@@ -292,6 +294,22 @@ def test_permissions_context(
     x_permissions = create_command._x_permissions(first_app)
     # Check that the final platform permissions are rendered as expected.
     assert context == create_command.permissions_context(first_app, x_permissions)
+
+
+def test_generate_app_template(create_command, first_app, tmp_path):
+    """After the app is generated, the location is checked for iCloud markers."""
+    create_command.generate_app_template(first_app)
+
+    # The template was generated. Check some basic details, but not the full context.
+    create_command.generate_template.assert_called_once_with(
+        template="https://github.com/beeware/briefcase-macOS-app-template.git",
+        branch=None,
+        output_path=tmp_path / "base_path/build/first-app/macos",
+        extra_context=mock.ANY,
+    )
+
+    # iCloud was verified, with cleanup.
+    create_command.verify_not_on_icloud.assert_called_once_with(first_app, cleanup=True)
 
 
 def test_install_app_resources(create_command, first_app_templated, tmp_path):
