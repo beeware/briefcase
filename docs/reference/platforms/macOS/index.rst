@@ -96,6 +96,8 @@ Application configuration
 The following options can be added to the ``tool.briefcase.app.<appname>.macOS``
 section of your ``pyproject.toml`` file.
 
+.. _macos-entitlement:
+
 ``entitlement``
 ~~~~~~~~~~~~~~~
 

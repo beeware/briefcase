@@ -48,7 +48,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        "Application 'first' already exists; overwrite [y/N]? "
+        "The directory build/first/tester/dummy already exists; overwrite [y/N]? "
     ]
 
     # The right sequence of things will be done
@@ -83,7 +83,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        "Application 'first' already exists; overwrite [y/N]? "
+        "The directory build/first/tester/dummy already exists; overwrite [y/N]? "
     ]
 
     # No app creation actions will be performed
@@ -110,7 +110,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        "Application 'first' already exists; overwrite [y/N]? "
+        "The directory build/first/tester/dummy already exists; overwrite [y/N]? "
     ]
 
     # And no actions were necessary

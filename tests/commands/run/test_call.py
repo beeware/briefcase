@@ -939,3 +939,25 @@ def test_test_mode_non_existent(run_command, first_app_config):
             {"build_state": "first", "passthrough": []},
         ),
     ]
+
+
+def test_run_external_app(run_command, first_app):
+    """If the user requests a run an external app, an error is raised."""
+    # Add an apps
+    run_command.apps = {
+        "first": first_app,
+    }
+
+    # Make first_app an external app
+    first_app.sources = None
+    first_app.package_path = "path/to/package"
+
+    # Configure no command line options
+    options, _ = run_command.parse_options([])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"'first' is declared as an external app",
+    ):
+        run_command(**options)

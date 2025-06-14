@@ -1,4 +1,3 @@
-from pathlib import Path
 from subprocess import CalledProcessError
 from unittest import mock
 from zipfile import ZipFile
@@ -207,13 +206,14 @@ def test_package_msi(package_command, first_app_config, kwargs, tmp_path):
 
     package_command.package_app(first_app_config, **kwargs)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -243,7 +243,7 @@ def test_package_msi(package_command, first_app_config, kwargs, tmp_path):
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -345,6 +345,7 @@ def test_package_msi_with_codesigning(
         timestamp_digest="sha56",
     )
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Codesign app exe
         mock.call(
@@ -389,7 +390,7 @@ def test_package_msi_with_codesigning(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -419,7 +420,7 @@ def test_package_msi_with_codesigning(
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -608,13 +609,14 @@ def test_package_msi_failed_manifest(package_command, first_app_config, tmp_path
     ):
         package_command.package_app(first_app_config)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -650,13 +652,14 @@ def test_package_msi_failed_compile(package_command, first_app_config, tmp_path)
     ):
         package_command.package_app(first_app_config)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -686,7 +689,7 @@ def test_package_msi_failed_compile(package_command, first_app_config, tmp_path)
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -711,13 +714,14 @@ def test_package_msi_failed_link(package_command, first_app_config, tmp_path):
     ):
         package_command.package_app(first_app_config)
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Collect manifest
         mock.call(
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -747,7 +751,7 @@ def test_package_msi_failed_link(package_command, first_app_config, tmp_path):
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -797,6 +801,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
             timestamp_digest="sha56",
         )
 
+    package_path = tmp_path / "base_path/build/first-app/windows/app/src"
     assert package_command.tools.subprocess.run.mock_calls == [
         # Codesign app exe
         mock.call(
@@ -831,7 +836,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
             [
                 tmp_path / "wix/bin/heat.exe",
                 "dir",
-                Path("src"),
+                package_path,
                 "-nologo",
                 "-gg",
                 "-sfrag",
@@ -861,7 +866,7 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
                 "WixUIExtension",
                 "-arch",
                 "x64",
-                "-dSourceDir=src",
+                f"-dSourceDir={package_path}",
                 "first-app.wxs",
                 "first-app-manifest.wxs",
             ],
@@ -912,6 +917,198 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
                 "-td",
                 "sha56",
                 tmp_path / "base_path/dist/First App-0.0.1.msi",
+            ],
+            check=True,
+        ),
+    ]
+
+
+def test_external_package_msi(
+    package_command,
+    external_first_app,
+    tmp_path,
+):
+    """A Windows app can be packaged as an MSI and code signed."""
+
+    package_command.package_app(
+        external_first_app,
+        identity="80ee4c3321122916f5637522451993c2a0a4a56a",
+        file_digest="sha42",
+        use_local_machine=False,
+        cert_store="mystore",
+        timestamp_url="http://freetimestamps.com",
+        timestamp_digest="sha56",
+    )
+
+    package_path = tmp_path / "base_path/external/src"
+    assert package_command.tools.subprocess.run.mock_calls == [
+        # Codesign app exe
+        mock.call(
+            [
+                tmp_path
+                / "windows_sdk"
+                / "bin"
+                / "81.2.1.0"
+                / "groovy"
+                / "signtool.exe",
+                "sign",
+                "-s",
+                "mystore",
+                "-sha1",
+                "80ee4c3321122916f5637522451993c2a0a4a56a",
+                "-fd",
+                "sha42",
+                "-d",
+                "The first simple app \\ demonstration",
+                "-du",
+                "https://example.com/first-app",
+                "-tr",
+                "http://freetimestamps.com",
+                "-td",
+                "sha56",
+            ]
+            + [tmp_path / "base_path/external/src/internal/app.exe"],
+            check=True,
+        ),
+        # Collect manifest
+        mock.call(
+            [
+                tmp_path / "wix/bin/heat.exe",
+                "dir",
+                package_path,
+                "-nologo",
+                "-gg",
+                "-sfrag",
+                "-sreg",
+                "-srd",
+                "-scom",
+                "-dr",
+                "first_app_ROOTDIR",
+                "-cg",
+                "first_app_COMPONENTS",
+                "-var",
+                "var.SourceDir",
+                "-out",
+                "first-app-manifest.wxs",
+            ],
+            check=True,
+            cwd=tmp_path / "base_path/build/first-app/windows/app",
+        ),
+        # Compile MSI
+        mock.call(
+            [
+                tmp_path / "wix/bin/candle.exe",
+                "-nologo",
+                "-ext",
+                "WixUtilExtension",
+                "-ext",
+                "WixUIExtension",
+                "-arch",
+                "x64",
+                f"-dSourceDir={package_path}",
+                "first-app.wxs",
+                "first-app-manifest.wxs",
+            ],
+            check=True,
+            cwd=tmp_path / "base_path/build/first-app/windows/app",
+        ),
+        # Link MSI
+        mock.call(
+            [
+                tmp_path / "wix/bin/light.exe",
+                "-nologo",
+                "-ext",
+                "WixUtilExtension",
+                "-ext",
+                "WixUIExtension",
+                "-loc",
+                "unicode.wxl",
+                "-o",
+                tmp_path / "base_path/dist/First App-0.0.1.msi",
+                "first-app.wixobj",
+                "first-app-manifest.wixobj",
+            ],
+            check=True,
+            cwd=tmp_path / "base_path/build/first-app/windows/app",
+        ),
+        # Codesign app MSI
+        mock.call(
+            [
+                tmp_path
+                / "windows_sdk"
+                / "bin"
+                / "81.2.1.0"
+                / "groovy"
+                / "signtool.exe",
+                "sign",
+                "-s",
+                "mystore",
+                "-sha1",
+                "80ee4c3321122916f5637522451993c2a0a4a56a",
+                "-fd",
+                "sha42",
+                "-d",
+                "The first simple app \\ demonstration",
+                "-du",
+                "https://example.com/first-app",
+                "-tr",
+                "http://freetimestamps.com",
+                "-td",
+                "sha56",
+            ]
+            + [tmp_path / "base_path/dist/First App-0.0.1.msi"],
+            check=True,
+        ),
+    ]
+
+
+def test_external_package_zip(
+    package_command_with_files,
+    external_first_app,
+    tmp_path,
+):
+    """In a ZIP package, only the binary will be code signed."""
+
+    external_first_app.packaging_format = "zip"
+
+    package_command_with_files.package_app(
+        external_first_app,
+        identity="80ee4c3321122916f5637522451993c2a0a4a56a",
+        file_digest="sha42",
+        use_local_machine=False,
+        cert_store="mystore",
+        timestamp_url="http://freetimestamps.com",
+        timestamp_digest="sha56",
+    )
+
+    assert package_command_with_files.tools.subprocess.run.mock_calls == [
+        # Codesign app exe
+        mock.call(
+            [
+                tmp_path
+                / "windows_sdk"
+                / "bin"
+                / "81.2.1.0"
+                / "groovy"
+                / "signtool.exe",
+                "sign",
+                "-s",
+                "mystore",
+                "-sha1",
+                "80ee4c3321122916f5637522451993c2a0a4a56a",
+                "-fd",
+                "sha42",
+                "-d",
+                "The first simple app \\ demonstration",
+                "-du",
+                "https://example.com/first-app",
+                "-tr",
+                "http://freetimestamps.com",
+                "-td",
+                "sha56",
+            ]
+            + [
+                tmp_path / "base_path/external/src/internal/app.exe",
             ],
             check=True,
         ),

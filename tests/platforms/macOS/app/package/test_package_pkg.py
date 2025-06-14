@@ -549,3 +549,125 @@ def test_package_pkg_previously_built(
             check=True,
         ),
     ]
+
+
+def test_external_app(
+    package_command,
+    external_first_app,
+    license_file,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    """A macOS GUI app can be packaged as a .pkg installer."""
+    external_first_app.packaging_format = "pkg"
+
+    # Select a codesigning identity
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
+
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    # Create a pre-existing app bundle.
+    create_file(
+        bundle_path / "installer/root/First App.app/original",
+        "Original app",
+    )
+
+    # Create a pre-existing package bundle.
+    create_file(
+        bundle_path / "installer/packages/first-app.pkg",
+        "Original package",
+    )
+
+    # Create a pre-existing LICENSE
+    create_file(
+        bundle_path / "installer/resources/LICENSE",
+        "Original License",
+    )
+
+    # Re-package the app
+    package_command.package_app(external_first_app)
+
+    # Two signing identities were selected; the second is an installer identity
+    assert package_command.select_identity.mock_calls == [
+        mock.call(identity=None),
+        mock.call(identity=None, app_identity=sekrit_identity),
+    ]
+
+    # The app has been signed
+    package_command.sign_app.assert_called_once_with(
+        app=external_first_app,
+        identity=sekrit_identity,
+    )
+
+    # App content has been copied into place.
+    assert (bundle_path / "installer/root/First App.app/Contents/Info.plist").is_file()
+
+    # When duplicating the app, symlinks have been preserved
+    assert (
+        bundle_path
+        / "installer/root/First App.app/Contents/Frameworks/Extras.framework/Extras"
+    ).is_symlink()
+
+    # The license has been updated.
+    assert (bundle_path / "installer/resources/LICENSE").read_text(
+        encoding="utf-8"
+    ) == "You can take license with this."
+
+    # The component list has been updated.
+    with (bundle_path / "installer/components.plist").open("rb") as f:
+        components = plistlib.load(f)
+
+        assert components == [
+            {
+                "BundleHasStrictIdentifier": True,
+                "BundleIsRelocatable": False,
+                "BundleIsVersionChecked": True,
+                "BundleOverwriteAction": "upgrade",
+                "RootRelativeBundlePath": "First App.app",
+            }
+        ]
+
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/resources",
+                "--sign",
+                "CAFEFACE",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
+
+    # Notarization was performed with the installer identity
+    package_command.notarize.assert_called_once_with(
+        external_first_app,
+        identity=sekrit_identity,
+        installer_identity=sekrit_installer_identity,
+    )

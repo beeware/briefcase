@@ -187,6 +187,10 @@ level, *and* platform level, the final set of sources will be the
 *concatenation* of sources from all levels, starting from least to most
 specific.
 
+The only time ``sources`` is *not* required is if you are is :doc:`packaging an external
+application </how-to/external-apps>`. If you are packaging an external application,
+``package_path`` must be defined, and ``sources`` *must not* be defined.
+
 Optional values
 ---------------
 
@@ -330,6 +334,36 @@ value is only used on platforms that have a clear mechanism for specifying OS ve
 compatibility; on the platforms where it *is* used, the interpretation of the value is
 platform specific. Refer to individual platform guides for details on how the provided
 value is interpreted.
+
+``package_path``
+~~~~~~~~~~~~~~~~
+
+.. admonition:: Only for external apps
+
+    This setting is only required if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not required if you are using Briefcase
+    for the entire app creation process.
+
+The value of ``package_path`` defines the path to the root of a folder that will be
+packaged as an application. The contents of ``package_path`` is what will be shipped to
+the end user as the installed app.
+
+If ``package_path`` is defined, ``sources`` must *not* be defined.
+
+``package_binary_path``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: Only for external apps
+
+    This setting is only required if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not required if you are using Briefcase
+    for the entire app creation process.
+
+The path to the binary that will be executed as part of the installed app. This is used
+when packaging external applications to establish the path to the shortcut that should
+be installed.
+
+This setting is only used on Windows.
 
 ``requirement_installer_args``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
