@@ -918,14 +918,19 @@ class CreateCommand(BaseCommand):
         if bundle_path.exists():
             self.console.info()
             confirm = self.console.input_boolean(
-                f"Application {app.app_name!r} already exists; overwrite", default=False
+                f"The directory {self.bundle_path(app).relative_to(self.base_path)} "
+                "already exists; overwrite",
+                default=False,
             )
             if not confirm:
                 self.console.error(
-                    f"Aborting creation of app {app.app_name!r}; existing application will not be overwritten."
+                    f"Aborting creation of app {app.app_name!r}; "
+                    "existing application template will not be overwritten."
                 )
                 return
-            self.console.info("Removing old application bundle...", prefix=app.app_name)
+            self.console.info(
+                "Removing old application template...", prefix=app.app_name
+            )
             self.tools.shutil.rmtree(bundle_path)
 
         self.console.info("Generating application template...", prefix=app.app_name)
