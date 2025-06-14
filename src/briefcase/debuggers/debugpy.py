@@ -139,18 +139,18 @@ def _start_debugpy(config_str: str, verbose: bool):
         f"""
 To connect to debugpy using VSCode add the following configuration to launch.json:
 {{
-"version": "0.2.0",
-"configurations": [
-    {{
-        "name": "Briefcase: Attach (Connect)",
-        "type": "debugpy",
-        "request": "attach",
-        "connect": {{
-            "host": "{host}",
-            "port": {port}
+    "version": "0.2.0",
+    "configurations": [
+        {{
+            "name": "Briefcase: Attach (Connect)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {{
+                "host": "{host}",
+                "port": {port}
+            }}
         }}
-    }}
-]
+    ]
 }}
 """
     )
