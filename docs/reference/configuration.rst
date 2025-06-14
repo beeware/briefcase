@@ -338,24 +338,32 @@ value is interpreted.
 ``package_path``
 ~~~~~~~~~~~~~~~~
 
-The path to the root of a folder that will be packaged as an application. The contents
-of ``package_path`` is what will be shipped to the end user as the installed app.
+.. admonition:: Only for external apps
 
-This is used to configure Briefcase to :doc:`package an external application
-</how-to/external-apps>`. It is not required if you are using Briefcase for the entire
-app creation process.
+    This setting is only required if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not required if you are using Briefcase
+    for the entire app creation process.
+
+The value of ``package_path`` defines the path to the root of a folder that will be
+packaged as an application. The contents of ``package_path`` is what will be shipped to
+the end user as the installed app.
 
 If ``package_path`` is defined, ``sources`` must *not* be defined.
 
 ``package_binary_path``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+.. admonition:: Only for external apps
+
+    This setting is only required if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not required if you are using Briefcase
+    for the entire app creation process.
+
 The path to the binary that will be executed as part of the installed app. This is used
 when packaging external applications to establish the path to the shortcut that should
 be installed.
 
-You should only define ``package_binary_path`` if you also define ``package_path`` -
-that is, if you are :doc:`packaging an external application </how-to/external-apps>`.
+This setting is only used on Windows.
 
 ``requirement_installer_args``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
