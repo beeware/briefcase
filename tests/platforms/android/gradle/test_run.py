@@ -900,21 +900,21 @@ def test_run_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
 
 
 class ServerDebugger(BaseDebugger):
-    def additional_requirements(self) -> list[str]:
-        raise NotImplementedError
-
     @property
     def connection_mode(self) -> DebuggerConnectionMode:
         return DebuggerConnectionMode.SERVER
 
-
-class ClientDebugger(BaseDebugger):
-    def additional_requirements(self) -> list[str]:
+    def create_debugger_support_pkg(self, dir: Path) -> None:
         raise NotImplementedError
 
+
+class ClientDebugger(BaseDebugger):
     @property
     def connection_mode(self) -> DebuggerConnectionMode:
         return DebuggerConnectionMode.CLIENT
+
+    def create_debugger_support_pkg(self, dir: Path) -> None:
+        raise NotImplementedError
 
 
 @pytest.mark.parametrize(
