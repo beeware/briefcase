@@ -126,28 +126,23 @@ class macOSMixin:
         """
         if self.is_icloud_synced(self.binary_path(app)):
             msg = [
-                "Briefcase cannot be used on an iCloud-mounted drive "
-                "(such as your Documents folder)."
+                """\
+Your project is in a folder that is synchronized with iCloud. This interferes
+with the operation of macOS code signing."""
             ]
             if cleanup:
                 self.tools.shutil.rmtree(self.bundle_path(app))
                 msg.append(
-                    "Move your project to a location that isn't "
-                    "synchronized with iCloud."
+                    f"""
+Move your project to a location that is not synchronized with iCloud,
+and re-run `briefcase {self.command}`."""
                 )
             else:
                 bundle_path = self.bundle_path(app).relative_to(self.base_path)
-                msg.extend(
-                    [
-                        (
-                            f"Delete the {bundle_path} "
-                            "folder, move your project to a location"
-                        ),
-                        (
-                            "that isn't synchronized with iCloud, "
-                            f"and re-run `briefcase {self.command}`."
-                        ),
-                    ]
+                msg.append(
+                    f"""
+Delete the {bundle_path} folder, move your project to location
+that is not synchronized with iCloud, and re-run `briefcase {self.command}`."""
                 )
             raise BriefcaseCommandError("\n".join(msg))
 

@@ -14,10 +14,7 @@ def test_on_icloud(dummy_command, first_app_templated, tmp_path):
     # Verify the location
     with pytest.raises(
         BriefcaseCommandError,
-        match=(
-            r"Briefcase cannot be used on an iCloud-mounted drive \(such as your "
-            r"Documents folder\).\nDelete the build[/\\]first-app[/\\]macos[/\\]app folder, "
-        ),
+        match=r"app folder, move your project to location\nthat is not",
     ):
         dummy_command.verify_not_on_icloud(first_app_templated)
 
@@ -45,10 +42,7 @@ def test_on_icloud_with_cleanup(dummy_command, first_app_templated, tmp_path):
     # Verify the location
     with pytest.raises(
         BriefcaseCommandError,
-        match=(
-            r"Briefcase cannot be used on an iCloud-mounted drive \(such as your "
-            r"Documents folder\).\nMove your project to a location that isn't"
-        ),
+        match=r"\n\nMove your project to a location that is not synchronized",
     ):
         dummy_command.verify_not_on_icloud(first_app_templated, cleanup=True)
 
