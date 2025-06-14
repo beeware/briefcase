@@ -1,1 +1,1 @@
-Briefcase can now be used to sign, package and notarize apps that Briefcase didn't create. You can now use another tool to create a macOS, Windows or Linux application, and then use Briefcase to complete the process of turning that app into signed and notaried release artefact.
+Briefcase can now be used to sign, package and notarize apps that Briefcase didn't create. You can now use another tool to create a macOS, Windows or Linux application, and then use Briefcase to complete the process of turning that app into a signed and notarized release artefact.
