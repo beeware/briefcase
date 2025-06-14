@@ -19,51 +19,22 @@ class PdbDebugger(BaseDebugger):
         """
         self._create_debugger_support_pkg_base(
             dir,
-            dependencies=[],
+            dependencies=["remote-pdb>=2.1.0,<3.0.0"],
         )
 
         debugger_support = dir / "briefcase_debugger_support.py"
         debugger_support.write_text('''
 import json
 import os
-import platform
-import re
-import socket
 import sys
 import traceback
+from remote_pdb import RemotePdb
 
 REMOTE_DEBUGGER_STARTED = False
 
-NEWLINE_REGEX = re.compile("\\r?\\n")
-
-class SocketFileWrapper(object):
-    def __init__(self, connection: socket.socket):
-        self.connection = connection
-        self.stream = connection.makefile('rw')
-
-        self.read = self.stream.read
-        self.readline = self.stream.readline
-        self.readlines = self.stream.readlines
-        self.close = self.stream.close
-        self.isatty = self.stream.isatty
-        self.flush = self.stream.flush
-        self.fileno = lambda: -1
-        self.__iter__ = self.stream.__iter__
-
-    @property
-    def encoding(self):
-        return self.stream.encoding
-
-    def write(self, data):
-        data = NEWLINE_REGEX.sub("\\r\\n", data)
-        self.connection.sendall(data.encode(self.stream.encoding))
-
-    def writelines(self, lines):
-        for line in lines:
-            self.write(line)
 
 def _start_pdb(config_str: str, verbose: bool):
-    """Open a socket server and stream all stdio via the connection bidirectional."""
+    """Start remote PDB server."""
     debugger_config: dict = json.loads(config_str)
 
     # Parsing host/port
@@ -72,29 +43,20 @@ def _start_pdb(config_str: str, verbose: bool):
 
     print(
         f"""
-Stdio redirector server opened at {host}:{port}, waiting for connection...
-To connect to stdio redirector use eg.:
-    - telnet {host} {port}
-    - nc -C {host} {port}
-    - socat readline tcp:{host}:{port}
+Remote PDB server opened at {host}:{port}, waiting for connection...
+To connect to remote PDB use eg.:
+    - telnet {host} {port} (Windows)
+    - rlwrap socat - tcp:{host}:{port} (Linux, macOS)
 """
     )
 
-    listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-    listen_socket.bind((host, port))
-    listen_socket.listen(1)
-    connection, address = listen_socket.accept()
-    print(f"Stdio redirector accepted connection from {{repr(address)}}.")
+    # Create a RemotePdb instance
+    remote_pdb = RemotePdb(host, port, quiet=True)
 
-    file_wrapper = SocketFileWrapper(connection)
+    # Connect the remote PDB with the "breakpoint()" function
+    sys.breakpointhook = remote_pdb.set_trace
 
-    sys.stderr = file_wrapper
-    sys.stdout = file_wrapper
-    sys.stdin = file_wrapper
-    sys.__stderr__ = file_wrapper
-    sys.__stdout__ = file_wrapper
-    sys.__stdin__ = file_wrapper
+    print("Debugger client attached.")
 
 
 def start_remote_debugger():
@@ -110,7 +72,9 @@ def start_remote_debugger():
     # skip debugger if no config is set
     if config_str is None:
         if verbose:
-            print("No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting.")
+            print(
+                "No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting."
+            )
         return  # If BRIEFCASE_DEBUGGER is not set, this packages does nothing...
 
     if verbose:
