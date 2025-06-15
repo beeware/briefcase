@@ -37,9 +37,9 @@ other test frameworks can be added using the ``test_success_regex`` and
 Debug mode
 ----------
 
-The debug mode can be used to (remote) debug an bundled app. The debugger to
-use can be configured via ``pyproject.toml`` an can then be activated through
-``briefcase run --debug <debugger>``.
+The debug mode can be used to (remote) debug an bundled app. The debugger has
+to be specified with the ``--debug <debugger>`` option during ``briefcase build``
+and ``briefcase run``.
 
 This is useful when developing an iOS or Android app that can't be debugged
 via ``briefcase dev``.
