@@ -122,7 +122,8 @@ setuptools.setup(
             encoding="utf-8",
         )
 
-        debugger_support.write_text("""
+        debugger_support.write_text(
+            """\
 import json
 import os
 import sys
@@ -165,4 +166,6 @@ if REMOTE_DEBUGGER_STARTED == False:
         # Show exception and stop the whole application when an error occurs
         print(traceback.format_exc())
         sys.exit(-1)
-""")
+""",
+            encoding="utf-8",
+        )

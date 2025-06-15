@@ -1110,9 +1110,14 @@ def test_app_packages_debugger_debugger(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.debugger = DummyDebugger()
 
-    create_command.install_app_requirements(myapp)
-
+    # create dummy debugger support package directory, that should be cleared
     bundle_path = create_command.bundle_path(myapp)
+    (bundle_path / ".debugger_support_package").mkdir(parents=True, exist_ok=True)
+    (bundle_path / ".debugger_support_package" / "dummy.txt").write_text(
+        "dummy content"
+    )
+
+    create_command.install_app_requirements(myapp)
 
     # A request was made to install requirements
     create_command.tools[myapp].app_context.run.assert_called_with(
@@ -1145,3 +1150,6 @@ def test_app_packages_debugger_debugger(
         myapp.debugger.debugger_support_pkg_dir
         == bundle_path / ".debugger_support_package"
     )
+
+    # Check that the debugger support package directory is empty
+    assert len(os.listdir(myapp.debugger.debugger_support_pkg_dir)) == 0

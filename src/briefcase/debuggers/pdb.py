@@ -23,7 +23,8 @@ class PdbDebugger(BaseDebugger):
         )
 
         remote_debugger = dir / "briefcase_debugger_support" / "_remote_debugger.py"
-        remote_debugger.write_text('''
+        remote_debugger.write_text(
+            '''\
 import json
 import sys
 
@@ -53,4 +54,6 @@ To connect to remote PDB use eg.:
     sys.breakpointhook = remote_pdb.set_trace
 
     print("Debugger client attached.")
-''')
+''',
+            encoding="utf-8",
+        )

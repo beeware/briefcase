@@ -155,5 +155,6 @@ To connect to debugpy using VSCode add the following configuration to launch.jso
     debugpy.wait_for_client()
 
     print("Debugger attached.")
-'''
+''',
+            encoding="utf-8",
         )
