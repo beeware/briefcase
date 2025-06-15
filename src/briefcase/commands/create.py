@@ -765,9 +765,6 @@ class CreateCommand(BaseCommand):
         has to be located in the app's site-packages directory, that it is executed
         correctly.
         """
-        if app.debugger is None:
-            return
-
         debugger_support_path = self.bundle_path(app) / ".debugger_support_package"
         if debugger_support_path.exists():
             self.tools.shutil.rmtree(debugger_support_path)
