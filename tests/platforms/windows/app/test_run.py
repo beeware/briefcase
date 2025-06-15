@@ -1,4 +1,3 @@
-import json
 import subprocess
 from unittest import mock
 
@@ -31,9 +30,7 @@ def test_run_gui_app(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -64,8 +61,6 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config, tmp_path):
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -98,9 +93,7 @@ def test_run_gui_app_failed(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(
-            first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-        )
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Popen was still invoked, though
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -125,9 +118,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess.run.assert_called_with(
@@ -151,8 +142,6 @@ def test_run_console_app_with_passthrough(run_command, first_app_config, tmp_pat
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -181,9 +170,7 @@ def test_run_console_app_failed(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.run.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(
-            first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-        )
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Popen was still invoked, though
     run_command.tools.subprocess.run.assert_called_with(
@@ -210,9 +197,7 @@ def test_run_app_test_mode(run_command, first_app_config, is_console_app, tmp_pa
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # The process was started
     exe_name = "first-app" if is_console_app else "First App"
@@ -253,8 +238,6 @@ def test_run_app_test_mode_with_passthrough(
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -272,54 +255,6 @@ def test_run_app_test_mode_with_passthrough(
         stderr=subprocess.STDOUT,
         bufsize=1,
         env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
-    )
-
-    # The streamer was started
-    run_command._stream_app_logs.assert_called_once_with(
-        first_app_config,
-        popen=log_popen,
-        clean_output=False,
-    )
-
-
-def test_run_gui_app_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
-    """A Windows app can be started in debug mode."""
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.subprocess.Popen.return_value = log_popen
-
-    first_app_config.debugger = dummy_debugger
-
-    # Run the app
-    run_command.run_app(
-        first_app_config,
-        debugger_host="somehost",
-        debugger_port=9999,
-        passthrough=[],
-    )
-
-    # The process was started
-    run_command.tools.subprocess.Popen.assert_called_with(
-        [tmp_path / "base_path/build/first-app/windows/app/src/First App.exe"],
-        cwd=tmp_path / "home",
-        encoding="UTF-8",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        env={
-            "BRIEFCASE_DEBUGGER": json.dumps(
-                {
-                    "host": "somehost",
-                    "port": 9999,
-                    "app_path_mappings": {
-                        "device_sys_path_regex": "app$",
-                        "device_subfolders": ["first_app"],
-                        "host_folders": [str(tmp_path / "base_path/src/first_app")],
-                    },
-                    "app_packages_path_mappings": None,
-                }
-            )
-        },
     )
 
     # The streamer was started

@@ -12,7 +12,6 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -367,22 +366,9 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     supported_host_os = {"Linux"}
     supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
-    def remote_debugger_app_packages_path_mapping(
-        self, app: AppConfig
-    ) -> AppPackagesPathMappings:
-        """
-        Get the path mappings for the app packages.
-
-        :param app: The config object for the app
-        :returns: The path mappings for the app packages
-        """
-        return None  # TODO: Where are the app packages located?
-
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -392,11 +378,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(
-            app=app,
-            debugger_host=debugger_host,
-            debugger_port=debugger_port,
-        )
+        kwargs = self._prepare_app_kwargs(app=app)
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

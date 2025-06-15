@@ -34,14 +34,6 @@ def first_app(first_app_config, tmp_path):
     bundle_dir = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
     create_file(bundle_dir / "first-app.1", "First App manpage")
-    create_file(
-        bundle_dir / "briefcase.toml",
-        """
-[paths]
-app_path = "first-app-0.0.1/usr/lib/first-app/app"
-app_packages_path = "first-app-0.0.1/usr/lib/first-app/app_packages"
-""",
-    )
 
     lib_dir = bundle_dir / "first-app-0.0.1/usr/lib/first-app"
     (lib_dir / "app").mkdir(parents=True, exist_ok=True)

@@ -298,7 +298,10 @@ class RunCommand(RunAppMixin, BaseCommand):
         return json.dumps(config)
 
     def _prepare_app_kwargs(
-        self, app: AppConfig, debugger_host: str | None, debugger_port: int | None
+        self,
+        app: AppConfig,
+        debugger_host: str | None = None,
+        debugger_port: int | None = None,
     ):
         """Prepare the kwargs for running an app as a log stream.
 

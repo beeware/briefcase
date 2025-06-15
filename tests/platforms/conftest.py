@@ -1,9 +1,6 @@
-from pathlib import Path
-
 import pytest
 
 from briefcase.config import AppConfig
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 
 
 @pytest.fixture
@@ -57,18 +54,3 @@ def underscore_app_config(first_app_config):
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
     )
-
-
-class DummyDebugger(BaseDebugger):
-    @property
-    def connection_mode(self) -> DebuggerConnectionMode:
-        raise NotImplementedError
-
-    def create_debugger_support_pkg(self, dir: Path) -> None:
-        raise NotImplementedError
-
-
-@pytest.fixture
-def dummy_debugger():
-    """A dummy debugger for testing purposes."""
-    return DummyDebugger()

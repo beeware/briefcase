@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import datetime
 import re
 import subprocess
@@ -18,12 +17,8 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
-from briefcase.debuggers.base import (
-    AppPackagesPathMappings,
-    DebuggerConnectionMode,
-)
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import ADB, AndroidSDK
+from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 
@@ -219,19 +214,15 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
-        # Extract test packages, to enable features like test discovery and assertion rewriting.
-        extract_sources = app.test_sources or []
-
-        # In debug mode extract all source packages so that the debugger can get the source code
-        # at runtime (eg. via 'll' in pdb).
-        if app.debugger:
-            extract_sources.extend(app.sources)
-
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
+            # Extract test packages, to enable features like test discovery and assertion
+            # rewriting.
             "extract_packages": ", ".join(
-                [f'"{name}"' for path in extract_sources if (name := Path(path).name)]
+                f'"{name}"'
+                for path in (app.test_sources or [])
+                if (name := Path(path).name)
             ),
             "build_gradle_dependencies": {"implementation": dependencies},
         }
@@ -368,26 +359,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
 
-    def remote_debugger_app_packages_path_mapping(
-        self, app: AppConfig
-    ) -> AppPackagesPathMappings:
-        """
-        Get the path mappings for the app packages.
-
-        :param app: The config object for the app
-        :returns: The path mappings for the app packages
-        """
-        app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
-        return AppPackagesPathMappings(
-            sys_path_regex="requirements$",
-            host_folder=f"{app_packages_path}",
-        )
-
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -397,8 +371,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param debugger_host: The host to use for the debugger
-        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -452,110 +424,54 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
-            env = {}
-            if self.console.is_debug:
-                env["BRIEFCASE_DEBUG"] = "1"
+            # To start the app, we launch `org.beeware.android.MainActivity`.
+            with self.console.wait_bar(f"Launching {label}..."):
+                # capture the earliest time for device logging in case PID not found
+                device_start_time = adb.datetime()
 
-            if app.debugger:
-                env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
-                    app, debugger_host, debugger_port
+                adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
+
+                # Try to get the PID for 5 seconds.
+                pid = None
+                fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
+                while not pid and datetime.datetime.now() < fail_time:
+                    # Try to get the PID; run in quiet mode because we may
+                    # need to do this a lot in the next 5 seconds.
+                    pid = adb.pidof(package, quiet=2)
+                    if not pid:
+                        time.sleep(0.01)
+
+            if pid:
+                self.console.info(
+                    "Following device log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
                 )
+                # Start adb's logcat in a way that lets us stream the logs
+                log_popen = adb.logcat(pid=pid)
 
-            # Forward port for debugger connection if configured. Else this is a no-op.
-            with self.forward_port_for_debugger(app, debugger_host, debugger_port, adb):
-                # To start the app, we launch `org.beeware.android.MainActivity`.
-                with self.console.wait_bar(f"Launching {label}..."):
-                    # capture the earliest time for device logging in case PID not found
-                    device_start_time = adb.datetime()
+                # Stream the app logs.
+                self._stream_app_logs(
+                    app,
+                    popen=log_popen,
+                    clean_filter=android_log_clean_filter,
+                    clean_output=False,
+                    # Check for the PID in quiet mode so logs aren't corrupted.
+                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
+                    log_stream=True,
+                )
+            else:
+                self.console.error("Unable to find PID for app", prefix=app.app_name)
+                self.console.error("Logs for launch attempt follow...")
+                self.console.error("=" * 75)
 
-                    adb.start_app(
-                        package, "org.beeware.android.MainActivity", passthrough, env
-                    )
+                # Show the log from the start time of the app
+                adb.logcat_tail(since=device_start_time)
 
-                    # Try to get the PID for 5 seconds.
-                    pid = None
-                    fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
-                    while not pid and datetime.datetime.now() < fail_time:
-                        # Try to get the PID; run in quiet mode because we may
-                        # need to do this a lot in the next 5 seconds.
-                        pid = adb.pidof(package, quiet=2)
-                        if not pid:
-                            time.sleep(0.01)
-
-                if pid:
-                    self.console.info(
-                        "Following device log output (type CTRL-C to stop log)...",
-                        prefix=app.app_name,
-                    )
-                    # Start adb's logcat in a way that lets us stream the logs
-                    log_popen = adb.logcat(pid=pid)
-
-                    # Stream the app logs.
-                    self._stream_app_logs(
-                        app,
-                        popen=log_popen,
-                        clean_filter=android_log_clean_filter,
-                        clean_output=False,
-                        # Check for the PID in quiet mode so logs aren't corrupted.
-                        stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
-                        log_stream=True,
-                    )
-                else:
-                    self.console.error(
-                        "Unable to find PID for app", prefix=app.app_name
-                    )
-                    self.console.error("Logs for launch attempt follow...")
-                    self.console.error("=" * 75)
-
-                    # Show the log from the start time of the app
-                    adb.logcat_tail(since=device_start_time)
-
-                    raise BriefcaseCommandError(
-                        f"Problem starting app {app.app_name!r}"
-                    )
-
+                raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
         finally:
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
-
-    @contextlib.contextmanager
-    def forward_port_for_debugger(
-        self, app: AppConfig, debugger_host: str, debugger_port: int, adb: ADB
-    ):
-        """Establish a port forwarding for the debugger connection.
-        :param app: The config object for the app
-        :param debugger_host: The host to use for the debugger
-        :param debugger_port: The port to use for the debugger
-        :param adb: The ADB wrapper for the device
-        """
-        if app.debugger and debugger_host == "localhost":
-            if app.debugger.connection_mode == DebuggerConnectionMode.SERVER:
-                with self.console.wait_bar(
-                    f"Start forwarding port '{debugger_port}' from host to device for debugger connection..."
-                ):
-                    adb.forward(debugger_port, debugger_port)
-
-                yield
-
-                with self.console.wait_bar(
-                    f"Stop forwarding port '{debugger_port}' from host to device for debugger connection..."
-                ):
-                    adb.forward_remove(debugger_port)
-            else:
-                with self.console.wait_bar(
-                    f"Start reversing port '{debugger_port}' from device to host for debugger connection..."
-                ):
-                    adb.reverse(debugger_port, debugger_port)
-
-                yield
-
-                with self.console.wait_bar(
-                    f"Stop reversing port '{debugger_port}' from device to host for debugger connection..."
-                ):
-                    adb.reverse_remove(debugger_port)
-        else:
-            yield  # no-op if no debugger is configured
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

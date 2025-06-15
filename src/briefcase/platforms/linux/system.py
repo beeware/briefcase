@@ -838,24 +838,16 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param debugger_host: The host to use for the debugger
-        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(
-            app=app,
-            debugger_host=debugger_host,
-            debugger_port=debugger_port,
-        )
+        kwargs = self._prepare_app_kwargs(app=app)
 
         with self.tools[app].app_context.run_app_context(kwargs) as kwargs:
             # Console apps must operate in non-streaming mode so that console input can

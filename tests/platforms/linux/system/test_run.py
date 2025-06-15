@@ -1,4 +1,3 @@
-import json
 import os
 import subprocess
 import sys
@@ -244,9 +243,7 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     )
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -285,9 +282,7 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     )
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=["foo", "--bar"]
-    )
+    run_command.run_app(first_app, passthrough=["foo", "--bar"])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -328,9 +323,7 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(
-            first_app, debugger_host=None, debugger_port=None, passthrough=[]
-        )
+        run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -351,78 +344,6 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_not_called()
 
 
-def test_run_gui_app_debugger(
-    run_command, first_app, sub_kw, tmp_path, monkeypatch, dummy_debugger
-):
-    """A bootstrap binary for a GUI app can be started in debug mode."""
-
-    # Set up tool cache
-    run_command.verify_app_tools(app=first_app)
-
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.subprocess._subprocess.Popen = mock.MagicMock(
-        return_value=log_popen
-    )
-
-    # Mock out the environment
-    monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
-
-    first_app.debugger = dummy_debugger
-
-    # Run the app
-    run_command.run_app(
-        first_app,
-        debugger_host="somehost",
-        debugger_port=9999,
-        passthrough=[],
-    )
-
-    # The process was started
-    run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [
-            os.fsdecode(
-                tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
-            )
-        ],
-        cwd=os.fsdecode(tmp_path / "home"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        bufsize=1,
-        env={
-            "ENVVAR": "Value",
-            "BRIEFCASE_DEBUGGER": json.dumps(
-                {
-                    "host": "somehost",
-                    "port": 9999,
-                    "app_path_mappings": {
-                        "device_sys_path_regex": "app$",
-                        "device_subfolders": ["first_app"],
-                        "host_folders": [str(tmp_path / "base_path/src/first_app")],
-                    },
-                    "app_packages_path_mappings": {
-                        "sys_path_regex": "app_packages$",
-                        "host_folder": str(
-                            tmp_path
-                            / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/"
-                            "lib/first-app/app_packages"
-                        ),
-                    },
-                }
-            ),
-        },
-        **sub_kw,
-    )
-
-    # The streamer was started
-    run_command._stream_app_logs.assert_called_once_with(
-        first_app,
-        popen=log_popen,
-        clean_output=False,
-    )
-
-
 def test_run_console_app(run_command, first_app, tmp_path):
     """A bootstrap binary for a console app can be started."""
     first_app.console_app = True
@@ -431,9 +352,7 @@ def test_run_console_app(run_command, first_app, tmp_path):
     run_command.verify_app_tools(app=first_app)
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     assert run_command.tools.subprocess.run.mock_calls == [
@@ -462,9 +381,7 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
     run_command.verify_app_tools(app=first_app)
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=["foo", "--bar"]
-    )
+    run_command.run_app(first_app, passthrough=["foo", "--bar"])
 
     # The process was started
     assert run_command.tools.subprocess.run.mock_calls == [
@@ -496,9 +413,7 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess.run.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(
-            first_app, debugger_host=None, debugger_port=None, passthrough=[]
-        )
+        run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
     assert run_command.tools.subprocess.run.mock_calls == [
@@ -540,9 +455,7 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     )
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -602,9 +515,7 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(
-            first_app, debugger_host=None, debugger_port=None, passthrough=[]
-        )
+        run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -665,9 +576,7 @@ def test_run_app_test_mode(
     monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -726,9 +635,7 @@ def test_run_app_test_mode_docker(
     )
 
     # Run the app
-    run_command.run_app(
-        first_app, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -797,8 +704,6 @@ def test_run_app_test_mode_with_args(
     # Run the app with args
     run_command.run_app(
         first_app,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -863,8 +768,6 @@ def test_run_app_test_mode_with_args_docker(
     # Run the app with args
     run_command.run_app(
         first_app,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import plistlib
 import subprocess
 import time
@@ -19,7 +18,6 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
@@ -490,29 +488,9 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
 
-    def remote_debugger_app_packages_path_mapping(
-        self, app: AppConfig
-    ) -> AppPackagesPathMappings:
-        """
-        Get the path mappings for the app packages.
-
-        :param app: The config object for the app
-        :returns: The path mappings for the app packages
-        """
-        # TODO: Add handling to switch between simulator and real device. Currently we only
-        #       support simulator.
-        return AppPackagesPathMappings(
-            sys_path_regex="app_packages$",
-            host_folder=str(
-                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
-            ),
-        )
-
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         udid=None,
         **kwargs,
@@ -520,8 +498,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param debugger_host: The host to use for the debugger
-        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
@@ -662,94 +638,42 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Wait for the log stream start up
         time.sleep(0.25)
 
-        # Add additional environment variables
-        env = {}
-        if app.debugger:
-            env["BRIEFCASE_DEBUGGER"] = self.remote_debugger_config(
-                app, debugger_host, debugger_port
+        try:
+            self.console.info(f"Starting {label}...", prefix=app.app_name)
+            with self.console.wait_bar(f"Launching {label}..."):
+                output = self.tools.subprocess.check_output(
+                    ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
+                    + passthrough
+                )
+                try:
+                    app_pid = int(output.split(":")[1].strip())
+                except (IndexError, ValueError) as e:
+                    raise BriefcaseCommandError(
+                        f"Unable to determine PID of {label} {app.app_name}."
+                    ) from e
+
+            # Start streaming logs for the app.
+            self.console.info(
+                "Following simulator log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
             )
 
-        # Set additional environment variables while the app is running (no-op if no environment variables are set).
-        with self.setup_env(env, udid):
-            try:
-                self.console.info(f"Starting {label}...", prefix=app.app_name)
-                with self.console.wait_bar(f"Launching {label}..."):
-                    output = self.tools.subprocess.check_output(
-                        ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
-                        + passthrough
-                    )
-                    try:
-                        app_pid = int(output.split(":")[1].strip())
-                    except (IndexError, ValueError) as e:
-                        raise BriefcaseCommandError(
-                            f"Unable to determine PID of {label} {app.app_name}."
-                        ) from e
-
-                # Start streaming logs for the app.
-                self.console.info(
-                    "Following simulator log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-
-                # Stream the app logs,
-                self._stream_app_logs(
-                    app,
-                    popen=simulator_log_popen,
-                    clean_filter=macOS_log_clean_filter,
-                    clean_output=True,
-                    stop_func=lambda: is_process_dead(app_pid),
-                    log_stream=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to launch {label} {app.app_name}."
-                ) from e
+            # Stream the app logs,
+            self._stream_app_logs(
+                app,
+                popen=simulator_log_popen,
+                clean_filter=macOS_log_clean_filter,
+                clean_output=True,
+                stop_func=lambda: is_process_dead(app_pid),
+                log_stream=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to launch {label} {app.app_name}."
+            ) from e
 
         # Preserve the device selection as state.
         return {"udid": udid}
-
-    @contextlib.contextmanager
-    def setup_env(
-        self,
-        env: dict[str, str] | None,
-        udid: str,
-    ):
-        """Context manager to set up the environment for the command."""
-        if env:
-            with self.console.wait_bar("Setting environment variables in simulator..."):
-                for env_key, env_value in env.items():
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "setenv",
-                            f"{env_key}",
-                            f"{env_value}",
-                        ]
-                    )
-
-            yield
-
-            with self.console.wait_bar(
-                "Removing environment variables from simulator..."
-            ):
-                for env_key in env.keys():
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "unsetenv",
-                            f"{env_key}",
-                        ]
-                    )
-        else:
-            yield  # no-op if no environment variables are set
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):

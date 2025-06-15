@@ -10,7 +10,6 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux import LinuxMixin
@@ -199,26 +198,9 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
 class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
     description = "Run a Linux Flatpak."
 
-    def remote_debugger_app_packages_path_mapping(
-        self, app: AppConfig
-    ) -> AppPackagesPathMappings:
-        """
-        Get the path mappings for the app packages.
-
-        :param app: The config object for the app
-        :returns: The path mappings for the app packages
-        """
-        app_packages_path = self.bundle_path(app) / "build/files/briefcase/app_packages"
-        return AppPackagesPathMappings(
-            sys_path_regex="app_packages$",
-            host_folder=f"{app_packages_path}",
-        )
-
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -228,11 +210,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(
-            app=app,
-            debugger_host=debugger_host,
-            debugger_port=debugger_port,
-        )
+        kwargs = self._prepare_app_kwargs(app=app)
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

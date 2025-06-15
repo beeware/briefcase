@@ -30,7 +30,7 @@ def test_start_app_launches_app(adb, capsys, passthrough):
 
     # Invoke start_app
     adb.start_app(
-        "com.example.sample.package", "com.example.sample.activity", passthrough, {}
+        "com.example.sample.package", "com.example.sample.activity", passthrough
     )
 
     # Validate call parameters.
@@ -54,45 +54,6 @@ def test_start_app_launches_app(adb, capsys, passthrough):
     assert "normal adb output" not in capsys.readouterr()
 
 
-@pytest.mark.parametrize(
-    "env",
-    [
-        {"PARAM1": "VALUE1"},
-        {"BRIEFCASE_DEBUGGER": '{"host": "localhost", "port": 1234}'},
-    ],
-)
-def test_start_app_launches_app_with_env(adb, capsys, env):
-    """Invoking `start_app()` calls `run()` with the appropriate parameters."""
-    # Mock out the run command on an adb instance
-    adb.run = MagicMock(return_value="example normal adb output")
-
-    # Invoke start_app
-    adb.start_app("com.example.sample.package", "com.example.sample.activity", [], env)
-
-    # Validate call parameters.
-    adb.run.assert_called_once_with(
-        "shell",
-        "am",
-        "start",
-        "-n",
-        "com.example.sample.package/com.example.sample.activity",
-        "-a",
-        "android.intent.action.MAIN",
-        "-c",
-        "android.intent.category.LAUNCHER",
-        "--es",
-        "org.beeware.ARGV",
-        "'[]'",
-        "--es",
-        "org.beeware.ENVIRON",
-        shlex.quote(json.dumps(env)),
-    )
-
-    # Validate that the normal output of the command was not printed (since there
-    # was no error).
-    assert "normal adb output" not in capsys.readouterr()
-
-
 def test_missing_activity(adb):
     """If the activity doesn't exist, the error is caught."""
     # Use real `adb` output from launching an activity that does not exist.
@@ -108,9 +69,7 @@ MainActivity} does not exist.
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        adb.start_app(
-            "com.example.sample.package", "com.example.sample.activity", [], {}
-        )
+        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
 
     assert "Activity class not found" in str(exc_info.value)
 
@@ -122,9 +81,7 @@ def test_invalid_device(adb):
     adb.run = MagicMock(side_effect=InvalidDeviceError("device", "exampleDevice"))
 
     with pytest.raises(InvalidDeviceError):
-        adb.start_app(
-            "com.example.sample.package", "com.example.sample.activity", [], {}
-        )
+        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])
 
 
 def test_unable_to_start(adb):
@@ -135,6 +92,4 @@ def test_unable_to_start(adb):
         BriefcaseCommandError,
         match=r"Unable to start com.example.sample.package/com.example.sample.activity on exampleDevice",
     ):
-        adb.start_app(
-            "com.example.sample.package", "com.example.sample.activity", [], {}
-        )
+        adb.start_app("com.example.sample.package", "com.example.sample.activity", [])

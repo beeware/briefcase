@@ -1514,9 +1514,7 @@ class ADB:
                 f"Unable to force stop app {package} on {self.device}"
             ) from e
 
-    def start_app(
-        self, package: str, activity: str, passthrough: list[str], env: dict[str, str]
-    ):
+    def start_app(self, package: str, activity: str, passthrough: list[str]):
         """Start an app, specified as a package name & activity name.
 
         If you have an APK file, and you are not sure of the package or activity
@@ -1545,15 +1543,6 @@ class ADB:
                 "--es",
                 "org.beeware.ARGV",
                 shlex.quote(json.dumps(passthrough)),  # Protect from Android's shell
-                *(
-                    [
-                        "--es",
-                        "org.beeware.ENVIRON",
-                        shlex.quote(json.dumps(env)),  # Protect from Android's shell
-                    ]
-                    if env
-                    else []
-                ),
             )
 
             # `adb shell am start` always exits with status zero. We look for error
@@ -1638,86 +1627,6 @@ Activity class not found while starting app.
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Error starting ADB logcat.") from e
-
-    def forward(self, host_port: int, device_port: int):
-        """Use the forward command to set up arbitrary port forwarding, which
-        forwards requests on a specific host port to a different port on a device.
-
-        :param host_port: The port on the host that should be forwarded to the device
-        :param device_port: The port on the device
-        """
-        try:
-            self.tools.subprocess.check_output(
-                [
-                    self.tools.android_sdk.adb_path,
-                    "-s",
-                    self.device,
-                    "forward",
-                    f"tcp:{host_port}",
-                    f"tcp:{device_port}",
-                ],
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting 'adb forward'.") from e
-
-    def forward_remove(self, host_port: int):
-        """Remove forwarded port.
-
-        :param host_port: The port on the host that should be removed
-        """
-        try:
-            self.tools.subprocess.check_output(
-                [
-                    self.tools.android_sdk.adb_path,
-                    "-s",
-                    self.device,
-                    "forward",
-                    "--remove",
-                    f"tcp:{host_port}",
-                ],
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting 'adb forward --remove'.") from e
-
-    def reverse(self, device_port: int, host_port: int):
-        """Use the reverse command to set up arbitrary port forwarding, which
-        forwards requests on a specific device port to a different port on the host.
-
-        :param device_port: The port on the device that should be forwarded to the host
-        :param host_port: The port on the host
-        """
-        try:
-            self.tools.subprocess.check_output(
-                [
-                    self.tools.android_sdk.adb_path,
-                    "-s",
-                    self.device,
-                    "reverse",
-                    f"tcp:{device_port}",
-                    f"tcp:{host_port}",
-                ],
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting 'adb reverse'.") from e
-
-    def reverse_remove(self, device_port: int):
-        """Remove reversed port.
-
-        :param device_port: The port on the device that should be removed
-        """
-        try:
-            self.tools.subprocess.check_output(
-                [
-                    self.tools.android_sdk.adb_path,
-                    "-s",
-                    self.device,
-                    "reverse",
-                    "--remove",
-                    f"tcp:{device_port}",
-                ],
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError("Error starting 'adb reverse --remove'.") from e
 
     def pidof(self, package: str, **kwargs) -> str | None:
         """Obtain the PID of a running app by package name.

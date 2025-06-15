@@ -136,6 +136,8 @@ class BaseCommand(ABC):
     output_format: str
     # supports passing extra command line arguments to subprocess
     allows_passthrough = False
+    # supports remote debugging
+    supports_debugger = False
     # if specified for a platform, then any template for that platform must declare
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
@@ -671,6 +673,11 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
+        if not self.supports_debugger and (debugger_name is not None):
+            raise BriefcaseCommandError(
+                f"The {self.command} command for the {self.platform} {self.output_format} format does not support debugging."
+            )
+
         if debugger_name and debugger_name != "":
             debugger = get_debugger(debugger_name)
             app.debugger = debugger

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import errno
 import subprocess
 import sys
@@ -240,7 +238,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 class HTTPHandler(SimpleHTTPRequestHandler):
     """Convert any HTTP request into a path request on the static content folder."""
 
-    server: LocalHTTPServer
+    server: "LocalHTTPServer"
 
     def translate_path(self, path):
         return str(self.server.base_path / path[1:])
@@ -312,8 +310,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         host,
         port,
@@ -330,10 +326,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         """
         if app.test_mode:
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
-        if app.debugger:
-            raise BriefcaseCommandError(
-                "Briefcase can't run web apps with an debugger."
-            )
 
         self.console.info("Starting web server...", prefix=app.app_name)
 
