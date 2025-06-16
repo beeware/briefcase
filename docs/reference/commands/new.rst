@@ -56,8 +56,8 @@ Third-party Bootstraps
 When you run new project wizard, you are asked to select a GUI toolkit. Briefcase
 includes bootstraps for `Toga <https://toga.readthedocs.io>`__ (BeeWare's cross-platform
 GUI framework), `PySide6 <https://wiki.qt.io/Qt_for_Python>`__ (Python bindings for the
-Qt GUI toolkit) and `Pygame <https://www.pygame.org/news>`__ (a common Python game
-development toolkit), as well as an "empty" bootstrap that doesn't include any GUI code.
+Qt GUI toolkit), `Pygame <https://www.pygame.org/news>`__ (a common Python game
+development toolkit), and `Slint <https://docs.slint.dev/latest/docs/python/slint>`, as well as an "empty" bootstrap that doesn't include any GUI code.
 However, Briefcase provides a :ref:`plug-in interface <bootstrap-interface>` that allows
 GUI toolkits to provide a their own bootstrap implementation.
 

@@ -197,5 +197,5 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        framework: [ "toga", "pyside6", "pygame", "console" ]
+        framework: [ "toga", "pyside6", "pygame", "console", "slint" ]
         runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
