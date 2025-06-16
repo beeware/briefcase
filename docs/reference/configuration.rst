@@ -355,8 +355,8 @@ If ``package_path`` is defined, ``sources`` must *not* be defined.
 
 .. admonition:: Only for external apps
 
-    This setting is only required if you're using Briefcase to :doc:`package an external
-    application </how-to/external-apps>`. It is not required if you are using Briefcase
+    This setting is only allowed if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not allowed if you are using Briefcase
     for the entire app creation process.
 
 The path to the binary that will be executed as part of the installed app. This is used
