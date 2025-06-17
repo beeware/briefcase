@@ -17,8 +17,8 @@ def first_app_templated(first_app_config, tmp_path):
 @pytest.fixture
 def external_first_app(first_app_config, tmp_path):
     first_app_config.sources = None
-    first_app_config.package_path = tmp_path / "base_path/external/src"
-    first_app_config.package_executable_path = "internal/app.exe"
+    first_app_config.external_package_path = tmp_path / "base_path/external/src"
+    first_app_config.external_package_executable_path = "internal/app.exe"
 
     # Create the binary
     create_file(

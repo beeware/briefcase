@@ -582,10 +582,10 @@ def test_cascading_distribution_properties(create_command, first_app_config):
 
 
 def test_external_docker(create_command, first_app_config):
-    """An app cannot be finalized inside docker."""
+    """An external app cannot be finalized inside Docker."""
     # Make the app external
     first_app_config.sources = None
-    first_app_config.package_path = "path/to/package"
+    first_app_config.external_package_path = "path/to/package"
 
     # Build the app on a specific target
     create_command.target_image = "somevendor:surprising"
@@ -604,6 +604,9 @@ def test_external_docker(create_command, first_app_config):
     # Finalize the app config - this will raise an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase can't currently package external apps as Linux system packages.",
+        match=(
+            r"Briefcase can't currently use Docker to package "
+            r"external apps as Linux system packages."
+        ),
     ):
         create_command.finalize_app_config(first_app_config)

@@ -282,7 +282,7 @@ def test_update_external_app(update_command, first_app):
 
     # Make first_app an external app
     first_app.sources = None
-    first_app.package_path = "path/to/package"
+    first_app.external_package_path = "path/to/package"
 
     # Configure no command line options
     options, _ = update_command.parse_options([])

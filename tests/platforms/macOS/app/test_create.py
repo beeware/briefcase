@@ -317,12 +317,12 @@ def test_generate_app_template_formal_name_mismatch(
 ):
     """If the app's formal name doesn't match the external package path, an error is
     raised."""
-    first_app.package_path = "output/Unexpected Name.app"
+    first_app.external_package_path = "output/Unexpected Name.app"
 
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"The external app bundle referenced by package_path \(Unexpected Name.app\)\n"
+            r"The app bundle referenced by external_package_path \(Unexpected Name.app\)\n"
             r"does not match the formal name of the app \('First App'\)."
         ),
     ):

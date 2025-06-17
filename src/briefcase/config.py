@@ -355,8 +355,8 @@ class AppConfig(BaseConfig):
         long_description=None,
         console_app=False,
         requirement_installer_args: list[str] | None = None,
-        package_path: str | None = None,
-        package_executable_path: str | None = None,
+        external_package_path: str | None = None,
+        external_package_executable_path: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -389,8 +389,8 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
-        self.package_path = package_path
-        self.package_executable_path = package_executable_path
+        self.external_package_path = external_package_path
+        self.external_package_executable_path = external_package_executable_path
 
         self.test_mode: bool = False
 

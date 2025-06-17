@@ -936,9 +936,9 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        # External apps (apps that define `package_path`) need the packaging metadata
+        # External apps (apps that define 'external_package_path') need the packaging metadata
         # from the template, but not the app content, dependencies, support package etc.
-        if app.package_path:
+        if app.external_package_path:
             self.console.info("Removing generated app content...", prefix=app.app_name)
             self.tools.shutil.rmtree(self.bundle_package_path(app))
 

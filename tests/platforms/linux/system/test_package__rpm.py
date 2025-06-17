@@ -80,7 +80,7 @@ def first_app_rpm(first_app, tmp_path):
 def external_first_app_rpm(first_app_rpm, tmp_path):
     # Make the app external
     first_app_rpm.sources = None
-    first_app_rpm.package_path = tmp_path / "base_path/external/package-rpm"
+    first_app_rpm.external_package_path = tmp_path / "base_path/external/package-rpm"
 
     # Move the generated first app to the external location
     (tmp_path / "base_path/external").mkdir()

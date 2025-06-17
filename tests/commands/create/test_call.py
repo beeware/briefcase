@@ -194,7 +194,7 @@ def test_create_external(tracking_create_command, tmp_path):
     """The create command can be called on an external app."""
     app = tracking_create_command.apps["first"]
     app.sources = None
-    app.package_path = "path/to/package"
+    app.external_package_path = "path/to/package"
 
     tracking_create_command(app=app)
 

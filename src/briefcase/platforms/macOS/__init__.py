@@ -164,7 +164,8 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         # verification occurs after the template is generated.
         if self.package_path(app).name != f"{app.formal_name}.app":
             raise BriefcaseCommandError(
-                f"The external app bundle referenced by package_path ({self.package_path(app).name})\n"
+                "The app bundle referenced by external_package_path "
+                f"({self.package_path(app).name})\n"
                 f"does not match the formal name of the app ({app.formal_name!r}).\n"
             )
 

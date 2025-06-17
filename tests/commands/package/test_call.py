@@ -924,7 +924,7 @@ def test_package_external_not_supported(package_command, first_app, tmp_path):
     package_command.apps = {
         "first": first_app,
     }
-    first_app.package_path = "path/to/package"
+    first_app.external_package_path = "path/to/package"
     first_app.sources = None
 
     # Configure no command line arguments
@@ -960,7 +960,7 @@ def test_package_external_app(package_command, first_app, tmp_path):
     package_command.apps = {
         "first": first_app,
     }
-    first_app.package_path = "path/to/package"
+    first_app.external_package_path = "path/to/package"
     first_app.sources = None
 
     # Configure no command line arguments
@@ -1022,7 +1022,7 @@ def test_create_before_package_external_app(
     package_command.apps = {
         "first": first_app_config,
     }
-    first_app_config.package_path = "path/to/package"
+    first_app_config.external_package_path = "path/to/package"
     first_app_config.sources = None
 
     # Configure no command line arguments

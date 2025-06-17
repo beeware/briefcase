@@ -155,9 +155,10 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
         else:
-            if app.package_path:
+            if app.external_package_path:
                 raise BriefcaseCommandError(
-                    "Briefcase can't currently package external apps as Linux system packages."
+                    "Briefcase can't currently use Docker to package "
+                    "external apps as Linux system packages."
                 )
 
             # If we're building for Arch, and Docker does user mapping, we can't build,

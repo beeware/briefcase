@@ -318,10 +318,10 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
-        if app.package_path:
+        if app.external_package_path:
             raise BriefcaseCommandError(
                 f"{app.app_name!r} is declared as an external app. External apps "
-                "(apps defining `package_path`) cannot be run."
+                "(apps defining 'external_package_path') cannot be run."
             )
 
         state = self.run_app(

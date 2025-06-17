@@ -25,7 +25,8 @@ def test_package_path(base_command, my_app, tmp_path):
 
 
 def test_external_package_path(base_command, my_app, tmp_path):
-    my_app.package_path = "path/to/package"
+    my_app.external_package_path = "path/to/package"
+
     package_path = base_command.package_path(my_app)
     bundle_package_path = base_command.bundle_package_path(my_app)
 
@@ -45,7 +46,8 @@ def test_package_executable_path(base_command, my_app, tmp_path):
 
 
 def test_external_package_executable_path(base_command, my_app, tmp_path):
-    my_app.package_executable_path = "alternate/the_app.exe"
+    my_app.external_package_executable_path = "alternate/the_app.exe"
+
     package_executable_path = base_command.package_executable_path(my_app)
     bundle_package_executable_path = base_command.bundle_package_executable_path(my_app)
 

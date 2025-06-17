@@ -82,7 +82,7 @@ class PackageCommand(BaseCommand):
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
 
-        if app.package_path:
+        if app.external_package_path:
             if not self.supports_external_packaging:
                 raise BriefcaseCommandError(
                     f"Briefcase cannot package external {self.platform} apps "

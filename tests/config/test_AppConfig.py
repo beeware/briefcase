@@ -24,8 +24,8 @@ def test_minimal_AppConfig():
     assert config.description == "A simple app"
     assert config.requires is None
     assert config.sources == ["src/myapp", "somewhere/else/interesting", "local_app"]
-    assert config.package_path is None
-    assert config.package_executable_path is None
+    assert config.external_package_path is None
+    assert config.external_package_executable_path is None
 
     # Derived properties have been set.
     assert config.bundle_name == "myapp"
@@ -56,8 +56,8 @@ def test_minimal_external_AppConfig():
         bundle="org.beeware",
         description="A simple app",
         license={"file": "LICENSE"},
-        package_path="path/to/package",
-        package_executable_path="internal/app.exe",
+        external_package_path="path/to/package",
+        external_package_executable_path="internal/app.exe",
     )
 
     # The basic properties have been set.
@@ -67,8 +67,8 @@ def test_minimal_external_AppConfig():
     assert config.description == "A simple app"
     assert config.requires is None
     assert config.sources is None
-    assert config.package_path == "path/to/package"
-    assert config.package_executable_path == "internal/app.exe"
+    assert config.external_package_path == "path/to/package"
+    assert config.external_package_executable_path == "internal/app.exe"
 
     # Derived properties have been set.
     assert config.bundle_name == "myapp"

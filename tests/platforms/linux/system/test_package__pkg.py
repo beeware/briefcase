@@ -80,7 +80,7 @@ def first_app_pkg(first_app, tmp_path):
 def external_first_app_pkg(first_app_pkg, tmp_path):
     # Make the app external
     first_app_pkg.sources = None
-    first_app_pkg.package_path = tmp_path / "base_path/external/package-pkg"
+    first_app_pkg.external_package_path = tmp_path / "base_path/external/package-pkg"
 
     # Move the generated first app to the external location
     (tmp_path / "base_path/external").mkdir()

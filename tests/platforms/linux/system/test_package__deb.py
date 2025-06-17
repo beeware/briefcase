@@ -60,7 +60,7 @@ def first_app_deb(first_app):
 def external_first_app_deb(first_app_deb, tmp_path):
     # Make the app external
     first_app_deb.sources = None
-    first_app_deb.package_path = tmp_path / "base_path/external/package-deb"
+    first_app_deb.external_package_path = tmp_path / "base_path/external/package-deb"
 
     # Move the generated first app to the external location
     (tmp_path / "base_path/external").mkdir()
