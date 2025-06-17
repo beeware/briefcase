@@ -13,7 +13,7 @@ basics of Briefcase and have completed the `BeeWare Tutorial
 We'll cover:
 
 1. How selecting "Console" changes your project configuration
-2. The ``console_app`` flag in ``pyproject.toml``
+2. The :attr:`console_app` flag in ``pyproject.toml``
 3. How Briefcase handles command-line arguments
 4. Operational differences in how console apps run and display output
 5. Packaging differences specific to console apps (e.g., ``.pkg`` bundles on macOS)
