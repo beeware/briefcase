@@ -158,6 +158,16 @@ class macOSCreateMixin(AppPackagesMergeMixin):
 
         :param app: The config object for the app
         """
+        # Before we generate the app template, make sure the package path and formal
+        # name match. This will always be the case for internal apps; they might not be
+        # aligned for external apps. We can't do this in verify, because app
+        # verification occurs after the template is generated.
+        if self.package_path(app).name != f"{app.formal_name}.app":
+            raise BriefcaseCommandError(
+                f"The external app bundle referenced by package_path ({self.package_path(app).name})\n"
+                f"does not match the formal name of the app ({app.formal_name!r}).\n"
+            )
+
         super().generate_app_template(app=app)
         # If we discover we're on iCloud during app creation, we can clean up the app
         # folder. This *may* return a false negative (i.e., not accurately detect that

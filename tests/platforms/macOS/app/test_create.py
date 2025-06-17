@@ -312,6 +312,29 @@ def test_generate_app_template(create_command, first_app, tmp_path):
     create_command.verify_not_on_icloud.assert_called_once_with(first_app, cleanup=True)
 
 
+def test_generate_app_template_formal_name_mismatch(
+    create_command, first_app, tmp_path
+):
+    """If the app's formal name doesn't match the external package path, an error is
+    raised."""
+    first_app.package_path = "output/Unexpected Name.app"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"The external app bundle referenced by package_path \(Unexpected Name.app\)\n"
+            r"does not match the formal name of the app \('First App'\)."
+        ),
+    ):
+        create_command.generate_app_template(first_app)
+
+    # The template was not generated.
+    create_command.generate_template.assert_not_called()
+
+    # iCloud was not verified either.
+    create_command.verify_not_on_icloud.assert_not_called()
+
+
 def test_install_app_resources(create_command, first_app_templated, tmp_path):
     """The app bundle's modification time is updated when app resources are
     installed."""

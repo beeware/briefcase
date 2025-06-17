@@ -28,10 +28,10 @@ macOS
 ~~~~~
 
 On macOS, the ``package_path`` should be the location of the ``.app`` bundle that you
-want to distribute to users. It is assumed that the configured ``formal_name`` is the
-name of the app bundle (e.g., ``Hello World.app`` should use a formal name of ``Hello
-World``); the ``app_name`` will be used for the shortcut installed in
-``/usr/local/bin`` when creating a :doc:`console app </how-to/cli-apps>`.
+want to distribute to users. The configured ``formal_name`` must match the name of the
+app bundle (e.g., ``Hello World.app`` should use a formal name of ``Hello World``); the
+``app_name`` will be used for the shortcut installed in ``/usr/local/bin`` when creating
+a :doc:`console app </how-to/cli-apps>`.
 
 Briefcase will sign and notarize the app bundle, as well as any DMG or PKG file that is
 produced.
