@@ -76,6 +76,21 @@ def first_app_rpm(first_app, tmp_path):
     return first_app
 
 
+@pytest.fixture
+def external_first_app_rpm(first_app_rpm, tmp_path):
+    # Make the app external
+    first_app_rpm.sources = None
+    first_app_rpm.external_package_path = tmp_path / "base_path/external/package-rpm"
+
+    # Move the generated first app to the external location
+    (tmp_path / "base_path/external").mkdir()
+    shutil.move(
+        tmp_path / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1",
+        tmp_path / "base_path/external/package-rpm",
+    )
+    return first_app_rpm
+
+
 def test_verify_no_docker(package_command, first_app_rpm, monkeypatch):
     """If not using docker, existence of rpmbuild is verified."""
     # Mock the existence of rpmbuild
@@ -656,3 +671,140 @@ def test_no_changelog(package_command, first_app_rpm, tmp_path):
 
     # The deb wasn't built, so it wasn't moved.
     package_command.tools.shutil.move.assert_not_called()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
+def test_external_rpm_package(package_command, external_first_app_rpm, tmp_path):
+    """An external app can be published as an RPM."""
+    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+
+    # Package the app
+    package_command.package_app(external_first_app_rpm)
+
+    # rpmbuild layout has been generated
+    assert (bundle_path / "rpmbuild/BUILD").exists()
+    assert (bundle_path / "rpmbuild/BUILDROOT").exists()
+    assert (bundle_path / "rpmbuild/RPMS").exists()
+    assert (bundle_path / "rpmbuild/SOURCES").exists()
+    assert (bundle_path / "rpmbuild/SRPMS").exists()
+    assert (bundle_path / "rpmbuild/SPECS").exists()
+
+    # The spec file is written
+    assert (bundle_path / "rpmbuild/SPECS/first-app.spec").exists()
+    with (bundle_path / "rpmbuild/SPECS/first-app.spec").open(encoding="utf-8") as f:
+        assert f.read() == "\n".join(
+            [
+                "%global __brp_mangle_shebangs %{nil}",
+                "%global __brp_strip %{nil}",
+                "%global __brp_strip_static_archive %{nil}",
+                "%global __brp_strip_comment_note %{nil}",
+                "%global __brp_check_rpaths %{nil}",
+                "%global __requires_exclude_from ^%{_libdir}/first-app/.*$",
+                "%global __provides_exclude_from ^%{_libdir}/first-app/.*$",
+                "%global _enable_debug_package 0",
+                "%global debug_package %{nil}",
+                "",
+                "Name:           first-app",
+                "Version:        0.0.1",
+                "Release:        1%{?dist}",
+                "Summary:        The first simple app \\ demonstration",
+                "",
+                "License:        Unknown",
+                "URL:            https://example.com/first-app",
+                "Source0:        %{name}-%{version}.tar.gz",
+                "",
+                "Requires:       python3",
+                "",
+                "ExclusiveArch:  wonky",
+                "",
+                "%description",
+                "Long description",
+                "for the app",
+                "",
+                "%prep",
+                "%autosetup",
+                "",
+                "%build",
+                "",
+                "%install",
+                "cp -r usr %{buildroot}/usr",
+                "",
+                "%files",
+                '"/usr/bin/first-app"',
+                '%dir "/usr/lib/first-app"',
+                '%dir "/usr/lib/first-app/app"',
+                '"/usr/lib/first-app/app/support.so"',
+                '"/usr/lib/first-app/app/support_same_perms.so"',
+                '%dir "/usr/lib/first-app/app_packages"',
+                '%dir "/usr/lib/first-app/app_packages/firstlib"',
+                '"/usr/lib/first-app/app_packages/firstlib/first.so"',
+                '"/usr/lib/first-app/app_packages/firstlib/first.so.1.0"',
+                '%dir "/usr/lib/first-app/app_packages/secondlib"',
+                '"/usr/lib/first-app/app_packages/secondlib/second_a.so"',
+                '"/usr/lib/first-app/app_packages/secondlib/second_b.so"',
+                '%dir "/usr/share/doc/first-app"',
+                '"/usr/share/doc/first-app/UserManual"',
+                '"/usr/share/doc/first-app/license"',
+                '"/usr/share/man/man1/first-app.1.gz"',
+                "",
+                "%changelog",
+                "First App Changelog",
+            ]
+        )
+
+    # A source tarball was created with the right content
+    # In particular, the top level path is `first-app-0.0.1`, not `package-rpm`
+    archive_file = bundle_path / "rpmbuild/SOURCES/first-app-0.0.1.tar.gz"
+    assert archive_file.exists()
+    with tarfile.open(archive_file, "r:gz") as archive:
+        assert sorted(archive.getnames()) == [
+            "first-app-0.0.1",
+            "first-app-0.0.1/usr",
+            "first-app-0.0.1/usr/bin",
+            "first-app-0.0.1/usr/bin/first-app",
+            "first-app-0.0.1/usr/lib",
+            "first-app-0.0.1/usr/lib/first-app",
+            "first-app-0.0.1/usr/lib/first-app/app",
+            "first-app-0.0.1/usr/lib/first-app/app/support.so",
+            "first-app-0.0.1/usr/lib/first-app/app/support_same_perms.so",
+            "first-app-0.0.1/usr/lib/first-app/app_packages",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/firstlib",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/firstlib/first.so",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/firstlib/first.so.1.0",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/secondlib",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/secondlib/second_a.so",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/secondlib/second_b.so",
+            "first-app-0.0.1/usr/share",
+            "first-app-0.0.1/usr/share/doc",
+            "first-app-0.0.1/usr/share/doc/first-app",
+            "first-app-0.0.1/usr/share/doc/first-app/UserManual",
+            "first-app-0.0.1/usr/share/doc/first-app/license",
+            "first-app-0.0.1/usr/share/man",
+            "first-app-0.0.1/usr/share/man/man1",
+            "first-app-0.0.1/usr/share/man/man1/first-app.1.gz",
+        ]
+
+    # rpmbuild was invoked
+    package_command.tools.app_tools[
+        external_first_app_rpm
+    ].app_context.run.assert_called_once_with(
+        [
+            "rpmbuild",
+            "-bb",
+            "--define",
+            f"_topdir {bundle_path / 'rpmbuild'}",
+            "./rpmbuild/SPECS/first-app.spec",
+        ],
+        check=True,
+        cwd=bundle_path,
+    )
+
+    # The rpm was moved into the final location
+    package_command.tools.shutil.move.assert_called_once_with(
+        bundle_path
+        / "rpmbuild"
+        / "RPMS"
+        / "wonky"
+        / "first-app-0.0.1-1.fcXX.wonky.rpm",
+        tmp_path / "base_path/dist/first-app-0.0.1-1.fcXX.wonky.rpm",
+    )

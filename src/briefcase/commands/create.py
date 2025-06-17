@@ -918,53 +918,72 @@ class CreateCommand(BaseCommand):
         if bundle_path.exists():
             self.console.info()
             confirm = self.console.input_boolean(
-                f"Application {app.app_name!r} already exists; overwrite", default=False
+                f"The directory {self.bundle_path(app).relative_to(self.base_path)} "
+                "already exists; overwrite",
+                default=False,
             )
             if not confirm:
                 self.console.error(
-                    f"Aborting creation of app {app.app_name!r}; existing application will not be overwritten."
+                    f"Aborting creation of app {app.app_name!r}; "
+                    "existing application template will not be overwritten."
                 )
                 return
-            self.console.info("Removing old application bundle...", prefix=app.app_name)
+            self.console.info(
+                "Removing old application template...", prefix=app.app_name
+            )
             self.tools.shutil.rmtree(bundle_path)
 
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        self.console.info("Installing support package...", prefix=app.app_name)
-        self.install_app_support_package(app=app)
+        # External apps (apps that define 'external_package_path') need the packaging metadata
+        # from the template, but not the app content, dependencies, support package etc.
+        if app.external_package_path:
+            self.console.info("Removing generated app content...", prefix=app.app_name)
+            self.tools.shutil.rmtree(self.bundle_package_path(app))
 
-        try:
-            # If the platform uses a stub binary, the template will define a binary
-            # revision. If this template configuration item doesn't exist, no stub
-            # binary is required.
-            self.stub_binary_revision(app)
-        except KeyError:
-            pass
+            self.console.info(
+                "Created configuration for an externally packaged app "
+                f"in {bundle_path.relative_to(self.base_path)}",
+                prefix=app.app_name,
+            )
         else:
-            self.console.info("Installing stub binary...", prefix=app.app_name)
-            self.install_stub_binary(app=app)
+            self.console.info("Installing support package...", prefix=app.app_name)
+            self.install_app_support_package(app=app)
 
-        # Verify the app after the app template and support package
-        # are in place since the app tools may be dependent on them.
-        self.verify_app(app)
+            try:
+                # If the platform uses a stub binary, the template will define a binary
+                # revision. If this template configuration item doesn't exist, no stub
+                # binary is required.
+                self.stub_binary_revision(app)
+            except KeyError:
+                pass
+            else:
+                self.console.info("Installing stub binary...", prefix=app.app_name)
+                self.install_stub_binary(app=app)
 
-        self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app)
+            # Verify the app after the app template and support package
+            # are in place since the app tools may be dependent on them.
+            self.verify_app(app)
 
-        self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app)
+            self.console.info("Installing application code...", prefix=app.app_name)
+            self.install_app_code(app=app)
 
-        self.console.info("Installing application resources...", prefix=app.app_name)
-        self.install_app_resources(app=app)
+            self.console.info("Installing requirements...", prefix=app.app_name)
+            self.install_app_requirements(app=app)
 
-        self.console.info("Removing unneeded app content...", prefix=app.app_name)
-        self.cleanup_app_content(app=app)
+            self.console.info(
+                "Installing application resources...", prefix=app.app_name
+            )
+            self.install_app_resources(app=app)
 
-        self.console.info(
-            f"Created {bundle_path.relative_to(self.base_path)}",
-            prefix=app.app_name,
-        )
+            self.console.info("Removing unneeded app content...", prefix=app.app_name)
+            self.cleanup_app_content(app=app)
+
+            self.console.info(
+                f"Created {bundle_path.relative_to(self.base_path)}",
+                prefix=app.app_name,
+            )
 
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.

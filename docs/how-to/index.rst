@@ -17,7 +17,8 @@ stand alone.
    access-packaging-metadata
    ci
    cli-apps
+   external-apps
    publishing/index
-   upgrade-from-v0.2
    contribute/index
    internal/index
+   upgrade-from-v0.2

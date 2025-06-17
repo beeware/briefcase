@@ -57,6 +57,10 @@ def test_create(tracking_create_command, tmp_path):
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     assert (tmp_path / "base_path/build/second/tester/dummy/new").exists()
 
+    # This includes the package path
+    assert (tmp_path / "base_path/build/first/tester/dummy/src/package").exists()
+    assert (tmp_path / "base_path/build/second/tester/dummy/src/package").exists()
+
 
 def test_create_single(tracking_create_command, tmp_path):
     """The create command can be called to create a single app from the config."""
@@ -84,6 +88,10 @@ def test_create_single(tracking_create_command, tmp_path):
     # New app content has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     assert not (tmp_path / "base_path/build/second/tester/dummy/new").exists()
+
+    # This includes the package path
+    assert (tmp_path / "base_path/build/first/tester/dummy/src/package").exists()
+    assert not (tmp_path / "base_path/build/second/tester/dummy/src/package").exists()
 
 
 # Parametrize both --apps/-a flags
@@ -180,3 +188,30 @@ def test_create_app_all_flags(tracking_create_command):
         ("resources", "first"),
         ("cleanup", "first"),
     ]
+
+
+def test_create_external(tracking_create_command, tmp_path):
+    """The create command can be called on an external app."""
+    app = tracking_create_command.apps["first"]
+    app.sources = None
+    app.external_package_path = "path/to/package"
+
+    tracking_create_command(app=app)
+
+    # The right sequence of things will be done.
+    # This means `generate`, but nothing else
+    assert tracking_create_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App configs have been finalized
+        ("finalize-app-config", "first"),
+        # Create the first app
+        ("generate", "first"),
+    ]
+
+    # New app content has been created
+    assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
+    # ... but the package path has been removed
+    assert not (tmp_path / "base_path/build/first/tester/dummy/src/package").exists()

@@ -56,6 +56,12 @@ class BuildCommand(BaseCommand):
         :param update_stub: Should the stub binary be updated?
         :param no_update: Should automated updates be disabled?
         """
+        if app.external_package_path:
+            raise BriefcaseCommandError(
+                f"{app.app_name!r} is declared as an external app. External apps "
+                "(apps defining 'external_package_path') cannot be built."
+            )
+
         if not self.bundle_path(app).exists():
             state = self.create_command(app, **options)
         elif (
