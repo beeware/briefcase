@@ -127,6 +127,7 @@ def test_default_install_scope(create_command, first_app_config, tmp_path):
     context = create_command.output_format_template_context(first_app_config)
 
     assert context == {
+        "binary_path": "First App.exe",
         "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
         "version_triple": "0.0.1",
         "install_scope": None,
@@ -140,6 +141,7 @@ def test_per_machine_install_scope(create_command, first_app_config, tmp_path):
     context = create_command.output_format_template_context(first_app_config)
 
     assert context == {
+        "binary_path": "First App.exe",
         "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
         "version_triple": "0.0.1",
         "install_scope": "perMachine",
@@ -153,6 +155,7 @@ def test_per_user_install_scope(create_command, first_app_config, tmp_path):
     context = create_command.output_format_template_context(first_app_config)
 
     assert context == {
+        "binary_path": "First App.exe",
         "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
         "version_triple": "0.0.1",
         "install_scope": "perUser",

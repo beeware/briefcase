@@ -18,13 +18,17 @@ class WindowsMixin:
     supported_host_os = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
 
-    def binary_path(self, app):
+    def bundle_package_executable_path(self, app):
         if app.console_app:
-            return self.bundle_path(app) / self.packaging_root / f"{app.app_name}.exe"
+            return f"{app.app_name}.exe"
         else:
-            return (
-                self.bundle_path(app) / self.packaging_root / f"{app.formal_name}.exe"
-            )
+            return f"{app.formal_name}.exe"
+
+    def bundle_package_path(self, app):
+        return self.bundle_path(app) / self.packaging_root
+
+    def binary_path(self, app):
+        return self.package_path(app) / self.package_executable_path(app)
 
     def distribution_path(self, app):
         suffix = "zip" if app.packaging_format == "zip" else "msi"
@@ -99,6 +103,7 @@ class WindowsCreateCommand(CreateCommand):
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
+            "binary_path": self.package_executable_path(app),
         }
 
     def _cleanup_app_support_package(self, support_path):
@@ -381,7 +386,7 @@ class WindowsPackageCommand(PackageCommand):
                     [
                         self.tools.wix.heat_exe,
                         "dir",
-                        self.packaging_root,
+                        self.package_path(app),
                         "-nologo",  # Don't display startup text
                         "-gg",  # Generate GUIDs
                         "-sfrag",  # Suppress fragment generation for directories
@@ -418,7 +423,7 @@ class WindowsPackageCommand(PackageCommand):
                         "WixUIExtension",
                         "-arch",
                         "x64",
-                        f"-dSourceDir={self.packaging_root}",
+                        f"-dSourceDir={self.package_path(app)}",
                         f"{app.app_name}.wxs",
                         f"{app.app_name}-manifest.wxs",
                     ],
@@ -457,7 +462,7 @@ class WindowsPackageCommand(PackageCommand):
 
         self.console.info("Building zip file...", prefix=app.app_name)
         with self.console.wait_bar("Packing..."):
-            source = self.bundle_path(app) / self.packaging_root  # /src
+            source = self.package_path(app)
             zip_root = f"{app.formal_name}-{app.version}"
 
             with ZipFile(self.distribution_path(app), "w", ZIP_DEFLATED) as archive:
