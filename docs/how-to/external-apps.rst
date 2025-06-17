@@ -20,15 +20,15 @@ Configuring an external app
 ---------------------------
 
 The process of configuring an external app is mostly the same as a normal Briefcase app,
-with one important difference: you do *not* define a ``sources`` entry, but instead
-define a ``external_package_path``. The ``external_package_path`` should be the content
+with one important difference: you do *not* define a :attr:`sources` entry, but instead
+define an :attr:`external_package_path`. This should be the content
 produced by your build tool that you want to distribute to end users.
 
 macOS
 ~~~~~
 
-On macOS, the ``external_package_path`` should be the location of the ``.app`` bundle
-that you want to distribute to users. The configured ``formal_name`` must match the name
+On macOS, the :attr:`external_package_path` should be the location of the ``.app`` bundle
+that you want to distribute to users. The configured :attr:`formal_name` must match the name
 of the app bundle (e.g., ``Hello World.app`` should use a formal name of ``Hello
 World``); the ``app_name`` will be used for the shortcut installed in ``/usr/local/bin``
 when creating a :doc:`console app </how-to/cli-apps>`.
@@ -42,28 +42,28 @@ standalone binaries.
 Linux
 ~~~~~
 
-On Linux, the ``external_package_path`` should be a path that contains the root of a installation
-tree to be packaged. If you define a ``external_package_path`` of ``external``, it is assumed
+On Linux, the :attr:`external_package_path` should be a path that contains the root of a installation
+tree to be packaged. If you define an ``external_package_path`` of ``external``, it is assumed
 that ``external/usr/bin/<app_name>`` will be the executable for your application, which will
 be installed as ``/usr/bin/<app_name>``. Any other content that should be installed as
 part of your app should be included in the tree contained under ``external``.
 
-Although it is not possible to specify ``requires`` for external applications, external
-Linux applications *must* define ``system_runtime_requires``. These requirements are
+Although it is not possible to specify :attr:`requires` for external applications, external
+Linux applications *must* define :attr:`system_runtime_requires`. These requirements are
 used to define system-level requirements in the generated system packages.
 
 Windows
 ~~~~~~~
 
-On Windows, the ``external_package_path`` should be the directory that contains all the
+On Windows, the :attr:`external_package_path` should be the directory that contains all the
 content to be installed into the end-user's Program Files directory. By default, it is
 assumed that the executable used to launch the app is named
 ``<external_package_path>/<formal_name>.exe`` (or
 ``<external_package_path>/<app_name>.exe`` for a :doc:`console app </how-to/cli-apps>`).
 If this is not the name or path to your executable, you can define
-``external_package_executable_path`` to define the path inside ``external_package_path``
-to your executable binary. For example, a ``external_package_path`` value of
-``external``, and a ``external_package_executable_path`` value of
+:attr:`external_package_executable_path` to define the path inside ``external_package_path``
+to your executable binary. For example, an ``external_package_path`` value of
+``external``, and an ``external_package_executable_path`` value of
 ``somewhere/myapp.exe``, would define that ``external/somewhere/myapp.exe`` is the
 executable that should be installed as the application shortcut.
 
@@ -85,7 +85,7 @@ an entitlement for signing purposes, you should *not* modify the templated
 <macos-entitlement>` in your ``pyproject.toml``.
 
 If Briefcase's configuration options are not sufficient for your requirements, you can
-either fork the template used by Briefcase and use the ``template`` option to point at
+either fork the template used by Briefcase and use the :attr:`template` option to point at
 your custom template; or you can :doc:`submit a pull request to Briefcase
 </how-to/contribute/code>` to support your customization use case.
 
