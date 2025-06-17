@@ -277,7 +277,7 @@ If ``external_package_path`` is defined, ``sources`` must *not* be defined.
     application </how-to/external-apps>`. It is not allowed if you are using Briefcase
     for the entire app creation process.
 
-The path, relative to :attr:`external_package_path`, to the binary 
+The path, relative to :attr:`external_package_path`, to the binary
 that will be executed as part of the installed app. This is used
 to establish the path to the shortcut that should be installed.
 
