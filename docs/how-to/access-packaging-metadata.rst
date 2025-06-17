@@ -41,18 +41,18 @@ contains the following identifying keys:
 It will also have the following keys, derived from your application's
 ``pyproject.toml`` configuration:
 
-  * **Name** - ``app_name``
-  * **Formal-Name** - ``formal_name``
-  * **App-ID** - ``bundle`` and ``app_name``, joined with a ``.``
-  * **Version** - ``version``
-  * **Summary** - ``description``
+  * **Name** - :attr:`app_name`
+  * **Formal-Name** - :attr:`formal_name`
+  * **App-ID** - :attr:`bundle` and :attr:`app_name`, joined with a ``.``
+  * **Version** - :attr:`version`
+  * **Summary** - :attr:`description`
 
 The metadata may also contain the following keys, if they have been defined
 in your app's ``pyproject.toml`` configuration:
 
-  * **Home-page** - ``url``
-  * **Author** - ``author``
-  * **Author-email** - ``author_email``
+  * **Home-page** - :attr:`url`
+  * **Author** - :attr:`author`
+  * **Author-email** - :attr:`author_email`
 
 For example, the metadata for the app constructed by the `BeeWare Tutorial
 <https://docs.beeware.org/en/latest/tutorial/tutorial-1.html>`_ would

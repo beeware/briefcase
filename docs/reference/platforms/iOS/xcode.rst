@@ -48,7 +48,7 @@ Colors
 
 iOS allows for some customization of the colors used by your app:
 
-* ``splash_background_color`` is the color of the splash background that
+* :attr:`splash_background_color` is the color of the splash background that
   displays while an app is loading.
 
 Additional options
@@ -69,11 +69,12 @@ The device simulator to target. Can be either a UDID, a device name (e.g.,
 Application configuration
 =========================
 
+.. currentmodule:: iOS
+
 The following options can be added to the ``tool.briefcase.app.<appname>.iOS.app``
 section of your ``pyproject.toml`` file.
 
-``info``
---------
+.. attribute:: info
 
 A property whose sub-attributes define keys that will be added to the app's
 ``Info.plist`` file. Each entry will be converted into a key in the entitlements
@@ -87,8 +88,7 @@ will result in an ``Info.plist`` declaration of::
 
 Any Boolean or string value can be used for an ``Info.plist`` value.
 
-``min_os_version``
-------------------
+.. attribute:: min_os_version
 
 The minimum iOS version that the app will support. This controls the value of
 ``IPHONEOS_DEPLOYMENT_TARGET`` used when building the app.
@@ -96,21 +96,29 @@ The minimum iOS version that the app will support. This controls the value of
 Permissions
 ===========
 
-Briefcase cross platform permissions map to the following ``info`` keys:
+Briefcase cross platform permissions map to the following :attr:`info` keys:
 
-* ``camera``: ``NSCameraUsageDescription``
-* ``microphone``: ``NSMicrophoneUsageDescription``
-* ``coarse_location``
+* :attr:`permission.camera`: ``NSCameraUsageDescription``
+* :attr:`permission.microphone`: ``NSMicrophoneUsageDescription``
+* :attr:`permission.coarse_location`:
+
   - ``NSLocationDefaultAccuracyReduced=True``
   - ``NSLocationWhenInUseUsageDescription`` if ``fine_location`` is not defined
-* ``fine_location``
+
+* :attr:`permission.fine_location`:
+
   - ``NSLocationDefaultAccuracyReduced=False``
   - ``NSLocationWhenInUseUsageDescription``
-* ``background_location``:
+
+* :attr:`permission.background_location`:
+
   - ``NSLocationAlwaysAndWhenInUseUsageDescription``
-  - ``NSLocationWhenInUseUsageDescription`` if neither ``fine_location`` or ``coarse_location`` is set
+  - ``NSLocationWhenInUseUsageDescription`` if neither
+    :attr:`permission.fine_location` or
+    :attr:`permission.coarse_location` is set
   - ``UIBackgroundModes`` will include ``location`` and ``processing``
-* ``photo_library``: ``NSPhotoLibraryAddUsageDescription``
+
+* :attr:`permission.photo_library`: ``NSPhotoLibraryAddUsageDescription``
 
 Platform quirks
 ===============
@@ -122,7 +130,7 @@ Availability of third-party packages
 
 Briefcase is able to use third-party packages in iOS apps. As long as the package is
 available on PyPI, or you can provide a wheel file for the package, it can be added to
-the ``requires`` declaration in your ``pyproject.toml`` file and used by your app at
+the :attr:`requires` declaration in your ``pyproject.toml`` file and used by your app at
 runtime.
 
 If the package is pure Python (i.e., it does not contain a binary library), that's all
@@ -177,7 +185,7 @@ the project has a binary component, you'll need to use `Mobile Forge
 <https://github.com/beeware/mobile-forge>`__ (or similar tooling) to compile compatible
 wheels.
 
-You can then directly add the wheel file to the ``requires`` definition for your app, or
+You can then directly add the wheel file to the :attr:`requires` definition for your app, or
 put the wheel in a folder and add:
 
 .. code-block:: TOML

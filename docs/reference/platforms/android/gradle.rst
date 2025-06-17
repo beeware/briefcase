@@ -88,11 +88,12 @@ application must provide the icons in the following sizes, for 3 variants:
 The ``round`` and ``square`` icons should include their background color in the image.
 The ``adaptive`` icons should have a transparent background; the icon image should be
 centered in the overall image, and should not exceed the drawable area. The background
-color of the adaptive icon will be the value specified with ``splash_background_color``.
+color of the adaptive icon will be the value specified with
+:attr:`splash_background_color`.
 
-The icon will also be used to populate the splash screen. You can specify a
-background color for the splash screen using the ``splash_background_color``
-configuration setting.
+The icon will also be used to populate the splash screen. You can specify a background
+color for the splash screen using the :attr:`splash_background_color` configuration
+setting.
 
 Android projects do not support installer images.
 
@@ -101,16 +102,15 @@ Colors
 
 Android allows for some customization of the colors used by your app:
 
-* ``base_theme`` is used to set the base Android theme.
-* ``accent_color`` is used as a subtle highlight throughout your app to
-  call attention to key elements. It's used on things like form labels and
-  inputs.
-* ``primary_color`` is the main branding color of the app and is used to
-  color the app bar in the main window.
-* ``primary_color_dark`` is used alongside the primary color to color the
-  status bar at the top of the screen.
-* ``splash_background_color`` is the color of the splash background that
-  displays while an app is loading.
+* :attr:`base_theme` is used to set the base Android theme.
+* :attr:`accent_color` is used as a subtle highlight throughout your app to call
+  attention to key elements. It's used on things like form labels and inputs.
+* :attr:`primary_color` is the main branding color of the app and is used to color the
+  app bar in the main window.
+* :attr:`primary_color_dark` is used alongside the primary color to color the status bar
+  at the top of the screen.
+* :attr:`splash_background_color` is the color of the splash background that displays
+  while an app is loading.
 
 Additional options
 ==================
@@ -170,52 +170,47 @@ in a CI configuration.
 Application configuration
 =========================
 
+.. currentmodule:: android
+
 The following options can be added to the ``tool.briefcase.app.<appname>.android``
 section of your ``pyproject.toml`` file.
 
-``android_manifest_attrs_extra_content``
-----------------------------------------
+.. attribute:: android_manifest_attrs_extra_content
 
 Additional attributes that will be added verbatim to the ``<manifest>`` declaration of
 the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_extra_content``
-----------------------------------
+.. attribute:: android_manifest_extra_content
 
 Additional content that will be added verbatim just before the closing ``</manifest>``
 declaration of the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_application_attrs_extra_content``
-----------------------------------------------------
+.. attribute:: android_manifest_application_attrs_extra_content
 
 Additional attributes that will be added verbatim to the ``<application>`` declaration
 of the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_application_extra_content``
-----------------------------------------------
+.. attribute:: android_manifest_application_extra_content
 
 Additional content that will be added verbatim just before the closing
 ``</application>`` declaration of the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_activity_attrs_extra_content``
--------------------------------------------------
+.. attribute:: android_manifest_activity_attrs_extra_content
 
 Additional attributes that will be added verbatim to the ``<activity>`` declaration of
 the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_activity_extra_content``
--------------------------------------------
+.. attribute:: android_manifest_activity_extra_content
+
 
 Additional content that will be added verbatim just before the closing ``</activity>``
 declaration of the ``AndroidManifest.xml`` of your app.
 
-``base_theme``
---------------
+.. attribute:: base_theme
 
 The base theme for the application. Defaults to ``Theme.AppCompat.Light.DarkActionBar``
 
-``build_gradle_dependencies``
------------------------------
+.. attribute:: build_gradle_dependencies
 
 The list of libraries that should be linked into the Android application. Each library
 should be a versioned Maven package specifier. If unspecified, three libraries will be
@@ -225,14 +220,12 @@ linked into the app:
 * ``androidx.constraintlayout:constraintlayout:1.1.3``
 * ``androidx.swiperefreshlayout:swiperefreshlayout:1.1.0``
 
-``build_gradle_extra_content``
-------------------------------
+.. attribute:: build_gradle_extra_content
 
 A string providing additional Gradle settings to use when building your app.
 This will be added verbatim to the end of your ``app/build.gradle`` file.
 
-``feature``
------------
+.. attribute:: feature
 
 A property whose sub-properties define the features that will be marked as required by
 the final app. Each entry will be converted into a ``<uses-feature>`` declaration in
@@ -250,16 +243,15 @@ will result in an ``AndroidManifest.xml`` declaration of::
 The use of some cross-platform permissions will imply the addition of features; see
 :ref:`the discussion on Android permissions <android-permissions>` for more details.
 
-``min_os_version``
-------------------
+.. attribute:: min_os_version
+   :no-index:
 
 The minimum API level that the app will support (i.e., the ``minSdkVersion`` for the
 app). This is *not* the Android version; it is the underlying API level. For example,
 Android 9 uses an API level of 28; if you wanted to specify Android 9 as your minimum
 supported version, you would define ``min_os_version = "28"``.
 
-``permission``
---------------
+.. attribute:: permission
 
 A property whose sub-properties define the platform-specific permissions that will be
 marked as required by the final app. Each entry will be converted into a
@@ -274,8 +266,7 @@ will result in an ``AndroidManifest.xml`` declaration of::
 
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
 
-``target_os_version``
-----------------------
+.. attribute:: target_os_version
 
 The API level that the app will target. This controls the version of the Android SDK that
 is used to build your app (by setting the ``compileSdkVersion`` for your app), and the
@@ -284,8 +275,7 @@ forwards compatibility behavioral changes your app will enable (by setting the
 API level. For example, Android 15 uses an API level of 35; if you wanted to specify
 Android 15 as your target API level, you would define ``target_os_version = "35"``.
 
-``version_code``
-----------------
+.. attribute:: version_code
 
 In addition to a version number, Android projects require a version "code".
 This code is an integer version of your version number that *must* increase
@@ -313,18 +303,18 @@ Permissions
 Briefcase cross platform permissions map to ``<uses-permission>`` declarations in the
 app's ``AppManifest.xml``:
 
-* ``camera``: ``android.permission.CAMERA``
-* ``microphone``: ``android.permission.RECORD_AUDIO``
-* ``coarse_location``: ``android.permission.ACCESS_COARSE_LOCATION``
-* ``fine_location``: ``android.permission.ACCESS_FINE_LOCATION``
-* ``background_location``: ``android.permission.ACCESS_BACKGROUND_LOCATION``
-* ``photo_library``: ``android.permission.READ_MEDIA_VISUAL_USER_SELECTED``
+* :attr:`permission.camera`: ``android.permission.CAMERA``
+* :attr:`permission.microphone`: ``android.permission.RECORD_AUDIO``
+* :attr:`permission.coarse_location`: ``android.permission.ACCESS_COARSE_LOCATION``
+* :attr:`permission.fine_location`: ``android.permission.ACCESS_FINE_LOCATION``
+* :attr:`permission.background_location`: ``android.permission.ACCESS_BACKGROUND_LOCATION``
+* :attr:`permission.photo_library`: ``android.permission.READ_MEDIA_VISUAL_USER_SELECTED``
 
 Every application will be automatically granted the ``android.permission.INTERNET`` and
 ``android.permission.NETWORK_STATE`` permissions.
 
-Specifying a ``camera`` permission will result in the following non-required ``feature``
-definitions being implicitly added to your app:
+Specifying a :attr:`permission.camera` permission will result in the following
+non-required :attr:`feature` definitions being implicitly added to your app:
 
 * ``android.hardware.camera``,
 * ``android.hardware.camera.any``,
@@ -332,9 +322,9 @@ definitions being implicitly added to your app:
 * ``android.hardware.camera.external`` and
 * ``android.hardware.camera.autofocus``.
 
-Specifying the ``coarse_location``, ``fine_location`` or ``background_location``
-permissions will result in the following non-required ``feature`` declarations being
-implicitly added to your app:
+Specifying the :attr:`permission.coarse_location`, :attr:`permission.fine_location` or
+:attr:`permission.background_location` permissions will result in the following
+non-required :attr:`feature` declarations being implicitly added to your app:
 
 * ``android.hardware.location.network``
 * ``android.hardware.location.gps``
@@ -357,7 +347,7 @@ Availability of third-party packages
 
 Briefcase is able to use third-party packages in Android apps. As long as the package is
 available on PyPI, or you can provide a wheel file for the package, it can be added to
-the ``requires`` declaration in your ``pyproject.toml`` file and used by your app at
+the :attr:`requires` declaration in your ``pyproject.toml`` file and used by your app at
 runtime.
 
 If the package is pure Python (i.e., it does not contain a binary library), that's all

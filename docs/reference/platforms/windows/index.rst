@@ -118,12 +118,13 @@ timestamp for code signing. Defaults to ``sha256``.
 Application configuration
 =========================
 
+.. currentmodule:: windows
+
 The following options can be added to the
 ``tool.briefcase.app.<appname>.windows`` section of your ``pyproject.toml``
 file.
 
-``system_installer``
-~~~~~~~~~~~~~~~~~~~~
+.. attribute:: system_installer
 
 Controls whether the app will be installed as a per-user or per-machine app.
 Per-machine apps are "system" apps, and require admin permissions to run the
@@ -134,8 +135,7 @@ If ``true`` the installer will attempt to install the app as a per-machine app,
 available to all users. If ``false``, the installer will install as a per-user
 app. If undefined the installer will ask the user for their preference.
 
-``use_full_install_path``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: use_full_install_path
 
 Controls whether the app will be installed using a path which includes both the
 application name *and* the company or developer's name. If ``true`` (the
@@ -144,16 +144,15 @@ Name>``. If ``false``, it will be installed to ``Program Files\<Project Name>``.
 Using the full path makes sense for larger companies with multiple applications,
 but less so for a solo developer.
 
-``version_triple``
-~~~~~~~~~~~~~~~~~~
+.. attribute:: version_triple
 
 Python and Briefcase allow any valid `PEP440 version number
-<https://peps.python.org/pep-0440/>`_ as a ``version`` specifier. However, MSI
+<https://peps.python.org/pep-0440/>`_ as a :attr:`version` specifier. However, MSI
 installers require a strict integer triple version number. Many
 PEP440-compliant version numbers, such as "1.2", "1.2.3b3", and "1.2.3.4", are
 invalid for MSI installers.
 
-Briefcase will attempt to convert your ``version`` into a valid MSI value by
+Briefcase will attempt to convert your :attr:`version` into a valid MSI value by
 extracting the first three parts of the main series version number (excluding
 pre, post and dev version indicators), padding with zeros if necessary:
 
@@ -163,8 +162,8 @@ pre, post and dev version indicators), padding with zeros if necessary:
     * ``1.2.3.4`` becomes ``1.2.3``.
 
 However, if you need to override this default value, you can define
-``version_triple`` in your app settings. If provided, this value will be used
-in the MSI configuration file instead of the auto-generated value.
+:attr:`version_triple` in your app settings. If provided, this value will be used in the
+MSI configuration file instead of the auto-generated value.
 
 Platform quirks
 ===============
