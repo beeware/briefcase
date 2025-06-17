@@ -36,21 +36,21 @@ def test_external_package_path(base_command, my_app, tmp_path):
     )
 
 
-def test_package_binary_path(base_command, my_app, tmp_path):
-    package_binary_path = base_command.package_binary_path(my_app)
-    bundle_package_binary_path = base_command.bundle_package_binary_path(my_app)
+def test_package_executable_path(base_command, my_app, tmp_path):
+    package_executable_path = base_command.package_executable_path(my_app)
+    bundle_package_executable_path = base_command.bundle_package_executable_path(my_app)
 
-    assert package_binary_path == "internal/my-app.exe"
-    assert bundle_package_binary_path == "internal/my-app.exe"
+    assert package_executable_path == "internal/my-app.exe"
+    assert bundle_package_executable_path == "internal/my-app.exe"
 
 
-def test_external_package_binary_path(base_command, my_app, tmp_path):
-    my_app.package_binary_path = "alternate/the_app.exe"
-    package_binary_path = base_command.package_binary_path(my_app)
-    bundle_package_binary_path = base_command.bundle_package_binary_path(my_app)
+def test_external_package_executable_path(base_command, my_app, tmp_path):
+    my_app.package_executable_path = "alternate/the_app.exe"
+    package_executable_path = base_command.package_executable_path(my_app)
+    bundle_package_executable_path = base_command.bundle_package_executable_path(my_app)
 
-    assert package_binary_path == "alternate/the_app.exe"
-    assert bundle_package_binary_path == "internal/my-app.exe"
+    assert package_executable_path == "alternate/the_app.exe"
+    assert bundle_package_executable_path == "internal/my-app.exe"
 
 
 def test_create_command(base_command):

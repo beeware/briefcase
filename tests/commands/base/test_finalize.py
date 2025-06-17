@@ -163,11 +163,11 @@ def test_not_external_or_internal(base_command, first_app):
 
 
 def test_binary_path_internal_app(base_command, first_app):
-    """If an internal app defines package_binary_path, an error is raised."""
-    first_app.package_binary_path = "internal/app.exe"
+    """If an internal app defines package_executable_path, an error is raised."""
+    first_app.package_executable_path = "internal/app.exe"
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"'first' defines 'package_binary_path', but not 'package_path'",
+        match=r"'first' defines 'package_executable_path', but not 'package_path'",
     ):
         base_command.finalize(first_app)

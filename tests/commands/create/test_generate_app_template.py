@@ -45,7 +45,7 @@ def full_context():
         "license": {"file": "LICENSE"},
         "requirement_installer_args": [],
         "package_path": None,
-        "package_binary_path": None,
+        "package_executable_path": None,
         "test_mode": False,
         # Properties of the generating environment
         "python_version": platform.python_version(),

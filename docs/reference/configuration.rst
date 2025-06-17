@@ -350,8 +350,8 @@ the end user as the installed app.
 
 If ``package_path`` is defined, ``sources`` must *not* be defined.
 
-``package_binary_path``
-~~~~~~~~~~~~~~~~~~~~~~~
+``package_executable_path``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. admonition:: Only for external apps
 

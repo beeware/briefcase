@@ -90,7 +90,7 @@ class DummyCreateCommand(CreateCommand):
     def bundle_package_path(self, app):
         return self.bundle_path(app) / "src/package"
 
-    def bundle_package_binary_path(self, app):
+    def bundle_package_executable_path(self, app):
         return f"internal/{app.app_name}.exe"
 
     # Hard code the python version to make testing easier.

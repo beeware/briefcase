@@ -57,13 +57,14 @@ Windows
 
 On Windows, the ``package_path`` should be the directory that contains all the content
 to be installed into the end-user's Program Files directory. By default, it is assumed
-that the executable used to launch the app is named ``<package_path>/<formal_name>.exe`` (or
-``<package_path>/<app_name>.exe`` for a :doc:`console app </how-to/cli-apps>`). If this is not the name or
-path to your executable, you can define ``package_binary_path`` to define the path
-inside ``package_path`` to your binary. For example, a ``package_path`` value of
-``external``, and a ``package_binary_path`` value of ``somewhere/myapp.exe``, would
-define that ``external/somewhere/myapp.exe`` is the binary that should be installed as
-the application shortcut.
+that the executable used to launch the app is named ``<package_path>/<formal_name>.exe``
+(or ``<package_path>/<app_name>.exe`` for a :doc:`console app </how-to/cli-apps>`). If
+this is not the name or path to your executable, you can define
+``package_executable_path`` to define the path inside ``package_path`` to your
+executable binary. For example, a ``package_path`` value of ``external``, and a
+``package_executable_path`` value of ``somewhere/myapp.exe``, would define that
+``external/somewhere/myapp.exe`` is the executable that should be installed as the
+application shortcut.
 
 Customizing packaging metadata
 ------------------------------

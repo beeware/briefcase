@@ -25,7 +25,7 @@ def test_minimal_AppConfig():
     assert config.requires is None
     assert config.sources == ["src/myapp", "somewhere/else/interesting", "local_app"]
     assert config.package_path is None
-    assert config.package_binary_path is None
+    assert config.package_executable_path is None
 
     # Derived properties have been set.
     assert config.bundle_name == "myapp"
@@ -57,7 +57,7 @@ def test_minimal_external_AppConfig():
         description="A simple app",
         license={"file": "LICENSE"},
         package_path="path/to/package",
-        package_binary_path="internal/app.exe",
+        package_executable_path="internal/app.exe",
     )
 
     # The basic properties have been set.
@@ -68,7 +68,7 @@ def test_minimal_external_AppConfig():
     assert config.requires is None
     assert config.sources is None
     assert config.package_path == "path/to/package"
-    assert config.package_binary_path == "internal/app.exe"
+    assert config.package_executable_path == "internal/app.exe"
 
     # Derived properties have been set.
     assert config.bundle_name == "myapp"
