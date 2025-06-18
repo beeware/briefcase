@@ -822,3 +822,14 @@ def find_changelog_filename(base_path):
         if changelog.is_file():
             return format
     return None
+
+
+def find_license_filename(base_path):
+    """Find a valid license file in a given directory.
+
+    :param base_Path: The directory to search
+    :returns: The filename of a license if one is found. Else none if no such
+        license could be found.
+    """
+
+    return None
