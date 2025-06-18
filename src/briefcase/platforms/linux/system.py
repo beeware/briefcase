@@ -777,7 +777,7 @@ app's configuration.
                 raise BriefcaseCommandError(
                     """\
 Your project does not contain a changelog file with a known file name. You
-must provided a changelog file in the same directory as your `pyproject.toml`,
+must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
@@ -1157,7 +1157,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     raise BriefcaseCommandError(
                         """\
 Your project does not contain a changelog file with a known file name. You
-must provided a changelog file in the same directory as your `pyproject.toml`,
+must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
