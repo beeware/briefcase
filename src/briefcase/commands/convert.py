@@ -831,5 +831,18 @@ def find_license_filename(base_path):
     :returns: The filename of a license if one is found. Else none if no such
         license could be found.
     """
+    # Collect all possible license file formats.
+    license_formats = [
+        f"{name}{extension}"
+        for name in ["LICENSE", "LICENCE", "COPYING"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ]
 
+    # If a particular format is found, it returns it as the license.
+    for file_format in license_formats:
+        license = base_path / file_format
+        if license.is_file():
+            return file_format
+
+    # Else, no such license exists and return None.
     return None
