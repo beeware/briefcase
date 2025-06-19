@@ -664,9 +664,8 @@ class ConvertCommand(NewCommand):
         self.merge_or_copy_pyproject(project_dir / "pyproject.toml")
 
         # Copy license file if not already there
-        license_file = self.pep621_data.get("license", {}).get("file")
-
-        if license_file is None and not (self.base_path / "LICENSE").exists():
+        license = find_license_filename();
+        if license is None:
             self.console.warning(
                 f"\nLicense file not found in '{self.base_path}'. "
                 "Briefcase will create a template 'LICENSE' file."

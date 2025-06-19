@@ -737,7 +737,7 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
 
         with self.console.wait_bar("Installing license..."):
             if license_file := app.license.get("file"):
-                license_file = self.base_path / license_file
+                license_file = find_license_filename()
                 if license_file.is_file():
                     self.tools.shutil.copy(license_file, doc_folder / "copyright")
                 else:
@@ -765,7 +765,7 @@ ensure that the contents of this file is adequate.
                     """\
 Your project does not contain a LICENSE definition.
 
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+Create a file named `LICENSE`, `LICENCE` or `COPYING` in the same directory as your `pyproject.toml`
 with your app's licensing terms, and set `license.file = 'LICENSE'` in your
 app's configuration.
 """
