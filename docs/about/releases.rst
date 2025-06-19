@@ -308,7 +308,7 @@ Backward Incompatible Changes
 * Support for creating new projects using PySide2 has been removed. Briefcase's release testing will no longer explicitly verify compatibility with PySide2. (`#1524 <https://github.com/beeware/briefcase/issues/1524>`__)
 * The Flatpak build process no longer strips binaries included in third-party (e.g. PyPI) packages that are bundled with the app. (`#1540 <https://github.com/beeware/briefcase/issues/1540>`__)
 * New projects will now use ``manylinux_2_28`` instead of ``manylinux2014`` to create AppImages in Docker. (`#1564 <https://github.com/beeware/briefcase/issues/1564>`__)
-* It is highly recommended that Android applications add a definition for ``build_gradle_dependencies`` to their app configuration. A default value will be used if this option is not explicitly provided. Refer to `the Android documentation <https://briefcase.readthedocs.io/en/latest/reference/platforms/android/gradle.html#build-gradle-dependencies>`__ for the default value that will be used. (`#1610 <https://github.com/beeware/briefcase/issues/1610>`__)
+* It is highly recommended that Android applications add a definition for ``build_gradle_dependencies`` to their app configuration. A default value will be used if this option is not explicitly provided. Refer to `the Android documentation <https://briefcase.readthedocs.io/en/latest/reference/platforms/android/gradle.html#android.build_gradle_dependencies>`__ for the default value that will be used. (`#1610 <https://github.com/beeware/briefcase/issues/1610>`__)
 
 Documentation
 -------------

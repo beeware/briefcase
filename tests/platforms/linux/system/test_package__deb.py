@@ -56,6 +56,21 @@ def first_app_deb(first_app):
     return first_app
 
 
+@pytest.fixture
+def external_first_app_deb(first_app_deb, tmp_path):
+    # Make the app external
+    first_app_deb.sources = None
+    first_app_deb.external_package_path = tmp_path / "base_path/external/package-deb"
+
+    # Move the generated first app to the external location
+    (tmp_path / "base_path/external").mkdir()
+    shutil.move(
+        tmp_path / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1",
+        tmp_path / "base_path/external/package-deb",
+    )
+    return first_app_deb
+
+
 def test_verify_no_docker(package_command, first_app_deb, monkeypatch):
     """If not using docker, existence of dpkg-deb is verified."""
     # Mock the existence of dpkg-deb
@@ -164,7 +179,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "first-app-0.0.1",
+            bundle_path / "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -217,7 +232,7 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "first-app-0.0.1",
+            bundle_path / "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -306,7 +321,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "first-app-0.0.1",
+            bundle_path / "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -367,7 +382,7 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
             "dpkg-deb",
             "--build",
             "--root-owner-group",
-            "first-app-0.0.1",
+            bundle_path / "first-app-0.0.1",
         ],
         check=True,
         cwd=bundle_path,
@@ -375,3 +390,56 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
 
     # The deb wasn't built, so it wasn't moved.
     package_command.tools.shutil.move.assert_not_called()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
+def test_external_deb_package_docker(package_command, external_first_app_deb, tmp_path):
+    """An external app cannot be packaged as a deb using Docker."""
+    package_command
+    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+    package_path = tmp_path / "base_path/external/package-deb"
+
+    # Package the app
+    package_command.package_app(external_first_app_deb)
+
+    # The control file is written
+    assert (package_path / "DEBIAN/control").exists()
+    with (package_path / "DEBIAN/control").open(encoding="utf-8") as f:
+        assert (
+            f.read()
+            == "\n".join(
+                [
+                    "Package: first-app",
+                    "Version: 0.0.1",
+                    "Architecture: wonky",
+                    "Maintainer: Megacorp <maintainer@example.com>",
+                    "Homepage: https://example.com/first-app",
+                    "Description: The first simple app \\ demonstration",
+                    " Long description",
+                    " for the app",
+                    "Depends: libc6 (>=2.99), libpython3.10",
+                    "Section: utils",
+                    "Priority: optional",
+                ]
+            )
+            + "\n"
+        )
+
+    package_command.tools.app_tools[
+        external_first_app_deb
+    ].app_context.run.assert_called_once_with(
+        [
+            "dpkg-deb",
+            "--build",
+            "--root-owner-group",
+            package_path,
+        ],
+        check=True,
+        cwd=bundle_path,
+    )
+
+    # The deb was moved into the final location
+    package_command.tools.shutil.move.assert_called_once_with(
+        tmp_path / "base_path/external/package-deb.deb",
+        tmp_path / "base_path/dist/first-app_0.0.1-1~somevendor-surprising_wonky.deb",
+    )

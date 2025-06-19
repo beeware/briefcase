@@ -82,9 +82,100 @@ class macOSMixin:
     # 0.3.20 introduced a framework-based support package.
     platform_target_version = "0.3.20"
 
+    def bundle_package_path(self, app) -> Path:
+        return self.binary_path(app)
+
+    def is_icloud_synced(self, path: Path) -> bool:
+        """Determine if a path is on an iCloud drive.
+
+        This is done by looking for the "com.apple.fileprovider.fpfs#P" resource fork.
+        This fork only appears on *some* directories - most notably, `.app` folders.
+
+        :param path: The location to check.
+        :returns: True if the location has iCloud resource markers.
+        """
+        # Check if the path is on an iCloud mounted drive.
+        try:
+            # Check for the iCloud resource fork. "Good" operation produces an error,
+            # so use quiet mode.
+            self.tools.subprocess.check_output(
+                [
+                    "xattr",
+                    "-p",
+                    "com.apple.fileprovider.fpfs#P",
+                    path,
+                ],
+                quiet=1,
+            )
+            # The resource fork was found.
+            return True
+        except subprocess.CalledProcessError:
+            # The resource fork was not found.
+            # This includes the file not existing.
+            return False
+
+    def verify_not_on_icloud(self, app: AppConfig, cleanup=False):
+        """Confirm that the app is *not* on an iCloud synchronized drive.
+
+        When a `.app` folder is on an iCloud-synchronized drive, iCloud adds filesystem
+        metadata to the folder. This metadata can't be removed (iCloud will just put it
+        back again), but it also conflicts with app signing. So - if we detect this
+        metadata, the project has been generated somewhere that ultimately won't work.
+
+        Optionally, this method will clean up the bundle if the verification fails.
+
+        :param app: The app to check.
+        :param cleanup: Should the app bundle be deleted if verification fails?
+        """
+        if self.is_icloud_synced(self.binary_path(app)):
+            msg = [
+                """\
+Your project is in a folder that is synchronized with iCloud. This interferes
+with the operation of macOS code signing."""
+            ]
+            if cleanup:
+                self.tools.shutil.rmtree(self.bundle_path(app))
+                msg.append(
+                    f"""
+Move your project to a location that is not synchronized with iCloud,
+and re-run `briefcase {self.command}`."""
+                )
+            else:
+                bundle_path = self.bundle_path(app).relative_to(self.base_path)
+                msg.append(
+                    f"""
+Delete the {bundle_path} folder, move your project to location
+that is not synchronized with iCloud, and re-run `briefcase {self.command}`."""
+                )
+            raise BriefcaseCommandError("\n".join(msg))
+
 
 class macOSCreateMixin(AppPackagesMergeMixin):
     hidden_app_properties = {"permission", "entitlement"}
+
+    def generate_app_template(self, app: AppConfig):
+        """Create an application bundle.
+
+        :param app: The config object for the app
+        """
+        # Before we generate the app template, make sure the package path and formal
+        # name match. This will always be the case for internal apps; they might not be
+        # aligned for external apps. We can't do this in verify, because app
+        # verification occurs after the template is generated.
+        if self.package_path(app).name != f"{app.formal_name}.app":
+            raise BriefcaseCommandError(
+                "The app bundle referenced by external_package_path "
+                f"({self.package_path(app).name})\n"
+                f"does not match the formal name of the app ({app.formal_name!r}).\n"
+            )
+
+        super().generate_app_template(app=app)
+        # If we discover we're on iCloud during app creation, we can clean up the app
+        # folder. This *may* return a false negative (i.e., not accurately detect that
+        # we *are* on iCloud, because it takes a moment for the iCloud daemon to detect
+        # that a new folder has been created; however, if this occurs, it will be
+        # picked up on the next run of any Briefcase command).
+        self.verify_not_on_icloud(app, cleanup=True)
 
     def _install_app_requirements(
         self,
@@ -651,6 +742,7 @@ or
                 )
                 return
             else:
+                self.tools.subprocess.output_error(e)
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
     def sign_app(
@@ -663,7 +755,7 @@ or
         :param app: The app to sign
         :param identity: The signing identity to use
         """
-        bundle_path = self.binary_path(app)
+        bundle_path = self.package_path(app)
         resources_path = bundle_path / "Contents/Resources"
         frameworks_path = bundle_path / "Contents/Frameworks"
 
@@ -755,7 +847,7 @@ class macOSPackageMixin(macOSSigningMixin):
             # Notarization for bare .app's is applied to the binary, not the
             # distribution artefact, with the distribution artefact being
             # created after notarization has completed.
-            return self.binary_path(app)
+            return self.package_path(app)
         else:
             return self.distribution_path(app)
 
@@ -1218,6 +1310,9 @@ password:
             installer. Ignored unless the packaging format is ``pkg``.
         :param submission_id: The submission ID of the notarization task to resume.
         """
+        # Confirm the project isn't currently on an iCloud synced drive.
+        self.verify_not_on_icloud(app)
+
         if submission_id:
             # If we're resuming notarization, we *can't* use an adhoc identity,
             # so don't allow it to be selected.
@@ -1352,9 +1447,9 @@ password:
         """Finalize the zip packaging process."""
         # Build the final archive for distribution
         with self.console.wait_bar(
-            f"Building final distribution archive for {self.binary_path(app).name}..."
+            f"Building final distribution archive for {self.package_path(app).name}..."
         ):
-            self.ditto_archive(self.binary_path(app), self.distribution_path(app))
+            self.ditto_archive(self.package_path(app), self.distribution_path(app))
 
     def package_pkg(
         self,
@@ -1397,11 +1492,11 @@ with your app's licensing terms.
         # the products you want to install. So - we need to copy the built app to a
         # "clean" packaging location.
         with self.console.wait_bar("Copying app into products folder..."):
-            installed_app_path = installer_path / "root" / self.binary_path(app).name
+            installed_app_path = installer_path / "root" / self.package_path(app).name
             if installed_app_path.exists():
                 self.tools.shutil.rmtree(installed_app_path)
             self.tools.shutil.copytree(
-                self.binary_path(app),
+                self.package_path(app),
                 installed_app_path,
                 # Ensure that symlinks are preserved in the duplication.
                 symlinks=True,
@@ -1418,7 +1513,7 @@ with your app's licensing terms.
                             "BundleIsRelocatable": False,
                             "BundleIsVersionChecked": True,
                             "BundleOverwriteAction": "upgrade",
-                            "RootRelativeBundlePath": self.binary_path(app).name,
+                            "RootRelativeBundlePath": self.package_path(app).name,
                         }
                     ],
                     components_plist,
@@ -1505,10 +1600,10 @@ with your app's licensing terms.
 
         with self.console.wait_bar(f"Building {dist_path.name}..."):
             dmg_settings = {
-                "files": [os.fsdecode(self.binary_path(app))],
+                "files": [os.fsdecode(self.package_path(app))],
                 "symlinks": {"Applications": "/Applications"},
                 "icon_locations": {
-                    f"{app.formal_name}.app": (75, 75),
+                    self.package_path(app).name: (75, 75),
                     "Applications": (225, 75),
                 },
                 "window_rect": ((600, 600), (350, 150)),

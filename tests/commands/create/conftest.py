@@ -87,6 +87,12 @@ class DummyCreateCommand(CreateCommand):
     def binary_path(self, app):
         return self.bundle_path(app) / self.exe_name(app.formal_name)
 
+    def bundle_package_path(self, app):
+        return self.bundle_path(app) / "src/package"
+
+    def bundle_package_executable_path(self, app):
+        return f"internal/{app.app_name}.exe"
+
     # Hard code the python version to make testing easier.
     @property
     def python_version_tag(self):
@@ -164,6 +170,10 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         # A mock version of template generation.
         create_file(self.bundle_path(app) / "new", "new template!")
+        create_file(
+            self.bundle_path(app) / "src/package/README",
+            "The packaged app goes here",
+        )
 
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
@@ -240,9 +250,8 @@ def myapp():
 
 @pytest.fixture
 def bundle_path(myapp, tmp_path):
-    # Return the bundle path for the app; however, as a side effect,
-    # ensure that the app, and app_packages target directories
-    # exist, and the briefcase index file has been created.
+    # Return the bundle path for the app; however, as a side effect, ensure that the app
+    # and package target directories exist.
     bundle_path = tmp_path / "base_path/build" / myapp.app_name / "tester/dummy"
     (bundle_path / "path/to/app").mkdir(parents=True, exist_ok=True)
 

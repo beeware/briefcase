@@ -93,11 +93,12 @@ reason (including user intervention), you can use this submission ID with the
 Application configuration
 =========================
 
+.. currentmodule:: macOS
+
 The following options can be added to the ``tool.briefcase.app.<appname>.macOS``
 section of your ``pyproject.toml`` file.
 
-``entitlement``
-~~~~~~~~~~~~~~~
+.. attribute:: entitlement
 
 A property whose sub-attributes define keys that will be added to the app's
 ``Entitlements.plist`` file. Each entry will be converted into a key in the entitlements
@@ -121,8 +122,7 @@ enable library validation, you could add the following to your ``pyproject.toml`
 
     entitlement."com.apple.security.cs.disable-library-validation" = false
 
-``info``
-~~~~~~~~
+.. attribute:: info
 
 A property whose sub-attributes define keys that will be added to the app's
 ``Info.plist`` file. Each entry will be converted into a key in the entitlements
@@ -136,14 +136,12 @@ will result in an ``Info.plist`` declaration of::
 
 Any Boolean or string value can be used for an ``Info.plist`` value.
 
-``min_os_version``
-------------------
+.. attribute:: min_os_version
 
 The minimum macOS version that the app will support. This controls the value of
 ``MACOSX_DEPLOYMENT_TARGET`` used when building the app.
 
-``universal_build``
-~~~~~~~~~~~~~~~~~~~
+.. attribute:: universal_build
 
 A Boolean, indicating whether Briefcase should build a universal app (i.e, an app that
 can target both x86_64 and ARM64). Defaults to ``true``; if ``false``, the binary will
@@ -151,29 +149,151 @@ only be executable on the host platform on which it was built - i.e., if you bui
 an x86_64 machine, you will produce an x86_65 binary; if you build on an ARM64 machine,
 you will produce an ARM64 binary.
 
+.. _macOS-document-types:
+
+Document types
+==============
+
+.. currentmodule:: document_type_id
+
+Internally, macOS uses Uniform Type Identifiers (UTIs) to track document types. UTIs are
+strings that uniquely identify a type of data. They are similar to MIME types, but they
+form a type hierarchy that allows for more complex relationships between types. For
+example, PDF files have the UTI ``com.adobe.pdf``, which conforms to the UTI
+``public.data``, indicating that PDF files are a specific type of data, and also
+conforms to ``public.content``, indicating that they are a type of document that can be
+shared via e.g. Airdrop. There is a long list of `standard UTIs defined by macOS
+<https://developer.apple.com/documentation/uniformtypeidentifiers/system-declared-uniform-type-identifiers>`_.
+
+These UTIs are then used to declare document types in an application's ``Info.plist``.
+Briefcase will determine an appropriate declarations based on the MIME type that has
+been provided (or generated) for a document type. However, there are also some
+macOS-specific configuration items that can be used to override this default behavior
+to control how document types are presented on macOS.
+
+Configuration options
+~~~~~~~~~~~~~~~~~~~~~
+
+The following macOS-specific configuration keys can be used in a document type
+declaration:
+
+.. attribute:: macOS.CFBundleTypeRole
+
+`CFBundleTypeRole
+<https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/cfbundletyperole>`_
+declares the role the application plays with respect to the document type. Valid values
+are ``Editor``, ``Viewer``, ``Shell``, ``QLGenerator``, and ``None``.
+
+Briefcase will default to a role of ``Viewer`` for all document types.
+
+.. attribute:: macOS.LSHandlerRank
+
+`LSHandlerRank
+<https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/lshandlerrank>`_
+defines the relative priority of this application when it comes to determining which
+application should open an application. Valid values are ``Owner``, ``Alternate``,
+``Default`` and ``None``.
+
+Briefcase will default to a role of ``Alternate`` for any known MIME type, and ``Owner``
+for any custom MIME type.
+
+.. attribute:: macOS.LSItemContentTypes
+
+`LSItemContentTypes
+<https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/lsitemcontenttypes>`_
+define the UTI content types that the app can handle.
+
+Briefcase defaults to the the registered UTI type for known MIME types. It will
+construct a UTI of the form ``<bundle id>.<app name>.<document type id>`` (e.g.,
+``org.beeware.helloworld.document``) for unknown MIME types.
+
+Although macOS technically allows an application to support multiple UTIs per document
+types, Briefcase can only assign a single content type. The value of
+:attr:`macOS.LSItemContentTypes` must be a string, or a list containing a single value.
+
+.. attribute:: macOS.UTTypeConformsTo
+
+`UTTypeConformsTo
+<https://developer.apple.com/documentation/BundleResources/Information-Property-List/UTExportedTypeDeclarations/UTTypeConformsTo>`_
+defines the list of UTIs that the document type conforms to. Each entry is a string.
+
+Briefcase will assume a default of ``["public.data", "public.content"]`` for unknown
+MIME types. The value is not used for known mime types (as the operating system knows
+the conforming types).
+
+.. attribute:: macOS.is_core_type
+
+A Boolean, used to explicitly declare a content type as a core type. This flag is used
+to determine whether a ``UTImportedTypeDeclarations`` entry is required in macOS app
+metadata.
+
+You shouldn't need to set this value. Briefcase is able to determine whether a type is
+core or not based using data provided by the operating system.
+
+Packages
+~~~~~~~~
+
+macOS provides for document types that are *packages*. A package document is structured
+as a directory on disk, but presents to the user as a single icon. An ``.app`` bundle is
+an example of a package document type.
+
+To define a package type, set :attr:`macOS.UTTypeConformsTo` to ``["com.apple.package",
+"public.content"]``. If other UTI types apply, they can also be added to this list.
+
+Further customization
+~~~~~~~~~~~~~~~~~~~~~
+
+For more details on macOS document type declarations, see the following web pages from
+Apple provide more background information. They may be helpful in determining how to
+expose content types for your application:
+
+* `Defining file and data types for your app <https://developer.apple.com/documentation/uniformtypeidentifiers/defining-file-and-data-types-for-your-app>`_
+* `Uniform Type Identifiers — a reintroduction
+  <https://developer.apple.com/videos/play/tech-talks/10696/?time=549>`_
+* `Core Foundation Keys (archived)
+  <https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html>`_
+
 Permissions
 ===========
 
-Briefcase cross platform permissions map to a combination of ``info`` and ``entitlement``
-keys:
+.. currentmodule:: macOS
 
-* ``microphone``: an ``info`` entry for ``NSMicrophoneUsageDescription``; and an
-  ``entitlement`` of ``com.apple.security.device.audio-input``
-* ``camera``: an ``info`` entry for ``NSCameraUsageDescription``; and
-  an ``entitlement`` of ``com.apple.security.device.camera``
-* ``coarse_location``: an ``info`` entry for ``NSLocationUsageDescription``
-  (ignored if ``background_location`` or ``fine_location`` is defined); plus an
-  entitlement of ``com.apple.security.personal-information.location``
-* ``fine_location``: an ``info`` entry for ``NSLocationUsageDescription``(ignored
-  if ``background_location`` is defined); plus an ``entitlement`` of
+Briefcase cross platform permissions map to a combination of :attr:`info` and
+:attr:`entitlement` keys:
+
+* :attr:`permission.microphone`: an :attr:`info` entry for
+  ``NSMicrophoneUsageDescription``; and an
+  :attr:`entitlement` of ``com.apple.security.device.audio-input``
+* :attr:`permission.camera`: an :attr:`info` entry for ``NSCameraUsageDescription``;
+  and an :attr:`entitlement` of ``com.apple.security.device.camera``
+* :attr:`permission.coarse_location`: an :attr:`info` entry for
+  ``NSLocationUsageDescription`` (ignored if :attr:`permission.background_location` or
+  :attr:`permission.fine_location` is defined); plus an entitlement of
   ``com.apple.security.personal-information.location``
-* ``background_location``: an ``info`` entry for ``NSLocationUsageDescription``;
-  plus an ``entitlement`` of ``com.apple.security.personal-information.location``
-* ``photo_library``: an ``info`` entry for ``NSPhotoLibraryUsageDescription``; plus an
-  ``entitlement`` of ``com.apple.security.personal-information.photos-library``
+* :attr:`permission.fine_location`: an :attr:`info` entry for
+  ``NSLocationUsageDescription``(ignored if :attr:`permission.background_location` is
+  defined); plus an :attr:`entitlement` of
+  ``com.apple.security.personal-information.location``
+* :attr:`permission.background_location`: an :attr:`info` entry for
+  ``NSLocationUsageDescription``; plus an :attr:`entitlement` of
+  ``com.apple.security.personal-information.location``
+* :attr:`permission.photo_library`: an :attr:`info` entry for
+  ``NSPhotoLibraryUsageDescription``; plus an :attr:`entitlement` of
+  ``com.apple.security.personal-information.photos-library``
 
 Platform quirks
 ===============
+
+Use of iCloud-synchronized folders
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+iCloud stores and maintains metadata on some content stored in iCloud-synchronized
+folders. Unfortunately, this metadata prevents apps from being signed and notarized, and
+app signing is a requirement for all apps on macOS. As a result, Briefcase cannot be
+used to generate macOS apps in a folder that is synchronized with iCloud.
+
+This most commonly affects the `Documents` and `Desktop` folders (and subfolders), but
+can affect other locations if they are synchronized with iCloud.
 
 Packaging with ``--adhoc-sign``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,7 +355,7 @@ Python, you can generate a ``py3-none-any`` wheel using ``pip wheel <package nam
 the project has a binary component, you will need to consult the documentation of the
 package to determine how to compile a wheel.
 
-You can then directly add the wheel file to the ``requires`` definition for your app, or
+You can then directly add the wheel file to the :attr:`requires` definition for your app, or
 put the wheel in a folder and add:
 
 .. code-block:: TOML

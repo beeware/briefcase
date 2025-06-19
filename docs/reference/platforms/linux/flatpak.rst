@@ -70,12 +70,13 @@ Flatpaks do not support splash screens or installer images.
 Application configuration
 =========================
 
+.. currentmodule:: linux.flatpak
+
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.flatpak`` section of your
 ``pyproject.toml`` file:
 
-``finish_arg``
-~~~~~~~~~~~~~~
+.. attribute:: finish_arg
 
 The arguments used to configure the Flatpak sandbox. ``finish_arg`` is an attribute
 that can have additional sub-attributes; each sub-attribute maps to a single property
@@ -103,46 +104,40 @@ disable audio access, you would specify::
 
     finish_arg."socket=pulseaudio" = false
 
-``flatpak_runtime_repo_alias``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: flatpak_runtime_repo_alias
 
 An alias to use when registering the Flatpak repository that will store the
 Flatpak runtime used to build the app. By default, Briefcase will use `Flathub
 <https://flathub.org>`__ as its runtime repository, with an alias of ``flathub``.
 
-``flatpak_runtime_repo_url``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: flatpak_runtime_repo_url
 
 The repository URL hosting the runtime and SDK package that the Flatpak will
 use. By default, Briefcase will use `Flathub <https://flathub.org>`__ as its
 runtime repository.
 
-``flatpak_runtime``
-~~~~~~~~~~~~~~~~~~~
+.. attribute:: flatpak_runtime
 
 A string, identifying the `runtime
 <https://docs.flatpak.org/en/latest/available-runtimes.html>`__ to use as a
 base for the Flatpak app.
 
-The Flatpak runtime and SDK are paired; so, both a ``flatpak_runtime`` and a
-corresponding ``flatpak_sdk`` must be defined.
+The Flatpak runtime and SDK are paired; so, both a :attr:`flatpak_runtime` and a
+corresponding :attr:`flatpak_sdk` must be defined.
 
-``flatpak_runtime_version``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: flatpak_runtime_version
 
 A string, identifying the version of the Flatpak runtime that should be used.
 
-``flatpak_sdk``
-~~~~~~~~~~~~~~~
+.. attribute:: flatpak_sdk
 
 A string, identifying the SDK associated with the platform that will be used to
 build the Flatpak app.
 
-The Flatpak runtime and SDK are paired; so, both a ``flatpak_runtime`` and a
-corresponding ``flatpak_sdk`` must be defined.
+The Flatpak runtime and SDK are paired; so, both a :attr:`flatpak_runtime` and a
+corresponding :attr:`flatpak_sdk` must be defined.
 
-``modules_extra_content``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: modules_extra_content
 
 Additional build instructions that will be inserted into the Flatpak manifest, *after*
 Python has been installed and ``pip`` is guaranteed to exist, but *before* any app code

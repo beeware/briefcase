@@ -1,0 +1,1 @@
+References to Briefcase's settings are now hyperlinked for ease of cross-referencing.

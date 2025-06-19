@@ -23,16 +23,16 @@ entry point will be used for the app: if your app is contained in a Python
 module named ``myapp``, test mode will attempt to launch ``tests.myapp``. Your
 app is responsible for providing the logic to discover and start the test suite.
 
-The code for your test suite can specified using the ``test_sources`` setting;
-test-specific requirements can be specified with ``test_requires``. Test sources
-and requirements will only be included in your app when running in test mode.
+The code for your test suite can specified using the :attr:`test_sources` setting;
+test-specific requirements can be specified with :attr:`test_requires`. Test sources and
+requirements will only be included in your app when running in test mode.
 
 Briefcase will monitor the log output of the test suite, looking for the output
-corresponding to test suite completion. Briefcase has built-in support for
-`pytest <https://docs.pytest.org/en/latest>`__ and `unittest
-<https://docs.python.org/3/library/unittest.html>`__ test suites; support for
-other test frameworks can be added using the ``test_success_regex`` and
-``test_failure_regex`` settings.
+corresponding to test suite completion. Briefcase has built-in support for `pytest
+<https://docs.pytest.org/en/latest>`__ and `unittest
+<https://docs.python.org/3/library/unittest.html>`__ test suites; support for other test
+frameworks can be added using the :attr:`test_success_regex` and
+:attr:`test_failure_regex` settings.
 
 Usage
 =====

@@ -25,6 +25,7 @@ from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
 
 class macOSAppMixin(macOSMixin):
     output_format = "app"
+    supports_external_packaging = True
 
     def project_path(self, app):
         return self.binary_path(app) / "Contents"
@@ -107,6 +108,9 @@ class macOSAppBuildCommand(
 
         :param app: The application to build
         """
+        # Confirm the project isn't currently on an iCloud synced drive.
+        self.verify_not_on_icloud(app)
+
         self.console.info("Building App...", prefix=app.app_name)
 
         # Move the unbuilt binary in to the final executable location
