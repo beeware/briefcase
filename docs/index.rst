@@ -41,7 +41,7 @@ Technical reference - commands, modules, classes, methods.
 :ref:`About Briefcase <about>`
 ------------------------------
 
-Explanation and discussion of key topics and concepts.
+Frequently Asked Questions, success stories, and other details about Briefcase as a project.
 
 Community
 =========
