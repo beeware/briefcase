@@ -1,6 +1,6 @@
-======================
-Docker X11 Passthrough
-======================
+==============================
+Testing Linux Apps with Docker
+==============================
 
 Briefcase can use Docker to build apps for Linux distributions other than the
 distribution you're currently using. Docker can also be used to *run* the app

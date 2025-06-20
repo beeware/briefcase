@@ -10,4 +10,3 @@ internal project procedures.
    :glob:
 
    release
-   x11passthrough
