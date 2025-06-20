@@ -664,7 +664,7 @@ class ConvertCommand(NewCommand):
         self.merge_or_copy_pyproject(project_dir / "pyproject.toml")
 
         # Copy license file if not already there
-        license = find_license_filename();
+        license = find_license_filename()
         if license is None:
             self.console.warning(
                 f"\nLicense file not found in '{self.base_path}'. "
