@@ -15,7 +15,8 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.commands.convert import find_changelog_filename, find_license_filename
+from briefcase.commands.convert import find_changelog_filename
+from briefcase.commands.convert import find_license_filename
 from briefcase.config import AppConfig, merge_config
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
