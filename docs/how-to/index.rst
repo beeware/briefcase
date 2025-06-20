@@ -16,6 +16,7 @@ stand alone.
    code-signing/index
    ci
    cli-apps
+   x11passthrough
    external-apps
    publishing/index
    contribute/index
