@@ -15,7 +15,9 @@ class BuildCommand(BaseCommand):
     def add_options(self, parser):
         self._add_update_options(parser, context_label=" before building")
         self._add_test_options(parser, context_label="Build")
-        self._add_debug_options(parser, context_label="Build")
+
+        if self.supports_debugger:
+            self._add_debug_options(parser, context_label="Build")
 
         parser.add_argument(
             "-a",

@@ -1098,11 +1098,63 @@ class DummyDebugger(BaseDebugger):
 
     def create_debugger_support_pkg(self, dir: Path) -> None:
         self.debugger_support_pkg_dir = dir
+        (dir / "dummy.py").write_text("# Dummy", encoding="utf8")
 
 
-def test_app_packages_debugger_debugger(
+def test_app_packages_debugger(
     create_command,
     myapp,
+    bundle_path,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app has debug requirements and we're in debug mode, they are installed."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp.debugger = DummyDebugger()
+
+    create_command.install_app_requirements(myapp)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+            f"{bundle_path / '.debugger_support_package'}",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+
+    # The debugger support package directory was created
+    assert (
+        myapp.debugger.debugger_support_pkg_dir
+        == bundle_path / ".debugger_support_package"
+    )
+
+    # Check that the debugger support package exists
+    assert (bundle_path / ".debugger_support_package").exists()
+    assert (bundle_path / ".debugger_support_package" / "dummy.py").exists()
+
+
+def test_app_packages_debugger_clear_old_package(
+    create_command,
+    myapp,
+    bundle_path,
     app_packages_path,
     app_packages_path_index,
 ):
@@ -1111,10 +1163,9 @@ def test_app_packages_debugger_debugger(
     myapp.debugger = DummyDebugger()
 
     # create dummy debugger support package directory, that should be cleared
-    bundle_path = create_command.bundle_path(myapp)
     (bundle_path / ".debugger_support_package").mkdir(parents=True, exist_ok=True)
-    (bundle_path / ".debugger_support_package" / "dummy.txt").write_text(
-        "dummy content"
+    (bundle_path / ".debugger_support_package" / "some_old_file.py").write_text(
+        "# some old file content", encoding="utf8"
     )
 
     create_command.install_app_requirements(myapp)
@@ -1151,5 +1202,5 @@ def test_app_packages_debugger_debugger(
         == bundle_path / ".debugger_support_package"
     )
 
-    # Check that the debugger support package directory is empty
-    assert len(os.listdir(myapp.debugger.debugger_support_pkg_dir)) == 0
+    # Check that "some_old_file.py" got deleted
+    assert os.listdir(bundle_path / ".debugger_support_package") == ["dummy.py"]

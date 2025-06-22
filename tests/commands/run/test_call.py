@@ -34,7 +34,7 @@ def test_no_args_one_app(run_command, first_app):
             "first",
             False,
             False,
-            {"debugger_host": "localhost", "debugger_port": 5678, "passthrough": []},
+            {"debugger_host": None, "debugger_port": None, "passthrough": []},
         ),
     ]
 
@@ -72,8 +72,8 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
             False,
             False,
             {
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": ["foo", "--bar"],
             },
         ),
@@ -130,7 +130,7 @@ def test_with_arg_one_app(run_command, first_app):
             "first",
             False,
             False,
-            {"debugger_host": "localhost", "debugger_port": 5678, "passthrough": []},
+            {"debugger_host": None, "debugger_port": None, "passthrough": []},
         ),
     ]
 
@@ -167,7 +167,7 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
             "second",
             False,
             False,
-            {"debugger_host": "localhost", "debugger_port": 5678, "passthrough": []},
+            {"debugger_host": None, "debugger_port": None, "passthrough": []},
         ),
     ]
 
@@ -241,8 +241,8 @@ def test_create_app_before_start(run_command, first_app_config):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -297,8 +297,8 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -353,8 +353,8 @@ def test_update_app(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -409,8 +409,8 @@ def test_update_app_requirements(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -465,8 +465,8 @@ def test_update_app_resources(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -521,8 +521,8 @@ def test_update_app_support(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -577,8 +577,8 @@ def test_update_app_stub(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -634,8 +634,8 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -691,8 +691,8 @@ def test_update_non_existent(run_command, first_app_config):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -747,8 +747,8 @@ def test_test_mode_existing_app(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -803,8 +803,8 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": ["foo", "--bar"],
             },
         ),
@@ -843,7 +843,7 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
             "first",
             True,
             False,
-            {"debugger_host": "localhost", "debugger_port": 5678, "passthrough": []},
+            {"debugger_host": None, "debugger_port": None, "passthrough": []},
         ),
     ]
 
@@ -896,8 +896,8 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -952,8 +952,8 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -1008,8 +1008,8 @@ def test_test_mode_update_existing_app(run_command, first_app):
             False,
             {
                 "build_state": "first",
-                "debugger_host": "localhost",
-                "debugger_port": 5678,
+                "debugger_host": None,
+                "debugger_port": None,
                 "passthrough": [],
             },
         ),
@@ -1062,6 +1062,64 @@ def test_test_mode_non_existent(run_command, first_app_config):
             "first",
             True,
             False,
+            {
+                "build_state": "first",
+                "debugger_host": None,
+                "debugger_port": None,
+                "passthrough": [],
+            },
+        ),
+    ]
+
+
+def test_debug(run_command, first_app_config):
+    """Requesting a debugger."""
+    # Add a single app, using the 'config only' fixture
+    run_command.apps = {
+        "first": first_app_config,
+    }
+
+    run_command.supports_debugger = True
+
+    # Configure a test option
+    options, _ = run_command.parse_options(["--debug=pdb"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App will be built with debugger
+        (
+            "build",
+            "first",
+            False,
+            True,
+            {
+                "update": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+                "no_update": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            False,
+            True,
             {
                 "build_state": "first",
                 "debugger_host": "localhost",

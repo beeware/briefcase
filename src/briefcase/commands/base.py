@@ -673,11 +673,6 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
-        if not self.supports_debugger and (debugger_name is not None):
-            raise BriefcaseCommandError(
-                f"The {self.command} command for the {self.platform} {self.output_format} format does not support debugging."
-            )
-
         if debugger_name and debugger_name != "":
             debugger = get_debugger(debugger_name)
             app.debugger = debugger

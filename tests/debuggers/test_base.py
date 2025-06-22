@@ -1,7 +1,9 @@
+import py_compile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+import tomllib
 
 from briefcase.debuggers import (
     DebugpyDebugger,
@@ -54,9 +56,20 @@ def test_debugger(debugger_name, expected_class, connection_mode):
     with TemporaryDirectory() as tmp_path:
         tmp_path = Path(tmp_path)
         debugger.create_debugger_support_pkg(tmp_path)
-        assert (tmp_path / "pyproject.toml").exists()
-        assert (tmp_path / "setup.py").exists()
-        assert (tmp_path / "briefcase_debugger_support" / "__init__.py").exists()
+
+        # Try to parse pyproject.toml to check for toml-format errors
+        with (tmp_path / "pyproject.toml").open("rb") as f:
+            tomllib.load(f)
+
+        # try to compile to check existence and for syntax errors
+        assert py_compile.compile(tmp_path / "setup.py") is not None
         assert (
-            tmp_path / "briefcase_debugger_support" / "_remote_debugger.py"
-        ).exists()
+            py_compile.compile(tmp_path / "briefcase_debugger_support" / "__init__.py")
+            is not None
+        )
+        assert (
+            py_compile.compile(
+                tmp_path / "briefcase_debugger_support" / "_remote_debugger.py"
+            )
+            is not None
+        )

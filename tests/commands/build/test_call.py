@@ -1039,12 +1039,15 @@ def test_build_test_update_stub(build_command, first_app, second_app):
 
 
 def test_build_debug(build_command, first_app, second_app):
-    """If the user builds a debug app, app is updated before build."""
+    """The update command can be called with debug option."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
         "second": second_app,
     }
+
+    # Emulate debugger support
+    build_command.supports_debugger = True
 
     # Configure command line options
     options, _ = build_command.parse_options(["--debug=pdb"])
@@ -1115,6 +1118,19 @@ def test_build_debug(build_command, first_app, second_app):
             },
         ),
     ]
+
+
+def test_build_debug_unsupported(build_command, first_app, second_app):
+    """If the user requests a build with update and no-update, an error is raised."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Configure command line options
+    with pytest.raises(SystemExit):
+        options, _ = build_command.parse_options(["--debug=pdb"])
 
 
 def test_build_invalid_update(build_command, first_app, second_app):

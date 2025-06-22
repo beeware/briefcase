@@ -16,7 +16,9 @@ class UpdateCommand(CreateCommand):
     def add_options(self, parser):
         self._add_update_options(parser, update=False)
         self._add_test_options(parser, context_label="Update")
-        self._add_debug_options(parser, context_label="Update")
+
+        if self.supports_debugger:
+            self._add_debug_options(parser, context_label="Update")
 
         parser.add_argument(
             "-a",
