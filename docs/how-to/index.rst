@@ -17,9 +17,9 @@ stand alone.
    ci
    cli-apps
    x11passthrough
+   debugging/index
    external-apps
    publishing/index
    contribute/index
    internal/index
    upgrade-from-v0.2
-   debugging_vscode

@@ -122,11 +122,11 @@ bundled app.
 
 Currently the following debuggers are supported (default is ``pdb``):
 
- - ``pdb``: This is used for debugging via console.
- - ``debugpy``: This is used for debugging via VSCode.
+- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
+- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
 
-It also optimizes the app for debugging. E.g. on android it ensures, that all
-`.py` files are extracted from the apk and are accessible for the debugger.
+It also optimizes the app for debugging. E.g. on Android it ensures, that all
+`.py` files are extracted from the APK and are accessible for the debugger.
 
 This option may slow down the app a little bit.
 

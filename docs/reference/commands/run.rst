@@ -34,32 +34,6 @@ corresponding to test suite completion. Briefcase has built-in support for `pyte
 frameworks can be added using the :attr:`test_success_regex` and
 :attr:`test_failure_regex` settings.
 
-Debug mode
-----------
-
-The debug mode can be used to (remote) debug an bundled app. The debugger has
-to be specified with the ``--debug <debugger>`` option during ``briefcase build``
-and ``briefcase run``.
-
-This is useful when developing an iOS or Android app that can't be debugged
-via ``briefcase dev``.
-
-To debug an bundled app you need a socket connection from your host system to
-the device running your bundled app. For the iOS simulator the host pc and the
-iOS simulator share the same network. For Android briefcase ensures that the
-port is forwarded from the android device to the host pc via adb.
-
-Currently the following debuggers are supported:
-
-- ``pdb``: This is used for debugging via console. After starting the app
-  you can connect to it depending on your host system via
-    - ``telnet localhost 5678`` (Windows, Linux)
-    - ``rlwrap socat - tcp:localhost:5678`` (Linux, macOS)
-  The app will start after the connection is established.
-
-- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debugging with VSCode </how-to/debugging_vscode>`)
-
-
 Usage
 =====
 
@@ -171,8 +145,8 @@ debugger connection via a socket.
 
 Currently the following debuggers are supported (default is ``pdb``):
 
- - ``pdb``: This is used for debugging via console.
- - ``debugpy``: This is used for debugging via VSCode.
+- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
+- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
 
 For ``debugpy`` there is also a mapping of the source code from your bundled
 app to your local copy of the apps source code in the ``build`` folder. This
@@ -193,10 +167,8 @@ Specifies the port of the socket connection for the debugger. This
 option is only used when the ``--debug <debugger>`` option is specified. The
 default value is ``5678``.
 
-On Android this also forwards the port from the android device to the host pc
-via adb if the port is ``localhost``.
-
-
+On Android this also forwards the port from the Android device to the host pc
+via ADB if the port is ``localhost``.
 
 Passthrough arguments
 ---------------------
