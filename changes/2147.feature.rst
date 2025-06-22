@@ -1,1 +1,1 @@
-Added debugging support in bundled app through ``briefcase run --debug <debugger>``.
+Added basic functions for an ``--debug <debugger>`` option.
