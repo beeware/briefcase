@@ -1,9 +1,14 @@
 import py_compile
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-import tomllib
+
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
+    import tomllib
+else:  # pragma: no-cover-if-gte-py311
+    import tomli as tomllib
 
 from briefcase.debuggers import (
     DebugpyDebugger,
