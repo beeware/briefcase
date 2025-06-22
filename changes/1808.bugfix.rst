@@ -1,0 +1,1 @@
+An error is now raised on macOS if Briefcase is used on an iCloud mounted drive. iCloud synchronization adds metadata to some folders, which is incompatible with the signing process.

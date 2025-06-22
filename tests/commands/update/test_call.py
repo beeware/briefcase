@@ -273,6 +273,28 @@ def test_update_app_all_flags(update_command, first_app, second_app):
     ]
 
 
+def test_update_external_app(update_command, first_app):
+    """If the user requests a update an external app, an error is raised."""
+    # Add an apps
+    update_command.apps = {
+        "first": first_app,
+    }
+
+    # Make first_app an external app
+    first_app.sources = None
+    first_app.external_package_path = "path/to/package"
+
+    # Configure no command line options
+    options, _ = update_command.parse_options([])
+
+    # Run the build command
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"'first' is declared as an external app",
+    ):
+        update_command(**options)
+
+
 def test_update_debug_with_requirements(update_command, first_app, second_app):
     """The update command can be called, requesting a requirements update."""
     update_command.supports_debugger = True

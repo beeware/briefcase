@@ -4,6 +4,7 @@ import gzip
 import re
 import subprocess
 import sys
+import tarfile
 from pathlib import Path
 
 from briefcase.commands import (
@@ -40,6 +41,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     supported_host_os_reason = (
         "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
+    supports_external_packaging = True
 
     @property
     def use_docker(self):
@@ -87,6 +89,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
     def binary_path(self, app):
         return self.project_path(app) / "usr/bin" / app.app_name
+
+    def bundle_package_path(self, app):
+        return self.project_path(app)
 
     def rpm_tag(self, app):
         if app.target_vendor == "fedora":
@@ -150,6 +155,12 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
         else:
+            if app.external_package_path:
+                raise BriefcaseCommandError(
+                    "Briefcase can't currently use Docker to package "
+                    "external apps as Linux system packages."
+                )
+
             # If we're building for Arch, and Docker does user mapping, we can't build,
             # because Arch won't let makepkg run as root. Docker on macOS *does* map the
             # user, but introducing a step-down user doesn't alter behavior, so we can
@@ -766,7 +777,7 @@ app's configuration.
                 raise BriefcaseCommandError(
                     """\
 Your project does not contain a changelog file with a known file name. You
-must provided a changelog file in the same directory as your `pyproject.toml`,
+must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
@@ -967,7 +978,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.console.wait_bar("Write Debian package control file..."):
-            DEBIAN_path = self.project_path(app) / "DEBIAN"
+            DEBIAN_path = self.package_path(app) / "DEBIAN"
 
             if DEBIAN_path.exists():
                 self.tools.shutil.rmtree(DEBIAN_path)
@@ -1014,7 +1025,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                         "dpkg-deb",
                         "--build",
                         "--root-owner-group",
-                        f"{app.app_name}-{app.version}",
+                        self.package_path(app),
                     ],
                     check=True,
                     cwd=self.bundle_path(app),
@@ -1026,7 +1037,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
             # Move the deb file to its final location
             self.tools.shutil.move(
-                self.bundle_path(app) / f"{app.app_name}-{app.version}.deb",
+                self.package_path(app).parent / f"{self.package_path(app).name}.deb",
                 self.distribution_path(app),
             )
 
@@ -1129,8 +1140,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
                 # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
                 # *not* cleaned up, as they're part of more general system structures.
-                for filename in sorted(self.project_path(app).glob("**/*")):
-                    path = filename.relative_to(self.project_path(app))
+                for filename in sorted(self.package_path(app).glob("**/*")):
+                    path = filename.relative_to(self.package_path(app))
 
                     if filename.is_dir():
                         if app.app_name in path.parts:
@@ -1146,7 +1157,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     raise BriefcaseCommandError(
                         """\
 Your project does not contain a changelog file with a known file name. You
-must provided a changelog file in the same directory as your `pyproject.toml`,
+must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
@@ -1159,16 +1170,18 @@ no extension).
                     f.write(c.read())
 
         with self.console.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                rpmbuild_path / "SOURCES" / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
-            )
+            with tarfile.open(
+                rpmbuild_path / f"SOURCES/{self.bundle_package_path(app).name}.tar.gz",
+                "w:gz",
+            ) as archive:
+                archive.add(
+                    self.package_path(app),
+                    arcname=self.bundle_package_path(app).name,
+                )
 
         with self.console.wait_bar("Building RPM package..."):
             try:
-                # Build the dpkg.
+                # Build the rpm.
                 self.tools[app].app_context.run(
                     [
                         "rpmbuild",
@@ -1231,12 +1244,14 @@ with details about the release.
 
         # Build the source archive
         with self.console.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                pkgbuild_path / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
-            )
+            with tarfile.open(
+                pkgbuild_path / f"{self.bundle_package_path(app).name}.tar.gz",
+                "w:gz",
+            ) as archive:
+                archive.add(
+                    self.package_path(app),
+                    arcname=self.bundle_package_path(app).name,
+                )
 
         # Write the arch PKGBUILD file.
         with self.console.wait_bar("Write PKGBUILD file..."):

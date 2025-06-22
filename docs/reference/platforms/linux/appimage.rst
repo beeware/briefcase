@@ -99,12 +99,13 @@ Use native execution, rather than using Docker to start a container.
 Application configuration
 =========================
 
+.. currentmodule:: linux.appimage
+
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.appimage`` section of your
 ``pyproject.toml`` file.
 
-``manylinux``
-~~~~~~~~~~~~~
+.. attribute:: manylinux
 
 The `manylinux <https://github.com/pypa/manylinux>`__ tag to use as a base image
 when building the AppImage. Should be one of:
@@ -116,15 +117,13 @@ when building the AppImage. Should be one of:
 * ``manylinux2_28``
 
 New projects will default to ``manylinux2014``. If an application doesn't specify
-a ``manylinux`` value, ``ubuntu:18.04`` will be used as the base image.
+a :attr:`manylinux` value, ``ubuntu:18.04`` will be used as the base image.
 
-``manylinux_image_tag``
-~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: manylinux_image_tag
 
 The specific tag of the ``manylinux`` image to use. Defaults to ``latest``.
 
-``system_requires``
-~~~~~~~~~~~~~~~~~~~
+.. attribute:: system_requires
 
 A list of operating system packages that must be installed for the AppImage
 build to succeed. If a Docker build is requested, this list will be passed to
@@ -146,8 +145,7 @@ a new environment that is completely isolated from your development
 environment, so if your app has any operating system dependencies, they
 *must* be listed in your ``system_requires`` definition.
 
-``linuxdeploy_plugins``
-~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: linuxdeploy_plugins
 
 A list of `linuxdeploy plugins
 <https://docs.appimage.org/packaging-guide/from-source/linuxdeploy-user-guide.html#plugin-system>`__
@@ -157,7 +155,7 @@ automatically discovered by Linuxdeploy. GTK and Qt both have complex
 runtime resource requirements that can be difficult for Linuxdeploy to
 identify automatically.
 
-The ``linuxdeploy_plugins`` declaration is a list of strings. Briefcase can take
+The :attr:`linuxdeploy_plugins` declaration is a list of strings. Briefcase can take
 plugin definitions in three formats:
 
 1. The name of a plugin known by Briefcase. One of ``gtk`` or ``qt``.
@@ -178,8 +176,7 @@ Or, if you were using a plugin stored as a local file::
 
     linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 path/to/plugins/linuxdeploy-gtk-plugin.sh"]
 
-``dockerfile_extra_content``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: dockerfile_extra_content
 
 Any additional Docker instructions that are required to configure the container
 used to build your Python app. For example, any dependencies that cannot be
@@ -290,7 +287,7 @@ This indicates that one of the libraries that has been included in the AppImage
 has become corrupted as a result of double processing.
 
 The solution is to ask Briefcase to install the affected library from source.
-This can be done by adding a ``"--no-binary"`` entry to the ``requires``
+This can be done by adding a ``"--no-binary"`` entry to the :attr:`requires`
 declaration for your app. For example, if your app includes Pillow as a
 requirement::
 
@@ -351,14 +348,13 @@ single ``:all`` declaration::
         "--no-binary", ":all:",
     ]
 
-The ``--no-binary`` declaration doesn't need to be added to the same
-``requires`` declaration that defines the requirement. For example, if you have
-a library that is used on all platforms, the declaration will probably be in the
-top-level ``requires``, not the platform-specific ``requires``. If you add
-``--no-binary`` in the top-level requires, the use of a binary wheel would be
-prevented on *all* platforms. To avoid this, you can add the requirement in the
-top-level requires, but add the ``--no-binary`` declaration to the
-Linux-specific requirements::
+The ``--no-binary`` declaration doesn't need to be added to the same :attr:`requires`
+declaration that defines the requirement. For example, if you have a library that is
+used on all platforms, the declaration will probably be in the top-level
+:attr:`requires`, not the platform-specific :attr:`requires`. If you add ``--no-binary``
+in the top-level requires, the use of a binary wheel would be prevented on *all*
+platforms. To avoid this, you can add the requirement in the top-level requires, but add
+the ``--no-binary`` declaration to the Linux-specific requirements::
 
     [tool.briefcase.app.helloworld]
     formal_name = "Hello World"

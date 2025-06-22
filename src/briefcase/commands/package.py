@@ -12,6 +12,7 @@ from .base import BaseCommand, full_options
 class PackageCommand(BaseCommand):
     command = "package"
     description = "Package an app for distribution."
+    supports_external_packaging = False
 
     ADHOC_SIGN_HELP = "Ignored; signing is not supported"
     IDENTITY_HELP = "Ignored; signing is not supported"
@@ -78,10 +79,27 @@ class PackageCommand(BaseCommand):
         :param update: Should the application be updated (and rebuilt) first?
         :param packaging_format: The format of the packaging artefact to create.
         """
-
         template_file = self.bundle_path(app)
         binary_file = self.binary_path(app)
-        if not template_file.exists():
+
+        if app.external_package_path:
+            if not self.supports_external_packaging:
+                raise BriefcaseCommandError(
+                    f"Briefcase cannot package external {self.platform} apps "
+                    f"in {self.output_format} format."
+                )
+
+            self.console.info(
+                f"Packaging external content from {self.package_path(app)}",
+                prefix=app.app_name,
+            )
+
+            # A minimal template is required to provide packaging configuration files
+            # and other metadata. We *always* generate the template to ensure that
+            # packaging metadata is up-to-date. If the app has been packaged before,
+            # it will be necessary to confirm deletion of the old folder.
+            state = self.create_command(app, **options)
+        elif not template_file.exists():
             state = self.create_command(app, **options)
             state = self.build_command(app, **full_options(state, options))
         elif update:

@@ -579,3 +579,34 @@ def test_cascading_distribution_properties(create_command, first_app_config):
         "prop1": "vendor level prop 1",
         "prop2": "debian level prop 2",
     }
+
+
+def test_external_docker(create_command, first_app_config):
+    """An external app cannot be finalized inside Docker."""
+    # Make the app external
+    first_app_config.sources = None
+    first_app_config.external_package_path = "path/to/package"
+
+    # Build the app on a specific target
+    create_command.target_image = "somevendor:surprising"
+    create_command.tools.docker = MagicMock()
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    # Mock a minimal response from checking /etc/os-release
+    create_command.tools.docker.check_output.return_value = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
+
+    # Finalize the app config - this will raise an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase can't currently use Docker to package "
+            r"external apps as Linux system packages."
+        ),
+    ):
+        create_command.finalize_app_config(first_app_config)

@@ -32,13 +32,13 @@ contains the ``pyproject.toml`` file.
 Changes to these options will not take effect until you run the appropriate
 ``briefcase`` command:
 
-* For ``sources``, run ``briefcase update``, or pass the ``-u`` option to
+* For :attr:`sources`, run ``briefcase update``, or pass the ``-u`` option to
   ``briefcase build`` or ``briefcase run``.
-* For ``requires``, run ``briefcase update -r``, or pass the ``-r`` option to
-  ``briefcase build`` or ``briefcase run``.
-* For ``icon`` (including an ``icon`` definition in a document type), run ``briefcase
-  update --update-resources``, or pass the ``--update-resources`` option to ``briefcase
-  build`` or ``briefcase run``.
+* For :attr:`requires`, run ``briefcase update -r``, or pass the ``-r``
+  option to ``briefcase build`` or ``briefcase run``.
+* For :attr:`icon` (including an :attr:`document_type_id.icon`
+  definition in a document type), run ``briefcase update --update-resources``, or pass
+  the ``--update-resources`` option to ``briefcase build`` or ``briefcase run``.
 * For any other options, you'll need to re-run ``briefcase create``.
 
 
@@ -110,8 +110,7 @@ Project configuration
 Required values
 ---------------
 
-``bundle``
-~~~~~~~~~~
+.. attribute:: bundle
 
 A reverse-domain name that can be used to identify resources for the
 application e.g., ``com.example``. The bundle identifier will be combined with
@@ -119,15 +118,13 @@ the app name to produce a unique application identifier - e.g., if the bundle
 identifier is ``com.example`` and the app name is ``myapp``, the application
 will be identified as ``com.example.myapp``.
 
-``project_name``
-~~~~~~~~~~~~~~~~
+.. attribute:: project_name
 
 The project is the collection of all applications that are described by the
 briefcase configuration. For projects with a single app, this may be the same
 as the formal name of the solitary packaged app.
 
-``version``
-~~~~~~~~~~~
+.. attribute:: version
 
 A `PEP440 <https://peps.python.org/pep-0440/>`__ compliant version string.
 
@@ -144,19 +141,16 @@ Examples of valid version strings:
 Optional values
 ---------------
 
-``author``
-~~~~~~~~~~
+.. attribute:: author
 
 The person or organization responsible for the project.
 
-``author_email``
-~~~~~~~~~~~~~~~~
+.. attribute:: author_email
 
 The contact email address for the person or organization responsible for the
 project.
 
-``url``
-~~~~~~~
+.. attribute:: url
 
 A URL where more details about the project can be found.
 
@@ -166,13 +160,11 @@ Application configuration
 Required
 --------
 
-``description``
-~~~~~~~~~~~~~~~
+.. attribute:: description
 
 A short, one-line description of the purpose of the application.
 
-``sources``
-~~~~~~~~~~~
+.. attribute:: sources
 
 A list of paths, relative to the ``pyproject.toml`` file, where source code for
 the application can be found. The contents of any named files or folders will be
@@ -181,42 +173,32 @@ not be included. For example, if you specify ``src/myapp`` as a source, the
 contents of the ``myapp`` folder will be copied into the application bundle; the
 ``src`` directory will not be reproduced.
 
-Unlike most other keys in a configuration file, ``sources`` is a *cumulative*
+Unlike most other keys in a configuration file, :attr:`sources` is a *cumulative*
 setting. If an application defines sources at the global level, application
 level, *and* platform level, the final set of sources will be the
 *concatenation* of sources from all levels, starting from least to most
 specific.
 
+The only time ``sources`` is *not* required is if you are is :doc:`packaging an external
+application </how-to/external-apps>`. If you are packaging an external application,
+``external_package_path`` must be defined, and ``sources`` *must not* be defined.
+
 Optional values
 ---------------
 
-``accent_color``
-~~~~~~~~~~~~~~~~
+.. attribute:: accent_color
 
 A hexadecimal RGB color value (e.g., ``#D81B60``) for a subtle secondary color
 to be used throughout an application to call attention to key elements. This
 setting is only used if the platform allows color modification, otherwise it
 is ignored.
 
-``author``
-~~~~~~~~~~
-
-The person or organization responsible for the application.
-
-``author_email``
-~~~~~~~~~~~~~~~~
-
-The contact email address for the person or organization responsible for the
-application.
-
-``build``
-~~~~~~~~~
+.. attribute:: build
 
 A build identifier. An integer, used in addition to the version specifier,
 to identify a specific compiled version of an application.
 
-``cleanup_paths``
-~~~~~~~~~~~~~~~~~
+.. attribute:: cleanup_paths
 
 A list of strings describing paths that will be *removed* from the project after
 the installation of the support package and app code. The paths provided will be
@@ -234,7 +216,7 @@ Paths are treated as format strings prior to glob expansion. You can use Python
 string formatting to include references to configuration properties of the app
 (e.g., ``app.formal_name``, ``app.version``, etc).
 
-For example, the following ``cleanup_paths`` specification::
+For example, the following :attr:`cleanup_paths` specification::
 
     cleanup_paths = [
         "path/to/unneeded_file.txt",
@@ -250,8 +232,7 @@ on an app with a formal name of "My App" would remove:
 3. Any ``.exe`` file in ``path`` or its subdirectories.
 4. The file ``My App/content/extra.doc``.
 
-``console_app``
-~~~~~~~~~~~~~~~
+.. attribute:: console_app
 
 A Boolean describing if the app is a console app, or a GUI app. Defaults to ``False``
 (producing a GUI app). This setting has no effect on platforms that do not support a
@@ -260,8 +241,7 @@ the resulting app will write output directly to ``stdout``/``stderr`` (rather th
 writing to a system log), creating a terminal window to display this output (if the
 platform allows).
 
-``exit_regex``
-~~~~~~~~~~~~~~
+.. attribute:: exit_regex
 
 A regular expression that will be executed against the console output generated
 by an application. If/when the regular expression find match, the application
@@ -275,15 +255,41 @@ default value for this regular expression is ``^>>>>>>>>>> EXIT
 (?P<returncode>.*) <<<<<<<<<<$`` The regex will be compiled with the
 ``re.MULTILINE`` flag enabled.
 
-``formal_name``
-~~~~~~~~~~~~~~~
+.. attribute:: external_package_path
+
+.. admonition:: Only for external apps
+
+    This setting is only required if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not required if you are using Briefcase
+    for the entire app creation process.
+
+The value of ``external_package_path`` defines the path to the root of a folder that
+will be packaged as an application. The contents of ``external_package_path`` is what
+will be shipped to the end user as the installed app.
+
+If ``external_package_path`` is defined, ``sources`` must *not* be defined.
+
+.. attribute:: external_package_executable_path
+
+.. admonition:: Only for external apps
+
+    This setting is only allowed if you're using Briefcase to :doc:`package an external
+    application </how-to/external-apps>`. It is not allowed if you are using Briefcase
+    for the entire app creation process.
+
+The path, relative to :attr:`external_package_path`, to the binary
+that will be executed as part of the installed app. This is used
+to establish the path to the shortcut that should be installed.
+
+This setting is only used on Windows.
+
+.. attribute:: formal_name
 
 The application name as it should be displayed to humans. This name may contain
-capitalization and punctuation. If it is not specified, the ``name`` will be
+capitalization and punctuation. If it is not specified, the :attr:`name` will be
 used.
 
-``icon``
-~~~~~~~~
+.. attribute:: icon
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the icon for the application. The path should *exclude*
@@ -298,32 +304,28 @@ iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will
 look for ``resources/icon-20.png``, ``resources/icon-1024.png``, and so on. The
 sizes that are required are determined by the platform template.
 
-``installer_icon``
-~~~~~~~~~~~~~~~~~~
+.. attribute:: installer_icon
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
-to an image to use as the icon for the installer. As with ``icon``, the
+to an image to use as the icon for the installer. As with :attr:`icon`, the
 path should *exclude* the extension, and a platform-appropriate extension will
 be appended when the application is built.
 
-``installer_background``
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: installer_background
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image to use as the background for the installer. The path should
 *exclude* the extension, and a platform-appropriate extension will be appended
 when the application is built.
 
-``long_description``
-~~~~~~~~~~~~~~~~~~~~
+.. attribute:: long_description
 
 A longer description of the purpose of the application. This description can be
 multiple paragraphs, if necessary. The long description *must not* be a copy of
-the ``description``, or include the ``description`` as the first line of the
-``long_description``.
+the :attr:`description`, or include the :attr:`description` as the first line of the
+:attr:`long_description`
 
-``min_os_version``
-~~~~~~~~~~~~~~~~~~
+.. py:attribute:: min_os_version
 
 A string describing the minimum OS version that the generated app will support. This
 value is only used on platforms that have a clear mechanism for specifying OS version
@@ -331,8 +333,7 @@ compatibility; on the platforms where it *is* used, the interpretation of the va
 platform specific. Refer to individual platform guides for details on how the provided
 value is interpreted.
 
-``requirement_installer_args``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: requirement_installer_args
 
 A list of strings of arguments to pass to the requirement installer when building the
 app.
@@ -374,7 +375,7 @@ to an existing path:
 
 .. admonition:: Supported arguments
 
-    The arguments supported in ``requirement_installer_args`` depend on the requirement
+    The arguments supported in :attr:`requirement_installer_args` depend on the requirement
     installer backend.
 
     The only currently supported requirement installer is ``pip``. As such, the list
@@ -384,15 +385,13 @@ to an existing path:
     Briefcase does not validate the inputs to this configuration, and will only report
     errors directly indicated by the requirement installer backend.
 
-``primary_color``
-~~~~~~~~~~~~~~~~~
+.. attribute:: primary_color
 
 A hexadecimal RGB color value (e.g., ``#008577``) to use as the primary color
 for the application. This setting is only used if the platform allows color
 modification, otherwise it is ignored.
 
-``primary_color_dark``
-~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: primary_color_dark
 
 A hexadecimal RGB color value (e.g., ``#008577``) used alongside the primary
 color. This setting is only used if the platform allows color modification,
@@ -401,12 +400,11 @@ otherwise it is ignored.
 
 .. _configuration-requires-key:
 
-``requires``
-~~~~~~~~~~~~
+.. attribute:: requires
 
 A list of packages that must be packaged with this application.
 
-Unlike most other keys in a configuration file, ``requires`` is a *cumulative*
+Unlike most other keys in a configuration file, :attr:`requires` is a *cumulative*
 setting. If an application defines requirements at the global level,
 application level, *and* platform level, the final set of requirements will be
 the *concatenation* of requirements from all levels, starting from least to
@@ -441,14 +439,12 @@ Any PEP 508 version specifier is legal. For example:
 
     requires=["fullpath/wheelfile.whl"]
 
-``revision``
-~~~~~~~~~~~~
+.. attribute:: revision
 
 An identifier used to differentiate specific builds of the same version of an
 app. Defaults to ``1`` if not provided.
 
-``splash_background_color``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: splash_background_color
 
 A hexadecimal RGB color value (e.g., ``#6495ED``) to use as the background
 color for splash screens.
@@ -456,8 +452,7 @@ color for splash screens.
 If the platform output format does not use a splash screen, this setting is
 ignored.
 
-``stub_binary``
-~~~~~~~~~~~~~~~
+.. attribute:: stub_binary
 
 A file path or URL pointing at a pre-compiled binary (or a zip/tarball of a binary) that
 can be used as an entry point for a bundled application.
@@ -465,19 +460,17 @@ can be used as an entry point for a bundled application.
 If this setting is not provided, and a stub binary is required by the platform,
 Briefcase will use the default stub binary for the platform.
 
-``stub_binary_revision``
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: stub_binary_revision
 
 The specific revision of the stub binary that should be used. By default, Briefcase will
 use the stub binary revision nominated by the application template. If you specify a
 stub binary revision, that will override the revision nominated by the application
 template.
 
-If you specify an explicit stub binary (using the ``stub_binary`` setting), this
+If you specify an explicit stub binary (using the :attr:`stub_binary` setting), this
 argument is ignored.
 
-``support_package``
-~~~~~~~~~~~~~~~~~~~
+.. attribute:: support_package
 
 A file path or URL pointing at a tarball containing a Python support package.
 (i.e., a precompiled, embeddable Python interpreter for the platform)
@@ -485,8 +478,7 @@ A file path or URL pointing at a tarball containing a Python support package.
 If this setting is not provided, Briefcase will use the default support
 package for the platform.
 
-``support_revision``
-~~~~~~~~~~~~~~~~~~~~
+.. attribute:: support_revision
 
 The specific revision of a support package that should be used. By default,
 Briefcase will use the support package revision nominated by the application
@@ -496,19 +488,17 @@ nominated by the application template.
 If you specify an explicit support package (either as a URL or a file path),
 this argument is ignored.
 
-``supported``
-~~~~~~~~~~~~~
+.. attribute:: supported
 
 Indicates that the platform is not supported. For example, if you know that
 the app cannot be deployed to Android for some reason, you can explicitly
 prevent deployment by setting ``supported=False`` in the Android section of
 the app configuration file.
 
-If ``supported`` is set to ``false``, the create command will fail, advising
+If :attr:`supported` is set to ``false``, the create command will fail, advising
 the user of the limitation.
 
-``template``
-~~~~~~~~~~~~
+.. attribute:: template
 
 A file path or URL pointing at a `cookiecutter
 <https://github.com/cookiecutter/cookiecutter>`__ template for the output
@@ -517,8 +507,7 @@ format.
 If this setting is not provided, Briefcase will use a default template for
 the output format and Python version.
 
-``template_branch``
-~~~~~~~~~~~~~~~~~~~
+.. attribute:: template_branch
 
 The branch of the project template to use when generating the app. If the
 template is a local file, this attribute will be ignored. If not specified,
@@ -528,12 +517,11 @@ used (i.e., if you're using Briefcase 0.3.9, Briefcase will use the
 development version of Briefcase, Briefcase will use the ``main`` branch of the
 template.
 
-``test_requires``
-~~~~~~~~~~~~~~~~~
+.. attribute:: test_requires
 
 A list of packages that are required for the test suite to run.
 
-Unlike most other keys in a configuration file, ``test_requires`` is a
+Unlike most other keys in a configuration file, :attr:`test_requires` is a
 *cumulative* setting. If an application defines requirements at the global
 level, application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting from least
@@ -541,8 +529,7 @@ to most specific.
 
 See :ref:`requires <configuration-requires-key>` for examples.
 
-``test_sources``
-~~~~~~~~~~~~~~~~
+.. attribute:: test_sources
 
 A list of paths, relative to the ``pyproject.toml`` file, where test code for
 the application can be found. The contents of any named files or folders will be
@@ -551,15 +538,10 @@ not be included. For example, if you specify ``src/myapp`` as a source, the
 contents of the ``myapp`` folder will be copied into the application bundle; the
 ``src`` directory will not be reproduced.
 
-As with ``sources``, ``test_sources`` is a *cumulative* setting. If an
+As with :attr:`sources`, :attr:`test_sources` is a *cumulative* setting. If an
 application defines sources at the global level, application level, *and*
 platform level, the final set of sources will be the *concatenation* of test
 sources from all levels, starting from least to most specific.
-
-``url``
-~~~~~~~
-
-A URL where more details about the application can be found.
 
 Permissions
 ===========
@@ -573,12 +555,29 @@ starting from least to most specific, with the most specific taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
-* ``permission.camera`` - permission to access the camera to take photos or video.
-* ``permission.microphone`` - permission to access the microphone.
-* ``permission.coarse_location`` - permission to determine a rough GPS location.
-* ``permission.fine_location`` - permission to determine a precise GPS location.
-* ``permission.background_location`` - permission to track GPS location while in the background.
-* ``permission.photo_library`` - permission to access the user's photo library.
+.. attribute:: permission.camera
+
+Permission to access the camera to take photos or video.
+
+.. attribute:: permission.microphone
+
+Permission to access the microphone.
+
+.. attribute:: permission.coarse_location
+
+Permission to determine a rough GPS location.
+
+.. attribute:: permission.fine_location
+
+Permission to determine a precise GPS location.
+
+.. attribute:: permission.background_location
+
+Permission to track GPS location while in the background.
+
+.. attribute:: permission.photo_library
+
+Permission to access the user's photo library.
 
 If a cross-platform permission is used, it will be mapped to platform-specific values in
 whatever files are used to define permissions on that platform.
@@ -598,6 +597,8 @@ platform backends for details on how cross-platform permissions are mapped.
 Document types
 ==============
 
+.. currentmodule:: document_type_id
+
 Applications in a project can register themselves with the operating system as
 handlers for specific document types by adding a ``document_type``
 configuration section for each document type the application can support. This
@@ -611,23 +612,19 @@ or, for a platform-specific definition:
 
 The ``document type id`` is an identifier, in alphanumeric format. It is appended to the app id of an application to identify documents of the same type.
 
-
 The document type declaration requires the following settings:
 
-``description``
----------------
+.. attribute:: description
 
 A short, one-line description of the document format.
 
-``extension``
----------------
+.. attribute:: extension
 
-The ``extension`` is the file extension to register. For example, ``myapp``
+The :attr:`extension` is the file extension to register. For example, ``myapp``
 could register as a handler for PNG image files by defining the configuration
 section ``[tool.briefcase.app.myapp.document_type.png]``.
 
-``icon``
---------
+.. attribute:: icon
 
 A path, relative to the directory where the ``pyproject.toml`` file is located,
 to an image for an icon to register for use with documents of this type. The
@@ -657,8 +654,7 @@ round and square icons, in sizes ranging from 48px to 192px; Briefcase will
 look for ``resource/round-icon-42.png``, ``resource/square-icon-42.png``,
 ``resource/round-icon-192.png``, and so on.
 
-``mime_type``
--------------
+.. attribute:: mime_type
 
 A MIME type for the document format. This is used to register the document type with the
 operating system. For example, ``image/png`` for PNG image files, or ``application/pdf``
@@ -676,8 +672,7 @@ not using a formally registered mime type, you *must* use the ``x-`` prefix, or
 `formally apply to IANA <https://www.iana.org/form/media-types>`__ for a new registered
 MIME type.
 
-``url``
--------
+.. attribute:: url
 
 A URL for help related to the document format.
 
@@ -705,16 +700,16 @@ available:
 
 * ``version`` maps to the same key in Briefcase.
 * ``authors`` The ``email`` and ``name`` keys of the first value in the
-  ``authors`` setting map to ``author`` and ``author_email``.
-* ``dependencies`` maps to the Briefcase ``requires`` setting. This is a
-  cumulative setting; any packages defined in the ``requires`` setting at the
+  ``authors`` setting map to :attr:`author` and :attr:`author_email`.
+* ``dependencies`` maps to the Briefcase :attr:`requires` setting. This is a
+  cumulative setting; any packages defined in the :attr:`requires` setting at the
   ``[tool.briefcase]`` level will be appended to the packages defined with
   ``dependencies`` at the ``[project]`` level.
 * ``description`` maps to the same key in Briefcase.
 * ``test`` in an ``[project.optional-dependencies]`` section maps to
-  ``test_requires``., As with ``dependencies``/``requires``, this is a
+  :attr:`test_requires`., As with ``dependencies``/:attr:`requires`, this is a
   cumulative setting.
-* ``text`` in a ``[project.license]`` section will be mapped to ``license``.
-* ``homepage`` in a ``[project.urls]`` section will be mapped to ``url``.
+* ``text`` in a ``[project.license]`` section will be mapped to :attr:`license`.
+* ``homepage`` in a ``[project.urls]`` section will be mapped to :attr:`url`.
 * ``requires-python`` will be used to validate the running Python interpreter's
   version against the requirement.

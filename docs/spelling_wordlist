@@ -41,6 +41,7 @@ gradlew
 gtk
 hoc
 hostname
+iCloud
 installable
 iOS
 jarsigner
@@ -89,6 +90,7 @@ subdirectory
 subfolders
 submodule
 subprocesses
+templated
 Tk
 Tkinter
 tl

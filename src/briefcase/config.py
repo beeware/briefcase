@@ -338,8 +338,8 @@ class AppConfig(BaseConfig):
         version,
         bundle,
         description,
-        sources,
         license,
+        sources=None,
         formal_name=None,
         url=None,
         author=None,
@@ -356,6 +356,8 @@ class AppConfig(BaseConfig):
         long_description=None,
         console_app=False,
         requirement_installer_args: list[str] | None = None,
+        external_package_path: str | None = None,
+        external_package_executable_path: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -388,6 +390,9 @@ class AppConfig(BaseConfig):
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
         )
+        self.external_package_path = external_package_path
+        self.external_package_executable_path = external_package_executable_path
+
         self.test_mode: bool = False
 
         self.debugger: BaseDebugger | None = None
@@ -420,20 +425,21 @@ class AppConfig(BaseConfig):
                 "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
 
-        # Sources list doesn't include any duplicates
-        source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
-        if len(self.sources) != len(source_modules):
-            raise BriefcaseConfigError(
-                f"The `sources` list for {self.app_name!r} contains duplicated "
-                "package names."
-            )
+        if self.sources:
+            # Sources list doesn't include any duplicates
+            source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
+            if len(self.sources) != len(source_modules):
+                raise BriefcaseConfigError(
+                    f"The `sources` list for {self.app_name!r} contains duplicated "
+                    "package names."
+                )
 
-        # There is, at least, a source for the app module
-        if self.module_name not in source_modules:
-            raise BriefcaseConfigError(
-                f"The `sources` list for {self.app_name!r} does not include a "
-                f"package named {self.module_name!r}."
-            )
+            # There is, at least, a source for the app module
+            if self.module_name not in source_modules:
+                raise BriefcaseConfigError(
+                    f"The `sources` list for {self.app_name!r} does not include a "
+                    f"package named {self.module_name!r}."
+                )
 
     def __repr__(self):
         return f"<{self.bundle_identifier} v{self.version} AppConfig>"
@@ -482,7 +488,7 @@ class AppConfig(BaseConfig):
     def PYTHONPATH(self):
         """The PYTHONPATH modifications needed to run this app."""
         paths = []
-        sources = self.sources
+        sources = self.sources.copy() if self.sources else []
         if self.test_mode and self.test_sources:
             sources.extend(self.test_sources)
 
