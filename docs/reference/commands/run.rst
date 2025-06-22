@@ -145,13 +145,8 @@ debugger connection via a socket.
 
 Currently the following debuggers are supported (default is ``pdb``):
 
-- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
-- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
-
-For ``debugpy`` there is also a mapping of the source code from your bundled
-app to your local copy of the apps source code in the ``build`` folder. This
-is useful for devices like iOS and Android, where the running source code is
-not available on the host system.
+- ``pdb``: This is used for debugging via console.
+- ``debugpy``: This is used for debugging via VSCode.
 
 ``--debugger-host <host>``
 --------------------------
@@ -166,9 +161,6 @@ default value is ``localhost``.
 Specifies the port of the socket connection for the debugger. This
 option is only used when the ``--debug <debugger>`` option is specified. The
 default value is ``5678``.
-
-On Android this also forwards the port from the Android device to the host pc
-via ADB if the port is ``localhost``.
 
 Passthrough arguments
 ---------------------
