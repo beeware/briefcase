@@ -51,7 +51,7 @@ Set up the dev environment by running:
       (venv) C:\...>python -m pip install -Ue .[dev]
       (venv) C:\...>pre-commit install
 
-Invoke CI checks and tests by running:
+Invoke checks and tests by running:
 
 .. tabs::
 
@@ -59,19 +59,19 @@ Invoke CI checks and tests by running:
 
     .. code-block:: console
 
-      (venv) $ tox p -m ci
+      (venv) $ tox p
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox p -m ci
+      (venv) $ tox p
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox p -m ci
+      (venv) C:\...>tox p
 
 .. _setup-dev-environment:
 
@@ -367,6 +367,8 @@ The default ``tox`` command includes running:
  * test suite for available Python versions
  * code coverage reporting
 
+This is essentially what is run by CI when you submit a pull request.
+
 To run the full test suite, run:
 
 .. tabs::
@@ -531,31 +533,6 @@ A :ref:`subset of tests <test-subset>` can be run by adding ``--`` and a test
 specification to the command line; a :ref:`specific Python version
 <test-py-version>` can be used by adding the version to the test target (e.g.,
 ``py310-fast`` to run fast on Python 3.10).
-
-Simulating GitHub CI checks locally
------------------------------------
-
-To run the same checks that run in CI for the platform, run:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ tox p -m ci
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ tox p -m ci
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>tox p -m ci
 
 Code coverage
 =============
