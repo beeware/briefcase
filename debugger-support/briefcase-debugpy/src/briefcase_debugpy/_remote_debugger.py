@@ -106,7 +106,7 @@ def start_debugpy(config_str: str, verbose: bool):
     print("The debugpy server started. Waiting for debugger to attach...")
     print(
         f"""
-To connect to debugpy using VSCode add the following configuration to launch.json:
+To connect to debugpy using VSCode add the following configuration to '.vscode/launch.json':
 {{
     "version": "0.2.0",
     "configurations": [
@@ -121,6 +121,8 @@ To connect to debugpy using VSCode add the following configuration to launch.jso
         }}
     ]
 }}
+
+For more information see: https://briefcase.readthedocs.io/en/stable/how-to/debugging/vscode.html#bundled-app
 """
     )
     debugpy.wait_for_client()

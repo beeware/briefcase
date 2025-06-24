@@ -17,8 +17,10 @@ def start_pdb(config_str: str, verbose: bool):
 Remote PDB server opened at {host}:{port}.
 Waiting for debugger to attach...
 To connect to remote PDB use eg.:
-    - telnet {host} {port} (Windows, Linux)
+    - telnet {host} {port} (Windows)
     - rlwrap socat - tcp:{host}:{port} (Linux, macOS)
+
+For more information see: https://briefcase.readthedocs.io/en/stable/how-to/debugging/console.html#bundled-app
 """
     )
 

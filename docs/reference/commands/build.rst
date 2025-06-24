@@ -122,12 +122,15 @@ bundled app.
 
 Currently the following debuggers are supported:
 
-- ``pdb``: This is used for debugging via console.
-- ``debugpy``: This is used for debugging via VSCode.
+- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
+- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
 -
 If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is used as default.
 
 This is an experimental new feature, that is currently only support on Windows and macOS.
+
+This option may slow down the app a little bit.
+
 
 ``--no-update``
 ---------------
