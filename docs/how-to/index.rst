@@ -17,6 +17,7 @@ stand alone.
    ci
    cli-apps
    x11passthrough
+   debugging/index
    external-apps
    publishing/index
    contribute/index
