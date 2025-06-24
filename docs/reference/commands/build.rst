@@ -113,6 +113,19 @@ If you have previously run the app in "normal" mode, you may need to pass ``-r``
 / ``--update-requirements`` the first time you build in test mode to ensure that
 your testing requirements are present in the test app.
 
+``--debug <debugger>``
+----------------------
+
+Build the app in debug mode in the bundled app environment and establish an
+debugger connection via a socket. This installs the selected debugger in the
+bundled app.
+
+Currently the following debuggers are supported (default is ``pdb``):
+
+- ``pdb``: This is used for debugging via console.
+- ``debugpy``: This is used for debugging via VSCode.
+
+
 ``--no-update``
 ---------------
 

@@ -21,6 +21,8 @@ from packaging.specifiers import InvalidSpecifier, Specifier
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
+from briefcase.debuggers import get_debugger, get_debuggers
+
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
@@ -134,6 +136,8 @@ class BaseCommand(ABC):
     output_format: str
     # supports passing extra command line arguments to subprocess
     allows_passthrough = False
+    # supports remote debugging
+    supports_debugger = False
     # if specified for a platform, then any template for that platform must declare
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
@@ -681,7 +685,12 @@ a custom location for Briefcase's tools.
         :param app: The app configuration to finalize.
         """
 
-    def finalize(self, app: AppConfig | None = None, test_mode: bool = False):
+    def finalize(
+        self,
+        app: AppConfig | None = None,
+        test_mode: bool = False,
+        debugger: str | None = None,
+    ):
         """Finalize Briefcase configuration.
 
         This will:
@@ -701,6 +710,7 @@ a custom location for Briefcase's tools.
         apps = self.apps.values() if app is None else [app]
         for app in apps:
             if hasattr(app, "__draft__"):
+                self.finalize_debugger(app, debugger)
                 app.test_mode = test_mode
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
@@ -725,6 +735,18 @@ a custom location for Briefcase's tools.
                         raise BriefcaseConfigError(
                             f"{app.app_name!r} defines 'external_package_executable_path', but not 'external_package_path'."
                         )
+
+    def finalize_debugger(self, app: AppConfig, debugger_name: str | None = None):
+        """Finalize the debugger configuration.
+
+        This will ensure that the debugger is available and that the app
+        configuration is valid.
+
+        :param app: The app configuration to finalize.
+        """
+        if debugger_name and debugger_name != "":
+            debugger = get_debugger(debugger_name)
+            app.debugger = debugger
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
@@ -980,6 +1002,28 @@ any compatibility problems, and then add the compatibility declaration.
             dest="test_mode",
             action="store_true",
             help=f"{context_label} the app in test mode",
+        )
+
+    def _add_debug_options(self, parser, context_label):
+        """Internal utility method for adding common debug-related options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text for commands; the capitalized action being
+            performed (e.g., "Build", "Run",...)
+        """
+        debuggers = get_debuggers()
+        debugger_names = list(reversed(debuggers.keys()))
+        choices_help = [f"'{choice}'" for choice in debugger_names]
+
+        parser.add_argument(
+            "--debug",
+            dest="debugger",
+            nargs="?",
+            default=None,
+            const="pdb",
+            choices=debugger_names,
+            metavar="DEBUGGER",
+            help=f"{context_label} the app with the specified debugger. One of {', '.join(choices_help)} (default: pdb)",
         )
 
     def add_options(self, parser):
