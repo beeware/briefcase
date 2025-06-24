@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from abc import abstractmethod
 from contextlib import suppress
+from pathlib import Path
 
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import (
+    AppPackagesPathMappings,
+    AppPathMappings,
+    DebuggerConfig,
+)
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseTestSuiteFailure
 from briefcase.integrations.subprocess import StopStreaming
 
@@ -234,6 +241,60 @@ class RunCommand(RunAppMixin, BaseCommand):
                 help="The port on which to run the debug server (default: 5678)",
                 required=False,
             )
+
+    def _debugger_app_path_mappings(self, app: AppConfig) -> AppPathMappings:
+        """
+        Get the path mappings for the app code.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app code
+        """
+        device_subfolders = []
+        host_folders = []
+        for src in app.all_sources():
+            original = Path(self.base_path / src)
+            device_subfolders.append(original.name)
+            host_folders.append(f"{original.absolute()}")
+        return AppPathMappings(
+            device_sys_path_regex="app$",
+            device_subfolders=device_subfolders,
+            host_folders=host_folders,
+        )
+
+    def _debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        raise NotImplementedError
+
+    def debugger_config(
+        self,
+        app: AppConfig,
+        debugger_host: str,
+        debugger_port: int,
+    ) -> str:
+        """
+        Create the remote debugger configuration that should be saved as environment variable for this run.
+
+        :param app: The app to be debugged
+        :param debugger_host: Host for the debugger connection
+        :param debugger_port: Port for the debugger connection
+        :returns: The remote debugger configuration
+        """
+        app_path_mappings = self._debugger_app_path_mappings(app)
+        app_packages_path_mappings = self._debugger_app_packages_path_mapping(app)
+        config = DebuggerConfig(
+            host=debugger_host,
+            port=debugger_port,
+            app_path_mappings=app_path_mappings,
+            app_packages_path_mappings=app_packages_path_mappings,
+        )
+        return json.dumps(config)
 
     def _prepare_app_kwargs(self, app: AppConfig):
         """Prepare the kwargs for running an app as a log stream.
