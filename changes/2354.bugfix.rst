@@ -1,0 +1,1 @@
+The version pin for PyGObject has been modified to ensure that the installed version is guaranteed to be compatible with ``libgirepository1.0``.
