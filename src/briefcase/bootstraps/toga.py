@@ -64,7 +64,7 @@ requires = [
     # libgirepository1.0-dev. Newer releases depend on libgirepository-2.0-dev, which
     # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
     # older) releases, you can remove this version pin. See beeware/toga#3143.
-    "pygobject <= 3.50.0",
+    "pygobject == 3.50.0",
 ]
 """
 
