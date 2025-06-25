@@ -1,5 +1,6 @@
 from . import (
     android_sdk,
+    config,
     cookiecutter,
     docker,
     file,
@@ -17,6 +18,7 @@ from . import (
 
 __all__ = [
     "android_sdk",
+    "config",
     "cookiecutter",
     "docker",
     "file",

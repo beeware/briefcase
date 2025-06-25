@@ -36,3 +36,5 @@ venv*/
 
 tests/apps/verify-*/
 logs/
+
+.briefcase/
