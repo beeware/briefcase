@@ -27,6 +27,7 @@ class WindowsVisualStudioCreateCommand(WindowsVisualStudioMixin, WindowsCreateCo
 
 class WindowsVisualStudioUpdateCommand(WindowsVisualStudioCreateCommand, UpdateCommand):
     description = "Update an existing Visual Studio project."
+    supports_debugger = True
 
 
 class WindowsVisualStudioOpenCommand(WindowsVisualStudioMixin, OpenCommand):
@@ -35,6 +36,7 @@ class WindowsVisualStudioOpenCommand(WindowsVisualStudioMixin, OpenCommand):
 
 class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
     description = "Build a Visual Studio project."
+    supports_debugger = True
 
     def verify_tools(self):
         super().verify_tools()

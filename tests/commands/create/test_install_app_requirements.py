@@ -1089,8 +1089,6 @@ def test_app_packages_only_test_requires_test_mode(
 
 
 class DummyDebugger(BaseDebugger):
-    debugger_support_pkg_dir = None
-
     @property
     def connection_mode(self) -> DebuggerConnectionMode:
         raise NotImplementedError
