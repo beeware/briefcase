@@ -60,10 +60,11 @@ requires = [
         return """\
 requires = [
     "toga-gtk~=0.5.0",
-    # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
+    # PyGObject 3.50.0 is the last version that is known to be dependent on
+    # libgirepository1.0-dev. Newer releases depend on libgirepository-2.0-dev, which
     # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
     # older) releases, you can remove this version pin. See beeware/toga#3143.
-    "pygobject < 3.52.1",
+    "pygobject <= 3.50.0",
 ]
 """
 
