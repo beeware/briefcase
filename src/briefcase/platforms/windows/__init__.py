@@ -17,6 +17,7 @@ class WindowsMixin:
     platform = "windows"
     supported_host_os = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
+    platform_target_version = "0.3.24"
 
     def bundle_package_executable_path(self, app):
         if app.console_app:
