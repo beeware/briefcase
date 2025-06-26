@@ -28,8 +28,8 @@ Get started with a hands-on introduction for beginners.
 
 Guides and recipes for common problems and tasks, including how to contribute.
 
-:ref:`Topic guides <topic>`
----------------------------
+:ref:`Topic guides <topics>`
+----------------------------
 
 Deeper explorations of concepts and issues related to Briefcase usage.
 
@@ -64,6 +64,6 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
    tutorial/index
    how-to/index
-   topic/index
+   topics/index
    reference/index
    about/index
