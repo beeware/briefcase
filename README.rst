@@ -48,11 +48,11 @@ Support for AppleTV, watchOS, and wearOS deployments is planned.
 Getting started
 ---------------
 
-To install Briefcase for windows or linux, run:
+To install Briefcase for Windows, run:
 
    $ python -m pip install briefcase 
 
-For macOS, run:
+For macOS and Linux, run:
 
    $ python3 -m pip install briefcase
 
