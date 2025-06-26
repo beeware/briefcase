@@ -48,9 +48,13 @@ Support for AppleTV, watchOS, and wearOS deployments is planned.
 Getting started
 ---------------
 
-To install Briefcase, run::
+To install Briefcase for windows or linux, run:
 
-   $ python -m pip install briefcase
+   $ python -m pip install briefcase 
+
+For macOS, run:
+
+   $ python3 -m pip install briefcase
 
 If you would like a full introduction to using Briefcase, try the `BeeWare tutorial
 <https://docs.beeware.org>`__. This tutorial walks you through the process of creating
