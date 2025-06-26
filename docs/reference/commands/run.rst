@@ -148,6 +148,8 @@ Currently the following debuggers are supported (default is ``pdb``):
 - ``pdb``: This is used for debugging via console.
 - ``debugpy``: This is used for debugging via VSCode.
 
+This is an experimental new feature, that is currently only support on Windows and macOS.
+
 ``--debugger-host <host>``
 --------------------------
 
