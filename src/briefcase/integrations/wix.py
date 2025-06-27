@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import os
-import shutil
+import re
 from pathlib import Path
+from subprocess import CalledProcessError
+
+from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseCommandError, MissingToolError
 from briefcase.integrations.base import ManagedTool, ToolCache
@@ -13,62 +15,42 @@ class WiX(ManagedTool):
     full_name = "WiX"
     supported_host_os = {"Windows"}
 
-    def __init__(
-        self,
-        tools: ToolCache,
-        wix_home: Path | None = None,
-        bin_install: bool = False,
-    ):
-        """Create a wrapper around a WiX install.
+    # WARNING: version 6 and later have licensing issues: see
+    # https://github.com/beeware/briefcase/issues/1185.
+    version = Version("5.0.2")
 
-        :param tools: ToolCache of available tools.
-        :param wix_home: The path of the WiX installation.
-        :param bin_install: Is the install a binaries-only install? A full MSI install
-            of WiX has a `/bin` folder in the paths; a binaries-only install does not.
-        :returns: A valid WiX SDK wrapper. If WiX is not available, and was not
-            installed, raises MissingToolError.
-        """
+    def __init__(self, tools: ToolCache):
         super().__init__(tools=tools)
-        if wix_home:
-            self.wix_home = wix_home
-        else:
-            self.wix_home = tools.base_path / "wix"
-        self.bin_install = bin_install
+        self.wix_home = tools.base_path / "wix"
 
     @property
     def download_url(self) -> str:
-        return "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip"
+        return (
+            f"https://github.com/wixtoolset/wix/releases/download/v{self.version}/"
+            f"wix-cli-x64.msi"
+        )
 
     @property
-    def heat_exe(self) -> Path:
-        if self.bin_install:
-            return self.wix_home / "heat.exe"
-        else:
-            return self.wix_home / "bin/heat.exe"
+    def wix_exe(self) -> Path:
+        return (
+            self.wix_home
+            / f"PFiles64/WiX Toolset v{self.version.major}.{self.version.minor}/bin"
+            / "wix.exe"
+        )
 
-    @property
-    def light_exe(self) -> Path:
-        if self.bin_install:
-            return self.wix_home / "light.exe"
-        else:
-            return self.wix_home / "bin/light.exe"
-
-    @property
-    def candle_exe(self) -> Path:
-        if self.bin_install:
-            return self.wix_home / "candle.exe"
-        else:
-            return self.wix_home / "bin/candle.exe"
+    def ext_path(self, name: str) -> Path:
+        return (
+            self.wix_home
+            / f"CFiles64/WixToolset/extensions/WixToolset.{name}.wixext/{self.version}"
+            / f"wixext{self.version.major}/WixToolset.{name}.wixext.dll"
+        )
 
     @classmethod
     def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> WiX:
         """Verify that there is a WiX install available.
 
-        If the WIX environment variable is set, that location will be checked for a
-        valid WiX installation.
-
-        If the location provided doesn't contain an SDK, or no location is provided, an
-        SDK is downloaded.
+        WiX is a small tool, and there's a close relationship between the WiX version
+        and the template syntax, so we always use a Briefcase-managed copy.
 
         :param tools: ToolCache of available tools
         :param install: Should WiX be installed if it is not found?
@@ -77,36 +59,38 @@ class WiX(ManagedTool):
         if hasattr(tools, "wix"):
             return tools.wix
 
-        # Look for the WIX environment variable
-        if wix_env := tools.os.environ.get("WIX"):
-            tools.console.debug("Evaluating WIX...", prefix=cls.full_name)
-            tools.console.debug(f"WIX={wix_env}")
-            wix_home = Path(wix_env)
-
-            # Set up the paths for the WiX executables we will use.
-            wix = WiX(tools=tools, wix_home=wix_home)
-
-            if not wix.exists():
-                raise BriefcaseCommandError(
-                    f"""\
-The WIX environment variable:
-
-{wix_home}
-
-does not point to an install of the WiX Toolset.
-"""
+        wix = WiX(tools)
+        if not wix.exists():
+            if install:
+                tools.console.info(
+                    "The WiX toolset was not found; downloading and installing...",
+                    prefix=cls.name,
+                )
+                wix.install()
+            else:
+                raise MissingToolError("WiX")
+        else:
+            try:
+                # The string returned by --version may include "+" followed by a
+                # commit ID; ignore this.
+                installed_version = re.sub(
+                    r"\+.*",
+                    "",
+                    tools.subprocess.check_output([wix.wix_exe, "--version"]),
+                ).strip()
+            except (OSError, CalledProcessError) as e:
+                installed_version = None
+                tools.console.error(
+                    f"The WiX toolset is unusable ({type(e).__name__}: {e})"
                 )
 
-        else:
-            wix = WiX(tools=tools, bin_install=True)
-
-            if not wix.exists():
-                if install:
+            if installed_version != str(wix.version):
+                if installed_version is not None:
                     tools.console.info(
-                        "The WiX toolset was not found; downloading and installing...",
-                        prefix=cls.name,
+                        f"The WiX toolset is an unsupported version ({installed_version})"
                     )
-                    wix.install()
+                if install:
+                    wix.upgrade()
                 else:
                     raise MissingToolError("WiX")
 
@@ -115,26 +99,15 @@ does not point to an install of the WiX Toolset.
         return wix
 
     def exists(self) -> bool:
-        return (
-            self.heat_exe.is_file()
-            and self.light_exe.is_file()
-            and self.candle_exe.is_file()
-        )
+        return self.wix_exe.is_file()
 
     @property
     def managed_install(self) -> bool:
-        try:
-            # Determine if wix_home is relative to the briefcase data directory.
-            # If wix_home isn't inside this directory, this will raise a ValueError,
-            # indicating it is a non-managed install.
-            self.wix_home.relative_to(self.tools.base_path)
-            return True
-        except ValueError:
-            return False
+        return True
 
     def install(self):
         """Download and install WiX."""
-        wix_zip_path = self.tools.file.download(
+        wix_msi_path = self.tools.file.download(
             url=self.download_url,
             download_path=self.tools.base_path,
             role="WiX",
@@ -142,22 +115,27 @@ does not point to an install of the WiX Toolset.
 
         try:
             with self.tools.console.wait_bar("Installing WiX..."):
-                self.tools.file.unpack_archive(
-                    os.fsdecode(wix_zip_path),
-                    extract_dir=os.fsdecode(self.wix_home),
+                self.tools.subprocess.run(
+                    [
+                        "msiexec",
+                        "/a",  # Unpack the MSI into individual files
+                        wix_msi_path,
+                        "/qn",  # Disable GUI interaction
+                        f"TARGETDIR={self.wix_home}",
+                    ],
+                    check=True,
                 )
-        except (shutil.ReadError, EOFError) as e:
+        except CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"""\
-Unable to unpack WiX ZIP file. The download may have been
+Unable to unpack WiX MSI file. The download may have been
 interrupted or corrupted.
 
-Delete {wix_zip_path} and run briefcase again.
+Delete {wix_msi_path} and run briefcase again.
 """
             ) from e
 
-        # Zip file no longer needed once unpacked.
-        wix_zip_path.unlink()
+        wix_msi_path.unlink()
 
     def uninstall(self):
         """Uninstall WiX."""
