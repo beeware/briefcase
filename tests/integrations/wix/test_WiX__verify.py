@@ -135,9 +135,26 @@ def assert_download(mock_tools, wix_path):
     assert wix.wix_exe == wix_path / WIX_EXE_PATH
 
 
-def test_dont_install(mock_tools, tmp_path):
+def test_dont_install_missing(mock_tools, tmp_path):
     """If there's no existing managed WiX install, and install is not requested, verify
     fails."""
+    # Verify, but don't install. This will fail.
+    with pytest.raises(MissingToolError):
+        WiX.verify(mock_tools, install=False)
+
+    # No download was initiated
+    mock_tools.file.download.assert_not_called()
+
+
+def test_dont_install_version(mock_tools, wix_path):
+    """If the existing managed WiX install is the wrong version, and install is not
+    requested, verify fails."""
+    wix_exe = wix_path / WIX_EXE_PATH
+    wix_exe.parent.mkdir(parents=True)
+    wix_exe.touch()
+
+    mock_tools.subprocess.check_output.return_value = "5.0.1"
+
     # Verify, but don't install. This will fail.
     with pytest.raises(MissingToolError):
         WiX.verify(mock_tools, install=False)
