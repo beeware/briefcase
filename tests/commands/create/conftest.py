@@ -99,7 +99,7 @@ class DummyCreateCommand(CreateCommand):
         return "3.X"
 
     # Define output format-specific template context.
-    def output_format_template_context(self, app):
+    def output_format_template_context(self, app: AppConfig):
         return {"output_format": "dummy"}
 
     # Handle platform-specific permissions.
@@ -179,7 +179,9 @@ class TrackingCreateCommand(DummyCreateCommand):
         self.actions.append(("support", app.app_name))
 
     def install_app_requirements(self, app):
-        self.actions.append(("requirements", app.app_name, app.test_mode))
+        self.actions.append(
+            ("requirements", app.app_name, app.test_mode, app.debugger is not None)
+        )
 
     def install_app_code(self, app):
         self.actions.append(("code", app.app_name, app.test_mode))

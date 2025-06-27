@@ -137,6 +137,39 @@ contains the most recent test code. To prevent this update and build, use the
 Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
 
+``--debug <debugger>``
+----------------------
+
+Run the app in debug mode in the bundled app environment and establish an
+debugger connection via a socket.
+
+Currently the following debuggers are supported (default is ``pdb``):
+
+- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
+- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
+
+For ``debugpy`` there is also a mapping of the source code from your bundled
+app to your local copy of the apps source code in the ``build`` folder. This
+is useful for devices like iOS and Android, where the running source code is
+not available on the host system.
+
+``--debugger-host <host>``
+--------------------------
+
+Specifies the host of the socket connection for the debugger. This
+option is only used when the ``--debug <debugger>`` option is specified. The
+default value is ``localhost``.
+
+``--debugger-port <port>``
+--------------------------
+
+Specifies the port of the socket connection for the debugger. This
+option is only used when the ``--debug <debugger>`` option is specified. The
+default value is ``5678``.
+
+On Android this also forwards the port from the Android device to the host pc
+via ADB if the port is ``localhost``.
+
 Passthrough arguments
 ---------------------
 
