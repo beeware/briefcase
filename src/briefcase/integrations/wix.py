@@ -19,9 +19,17 @@ class WiX(ManagedTool):
     # https://github.com/beeware/briefcase/issues/1185.
     version = Version("5.0.2")
 
-    def __init__(self, tools: ToolCache):
+    def __init__(self, tools: ToolCache, wix_home: Path | None = None):
+        """Create a wrapper around a WiX install.
+
+        :param tools: ToolCache of available tools.
+        :param wix_home: The path of the WiX installation.
+        """
         super().__init__(tools=tools)
-        self.wix_home = tools.base_path / "wix"
+        if wix_home:
+            self.wix_home = wix_home
+        else:
+            self.wix_home = tools.base_path / "wix"
 
     @property
     def download_url(self) -> str:

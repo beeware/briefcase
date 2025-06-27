@@ -62,6 +62,17 @@ def test_unsupported_32bit_python(create_command):
         create_command()
 
 
+def test_context(create_command, first_app_config):
+    context = create_command.output_format_template_context(first_app_config)
+    assert sorted(context.keys()) == [
+        "binary_path",
+        "guid",
+        "install_scope",
+        "package_path",
+        "version_triple",
+    ]
+
+
 @pytest.mark.parametrize(
     "version, version_triple",
     [
@@ -125,38 +136,39 @@ def test_support_package_url(create_command, first_app_config, tmp_path):
 def test_default_install_scope(create_command, first_app_config, tmp_path):
     """By default, app should be installed per user."""
     context = create_command.output_format_template_context(first_app_config)
-
-    assert context == {
-        "binary_path": "First App.exe",
-        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
-        "version_triple": "0.0.1",
-        "install_scope": None,
-    }
+    assert context["install_scope"] is None
 
 
 def test_per_machine_install_scope(create_command, first_app_config, tmp_path):
-    """By default, app should be installed per user."""
+    """App can be set to have explicit per-machine scope."""
     first_app_config.system_installer = True
-
     context = create_command.output_format_template_context(first_app_config)
-
-    assert context == {
-        "binary_path": "First App.exe",
-        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
-        "version_triple": "0.0.1",
-        "install_scope": "perMachine",
-    }
+    assert context["install_scope"] == "perMachine"
 
 
 def test_per_user_install_scope(create_command, first_app_config, tmp_path):
     """App can be set to have explicit per-user scope."""
     first_app_config.system_installer = False
-
     context = create_command.output_format_template_context(first_app_config)
+    assert context["install_scope"] == "perUser"
 
-    assert context == {
-        "binary_path": "First App.exe",
-        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
-        "version_triple": "0.0.1",
-        "install_scope": "perUser",
-    }
+
+def test_package_path(create_command, first_app_config, tmp_path):
+    """The default package_path is passed as an absolute path."""
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["package_path"] == str(
+        tmp_path / "base_path/build/first-app/windows/app/src"
+    )
+
+
+def test_binary_path(create_command, first_app_config, tmp_path):
+    """The default binary_path is passed as a path relative to package_path."""
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["binary_path"] == "First App.exe"
+
+
+def test_external(create_command, external_first_app, tmp_path):
+    """The package_path and binary_path can be overridden by the user."""
+    context = create_command.output_format_template_context(external_first_app)
+    assert context["package_path"] == str(tmp_path / "base_path/external/src")
+    assert context["binary_path"] == "internal/app.exe"

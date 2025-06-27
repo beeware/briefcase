@@ -104,6 +104,7 @@ class WindowsCreateCommand(CreateCommand):
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
+            "package_path": str(self.package_path(app)),
             "binary_path": self.package_executable_path(app),
         }
 
@@ -378,85 +379,25 @@ class WindowsPackageCommand(PackageCommand):
 
     def _package_msi(self, app):
         """Build the msi installer."""
-
-        self.console.info("Building MSI...", prefix=app.app_name)
         try:
-            self.console.info("Compiling application manifest...")
-            with self.console.wait_bar("Compiling..."):
+            with self.console.wait_bar("Building MSI..."):
                 self.tools.subprocess.run(
                     [
-                        self.tools.wix.heat_exe,
-                        "dir",
-                        self.package_path(app),
-                        "-nologo",  # Don't display startup text
-                        "-gg",  # Generate GUIDs
-                        "-sfrag",  # Suppress fragment generation for directories
-                        "-sreg",  # Suppress registry harvesting
-                        "-srd",  # Suppress harvesting the root directory
-                        "-scom",  # Suppress harvesting COM components
-                        "-dr",
-                        f"{app.module_name}_ROOTDIR",  # Root directory reference name
-                        "-cg",
-                        f"{app.module_name}_COMPONENTS",  # Root component group name
-                        "-var",
-                        "var.SourceDir",  # variable to use as the source dir
-                        "-out",
-                        f"{app.app_name}-manifest.wxs",
-                    ],
-                    check=True,
-                    cwd=self.bundle_path(app),
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to generate manifest for app {app.app_name}."
-            ) from e
-
-        try:
-            self.console.info("Compiling application installer...")
-            with self.console.wait_bar("Compiling..."):
-                self.tools.subprocess.run(
-                    [
-                        self.tools.wix.candle_exe,
-                        "-nologo",  # Don't display startup text
+                        self.tools.wix.wix_exe,
+                        "build",
                         "-ext",
-                        "WixUtilExtension",
-                        "-ext",
-                        "WixUIExtension",
-                        "-arch",
-                        "x64",
-                        f"-dSourceDir={self.package_path(app)}",
+                        self.tools.wix.ext_path("UI"),
                         f"{app.app_name}.wxs",
-                        f"{app.app_name}-manifest.wxs",
-                    ],
-                    check=True,
-                    cwd=self.bundle_path(app),
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from e
-
-        try:
-            self.console.info("Linking application installer...")
-            with self.console.wait_bar("Linking..."):
-                self.tools.subprocess.run(
-                    [
-                        self.tools.wix.light_exe,
-                        "-nologo",  # Don't display startup text
-                        "-ext",
-                        "WixUtilExtension",
-                        "-ext",
-                        "WixUIExtension",
                         "-loc",
                         "unicode.wxl",
                         "-o",
                         self.distribution_path(app),
-                        f"{app.app_name}.wixobj",
-                        f"{app.app_name}-manifest.wixobj",
                     ],
                     check=True,
                     cwd=self.bundle_path(app),
                 )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
+            raise BriefcaseCommandError(f"Unable to package app {app.app_name}.") from e
 
     def _package_zip(self, app):
         """Package the app as simple zip file."""
