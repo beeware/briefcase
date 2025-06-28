@@ -20,3 +20,6 @@ Want to see examples of Briefcase in use? Here's some:
 * `Wunjo <https://wunjo.online/>`_ is a suite of tools for editing and generating video,
   images, and audio for designers, creators, and photographers, with more than 50 neural
   networks inside. It uses Briefcase to prepare builds for Windows, Linux, and Web.
+
+* `Easy Media Server <https://apps.rsmail.co/easy-media-server>`_ is a DLNA media server
+  for streaming content to devices such as Smart TVs. It uses Toga for the interface and Briefcase to prepare builds for macOS.
