@@ -39,8 +39,8 @@ In order to submit your app to the App Store, you will need to provide at least 
 
 * 1280 x 800, 1440 x 900, 2560 x 1600, or 2880 x 1800 pixels
 
-To capture a screenshot of a specific application window on macOS, use the key combination Shift-Command-4, then press the Space bar. 
-The cursor will change to a camera icon. 
+To capture a screenshot of a specific application window on macOS, use the key combination Shift-Command-4, then press the Space bar.
+The cursor will change to a camera icon.
 Hover over the desired window and click to capture it as an image.
 
 Produce an App archive
@@ -52,7 +52,7 @@ displayed. The "Team" option under "Signing" will be listed as "None"; select th
 of the development team that will sign the app. If there's no team listed, select "Add
 an Account", and choose one of the teams that is associated with your Apple ID.
 
-In the top bar of the Xcode window, build an archive by selecting "Archive" from the Product menu. 
+In the top bar of the Xcode window, build an archive by selecting "Archive" from the Product menu.
 
 This will perform a clean build of your application, build an archive, and open a new window,
 called the Organizer. It should list a freshly created archive of your app, with the
