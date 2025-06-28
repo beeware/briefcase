@@ -8,7 +8,7 @@ Store.
 .. admonition: App Stores are a moving target
 
     The Apple App Store makes frequent changes to the workflows and nomenclature
-    associated with publishing apps. As a result, it's very difficult to keep a like
+    associated with publishing apps. As a result, it's very difficult to keep a guide like
     this one up to date. If you spot any problems, `let us know
     <https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml>`__.
 
@@ -30,10 +30,10 @@ Use Briefcase to create a fresh macOS build and open the associated Xcode projec
     (venv) $ briefcase build macOS Xcode -u
     (venv) $ briefcase open macOS Xcode
 
-Run the app
+Run the app via Xcode
 ============================
 
-Run the app in XCode to ensure it builds correctly and works as expected.  
+Run the app in Xcode to ensure it builds correctly and works as expected.
 
 In order to submit your app to the App Store, you will need to provide at least one screenshot of the following sizes:
 
