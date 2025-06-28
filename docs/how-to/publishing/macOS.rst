@@ -1,8 +1,8 @@
 ===
-MacOS
+macOS
 ===
 
-This guide will walk you through the process of publishing a MacOS app to the Apple App
+This guide will walk you through the process of publishing a macOS app to the Apple App
 Store.
 
 .. admonition: App Stores are a moving target
