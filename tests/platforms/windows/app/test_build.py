@@ -378,11 +378,14 @@ def test_build_app_with_support_package_update(
         "wb"
     ) as f:
         index = {
+            "briefcase": {
+                "target_version": "0.3.24",
+            },
             "paths": {
                 "app_path": "src/app",
                 "app_package_path": "src/app_packages",
                 "support_path": "src",
-            }
+            },
         }
         tomli_w.dump(index, f)
 
