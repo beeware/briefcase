@@ -134,9 +134,9 @@ def test_support_package_url(create_command, first_app_config, tmp_path):
 
 
 def test_default_install_scope(create_command, first_app_config, tmp_path):
-    """By default, app should be installed per user."""
+    """By default, the installer gives a choice between per user and per machine."""
     context = create_command.output_format_template_context(first_app_config)
-    assert context["install_scope"] is None
+    assert context["install_scope"] == "perUserOrMachine"
 
 
 def test_per_machine_install_scope(create_command, first_app_config, tmp_path):

@@ -58,7 +58,8 @@ class WiX(ManagedTool):
         """Verify that there is a WiX install available.
 
         WiX is a small tool, and there's a close relationship between the WiX version
-        and the template syntax, so we always use a Briefcase-managed copy.
+        and the template syntax, so we always use a Briefcase-managed copy, and upgrade
+        it automatically.
 
         :param tools: ToolCache of available tools
         :param install: Should WiX be installed if it is not found?

@@ -3,7 +3,8 @@ import pytest
 from briefcase.console import Console
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioCreateCommand
 
-# Most tests are the same for both "app" and "visualstudio".
+# Most tests and fixtures are the same for both "app" and "visualstudio". This file only
+# contains those that need to be overridden.
 from ..app.test_create import *  # noqa: F403
 
 

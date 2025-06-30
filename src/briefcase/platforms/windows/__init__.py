@@ -98,7 +98,7 @@ class WindowsCreateCommand(CreateCommand):
             install_scope = "perMachine" if app.system_installer else "perUser"
         except AttributeError:
             # system_installer not defined in config; default to asking the user
-            install_scope = None
+            install_scope = "perUserOrMachine"
 
         return {
             "version_triple": version_triple,
