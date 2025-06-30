@@ -38,6 +38,8 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 "build",
                 "-ext",
                 tmp_path / "wix" / WIX_UI_PATH,
+                "-arch",
+                "x64",
                 "first-app.wxs",
                 "-loc",
                 "unicode.wxl",

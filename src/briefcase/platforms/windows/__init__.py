@@ -387,6 +387,8 @@ class WindowsPackageCommand(PackageCommand):
                         "build",
                         "-ext",
                         self.tools.wix.ext_path("UI"),
+                        "-arch",
+                        "x64",  # Default is x86, regardless of the build machine.
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",
