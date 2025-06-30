@@ -31,6 +31,13 @@ bundle. By default, apps will be both signed and notarized when they are package
 
 Configuration options between the :doc:`./app` and :doc:`./xcode` formats are identical.
 
+.. _macos-prerequisites:
+
+Prerequisites
+=============
+
+Briefcase requires installing Python 3.9+.
+
 Packaging format
 ================
 

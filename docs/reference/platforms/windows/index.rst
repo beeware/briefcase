@@ -29,6 +29,13 @@ The default output format for Windows is a :doc:`./app`.
 Configuration options between the :doc:`./app` and :doc:`./visualstudio` formats are
 identical.
 
+.. _windows-prerequisites:
+
+Prerequisites
+=============
+
+Briefcase requires installing Python 3.9+.
+
 Packaging format
 ================
 

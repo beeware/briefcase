@@ -8,11 +8,34 @@ If you experience problems with Briefcase, `log them on GitHub`_. If you want
 to contribute code, please `fork the code`_ and `submit a pull request`_.
 
 .. _log them on GitHub: https://github.com/beeware/briefcase/issues
-.. _fork the code: https://github.com/beeware/briefcase
+.. _fork the code: https://github.com/beeware/briefcase/fork
 .. _submit a pull request: https://github.com/beeware/briefcase/pulls
 
-tl;dr
-=====
+.. _dev-environment-prereqs:
+
+Prerequisites
+=============
+
+You'll need to install the following prerequisites.
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    View the :ref:`macOS prerequisites <macos-prerequisites>`.
+
+  .. group-tab:: Linux
+
+    View the :ref:`Linux prerequisites <linux-prerequisites>`.
+
+  .. group-tab:: Windows
+
+    View the :ref:`Windows prerequisites <windows-prerequisites>`.
+
+.. _dev-environment-tldr:
+
+tl;dr - Dev Quick-Setup
+=======================
 
 Set up the dev environment by running:
 
@@ -24,10 +47,10 @@ Set up the dev environment by running:
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
-      $ python3 -m venv venv
-      $ . venv/bin/activate
-      (venv) $ python -m pip install -Ue ".[dev]"
-      (venv) $ pre-commit install
+      $ python -m venv .venv
+      $ . .venv/bin/activate
+      (.venv) $ python -m pip install -Ue ".[dev]"
+      (.venv) $ pre-commit install
 
   .. group-tab:: Linux
 
@@ -35,10 +58,10 @@ Set up the dev environment by running:
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
-      $ python3 -m venv venv
-      $ . venv/bin/activate
-      (venv) $ python -m pip install -Ue ".[dev]"
-      (venv) $ pre-commit install
+      $ python -m venv .venv
+      $ . .venv/bin/activate
+      (.venv) $ python -m pip install -Ue ".[dev]"
+      (.venv) $ pre-commit install
 
   .. group-tab:: Windows
 
@@ -46,10 +69,10 @@ Set up the dev environment by running:
 
       C:\...>git clone https://github.com/beeware/briefcase.git
       C:\...>cd briefcase
-      C:\...>py -m venv venv
-      C:\...>venv\Scripts\activate
-      (venv) C:\...>python -m pip install -Ue .[dev]
-      (venv) C:\...>pre-commit install
+      C:\...>py -m venv .venv
+      C:\...>.venv\Scripts\activate
+      (.venv) C:\...>python -m pip install -Ue .[dev]
+      (.venv) C:\...>pre-commit install
 
 Invoke checks and tests by running:
 
@@ -59,19 +82,19 @@ Invoke checks and tests by running:
 
     .. code-block:: console
 
-      (venv) $ tox p
+      (.venv) $ tox p
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox p
+      (.venv) $ tox p
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox p
+      (.venv) C:\...>tox p
 
 .. _setup-dev-environment:
 
@@ -80,10 +103,9 @@ Set up your development environment
 
 The recommended way of setting up your development environment for Briefcase is
 to use a `virtual environment <https://docs.python.org/3/library/venv.html>`__,
-and then install the development version of Briefcase and its dependencies:
+and then install the development version of Briefcase and its dependencies.
 
-Clone Briefcase and create virtual environment
-----------------------------------------------
+First, ensure that you have Python 3 and pip installed. To do this, run:
 
 .. tabs::
 
@@ -91,34 +113,128 @@ Clone Briefcase and create virtual environment
 
     .. code-block:: console
 
-      $ git clone https://github.com/beeware/briefcase.git
-      $ cd briefcase
-      $ python3 -m venv venv
-      $ . venv/bin/activate
-      (venv) $ python -m pip install -Ue ".[dev]"
+      $ python --version
+      $ python -m pip --version
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      $ git clone https://github.com/beeware/briefcase.git
-      $ cd briefcase
-      $ python3 -m venv venv
-      $ . venv/bin/activate
-      (venv) $ python -m pip install -Ue ".[dev]"
+      $ python --version
+      $ python -m pip --version
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      C:\...>git clone https://github.com/beeware/briefcase.git
-      C:\...>cd briefcase
-      C:\...>py -m venv venv
-      C:\...>venv\Scripts\activate
-      (venv) C:\...>python -m pip install -Ue .[dev]
+      C:\...>python --version
+      C:\...>python -m pip --version
 
-Install pre-commit
-------------------
+Clone the Briefcase repository
+------------------------------
+
+Next, go to the `Briefcase page on GitHub <https://github.com/beeware/briefcase>`__,
+and, if you haven't already, `fork the repository <https://github.com/beeware/briefcase/fork>`__
+into your own account. Next, click on the "<> Code" button. If you have the GitHub
+desktop application installed on your computer, you can select "Open with GitHub
+Desktop"; otherwise, copy the HTTPS URL provided, and use it to clone the repository
+to your computer using the command line:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    Fork the Briefcase repository, and then:
+
+    .. code-block:: console
+
+      $ git clone https://github.com/<your username>/briefcase.git
+
+    (substituting your GitHub username)
+
+  .. group-tab:: Linux
+
+    Fork the Briefcase repository, and then:
+
+    .. code-block:: console
+
+      $ git clone https://github.com/<your username>/briefcase.git
+
+    (substituting your GitHub username)
+
+  .. group-tab:: Windows
+
+    Fork the Briefcase repository, and then:
+
+    .. code-block:: doscon
+
+      C:\...>git clone https://github.com/<your username>/briefcase.git
+
+    (substituting your GitHub username)
+
+Create a virtual environment
+----------------------------
+
+To set up a virtual environment, run:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      $ cd briefcase
+      $ python -m venv .venv
+      $ source .venv/bin/activate
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      $ cd briefcase
+      $ python -m venv .venv
+      $ source .venv/bin/activate
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      C:\...>cd briefcase
+      C:\...>python -m venv .venv
+      C:\...>.venv\Scripts\activate
+
+Your prompt should now have a ``(.venv)`` prefix in front of it.
+
+Install Briefcase
+-----------------
+
+Now that you have the source code, you can do an
+`editable install <https://setuptools.pypa.io/en/latest/userguide/development_mode.html>`__
+of Briefcase into your development environment. Run the following command:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (.venv) $ python -m pip install -Ue ".[dev]"
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (.venv) $ python -m pip install -Ue ".[dev]"
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (.venv) C:\...>python -m pip install -Ue .[dev]
+
+
+Enable pre-commit
+-----------------
 
 Briefcase uses a tool called `pre-commit <https://pre-commit.com>`__ to identify
 simple issues and standardize code formatting. It does this by installing a git
@@ -131,142 +247,22 @@ git commit. To enable pre-commit, run:
 
     .. code-block:: console
 
-      (venv) $ pre-commit install
+      (.venv) $ pre-commit install
       pre-commit installed at .git/hooks/pre-commit
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ pre-commit install
+      (.venv) $ pre-commit install
       pre-commit installed at .git/hooks/pre-commit
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>pre-commit install
+      (.venv) C:\...>pre-commit install
       pre-commit installed at .git/hooks/pre-commit
-
-When you commit any change, pre-commit will run automatically. If there are any
-issues found with the commit, this will cause your commit to fail. Where possible,
-pre-commit will make the changes needed to correct the problems it has found:
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ git add some/interesting_file.py
-      (venv) $ git commit -m "Minor change"
-      check toml...............................................................Passed
-      check yaml...............................................................Passed
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      ruff format..............................................................Failed
-      - hook id: ruff-format
-      - files were modified by this hook
-
-      1 file reformatted, 488 files left unchanged
-
-      ruff check...............................................................Passed
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ git add some/interesting_file.py
-      (venv) $ git commit -m "Minor change"
-      check toml...............................................................Passed
-      check yaml...............................................................Passed
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      ruff format..............................................................Failed
-      - hook id: ruff-format
-      - files were modified by this hook
-
-      1 file reformatted, 488 files left unchanged
-
-      ruff check...............................................................Passed
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>git add some/interesting_file.py
-      (venv) C:\...>git commit -m "Minor change"
-      check toml...............................................................Passed
-      check yaml...............................................................Passed
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      ruff format..............................................................Failed
-      - hook id: ruff-format
-      - files were modified by this hook
-
-      1 file reformatted, 488 files left unchanged
-
-      ruff check...............................................................Passed
-
-You can then re-add any files that were modified as a result of the pre-commit checks,
-and re-commit the change.
-
-.. tabs::
-
-  .. group-tab:: macOS
-
-    .. code-block:: console
-
-      (venv) $ git add some/interesting_file.py
-      (venv) $ git commit -m "Minor change"
-      check toml...............................................................Passed
-      check yaml...............................................................Passed
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      ruff format..............................................................Passed
-      ruff check...............................................................Passed
-      [bugfix e3e0f73] Minor change
-      1 file changed, 4 insertions(+), 2 deletions(-)
-
-  .. group-tab:: Linux
-
-    .. code-block:: console
-
-      (venv) $ git add some/interesting_file.py
-      (venv) $ git commit -m "Minor change"
-      check toml...............................................................Passed
-      check yaml...............................................................Passed
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      ruff format..............................................................Passed
-      ruff check...............................................................Passed
-      [bugfix e3e0f73] Minor change
-      1 file changed, 4 insertions(+), 2 deletions(-)
-
-  .. group-tab:: Windows
-
-    .. code-block:: doscon
-
-      (venv) C:\...>git add some\interesting_file.py
-      (venv) C:\...>git commit -m "Minor change"
-      check toml...............................................................Passed
-      check yaml...............................................................Passed
-      check for case conflicts.................................................Passed
-      check docstring is first.................................................Passed
-      fix end of files.........................................................Passed
-      trim trailing whitespace.................................................Passed
-      ruff format..............................................................Passed
-      ruff check...............................................................Passed
 
 Now you are ready to start hacking on Briefcase!
 
@@ -332,14 +328,13 @@ documentation, and separate ideas for what to work on.
 Add a new feature
 -----------------
 
-Can you think of a feature than Briefcase should have? Propose a new API for that
-widget, and provide a sample implementation. If you don't have any ideas of your own,
+Can you think of a feature that Briefcase should have? Propose a new API or feature,
+and provide a sample implementation. If you don't have any ideas of your own,
 the Briefcase issue tracker has some `existing feature suggestions
 <https://github.com/beeware/briefcase/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement>`__
 that you could try to implement.
 
-Again, you'll need to add unit tests and/or backend probes for any new features
-you add.
+Again, you'll need to add unit tests for any new features you add.
 
 Implement an entirely new platform backend
 ------------------------------------------
@@ -377,25 +372,34 @@ To run the full test suite, run:
 
     .. code-block:: console
 
-      (venv) $ tox
+      (.venv) $ tox
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox
+      (.venv) $ tox
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox
+      (.venv) C:\...>tox
 
 The full test suite can take a while to run. You can speed it up considerably by
 running tox in parallel, by running ``tox p`` (or ``tox run-parallel``). When
 you run the test suite in parallel, you'll get less feedback on the progress of
 the test suite as it runs, but you'll still get a summary of any problems found
 at the end of the test run.
+You should get some output indicating that tests have been run. You may see
+``SKIPPED`` tests, but shouldn't ever get any ``FAIL`` or ``ERROR`` test
+results. We run our full test suite before merging every patch. If that process
+discovers any problems, we don't merge the patch. If you do find a test error or
+failure, either there's something odd in your test environment, or you've found
+an edge case that we haven't seen before - either way, let us know!
+
+As with the full test suite, and the core, this should report :ref:`100% test coverage
+<code-coverage>`.
 
 Running test variations
 =======================
@@ -423,30 +427,31 @@ test suite; you can run *just* the unit tests. To do this, run:
 
     .. code-block:: console
 
-      (venv) $ tox -e py
+      (.venv) $ tox -e py
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e py
+      (.venv) $ tox -e py
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e py
-
+      (.venv) C:\...>tox -e py
 
 .. _test-subset:
 
 Run a subset of tests
 ---------------------
 
-By default, tox will run all tests in the unit test suite. To restrict the test
-run to a subset of tests, you can pass in `any pytest specifier
+By default, tox will run all tests in the unit test suite.
+When you're developing your new test, it may be helpful to run *just* that one
+test. To do this, you can pass in `any pytest specifier
 <https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`__
-as an argument to tox. For example, to run only the tests in a single file, run:
+as an argument to tox. These test paths are relative to the ``briefcase`` directory. For
+example, to run only the tests in a single file, run:
 
 .. tabs::
 
@@ -454,19 +459,23 @@ as an argument to tox. For example, to run only the tests in a single file, run:
 
     .. code-block:: console
 
-      (venv) $ tox -e py -- tests/path/to/test_some_test.py
+      (.venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e py -- tests/path/to/test_some_test.py
+      (.venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e py -- tests/path/to/test_some_test.py
+      (.venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
+
+You'll still get a coverage report when running a part of the test suite -
+but the coverage results will only report the lines of code that were executed by the
+specific tests you ran.
 
 .. _test-py-version:
 
@@ -474,9 +483,10 @@ Run the test suite for a specific Python version
 ------------------------------------------------
 
 By default ``tox -e py`` will run using whatever interpreter resolves as
-``python3`` on your machine. If you have multiple Python versions installed, and
-want to test a specific Python version, you can specify a specific python
-version to use. For example, to run the test suite on Python 3.10, run:
+``python`` on your machine. If you have multiple Python versions installed, and
+want to test a specific Python version from the versions you have installed, you can
+specify a specific Python version to use. For example, to run the test suite on Python
+3.10, run:
 
 .. tabs::
 
@@ -484,19 +494,19 @@ version to use. For example, to run the test suite on Python 3.10, run:
 
     .. code-block:: console
 
-      (venv) $ tox -e py310
+      (.venv) $ tox -e py310
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e py310
+      (.venv) $ tox -e py310
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e py310
+      (.venv) C:\...>tox -e py310
 
 A :ref:`subset of tests <test-subset>` can be run by adding ``--`` and a test
 specification to the command line.
@@ -515,24 +525,26 @@ within spawned processes. To run a single python version in "fast" mode, run:
 
     .. code-block:: console
 
-      (venv) $ tox -e py-fast
+      (.venv) $ tox -e py-fast
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e py-fast
+      (.venv) $ tox -e py-fast
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e py-fast
+      (.venv) C:\...>tox -e py-fast
 
 A :ref:`subset of tests <test-subset>` can be run by adding ``--`` and a test
 specification to the command line; a :ref:`specific Python version
 <test-py-version>` can be used by adding the version to the test target (e.g.,
 ``py310-fast`` to run fast on Python 3.10).
+
+.. _code-coverage:
 
 Code coverage
 =============
@@ -541,7 +553,7 @@ Briefcase maintains 100% branch coverage in its codebase. When you add or
 modify code in the project, you must add test code to ensure coverage of any
 changes you make.
 
-However, Briefcase targets macOS, Linux, and Windows, as well as multiple
+However, Briefcase targets multiple platforms, as well as multiple
 versions of Python, so full coverage cannot be verified on a single platform and
 Python version. To accommodate this, several conditional coverage rules are
 defined in the ``tool.coverage.coverage_conditional_plugin.rules`` section of
@@ -556,11 +568,45 @@ coverage reporting is done on another, the report may include false positives
 for missed branches. Because of this, coverage reporting should always use the
 oldest version Python used to produce the coverage files.
 
+Understanding coverage results
+------------------------------
+
+At the end of the coverage test output there should be a report of the coverage data
+that was gathered:
+
+.. code-block:: console
+
+    Name    Stmts   Miss Branch BrPart   Cover   Missing
+    ----------------------------------------------------
+    TOTAL    7540      0   1040      0  100.0%
+
+This tells us that the test suite has executed every possible branching path
+in the ``briefcase`` code. This isn't a 100% guarantee that there are no bugs,
+but it does mean that we're exercising every line of code in the core API.
+
+If you make changes to the core API, it's possible you'll introduce a gap in this
+coverage. When this happens, the coverage report will tell you which lines aren't
+being executed. For example, lets say we made a change to
+``briefcase/integrations/file.py``, adding some new logic. The coverage report might
+look something like:
+
+.. code-block:: console
+
+    Name                                 Stmts   Miss Branch BrPart  Cover   Missing
+    --------------------------------------------------------------------------------
+    src/briefcase/integrations/file.py     111      1     26      0  98.1%   170, 302-307
+    --------------------------------------------------------------------------------
+    TOTAL                                 7540      1   1726      0  99.9%
+
+This tells us that line 170, and lines 302-307 are not being executed by the test
+suite. You'll need to add new tests (or modify an existing test) to restore this
+coverage.
+
 Coverage report for host platform and Python version
 ----------------------------------------------------
 
 You can generate a coverage report for your platform and version of Python. For
-example, to run the test suite and generate a coverage report on Python3.11,
+example, to run the test suite and generate a coverage report on Python 3.11,
 run:
 
 .. tabs::
@@ -569,19 +615,19 @@ run:
 
     .. code-block:: console
 
-      (venv) $ tox -m test311
+      (.venv) $ tox -m test311
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -m test311
+      (.venv) $ tox -m test311
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -m test311
+      (.venv) C:\...>tox -m test311
 
 Coverage report for host platform
 ---------------------------------
@@ -595,19 +641,19 @@ host platform can be reported by running:
 
     .. code-block:: console
 
-      (venv) $ tox p -m test-platform
+      (.venv) $ tox p -m test-platform
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox p -m test-platform
+      (.venv) $ tox p -m test-platform
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox p -m test-platform
+      (.venv) C:\...>tox p -m test-platform
 
 Coverage reporting in HTML
 --------------------------
@@ -621,19 +667,19 @@ coverage tox environment names, for instance:
 
     .. code-block:: console
 
-      (venv) $ tox -e coverage-platform-html
+      (.venv) $ tox -e coverage-platform-html
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ tox -e coverage-platform-html
+      (.venv) $ tox -e coverage-platform-html
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>tox -e coverage-platform-html
+      (.venv) C:\...>tox -e coverage-platform-html
 
 .. _pr-housekeeping:
 
@@ -662,7 +708,7 @@ in Briefcase's binary signing on Windows, you might create a feature branch
 ``fix-windows-signing``. If your bug relates to a specific issue that has been reported,
 it's also common to reference that issue number in the branch name (e.g., ``fix-1234``).
 
-To create a feature branch, run:
+To create a ``fix-windows-signing`` feature branch, run:
 
 .. tabs::
 
@@ -670,46 +716,164 @@ To create a feature branch, run:
 
     .. code-block:: console
 
-      (venv) $ git checkout -b fix-windows-signing
+      (.venv) $ git switch -c fix-windows-signing
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (venv) $ git checkout -b fix-windows-signing
+      (.venv) $ git switch -c fix-windows-signing
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (venv) C:\...>git checkout -b fix-windows-signing
+      (.venv) C:\...>git switch -c fix-windows-signing
 
 Commit your changes to this branch, then push to GitHub and create a pull request.
+
+Working with pre-commit
+-----------------------
+
+When you commit any change, pre-commit will run automatically. If there are any
+issues found with the commit, this will cause your commit to fail. Where possible,
+pre-commit will make the changes needed to correct the problems it has found:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (.venv) $ git add some/interesting_file.py
+      (.venv) $ git commit -m "Minor change"
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      ruff format..............................................................Failed
+      - hook id: ruff-format
+      - files were modified by this hook
+
+      1 file reformatted, 488 files left unchanged
+
+      ruff check...............................................................Passed
+      codespell................................................................Passed
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (.venv) $ git add some/interesting_file.py
+      (.venv) $ git commit -m "Minor change"
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      ruff format..............................................................Failed
+      - hook id: ruff-format
+      - files were modified by this hook
+
+      1 file reformatted, 488 files left unchanged
+
+      ruff check...............................................................Passed
+      codespell................................................................Passed
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (.venv) C:\...>git add some/interesting_file.py
+      (.venv) C:\...>git commit -m "Minor change"
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      ruff format..............................................................Failed
+      - hook id: ruff-format
+      - files were modified by this hook
+
+      1 file reformatted, 488 files left unchanged
+
+      ruff check...............................................................Passed
+      codespell................................................................Passed
+
+You can then re-add any files that were modified as a result of the pre-commit checks,
+and re-commit the change.
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (.venv) $ git add some/interesting_file.py
+      (.venv) $ git commit -m "Minor change"
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      ruff format..............................................................Passed
+      ruff check...............................................................Passed
+      codespell................................................................Passed
+      [bugfix e3e0f73] Minor change
+      1 file changed, 4 insertions(+), 2 deletions(-)
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (.venv) $ git add some/interesting_file.py
+      (.venv) $ git commit -m "Minor change"
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      ruff format..............................................................Passed
+      ruff check...............................................................Passed
+      codespell................................................................Passed
+      [bugfix e3e0f73] Minor change
+      1 file changed, 4 insertions(+), 2 deletions(-)
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (.venv) C:\...>git add some\interesting_file.py
+      (.venv) C:\...>git commit -m "Minor change"
+      check toml...............................................................Passed
+      check yaml...............................................................Passed
+      check for case conflicts.................................................Passed
+      check docstring is first.................................................Passed
+      fix end of files.........................................................Passed
+      trim trailing whitespace.................................................Passed
+      ruff format..............................................................Passed
+      ruff check...............................................................Passed
+      codespell................................................................Passed
+
+Once everything passes, you're ready for the next steps.
 
 Add change information for release notes
 ----------------------------------------
 
-Before you submit this change as a pull request, you need to add a *change
+When you submit this change as a pull request, you need to add a *change
 note*. Briefcase uses `towncrier <https://pypi.org/project/towncrier/>`__ to automate
 building the release notes for each release. Every pull request must include at
 least one file in the ``changes/`` directory that provides a short description
 of the change implemented by the pull request.
 
-This description should be a high level summary of the change from the
-perspective of the user, not a deep technical description or implementation
-detail. It is distinct from a commit message - a commit message describes what
-has been done so that future developers can follow the reasoning for a change;
-the change note is a "user facing" description. For example, if you fix a bug
-caused by date handling, the commit message might read:
-
-    Modified date validation to accept US-style MM-DD-YYYY format.
-
-The corresponding change note would read something like:
-
-    Date widgets can now accept US-style MM-DD-YYYY format.
-
-The change note should be in ReST format, in a file that has name of the format
-``<id>.<fragment type>.rst``. If the change you are proposing will fix a bug or
+The change note should be in reStructuredText format, in a file that has name of the
+format ``<id>.<fragment type>.rst``. If the change you are proposing will fix a bug or
 implement a feature for which there is an existing issue number, the ID will be
 the number of that ticket. If the change has no corresponding issue, the PR
 number can be used as the ID. You won't know this PR number until you push the
@@ -719,8 +883,8 @@ note and push a PR update and CI should then pass.
 There are five allowed fragment types:
 
 - ``feature``: The PR adds a new behavior or capability that wasn't previously
-  possible (e.g., adding a new widget, or adding a significant capability to an
-  existing widget);
+  possible (e.g., adding support for a new packaging format, or a new feature in an
+  existing packaging format);
 - ``bugfix``: The PR fixes a bug in the existing implementation;
 - ``doc``: The PR is an significant improvement to documentation;
 - ``removal``; The PR represents a backwards incompatible change in the Briefcase
@@ -728,6 +892,19 @@ There are five allowed fragment types:
 - ``misc``; A minor or administrative change (e.g., fixing a typo, a minor
   language clarification, or updating a dependency version) that doesn't need to
   be announced in the release notes.
+
+This description in the change note should be a high level summary of the change from
+the perspective of the user, not a deep technical description or implementation
+detail. It is distinct from a commit message - a commit message describes what
+has been done so that future developers can follow the reasoning for a change;
+the change note is a "user facing" description. For example, if you fix a bug
+related to project naming, the commit message might read:
+
+    Disallow project names that begin with a number.
+
+The corresponding change note would read something like:
+
+    Project names can no longer begin with a number.
 
 Some PRs will introduce multiple features and fix multiple bugs, or introduce
 multiple backwards incompatible changes. In that case, the PR may have multiple
