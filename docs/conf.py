@@ -31,6 +31,7 @@ extensions = [
     "sphinx_tabs.tabs",
     "sphinx_copybutton",
     "sphinx.ext.intersphinx",
+    "sphinxcontrib.spelling",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -326,12 +327,6 @@ texinfo_documents = [
 # texinfo_show_urls = 'footnote'
 
 # -- Options for spelling -------------------------------------------
-
-# Spelling check needs an additional module that is not installed by default.
-# Add it only if spelling check is requested so docs can be generated without it.
-if "spelling" in sys.argv:
-    extensions.append("sphinxcontrib.spelling")
-
 # Spelling language.
 spelling_lang = "en_US"
 

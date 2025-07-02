@@ -34,8 +34,8 @@ You'll need to install the following prerequisites.
 
 .. _dev-environment-tldr:
 
-tl;dr - Dev Quick-Setup
-=======================
+:spelling:ignore:`tl;dr` - Dev Quick-Setup
+==========================================
 
 Set up the dev environment by running:
 
@@ -135,8 +135,8 @@ Clone the Briefcase repository
 
 Next, go to the `Briefcase page on GitHub <https://github.com/beeware/briefcase>`__,
 and, if you haven't already, `fork the repository <https://github.com/beeware/briefcase/fork>`__
-into your own account. Next, click on the "<> Code" button. If you have the GitHub
-desktop application installed on your computer, you can select "Open with GitHub
+into your own account. Next, click on the "<> Code" button on your fork. If you have the
+GitHub desktop application installed on your computer, you can select "Open with GitHub
 Desktop"; otherwise, copy the HTTPS URL provided, and use it to clone the repository
 to your computer using the command line:
 
@@ -218,19 +218,19 @@ of Briefcase into your development environment. Run the following command:
 
     .. code-block:: console
 
-      (.venv) $ python -m pip install -Ue ".[dev]"
+      (.venv) $ python -m pip install -e ".[dev]"
 
   .. group-tab:: Linux
 
     .. code-block:: console
 
-      (.venv) $ python -m pip install -Ue ".[dev]"
+      (.venv) $ python -m pip install -e ".[dev]"
 
   .. group-tab:: Windows
 
     .. code-block:: doscon
 
-      (.venv) C:\...>python -m pip install -Ue .[dev]
+      (.venv) C:\...>python -m pip install -e .[dev]
 
 
 Enable pre-commit
@@ -309,7 +309,7 @@ If you can reproduce the problem - try to fix it! Work out what combination of c
 implementing the feature, and see if you can work out what isn't working correctly.
 
 If you're able to fix the problem, you'll need to :ref:`add tests
-API <run-test-suite>` to verify that the problem has been fixed (and to prevent
+<run-test-suite>` to verify that the problem has been fixed (and to prevent
 the issue from occurring again in future).
 
 Even if you can't fix the problem, reporting anything you discover as a comment
@@ -352,8 +352,10 @@ Running tests and coverage
 ==========================
 
 Briefcase uses `tox <https://tox.wiki/en/latest/>`__ to manage the testing
-process and `pytest <https://docs.pytest.org/en/latest>`__ for its own test
-suite.
+process and |pytest|_ for its own test suite.
+
+.. |pytest| replace:: ``pytest``
+.. _pytest: https://docs.pytest.org/en/latest
 
 The default ``tox`` command includes running:
  * pre-commit hooks
@@ -582,9 +584,9 @@ that was gathered:
 
 This tells us that the test suite has executed every possible branching path
 in the ``briefcase`` code. This isn't a 100% guarantee that there are no bugs,
-but it does mean that we're exercising every line of code in the core API.
+but it does mean that we're exercising every line of code in the codebase.
 
-If you make changes to the core API, it's possible you'll introduce a gap in this
+If you make changes to the codebase, it's possible you'll introduce a gap in this
 coverage. When this happens, the coverage report will tell you which lines aren't
 being executed. For example, lets say we made a change to
 ``briefcase/integrations/file.py``, adding some new logic. The coverage report might
@@ -867,10 +869,13 @@ Add change information for release notes
 ----------------------------------------
 
 When you submit this change as a pull request, you need to add a *change
-note*. Briefcase uses ```towncrier`` <https://pypi.org/project/towncrier/>`__ to automate
+note*. Toga uses |towncrier|_ to automate
 building the release notes for each release. Every pull request must include at
 least one file in the ``changes/`` directory that provides a short description
 of the change implemented by the pull request.
+
+.. |towncrier| replace:: ``towncrier``
+.. _towncrier: https://pypi.org/project/towncrier/
 
 The change note should be in reStructuredText format, in a file that has name of the
 format ``<id>.<fragment type>.rst``. If the change you are proposing will fix a bug or
@@ -932,11 +937,10 @@ format your change notes.
 It's not just about coverage!
 -----------------------------
 
-Although we're always trying to improve test coverage, the
-task isn't *just* about increasing the numerical coverage value. Part of the
-task is to audit the code as you go. You could write a comprehensive set of
-tests for a concrete life jacket... but a concrete life jacket would still be
-useless for the purpose it was intended!
+Although we have full test coverage, the task isn't *just* about maintaining
+the numerical coverage value. Part of the task is to audit the code as you go.
+You could write a comprehensive set of tests for a concrete life jacket... but
+a concrete life jacket would still be useless for the purpose it was intended!
 
 As you develop tests and improve coverage, you should be checking that the
 core module is internally **consistent** as well. If you notice any method
