@@ -137,6 +137,33 @@ contains the most recent test code. To prevent this update and build, use the
 Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
 
+``--debug <debugger>``
+----------------------
+
+Run the app in debug mode in the bundled app environment and establish an
+debugger connection via a socket.
+
+Currently the following debuggers are supported (default is ``pdb``):
+
+- ``pdb``: This is used for debugging via console.
+- ``debugpy``: This is used for debugging via VSCode.
+
+This is an experimental new feature, that is currently only support on Windows and macOS.
+
+``--debugger-host <host>``
+--------------------------
+
+Specifies the host of the socket connection for the debugger. This
+option is only used when the ``--debug <debugger>`` option is specified. The
+default value is ``localhost``.
+
+``--debugger-port <port>``
+--------------------------
+
+Specifies the port of the socket connection for the debugger. This
+option is only used when the ``--debug <debugger>`` option is specified. The
+default value is ``5678``.
+
 Passthrough arguments
 ---------------------
 

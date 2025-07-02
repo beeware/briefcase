@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import subprocess
 import uuid
@@ -131,9 +133,24 @@ class WindowsCreateCommand(CreateCommand):
 
 
 class WindowsRunCommand(RunCommand):
+    supports_debugger = True
+
+    def _debugger_app_packages_path_mapping(self, app: AppConfig) -> None:
+        """
+        Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        # No path mapping is required. The paths are automatically found, because
+        # developing an windows app also requires a windows host.
+        return None
+
     def run_app(
         self,
         app: AppConfig,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -143,7 +160,11 @@ class WindowsRunCommand(RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app)
+        kwargs = self._prepare_app_kwargs(
+            app=app,
+            debugger_host=debugger_host,
+            debugger_port=debugger_port,
+        )
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

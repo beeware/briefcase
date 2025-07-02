@@ -30,6 +30,7 @@ class WindowsAppCreateCommand(WindowsAppMixin, WindowsCreateCommand):
 
 class WindowsAppUpdateCommand(WindowsAppCreateCommand, UpdateCommand):
     description = "Update an existing Windows app."
+    supports_debugger = True
 
 
 class WindowsAppOpenCommand(WindowsAppMixin, OpenCommand):
@@ -38,6 +39,7 @@ class WindowsAppOpenCommand(WindowsAppMixin, OpenCommand):
 
 class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
     description = "Build a Windows app."
+    supports_debugger = True
 
     def verify_tools(self):
         super().verify_tools()
