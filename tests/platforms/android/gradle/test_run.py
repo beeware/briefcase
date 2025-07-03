@@ -93,8 +93,8 @@ def test_device_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
-        "forward_ports": [],
-        "reverse_ports": [],
+        "forward_ports": None,
+        "reverse_ports": None,
     }
     assert overrides == {}
 
@@ -118,8 +118,8 @@ def test_extra_emulator_args_option(run_command):
         "passthrough": [],
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
-        "forward_ports": [],
-        "reverse_ports": [],
+        "forward_ports": None,
+        "reverse_ports": None,
     }
     assert overrides == {}
 
@@ -141,8 +141,8 @@ def test_shutdown_on_exit_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
-        "forward_ports": [],
-        "reverse_ports": [],
+        "forward_ports": None,
+        "reverse_ports": None,
     }
     assert overrides == {}
 
@@ -165,9 +165,9 @@ def test_forward_ports_option(run_command):
         "test_mode": False,
         "passthrough": [],
         "extra_emulator_args": None,
-        "shutdown_on_exit": True,
+        "shutdown_on_exit": False,
         "forward_ports": [80, 81],
-        "reverse_ports": [],
+        "reverse_ports": None,
     }
     assert overrides == {}
 
@@ -190,8 +190,8 @@ def test_reverse_ports_option(run_command):
         "test_mode": False,
         "passthrough": [],
         "extra_emulator_args": None,
-        "shutdown_on_exit": True,
-        "forward_ports": [],
+        "shutdown_on_exit": False,
+        "forward_ports": None,
         "reverse_ports": [78, 79],
     }
     assert overrides == {}
