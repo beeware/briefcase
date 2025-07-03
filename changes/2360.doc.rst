@@ -1,0 +1,1 @@
+Adds docs for publishing a macOS app
