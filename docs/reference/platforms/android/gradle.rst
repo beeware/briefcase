@@ -159,13 +159,34 @@ You may specify multiple ``--Xemulator`` arguments; each one specifies a
 single argument to pass to the emulator, in the order they are specified.
 
 ``--shutdown-on-exit``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Instruct Briefcase to shut down the emulator when the run finishes. This is
 especially useful if you are running in headless mode, as the emulator will
 continue to run in the background, but there will be no visual manifestation
 that it is running. It may also be useful as a cleanup mechanism when running
 in a CI configuration.
+
+``--forward-port=<port>``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Forward a port via ADB from the host to the Android device. This is useful when
+a network service is running on the Android app that you want to connect to from
+the host.
+
+You may specify multiple ``--forward-port`` arguments; each one specifies a
+single port.
+
+``--reverse-port=<port>``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Reverse a port via ADB from the Android device to the host. This is useful when
+a network service is running on the host that you want to connect to from the
+Android app.
+
+You may specify multiple ``--reverse-port`` arguments; each one specifies a
+single port.
+
 
 Application configuration
 =========================
