@@ -47,7 +47,7 @@ Set up the dev environment by running:
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
-      $ python -m venv .venv
+      $ python3 -m venv .venv
       $ . .venv/bin/activate
       (.venv) $ python -m pip install -Ue ".[dev]"
       (.venv) $ pre-commit install
@@ -58,7 +58,7 @@ Set up the dev environment by running:
 
       $ git clone https://github.com/beeware/briefcase.git
       $ cd briefcase
-      $ python -m venv .venv
+      $ python3 -m venv .venv
       $ . .venv/bin/activate
       (.venv) $ python -m pip install -Ue ".[dev]"
       (.venv) $ pre-commit install
@@ -184,7 +184,7 @@ To set up a virtual environment, run:
     .. code-block:: console
 
       $ cd briefcase
-      $ python -m venv .venv
+      $ python3 -m venv .venv
       $ source .venv/bin/activate
 
   .. group-tab:: Linux
@@ -192,7 +192,7 @@ To set up a virtual environment, run:
     .. code-block:: console
 
       $ cd briefcase
-      $ python -m venv .venv
+      $ python3 -m venv .venv
       $ source .venv/bin/activate
 
   .. group-tab:: Windows
