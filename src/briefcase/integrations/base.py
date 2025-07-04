@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     import git as git_
 
     from briefcase.integrations.android_sdk import AndroidSDK
+    from briefcase.integrations.config import Config
     from briefcase.integrations.docker import Docker, DockerAppContext
     from briefcase.integrations.file import File
     from briefcase.integrations.flatpak import Flatpak
@@ -148,6 +149,7 @@ class ToolCache(Mapping):
     # Briefcase tools
     android_sdk: AndroidSDK
     app_context: Subprocess | DockerAppContext
+    config: Config
     docker: Docker
     file: File
     flatpak: Flatpak
@@ -207,6 +209,11 @@ class ToolCache(Mapping):
                 home_path=self.home_path,
             )
         )
+        from briefcase.integrations.config import (
+            Config,
+        )  # Local import to avoid circular import
+
+        self.config = Config(self)
 
     @cached_property
     def system_encoding(self) -> str:
