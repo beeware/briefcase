@@ -610,7 +610,7 @@ or, for a platform-specific definition:
 
     ``[tool.briefcase.app.<app name>.<platform>.document_type.<document type id>]``
 
-The ``document type id`` is an identifier, in alphanumeric format. It is appended to the app id of an application to identify documents of the same type.
+The ``document type id`` is an identifier, in alphanumeric format.
 
 The document type declaration requires the following settings:
 
@@ -620,9 +620,7 @@ A short, one-line description of the document format.
 
 .. attribute:: extension
 
-The :attr:`extension` is the file extension to register. For example, ``myapp``
-could register as a handler for PNG image files by defining the configuration
-section ``[tool.briefcase.app.myapp.document_type.png]``.
+The file extension to register, without a leading dot.
 
 .. attribute:: icon
 

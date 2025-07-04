@@ -279,6 +279,9 @@ class BaseConfig:
         for key, configs in data.items():
             setattr(self, key, configs)
 
+    def copy(self):
+        return type(self)(**self.__dict__)
+
     def setdefault(self, field_name, default_value):
         """Return the field_name field or, if it does not exist, create it
         to hold default_value.

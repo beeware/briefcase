@@ -15,7 +15,7 @@ Over time, it may be necessary to upgrade these tools. The ``upgrade`` command
 provides a way to perform these upgrades.
 
 If you are managing your own version of these tools (e.g., if you have
-downloaded a version of WiX and have set the ``WIX_HOME`` environment variable),
+downloaded the Android SDK and have set the ``ANDROID_HOME`` environment variable),
 you must manage any upgrades on your own.
 
 Usage

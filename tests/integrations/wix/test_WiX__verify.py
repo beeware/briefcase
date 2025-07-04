@@ -1,4 +1,4 @@
-import os
+from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,8 +11,8 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.wix import WiX
 
-from ...utils import assert_url_resolvable, create_zip_file
-from .conftest import WIX_DOWNLOAD_URL
+from ...utils import assert_url_resolvable
+from .conftest import WIX_DOWNLOAD_URL, WIX_EXE_PATH
 
 
 def test_short_circuit(mock_tools):
@@ -37,121 +37,127 @@ def test_unsupported_os(mock_tools, host_os):
         WiX.verify(mock_tools)
 
 
-def test_valid_wix_envvar(mock_tools, tmp_path):
-    """If the WiX envvar points to a valid WiX install, the validator succeeds."""
-    # Mock the environment for a WiX install
-    wix_path = tmp_path / "wix"
-    mock_tools.os.environ.get.return_value = os.fsdecode(wix_path)
-
-    # Mock the interesting parts of a WiX install
-    (wix_path / "bin").mkdir(parents=True)
-    (wix_path / "bin/heat.exe").touch()
-    (wix_path / "bin/light.exe").touch()
-    (wix_path / "bin/candle.exe").touch()
-
-    # Verify the install
-    wix = WiX.verify(mock_tools)
-
-    # The environment was queried.
-    mock_tools.os.environ.get.assert_called_with("WIX")
-
-    # The returned paths are as expected (and are the full paths)
-    assert wix.heat_exe == tmp_path / "wix/bin/heat.exe"
-    assert wix.light_exe == tmp_path / "wix/bin/light.exe"
-    assert wix.candle_exe == tmp_path / "wix/bin/candle.exe"
-
-
-def test_invalid_wix_envvar(mock_tools, tmp_path):
-    """If the WiX envvar points to an invalid WiX install, the validator fails."""
-    # Mock the environment for a WiX install
-    wix_path = tmp_path / "wix"
-    mock_tools.os.environ.get.return_value = os.fsdecode(wix_path)
-
-    # Don't create the actual install, and then attempt to validate
-    with pytest.raises(BriefcaseCommandError, match="does not point to an install"):
-        WiX.verify(mock_tools)
-
-
-def test_existing_wix_install(mock_tools, tmp_path):
+def test_existing_wix_install(mock_tools, wix_path):
     """If there's an existing managed WiX install, the validator succeeds."""
-    # Mock the environment as if there is not WiX variable
-    mock_tools.os.environ.get.return_value = None
-
     # Create a mock of a previously installed WiX version.
-    wix_path = tmp_path / "tools/wix"
-    wix_path.mkdir(parents=True)
-    (wix_path / "heat.exe").touch()
-    (wix_path / "light.exe").touch()
-    (wix_path / "candle.exe").touch()
+    wix_exe = wix_path / WIX_EXE_PATH
+    wix_exe.parent.mkdir(parents=True)
+    wix_exe.touch()
+
+    mock_tools.subprocess.check_output.return_value = "5.0.2+aa65968c"
 
     wix = WiX.verify(mock_tools)
 
-    # The environment was queried.
-    mock_tools.os.environ.get.assert_called_with("WIX")
+    # Version was checked
+    mock_tools.subprocess.check_output.assert_called_once_with([wix_exe, "--version"])
 
     # No download was attempted
     assert mock_tools.file.download.call_count == 0
 
     # The returned paths are as expected
-    assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
-    assert wix.light_exe == tmp_path / "tools/wix/light.exe"
-    assert wix.candle_exe == tmp_path / "tools/wix/candle.exe"
+    assert wix.wix_exe == wix_exe
 
 
-def test_download_wix(mock_tools, tmp_path):
+def test_download_missing(capsys, mock_tools, wix_path):
     """If there's no existing managed WiX install, it is downloaded and unpacked."""
-    # Mock the environment as if there is not WiX variable
-    mock_tools.os.environ.get.return_value = None
+    assert_download(mock_tools, wix_path)
+    assert "WiX toolset was not found" in capsys.readouterr().out
 
+    # Version was not checked
+    mock_tools.subprocess.check_output.assert_not_called()
+
+    # The WiX URL is resolvable
+    assert_url_resolvable(WiX.verify(mock_tools).download_url)
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [PermissionError(), CalledProcessError(1, "wix")],
+)
+def test_download_unusable(capsys, mock_tools, wix_path, exc):
+    """If the existing managed WiX install is unusable, it is reinstalled."""
+    wix_exe = wix_path / WIX_EXE_PATH
+    wix_exe.parent.mkdir(parents=True)
+    wix_exe.touch()
+
+    mock_tools.subprocess.check_output.side_effect = exc
+
+    assert_download(mock_tools, wix_path)
+    assert (
+        f"WiX toolset is unusable ({type(exc).__name__}: {exc})"
+        in capsys.readouterr().out
+    )
+
+    # Version was checked
+    mock_tools.subprocess.check_output.assert_called_once_with([wix_exe, "--version"])
+
+
+def test_download_version(capsys, mock_tools, wix_path):
+    """If the existing managed WiX install is the wrong version, it is reinstalled."""
+    wix_exe = wix_path / WIX_EXE_PATH
+    wix_exe.parent.mkdir(parents=True)
+    wix_exe.touch()
+
+    mock_tools.subprocess.check_output.return_value = "5.0.1"
+
+    assert_download(mock_tools, wix_path)
+    assert "WiX toolset is an unsupported version (5.0.1)" in capsys.readouterr().out
+
+    # Version was checked
+    mock_tools.subprocess.check_output.assert_called_once_with([wix_exe, "--version"])
+
+
+def assert_download(mock_tools, wix_path):
     # Mock the download
-    wix_path = tmp_path / "tools/wix"
-
-    wix_zip_path = create_zip_file(tmp_path / "tools/wix.zip", content=[("wix", "wix")])
-
-    mock_tools.file.download = MagicMock(return_value=wix_zip_path)
+    wix_msi_path = wix_path.parent / "wix.msi"
+    wix_msi_path.touch()
+    mock_tools.file.download = MagicMock(return_value=wix_msi_path)
 
     # Verify the install. This will trigger a download
     wix = WiX.verify(mock_tools)
 
-    # The environment was queried.
-    mock_tools.os.environ.get.assert_called_with("WIX")
-
     # A download was initiated
     mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / "tools",
+        download_path=wix_path.parent,
         role="WiX",
     )
 
     # The download was unpacked.
-    mock_tools.shutil.unpack_archive.assert_called_with(
-        filename=os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
+    mock_tools.subprocess.run.assert_called_with(
+        ["msiexec", "/a", wix_msi_path, "/qn", f"TARGETDIR={wix_path}"], check=True
     )
 
-    # The zip file was removed
-    assert not wix_zip_path.exists()
+    # The msi file was removed
+    assert not wix_msi_path.exists()
 
     # The returned paths are as expected
-    assert wix.heat_exe == tmp_path / "tools/wix/heat.exe"
-    assert wix.light_exe == tmp_path / "tools/wix/light.exe"
-    assert wix.candle_exe == tmp_path / "tools/wix/candle.exe"
-
-    # The WiX URL is resolvable
-    assert_url_resolvable(wix.download_url)
+    assert wix.wix_exe == wix_path / WIX_EXE_PATH
 
 
-def test_dont_install(mock_tools, tmp_path):
-    """If there's no existing managed WiX install, an install is not requested, verify
+def test_dont_install_missing(mock_tools, tmp_path):
+    """If there's no existing managed WiX install, and install is not requested, verify
     fails."""
-    # Mock the environment as if there is not WiX variable
-    mock_tools.os.environ.get.return_value = None
-
     # Verify, but don't install. This will fail.
     with pytest.raises(MissingToolError):
         WiX.verify(mock_tools, install=False)
 
-    # The environment was queried.
-    mock_tools.os.environ.get.assert_called_with("WIX")
+    # No download was initiated
+    mock_tools.file.download.assert_not_called()
+
+
+def test_dont_install_version(mock_tools, wix_path):
+    """If the existing managed WiX install is the wrong version, and install is not
+    requested, verify fails."""
+    wix_exe = wix_path / WIX_EXE_PATH
+    wix_exe.parent.mkdir(parents=True)
+    wix_exe.touch()
+
+    mock_tools.subprocess.check_output.return_value = "5.0.1"
+
+    # Verify, but don't install. This will fail.
+    with pytest.raises(MissingToolError):
+        WiX.verify(mock_tools, install=False)
 
     # No download was initiated
     mock_tools.file.download.assert_not_called()
@@ -159,18 +165,12 @@ def test_dont_install(mock_tools, tmp_path):
 
 def test_download_fail(mock_tools, tmp_path):
     """If the download doesn't complete, the validator fails."""
-    # Mock the environment as if there is not WiX variable
-    mock_tools.os.environ.get.return_value = None
-
     # Mock the download failure
     mock_tools.file.download = MagicMock(side_effect=NetworkFailure("mock"))
 
     # Verify the install. This will trigger a download
     with pytest.raises(NetworkFailure, match="Unable to mock"):
         WiX.verify(mock_tools)
-
-    # The environment was queried.
-    mock_tools.os.environ.get.assert_called_with("WIX")
 
     # A download was initiated
     mock_tools.file.download.assert_called_with(
@@ -180,43 +180,35 @@ def test_download_fail(mock_tools, tmp_path):
     )
 
     # ... but the unpack didn't happen
-    assert mock_tools.shutil.unpack_archive.call_count == 0
+    mock_tools.subprocess.run.assert_not_called()
 
 
-def test_unpack_fail(mock_tools, tmp_path):
+def test_unpack_fail(capsys, mock_tools, wix_path):
     """If the download archive is corrupted, the validator fails."""
-    # Mock the environment as if there is not WiX variable
-    mock_tools.os.environ.get.return_value = None
-
     # Mock the download
-    wix_path = tmp_path / "tools/wix"
+    wix_msi_path = wix_path.parent / "wix.msi"
+    wix_msi_path.touch()
+    mock_tools.file.download = MagicMock(return_value=wix_msi_path)
 
-    wix_zip_path = create_zip_file(tmp_path / "tools/wix.zip", content=[("wix", "wix")])
-
-    mock_tools.file.download = MagicMock(return_value=wix_zip_path)
-
-    # Mock an unpack failure
-    mock_tools.shutil.unpack_archive.side_effect = EOFError
+    # Mock an msiexec failure
+    mock_tools.subprocess.run.side_effect = CalledProcessError(1, "msiexec")
 
     # Verify the install. This will trigger a download,
     # but the unpack will fail
     with pytest.raises(BriefcaseCommandError, match="interrupted or corrupted"):
         WiX.verify(mock_tools)
 
-    # The environment was queried.
-    mock_tools.os.environ.get.assert_called_with("WIX")
-
     # A download was initiated
     mock_tools.file.download.assert_called_with(
         url=WIX_DOWNLOAD_URL,
-        download_path=tmp_path / "tools",
+        download_path=wix_path.parent,
         role="WiX",
     )
 
     # The download was unpacked.
-    mock_tools.shutil.unpack_archive.assert_called_with(
-        filename=os.fsdecode(wix_zip_path), extract_dir=os.fsdecode(wix_path)
+    mock_tools.subprocess.run.assert_called_with(
+        ["msiexec", "/a", wix_msi_path, "/qn", f"TARGETDIR={wix_path}"], check=True
     )
 
     # The zip file was not removed
-    assert wix_zip_path.exists()
+    assert wix_msi_path.exists()

@@ -10,6 +10,8 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioPackageCommand
 
+from ....integrations.wix.conftest import WIX_EXE_PATH, WIX_UI_PATH
+
 
 @pytest.fixture
 def package_command(tmp_path):
@@ -28,86 +30,23 @@ def test_package_msi(package_command, first_app_config, tmp_path):
 
     package_command.package_app(first_app_config)
 
-    package_path = (
-        tmp_path / "base_path/build/first-app/windows/visualstudio/x64/Release"
-    )
-    package_command.tools.subprocess.run.assert_has_calls(
-        [
-            # Collect manifest
-            mock.call(
-                [
-                    tmp_path / "wix/bin/heat.exe",
-                    "dir",
-                    package_path,
-                    "-nologo",
-                    "-gg",
-                    "-sfrag",
-                    "-sreg",
-                    "-srd",
-                    "-scom",
-                    "-dr",
-                    "first_app_ROOTDIR",
-                    "-cg",
-                    "first_app_COMPONENTS",
-                    "-var",
-                    "var.SourceDir",
-                    "-out",
-                    "first-app-manifest.wxs",
-                ],
-                check=True,
-                cwd=tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "windows"
-                / "visualstudio",
-            ),
-            # Compile MSI
-            mock.call(
-                [
-                    tmp_path / "wix/bin/candle.exe",
-                    "-nologo",
-                    "-ext",
-                    "WixUtilExtension",
-                    "-ext",
-                    "WixUIExtension",
-                    "-arch",
-                    "x64",
-                    f"-dSourceDir={package_path}",
-                    "first-app.wxs",
-                    "first-app-manifest.wxs",
-                ],
-                check=True,
-                cwd=tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "windows"
-                / "visualstudio",
-            ),
-            # Link MSI
-            mock.call(
-                [
-                    tmp_path / "wix/bin/light.exe",
-                    "-nologo",
-                    "-ext",
-                    "WixUtilExtension",
-                    "-ext",
-                    "WixUIExtension",
-                    "-loc",
-                    "unicode.wxl",
-                    "-o",
-                    tmp_path / "base_path/dist/First App-0.0.1.msi",
-                    "first-app.wixobj",
-                    "first-app-manifest.wixobj",
-                ],
-                check=True,
-                cwd=tmp_path
-                / "base_path"
-                / "build"
-                / "first-app"
-                / "windows"
-                / "visualstudio",
-            ),
-        ]
-    )
+    assert package_command.tools.subprocess.run.mock_calls == [
+        # Compile MSI
+        mock.call(
+            [
+                tmp_path / "wix" / WIX_EXE_PATH,
+                "build",
+                "-ext",
+                tmp_path / "wix" / WIX_UI_PATH,
+                "-arch",
+                "x64",
+                "first-app.wxs",
+                "-loc",
+                "unicode.wxl",
+                "-o",
+                tmp_path / "base_path/dist/First App-0.0.1.msi",
+            ],
+            check=True,
+            cwd=tmp_path / "base_path/build/first-app/windows/visualstudio",
+        ),
+    ]
