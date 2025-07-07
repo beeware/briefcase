@@ -13,6 +13,24 @@ import os
 import sys
 from importlib.metadata import version as metadata_version
 
+import beeware_theme
+
+# BeeWare theme override for Furo Sphinx theme to add BeeWare features.
+templates_path = []
+html_static_path = []
+html_css_files = []
+html_context = {}
+html_theme_options = {}
+
+beeware_theme.init(
+    project_name="briefcase",
+    templates=templates_path,
+    context=html_context,
+    static=html_static_path,
+    css=html_css_files,
+    theme_options=html_theme_options,
+)
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -35,7 +53,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+# templates_path = ["_templates"]
 
 # The suffix of source filenames.
 source_suffix = ".rst"
@@ -196,7 +214,7 @@ html_logo = "_static/images/briefcase.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
