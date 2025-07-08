@@ -10,3 +10,4 @@ covers how to publish your app to the appropriate distribution system.
 
    android
    iOS
+   macOS

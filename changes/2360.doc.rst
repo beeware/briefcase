@@ -1,0 +1,1 @@
+A guide for publishing apps to the macOS App Store has been added.
