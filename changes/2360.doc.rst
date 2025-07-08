@@ -1,1 +1,1 @@
-Adds docs for publishing a macOS app
+A guide for publishing apps to the macOS App Store has been added.
