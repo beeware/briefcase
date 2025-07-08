@@ -36,3 +36,5 @@ coverage.xml
 
 tests/apps/verify-*/
 logs/
+
+.briefcase/
