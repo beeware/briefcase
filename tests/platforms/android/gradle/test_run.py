@@ -267,11 +267,17 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
+    assert run_command.tools.mock_adb.forward.call_count == 0
+    assert run_command.tools.mock_adb.reverse.call_count == 0
+
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
     )
+
+    assert run_command.tools.mock_adb.forward_remove.call_count == 0
+    assert run_command.tools.mock_adb.reverse_remove.call_count == 0
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -369,61 +375,22 @@ def test_run_forward_reverse_ports(run_command, first_app_config):
         return_value=("exampleDevice", "ExampleDevice", None)
     )
 
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat.return_value = log_popen
-
-    # To satisfy coverage, the stop function must be invoked at least once
-    # when invoking stream_output.
-    def mock_stream_output(app, stop_func, **kwargs):
-        stop_func()
-
-    run_command._stream_app_logs.side_effect = mock_stream_output
-
-    # Set up app config to have a `-` in the `bundle`, to ensure it gets
-    # normalized into a `_` via `package_name`.
-    first_app_config.bundle = "com.ex-ample"
-
     # Invoke run_app with args.
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=[],
         forward_ports=[80, 81],
         reverse_ports=[78, 79],
     )
 
-    # select_target_device was invoked with a specific device
-    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        "exampleDevice"
-    )
-
-    # The ADB wrapper is created
-    run_command.tools.android_sdk.adb.assert_called_once_with(device="exampleDevice")
-
-    # The adb wrapper is invoked with the expected arguments
-    run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
-    )
-    run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
-        f"{first_app_config.package_name}.{first_app_config.module_name}",
-    )
-
-    assert run_command.tools.mock_adb.forward.call_count == 2
-    run_command.tools.mock_adb.forward.assert_any_call(80, 80)
-    run_command.tools.mock_adb.forward.assert_any_call(81, 81)
-
-    assert run_command.tools.mock_adb.forward_remove.call_count == 2
-    run_command.tools.mock_adb.forward_remove.assert_any_call(80)
-    run_command.tools.mock_adb.forward_remove.assert_any_call(81)
-
-    assert run_command.tools.mock_adb.reverse.call_count == 2
-    run_command.tools.mock_adb.reverse.assert_any_call(78, 78)
-    run_command.tools.mock_adb.reverse.assert_any_call(79, 79)
-
-    assert run_command.tools.mock_adb.reverse_remove.call_count == 2
-    run_command.tools.mock_adb.reverse_remove.assert_any_call(78)
-    run_command.tools.mock_adb.reverse_remove.assert_any_call(79)
+    assert run_command.tools.mock_adb.forward.mock_calls == [
+        mock.call(80, 80),
+        mock.call(81, 81),
+    ]
+    assert run_command.tools.mock_adb.reverse.mock_calls == [
+        mock.call(78, 78),
+        mock.call(79, 79),
+    ]
 
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -431,23 +398,14 @@ def test_run_forward_reverse_ports(run_command, first_app_config):
         [],
     )
 
-    run_command.tools.mock_adb.pidof.assert_called_once_with(
-        f"{first_app_config.package_name}.{first_app_config.module_name}",
-        quiet=2,
-    )
-    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
-
-    run_command._stream_app_logs.assert_called_once_with(
-        first_app_config,
-        popen=log_popen,
-        clean_filter=android_log_clean_filter,
-        clean_output=False,
-        stop_func=mock.ANY,
-        log_stream=True,
-    )
-
-    # The emulator was not killed at the end of the test
-    run_command.tools.mock_adb.kill.assert_not_called()
+    assert run_command.tools.mock_adb.forward_remove.mock_calls == [
+        mock.call(80),
+        mock.call(81),
+    ]
+    assert run_command.tools.mock_adb.reverse_remove.mock_calls == [
+        mock.call(78),
+        mock.call(79),
+    ]
 
 
 def test_run_slow_start(run_command, first_app_config, monkeypatch):
