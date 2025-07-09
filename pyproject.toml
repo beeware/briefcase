@@ -238,11 +238,14 @@ extend-select = [
     "F",      # pyflakes
     "UP",     # pyupgrade
     "B",      # flake8-bugbear
-    "SIM",    # flake8-simplify
     "YTT",    # flake8-2020
     "ASYNC",  # flake8-async
     "C4",     # flake8-comprehensions
     "I",      # isort
+    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
+    # They may be worth occasionally turning on just to see if something could actually
+    # use improvement.
+    # "SIM",    # flake8-simplify
 ]
 
 # Below is a list of ignored rules.  Many (if not all) of these have been disabled
@@ -257,16 +260,6 @@ ignore = [
     "B024",    # abstract base class without abstract methods / properties
     "B027",    # empty method in abstract base class
     "B904",    # use raise ... from ...
-    "SIM102",  # combine if statements
-    "SIM103",  # return condition directly
-    "SIM105",  # use contextlib.suppress() instead of try-except-pass
-    "SIM108",  # use ternary operators
-    "SIM115",  # use context manager for opening files
-    "SIM117",  # combine with statements
-    "SIM118",  # use "key in dict" instead of "key in dict.keys()"
-    "SIM201",  # use "x != y" instead of "not x == y"
-    "SIM300",  # Yoda condition (0 != x)
-    "SIM905",  # use list literal instead of str.split()
     "C400",    # unnecessary generator
     "C408",    # use dict literal instead of dict()
     "C414",    # unnecessary list() use within sorted()
