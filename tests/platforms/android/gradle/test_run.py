@@ -148,7 +148,7 @@ def test_shutdown_on_exit_option(run_command):
 
 
 def test_forward_ports_option(run_command):
-    """The -d option can be parsed."""
+    """The --forward-port option can be parsed."""
     options, overrides = run_command.parse_options(
         ["--forward-port", "80", "--forward-port", "81"]
     )
@@ -173,7 +173,7 @@ def test_forward_ports_option(run_command):
 
 
 def test_reverse_ports_option(run_command):
-    """The -d option can be parsed."""
+    """The --reverse-port option can be parsed."""
     options, overrides = run_command.parse_options(
         ["--reverse-port", "78", "--reverse-port", "79"]
     )
@@ -363,7 +363,7 @@ def test_run_with_passthrough(run_command, first_app_config):
 
 
 def test_run_forward_reverse_ports(run_command, first_app_config):
-    """An app can be run with passthrough args."""
+    """An app can be run with port forwarding and reversing."""
     # Set up device selection to return a running physical device.
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)

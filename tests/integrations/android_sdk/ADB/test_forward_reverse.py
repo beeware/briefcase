@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_forward(mock_tools, adb):
-    """An port forwarding."""
+    """A port forwarding"""
     # Invoke forward
     adb.forward(5555, 6666)
 
@@ -34,7 +34,7 @@ def test_forward_failure(adb, mock_tools):
 
 
 def test_forward_remove(mock_tools, adb):
-    """An port forwarding removing."""
+    """A port forwarding removal."""
     # Invoke forward remove
     adb.forward_remove(5555)
 
@@ -52,7 +52,7 @@ def test_forward_remove(mock_tools, adb):
 
 
 def test_forward_remove_failure(adb, mock_tools):
-    """If port forwarding removing fails, the error is caught."""
+    """If port forwarding removal fails, the error is caught."""
     # Mock out the run command on an adb instance
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd=""
@@ -62,7 +62,7 @@ def test_forward_remove_failure(adb, mock_tools):
 
 
 def test_reverse(mock_tools, adb):
-    """An port reversing."""
+    """A port reversing."""
     # Invoke reverse
     adb.reverse(5555, 6666)
 
@@ -90,7 +90,7 @@ def test_reverse_failure(adb, mock_tools):
 
 
 def test_reverse_remove(mock_tools, adb):
-    """An port reversing removing."""
+    """A port reversing removal."""
     # Invoke reverse remove
     adb.reverse_remove(5555)
 
@@ -108,7 +108,7 @@ def test_reverse_remove(mock_tools, adb):
 
 
 def test_reverse_remove_failure(adb, mock_tools):
-    """If port reversing removing fails, the error is caught."""
+    """If port reversing removal fails, the error is caught."""
     # Mock out the run command on an adb instance
     mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd=""

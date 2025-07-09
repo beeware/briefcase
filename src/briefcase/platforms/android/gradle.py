@@ -365,7 +365,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
             dest="forward_ports",
             type=int,
             help="Forward the specified port from host to device.",
-            required=False,
         )
         parser.add_argument(
             "--reverse-port",
@@ -373,7 +372,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
             dest="reverse_ports",
             type=int,
             help="Reverse the specified port from device to host.",
-            required=False,
         )
 
     def run_app(
