@@ -150,6 +150,8 @@ Currently the following debuggers are supported (default is ``pdb``):
 
 This is an experimental new feature, that is currently only support on Windows and macOS.
 
+On macOS you also have to specify ``min_os_version = "14.0"``to use ``debugpy``.
+
 ``--debugger-host <host>``
 --------------------------
 
