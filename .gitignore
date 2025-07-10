@@ -18,6 +18,7 @@ coverage.xml
 .eggs/
 .tox/
 /local
+.ruff_cache/
 
 /pip-wheel-metadata
 # IntelliJ Idea family of suites
