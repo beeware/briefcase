@@ -93,6 +93,8 @@ def test_device_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
+        "forward_ports": None,
+        "reverse_ports": None,
     }
     assert overrides == {}
 
@@ -116,6 +118,8 @@ def test_extra_emulator_args_option(run_command):
         "passthrough": [],
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
+        "forward_ports": None,
+        "reverse_ports": None,
     }
     assert overrides == {}
 
@@ -137,6 +141,58 @@ def test_shutdown_on_exit_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
+        "forward_ports": None,
+        "reverse_ports": None,
+    }
+    assert overrides == {}
+
+
+def test_forward_ports_option(run_command):
+    """The --forward-port option can be parsed."""
+    options, overrides = run_command.parse_options(
+        ["--forward-port", "80", "--forward-port", "81"]
+    )
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "update_support": False,
+        "update_stub": False,
+        "no_update": False,
+        "test_mode": False,
+        "passthrough": [],
+        "extra_emulator_args": None,
+        "shutdown_on_exit": False,
+        "forward_ports": [80, 81],
+        "reverse_ports": None,
+    }
+    assert overrides == {}
+
+
+def test_reverse_ports_option(run_command):
+    """The --reverse-port option can be parsed."""
+    options, overrides = run_command.parse_options(
+        ["--reverse-port", "78", "--reverse-port", "79"]
+    )
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "update_support": False,
+        "update_stub": False,
+        "no_update": False,
+        "test_mode": False,
+        "passthrough": [],
+        "extra_emulator_args": None,
+        "shutdown_on_exit": False,
+        "forward_ports": None,
+        "reverse_ports": [78, 79],
     }
     assert overrides == {}
 
@@ -211,11 +267,17 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
+    run_command.tools.mock_adb.forward.assert_not_called()
+    run_command.tools.mock_adb.reverse.assert_not_called()
+
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
     )
+
+    run_command.tools.mock_adb.forward_remove.assert_not_called()
+    run_command.tools.mock_adb.reverse_remove.assert_not_called()
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -304,6 +366,46 @@ def test_run_with_passthrough(run_command, first_app_config):
 
     # The emulator was not killed at the end of the test
     run_command.tools.mock_adb.kill.assert_not_called()
+
+
+def test_run_forward_reverse_ports(run_command, first_app_config):
+    """An app can be run with port forwarding and reversing."""
+    # Set up device selection to return a running physical device.
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+
+    # Invoke run_app with args.
+    run_command.run_app(
+        first_app_config,
+        passthrough=[],
+        forward_ports=[80, 81],
+        reverse_ports=[78, 79],
+    )
+
+    assert run_command.tools.mock_adb.forward.mock_calls == [
+        mock.call(80, 80),
+        mock.call(81, 81),
+    ]
+    assert run_command.tools.mock_adb.reverse.mock_calls == [
+        mock.call(78, 78),
+        mock.call(79, 79),
+    ]
+
+    run_command.tools.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+        [],
+    )
+
+    assert run_command.tools.mock_adb.forward_remove.mock_calls == [
+        mock.call(80),
+        mock.call(81),
+    ]
+    assert run_command.tools.mock_adb.reverse_remove.mock_calls == [
+        mock.call(78),
+        mock.call(79),
+    ]
 
 
 def test_run_slow_start(run_command, first_app_config, monkeypatch):
