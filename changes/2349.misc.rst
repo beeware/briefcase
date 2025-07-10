@@ -1,1 +1,0 @@
-``tox`` command now runs all tests, and ``tox test`` runs on the current version of Python.

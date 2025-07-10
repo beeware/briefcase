@@ -1,1 +1,0 @@
-A redundant signing phase has been removed when packaging an apps for macOS.

@@ -1,1 +1,0 @@
-On Linux, fixed the grammar of the message pertaining to a missing changelog file.

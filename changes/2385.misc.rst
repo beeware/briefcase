@@ -1,1 +1,0 @@
-Ruff's cache folder has been added to .gitignore.

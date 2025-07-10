@@ -1,1 +1,0 @@
-Align environment variable handling for flatpak with the other platforms
