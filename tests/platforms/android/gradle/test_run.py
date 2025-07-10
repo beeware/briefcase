@@ -267,8 +267,8 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    assert run_command.tools.mock_adb.forward.call_count == 0
-    assert run_command.tools.mock_adb.reverse.call_count == 0
+    run_command.tools.mock_adb.forward.assert_not_called()
+    run_command.tools.mock_adb.reverse.assert_not_called()
 
     run_command.tools.mock_adb.start_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -276,8 +276,8 @@ def test_run_existing_device(run_command, first_app_config):
         [],
     )
 
-    assert run_command.tools.mock_adb.forward_remove.call_count == 0
-    assert run_command.tools.mock_adb.reverse_remove.call_count == 0
+    run_command.tools.mock_adb.forward_remove.assert_not_called()
+    run_command.tools.mock_adb.reverse_remove.assert_not_called()
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
