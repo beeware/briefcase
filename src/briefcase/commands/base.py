@@ -9,7 +9,6 @@ import platform
 import re
 import subprocess
 import sys
-from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
@@ -122,7 +121,7 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
     return overrides
 
 
-class BaseCommand(ABC):
+class BaseCommand:
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
@@ -400,7 +399,6 @@ a custom location for Briefcase's tools.
         """
         return self.build_path(app) / self.output_format.lower()
 
-    @abstractmethod
     def binary_path(self, app) -> Path:
         """The path to the executable artefact for the app in the output format.
 
@@ -655,20 +653,17 @@ a custom location for Briefcase's tools.
             f"{self.tools.sys.version_info.major}.{self.tools.sys.version_info.minor}"
         )
 
-    @abstractmethod
     def verify_host(self):
         """Verify the host OS is supported by the Command."""
         if self.tools.host_os not in self.supported_host_os:
             raise UnsupportedHostError(self.supported_host_os_reason)
 
-    @abstractmethod
     def verify_tools(self):
         """Verify that the tools needed to run this Command exist.
 
         Raises MissingToolException if a required system tool is missing.
         """
 
-    @abstractmethod
     def finalize_app_config(self, app: AppConfig):
         """Finalize the application config.
 
@@ -742,7 +737,6 @@ a custom location for Briefcase's tools.
         self.verify_app_tools(app)
         self.verify_required_python(app)
 
-    @abstractmethod
     def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
 
@@ -874,7 +868,6 @@ any compatibility problems, and then add the compatibility declaration.
 
         return options, overrides
 
-    @abstractmethod
     def clone_options(self, command):
         """Clone options from one command to this one.
 
@@ -987,7 +980,6 @@ any compatibility problems, and then add the compatibility declaration.
             help=f"{context_label} the app in test mode",
         )
 
-    @abstractmethod
     def add_options(self, parser):
         """Add any options that this command needs to parse from the command line.
 
