@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -60,6 +60,7 @@ class BaseGuiBootstrap(ABC):
         # context contains metadata about the app being created
         self.context = context
 
+    @abstractmethod
     def extra_context(self, project_overrides: dict[str, str]) -> dict[str, Any] | None:
         """Runs prior to other plugin hooks to provide additional context.
 
@@ -70,57 +71,75 @@ class BaseGuiBootstrap(ABC):
             haven't been consumed by the standard bootstrap wizard questions.
         """
 
+    @abstractmethod
     def app_source(self) -> str | None:
         """The Python source code for app.py."""
 
+    @abstractmethod
     def app_start_source(self) -> str | None:
         """The Python source code for __main__.py to start the app."""
 
+    @abstractmethod
     def pyproject_table_briefcase_extra_content(self) -> str | None:
         """Additional content for ``tool.briefcase`` table."""
 
+    @abstractmethod
     def pyproject_table_briefcase_app_extra_content(self) -> str | None:
         """Additional content for ``tool.briefcase.app.<app-name>`` table."""
 
+    @abstractmethod
     def pyproject_table_macOS(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.macOS`` table."""
 
+    @abstractmethod
     def pyproject_table_linux(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux`` table."""
 
+    @abstractmethod
     def pyproject_table_linux_system_debian(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux.debian`` table."""
 
+    @abstractmethod
     def pyproject_table_linux_system_rhel(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux.rhel`` table."""
 
+    @abstractmethod
     def pyproject_table_linux_system_suse(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux.suse`` table."""
 
+    @abstractmethod
     def pyproject_table_linux_system_arch(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux.arch`` table."""
 
+    @abstractmethod
     def pyproject_table_linux_appimage(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux.appimage`` table."""
 
+    @abstractmethod
     def pyproject_table_linux_flatpak(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.linux.flatpak`` table."""
 
+    @abstractmethod
     def pyproject_table_windows(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.windows`` table."""
 
+    @abstractmethod
     def pyproject_table_iOS(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.iOS`` table."""
 
+    @abstractmethod
     def pyproject_table_android(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.android`` table."""
 
+    @abstractmethod
     def pyproject_table_web(self) -> str | None:
         """Content for ``tool.briefcase.app.<app-name>.web`` table."""
 
+    @abstractmethod
     def pyproject_extra_content(self) -> str | None:
         """Additional TOML to add to the bottom of pyproject.toml."""
 
+    @abstractmethod
     def post_generate(self, base_path: Path) -> None:
         """Runs after the template has been generated.
 
