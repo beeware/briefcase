@@ -336,7 +336,7 @@ class CreateCommand(BaseCommand):
                 try:
                     # If the app has a custom support package *and* a support revision,
                     # that's an error.
-                    app.support_revision
+                    _ = app.support_revision
                     self.console.warning(
                         "App specifies both a support package and a support revision; "
                         "support revision will be ignored."
@@ -454,7 +454,7 @@ class CreateCommand(BaseCommand):
                 try:
                     # If the app has a custom stub binary *and* a support revision,
                     # that's an error.
-                    app.stub_binary_revision
+                    _ = app.stub_binary_revision
                     self.console.warning(
                         "App specifies both a stub binary and a stub binary revision; "
                         "stub binary revision will be ignored."
