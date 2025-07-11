@@ -22,7 +22,7 @@ class DummyDevCommand(DevCommand):
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
-        self.env = dict(a=1, b=2, c=3)
+        self.env = {"a": 1, "b": 2, "c": 3}
 
     def verify_host(self):
         super().verify_host()

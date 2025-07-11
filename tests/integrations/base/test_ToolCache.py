@@ -98,7 +98,7 @@ def test_mapping_protocol(simple_tools):
     simple_tools["app-1"].tool = "tool 1"
     simple_tools["app-2"].tool = "tool 2"
 
-    assert [app for app in simple_tools] == ["app-1", "app-2"]
+    assert list(simple_tools) == ["app-1", "app-2"]
     assert len(simple_tools) == 2
     assert simple_tools["app-1"].tool == "tool 1"
     assert simple_tools["app-2"].tool == "tool 2"

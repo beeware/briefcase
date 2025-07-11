@@ -51,7 +51,7 @@ def mock_tool_registry(monkeypatch):
         DummyNotInstalledManagedTool,
     ]
 
-    tool_registry = dict()
+    tool_registry = {}
     for tool in tool_list:
         monkeypatch.setattr(tool, "verify", MagicMock(wraps=tool.verify))
         tool_registry[tool.name] = tool
@@ -68,7 +68,7 @@ def mock_no_managed_tool_registry(monkeypatch):
         DummyNotInstalledManagedTool,
     ]
 
-    tool_registry = dict()
+    tool_registry = {}
     for tool in tool_list:
         monkeypatch.setattr(tool, "verify", MagicMock(wraps=tool.verify))
         tool_registry[tool.name] = tool

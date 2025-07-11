@@ -44,10 +44,10 @@ def test_question_sequence_bootstrap_context(
         briefcase.commands.new,
         "get_gui_bootstraps",
         MagicMock(
-            return_value=dict(
+            return_value={
                 **mock_builtin_bootstraps,
                 **{"Custom GUI": GuiBootstrap},
-            ),
+            },
         ),
     )
 
@@ -58,9 +58,9 @@ def test_question_sequence_bootstrap_context(
             "app_name": "myapplication",
             "author": "Grace Hopper",
         },
-        project_overrides=dict(
-            bootstrap="Custom GUI",
-        ),
+        project_overrides={
+            "bootstrap": "Custom GUI",
+        },
     )
 
     assert isinstance(bootstrap, GuiBootstrap)
@@ -201,10 +201,10 @@ def test_question_sequence_with_overrides(
         briefcase.commands.new,
         "get_gui_bootstraps",
         MagicMock(
-            return_value=dict(
+            return_value={
                 **mock_builtin_bootstraps,
                 **{"Custom GUI": GuiBootstrap},
-            ),
+            },
         ),
     )
 
@@ -213,9 +213,9 @@ def test_question_sequence_with_overrides(
             "app_name": "myapplication",
             "author": "Grace Hopper",
         },
-        project_overrides=dict(
-            bootstrap="Custom GUI",
-        ),
+        project_overrides={
+            "bootstrap": "Custom GUI",
+        },
     )
 
     assert isinstance(bootstrap, GuiBootstrap)
@@ -249,10 +249,10 @@ def test_question_sequence_with_bad_bootstrap_override(
         briefcase.commands.new,
         "get_gui_bootstraps",
         MagicMock(
-            return_value=dict(
+            return_value={
                 **mock_builtin_bootstraps,
                 **{"Custom GUI": GuiBootstrap},
-            ),
+            },
         ),
     )
 
@@ -261,9 +261,9 @@ def test_question_sequence_with_bad_bootstrap_override(
             "app_name": "myapplication",
             "author": "Grace Hopper",
         },
-        project_overrides=dict(
-            bootstrap="BAD i don't exist GUI",
-        ),
+        project_overrides={
+            "bootstrap": "BAD i don't exist GUI",
+        },
     )
 
     assert isinstance(bootstrap, BaseGuiBootstrap)

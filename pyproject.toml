@@ -264,10 +264,6 @@ ignore = [
     "B024",    # abstract base class without abstract methods / properties
     "B027",    # empty method in abstract base class
     "B904",    # use raise ... from ...
-    "C400",    # unnecessary generator
-    "C408",    # use dict literal instead of dict()
-    "C414",    # unnecessary list() use within sorted()
-    "C416",    # unnecessary list comprehension
 ]
 
 

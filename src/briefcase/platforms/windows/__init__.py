@@ -354,14 +354,14 @@ class WindowsPackageCommand(PackageCommand):
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)
-            sign_options = dict(
-                identity=identity,
-                file_digest=file_digest,
-                use_local_machine=use_local_machine,
-                cert_store=cert_store,
-                timestamp_url=timestamp_url,
-                timestamp_digest=timestamp_digest,
-            )
+            sign_options = {
+                "identity": identity,
+                "file_digest": file_digest,
+                "use_local_machine": use_local_machine,
+                "cert_store": cert_store,
+                "timestamp_url": timestamp_url,
+                "timestamp_digest": timestamp_digest,
+            }
             self.sign_file(app=app, filepath=self.binary_path(app), **sign_options)
 
         if app.packaging_format == "zip":

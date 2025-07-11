@@ -10,8 +10,8 @@ def test_dockerize_args(mock_tools, my_app, tmp_path):
     """A command to run in Docker is dockerized."""
     dockerize_args = mock_tools[my_app].app_context._dockerize_args(["hello", "world"])
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -23,8 +23,8 @@ def test_dockerize_args(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -35,8 +35,8 @@ def test_dockerize_args_sys_executable(mock_tools, my_app, tmp_path):
         [sys.executable, "-m", "pip"]
     )
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -49,8 +49,8 @@ def test_dockerize_args_sys_executable(mock_tools, my_app, tmp_path):
             "-m",
             "pip",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -65,8 +65,8 @@ def test_dockerize_args_mounts(mock_tools, my_app, tmp_path):
         ],
     )
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -82,8 +82,8 @@ def test_dockerize_args_mounts(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -99,8 +99,8 @@ def test_dockerize_args_mounts_path(mock_tools, my_app, tmp_path):
         ],
     )
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -117,8 +117,8 @@ def test_dockerize_args_mounts_path(mock_tools, my_app, tmp_path):
             "world",
             "/container/second/bin",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.skipif(
@@ -133,8 +133,8 @@ def test_dockerize_args_cwd(mock_tools, my_app, tmp_path):
         cwd=tmp_path / "bundle/foobar",
     )
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -148,8 +148,8 @@ def test_dockerize_args_cwd(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -166,8 +166,8 @@ def test_dockerize_args_arg_and_env(mock_tools, my_app, tmp_path):
         steam_output=True,
     )
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -183,10 +183,10 @@ def test_dockerize_args_arg_and_env(mock_tools, my_app, tmp_path):
             "hello",
             "world",
         ],
-        check=True,
-        steam_output=True,
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "check": True,
+        "steam_output": True,
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.skipif(
@@ -210,8 +210,8 @@ def test_dockerize_args_path_arg_and_env(mock_tools, my_app, tmp_path):
         cwd=tmp_path / "cwd",
     )
 
-    assert dockerize_args == dict(
-        args=[
+    assert dockerize_args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -229,5 +229,5 @@ def test_dockerize_args_path_arg_and_env(mock_tools, my_app, tmp_path):
             "hello",
             os.fsdecode(tmp_path / "location"),
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
