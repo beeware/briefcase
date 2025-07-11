@@ -260,7 +260,6 @@ ignore = [
     "E501",    # line length
     "B007",    # loop control variable not used
     "B018",    # useless expression
-    "B019",    # memory leaks from functools.lru_cache / functools.cache
     "B024",    # abstract base class without abstract methods / properties
     "B027",    # empty method in abstract base class
     "B904",    # use raise ... from ...
