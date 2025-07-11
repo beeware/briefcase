@@ -395,7 +395,6 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
 def test_external_deb_package_docker(package_command, external_first_app_deb, tmp_path):
     """An external app cannot be packaged as a deb using Docker."""
-    package_command
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
     package_path = tmp_path / "base_path/external/package-deb"
 

@@ -1,0 +1,1 @@
+Resolve all current issues with Ruff rules B007, B018, B019, B024, and B027. Don't ignore these rules anymore.

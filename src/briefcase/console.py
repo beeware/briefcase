@@ -947,7 +947,7 @@ class Console:
             except ValueError:
                 raise ValueError(f"{default!r} is not a valid default value")
 
-        for i, (key, value) in enumerate(ordered, start=1):
+        for i, (_, value) in enumerate(ordered, start=1):
             self.prompt(f"  {i}) {value}")
 
         self.prompt()

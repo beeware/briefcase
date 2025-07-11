@@ -119,7 +119,7 @@ class UpdateCommand(CreateCommand):
             apps_to_update = self.apps
 
         state = None
-        for app_name, app_obj in sorted(apps_to_update.items()):
+        for _, app_obj in sorted(apps_to_update.items()):
             state = self.update_app(
                 app_obj,
                 update_requirements=update_requirements,
