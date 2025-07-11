@@ -1021,7 +1021,7 @@ class CreateCommand(BaseCommand):
             apps_to_create = self.apps
 
         state = None
-        for app_name, app_obj in sorted(apps_to_create.items()):
+        for _, app_obj in sorted(apps_to_create.items()):
             state = self.create_app(
                 app_obj,
                 **full_options(state, options),

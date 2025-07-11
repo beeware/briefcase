@@ -150,7 +150,7 @@ class BuildCommand(BaseCommand):
             apps_to_build = self.apps
 
         state = None
-        for app_name, app_obj in sorted(apps_to_build.items()):
+        for _, app_obj in sorted(apps_to_build.items()):
             state = self._build_app(
                 app_obj,
                 update=update,
