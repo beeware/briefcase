@@ -8,29 +8,45 @@ from briefcase.integrations.subprocess import get_process_id_by_command
 Process = namedtuple("Process", "info")
 process_list_one_proc = [
     Process(
-        info=dict(cmdline=["/bin/cmd.sh", "--input", "data"], create_time=20, pid=100)
+        info={
+            "cmdline": ["/bin/cmd.sh", "--input", "data"],
+            "create_time": 20,
+            "pid": 100,
+        }
     )
 ]
 
 process_list_two_procs_diff_cmd = [
     Process(
-        info=dict(
-            cmdline=["/bin/first_cmd.sh", "--input", "data"], create_time=20, pid=100
-        )
+        info={
+            "cmdline": ["/bin/first_cmd.sh", "--input", "data"],
+            "create_time": 20,
+            "pid": 100,
+        }
     ),
     Process(
-        info=dict(
-            cmdline=["/bin/second_cmd.sh", "--input", "data"], create_time=10, pid=200
-        )
+        info={
+            "cmdline": ["/bin/second_cmd.sh", "--input", "data"],
+            "create_time": 10,
+            "pid": 200,
+        }
     ),
 ]
 
 process_list_two_procs_same_cmd = [
     Process(
-        info=dict(cmdline=["/bin/cmd.sh", "--input", "data"], create_time=20, pid=100)
+        info={
+            "cmdline": ["/bin/cmd.sh", "--input", "data"],
+            "create_time": 20,
+            "pid": 100,
+        }
     ),
     Process(
-        info=dict(cmdline=["/bin/cmd.sh", "--input", "data"], create_time=10, pid=200)
+        info={
+            "cmdline": ["/bin/cmd.sh", "--input", "data"],
+            "create_time": 10,
+            "pid": 200,
+        }
     ),
 ]
 

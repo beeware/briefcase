@@ -93,7 +93,7 @@ class UpgradeCommand(BaseCommand):
                 else:
                     self.console.warning(error_msg)
 
-        return sorted(list(tools_to_upgrade), key=attrgetter("name"))
+        return sorted(tools_to_upgrade, key=attrgetter("name"))
 
     def __call__(self, tool_list: list[str], list_tools: bool = False, **options):
         """Perform tool upgrades or list tools qualifying for upgrade.

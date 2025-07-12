@@ -119,11 +119,11 @@ def test_verify_with_signing(package_command, monkeypatch):
     "cli_args, signing_options, is_sdk_needed",
     [
         ([], {}, False),
-        (["--adhoc-sign"], dict(adhoc_sign=True), False),
-        (["--file-digest", "sha2000"], dict(file_digest="sha2000"), False),
-        (["-i", "asdf"], dict(identity="asdf"), True),
-        (["--identity", "asdf"], dict(identity="asdf"), True),
-        (["--identity", "asdf"], dict(identity="asdf"), True),
+        (["--adhoc-sign"], {"adhoc_sign": True}, False),
+        (["--file-digest", "sha2000"], {"file_digest": "sha2000"}, False),
+        (["-i", "asdf"], {"identity": "asdf"}, True),
+        (["--identity", "asdf"], {"identity": "asdf"}, True),
+        (["--identity", "asdf"], {"identity": "asdf"}, True),
         (
             [
                 "-i",
@@ -138,14 +138,14 @@ def test_verify_with_signing(package_command, monkeypatch):
                 "--timestamp-digest",
                 "sha56",
             ],
-            dict(
-                identity="asdf",
-                file_digest="sha42",
-                use_local_machine=True,
-                cert_store="mystore",
-                timestamp_url="http://freetimestamps.com",
-                timestamp_digest="sha56",
-            ),
+            {
+                "identity": "asdf",
+                "file_digest": "sha42",
+                "use_local_machine": True,
+                "cert_store": "mystore",
+                "timestamp_url": "http://freetimestamps.com",
+                "timestamp_digest": "sha56",
+            },
             True,
         ),
         (
@@ -161,13 +161,13 @@ def test_verify_with_signing(package_command, monkeypatch):
                 "--timestamp-digest",
                 "sha56",
             ],
-            dict(
-                identity="asdf",
-                file_digest="sha42",
-                cert_store="mystore",
-                timestamp_url="http://freetimestamps.com",
-                timestamp_digest="sha56",
-            ),
+            {
+                "identity": "asdf",
+                "file_digest": "sha42",
+                "cert_store": "mystore",
+                "timestamp_url": "http://freetimestamps.com",
+                "timestamp_digest": "sha56",
+            },
             True,
         ),
     ],
@@ -175,17 +175,17 @@ def test_verify_with_signing(package_command, monkeypatch):
 def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed):
     """Command line arguments are parsed as expected; Windows SDK is required if an
     identity is specified."""
-    default_options = dict(
-        identity=None,
-        file_digest="sha256",
-        use_local_machine=False,
-        cert_store="My",
-        timestamp_url="http://timestamp.digicert.com",
-        timestamp_digest="sha256",
-        adhoc_sign=False,
-        packaging_format="msi",
-        update=False,
-    )
+    default_options = {
+        "identity": None,
+        "file_digest": "sha256",
+        "use_local_machine": False,
+        "cert_store": "My",
+        "timestamp_url": "http://timestamp.digicert.com",
+        "timestamp_digest": "sha256",
+        "adhoc_sign": False,
+        "packaging_format": "msi",
+        "update": False,
+    }
     expected_options = {**default_options, **signing_options}
 
     options, overrides = package_command.parse_options(extra=cli_args)
@@ -242,7 +242,7 @@ def test_package_msi(
 @pytest.mark.parametrize(
     "kwargs",
     [
-        dict(),  # Default behavior (adhoc signing)
+        {},  # Default behavior (adhoc signing)
         {"adhoc_sign": True},  # Explicit adhoc signing
     ],
 )
