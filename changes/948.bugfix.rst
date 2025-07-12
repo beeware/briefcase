@@ -1,0 +1,1 @@
+Apps that contain file paths longer than 260 characters can now be included in MSI installers.
