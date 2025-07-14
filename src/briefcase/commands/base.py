@@ -9,6 +9,7 @@ import platform
 import re
 import subprocess
 import sys
+from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
@@ -121,7 +122,7 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
     return overrides
 
 
-class BaseCommand:
+class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
@@ -399,6 +400,7 @@ a custom location for Briefcase's tools.
         """
         return self.build_path(app) / self.output_format.lower()
 
+    @abstractmethod
     def binary_path(self, app) -> Path:
         """The path to the executable artefact for the app in the output format.
 
