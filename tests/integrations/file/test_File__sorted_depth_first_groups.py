@@ -73,6 +73,6 @@ def test_sorted_depth_first_groups(files, groups, tmp_path):
         else:
             file_path.mkdir(parents=True, exist_ok=True)
 
-    assert list(list(group) for group in File.sorted_depth_first_groups(paths)) == [
+    assert [list(group) for group in File.sorted_depth_first_groups(paths)] == [
         [tmp_path / file_path for file_path in group] for group in groups
     ]

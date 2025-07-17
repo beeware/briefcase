@@ -11,15 +11,15 @@ from briefcase.integrations.docker import Docker, DockerAppContext
 
 @pytest.fixture
 def verify_kwargs():
-    return dict(
-        image_tag="com.example.first-app:py3.X",
-        dockerfile_path=Path("/path/to/Dockerfile"),
-        app_base_path=Path("/app/base"),
-        host_bundle_path=Path("/host/bundle"),
-        host_data_path=Path("/host/data"),
-        python_version="py3.X",
-        extra_build_args=["--option-one", "--option-two"],
-    )
+    return {
+        "image_tag": "com.example.first-app:py3.X",
+        "dockerfile_path": Path("/path/to/Dockerfile"),
+        "app_base_path": Path("/app/base"),
+        "host_bundle_path": Path("/host/bundle"),
+        "host_data_path": Path("/host/data"),
+        "python_version": "py3.X",
+        "extra_build_args": ["--option-one", "--option-two"],
+    }
 
 
 def test_short_circuit(mock_tools, first_app_config, verify_kwargs):

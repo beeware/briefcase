@@ -23,21 +23,21 @@ def test_question_sequence(new_command):
         project_overrides={},
     )
 
-    assert context == dict(
-        app_name="myapplication",
-        author="Grace Hopper",
-        author_email="grace@navy.mil",
-        bundle="org.beeware",
-        class_name="MyApplication",
-        description="Cool stuff",
-        formal_name="My Application",
-        license="GPL-2.0",
-        module_name="myapplication",
-        source_dir="src/myapplication",
-        test_source_dir="tests",
-        project_name="My Project",
-        url="https://navy.mil/myapplication",
-    )
+    assert context == {
+        "app_name": "myapplication",
+        "author": "Grace Hopper",
+        "author_email": "grace@navy.mil",
+        "bundle": "org.beeware",
+        "class_name": "MyApplication",
+        "description": "Cool stuff",
+        "formal_name": "My Application",
+        "license": "GPL-2.0",
+        "module_name": "myapplication",
+        "source_dir": "src/myapplication",
+        "test_source_dir": "tests",
+        "project_name": "My Project",
+        "url": "https://navy.mil/myapplication",
+    }
 
 
 def test_question_sequence_with_overrides(new_command):
@@ -47,34 +47,34 @@ def test_question_sequence_with_overrides(new_command):
     new_command.console.values = []
 
     context = new_command.build_app_context(
-        project_overrides=dict(
-            formal_name="My Override App",
-            app_name="myoverrideapp",
-            bundle="net.example",
-            project_name="My Override Project",
-            description="My override description",
-            author="override, author",
-            author_email="author@override.tld",
-            url="https://override.example.com",
-            license="MIT",
-        ),
+        project_overrides={
+            "formal_name": "My Override App",
+            "app_name": "myoverrideapp",
+            "bundle": "net.example",
+            "project_name": "My Override Project",
+            "description": "My override description",
+            "author": "override, author",
+            "author_email": "author@override.tld",
+            "url": "https://override.example.com",
+            "license": "MIT",
+        },
     )
 
-    assert context == dict(
-        app_name="myoverrideapp",
-        author="override, author",
-        author_email="author@override.tld",
-        bundle="net.example",
-        class_name="MyOverrideApp",
-        description="My override description",
-        formal_name="My Override App",
-        license="MIT",
-        module_name="myoverrideapp",
-        source_dir="src/myoverrideapp",
-        test_source_dir="tests",
-        project_name="My Override Project",
-        url="https://override.example.com",
-    )
+    assert context == {
+        "app_name": "myoverrideapp",
+        "author": "override, author",
+        "author_email": "author@override.tld",
+        "bundle": "net.example",
+        "class_name": "MyOverrideApp",
+        "description": "My override description",
+        "formal_name": "My Override App",
+        "license": "MIT",
+        "module_name": "myoverrideapp",
+        "source_dir": "src/myoverrideapp",
+        "test_source_dir": "tests",
+        "project_name": "My Override Project",
+        "url": "https://override.example.com",
+    }
 
 
 def test_question_sequence_with_bad_license_override(new_command):
@@ -86,34 +86,34 @@ def test_question_sequence_with_bad_license_override(new_command):
     ]
 
     context = new_command.build_app_context(
-        project_overrides=dict(
-            formal_name="My Override App",
-            app_name="myoverrideapp",
-            bundle="net.example",
-            project_name="My Override Project",
-            description="My override description",
-            author="override, author",
-            author_email="author@override.tld",
-            url="https://override.example.com",
-            license="BAD i don't exist license",
-        ),
+        project_overrides={
+            "formal_name": "My Override App",
+            "app_name": "myoverrideapp",
+            "bundle": "net.example",
+            "project_name": "My Override Project",
+            "description": "My override description",
+            "author": "override, author",
+            "author_email": "author@override.tld",
+            "url": "https://override.example.com",
+            "license": "BAD i don't exist license",
+        },
     )
 
-    assert context == dict(
-        app_name="myoverrideapp",
-        author="override, author",
-        author_email="author@override.tld",
-        bundle="net.example",
-        class_name="MyOverrideApp",
-        description="My override description",
-        formal_name="My Override App",
-        license="GPL-2.0",
-        module_name="myoverrideapp",
-        source_dir="src/myoverrideapp",
-        test_source_dir="tests",
-        project_name="My Override Project",
-        url="https://override.example.com",
-    )
+    assert context == {
+        "app_name": "myoverrideapp",
+        "author": "override, author",
+        "author_email": "author@override.tld",
+        "bundle": "net.example",
+        "class_name": "MyOverrideApp",
+        "description": "My override description",
+        "formal_name": "My Override App",
+        "license": "GPL-2.0",
+        "module_name": "myoverrideapp",
+        "source_dir": "src/myoverrideapp",
+        "test_source_dir": "tests",
+        "project_name": "My Override Project",
+        "url": "https://override.example.com",
+    }
 
 
 def test_question_sequence_with_no_user_input(new_command):
@@ -123,21 +123,21 @@ def test_question_sequence_with_no_user_input(new_command):
 
     context = new_command.build_app_context(project_overrides={})
 
-    assert context == dict(
-        app_name="helloworld",
-        author="Jane Developer",
-        author_email="jane@example.com",
-        bundle="com.example",
-        class_name="HelloWorld",
-        description="My first application",
-        formal_name="Hello World",
-        license="BSD-3-Clause",
-        module_name="helloworld",
-        source_dir="src/helloworld",
-        test_source_dir="tests",
-        project_name="Hello World",
-        url="https://example.com/helloworld",
-    )
+    assert context == {
+        "app_name": "helloworld",
+        "author": "Jane Developer",
+        "author_email": "jane@example.com",
+        "bundle": "com.example",
+        "class_name": "HelloWorld",
+        "description": "My first application",
+        "formal_name": "Hello World",
+        "license": "BSD-3-Clause",
+        "module_name": "helloworld",
+        "source_dir": "src/helloworld",
+        "test_source_dir": "tests",
+        "project_name": "Hello World",
+        "url": "https://example.com/helloworld",
+    }
 
 
 def test_author_and_email_use_git_config_as_fallback(new_command):

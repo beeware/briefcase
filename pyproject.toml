@@ -259,10 +259,6 @@ extend-select = [
 ignore = [
     "E501",    # line length
     "B904",    # use raise ... from ...
-    "C400",    # unnecessary generator
-    "C408",    # use dict literal instead of dict()
-    "C414",    # unnecessary list() use within sorted()
-    "C416",    # unnecessary list comprehension
 ]
 
 
