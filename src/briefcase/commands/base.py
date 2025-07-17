@@ -665,6 +665,7 @@ a custom location for Briefcase's tools.
 
         Raises MissingToolException if a required system tool is missing.
         """
+        return
 
     def finalize_app_config(self, app: AppConfig):
         """Finalize the application config.
@@ -680,6 +681,7 @@ a custom location for Briefcase's tools.
 
         :param app: The app configuration to finalize.
         """
+        return
 
     def finalize(self, app: AppConfig | None = None, test_mode: bool = False):
         """Finalize Briefcase configuration.
@@ -741,6 +743,7 @@ a custom location for Briefcase's tools.
 
     def verify_app_tools(self, app: AppConfig):
         """Verify that tools needed to run the command for this app exist."""
+        return
 
     def verify_app_template(self, app: AppConfig):
         """Verify the template targets the same Briefcase version as the Command.
@@ -875,6 +878,7 @@ any compatibility problems, and then add the compatibility declaration.
 
         :param command: The command whose options are to be cloned
         """
+        return
 
     def add_default_options(self, parser):
         """Add the default options that exist on *all* commands.
@@ -987,6 +991,7 @@ any compatibility problems, and then add the compatibility declaration.
 
         :param parser: a stub argparse parser for the command.
         """
+        return
 
     def parse_config(self, filename, overrides):
         try:
