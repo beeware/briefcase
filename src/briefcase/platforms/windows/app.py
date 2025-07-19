@@ -141,8 +141,8 @@ Recreating the app layout may also help resolve this issue:
                     f"""\
 Unable to update details on stub app for {app.app_name}.
 
-Try to disable your virus scanner or whitelist rcedit.exe and build again
-
+This may be caused by a virus scanner misidentifying the Briefcase build as malicous
+activity. Try disabling your virus checker, and re-run briefcase build.
 """
                 ) from e
 
