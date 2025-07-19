@@ -10,6 +10,8 @@ build:
     # Docs are always built on Python 3.12. See also the tox config and contribution docs.
     python: "3.12"
   jobs:
+    install:
+      - pip install --group docs --group dev
     post_checkout:
       # RTD defaults to a depth of 50 but Briefcase versioning may require
       # much more git history to accurately determine the SCM version
@@ -26,12 +28,3 @@ sphinx:
 # Build docs as PDF (other options are epub and htmlzip)
 formats:
    - pdf
-
-# Install extras for build - dev is needed to run tox
-python:
-  install:
-  - method: pip
-    path: .
-    extra_requirements:
-      - dev
-      - docs
