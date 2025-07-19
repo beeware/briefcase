@@ -5,7 +5,6 @@ class TogaGuiBootstrap(BaseGuiBootstrap):
     def app_source(self):
         return '''\
 import toga
-from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
 
