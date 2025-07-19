@@ -75,7 +75,7 @@ class PublishCommand(BaseCommand):
 
         # Then publish them all to the selected channel.
         state = None
-        for app_name, app in sorted(self.apps.items()):
+        for _, app in sorted(self.apps.items()):
             state = self._publish_app(
                 app, channel=channel, **full_options(state, options)
             )

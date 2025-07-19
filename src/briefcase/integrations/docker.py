@@ -344,7 +344,11 @@ Delete this file and run Briefcase again.
 
         return is_user_mapped
 
-    @cache
+    # B019 is a warning about @cache on methods possibly causing memory leaks,
+    # since the cache retains a reference to the instance that called the
+    # method. Since the Docker tools usually exist one at a time, this is not
+    # a big concern
+    @cache  # noqa B019
     def cache_image(self, image_tag: str):
         """Ensures an image is available and cached locally.
 
