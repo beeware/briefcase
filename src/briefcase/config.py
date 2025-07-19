@@ -27,8 +27,7 @@ PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9
 
 
 def is_valid_pep508_name(app_name):
-    """
-    Determine if the name is valid by PEP508 rules."""
+    """Determine if the name is valid by PEP508 rules."""
     return PEP508_NAME_RE.match(app_name)
 
 
