@@ -11,6 +11,7 @@ build:
     python: "3.12"
   jobs:
     install:
+      - python -m pip install --upgrade pip
       - pip install --group docs --group dev
     post_checkout:
       # RTD defaults to a depth of 50 but Briefcase versioning may require
