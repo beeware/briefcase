@@ -1,0 +1,1 @@
+Rewritten the ``README.rst`` to markdown (``README.md``) using pandoc.

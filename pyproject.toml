@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 dynamic = ["version"]
 name = "briefcase"
 description = "Tools to support converting a Python project into a standalone native application."
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">= 3.9"
 license = "BSD-3-Clause"
 license-files = [
