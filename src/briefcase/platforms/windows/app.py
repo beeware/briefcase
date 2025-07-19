@@ -138,7 +138,12 @@ Recreating the app layout may also help resolve this issue:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to update details on stub app for {app.app_name}."
+                    f"""\
+Unable to update details on stub app for {app.app_name}.
+
+Try to disable your virus scanner or whitelist rcedit.exe and build again
+
+"""
                 ) from e
 
 
