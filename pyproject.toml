@@ -124,6 +124,11 @@ docs = [
     "sphinxcontrib-spelling == 8.0.1",
     "beeware_theme @ git+https://github.com/beeware/beeware-theme",
 ]
+# In case you want to install all the dependencies for development, docs, and testing
+all = [
+    {include-group = "dev"},
+    {include-group = "docs"},
+]
 
 [project.urls]
 Homepage = "https://beeware.org/briefcase"
