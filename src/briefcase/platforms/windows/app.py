@@ -141,7 +141,7 @@ Recreating the app layout may also help resolve this issue:
                     f"""\
 Unable to update details on stub app for {app.app_name}.
 
-This may be caused by a virus scanner misidentifying the Briefcase build as malicous
+This may be caused by a virus scanner misidentifying the Briefcase build as malicious
 activity. Try disabling your virus checker, and re-run briefcase build.
 """
                 ) from e
