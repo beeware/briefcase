@@ -57,7 +57,7 @@ def is_valid_app_name(app_name):
             not app_name.endswith(("-", "_")),
             app_name.replace("-", "_").isidentifier(),
             # the string 'None' is not a valid app name
-            app_name.lower() != "None",
+            app_name != "None",
         ]
     )
 

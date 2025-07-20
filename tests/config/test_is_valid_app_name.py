@@ -60,16 +60,6 @@ def test_is_valid_app_name(name):
         "helloworld_ı",
         "İstanbul",
         "Kelvin",
-    ],
-)
-def test_is_invalid_app_name(name):
-    """Test that invalid app names are rejected."""
-    assert not is_valid_app_name(name)
-
-
-@pytest.mark.parametrize(
-    "name",
-    [
         # Additional Python keywords to verify logic fix
         "and",
         "or",
@@ -114,6 +104,6 @@ def test_is_invalid_app_name(name):
         "TEST",
     ],
 )
-def test_additional_invalid_app_names(name):
-    """Test additional invalid app names to verify logic fix."""
+def test_is_invalid_app_name(name):
+    """Test that invalid app names are rejected."""
     assert not is_valid_app_name(name)
