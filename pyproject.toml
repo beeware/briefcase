@@ -115,7 +115,7 @@ docs = [
     # independent of the docs extra. Ideally, we'd use dependency groups for docs
     # dependencies, but RTD doesn't support them yet. In addition to these dependencies,
     # you should also run `pip install -r ../requirements-docs.txt`
-    "furo == 2024.8.6",
+    "furo == 2025.7.19",
     "pyenchant == 3.2.2",
     "sphinx == 8.2.3",
     "sphinx_tabs == 3.4.7",
