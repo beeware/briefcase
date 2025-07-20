@@ -37,7 +37,29 @@ def is_reserved_keyword(app_name):
 
 
 def is_valid_app_name(app_name):
-    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
+    """Determine if the app name is valid.
+
+    :param app_name: The app name to validate. Checks the following:
+        - It is not a reserved keyword.
+        - It is a valid PEP508 name.
+        - Does not start with a number.
+        - Does not have a period ('.') in the name.
+        - Does not start or end with a hyphen ('-') or underscore ('_').
+        - Is not the string 'None'
+    :returns: True if the app name is valid; False otherwise.
+    """
+    return all(
+        [
+            is_valid_pep508_name(app_name),
+            not is_reserved_keyword(app_name),
+            not app_name[0].isdigit(),
+            not app_name.startswith(("-", "_")),
+            not app_name.endswith(("-", "_")),
+            app_name.replace("-", "_").isidentifier(),
+            # the string 'None' is not a valid app name
+            app_name.lower() != "None",
+        ]
+    )
 
 
 def make_class_name(formal_name):
@@ -400,9 +422,12 @@ class AppConfig(BaseConfig):
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
                 f"{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
-                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
-                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+                "App names must:\n"
+                "- Not be reserved keywords (like 'and', 'for', 'while', 'main', 'test', etc.)\n"
+                "- Be PEP508 compliant (letters, numbers, hyphens, and underscores only)\n"
+                "- Start with a letter (not a number, hyphen, or underscore)\n"
+                "- Not end with a hyphen or underscore\n"
+                "- Be valid Python identifiers when hyphens are replaced with underscores"
             )
 
         if not is_valid_bundle_identifier(self.bundle):
