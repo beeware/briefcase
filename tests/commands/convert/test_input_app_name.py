@@ -39,7 +39,7 @@ def test_valid_pep621_app_name(convert_command):
 
 def test_pep621_name_is_canonicalized(convert_command):
     (convert_command.base_path / "pyproject.toml").write_text(
-        '[project]\nname="test.name"', encoding="utf-8"
+        '[project]\nname="test_name"', encoding="utf-8"
     )
     assert convert_command.input_app_name(None) == "test-name"
 
