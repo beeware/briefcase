@@ -45,7 +45,6 @@ def is_valid_app_name(app_name):
         - Does not start with a number.
         - Does not have a period ('.') in the name.
         - Does not start or end with a hyphen ('-') or underscore ('_').
-        - Is not the string 'None'
     :returns: True if the app name is valid; False otherwise.
     """
     return all(
@@ -56,8 +55,6 @@ def is_valid_app_name(app_name):
             not app_name.startswith(("-", "_")),
             not app_name.endswith(("-", "_")),
             app_name.replace("-", "_").isidentifier(),
-            # the string 'None' is not a valid app name
-            app_name != "None",
         ]
     )
 
