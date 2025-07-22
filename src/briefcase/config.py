@@ -39,12 +39,13 @@ def is_reserved_keyword(app_name):
 def is_valid_app_name(app_name):
     """Determine if the app name is valid.
 
-    :param app_name: The app name to validate. Checks the following:
+    Checks the following:
         - It is not a reserved keyword.
         - It is a valid PEP508 name.
         - Does not start with a number.
         - Does not have a period ('.') in the name.
-        - Does not start or end with a hyphen ('-') or underscore ('_').
+
+    :param app_name: The app name to validate.
     :returns: True if the app name is valid; False otherwise.
     """
     return all(
