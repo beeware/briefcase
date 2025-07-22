@@ -52,10 +52,7 @@ def is_valid_app_name(app_name):
         [
             is_valid_pep508_name(app_name),
             not is_reserved_keyword(app_name),
-            not app_name[0].isdigit(),
-            not app_name.startswith(("-", "_")),
-            not app_name.endswith(("-", "_")),
-            app_name.replace("-", "_").isidentifier(),
+            app_name.lower().replace("-", "_").isidentifier(),
         ]
     )
 

@@ -24,10 +24,12 @@ def test_is_valid_app_name(name):
 @pytest.mark.parametrize(
     "name",
     [
+        # Invalid characters
         "hello world",
         "helloworld!",
         "_helloworld",
         "-helloworld",
+        # python reserved words
         "switch",
         "pass",
         "false",
