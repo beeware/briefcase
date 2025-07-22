@@ -38,6 +38,8 @@ def test_is_valid_app_name(name):
         "main",
         "socket",
         "test",
+        "None",
+        "none",
         # Additional invalid formats
         "my$app",  # dollar sign
         "app@domain",  # at symbol
