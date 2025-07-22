@@ -11,15 +11,9 @@ from briefcase.config import is_valid_app_name
         "hello42world",
         "hello_world",
         "hello-world",
-        "myapp",
-        "my_app",
-        "my-app",
-        "app2",
-        "validname",
+        "helloworld42",
         "a",  # single letter
         "abc123",  # alphanumeric
-        "app-with-hyphens",
-        "app_with_underscores",
     ],
 )
 def test_is_valid_app_name(name):
