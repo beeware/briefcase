@@ -69,7 +69,8 @@ class iOSXcodePassiveMixin(iOSMixin):
         briefcase open iOS
 
     and use Xcode's app distribution workflow described at:
-    https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#deployment-to-simulated-and-physical-ios-devices.
+
+        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
 
 *************************************************************************
 """

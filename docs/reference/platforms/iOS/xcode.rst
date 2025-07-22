@@ -225,6 +225,7 @@ can do this using the ``cleanup_paths`` configuration option::
 This will find and purge all ``.a`` content in your app's dependencies. You can add
 additional patterns to remove other problematic content.
 
+.. _ios-deploy:
 
 Deployment to Simulated and Physical iOS Devices
 ------------------------------------------------
