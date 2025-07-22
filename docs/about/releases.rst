@@ -4,27 +4,6 @@ Release History
 
 .. towncrier release notes start
 
-0.1.dev4873+g4e670fa.d20250719 (2025-07-19)
-===========================================
-
-Features
---------
-
-* Add ``--forward-port`` and ``--reverse-port`` via ADB when running an Android app (`#2369 <https://github.com/beeware/briefcase/issues/2369>`__)
-
-
-Bugfixes
---------
-
-* Apps that contain file paths longer than 260 characters can now be included in MSI installers. (`#948 <https://github.com/beeware/briefcase/issues/948>`__)
-
-
-Misc
-----
-
-* `#2381 <https://github.com/beeware/briefcase/issues/2381>`__, `#2387 <https://github.com/beeware/briefcase/issues/2387>`__, `#2394 <https://github.com/beeware/briefcase/issues/2394>`__
-
-
 0.3.24 (2025-07-10)
 ===================
 
