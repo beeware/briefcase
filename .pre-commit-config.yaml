@@ -15,10 +15,11 @@ repos:
   #     - id: docformatter
   #       args: [--in-place, --black]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3
+    rev: v0.12.4
     hooks:
       - id: ruff-format
       - id: ruff-check
+        args: [ --fix ]
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:

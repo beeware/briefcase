@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 dynamic = ["version"]
 name = "briefcase"
 description = "Tools to support converting a Python project into a standalone native application."
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">= 3.9"
 license = "BSD-3-Clause"
 license-files = [
@@ -105,7 +105,7 @@ dev = [
     "pytest == 8.4.1",
     "pytest-xdist == 3.8.0",
     "setuptools_scm == 8.3.1",
-    "tox == 4.27.0",
+    "tox == 4.28.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
@@ -115,7 +115,7 @@ docs = [
     # independent of the docs extra. Ideally, we'd use dependency groups for docs
     # dependencies, but RTD doesn't support them yet. In addition to these dependencies,
     # you should also run `pip install -r ../requirements-docs.txt`
-    "furo == 2024.8.6",
+    "furo == 2025.7.19",
     "pyenchant == 3.2.2",
     "sphinx == 8.2.3",
     "sphinx_tabs == 3.4.7",

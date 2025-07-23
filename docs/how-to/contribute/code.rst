@@ -869,7 +869,7 @@ Add change information for release notes
 ----------------------------------------
 
 When you submit this change as a pull request, you need to add a *change
-note*. Toga uses |towncrier|_ to automate
+note*. Briefcase uses |towncrier|_ to automate
 building the release notes for each release. Every pull request must include at
 least one file in the ``changes/`` directory that provides a short description
 of the change implemented by the pull request.
