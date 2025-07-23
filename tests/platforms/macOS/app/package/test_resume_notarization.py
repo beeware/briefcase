@@ -463,7 +463,8 @@ def test_resume_notarize_app_dist_artefact_exists(
     tmp_path,
     sleep_zero,
 ):
-    """A *distribution* artefact of an app bundle will be cleaned up as part of resuming notarization."""
+    """A *distribution* artefact of an app bundle will be cleaned up as part of resuming
+    notarization."""
     # Create a pre-existing distribution artefact
     create_file(
         tmp_path / "base_path/dist/First App-0.0.1.app.zip",
@@ -764,7 +765,8 @@ def test_filename_mismatch(
     tmp_path,
     dist_filename,
 ):
-    """If the filename on a notarization submission doesn't match the current artefact, an error is raised."""
+    """If the filename on a notarization submission doesn't match the current artefact,
+    an error is raised."""
     # Create a pre-existing distribution artefact
     create_file(
         tmp_path / "base_path/dist" / dist_filename,

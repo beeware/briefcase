@@ -888,8 +888,8 @@ class Subprocess(Tool):
     def output_error(self, exception: subprocess.CalledProcessException):
         """Print error from a subprocess to the console.
 
-        This will output the command, output and return code to the console,
-        but *not* to the log.
+        This will output the command, output and return code to the console, but *not*
+        to the log.
 
         :param exception: The raw exception raised by a subprocess
         """

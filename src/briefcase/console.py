@@ -969,7 +969,7 @@ class Console:
         default: bool | None = None,
         override_value: str | None = None,
     ) -> bool:
-        """Ask the user a boolean question who's answer requires selecting yes/no
+        """Ask the user a boolean question who's answer requires selecting yes/no.
 
         :param description: A short description of the question being asked. This text
             is used in prompts and a header bar prefacing the question.
@@ -978,7 +978,8 @@ class Console:
         :param override_value: A pre-selected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
-            intro paragraph and option list will not. Will take the provided string and attempt to parse into bool
+            intro paragraph and option list will not. Will take the provided string and
+            attempt to parse into bool
         :returns: The user's chosen answer or none if closed without input
         """
 

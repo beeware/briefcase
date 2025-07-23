@@ -34,7 +34,8 @@ class _IteratorByteSteam(httpx.SyncByteStream):
     """Shim that satisfies ``httpx.Response`` ``stream`` parameter type.
 
     Cannot be replaced by any ``Iterable[bytes]`` because the base class requires
-    an explicit finalization method ``close``."""
+    an explicit finalization method ``close``.
+    """
 
     def __init__(self, iterable: Iterable[bytes]) -> None:
         self.iterable = iterable
@@ -51,7 +52,8 @@ def _make_httpx_response(
     method: str = "GET",
     headers: Optional[dict] = None,
 ) -> httpx.Response:
-    """Create a real ``httpx.Response`` with key methods wrapped by ``mock.Mock`` for spying.
+    """Create a real ``httpx.Response`` with key methods wrapped by ``mock.Mock`` for
+    spying.
 
     Wrapped methods:
         response.read
@@ -191,7 +193,8 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
 
 
 def test_new_download_chunked(mock_tools, file_perms):
-    """If a content-length is provided, ``File`` streams the response rather than downloading it all at once."""
+    """If a content-length is provided, ``File`` streams the response rather than
+    downloading it all at once."""
     response = _make_httpx_response(
         method="GET",
         url="https://example.com/path/to/something.zip",
@@ -247,8 +250,8 @@ def test_new_download_chunked(mock_tools, file_perms):
 def test_already_downloaded(mock_tools):
     """If the file already exists on disk, it isn't re-downloaded.
 
-    The request is still made to derive the filename, but the content
-    is never streamed."""
+    The request is still made to derive the filename, but the content is never streamed.
+    """
 
     # Create an existing file
     existing_file = mock_tools.base_path / "something.zip"
@@ -299,7 +302,7 @@ def test_already_downloaded(mock_tools):
 
 
 def test_missing_resource(mock_tools):
-    """MissingNetworkResourceError raises for 404 status code"""
+    """MissingNetworkResourceError raises for 404 status code."""
     url = "https://example.com/something.zip?useful=Yes"
     response = _make_httpx_response(
         url=url,
@@ -335,7 +338,7 @@ def test_missing_resource(mock_tools):
 
 
 def test_bad_resource(mock_tools):
-    """BadNetworkResourceError raises for non-200 status code"""
+    """BadNetworkResourceError raises for non-200 status code."""
     url = "https://example.com/something.zip?useful=Yes"
     response = _make_httpx_response(
         status_code=500,
@@ -371,8 +374,8 @@ def test_bad_resource(mock_tools):
 
 
 def test_iter_bytes_connection_error(mock_tools):
-    """NetworkFailure raised if response.iter_bytes() errors
-    and cleans up temporary files."""
+    """NetworkFailure raised if response.iter_bytes() errors and cleans up temporary
+    files."""
     url = "https://example.com/something.zip?useful=Yes"
     response = _make_httpx_response(
         status_code=200,

@@ -1060,8 +1060,9 @@ def test_install_support_package(
 def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     create_command, first_app_templated
 ):
-    """Install_hint (mentioning a missing x86_64 wheel) is added when RequirementsInstallError is raised
-    by _install_app_requirements in the macOS create command."""
+    """Install_hint (mentioning a missing x86_64 wheel) is added when
+    RequirementsInstallError is raised by _install_app_requirements in the macOS create
+    command."""
 
     create_command.tools.host_arch = "x86_64"
     first_app_templated.min_os_version = "12.0"
@@ -1090,8 +1091,9 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
 def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
     create_command, first_app_templated
 ):
-    """Install_hint (mentioning a missing arm64 wheel) is added when RequirementsInstallError is raised
-    by _install_app_requirements in the macOS create command."""
+    """Install_hint (mentioning a missing arm64 wheel) is added when
+    RequirementsInstallError is raised by _install_app_requirements in the macOS create
+    command."""
 
     create_command.tools.host_arch = "x86_64"
     first_app_templated.min_os_version = "12.0"

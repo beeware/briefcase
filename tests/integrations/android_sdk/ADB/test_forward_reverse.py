@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_forward(mock_tools, adb):
-    """A port forwarding"""
+    """A port forwarding."""
     # Invoke forward
     adb.forward(5555, 6666)
 

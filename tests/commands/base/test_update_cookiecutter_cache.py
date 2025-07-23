@@ -166,7 +166,9 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
 )
 def test_repo_clone_error(stderr_string, error_message, base_command, mock_git):
     """If git emits error information when cloning, Briefcase provides that to the user.
-    If git does not emit a 'fatal' error, then fallback to a generic hint."""
+
+    If git does not emit a 'fatal' error, then fallback to a generic hint.
+    """
     base_command.tools.git = mock_git
 
     base_command.tools.git.Repo.clone_from.side_effect = git_exceptions.GitCommandError(

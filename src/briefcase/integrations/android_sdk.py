@@ -1629,8 +1629,8 @@ Activity class not found while starting app.
             raise BriefcaseCommandError("Error starting ADB logcat.") from e
 
     def forward(self, host_port: int, device_port: int):
-        """Use the forward command to set up arbitrary port forwarding, which
-        forwards requests on a specific host port to a different port on a device.
+        """Use the forward command to set up arbitrary port forwarding, which forwards
+        requests on a specific host port to a different port on a device.
 
         :param host_port: The port on the host that should be forwarded to the device
         :param device_port: The port on the device
@@ -1669,8 +1669,8 @@ Activity class not found while starting app.
             raise BriefcaseCommandError("Error starting 'adb forward --remove'.") from e
 
     def reverse(self, device_port: int, host_port: int):
-        """Use the reverse command to set up arbitrary port forwarding, which
-        forwards requests on a specific device port to a different port on the host.
+        """Use the reverse command to set up arbitrary port forwarding, which forwards
+        requests on a specific device port to a different port on the host.
 
         :param device_port: The port on the device that should be forwarded to the host
         :param host_port: The port on the host
