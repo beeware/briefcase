@@ -141,8 +141,8 @@ def test_question_sequence_with_no_user_input(new_command):
 
 
 def test_author_and_email_use_git_config_as_fallback(new_command):
-    """If no user input is provided, git config values 'git.user' and 'git.email' are used if
-    available."""
+    """If no user input is provided, git config values 'git.user' and 'git.email' are
+    used if available."""
     new_command.tools.git = object()
     new_command.get_git_config_value = mock.MagicMock()
     new_command.get_git_config_value.side_effect = ["Some Author", "my@email.com"]

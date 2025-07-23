@@ -235,7 +235,8 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
 
 
 def test_incompatible_min_os_version(create_command, first_app_generated, tmp_path):
-    """If the app's iOS version isn't compatible with the support package, an error is raised."""
+    """If the app's iOS version isn't compatible with the support package, an error is
+    raised."""
     # Hard code the current architecture for testing. We only install simulator
     # requirements for the current platform.
     create_command.tools.host_arch = "wonky"
@@ -453,8 +454,9 @@ def test_permissions_context(create_command, first_app, permissions, info, conte
 def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel(
     create_command, first_app_generated
 ):
-    """Install_hint (mentioning a missing iphoneos wheel) is added when RequirementsInstallError is raised
-    by _install_app_requirements in the iOS create command."""
+    """Install_hint (mentioning a missing iphoneos wheel) is added when
+    RequirementsInstallError is raised by _install_app_requirements in the iOS create
+    command."""
     first_app_generated.min_os_version = "15.4"
     first_app_generated.requires = ["package-one", "package_two", "package_three"]
 
@@ -484,8 +486,9 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel
 def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulator_wheel(
     create_command, first_app_generated
 ):
-    """Install_hint (mentioning a missing iphonesimulator wheel) is added when RequirementsInstallError is raised
-    by _install_app_requirements in the iOS create command."""
+    """Install_hint (mentioning a missing iphonesimulator wheel) is added when
+    RequirementsInstallError is raised by _install_app_requirements in the iOS create
+    command."""
     first_app_generated.min_os_version = "15.4"
     first_app_generated.requires = ["package-one", "package_two", "package_three"]
 

@@ -27,7 +27,8 @@ def test_selection_question():
 
 
 def test_selection_question_list():
-    """If selection_question is given a list of values, they're presented as provided."""
+    """If selection_question is given a list of values, they're presented as
+    provided."""
     # Return '3' when prompted
     console = DummyConsole("3")
 

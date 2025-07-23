@@ -1018,7 +1018,8 @@ def test_unknown_notarization_status_failure(
     sleep_zero,
     tmp_path,
 ):
-    """If the notarization log process fails with an unexpected status code, an error is raised."""
+    """If the notarization log process fails with an unexpected status code, an error is
+    raised."""
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()
 

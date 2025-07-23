@@ -539,9 +539,8 @@ def test_passive_mixin(first_app_config, tmp_path):
 
 
 def test_cascading_distribution_properties(create_command, first_app_config):
-    """Properties should be cascading/accumulating, and vendor-level
-    properties should overwrite os-level ones when in a dictionary.
-    """
+    """Properties should be cascading/accumulating, and vendor-level properties should
+    overwrite os-level ones when in a dictionary."""
     # Run this test as "docker"; however, the things we're testing aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()

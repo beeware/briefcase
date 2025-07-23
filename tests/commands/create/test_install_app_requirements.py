@@ -242,8 +242,8 @@ def test_app_packages_requirement_installer_args_coincidental_path_not_transform
     app_path,
     app_packages_path_index,
 ):
-    """If an app's requirement installer arguments includes a path that exists,
-    but it starts with `-`, it is used as-is."""
+    """If an app's requirement installer arguments includes a path that exists, but it
+    starts with `-`, it is used as-is."""
     (create_command.base_path / "-f" / "wheels").mkdir(parents=True, exist_ok=True)
     myapp.requirement_installer_args = ["-f./wheels"]
     myapp.requires = ["package"]
@@ -279,8 +279,8 @@ def test_app_packages_requirement_installer_args_path_not_transformed(
     app_path,
     app_packages_path_index,
 ):
-    """If an app's requirement installer arguments have an argument that looks like a local path,
-    but does not resolve to an existing path, it is used as-is."""
+    """If an app's requirement installer arguments have an argument that looks like a
+    local path, but does not resolve to an existing path, it is used as-is."""
     (create_command.base_path / "packages").unlink(missing_ok=True)
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
     myapp.requires = ["package"]
@@ -317,8 +317,8 @@ def test_app_packages_requirement_installer_args_combined_argument_not_transform
     app_path,
     app_packages_path_index,
 ):
-    """If an app's requirement installer arguments use a combined argument,
-    paths are not modified."""
+    """If an app's requirement installer arguments use a combined argument, paths are
+    not modified."""
     (create_command.base_path / "packages").mkdir(exist_ok=True)
     myapp.requirement_installer_args = ["--extra-index-url=./packages"]
     myapp.requires = ["package"]
@@ -685,9 +685,9 @@ def test_app_requirements_requirement_installer_args_no_template_support(
     mock_now,
     app_requirements_path_index,
 ):
-    """If an app has requirement install args, a requirements file is still written,
-    but no requirement installer args file is written if the template does not support it.
-    """
+    """If an app has requirement install args, a requirements file is still written, but
+    no requirement installer args file is written if the template does not support
+    it."""
     myapp.requirement_installer_args = ["--no-cache"]
     myapp.requires = ["my-favourite-package"]
 
@@ -713,8 +713,8 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     mock_now,
     app_requirement_installer_args_path_index,
 ):
-    """If an app has requirement install args, a requirements file is still written,
-    and requirement installer args file is written if the template supports it."""
+    """If an app has requirement install args, a requirements file is still written, and
+    requirement installer args file is written if the template supports it."""
     myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
     myapp.requires = ["my-favourite-package"]
 
@@ -746,9 +746,9 @@ def test_app_requirements_requirement_installer_args_without_requires_no_templat
     mock_now,
     app_requirements_path_index,
 ):
-    """If an app has requirement install args and no requires,
-    a requirements file is still written with the timestamp,
-    and does not write a requirement installer args file."""
+    """If an app has requirement install args and no requires, a requirements file is
+    still written with the timestamp, and does not write a requirement installer args
+    file."""
     myapp.requirement_installer_args = ["--no-cache"]
     myapp.requires = []
 
@@ -776,9 +776,9 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
     mock_now,
     app_requirement_installer_args_path_index,
 ):
-    """If an app has requirement install args and no requires,
-    a requirements file is still written with the timestamp,
-    as well as requirement installer args file when the template supports it."""
+    """If an app has requirement install args and no requires, a requirements file is
+    still written with the timestamp, as well as requirement installer args file when
+    the template supports it."""
     myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
     myapp.requires = []
 

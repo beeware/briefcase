@@ -361,7 +361,8 @@ def test_calledprocesserror_exception_logging(
 
 
 def test_calledprocesserror_exception_logging_no_output(mock_sub, capsys, caplog):
-    """If command errors, and there is no command output, return code is still printed."""
+    """If command errors, and there is no command output, return code is still
+    printed."""
     called_process_error = CalledProcessError(
         returncode=-1,
         cmd=["hello", "world"],

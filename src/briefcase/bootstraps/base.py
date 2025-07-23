@@ -123,8 +123,8 @@ class BaseGuiBootstrap:
     def post_generate(self, base_path: Path) -> None:
         """Runs after the template has been generated.
 
-        This can be used to produce any additional files that the base
-        template doesn't provide.
+        This can be used to produce any additional files that the base template doesn't
+        provide.
 
         :param base_path: The path to the root of the generated project.
         """

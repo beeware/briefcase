@@ -929,8 +929,8 @@ class macOSPackageMixin(macOSSigningMixin):
     def clean_dist_folder(self, app, **options):
         """Clean up any existing artefacts in the dist folder.
 
-        If we are resuming a notarization session verify that the artefact exists,
-        but *do not* delete it.
+        If we are resuming a notarization session verify that the artefact exists, but
+        *do not* delete it.
 
         :param app: The app being packaged.
         :param submission_id: The notarization submission being resumed.
@@ -992,7 +992,8 @@ class macOSPackageMixin(macOSSigningMixin):
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
     ):
-        """Submit a file for notarization, and wait for that notarization to be completed.
+        """Submit a file for notarization, and wait for that notarization to be
+        completed.
 
         :param app: The app to notarize.
         :param identity: The code signing used to notarize the app.

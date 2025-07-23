@@ -20,7 +20,8 @@ def test_all_config_files_are_read(base_command, mock_git):
 
 
 def test_config_values_are_parsed(base_command, tmp_path, monkeypatch):
-    """If the requested value exists in one of the config files, it shall be returned."""
+    """If the requested value exists in one of the config files, it shall be
+    returned."""
     import git
 
     # use 'real' gitpython library (no mock)

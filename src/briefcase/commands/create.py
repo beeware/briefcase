@@ -524,9 +524,9 @@ class CreateCommand(BaseCommand):
         :param requires: The full list of requirements
         :param requirements_path: The full path to a requirements.txt file that will be
             written.
-        :param requirement_installer_args_path: The full path to where newline
-            delimited additional requirement installer argumentss should be written if
-            the template supports it.
+        :param requirement_installer_args_path: The full path to where newline delimited
+            additional requirement installer argumentss should be written if the
+            template supports it.
         """
 
         with self.console.wait_bar("Writing requirements file..."):
