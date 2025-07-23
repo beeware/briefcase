@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -23,7 +22,7 @@ class AppContext(TypedDict):
     license: str
 
 
-class BaseGuiBootstrap(ABC):
+class BaseGuiBootstrap:
     """Definition for a plugin that defines a new Briefcase app."""
 
     # These are the field names that will be defined in the cookiecutter context.
