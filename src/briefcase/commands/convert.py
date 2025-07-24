@@ -114,7 +114,7 @@ class ConvertCommand(NewCommand):
 
         default = "hello-world"
         if "name" in self.pep621_data and override_value is None:
-            app_name = canonicalize_name(self.pep621_data["name"]).replace("-", "_")
+            app_name = canonicalize_name(self.pep621_data["name"])
             self.console.divider(title="App name")
             self.console.prompt()
             self.console.prompt(
