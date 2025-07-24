@@ -7,7 +7,6 @@ import pytest
         "helloworld",
         "helloWorld",
         "hello42world",
-        "42helloworld",  # ?? Are we sure this is correct?
         "hello_world",
         "hello-world",
     ],
@@ -24,6 +23,7 @@ def test_valid_app_name(new_command, name):
         "helloworld!",  # contains punctuation
         "_helloworld",  # leading underscore
         "-helloworld",  # leading hyphen
+        "42helloworld",  # starting with a number
         "pass",  # python keyword
         "Pass",  # python keyword, but different case usage
         "PASS",  # python keyword, but all upper case
