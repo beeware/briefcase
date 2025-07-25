@@ -131,8 +131,6 @@ def parse_cmdline(args, console: Console | None = None):
         Command = ConvertCommand
     elif options.command == "new":
         Command = NewCommand
-    elif options.command == "dev":
-        Command = DevCommand
     elif options.command == "upgrade":
         Command = UpgradeCommand
     else:

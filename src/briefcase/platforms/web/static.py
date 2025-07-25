@@ -19,6 +19,7 @@ import tomli_w
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -447,6 +448,16 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
+class StaticWebDevCommand(StaticWebMixin, DevCommand):
+    description = "Run a static web project in development mode. (Work in progress)"
+
+    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
+        """Web-specific dev mode (WIP)."""
+        raise NotImplementedError(
+            "Web dev mode is not yet implemented. (Work in progress)"
+        )
+
+
 # Declare the briefcase command bindings
 create = StaticWebCreateCommand
 update = StaticWebUpdateCommand
@@ -455,3 +466,4 @@ build = StaticWebBuildCommand
 run = StaticWebRunCommand
 package = StaticWebPackageCommand
 publish = StaticWebPublishCommand
+dev = StaticWebDevCommand
