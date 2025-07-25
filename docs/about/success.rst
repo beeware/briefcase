@@ -23,3 +23,6 @@ Want to see examples of Briefcase in use? Here's some:
 
 * `Easy Media Server <https://apps.rsmail.co/easy-media-server>`_ is a DLNA media server
   for streaming content to devices such as Smart TVs. It uses Toga for the interface and Briefcase to prepare builds for macOS.
+
+* `Beanquick <https://twobitsware.com/beanquick>`_ is a fast, offline, and intuitive desktop app
+  for double-entry bookkeeping. Built on Beancount with lightning-fast natural language input.
