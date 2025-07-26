@@ -453,9 +453,50 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         """Web-specific dev mode (WIP)."""
-        raise NotImplementedError(
-            "Web dev mode is not yet implemented. (Work in progress)"
-        )
+        
+        if self.check_venv_exists():
+            self.console.info(
+                "Virtual environment for web development already exists."
+            )
+        else:
+            try:
+                self.console.info("No virtual environent was found.")
+                self.create_venv()
+                self.console.info(
+                "Virtual environment was successfully created for web developement."
+                )
+            except:
+                raise BriefcaseCommandError(
+                    "Failed to create virtual environment for web development."
+                )
+
+        
+    def create_venv(self):
+        """
+        Create a virtual environment for the web development server.
+
+        Raises:
+            subprocess.CalledProcessError: If the venv creation fails.
+        """
+        venv_path = self.base_path / ".briefcase" / "dev-web-venv"
+        if not venv_path.exists():
+            venv_path.parent.mkdir(parents=True, exist_ok=True)  
+            subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
+            
+         
+    def check_venv_exists(self):
+        """Check if the virtual environment for the web development server exists.
+        
+        Returns:
+            bool: True if the virtual environment exists, False otherwise.
+        """
+        venv_path = self.base_path / ".briefcase" / "dev-web-venv"
+        pyvenv_cfg = venv_path / "pyvenv.cfg"
+        if pyvenv_cfg.exists():
+            return True
+        else:
+            return False
+    
 
 
 # Declare the briefcase command bindings
