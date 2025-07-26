@@ -27,7 +27,11 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 
 class StaticWebMixin:
@@ -453,8 +457,10 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         """Web-specific dev mode (WIP)."""
-        raise NotImplementedError(
-            "Web dev mode is not yet implemented. (Work in progress)"
+        raise UnsupportedCommandError(
+            platform="",
+            output_format="Web",
+            command="Dev",
         )
 
 
