@@ -6,6 +6,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -411,6 +412,10 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
             )
 
 
+class LinuxAppDevCommand(LinuxAppImageMixin, DevCommand):
+    description = "Run a Linux AppImage app in development mode"
+
+
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
 
@@ -434,3 +439,4 @@ build = LinuxAppImageBuildCommand
 run = LinuxAppImageRunCommand
 package = LinuxAppImagePackageCommand
 publish = LinuxAppImagePublishCommand
+dev = LinuxAppDevCommand

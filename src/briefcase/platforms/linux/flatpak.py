@@ -3,6 +3,7 @@ from __future__ import annotations
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -240,6 +241,10 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
             )
 
 
+class LinuxFlatpakDevCommand(LinuxFlatpakMixin, DevCommand):
+    description = "Run a Linux Flatpak app in development mode"
+
+
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
     description = "Package a Linux Flatpak for distribution."
 
@@ -273,3 +278,4 @@ build = LinuxFlatpakBuildCommand
 run = LinuxFlatpakRunCommand
 package = LinuxFlatpakPackageCommand
 publish = LinuxFlatpakPublishCommand
+dev = LinuxFlatpakDevCommand
