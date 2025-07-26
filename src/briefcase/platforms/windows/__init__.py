@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path, PurePath
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from briefcase.commands import CreateCommand, PackageCommand, RunCommand
+from briefcase.commands import CreateCommand, DevCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig, parsed_version
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.windows_sdk import WindowsSDK
@@ -178,6 +178,10 @@ class WindowsRunCommand(RunCommand):
                 popen=app_popen,
                 clean_output=False,
             )
+
+
+class WindowsDevCommand(DevCommand):
+    description = "Run a Windows app in development mode."
 
 
 class WindowsPackageCommand(PackageCommand):

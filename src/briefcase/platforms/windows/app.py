@@ -2,13 +2,20 @@ import subprocess
 from contextlib import suppress
 from pathlib import Path
 
-from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
+from briefcase.commands import (
+    BuildCommand,
+    DevCommand,
+    OpenCommand,
+    PublishCommand,
+    UpdateCommand,
+)
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
+    WindowsDevCommand,
     WindowsMixin,
     WindowsPackageCommand,
     WindowsRunCommand,
@@ -151,6 +158,13 @@ class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
     description = "Run a Windows app."
 
 
+class WindowsAppDevCommand(WindowsAppMixin, WindowsDevCommand):
+    description = "Run a Windows app in development mode."
+
+    def __call__(self, *args, **kwargs):
+        return DevCommand.__call__(self, *args, **kwargs)
+
+
 class WindowsAppPackageCommand(WindowsAppMixin, WindowsPackageCommand):
     description = "Package a Windows app."
 
@@ -167,3 +181,4 @@ build = WindowsAppBuildCommand
 run = WindowsAppRunCommand
 package = WindowsAppPackageCommand
 publish = WindowsAppPublishCommand
+dev = WindowsAppDevCommand

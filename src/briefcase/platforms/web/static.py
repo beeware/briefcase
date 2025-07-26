@@ -27,7 +27,11 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 
 class StaticWebMixin:
@@ -469,6 +473,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
                 raise BriefcaseCommandError(
                     "Failed to create virtual environment for web development."
                 )
+                
+        raise UnsupportedCommandError(
+            platform="",
+            output_format="Web",
+            command="Dev",
+        )
 
         
     def create_venv(self):
@@ -497,6 +507,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         else:
             return False
     
+
 
 
 # Declare the briefcase command bindings
