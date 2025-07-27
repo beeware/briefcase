@@ -454,18 +454,25 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
     description = "Run a static web project in development mode. (Work in progress)"
-
+    
+    
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         """Web-specific dev mode (WIP)."""
+        venv_path = self.base_path / ".briefcase" / "dev-web-venv"
+        pyvenv_cfg = venv_path / "pyvenv.cfg"
         
-        if self.check_venv_exists():
+        if pyvenv_cfg.exists():
             self.console.info(
                 "Virtual environment for web development already exists."
             )
+            
+            # implement logic to check if -r flag is given 
+            # implement logic to carry out the -r flag functionality
         else:
             try:
                 self.console.info("No virtual environent was found.")
-                self.create_venv()
+                venv_path.parent.mkdir(parents=True, exist_ok=True)  
+                subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
                 self.console.info(
                 "Virtual environment was successfully created for web developement."
                 )
@@ -473,39 +480,61 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
                 raise BriefcaseCommandError(
                     "Failed to create virtual environment for web development."
                 )
-                
-        raise UnsupportedCommandError(
-            platform="",
-            output_format="Web",
-            command="Dev",
-        )
+        
+        
+        
 
         
-    def create_venv(self):
-        """
-        Create a virtual environment for the web development server.
+    #     if self._check_venv_exists():
+    #         self.console.info(
+    #             "Virtual environment for web development already exists."
+    #         )
+            
+    #         # implement logic to check if -r flag is given 
+    #     else:
+    #         try:
+    #             self.console.info("No virtual environent was found.")
+    #             self._create_venv()
+    #             self.console.info(
+    #             "Virtual environment was successfully created for web developement."
+    #             )
+    #         except:
+    #             raise BriefcaseCommandError(
+    #                 "Failed to create virtual environment for web development."
+    #             )
+                
+    #     raise UnsupportedCommandError(
+    #         platform="",
+    #         output_format="Web",
+    #         command="Dev",
+    #     )
 
-        Raises:
-            subprocess.CalledProcessError: If the venv creation fails.
-        """
-        venv_path = self.base_path / ".briefcase" / "dev-web-venv"
-        if not venv_path.exists():
-            venv_path.parent.mkdir(parents=True, exist_ok=True)  
-            subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
+        
+    # def _create_venv(self):
+    #     """
+    #     Create a virtual environment for the web development server.
+
+    #     Raises:
+    #         subprocess.CalledProcessError: If the venv creation fails.
+    #     """
+    #     venv_path = self.base_path / ".briefcase" / "dev-web-venv"
+    #     if not venv_path.exists():
+    #         venv_path.parent.mkdir(parents=True, exist_ok=True)  
+    #         subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
             
          
-    def check_venv_exists(self):
-        """Check if the virtual environment for the web development server exists.
+    # def _check_venv_exists(self):
+    #     """Check if the virtual environment for the web development server exists.
         
-        Returns:
-            bool: True if the virtual environment exists, False otherwise.
-        """
-        venv_path = self.base_path / ".briefcase" / "dev-web-venv"
-        pyvenv_cfg = venv_path / "pyvenv.cfg"
-        if pyvenv_cfg.exists():
-            return True
-        else:
-            return False
+    #     Returns:
+    #         bool: True if the virtual environment exists, False otherwise.
+    #     """
+    #     venv_path = self.base_path / ".briefcase" / "dev-web-venv"
+    #     pyvenv_cfg = venv_path / "pyvenv.cfg"
+    #     if pyvenv_cfg.exists():
+    #         return True
+    #     else:
+    #         return False
     
 
 
