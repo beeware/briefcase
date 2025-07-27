@@ -412,7 +412,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
             )
 
 
-class LinuxAppDevCommand(LinuxAppImageMixin, DevCommand):
+class LinuxAppImageDevCommand(LinuxAppImageMixin, DevCommand):
     description = "Run a Linux AppImage app in development mode"
 
 
@@ -439,4 +439,4 @@ build = LinuxAppImageBuildCommand
 run = LinuxAppImageRunCommand
 package = LinuxAppImagePackageCommand
 publish = LinuxAppImagePublishCommand
-dev = LinuxAppDevCommand
+dev = LinuxAppImageDevCommand

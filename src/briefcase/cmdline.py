@@ -191,7 +191,4 @@ def parse_cmdline(args, console: Console | None = None):
                 output_format=output_format,
                 command=options.command,
             )
-    print("====================================================")
-    ##print(platform)
-    print("====================================================")
     return Command, extra
