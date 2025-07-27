@@ -557,11 +557,12 @@ Delete this file and run Briefcase again.
                 self._x11_write_xauth_file(DISPLAY, xauth_file_path, proxy_display_num)
             except XauthDatabaseCreationFailure:
                 self.tools.console.warning(
-                    """\
-An X11 authentication database could not be created for the display.
+                    r"""\ An X11 authentication database could not be created for the
+                    display.
 
-Briefcase will proceed, but if access to the display is rejected, this may be why.
-"""
+                    Briefcase will proceed, but if access to the display is rejected,
+                    this may be why.
+                    """
                 )
             else:
                 # Add the xauth database to the container

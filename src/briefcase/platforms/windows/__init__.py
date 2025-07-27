@@ -45,11 +45,11 @@ class WindowsMixin:
         # 64bit Python is required to ensure 64bit wheels are installed/created for the app
         if self.tools.is_32bit_python:
             raise UnsupportedHostError(
-                """\
-Windows applications cannot be built using a 32bit version of Python.
+                r"""\ Windows applications cannot be built using a 32bit version of
+                Python.
 
-Install a 64bit version of Python and run Briefcase again.
-"""
+                Install a 64bit version of Python and run Briefcase again.
+                """
             )
 
 
@@ -113,22 +113,21 @@ class WindowsCreateCommand(CreateCommand):
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
         self.console.warning(
+            """*************************************************************************
+            ** WARNING: Support package update may be imperfect                    **
+            *************************************************************************
+
+                Support packages in Windows apps are overlaid with app content,
+                so it isn't possible to remove all old support files before
+                installing new ones.
+
+                Briefcase will unpack the new support package without cleaning up
+                existing support package content. This *should* work; however,
+                ensure a reproducible release artefacts, it is advisable to
+                perform a clean app build before release.
+
+            *************************************************************************
             """
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
-
-    Support packages in Windows apps are overlaid with app content,
-    so it isn't possible to remove all old support files before
-    installing new ones.
-
-    Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; however,
-    ensure a reproducible release artefacts, it is advisable to
-    perform a clean app build before release.
-
-*************************************************************************
-"""
         )
 
 
@@ -266,7 +265,6 @@ class WindowsPackageCommand(PackageCommand):
         timestamp_digest: str,
     ):
         """Sign a file."""
-
         if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
             raise BriefcaseCommandError(
                 f"Codesigning identify {identity!r} must be a certificate SHA-1 thumbprint."
@@ -331,7 +329,6 @@ class WindowsPackageCommand(PackageCommand):
         :param timestamp_url: Timestamp authority server to use in code signing.
         :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
-
         if adhoc_sign:
             sign_app = False
         elif identity:
@@ -339,17 +336,17 @@ class WindowsPackageCommand(PackageCommand):
         else:
             sign_app = False
             self.console.warning(
+                """*********************************************************************
+                **** ** WARNING: No signing identity provided
+                ** *********************************************************************
+                ****
+
+                    Briefcase will not sign the app. To provide a signing identity,
+                    use the `--identity` option; or, to explicitly disable signing,
+                    use `--adhoc-sign`.
+
+                *************************************************************************
                 """
-*************************************************************************
-** WARNING: No signing identity provided                               **
-*************************************************************************
-
-    Briefcase will not sign the app. To provide a signing identity,
-    use the `--identity` option; or, to explicitly disable signing,
-    use `--adhoc-sign`.
-
-*************************************************************************
-"""
             )
 
         if sign_app:
@@ -403,7 +400,6 @@ class WindowsPackageCommand(PackageCommand):
 
     def _package_zip(self, app):
         """Package the app as simple zip file."""
-
         self.console.info("Building zip file...", prefix=app.app_name)
         with self.console.wait_bar("Packing..."):
             source = self.package_path(app)

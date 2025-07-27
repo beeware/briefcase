@@ -247,7 +247,6 @@ def parsed_version(version):
 
 def parse_boolean(value: str) -> bool:
     """Takes a string value and attempts to convert to a boolean value."""
-
     truth_vals = {"true", "t", "yes", "y", "1", "on"}
     false_vals = {"false", "f", "no", "n", "0", "off"}
 
@@ -551,7 +550,6 @@ def merge_config(config, data):
 
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
-
     if requires_python := pep621_config.get("requires-python"):
         global_config["requires_python"] = requires_python
 

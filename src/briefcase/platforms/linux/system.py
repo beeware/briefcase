@@ -171,17 +171,20 @@ class LinuxSystemPassiveMixin(LinuxMixin):
                 and self.tools.host_os != "Darwin"
             ):
                 raise BriefcaseCommandError(
-                    """\
-Briefcase cannot use this Docker installation to target Arch Linux since the
-tools to build packages for Arch cannot be run as root.
+                    r"""\ Briefcase cannot use this Docker installation to target Arch
+                    Linux since the tools to build packages for Arch cannot be run as
+                    root.
 
-The Docker available to Briefcase requires the use of the root user in
-containers to maintain accurate file permissions of the build artefacts.
+                    The Docker available to Briefcase requires the use of the root user
+                    in containers to maintain accurate file permissions of the build
+                    artefacts.
 
-This most likely means you're using Docker Desktop or rootless Docker.
+                    This most likely means you're using Docker Desktop or rootless
+                    Docker.
 
-Install Docker Engine and try again or run Briefcase on an Arch host system.
-"""
+                    Install Docker Engine and try again or run Briefcase on an Arch host
+                    system.
+                    """
                 )
 
         # Merge target-specific configuration items into the app config This
@@ -547,18 +550,18 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
             self.console.warning(
+                """*********************************************************************
+                **** ** WARNING: Can't verify system packages
+                ** *********************************************************************
+                ****
+
+                    Briefcase doesn't know how to verify the installation of system
+                    packages on your Linux distribution. If you have any problems
+                    building this app, ensure that the packages listed in the app's
+                    `system_requires` setting have been installed.
+
+                *************************************************************************
                 """
-*************************************************************************
-** WARNING: Can't verify system packages                               **
-*************************************************************************
-
-    Briefcase doesn't know how to verify the installation of system
-    packages on your Linux distribution. If you have any problems
-    building this app, ensure that the packages listed in the app's
-    `system_requires` setting have been installed.
-
-*************************************************************************
-"""
             )
             return
 
@@ -753,11 +756,12 @@ Ensure you have correctly spelled the filename in your `license.file` setting.
                 (doc_folder / "copyright").write_text(license_text, encoding="utf-8")
                 if len(license_text.splitlines()) <= 1:
                     self.console.warning(
+                        """Your app specifies a license using `license.text`, but the
+                        value doesn't appear to be a full license.
+
+                        Briefcase will generate a `copyright` file for your project; you should
+                        ensure that the contents of this file is adequate.
                         """
-Your app specifies a license using `license.text`, but the value doesn't appear to be a
-full license. Briefcase will generate a `copyright` file for your project; you should
-ensure that the contents of this file is adequate.
-"""
                     )
             else:
                 raise BriefcaseCommandError(
@@ -775,13 +779,15 @@ app's configuration.
 
             if changelog is None:
                 raise BriefcaseCommandError(
-                    """\
-Your project does not contain a changelog file with a known file name. You
-must provide a changelog file in the same directory as your `pyproject.toml`,
-with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
-'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
-no extension).
-"""
+                    r"""\ Your project does not contain a changelog file with a known
+                    file name.
+
+                    You
+                    must provide a changelog file in the same directory as your `pyproject.toml`,
+                    with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
+                    'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
+                    no extension).
+                    """
                 )
 
             changelog_source = self.base_path / changelog
@@ -1155,13 +1161,15 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
                 if changelog is None:
                     raise BriefcaseCommandError(
-                        """\
-Your project does not contain a changelog file with a known file name. You
-must provide a changelog file in the same directory as your `pyproject.toml`,
-with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
-'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
-no extension).
-"""
+                        r"""\ Your project does not contain a changelog file with a known
+                        file name.
+
+                        You
+                        must provide a changelog file in the same directory as your `pyproject.toml`,
+                        with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
+                        'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
+                        no extension).
+                        """
                     )
 
                 changelog_source = self.base_path / changelog
@@ -1222,12 +1230,13 @@ no extension).
 
         if changelog is None:
             raise BriefcaseCommandError(
-                """\
-Your project does not contain a changelog file with a valid file name.
-Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
-with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
-with details about the release.
-"""
+                r"""\ Your project does not contain a changelog file with a valid file
+                name.
+
+                Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
+                with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
+                with details about the release.
+                """
             )
 
         changelog_source = self.base_path / changelog

@@ -33,7 +33,6 @@ def test_cleanup_support_package(
     app_requirements_path_index,
 ):
     """If a support package already exists, it can be cleaned up."""
-
     # Mock an existing support file
     create_file(support_path / "old/trash.txt", "Old support file")
 

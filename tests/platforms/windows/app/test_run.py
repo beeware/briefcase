@@ -89,7 +89,6 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config, tmp_path):
 
 def test_run_gui_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem starting the GUI app, an exception is raised."""
-
     run_command.tools.subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):

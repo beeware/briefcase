@@ -150,7 +150,6 @@ def other_package(create_command, first_app_config):
 )
 def test_install_app_requirements_in_docker(create_command, first_app_config, tmp_path):
     """If Docker is in use, a docker context is used to invoke pip."""
-
     # Install requirements
     create_command.install_app_requirements(first_app_config)
 

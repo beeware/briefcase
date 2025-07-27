@@ -211,7 +211,6 @@ def test_package_msi(
     package_command, first_app_config, external_first_app, tmp_path, kwargs, external
 ):
     """A Windows app can be packaged as an MSI."""
-
     package_command.package_app(
         external_first_app if external else first_app_config,
         **kwargs,
@@ -248,7 +247,6 @@ def test_package_msi(
 )
 def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_path):
     """A Windows app can be packaged as a zip file."""
-
     first_app_config.packaging_format = "zip"
     package_command_with_files.package_app(first_app_config, **kwargs)
 
@@ -301,7 +299,6 @@ def test_package_msi_with_codesigning(
     additional_args,
 ):
     """A Windows app can be packaged as an MSI and code signed."""
-
     package_command.package_app(
         first_app_config,
         identity="80ee4c3321122916f5637522451993c2a0a4a56a",
@@ -413,7 +410,6 @@ def test_package_zip_with_codesigning(
     additional_args,
 ):
     """In a ZIP package, only the binary will be code signed."""
-
     first_app_config.packaging_format = "zip"
 
     package_command_with_files.package_app(
@@ -657,7 +653,6 @@ def test_external_package_zip(
     tmp_path,
 ):
     """In a ZIP package, only the binary will be code signed."""
-
     external_first_app.packaging_format = "zip"
 
     package_command_with_files.package_app(

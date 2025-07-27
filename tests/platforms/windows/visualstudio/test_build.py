@@ -81,7 +81,6 @@ def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
 
 def test_build_app_failure(build_command, first_app_config, tmp_path):
     """If the stub binary cannot be updated, an error is raised."""
-
     build_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd="MSBuild.exe",

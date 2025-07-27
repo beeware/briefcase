@@ -24,7 +24,6 @@ def mock_builtin_bootstraps():
 
 def test_toga_bootstrap(new_command):
     """Context can be requested from the Toga bootstrap."""
-
     context = new_command.build_gui_context(
         TogaGuiBootstrap(
             new_command.console,
@@ -60,12 +59,10 @@ class {{ cookiecutter.class_name }}(toga.App):
 def main():
     return {{ cookiecutter.class_name }}()
 ''',
-        "app_start_source": """\
-from {{ cookiecutter.module_name }}.app import main
+        "app_start_source": r"""\ from {{ cookiecutter.module_name }}.app import main.
 
-if __name__ == "__main__":
-    main().main_loop()
-""",
+                            if __name__ == "__main__":     main().main_loop()
+                            """,
         "pyproject_table_briefcase_app_extra_content": """
 requires = [
 ]
@@ -245,7 +242,6 @@ style_framework = "Shoelace v2.3"
 
 def test_console_bootstrap(new_command):
     """Context can be requested from the Console bootstrap."""
-
     context = new_command.build_gui_context(
         ConsoleBootstrap(
             new_command.console,
@@ -352,7 +348,6 @@ supported = false
 
 def test_pyside6_bootstrap(new_command):
     """Context can be requested from the PySide6 bootstrap."""
-
     context = new_command.build_gui_context(
         PySide6GuiBootstrap(
             new_command.console,
@@ -511,7 +506,6 @@ supported = false
 
 def test_pygame_bootstrap(new_command):
     """Context can be requested from the Pygame bootstrap."""
-
     context = new_command.build_gui_context(
         PygameGuiBootstrap(
             new_command.console,
@@ -650,7 +644,6 @@ supported = false
 
 def test_no_bootstrap(new_command):
     """The empty bootstrap is used if no bootstrap is selected."""
-
     context = new_command.build_gui_context(
         EmptyBootstrap(
             new_command.console,
