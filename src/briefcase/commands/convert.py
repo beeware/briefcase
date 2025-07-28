@@ -109,15 +109,11 @@ class ConvertCommand(NewCommand):
             "We need a name that can serve as a machine-readable Python package name for "
             "your application. This name must be PEP508-compliant - that means the name "
             "may only contain letters, numbers, hyphens and underscores; it can't contain "
-            "spaces or punctuation, and it can't start with a hyphen or underscore."
+            "spaces or punctuation, and it can't start with a hyphen, underscore or a number."
         )
 
         default = "hello-world"
-        if (
-            "name" in self.pep621_data
-            and is_valid_app_name(self.pep621_data["name"])
-            and override_value is None
-        ):
+        if "name" in self.pep621_data and override_value is None:
             app_name = canonicalize_name(self.pep621_data["name"])
             self.console.divider(title="App name")
             self.console.prompt()

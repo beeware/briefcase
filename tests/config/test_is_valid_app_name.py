@@ -9,9 +9,11 @@ from briefcase.config import is_valid_app_name
         "helloworld",
         "helloWorld",
         "hello42world",
-        "42helloworld",
         "hello_world",
         "hello-world",
+        "helloworld42",
+        "a",  # single letter
+        "abc123",  # alphanumeric
     ],
 )
 def test_is_valid_app_name(name):
@@ -22,10 +24,12 @@ def test_is_valid_app_name(name):
 @pytest.mark.parametrize(
     "name",
     [
+        # Invalid characters
         "hello world",
         "helloworld!",
         "_helloworld",
         "-helloworld",
+        # python reserved words
         "switch",
         "pass",
         "false",
@@ -34,12 +38,34 @@ def test_is_valid_app_name(name):
         "main",
         "socket",
         "test",
+        "None",
+        "none",
+        # Additional invalid formats
+        "my$app",  # dollar sign
+        "app@domain",  # at symbol
+        "app.name",  # period
+        "helloworld_",  # ends with underscore
+        "helloworld-",  # ends with hyphen
+        "2app",  # starts with number
+        "42app",  # starts with number
+        "_",  # single underscore
+        "-",  # single hyphen
+        "1",  # single digit
+        "123",  # all digits
         # ı, İ and K (i.e. 0x212a) are valid ASCII when made lowercase and as such are
         # accepted by the official PEP 508 regex... but they are rejected here to ensure
         # compliance with the regex that is used in practice.
         "helloworld_ı",
         "İstanbul",
         "Kelvin",
+        # Case variations of reserved words
+        "Switch",
+        "SWITCH",
+        "FALSE",
+        "Pass",
+        "PASS",
+        "Test",
+        "TEST",
     ],
 )
 def test_is_invalid_app_name(name):
