@@ -8,6 +8,11 @@ from typing import Any
 from zipfile import ZipFile
 
 from briefcase.console import Console
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -27,10 +32,6 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    BriefcaseConfigError,
-)
 
 
 class StaticWebMixin:
@@ -467,6 +468,9 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         else:
             try:
                 self.console.info("No virtual environment was found.")
+                self.console.info("Creating virtual environment....")
+
+                # Create the virtual environment
                 venv_path.parent.mkdir(parents=True, exist_ok=True)
                 subprocess.run(
                     [sys.executable, "-m", "venv", str(venv_path)], check=True
@@ -478,6 +482,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
                 raise BriefcaseCommandError(
                     "Failed to create virtual environment for web development."
                 ) from e
+
+            raise UnsupportedCommandError(
+                platform="",
+                output_format="Web",
+                command="Dev",
+            )
 
         # implement logic to run the web server in development mode
 

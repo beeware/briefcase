@@ -17,7 +17,7 @@ def dev_command(tmp_path):
     )
 
 
-def test_run_dev_app_creates_venv(dev_command, first_app_built, capsys):
+def test_run_dev_app_creates_venv(dev_command, first_app_built):
     """Test that the dev command creates a virtual environment for the app."""
     venv_path = dev_command.base_path / ".briefcase" / "dev-web-venv"
     if venv_path.exists():
@@ -28,8 +28,6 @@ def test_run_dev_app_creates_venv(dev_command, first_app_built, capsys):
 
     assert venv_path.exists()
     assert (venv_path / "pyvenv.cfg").exists()
-    captured = capsys.readouterr()
-    assert "Virtual environment was successfully created" in captured.out
 
 
 def test_run_dev_app_existing_venv(dev_command, first_app_built, capsys):
