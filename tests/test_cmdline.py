@@ -227,7 +227,7 @@ def test_dev_command(
 
     assert isinstance(cmd, DevCommand)
     assert cmd.platform == "macOS"
-    assert cmd.output_format is None
+    assert cmd.output_format == "app"
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == {

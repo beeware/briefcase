@@ -5,6 +5,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -96,6 +97,10 @@ class macOSXcodeRunCommand(macOSRunMixin, macOSXcodeMixin, RunCommand):
     description = "Run a macOS app."
 
 
+class macOSXcodeDevCommand(macOSXcodeMixin, DevCommand):
+    description = "Run a macOS app in development mode."
+
+
 class macOSXcodePackageCommand(macOSPackageMixin, macOSXcodeMixin, PackageCommand):
     description = "Package a macOS app for distribution."
 
@@ -112,3 +117,4 @@ build = macOSXcodeBuildCommand
 run = macOSXcodeRunCommand
 package = macOSXcodePackageCommand
 publish = macOSXcodePublishCommand
+dev = macOSXcodeDevCommand

@@ -7,6 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.visualstudio import VisualStudio
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
+    WindowsDevCommand,
     WindowsMixin,
     WindowsPackageCommand,
     WindowsRunCommand,
@@ -76,6 +77,10 @@ class WindowsVisualStudioRunCommand(WindowsVisualStudioMixin, WindowsRunCommand)
     description = "Run a Visual Studio project."
 
 
+class WindowsVisualStudioDevCommand(WindowsVisualStudioMixin, WindowsDevCommand):
+    description = "Run a Visual Studio project in development mode."
+
+
 class WindowsVisualStudioPackageCommand(
     WindowsVisualStudioMixin,
     WindowsPackageCommand,
@@ -95,3 +100,4 @@ build = WindowsVisualStudioBuildCommand
 run = WindowsVisualStudioRunCommand
 package = WindowsVisualStudioPackageCommand
 publish = WindowsVisualStudioPublishCommand
+dev = WindowsVisualStudioDevCommand
