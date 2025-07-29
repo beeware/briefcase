@@ -457,7 +457,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         """Web-specific dev mode (WIP)."""
-        venv_path = self.base_path / ".briefcase" / "dev-web-venv"
+        venv_path = self.base_path / ".briefcase" / f"dev-web-venv-{app.app_name}"
         pyvenv_cfg = venv_path / "pyvenv.cfg"
 
         if pyvenv_cfg.exists():
