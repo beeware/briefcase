@@ -56,3 +56,13 @@ def test_run_dev_app_existing_venv(dev_command, first_app_built, capsys):
 
     captured = capsys.readouterr()
     assert "Virtual environment for web development already exists." in captured.out
+    
+    
+def test_run_dev_app_unsupported(dev_command, first_app_built):
+    with pytest.raises(
+        UnsupportedCommandError,
+        match=re.escape(
+            "The Dev command for the  Web format has not been implemented (yet!)."
+        ),
+    ):
+        dev_command.run_dev_app(first_app_built, env={})

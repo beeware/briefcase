@@ -488,8 +488,13 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
                 output_format="Web",
                 command="Dev",
             )
+        raise UnsupportedCommandError(
+            platform="",
+            output_format="Web",
+            command="Dev",
+        )
 
-        # implement logic to run the web server in development mode
+    # implement logic to run the web server in development mode
 
 
 # Declare the briefcase command bindings
