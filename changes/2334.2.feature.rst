@@ -1,0 +1,1 @@
+Briefcase dev command now manages a separate venv for each app
