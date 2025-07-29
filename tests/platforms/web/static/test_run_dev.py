@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 import sys
@@ -5,6 +6,7 @@ import sys
 import pytest
 
 from briefcase.console import Console
+from briefcase.exceptions import UnsupportedCommandError
 from briefcase.platforms.web.static import StaticWebDevCommand
 
 
@@ -24,7 +26,13 @@ def test_run_dev_app_creates_venv(dev_command, first_app_built):
         shutil.rmtree(venv_path)
     assert not venv_path.exists()
 
-    dev_command.run_dev_app(first_app_built, env={})
+    with pytest.raises(
+        UnsupportedCommandError,
+        match=re.escape(
+            "The Dev command for the Web format has not been implemented (yet!)."
+        ),
+    ):
+        dev_command.run_dev_app(first_app_built, env={})
 
     assert venv_path.exists()
     assert (venv_path / "pyvenv.cfg").exists()
@@ -38,7 +46,13 @@ def test_run_dev_app_existing_venv(dev_command, first_app_built, capsys):
     subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
     assert (venv_path / "pyvenv.cfg").exists()
 
-    dev_command.run_dev_app(first_app_built, env={})
+    with pytest.raises(
+        UnsupportedCommandError,
+        match=re.escape(
+            "The Dev command for the Web format has not been implemented (yet!)."
+        ),
+    ):
+        dev_command.run_dev_app(first_app_built, env={})
 
     captured = capsys.readouterr()
     assert "Virtual environment for web development already exists." in captured.out
