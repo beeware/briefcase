@@ -7,11 +7,23 @@ Run the application in developer mode.
 Usage
 =====
 
-To run the app, run:
+To run your application on the current platform's default output format:
 
 .. code-block:: console
 
     $ briefcase dev
+
+To run your application for a different platform:
+
+.. code-block:: console
+
+    $ briefcase dev <platform>
+
+To run your application using a specific output format:
+
+.. code-block:: console
+
+    $ briefcase dev <platform> <output format>
 
 The first time the application runs in developer mode, any requirements listed in a
 :attr:`requires` configuration item in ``pyproject.toml`` will be installed into the
