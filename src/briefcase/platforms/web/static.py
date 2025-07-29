@@ -478,16 +478,11 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
                 self.console.info(
                     "Virtual environment was successfully created for web development."
                 )
-            except Exception as e:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     "Failed to create virtual environment for web development."
                 ) from e
 
-            raise UnsupportedCommandError(
-                platform="",
-                output_format="Web",
-                command="Dev",
-            )
         raise UnsupportedCommandError(
             platform="",
             output_format="Web",
