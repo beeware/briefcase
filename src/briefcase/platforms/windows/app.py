@@ -4,7 +4,6 @@ from pathlib import Path
 
 from briefcase.commands import (
     BuildCommand,
-    DevCommand,
     OpenCommand,
     PublishCommand,
     UpdateCommand,
@@ -160,9 +159,6 @@ class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
 
 class WindowsAppDevCommand(WindowsAppMixin, WindowsDevCommand):
     description = "Run a Windows app in development mode."
-
-    def __call__(self, *args, **kwargs):
-        return DevCommand.__call__(self, *args, **kwargs)
 
 
 class WindowsAppPackageCommand(WindowsAppMixin, WindowsPackageCommand):

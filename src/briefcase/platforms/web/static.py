@@ -456,13 +456,13 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
     description = "Run a static web project in development mode. (Work in progress)"
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
-            raise UnsupportedCommandError(
-                platform="",
-                output_format="Web",
-                command="Dev",
-            )
+        raise UnsupportedCommandError(
+            platform="",
+            output_format="Web",
+            command="Dev",
+        )
 
-        # implement logic to run the web server in development mode
+    # implement logic to run the web server in development mode
 
 
 # Declare the briefcase command bindings
