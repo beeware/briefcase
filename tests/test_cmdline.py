@@ -206,16 +206,19 @@ def dev_run_parameters(command):
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_options, expected_overrides",
-    dev_run_parameters("dev")
-    + [
-        ("dev --no-run", {"run_app": False}, {}),
+    "cmdline, expected_output_format, expected_options, expected_overrides",
+    [
+        *[(c, "app", o, ov) for c, o, ov in dev_run_parameters("dev")],
+        ("dev --no-run", "app", {"run_app": False}, {}),
+        ("dev macOS", "app", {}, {}),
+        ("dev macOS Xcode", "Xcode", {}, {}),
     ],
 )
 def test_dev_command(
     monkeypatch,
     console,
     cmdline,
+    expected_output_format,
     expected_options,
     expected_overrides,
 ):
@@ -227,7 +230,7 @@ def test_dev_command(
 
     assert isinstance(cmd, DevCommand)
     assert cmd.platform == "macOS"
-    assert cmd.output_format == "app"
+    assert cmd.output_format == expected_output_format
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == {

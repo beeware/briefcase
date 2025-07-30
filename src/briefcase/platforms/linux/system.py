@@ -893,7 +893,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
                 )
 
 
-class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
+class LinuxSystemDevCommand(LinuxMixin, DevCommand):
     description = "Run a Linux system app in development mode"
 
 

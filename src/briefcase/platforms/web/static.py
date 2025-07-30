@@ -457,8 +457,8 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         raise UnsupportedCommandError(
-            platform="",
-            output_format="Web",
+            platform="web",
+            output_format="static",
             command="Dev",
         )
 
