@@ -7,7 +7,7 @@ Run the application in developer mode.
 Usage
 =====
 
-To run your application on the current platform's default output format:
+To run your application in development mode on the current platform's default output format:
 
 .. code-block:: console
 

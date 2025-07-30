@@ -894,7 +894,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
 
 
 class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
-    description = "Run a linux system app in development mode"
+    description = "Run a Linux system app in development mode"
 
 
 def debian_multiline_description(description):
