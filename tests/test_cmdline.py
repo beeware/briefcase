@@ -631,3 +631,21 @@ def test_unknown_command_options(monkeypatch, capsys, console):
         "                                     [--no-input] [--log] [-c {s3}]\n"
         "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
     )
+
+
+@pytest.mark.parametrize(
+    "cmdline",
+    [
+        ["dev", "iOS"],
+        ["dev", "Android"],
+    ],
+)
+def test_dev_command_unsupported_platform(cmdline, console):
+    """Unsupported platforms should raise an UnsupportedCommandError."""
+
+    with pytest.raises(UnsupportedCommandError) as e:
+        do_cmdline_parse(cmdline, console)
+
+    msg = str(e.value)
+    assert "dev command for the" in msg
+    assert "not been implemented" in msg
