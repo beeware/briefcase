@@ -10,7 +10,7 @@ class iOSMixin:
         "iOS applications require Xcode, which is only available on macOS."
     )
     # 0.3.20 introduced PEP 730-style dynamic libraries.
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
 
     def verify_tools(self):
         Xcode.verify(self.tools, min_version=(13, 0, 0))

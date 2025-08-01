@@ -631,9 +631,10 @@ class CreateCommand(BaseCommand):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        *,
         progress_message: str = "Installing app requirements...",
         pip_args: list[str] | None = None,
-        pip_kwargs: dict[str, str] | None = None,
+        pip_kwargs: dict[str, dict[str, str | None]] | None = None,
         install_hint: str = "",
     ):
         """Install requirements for the app with pip.
