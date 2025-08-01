@@ -10,6 +10,7 @@ from pathlib import Path
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -892,6 +893,13 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
                 )
 
 
+class LinuxSystemDevCommand(LinuxMixin, DevCommand):
+    description = "Run a Linux system app in development mode"
+    output_format = "system"
+    supported_host_os = {"Linux"}
+    supported_host_os_reason = "Linux system dev mode is only supported on Linux."
+
+
 def debian_multiline_description(description):
     """Generate a Debian multiline description string.
 
@@ -1326,3 +1334,4 @@ build = LinuxSystemBuildCommand
 run = LinuxSystemRunCommand
 package = LinuxSystemPackageCommand
 publish = LinuxSystemPublishCommand
+dev = LinuxSystemDevCommand
