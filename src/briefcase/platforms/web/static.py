@@ -457,39 +457,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         """Web-specific dev mode (WIP)."""
-        venv_path = self.base_path / ".briefcase" / f"dev-web-venv-{app.app_name}"
-        pyvenv_cfg = venv_path / "pyvenv.cfg"
-
-        if pyvenv_cfg.exists():
-            self.console.info("Virtual environment for web development already exists.")
-
-            # implement logic to check if -r flag is given
-            # implement logic to carry out the -r flag functionality to refresh or recreate the venv
-        else:
-            try:
-                self.console.info("No virtual environment was found.")
-                self.console.info("Creating virtual environment....")
-
-                # Create the virtual environment
-                venv_path.parent.mkdir(parents=True, exist_ok=True)
-                subprocess.run(
-                    [sys.executable, "-m", "venv", str(venv_path)], check=True
-                )
-                self.console.info(
-                    "Virtual environment was successfully created for web development."
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    "Failed to create virtual environment for web development."
-                ) from e
 
         raise UnsupportedCommandError(
             platform="",
             output_format="Web",
             command="Dev",
         )
-
-    # implement logic to run the web server in development mode
 
 
 # Declare the briefcase command bindings
