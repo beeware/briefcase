@@ -141,10 +141,14 @@ extensions (e.g., ``-cp311-cp311-macosx_11_0_universal2.whl``), then the wheel c
 a binary component.
 
 If the package contains a binary component, that wheel needs to be compiled for iOS.
-PyPI does not currently support uploading iOS-compatible wheels, so you can't rely on
-PyPI to provide those wheels. Briefcase uses a `secondary repository
-<https://anaconda.org/beeware/repo>`__ to store pre-compiled iOS wheels.
+PyPI `recently <https://github.com/pypi/warehouse/pull/17559>`_ gained support for
+uploading iOS-compatible wheels (identified by suffixes like
+``-cp314-cp314-ios_15_4_arm64_iphoneos.whl`` or
+``-cp313-cp313-ios_13_0_x86_64_iphonesimulator.whl``). Most packages do not yet provide
+iOS-compatible wheels, but this is expected to improve over time.
 
+In the mean time, Briefcase uses a `secondary repository
+<https://anaconda.org/beeware/repo>`__ to store some popular pre-compiled iOS wheels.
 This repository is maintained by the BeeWare project, and as a result, it does not have
 binary wheels for *every* package that is available on PyPI, or even every *version* of
 every package that is on PyPI. If you see the message::
@@ -162,10 +166,13 @@ build tools that don't support iOS, such as a compiler that can't target iOS, or
 PEP517 build system that doesn't support cross-compilation, it may not be possible to
 build an iOS wheel.
 
-The BeeWare Project provides the `Mobile Forge
+The recommended way to build iOS-compatible wheels is to use `cibuildwheel
+<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__. Despite the name,
+the tool is not limited to CI environments; it can be run locally on a Mac.
+
+The BeeWare Project also provides the `Mobile Forge
 <https://github.com/beeware/mobile-forge>`__ project to assist with cross-compiling iOS
-binary wheels. This repository contains recipes for building the packages that are
-stored in the `secondary package repository <https://anaconda.org/beeware/repo>`__.
+binary wheels for the `secondary package repository <https://anaconda.org/beeware/repo>`__.
 Contributions of new package recipes are welcome, and can be submitted as pull requests.
 Or, if you have a particular package that you'd like us to support, please visit the
 `issue tracker <https://github.com/beeware/mobile-forge/issues>`__ and provide details
@@ -181,9 +188,10 @@ This is an inherent limitation in the use of source tarballs as a distribution f
 If you need to install a package in an iOS app that is only published as a source
 tarball, you'll need to compile that package into a wheel first. If the package is pure
 Python, you can generate a ``py3-none-any`` wheel using ``pip wheel <package name>``. If
-the project has a binary component, you'll need to use `Mobile Forge
-<https://github.com/beeware/mobile-forge>`__ (or similar tooling) to compile compatible
-wheels.
+the project has a binary component, you'll need to use `cibuildwheel
+<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__, `Mobile Forge
+<https://github.com/beeware/mobile-forge>`__, or other similar tooling to compile
+compatible wheels.
 
 You can then directly add the wheel file to the :attr:`requires` definition for your app, or
 put the wheel in a folder and add:
