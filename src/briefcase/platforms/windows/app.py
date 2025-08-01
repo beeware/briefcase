@@ -4,6 +4,7 @@ from pathlib import Path
 
 from briefcase.commands import (
     BuildCommand,
+    DevCommand,
     OpenCommand,
     PublishCommand,
     UpdateCommand,
@@ -14,7 +15,6 @@ from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
-    WindowsDevCommand,
     WindowsMixin,
     WindowsPackageCommand,
     WindowsRunCommand,
@@ -157,7 +157,7 @@ class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
     description = "Run a Windows app."
 
 
-class WindowsAppDevCommand(WindowsAppMixin, WindowsDevCommand):
+class WindowsAppDevCommand(WindowsAppMixin, DevCommand):
     description = "Run a Windows app in development mode."
 
 

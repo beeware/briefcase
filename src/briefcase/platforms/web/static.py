@@ -459,9 +459,9 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         """Web-specific dev mode (WIP)."""
 
         raise UnsupportedCommandError(
-            platform="",
-            output_format="Web",
-            command="Dev",
+            platform="web",
+            output_format="static",
+            command="dev",
         )
 
 

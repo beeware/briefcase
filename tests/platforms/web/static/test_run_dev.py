@@ -20,7 +20,7 @@ def test_run_dev_app_unsupported(dev_command, first_app_built):
     with pytest.raises(
         UnsupportedCommandError,
         match=re.escape(
-            "The Dev command for the  Web format has not been implemented (yet!)."
+            "The dev command for the web static format has not been implemented (yet!)."
         ),
     ):
         dev_command.run_dev_app(first_app_built, env={})

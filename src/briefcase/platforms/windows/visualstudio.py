@@ -1,13 +1,18 @@
 import subprocess
 from pathlib import Path
 
-from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
+from briefcase.commands import (
+    BuildCommand,
+    DevCommand,
+    OpenCommand,
+    PublishCommand,
+    UpdateCommand,
+)
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.visualstudio import VisualStudio
 from briefcase.platforms.windows import (
     WindowsCreateCommand,
-    WindowsDevCommand,
     WindowsMixin,
     WindowsPackageCommand,
     WindowsRunCommand,
@@ -77,7 +82,7 @@ class WindowsVisualStudioRunCommand(WindowsVisualStudioMixin, WindowsRunCommand)
     description = "Run a Visual Studio project."
 
 
-class WindowsVisualStudioDevCommand(WindowsVisualStudioMixin, WindowsDevCommand):
+class WindowsVisualStudioDevCommand(WindowsVisualStudioMixin, DevCommand):
     description = "Run a Visual Studio project in development mode."
 
 
