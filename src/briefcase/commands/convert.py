@@ -27,7 +27,7 @@ class ConvertCommand(NewCommand):
     cmd_line = "briefcase convert"
     command = "convert"
     platform = "all"
-    output_format = None
+    output_format = ""
     description = "Set up an existing project for Briefcase."
 
     @cached_property

@@ -121,7 +121,7 @@ def test_new_command(console, cmdline, expected_options, expected_overrides):
 
     assert isinstance(cmd, NewCommand)
     assert cmd.platform == "all"
-    assert cmd.output_format is None
+    assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
@@ -160,7 +160,7 @@ def test_convert_command(console, cmdline, expected_options, expected_overrides)
 
     assert isinstance(cmd, ConvertCommand)
     assert cmd.platform == "all"
-    assert cmd.output_format is None
+    assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
@@ -328,7 +328,7 @@ def test_upgrade_command(
 
     assert isinstance(cmd, UpgradeCommand)
     assert cmd.platform == "macOS"
-    assert cmd.output_format is None
+    assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options

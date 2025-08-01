@@ -76,7 +76,7 @@ class NewCommand(BaseCommand):
     cmd_line = "briefcase new"
     command = "new"
     platform = "all"
-    output_format = None
+    output_format = ""
     description = "Create a new Briefcase project."
 
     def bundle_path(self, app):

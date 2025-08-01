@@ -80,7 +80,7 @@ class macOSMixin:
     supported_host_os = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
 
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
@@ -182,6 +182,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
         # Determine the min macOS version from the VERSIONS file in the support package.
         versions = dict(
