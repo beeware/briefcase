@@ -110,7 +110,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         else:
             self.console.info("No application requirements.")
 
-    def create_venv(self, app: AppConfig):
+    def create_environment(self, app: AppConfig, **options):
+        # This path is defined for a venv style environment (currently the default environment manager used)
         venv_path = self.base_path / ".briefcase" / f"dev-web-venv-{app.app_name}"
         pyvenv_cfg = venv_path / "pyvenv.cfg"
 
@@ -254,7 +255,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
-        self.create_venv(app)
+        self.create_environment(app)
 
         # Look for the existence of a dist-info file.
         # If one exists, assume that the requirements have already been
