@@ -459,7 +459,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         raise UnsupportedCommandError(
             platform="web",
             output_format="static",
-            command="Dev",
+            command="dev",
         )
 
     # implement logic to run the web server in development mode
