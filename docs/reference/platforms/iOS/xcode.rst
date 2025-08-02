@@ -193,9 +193,8 @@ If you need to install a package in an iOS app that is only published as a sourc
 tarball, you'll need to compile that package into a wheel first. If the package is pure
 Python, you can generate a ``py3-none-any`` wheel using ``pip wheel <package name>``. If
 the project has a binary component, you'll need to use `cibuildwheel
-<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__, `Mobile Forge
-<https://github.com/beeware/mobile-forge>`__, or other similar tooling to compile
-compatible wheels.
+<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__ or other similar tooling to
+compile compatible wheels.
 
 You can then directly add the wheel file to the :attr:`requires` definition for your app, or
 put the wheel in a folder and add:
