@@ -141,17 +141,16 @@ extensions (e.g., ``-cp311-cp311-macosx_11_0_universal2.whl``), then the wheel c
 a binary component.
 
 If the package contains a binary component, that wheel needs to be compiled for iOS.
-PyPI `recently <https://github.com/pypi/warehouse/pull/17559>`_ gained support for
-uploading iOS-compatible wheels (identified by suffixes like
+PyPI allows projects to upload iOS-compatible wheels (identified by suffixes like
 ``-cp314-cp314-ios_15_4_arm64_iphoneos.whl`` or
-``-cp313-cp313-ios_13_0_x86_64_iphonesimulator.whl``). Most packages do not yet provide
-iOS-compatible wheels, but this is expected to improve over time.
+``-cp313-cp313-ios_13_0_x86_64_iphonesimulator.whl``). However, at this time, most
+projects do not provide iOS-compatible wheels.
 
-In the mean time, Briefcase uses a `secondary repository
-<https://anaconda.org/beeware/repo>`__ to store some popular pre-compiled iOS wheels.
-This repository is maintained by the BeeWare project, and as a result, it does not have
-binary wheels for *every* package that is available on PyPI, or even every *version* of
-every package that is on PyPI. If you see the message::
+This is expected to improve over time. In the mean time, Briefcase uses a `secondary
+repository <https://anaconda.org/beeware/repo>`__ to store some popular pre-compiled iOS
+wheels. This repository is maintained by the BeeWare project, and as a result, it does
+not have binary wheels for *every* package that is available on PyPI, or even every
+*version* of every package that is on PyPI. If you see the message::
 
     ERROR: Could not find a version that satisfies the requirement <package name> (from versions: none)
     ERROR: No matching distribution found for <package name>
@@ -167,16 +166,21 @@ PEP517 build system that doesn't support cross-compilation, it may not be possib
 build an iOS wheel.
 
 The recommended way to build iOS-compatible wheels is to use `cibuildwheel
-<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__. Despite the name,
-the tool is not limited to CI environments; it can be run locally on a Mac.
+<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__. Despite the name, the tool
+is not limited to CI environments; it can be run locally on macOS machines. Many
+projects already use cibuildwheel to manage publication of binary wheels. For those
+projects, it may be possible to generate iOS wheels by invoking ``cibuildwheel
+--platform=ios``. Some modifications of the cibuildwheel configuration may be necessary
+to provide iOS-specific customizations.
 
 The BeeWare Project also provides the `Mobile Forge
 <https://github.com/beeware/mobile-forge>`__ project to assist with cross-compiling iOS
-binary wheels for the `secondary package repository <https://anaconda.org/beeware/repo>`__.
-Contributions of new package recipes are welcome, and can be submitted as pull requests.
-Or, if you have a particular package that you'd like us to support, please visit the
-`issue tracker <https://github.com/beeware/mobile-forge/issues>`__ and provide details
-about that package.
+binary wheels for the `secondary package repository
+<https://anaconda.org/beeware/repo>`__. This project is mostly of historical
+significance; the BeeWare team is now focused on contributing iOS support upstream,
+rather than maintaining independent packaging efforts. If you would like a project to
+officially support iOS, you should open a feature request with that project requesting
+iOS support, and consider providing a PR to contribute that support.
 
 Requirements cannot be provided as source tarballs
 --------------------------------------------------
