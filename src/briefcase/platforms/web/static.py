@@ -463,6 +463,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             command="dev",
         )
 
+
 # Declare the briefcase command bindings
 create = StaticWebCreateCommand
 update = StaticWebUpdateCommand
