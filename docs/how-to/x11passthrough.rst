@@ -191,7 +191,7 @@ on the host machine for the display.
 TCP Proxy
 ~~~~~~~~~
 
-The `socat <https://repo.or.cz/socat.git>`__ tool is a widely available program
+The `socat <http://www.dest-unreach.org/socat/>`__ tool is a widely available program
 to relay bi-directional data transfer between independent data channels. It
 allows running a process on the host to listen on a network port and send any
 received data to a socket connected to an X display on the other side.

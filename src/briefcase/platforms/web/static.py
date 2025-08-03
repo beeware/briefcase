@@ -457,13 +457,11 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
         """Web-specific dev mode (WIP)."""
-
         raise UnsupportedCommandError(
             platform="web",
             output_format="static",
             command="dev",
         )
-
 
 # Declare the briefcase command bindings
 create = StaticWebCreateCommand
