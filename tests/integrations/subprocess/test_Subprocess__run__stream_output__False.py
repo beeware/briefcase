@@ -13,7 +13,6 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 @pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
 def test_call(mock_sub, capsys, platform, sub_kw):
     """A simple call will be invoked."""
-
     mock_sub.tools.sys.platform = platform
     mock_sub.run(["hello", "world"], stream_output=False)
 
@@ -23,7 +22,6 @@ def test_call(mock_sub, capsys, platform, sub_kw):
 
 def test_call_with_arg(mock_sub, capsys, sub_kw):
     """Any extra keyword arguments are passed through as-is."""
-
     mock_sub.run(["hello", "world"], extra_kw="extra", stream_output=False)
 
     mock_sub._subprocess.run.assert_called_with(
@@ -36,7 +34,6 @@ def test_call_with_arg(mock_sub, capsys, sub_kw):
 
 def test_call_with_path_arg(mock_sub, capsys, tmp_path, sub_kw):
     """Path-based arguments are converted to strings and passed in as-is."""
-
     mock_sub.run(
         ["hello", tmp_path / "location"],
         cwd=tmp_path / "cwd",
@@ -78,7 +75,6 @@ def test_call_with_start_new_session(
     sub_kw,
 ):
     """start_new_session is passed thru on Linux and macOS but converted for Windows."""
-
     mock_sub.tools.host_os = platform
     mock_sub.run(
         ["hello", "world"],
@@ -116,7 +112,6 @@ def test_call_windows_with_start_new_session_and_creationflags(
 ):
     """Creationflags used to simulate start_new_session=True should be merged with any
     existing flags."""
-
     mock_sub.tools.host_os = "Windows"
 
     # use commented test below when merging creationflags is allowed
@@ -233,7 +228,6 @@ def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
 
 def test_call_with_filter_func(mock_sub, capsys, sub_kw):
     """Providing a filter function when not streaming raises an exception."""
-
     with pytest.raises(
         ValueError,
         match=r"Cannot apply a filter to non-streamed output",

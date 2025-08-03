@@ -12,17 +12,12 @@ def test_device(tmp_path):
     # * a key whose value explicitly contains an equals sign.
     with config_file.open("w", encoding="utf-8") as f:
         f.write(
-            """
-avd.ini.encoding=UTF-8
-hw.device.manufacturer=Google
-hw.device.name=pixel
-weird.key=good=bad
+            """avd.ini.encoding=UTF-8 hw.device.manufacturer=Google hw.device.name=pixel
+            weird.key=good=bad.
 
-PlayStore.enabled=no
-avd.name=beePhone
-disk.cachePartition=yes
-disk.cachePartition.size=42M
-"""
+            PlayStore.enabled=no avd.name=beePhone disk.cachePartition=yes
+            disk.cachePartition.size=42M
+            """
         )
 
     return config_file
@@ -41,19 +36,12 @@ def test_update_existing(android_sdk, test_device):
 
     with test_device.open(encoding="utf-8") as f:
         content = f.read()
-
     # Keys have been updated, order is preserved.
     assert (
         content
-        == """avd.ini.encoding=UTF-8
-hw.device.manufacturer=Google
-hw.device.name=pixel
-weird.key=good=bad
-PlayStore.enabled=no
-avd.name=testDevice
-disk.cachePartition=yes
-disk.cachePartition.size=37MB
-"""
+        == """avd.ini.encoding=UTF-8 hw.device.manufacturer=Google hw.device.name=pixel
+           weird.key=good=bad PlayStore.enabled=no avd.name=testDevice
+           disk.cachePartition=yes disk.cachePartition.size=37MB."""
     )
 
 
@@ -70,20 +58,12 @@ def test_new_content(android_sdk, test_device):
 
     with test_device.open(encoding="utf-8") as f:
         content = f.read()
-
     # New keys are appended to the end of the file
     # Newlines have been dropped
     assert (
         content
-        == """avd.ini.encoding=UTF-8
-hw.device.manufacturer=Google
-hw.device.name=pixel
-weird.key=good=bad
-PlayStore.enabled=no
-avd.name=beePhone
-disk.cachePartition=yes
-disk.cachePartition.size=42M
-skin.name=pixel_3a
-skin.path=skins/pixel_3a
-"""
+        == """avd.ini.encoding=UTF-8 hw.device.manufacturer=Google hw.device.name=pixel
+           weird.key=good=bad PlayStore.enabled=no avd.name=beePhone
+           disk.cachePartition=yes disk.cachePartition.size=42M skin.name=pixel_3a
+           skin.path=skins/pixel_3a."""
     )

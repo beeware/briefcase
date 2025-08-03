@@ -274,22 +274,22 @@ class AndroidSDK(ManagedTool):
             if sdk.exists():
                 if sdk_source_env == "ANDROID_SDK_ROOT":
                     tools.console.warning(
+                        """*************************************************************
+                        ************ ** WARNING: Using Android SDK from ANDROID_SDK_ROOT
+                        ** *************************************************************
+                        ************
+
+                            Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
+                            environment variable.
+
+                            Android has deprecated ANDROID_SDK_ROOT in favor of the
+                            ANDROID_HOME environment variable.
+
+                            Update your environment configuration to set ANDROID_HOME instead of
+                            ANDROID_SDK_ROOT to ensure future compatibility.
+
+                        *************************************************************************
                         """
-*************************************************************************
-** WARNING: Using Android SDK from ANDROID_SDK_ROOT                    **
-*************************************************************************
-
-    Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
-    environment variable.
-
-    Android has deprecated ANDROID_SDK_ROOT in favor of the
-    ANDROID_HOME environment variable.
-
-    Update your environment configuration to set ANDROID_HOME instead of
-    ANDROID_SDK_ROOT to ensure future compatibility.
-
-*************************************************************************
-"""
                     )
             elif sdk.cmdline_tools_path.parent.exists():
                 # a cmdline-tools directory exists but the required version isn't installed.
@@ -594,12 +594,9 @@ its output for errors.
         license_path = self.root_path / "licenses/android-sdk-license"
         if license_path.exists():
             return
-
         self.tools.console.info(
-            """
-The Android tools provided by Google have license terms that you must accept
-before you may use those tools.
-"""
+            """The Android tools provided by Google have license terms that you must
+            accept before you may use those tools."""
         )
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
@@ -622,11 +619,11 @@ its output for errors.
 
         if not license_path.exists():
             raise BriefcaseCommandError(
-                """\
-You did not accept the Android SDK licenses. Please re-run the briefcase command
-and accept the Android SDK license when prompted. You may need an Internet
-connection.
-"""
+                r"""\ You did not accept the Android SDK licenses.
+
+                Please re-run the briefcase command and accept the Android SDK license
+                when prompted. You may need an Internet connection.
+                """
             )
 
     def verify_emulator(self):
@@ -1038,10 +1035,10 @@ connection.
                 choice = next(iter(choices))
             else:
                 raise BriefcaseCommandError(
-                    """\
-Input has been disabled; can't select a device to target.
-Use the -d/--device option to explicitly specify the device to use.
-"""
+                    r"""\ Input has been disabled; can't select a device to target.
+
+                    Use the -d/--device option to explicitly specify the device to use.
+                    """
                 ) from e
 
         # Process the user's choice
@@ -1392,10 +1389,11 @@ You can also start the emulator manually by running:
                     prefix=self.name,
                 )
                 self.tools.console.info(
+                    """If the emulator opened after pressing CTRL+C, then leave the
+                    emulator open and run Briefcase again.
+
+                    The running emulator can then be selected from the list.
                     """
-If the emulator opened after pressing CTRL+C, then leave the emulator open and
-run Briefcase again. The running emulator can then be selected from the list.
-"""
                 )
                 self.tools.console.info(general_error_msg)
 
@@ -1452,8 +1450,8 @@ class ADB:
             ) from e
 
     def run(self, *arguments: SubprocessArgT, quiet: int = 0) -> str:
-        """Run a command on a device using Android debug bridge, `adb`. The device name
-        is mandatory to ensure clarity in the case of multiple attached devices.
+        """Run a command on a device using Android debug bridge, `adb`. is mandatory to
+        ensure clarity in the case of multiple attached devices. The device name.
 
         :param arguments: List of strings to pass to `adb` as arguments.
         :param quiet: Should the invocation of this command be silent, and

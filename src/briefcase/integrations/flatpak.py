@@ -42,40 +42,40 @@ class Flatpak(Tool):
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
                 tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of Flatpak                 **
-*************************************************************************
+                    r"""\ ***************************************************************
+                    ********** ** WARNING: Unable to determine the version of Flatpak
+                    ** *****************************************************************
+                    ********
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of those
+                        problems.
 
-    Please report this as a bug at:
+                        Please report this as a bug at:
 
-      https://github.com/beeware/briefcase/issues/new
+                          https://github.com/beeware/briefcase/issues/new
 
-    In your report, please including the output from running:
+                        In your report, please including the output from running:
 
-      flatpak --version
+                          flatpak --version
 
-    from the command prompt.
+                        from the command prompt.
 
-*************************************************************************
-"""
+                    *************************************************************************
+                    """
                 )
 
         except OSError as e:
             raise BriefcaseCommandError(
-                """\
-Briefcase requires the Flatpak toolchain, but it does not appear to be installed.
+                r"""\ Briefcase requires the Flatpak toolchain, but it does not appear to
+                be installed.
 
-Instructions for installing the Flatpak toolchain can be found at:
+                Instructions for installing the Flatpak toolchain can be found at:
 
-    https://flatpak.org/setup/
+                    https://flatpak.org/setup/
 
-You must install both flatpak and flatpak-builder.
-"""
+                You must install both flatpak and flatpak-builder.
+                """
             ) from e
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Unable to invoke flatpak.") from e
@@ -100,41 +100,40 @@ You must install both flatpak and flatpak-builder.
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
                 tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of flatpak-builder         **
-*************************************************************************
+                    r"""\ ***************************************************************
+                    ********** ** WARNING: Unable to determine the version of flatpak-
+                    builder         ** *************************************************
+                    ************************
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of those
+                        problems.
 
-    Please report this as a bug at:
+                        Please report this as a bug at:
 
-      https://github.com/beeware/briefcase/issues/new
+                          https://github.com/beeware/briefcase/issues/new
 
-    In your report, please including the output from running:
+                        In your report, please including the output from running:
 
-      flatpak-builder --version
+                          flatpak-builder --version
 
-    from the command prompt.
+                        from the command prompt.
 
-*************************************************************************
-"""
+                    *************************************************************************
+                    """
                 )
 
         except OSError as e:
             raise BriefcaseCommandError(
-                """\
-Briefcase requires the full Flatpak development toolchain, but flatpak-builder
-does not appear to be installed.
+                r"""\ Briefcase requires the full Flatpak development toolchain, but
+                flatpak-builder does not appear to be installed.
 
-Instructions for installing the Flatpak toolchain can be found at:
+                Instructions for installing the Flatpak toolchain can be found at:
 
-    https://flatpak.org/setup/
+                    https://flatpak.org/setup/
 
-You must install both flatpak and flatpak-builder.
-"""
+                You must install both flatpak and flatpak-builder.
+                """
             ) from e
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError("Unable to invoke flatpak-builder.") from e

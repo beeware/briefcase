@@ -270,7 +270,6 @@ def test_upgrade_mixed_tools(upgrade_command, mock_tool_registry, capsys):
 
 def test_unknown_tool(upgrade_command, mock_tool_registry, capsys):
     """An upgrade attempt for an unknown tool raises an error."""
-
     with pytest.raises(
         UpgradeToolError,
         match="Briefcase does not know how to manage unknown_tool_1, unknown_tool_2.",

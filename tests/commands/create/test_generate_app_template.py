@@ -735,7 +735,6 @@ def test_cookiecutter_undefined_variable_in_template(
 ):
     """If the cookiecutter template has an undefined variable, a breifcase configuration
     error is raised."""
-
     cookiecutter_exception_message = "undefined document type"
     create_command.tools.cookiecutter.side_effect = (
         cookiecutter_exceptions.UndefinedVariableInTemplate(

@@ -18,7 +18,6 @@ def _get_global_config(requires_python):
 
 def test_no_requires_python(base_command, my_app):
     """If requires-python isn't set, no verification is necessary."""
-
     base_command.global_config = _get_global_config(requires_python=None)
     base_command.verify_required_python(my_app)
 
@@ -39,7 +38,6 @@ def test_no_requires_python(base_command, my_app):
 def test_requires_python_met(base_command, my_app, requires_python):
     """Validation passes if requires-python specifies a version compatible with the
     running interpreter."""
-
     base_command.global_config = _get_global_config(
         requires_python.format(current=platform.python_version())
     )
@@ -63,7 +61,6 @@ def test_requires_python_met(base_command, my_app, requires_python):
 def test_requires_python_unmet(base_command, my_app, requires_python):
     """Validation fails if requires-python specifies a version incompatible with the
     running interpreter."""
-
     base_command.global_config = _get_global_config(requires_python)
 
     with pytest.raises(UnsupportedPythonVersion):
@@ -72,7 +69,6 @@ def test_requires_python_unmet(base_command, my_app, requires_python):
 
 def test_requires_python_invalid_specifier(base_command, my_app):
     """Validation fails if requires-python is not a valid specifier."""
-
     base_command.global_config = _get_global_config(requires_python="0")
 
     with pytest.raises(BriefcaseConfigError, match="Invalid requires-python"):

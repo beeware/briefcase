@@ -89,7 +89,6 @@ def build_command(tmp_path, first_app_config):
 
 def test_verify_tools_wrong_platform(build_command):
     """If we're not on Linux, the build fails."""
-
     build_command.tools.host_os = "TestOS"
     build_command.build_app = mock.MagicMock()
     build_command.tools.file.download = mock.MagicMock()
@@ -318,7 +317,6 @@ def test_build_appimage_in_docker(
     monkeypatch,
 ):
     """A Linux app can be packaged as an AppImage in a docker container."""
-
     # Enable docker, and move to a non-Linux OS.
     build_command.tools.host_os = "TestOS"
     build_command.use_docker = True

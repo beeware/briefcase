@@ -179,8 +179,8 @@ class File(Tool):
         )
 
     def download(self, url: str, download_path: Path, role: str | None = None) -> Path:
-        """Download a given URL, caching it. If it has already been downloaded, return
-        the value that has been cached.
+        """Download a given URL, caching it. the value that has been cached. If it has
+        already been downloaded, return.
 
         This is a utility method used to obtain assets used by the installation process.
         The cached filename will be the filename portion of the URL, appended to the

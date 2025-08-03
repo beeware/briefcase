@@ -13,7 +13,6 @@ from briefcase.console import LogLevel
 @pytest.mark.usefixtures("mock_docker_app_context")
 def test_simple_call(mock_tools, my_app, tmp_path, sub_stream_kw, capsys):
     """A simple call will be invoked."""
-
     mock_tools[my_app].app_context.run(["hello", "world"])
 
     mock_tools[my_app].app_context._dockerize_args.assert_called_once_with(
@@ -74,7 +73,6 @@ def test_call_with_extra_kwargs(
 ):
     """Extra keyword arguments are passed through as-is; env modifications are
     converted."""
-
     mock_tools[my_app].app_context.run(
         ["hello", "world"],
         encoding="ISO-42",

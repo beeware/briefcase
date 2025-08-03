@@ -478,7 +478,6 @@ class NewCommand(BaseCommand):
         project_overrides: dict[str, str],
     ) -> dict[str, str]:
         """Build context specific to the GUI toolkit."""
-
         gui_context = {}
 
         # Iterate over the Bootstrap interface to build the context.
