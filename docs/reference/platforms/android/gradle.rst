@@ -406,7 +406,7 @@ build an Android wheel.
 
 The recommended way to build Android-compatible wheels is to use `cibuildwheel
 <https://cibuildwheel.pypa.io/en/stable/platforms/#android>`__. Despite the name, the
-tool is not limited to CI environments; it can be run locally on a macOS and Linux
+tool is not limited to CI environments; it can be run locally on macOS and Linux
 machines. Many projects already use cibuildwheel to manage publication of binary wheels.
 For those projects, it may be possible to generate Android wheels by invoking
 ``cibuildwheel --platform=android``. Some modifications of the cibuildwheel
@@ -429,4 +429,4 @@ file for distribution, the file is *not* usable as-is. It must be signed
 regardless of whether you're distributing your app through the Play Store, or
 via loading the APK directly. For details on how to manually sign your code,
 see the instructions on `signing an Android App Bundle
-<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.```
+<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.
