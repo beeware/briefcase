@@ -106,28 +106,37 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         final project.
 
         :param wheelfile: The path to the wheel file to be processed.
-        :param css_file: A file handle, opened for write/append, to which any extracted
-            CSS content will be appended.
+        :param inserts: The insert collection of html for the app
+        :param static_path: The location where static content should be unpacked
         """
-        package = " ".join(wheelfile.name.split("-")[:2])
+        parts = wheelfile.name.split("-")
+        package_name = parts[0]
+        package_version = parts[1]
+        package_key = f"{package_name} {package_version}"
+
+        if (static_path / package_name).exists():
+            self.tools.shutil.rmtree(static_path / package_name)
+
         with ZipFile(wheelfile) as wheel:
             for filename in wheel.namelist():
                 path = Path(filename)
-                # Any CSS file in a `static` folder is appended
-                if (
-                    len(path.parts) > 1
-                    and path.parts[1] == "static"
-                    and path.suffix == ".css"
-                ):
-                    self.console.info(f"    Found {filename}")
-                    css_file.write(
-                        "\n/*******************************************************\n"
-                    )
-                    css_file.write(f" * {package}::{'/'.join(path.parts[2:])}\n")
-                    css_file.write(
-                        " *******************************************************/\n\n"
-                    )
-                    css_file.write(wheel.read(filename).decode("utf-8"))
+                if len(path.parts) > 1:
+                    if path.parts[1] == "inserts":
+                        source = str(Path(*path.parts[2:]))
+                        content = wheel.read(filename).decode("utf-8")
+                        if ":" in path.name:
+                            target, insert = source.split(":")
+                            self.logger.info(
+                                f"  {source}: Adding {insert} insert for {target}"
+                            )
+                        else:
+                            target = path.suffix[1:].upper()
+                            insert = source
+                            self.logger.info(f"    {source}: Adding {target} insert")
+
+                        insert.setdefault(target, {}).setdefault(insert, {})[
+                            
+                        ]
 
     def _gather_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml file.
