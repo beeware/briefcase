@@ -3,6 +3,7 @@ import subprocess
 import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
@@ -131,6 +132,34 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """
         self.console.info("Building web project...", prefix=app.app_name)
 
+        deploy_path = files("toga_web.deploy")
+        deploy_config_path = deploy_path / "config.toml"
+        deploy_pyscript_path = deploy_path / "pyscript.toml"
+
+        if deploy_config_path.exists():
+            try:
+                with deploy_config_path.open("rb") as f:
+                    deploy_config = tomllib.load(f)
+            except tomllib.TOMLDecodeError as e:
+                raise BriefcaseConfigError(f"Invalid config.toml: {e}") from e
+        else:
+            deploy_config = {}
+
+        if "backend" in deploy_config and deploy_config["backend"] != "pyscript":
+            raise BriefcaseConfigError(
+                "Only 'pyscript' backend is currently supported for web static builds."
+            )
+
+        if deploy_pyscript_path.exists():
+            try:
+                extra_pyscript_toml = deploy_pyscript_path.read_text(encoding="utf-8")
+            except Exception as e:
+                raise BriefcaseConfigError(
+                    f"Unable to read deploy/pyscript.toml: {e}"
+                ) from e
+        else:
+            extra_pyscript_toml = ""
+
         if self.wheel_path(app).exists():
             with self.console.wait_bar("Removing old wheels..."):
                 self.tools.shutil.rmtree(self.wheel_path(app))
@@ -214,6 +243,18 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             except tomllib.TOMLDecodeError as e:
                 raise BriefcaseConfigError(
                     f"Extra pyscript.toml content isn't valid TOML: {e}"
+                ) from e
+            except AttributeError:
+                pass
+
+            # Parse any deploy pyscript.toml content, and merge it into
+            # the overall content
+            try:
+                extra = tomllib.loads(extra_pyscript_toml)
+                config.update(extra)
+            except tomllib.TOMLDecodeError as e:
+                raise BriefcaseConfigError(
+                    f"Deploy pyscript.toml content isn't valid TOML: {e}"
                 ) from e
             except AttributeError:
                 pass
