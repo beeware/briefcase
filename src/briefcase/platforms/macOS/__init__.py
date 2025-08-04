@@ -21,7 +21,7 @@ from briefcase.integrations.subprocess import (
 )
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
-from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_binary
 
 try:
     import dmgbuild
@@ -552,30 +552,6 @@ class macOSRunMixin:
             if app_pid:  # pragma: no-cover-if-is-py310
                 with suppress(ProcessLookupError):
                     self.tools.os.kill(app_pid, SIGTERM)
-
-
-def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
-    """Determine if the file at the given path is a Mach-O binary.
-
-    :param path: The path to check
-    :returns: True if the file at the given location is a Mach-O binary.
-    """
-    # A binary is any file that is executable, or has a suffix from a known list
-    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
-        # File is a binary; read the file magic to determine if it's Mach-O.
-        with path.open("rb") as f:
-            magic = f.read(4)
-            return magic in (
-                b"\xca\xfe\xba\xbe",
-                b"\xcf\xfa\xed\xfe",
-                b"\xce\xfa\xed\xfe",
-                b"\xbe\xba\xfe\xca",
-                b"\xfe\xed\xfa\xcf",
-                b"\xfe\xed\xfa\xce",
-            )
-    else:
-        # Not a binary
-        return False
 
 
 class macOSSigningMixin:
