@@ -194,7 +194,7 @@ class AppPackagesMergeMixin:
         """Ensure that all the dylibs in a given app_packages folder are thin."""
         dylibs = []
         for source_path in app_packages.glob("**/*"):
-            if is_mach_o_binary(source_path):
+            if not source_path.is_dir() and is_mach_o_binary(source_path):
                 dylibs.append(source_path)
 
         # Call lipo on each dylib that was found to ensure it is thin.

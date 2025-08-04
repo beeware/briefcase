@@ -19,9 +19,9 @@ def test_thin_app_packages(dummy_command, tmp_path):
         tag="macOS_11_0_gothic",
         extra_content=[
             ("pkg/other.py", "# other python"),
-            ("pkg/sub1/module1.dylib", "dylib-fat"),
-            ("pkg/sub1/module2.so", "dylib-fat"),
-            ("pkg/sub2/module3.dylib", "dylib-fat"),
+            ("pkg/sub1/module1.dylib", b"\xca\xfe\xba\xbedylib-fat"),
+            ("pkg/sub1/module2.so", b"\xca\xfe\xba\xbedylib-fat"),
+            ("pkg/sub2/module3.dylib", b"\xca\xfe\xba\xbedylib-fat"),
         ],
     )
 
@@ -32,7 +32,11 @@ def test_thin_app_packages(dummy_command, tmp_path):
 
     # Mock the effect of calling lipo -thin
     def thin_dylib(*args, **kwargs):
-        create_file(args[0][args[0].index("-output") + 1], "dylib-thin")
+        create_file(
+            args[0][args[0].index("-output") + 1],
+            b"\xca\xfe\xba\xbedylib-thin",
+            mode="wb",
+        )
 
     dummy_command.tools.subprocess.run.side_effect = thin_dylib
 
@@ -40,9 +44,18 @@ def test_thin_app_packages(dummy_command, tmp_path):
     dummy_command.thin_app_packages(app_packages, arch="gothic")
 
     # All libraries have been thinned
-    assert file_content(app_packages / "pkg/sub1/module1.dylib") == "dylib-thin"
-    assert file_content(app_packages / "pkg/sub1/module2.so") == "dylib-thin"
-    assert file_content(app_packages / "pkg/sub2/module3.dylib") == "dylib-thin"
+    assert (
+        file_content(app_packages / "pkg/sub1/module1.dylib")
+        == b"\xca\xfe\xba\xbedylib-thin"
+    )
+    assert (
+        file_content(app_packages / "pkg/sub1/module2.so")
+        == b"\xca\xfe\xba\xbedylib-thin"
+    )
+    assert (
+        file_content(app_packages / "pkg/sub2/module3.dylib")
+        == b"\xca\xfe\xba\xbedylib-thin"
+    )
 
 
 def test_thin_app_packages_problem(dummy_command, tmp_path):
@@ -57,9 +70,9 @@ def test_thin_app_packages_problem(dummy_command, tmp_path):
         tag="macOS_11_0_gothic",
         extra_content=[
             ("pkg/other.py", "# other python"),
-            ("pkg/sub1/module1.dylib", "dylib-fat"),
-            ("pkg/sub1/module2.so", "dylib-fat"),
-            ("pkg/sub2/module3.dylib", "dylib-fat"),
+            ("pkg/sub1/module1.dylib", b"\xca\xfe\xba\xbedylib-fat"),
+            ("pkg/sub1/module2.so", b"\xca\xfe\xba\xbedylib-fat"),
+            ("pkg/sub2/module3.dylib", b"\xca\xfe\xba\xbedylib-fat"),
         ],
     )
 
