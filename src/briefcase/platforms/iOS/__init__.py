@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from briefcase.integrations.xcode import Xcode
 
 DEFAULT_OUTPUT_FORMAT = "Xcode"
