@@ -101,9 +101,17 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    def _process_wheel(self, wheelfile, css_file):
+    def _process_wheel(self, wheelfile, static_path):
         """Process a wheel, extracting any content that needs to be compiled into the
         final project.
+
+        Extracted content is received in two forms:
+        * inserts - html content to be inserted into existing html files.
+        * static - content to be copied as a whole. Content in a ``static``
+            folder inside the wheel is copied as-is to the static folder,
+            namespaced by the package name of the wheel.
+
+        Any pre-existing static content for the wheel will be deleted.
 
         :param wheelfile: The path to the wheel file to be processed.
         :param inserts: The insert collection of html for the app
@@ -135,8 +143,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             self.logger.info(f"    {source}: Adding {target} insert")
 
                         insert.setdefault(target, {}).setdefault(insert, {})[
-                            
-                        ]
+                            package_key
+                        ] = content
+                    elif path.parts[1] == "static":
+                        content = wheel.read(filename)
+                        outfilename = static_path / package_name / Path(*path.parts[2:])
+                        outfilename.parent.mkdir(parents=True, exist_ok=True)
+                        with outfilename.open("wb") as f:
+                            f.write(content)
 
     def _gather_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml file.
