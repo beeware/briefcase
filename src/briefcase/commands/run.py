@@ -250,7 +250,11 @@ class RunCommand(RunAppMixin, BaseCommand):
 
     @abstractmethod
     def run_app(
-        self, app: AppConfig, *, passthrough: list[str], **options
+        self,
+        app: AppConfig,
+        *,
+        passthrough: list[str],
+        **options,
     ) -> dict | None:
         """Start an application.
 
