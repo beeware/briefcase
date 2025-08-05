@@ -1,1 +1,0 @@
-When an iOS or macOS binary wheel cannot be found, the error message now provides more useful hints regarding the possible cause.

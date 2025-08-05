@@ -37,7 +37,8 @@ def test_no_requires_python(base_command, my_app):
     ),
 )
 def test_requires_python_met(base_command, my_app, requires_python):
-    """Validation passes if requires-python specifies a version compatible with the running interpreter."""
+    """Validation passes if requires-python specifies a version compatible with the
+    running interpreter."""
 
     base_command.global_config = _get_global_config(
         requires_python.format(current=platform.python_version())
@@ -60,7 +61,8 @@ def test_requires_python_met(base_command, my_app, requires_python):
     ],
 )
 def test_requires_python_unmet(base_command, my_app, requires_python):
-    """Validation fails if requires-python specifies a version incompatible with the running interpreter."""
+    """Validation fails if requires-python specifies a version incompatible with the
+    running interpreter."""
 
     base_command.global_config = _get_global_config(requires_python)
 

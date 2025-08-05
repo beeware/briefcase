@@ -19,6 +19,7 @@ class WindowsMixin:
     platform = "windows"
     supported_host_os = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
+    platform_target_version = "0.3.24"
 
     def bundle_package_executable_path(self, app):
         if app.console_app:
@@ -99,12 +100,13 @@ class WindowsCreateCommand(CreateCommand):
             install_scope = "perMachine" if app.system_installer else "perUser"
         except AttributeError:
             # system_installer not defined in config; default to asking the user
-            install_scope = None
+            install_scope = "perUserOrMachine"
 
         return {
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
+            "package_path": str(self.package_path(app)),
             "binary_path": self.package_executable_path(app),
         }
 
@@ -136,8 +138,7 @@ class WindowsRunCommand(RunCommand):
     supports_debugger = True
 
     def _debugger_app_packages_path_mapping(self, app: AppConfig) -> None:
-        """
-        Get the path mappings for the app packages.
+        """Get the path mappings for the app packages.
 
         :param app: The config object for the app
         :returns: The path mappings for the app packages
@@ -373,14 +374,14 @@ class WindowsPackageCommand(PackageCommand):
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)
-            sign_options = dict(
-                identity=identity,
-                file_digest=file_digest,
-                use_local_machine=use_local_machine,
-                cert_store=cert_store,
-                timestamp_url=timestamp_url,
-                timestamp_digest=timestamp_digest,
-            )
+            sign_options = {
+                "identity": identity,
+                "file_digest": file_digest,
+                "use_local_machine": use_local_machine,
+                "cert_store": cert_store,
+                "timestamp_url": timestamp_url,
+                "timestamp_digest": timestamp_digest,
+            }
             self.sign_file(app=app, filepath=self.binary_path(app), **sign_options)
 
         if app.packaging_format == "zip":
@@ -398,85 +399,27 @@ class WindowsPackageCommand(PackageCommand):
 
     def _package_msi(self, app):
         """Build the msi installer."""
-
-        self.console.info("Building MSI...", prefix=app.app_name)
         try:
-            self.console.info("Compiling application manifest...")
-            with self.console.wait_bar("Compiling..."):
+            with self.console.wait_bar("Building MSI..."):
                 self.tools.subprocess.run(
                     [
-                        self.tools.wix.heat_exe,
-                        "dir",
-                        self.package_path(app),
-                        "-nologo",  # Don't display startup text
-                        "-gg",  # Generate GUIDs
-                        "-sfrag",  # Suppress fragment generation for directories
-                        "-sreg",  # Suppress registry harvesting
-                        "-srd",  # Suppress harvesting the root directory
-                        "-scom",  # Suppress harvesting COM components
-                        "-dr",
-                        f"{app.module_name}_ROOTDIR",  # Root directory reference name
-                        "-cg",
-                        f"{app.module_name}_COMPONENTS",  # Root component group name
-                        "-var",
-                        "var.SourceDir",  # variable to use as the source dir
-                        "-out",
-                        f"{app.app_name}-manifest.wxs",
-                    ],
-                    check=True,
-                    cwd=self.bundle_path(app),
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to generate manifest for app {app.app_name}."
-            ) from e
-
-        try:
-            self.console.info("Compiling application installer...")
-            with self.console.wait_bar("Compiling..."):
-                self.tools.subprocess.run(
-                    [
-                        self.tools.wix.candle_exe,
-                        "-nologo",  # Don't display startup text
+                        self.tools.wix.wix_exe,
+                        "build",
                         "-ext",
-                        "WixUtilExtension",
-                        "-ext",
-                        "WixUIExtension",
+                        self.tools.wix.ext_path("UI"),
                         "-arch",
-                        "x64",
-                        f"-dSourceDir={self.package_path(app)}",
+                        "x64",  # Default is x86, regardless of the build machine.
                         f"{app.app_name}.wxs",
-                        f"{app.app_name}-manifest.wxs",
-                    ],
-                    check=True,
-                    cwd=self.bundle_path(app),
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to compile app {app.app_name}.") from e
-
-        try:
-            self.console.info("Linking application installer...")
-            with self.console.wait_bar("Linking..."):
-                self.tools.subprocess.run(
-                    [
-                        self.tools.wix.light_exe,
-                        "-nologo",  # Don't display startup text
-                        "-ext",
-                        "WixUtilExtension",
-                        "-ext",
-                        "WixUIExtension",
                         "-loc",
                         "unicode.wxl",
                         "-o",
                         self.distribution_path(app),
-                        f"{app.app_name}.wixobj",
-                        f"{app.app_name}-manifest.wixobj",
                     ],
                     check=True,
                     cwd=self.bundle_path(app),
                 )
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to link app {app.app_name}.") from e
+            raise BriefcaseCommandError(f"Unable to package app {app.app_name}.") from e
 
     def _package_zip(self, app):
         """Package the app as simple zip file."""

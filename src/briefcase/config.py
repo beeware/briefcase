@@ -247,7 +247,7 @@ def parsed_version(version):
 
 
 def parse_boolean(value: str) -> bool:
-    """Takes a string value and attempts to convert to a boolean value"""
+    """Takes a string value and attempts to convert to a boolean value."""
 
     truth_vals = {"true", "t", "yes", "y", "1", "on"}
     false_vals = {"false", "f", "no", "n", "0", "off"}
@@ -280,15 +280,18 @@ class BaseConfig:
         for key, configs in data.items():
             setattr(self, key, configs)
 
+    def copy(self):
+        return type(self)(**self.__dict__)
+
     def setdefault(self, field_name, default_value):
-        """Return the field_name field or, if it does not exist, create it
-        to hold default_value.
+        """Return the field_name field or, if it does not exist, create it to hold
+        default_value.
 
         Behaves similarly to dict.setdefault().
 
         :param field_name: The name of the desired/new field.
-        :param default_value: The value to assign to self.field_name if it
-            does not already exist.
+        :param default_value: The value to assign to self.field_name if it does not
+            already exist.
         """
         if not hasattr(self, field_name):
             setattr(self, field_name, default_value)

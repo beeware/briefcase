@@ -2,6 +2,17 @@
 Linux
 =====
 
+.. _linux-prerequisites:
+
+Prerequisites
+=============
+
+Briefcase requires installing Python 3.9+. You will also need a method for managing
+virtual environments (such as ``venv``).
+
+Packaging format
+================
+
 Briefcase supports packaging Linux apps as native system packages, as an `AppImage
 <https://appimage.org>`__, and in `Flatpak <https://flatpak.org>`__ format.
 

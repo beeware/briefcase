@@ -34,7 +34,8 @@ def test_on_icloud(dummy_command, first_app_templated, tmp_path):
 
 
 def test_on_icloud_with_cleanup(dummy_command, first_app_templated, tmp_path):
-    """If the path is on iCloud, the metadata is detected, and the bundle can be cleaned up."""
+    """If the path is on iCloud, the metadata is detected, and the bundle can be cleaned
+    up."""
     dummy_command.tools.subprocess.check_output.return_value = (
         "com.apple.fileprovider.fpfs#P: \n"
     )

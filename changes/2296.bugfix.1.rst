@@ -1,1 +1,0 @@
-Briefcase will now default to using the system certificate store when performing HTTPS downloads.

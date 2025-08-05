@@ -5,6 +5,7 @@ from pathlib import Path
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -148,6 +149,10 @@ class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
     supports_debugger = True
 
 
+class macOSAppDevCommand(macOSAppMixin, DevCommand):
+    description = "Run a macOS app in development mode."
+
+
 class macOSAppPackageCommand(macOSPackageMixin, macOSAppMixin, PackageCommand):
     description = "Package a macOS app for distribution."
 
@@ -164,3 +169,4 @@ build = macOSAppBuildCommand
 run = macOSAppRunCommand
 package = macOSAppPackageCommand
 publish = macOSAppPublishCommand
+dev = macOSAppDevCommand

@@ -46,7 +46,7 @@ ToolT = TypeVar("ToolT", bound="Tool")
 ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
 
 # Registry of all defined Tools
-tool_registry: dict[str, type[Tool | ManagedTool]] = dict()
+tool_registry: dict[str, type[Tool | ManagedTool]] = {}
 
 DEFAULT_SYSTEM_ENCODING = "UTF-8"
 

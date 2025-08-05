@@ -919,7 +919,8 @@ def test_package_app_all_flags(package_command, first_app, second_app):
 
 
 def test_package_external_not_supported(package_command, first_app, tmp_path):
-    """If the backend doesn't explicitly support external packaging, an error is raised."""
+    """If the backend doesn't explicitly support external packaging, an error is
+    raised."""
     # Add a single external app
     package_command.apps = {
         "first": first_app,

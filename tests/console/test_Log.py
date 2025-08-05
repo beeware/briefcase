@@ -123,7 +123,7 @@ def test_capture_stacktrace():
     assert console.skip_log is False
 
     try:
-        1 / 0
+        _ = 1 / 0
     except ZeroDivisionError:
         console.capture_stacktrace()
 
@@ -251,7 +251,7 @@ def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
     console = Console()
     console.save_log = True
     try:
-        1 / 0
+        _ = 1 / 0
     except ZeroDivisionError:
         console.capture_stacktrace()
     console.save_log_to_file(command=command)
@@ -273,7 +273,7 @@ def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
     console.save_log = True
     for i in range(1, 5):
         try:
-            1 / 0
+            _ = 1 / 0
         except ZeroDivisionError:
             console.capture_stacktrace(f"Thread {i}")
 

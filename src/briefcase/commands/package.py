@@ -48,8 +48,8 @@ class PackageCommand(BaseCommand):
         :param app: The app being packaged
         :param options: Any additional arguments passed to the package command. This is
             required because backends that need to *resume* packaging (e.g.,
-            notarization on macOS), need to ignore the "clean" behavior and preserve
-            the existing artefact.
+            notarization on macOS), need to ignore the "clean" behavior and preserve the
+            existing artefact.
         """
         if self.distribution_path(app).exists():
             self.distribution_path(app).unlink()
@@ -200,7 +200,7 @@ class PackageCommand(BaseCommand):
             apps_to_package = self.apps
 
         state = None
-        for app_name, app_obj in sorted(apps_to_package.items()):
+        for _, app_obj in sorted(apps_to_package.items()):
             state = self._package_app(
                 app_obj,
                 update=update,

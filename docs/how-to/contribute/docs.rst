@@ -16,9 +16,12 @@ Building Briefcase's documentation
 
 .. Docs are always built on Python 3.12. See also the RTD and tox config.
 
-To build the documentation locally, :ref:`set up a development environment
-<setup-dev-environment>`. However, you **must** have a Python 3.12 interpreter installed
-and available on your path (i.e., ``python3.12`` must start a Python 3.12 interpreter).
+To build Briefcase's documentation, start by ensuring you :ref:`have the prerequisites
+<dev-environment-prereqs>`, and then :ref:`set up a development environment
+<dev-environment-tldr>` (or, for a more detailed explanation of dev environment setup,
+:ref:`start here <setup-dev-environment>`).You **must** have a Python 3.12 interpreter
+installed and available on your path (i.e., ``python3.12`` must start a Python 3.12
+interpreter).
 
 You'll also need to install the Enchant spell checking library.
 
@@ -32,8 +35,8 @@ You'll also need to install the Enchant spell checking library.
 
       (venv) $ brew install enchant
 
-    If you're on an Apple Silicon machine, you'll also need to manually set the location
-    of the Enchant library:
+    If you're on an Apple Silicon machine (M-series), you'll also need to manually set
+    the location of the Enchant library:
 
     .. code-block:: console
 
@@ -130,6 +133,35 @@ This will build the documentation, start a web server to serve the build documen
 and watch the file system for any changes to the documentation source. If a change is
 detected, the documentation will be rebuilt, and any browser viewing the modified page
 will be automatically refreshed.
+
+Live preview mode will only monitor the ``docs`` directory for changes. If you're
+updating the inline documentation associated with Briefcase source code, you'll need to
+use the ``docs-live-src`` target to build docs:
+
+.. tabs::
+
+  .. group-tab:: macOS
+
+    .. code-block:: console
+
+      (venv) $ tox -e docs-live-src
+
+  .. group-tab:: Linux
+
+    .. code-block:: console
+
+      (venv) $ tox -e docs-live-src
+
+  .. group-tab:: Windows
+
+    .. code-block:: doscon
+
+      (venv) C:\...>tox -e docs-live-src
+
+This behaves the same as ``docs-live``, but will also monitor any changes to the
+``src`` folder, reflecting any changes to inline documentation. However, the
+rebuild process takes much longer, so you may not want to use this target unless
+you're actively editing inline documentation.
 
 Documentation linting
 ---------------------

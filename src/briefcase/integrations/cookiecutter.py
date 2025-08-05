@@ -141,7 +141,7 @@ class XMLExtension(Extension):
             return "true" if obj else "false"
 
         def xml_escape(obj):
-            """Filter to escape characters <, >, &, " and '"""
+            """Filter to escape characters <, >, &, " and '."""
             return escape(obj)
 
         def xml_attr(obj):

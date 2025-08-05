@@ -6,6 +6,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -36,7 +37,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     supported_host_os_reason = (
         "Linux AppImages can only be built on Linux, or on macOS using Docker."
     )
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
 
     def appdir_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.AppDir"
@@ -411,6 +412,10 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
             )
 
 
+class LinuxAppImageDevCommand(LinuxAppImageMixin, DevCommand):
+    description = "Run a Linux AppImage app in development mode"
+
+
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
 
@@ -434,3 +439,4 @@ build = LinuxAppImageBuildCommand
 run = LinuxAppImageRunCommand
 package = LinuxAppImagePackageCommand
 publish = LinuxAppImagePublishCommand
+dev = LinuxAppImageDevCommand

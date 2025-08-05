@@ -15,12 +15,12 @@ distribute-*
 .coverage
 .coverage.*
 coverage.xml
-venv*/
-.venv*/
+*venv*
 .vscode/
 .eggs/
 .tox/
 /local
+.ruff_cache/
 
 /pip-wheel-metadata
 # IntelliJ Idea family of suites

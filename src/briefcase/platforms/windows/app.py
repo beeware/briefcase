@@ -2,7 +2,13 @@ import subprocess
 from contextlib import suppress
 from pathlib import Path
 
-from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
+from briefcase.commands import (
+    BuildCommand,
+    DevCommand,
+    OpenCommand,
+    PublishCommand,
+    UpdateCommand,
+)
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
@@ -140,12 +146,21 @@ Recreating the app layout may also help resolve this issue:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to update details on stub app for {app.app_name}."
+                    f"""\
+Unable to update details on stub app for {app.app_name}.
+
+This may be caused by a virus scanner misidentifying the Briefcase build as malicious
+activity. Try disabling your virus checker, and re-run briefcase build.
+"""
                 ) from e
 
 
 class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
     description = "Run a Windows app."
+
+
+class WindowsAppDevCommand(WindowsAppMixin, DevCommand):
+    description = "Run a Windows app in development mode."
 
 
 class WindowsAppPackageCommand(WindowsAppMixin, WindowsPackageCommand):
@@ -164,3 +179,4 @@ build = WindowsAppBuildCommand
 run = WindowsAppRunCommand
 package = WindowsAppPackageCommand
 publish = WindowsAppPublishCommand
+dev = WindowsAppDevCommand

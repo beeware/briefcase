@@ -74,9 +74,9 @@ def test_run_stream_output_false(mock_sub, sub_kw):
 @pytest.mark.parametrize(
     "cmdline, kwargs",
     [
-        ([], dict()),
-        (["Hello", "World"], dict()),
-        (["Hello", "World"], dict(val1="value1", val2="value2")),
+        ([], {}),
+        (["Hello", "World"], {}),
+        (["Hello", "World"], {"val1": "value1", "val2": "value2"}),
     ],
 )
 def test_negative_condition_not_controlled(
@@ -104,9 +104,9 @@ def test_negative_condition_not_controlled(
 @pytest.mark.parametrize(
     "cmdline, kwargs",
     [
-        ([], dict()),
-        (["Hello", "World"], dict()),
-        (["Hello", "World"], dict(val1="value1", val2="value2")),
+        ([], {}),
+        (["Hello", "World"], {}),
+        (["Hello", "World"], {"val1": "value1", "val2": "value2"}),
     ],
 )
 def test_negative_condition_controlled(mock_sub, cmdline, kwargs, sub_check_output_kw):

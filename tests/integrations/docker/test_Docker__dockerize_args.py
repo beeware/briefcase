@@ -12,10 +12,10 @@ def test_dockerize_simple_call(mock_tools):
         image_tag="best-image",
     )
 
-    assert args == dict(
-        args=["docker", "run", "--rm", "best-image", "hello", "world"],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+    assert args == {
+        "args": ["docker", "run", "--rm", "best-image", "hello", "world"],
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -27,10 +27,10 @@ def test_dockerize_interactive(mock_tools):
         interactive=True,
     )
 
-    assert args == dict(
-        args=["docker", "run", "--rm", "-it", "best-image", "hello", "world"],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+    assert args == {
+        "args": ["docker", "run", "--rm", "-it", "best-image", "hello", "world"],
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -45,8 +45,8 @@ def test_dockerize_mounts(mock_tools):
         ],
     )
 
-    assert args == dict(
-        args=[
+    assert args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -58,8 +58,8 @@ def test_dockerize_mounts(mock_tools):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.skipif(
@@ -75,8 +75,8 @@ def test_dockerize_cwd(mock_tools, cwd):
         cwd=cwd,
     )
 
-    assert args == dict(
-        args=[
+    assert args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -86,8 +86,8 @@ def test_dockerize_cwd(mock_tools, cwd):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.skipif(
@@ -108,8 +108,8 @@ def test_dockerize_env(mock_tools):
         },
     )
 
-    assert args == dict(
-        args=[
+    assert args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -127,8 +127,8 @@ def test_dockerize_env(mock_tools):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 @pytest.mark.usefixtures("mock_docker")
@@ -144,8 +144,8 @@ def test_dockerize_add_hosts(mock_tools):
         ],
     )
 
-    assert args == dict(
-        args=[
+    assert args == {
+        "args": [
             "docker",
             "run",
             "--rm",
@@ -159,34 +159,34 @@ def test_dockerize_add_hosts(mock_tools):
             "hello",
             "world",
         ],
-        env={"DOCKER_CLI_HINTS": "false"},
-    )
+        "env": {"DOCKER_CLI_HINTS": "false"},
+    }
 
 
 DOCKERIZE_TEST_PARAMS = [
     (
-        dict(
-            interactive=True,
-            mounts=[
+        {
+            "interactive": True,
+            "mounts": [
                 ("/source/path_one", "/target/path_one"),
                 ("/source/path_two", "/target/path_two"),
             ],
-            cwd="/my/cwd/inside",
-            env={
+            "cwd": "/my/cwd/inside",
+            "env": {
                 "ENVVAR1": "value",
                 "ENVVAR2": "value with space",
                 "ENVVAR3": "/my/str/path",
                 "ENVVAR4": Path("/my/path/path"),
                 "ENVVAR5": PurePosixPath("/my/pure/path/path"),
             },
-            add_hosts=[
+            "add_hosts": [
                 ("host1.local", "1.1.1.1"),
                 ("host2.local", "1.1.1.2"),
                 ("host3.local", "example.com"),
             ],
-        ),
-        dict(
-            args=[
+        },
+        {
+            "args": [
                 "docker",
                 "run",
                 "--rm",
@@ -217,8 +217,8 @@ DOCKERIZE_TEST_PARAMS = [
                 "hello",
                 "world",
             ],
-            env={"DOCKER_CLI_HINTS": "false"},
-        ),
+            "env": {"DOCKER_CLI_HINTS": "false"},
+        },
     )
 ]
 

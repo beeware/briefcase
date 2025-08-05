@@ -62,7 +62,8 @@ def test_boolean_question_default_used(default, expected, prompt):
     ],
 )
 def test_boolean_question_override_used(capsys, override_value, expected_result):
-    """The override is used if provided and valid (parametrized for True/False cases)."""
+    """The override is used if provided and valid (parametrized for True/False
+    cases)."""
     console = DummyConsole()
 
     result = console.boolean_question(
@@ -95,7 +96,7 @@ def test_boolean_question_override_invalid():
 
 
 def test_boolean_question_empty_input_no_default_returns_false():
-    """Reprompts the user when no override or default given"""
+    """Reprompts the user when no override or default given."""
     console = DummyConsole("", "", "n")  # Simulates pressing Enter
 
     result = console.boolean_question(

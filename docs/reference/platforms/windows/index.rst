@@ -29,6 +29,13 @@ The default output format for Windows is a :doc:`./app`.
 Configuration options between the :doc:`./app` and :doc:`./visualstudio` formats are
 identical.
 
+.. _windows-prerequisites:
+
+Prerequisites
+=============
+
+Briefcase requires installing Python 3.9+.
+
 Packaging format
 ================
 
@@ -40,13 +47,7 @@ Briefcase supports two packaging formats for a Windows app:
    package windows -p zip``).
 
 Briefcase uses the `WiX Toolset <https://www.firegiant.com/wixtoolset/>`__ to build an
-MSI installer for a Windows App. WiX, in turn, requires that .NET Framework 3.5 is
-enabled. To ensure .NET Framework 3.5 is enabled:
-
-1. Open the Windows Control Panel
-2. Traverse to Programs -> Programs and Features
-3. Select "Turn Windows features On or Off"
-4. Ensure that ".NET framework 3.5 (includes .NET 2.0 and 3.0)" is selected.
+MSI installer for a Windows app.
 
 Icon format
 ===========

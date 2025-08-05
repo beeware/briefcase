@@ -8,17 +8,17 @@ repos:
       - id: check-docstring-first
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  # Docformatter 1.7.5 isn't compatible with Pre-commit 4.0
-  # - repo: https://github.com/PyCQA/docformatter
-  #   rev: v1.7.5
-  #   hooks:
-  #     - id: docformatter
-  #       args: [--in-place, --black]
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
+    hooks:
+      - id: docformatter
+        args: [--in-place, --black]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.13
+    rev: v0.12.7
     hooks:
       - id: ruff-format
       - id: ruff-check
+        args: [ --fix ]
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:

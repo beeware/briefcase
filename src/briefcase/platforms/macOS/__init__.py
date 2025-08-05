@@ -21,7 +21,7 @@ from briefcase.integrations.subprocess import (
 )
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
-from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_binary
 
 try:
     import dmgbuild
@@ -80,7 +80,7 @@ class macOSMixin:
     supported_host_os = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
 
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
@@ -182,6 +182,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
         # Determine the min macOS version from the VERSIONS file in the support package.
         versions = dict(
@@ -390,8 +391,7 @@ in the macOS configuration section of your pyproject.toml.
 
 class macOSRunMixin:
     def _debugger_app_packages_path_mapping(self, app: AppConfig) -> None:
-        """
-        Get the path mappings for the app packages.
+        """Get the path mappings for the app packages.
 
         :param app: The config object for the app
         :returns: The path mappings for the app packages
@@ -583,30 +583,6 @@ class macOSRunMixin:
             if app_pid:  # pragma: no-cover-if-is-py310
                 with suppress(ProcessLookupError):
                     self.tools.os.kill(app_pid, SIGTERM)
-
-
-def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
-    """Determine if the file at the given path is a Mach-O binary.
-
-    :param path: The path to check
-    :returns: True if the file at the given location is a Mach-O binary.
-    """
-    # A binary is any file that is executable, or has a suffix from a known list
-    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
-        # File is a binary; read the file magic to determine if it's Mach-O.
-        with path.open("rb") as f:
-            magic = f.read(4)
-            return magic in (
-                b"\xca\xfe\xba\xbe",
-                b"\xcf\xfa\xed\xfe",
-                b"\xce\xfa\xed\xfe",
-                b"\xbe\xba\xfe\xca",
-                b"\xfe\xed\xfa\xcf",
-                b"\xfe\xed\xfa\xce",
-            )
-    else:
-        # Not a binary
-        return False
 
 
 class macOSSigningMixin:
@@ -960,8 +936,8 @@ class macOSPackageMixin(macOSSigningMixin):
     def clean_dist_folder(self, app, **options):
         """Clean up any existing artefacts in the dist folder.
 
-        If we are resuming a notarization session verify that the artefact exists,
-        but *do not* delete it.
+        If we are resuming a notarization session verify that the artefact exists, but
+        *do not* delete it.
 
         :param app: The app being packaged.
         :param submission_id: The notarization submission being resumed.
@@ -1023,7 +999,8 @@ class macOSPackageMixin(macOSSigningMixin):
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
     ):
-        """Submit a file for notarization, and wait for that notarization to be completed.
+        """Submit a file for notarization, and wait for that notarization to be
+        completed.
 
         :param app: The app to notarize.
         :param identity: The code signing used to notarize the app.

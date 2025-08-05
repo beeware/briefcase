@@ -8,6 +8,11 @@ from typing import Any
 from zipfile import ZipFile
 
 from briefcase.console import Console
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -19,6 +24,7 @@ import tomli_w
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -26,7 +32,6 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
 
 class StaticWebMixin:
@@ -447,6 +452,19 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
+class StaticWebDevCommand(StaticWebMixin, DevCommand):
+    description = "Run a static web project in development mode. (Work in progress)"
+
+    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
+        raise UnsupportedCommandError(
+            platform="web",
+            output_format="static",
+            command="dev",
+        )
+
+    # implement logic to run the web server in development mode
+
+
 # Declare the briefcase command bindings
 create = StaticWebCreateCommand
 update = StaticWebUpdateCommand
@@ -455,3 +473,4 @@ build = StaticWebBuildCommand
 run = StaticWebRunCommand
 package = StaticWebPackageCommand
 publish = StaticWebPublishCommand
+dev = StaticWebDevCommand

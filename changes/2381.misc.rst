@@ -1,0 +1,1 @@
+Resolve all places where Ruff complains about comprehension issues (i.e. C### rules).

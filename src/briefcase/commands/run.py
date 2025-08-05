@@ -243,8 +243,7 @@ class RunCommand(RunAppMixin, BaseCommand):
             )
 
     def _debugger_app_path_mappings(self, app: AppConfig) -> AppPathMappings:
-        """
-        Get the path mappings for the app code.
+        """Get the path mappings for the app code.
 
         :param app: The config object for the app
         :returns: The path mappings for the app code
@@ -264,8 +263,7 @@ class RunCommand(RunAppMixin, BaseCommand):
     def _debugger_app_packages_path_mapping(
         self, app: AppConfig
     ) -> AppPackagesPathMappings:
-        """
-        Get the path mappings for the app packages.
+        """Get the path mappings for the app packages.
 
         :param app: The config object for the app
         :returns: The path mappings for the app packages
@@ -278,8 +276,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         debugger_host: str,
         debugger_port: int,
     ) -> str:
-        """
-        Create the remote debugger configuration that should be saved as environment variable for this run.
+        """Create the remote debugger configuration that should be saved as environment
+        variable for this run.
 
         :param app: The app to be debugged
         :returns: The remote debugger configuration
@@ -341,6 +339,7 @@ class RunCommand(RunAppMixin, BaseCommand):
     def run_app(
         self,
         app: AppConfig,
+        *,
         debugger_host: str | None,
         debugger_port: int | None,
         passthrough: list[str],

@@ -13,7 +13,9 @@ blobless
 Bugfix
 Bugfixes
 ce
+Chaquopy
 checkmarks
+cibuildwheel
 codebase
 Cookiecutter
 cryptographic
@@ -25,7 +27,6 @@ distributable
 Django
 dmg
 Dockerfile
-dr
 drawable
 embeddable
 executables
@@ -93,7 +94,6 @@ subprocesses
 templated
 Tk
 Tkinter
-tl
 toml
 toolkits
 towncrier
