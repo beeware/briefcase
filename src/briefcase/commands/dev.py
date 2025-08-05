@@ -8,6 +8,7 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.virtual_environment import virtual_environment
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -72,6 +73,12 @@ class DevCommand(RunAppMixin, BaseCommand):
             dest="test_mode",
             action="store_true",
             help="Run the app in test mode",
+        )
+        parser.add_argument(
+            "--no-isolation",
+            dest="no_isolation",
+            action="store_true",
+            help="Run without creating an isolated environment",
         )
 
     def install_dev_requirements(self, app: AppConfig, **options):
@@ -255,21 +262,36 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
-        self.create_environment(app)
+        if self.platform == "web":
+            with virtual_environment(
+                self.tools, self.console, self.base_path, app, **options
+            ) as venv:
+                return self._dev_with_env(
+                    app, venv, run_app, update_requirements, passthrough, **options
+                )
+        else:
+            return self._dev_with_env(
+                app,
+                Path(sys.prefix),
+                run_app,
+                update_requirements,
+                passthrough,
+                **options,
+            )
 
-        # Look for the existence of a dist-info file.
-        # If one exists, assume that the requirements have already been
-        # installed. If a dependency update has been manually requested,
-        # do it regardless.
+    def _dev_with_env(
+        self, app, venv_path, run_app, update_requirements, passthrough, **options
+    ):
         dist_info_path = (
             self.app_module_path(app).parent / f"{app.module_name}.dist-info"
         )
+
         if not run_app:
-            # If we are not running the app, it means we should update requirements.
             update_requirements = True
+
         if update_requirements or not dist_info_path.exists():
             self.console.info("Installing requirements...", prefix=app.app_name)
-            self.install_dev_requirements(app, **options)
+            self.install_dev_requirements(app, venv_path=venv_path, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:
