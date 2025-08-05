@@ -72,7 +72,11 @@ def test_debugger_editable(debugger_name, monkeypatch):
 
         debugger = get_debugger(debugger_name)
         assert (
-            f"{tmp_path}/debugger-support/briefcase-{debugger_name}-debugger-support"
+            str(
+                tmp_path
+                / "debugger-support"
+                / f"briefcase-{debugger_name}-debugger-support"
+            )
             == debugger.debugger_support_pkg
         )
 

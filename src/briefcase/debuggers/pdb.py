@@ -17,7 +17,8 @@ class PdbDebugger(BaseDebugger):
         if briefcase.utils.IS_EDITABLE and briefcase.utils.REPO_ROOT is not None:
             local_path = (
                 briefcase.utils.REPO_ROOT
-                / "debugger-support/briefcase-pdb-debugger-support"
+                / "debugger-support"
+                / "briefcase-pdb-debugger-support"
             )
             if local_path.exists() and local_path.is_dir():
                 return str(local_path)
