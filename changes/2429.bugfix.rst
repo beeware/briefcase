@@ -1,0 +1,1 @@
+Wheels that contain Linux `.so` are now usable on macOS.

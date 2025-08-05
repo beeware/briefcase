@@ -283,7 +283,8 @@ def create_installed_package(
         except ValueError:
             filename, content = entry
             chmod = None
-        create_file(path / filename, content=content, chmod=chmod)
+        mode = "wb" if isinstance(content, bytes) else "w"
+        create_file(path / filename, content=content, mode=mode, chmod=chmod)
 
 
 def create_wheel(
@@ -318,12 +319,16 @@ def create_wheel(
     return wheel_filename
 
 
-def file_content(path: Path) -> str | None:
+def file_content(path: Path) -> str | bytes | None:
     """Return the content of a file, or None if the path is a directory."""
     if path.is_dir():
         return None
-    with path.open(encoding="utf-8") as f:
-        return f.read()
+    try:
+        with path.open(encoding="utf-8") as f:
+            return f.read()
+    except UnicodeDecodeError:
+        with path.open(mode="rb") as f:
+            return f.read()
 
 
 def assert_url_resolvable(url: str):
