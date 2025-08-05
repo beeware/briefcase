@@ -417,7 +417,7 @@ class AppConfig(BaseConfig):
                 f"{self.app_name!r} is not a valid app name.\n\n"
                 "App names must:\n"
                 "- Not be reserved keywords (like 'and', 'for', 'while', 'main', 'test', etc.)\n"
-                "- Be PEP508 compliant (letters, numbers, hyphens, and underscores only)\n"
+                "- Only letters, numbers, hyphens, and underscores only\n"
                 "- Start with a letter (not a number, hyphen, or underscore)\n"
                 "- Not end with a hyphen or underscore\n"
                 "- Be valid Python identifiers when hyphens are replaced with underscores"
