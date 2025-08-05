@@ -42,8 +42,6 @@ def is_valid_app_name(app_name):
     Checks the following:
         - It is not a reserved keyword.
         - It is a valid PEP508 name.
-        - Does not start with a number.
-        - Does not have a period ('.') in the name.
 
     :param app_name: The app name to validate.
     :returns: True if the app name is valid; False otherwise.
