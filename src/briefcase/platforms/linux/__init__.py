@@ -135,6 +135,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
         """Install requirements for the app with pip.
 
