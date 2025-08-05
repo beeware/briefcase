@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -442,3 +443,38 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
             dev_command.env,
         ),
     ]
+
+
+def test_web_platform_dev_with_env_called(monkeypatch, tmp_path, first_app):
+    """Ensure that _dev_with_env is called for web platform with a venv."""
+    log = {}
+
+    class WebDevCommand(DummyDevCommand):
+        platform = "web"
+
+        def _dev_with_env(
+            self, app, env, run_app, update_requirements, passthrough, **options
+        ):
+            log["called"] = True
+            log["venv"] = env
+            return "success"
+
+    cmd = WebDevCommand(base_path=tmp_path)
+    cmd.apps = {"first": first_app}
+
+    # Patch virtual_environment context manager
+    mock_venv_path = tmp_path / ".briefcase" / "dummy" / "venv"
+    monkeypatch.setattr(
+        "briefcase.commands.dev.virtual_environment",
+        lambda *a, **k: mock.MagicMock(
+            __enter__=lambda s: mock_venv_path,
+            __exit__=lambda s, *a: False,
+        ),
+    )
+
+    options, _ = cmd.parse_options([])
+    result = cmd(**options)
+
+    assert result == "success"
+    assert log["called"] is True
+    assert log["venv"] == mock_venv_path
