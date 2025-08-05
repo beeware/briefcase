@@ -75,3 +75,20 @@ def test_debugger_editable(debugger_name, monkeypatch):
             f"{tmp_path}/debugger-support/briefcase-{debugger_name}-debugger-support"
             == debugger.debugger_support_pkg
         )
+
+
+@pytest.mark.parametrize(
+    "debugger_name",
+    ["pdb", "debugpy"],
+)
+def test_debugger_editable_path_not_found(debugger_name, monkeypatch):
+    with TemporaryDirectory() as tmp_path:
+        tmp_path = Path(tmp_path)
+        monkeypatch.setattr("briefcase.utils.IS_EDITABLE", True)
+        monkeypatch.setattr("briefcase.utils.REPO_ROOT", tmp_path)
+
+        debugger = get_debugger(debugger_name)
+        assert (
+            f"briefcase-{debugger_name}-debugger-support=="
+            in debugger.debugger_support_pkg
+        )
