@@ -39,4 +39,4 @@ class BaseDebugger(ABC):
     @property
     @abstractmethod
     def debugger_support_pkg(self) -> str:
-        """Get the name of the debugger support package"""
+        """Get the name of the debugger support package."""

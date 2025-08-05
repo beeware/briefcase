@@ -13,7 +13,7 @@ class DebugpyDebugger(BaseDebugger):
 
     @property
     def debugger_support_pkg(self) -> str:
-        """Get the name of the debugger support package"""
+        """Get the name of the debugger support package."""
         if IS_EDITABLE and REPO_ROOT is not None:
             local_path = (
                 REPO_ROOT / "debugger-support/briefcase-debugpy-debugger-support"

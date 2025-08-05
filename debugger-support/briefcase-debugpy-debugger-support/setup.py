@@ -7,8 +7,7 @@ from setuptools.command.install import install
 # Copied from setuptools:
 # (https://github.com/pypa/setuptools/blob/7c859e017368360ba66c8cc591279d8964c031bc/setup.py#L40C6-L82)
 class install_with_pth(install):
-    """
-    Custom install command to install a .pth file for distutils patching.
+    """Custom install command to install a .pth file for distutils patching.
 
     This hack is necessary because there's no standard way to install behavior
     on startup (and it's debatable if there should be one). This hack (ab)uses
@@ -31,9 +30,7 @@ class install_with_pth(install):
         self._restore_install_lib()
 
     def _restore_install_lib(self):
-        """
-        Undo secondary effect of `extra_path` adding to `install_lib`
-        """
+        """Undo secondary effect of `extra_path` adding to `install_lib`"""
         suffix = os.path.relpath(self.install_lib, self.install_libbase)
 
         if suffix.strip() == self._pth_contents.strip():
