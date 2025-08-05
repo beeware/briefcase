@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+
 import pytest
 
 from briefcase.commands import DevCommand
@@ -80,7 +83,13 @@ def test_no_args_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -127,7 +136,13 @@ def test_with_arg_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -156,7 +171,13 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Run the second app devly
-        ("run_dev", "second", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "second",
+            False,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -193,6 +214,8 @@ def test_update_requirements(dev_command, first_app):
     # Run the run command
     dev_command(**options)
 
+    venv_path = Path(sys.prefix)
+
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -204,9 +227,22 @@ def test_update_requirements(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            {
+                "venv_path": venv_path,
+                "no_isolation": False,
+            },
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -223,6 +259,8 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
+    venv_path = Path(sys.prefix)
+
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -234,9 +272,22 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # The app will be installed
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            {
+                "venv_path": venv_path,
+                "no_isolation": False,
+            },
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -254,6 +305,8 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
+    venv_path = Path(sys.prefix)
+
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -265,9 +318,22 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            {
+                "venv_path": venv_path,
+                "no_isolation": False,
+            },
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -284,7 +350,8 @@ def test_no_run(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
+    venv_path = Path(sys.prefix)
+
     assert dev_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -294,8 +361,15 @@ def test_no_run(dev_command, first_app_uninstalled):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
-        # Only update requirements without running the app
-        ("dev_requirements", "first", {}),
+        # An update was requested
+        (
+            "dev_requirements",
+            "first",
+            {
+                "venv_path": venv_path,
+                "no_isolation": False,
+            },
+        ),
     ]
 
 
@@ -323,7 +397,13 @@ def test_run_test(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Then, it will be started
-        ("run_dev", "first", True, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            True,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]
 
 
@@ -340,6 +420,7 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
+    venv_path = Path(sys.prefix)
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -351,7 +432,13 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Development requirements will be installed
-        ("dev_requirements", "first", {}),
+        ("dev_requirements", "first", {"venv_path": venv_path, "no_isolation": False}),
         # Then, it will be started
-        ("run_dev", "first", True, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            True,
+            {"passthrough": [], "no_isolation": False},
+            dev_command.env,
+        ),
     ]

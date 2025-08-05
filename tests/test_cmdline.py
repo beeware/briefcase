@@ -239,6 +239,7 @@ def test_dev_command(
         "run_app": True,
         "test_mode": False,
         "passthrough": [],
+        "no_isolation": False,
         **expected_options,
     }
     assert overrides == expected_overrides

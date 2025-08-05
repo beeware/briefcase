@@ -78,6 +78,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             "--no-isolation",
             dest="no_isolation",
             action="store_true",
+            default=False,
             help="Run without creating an isolated environment",
         )
 

@@ -4,11 +4,13 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 
 from briefcase.config import AppConfig
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.base import ManagedTool, ToolCache
 
 
-class VirtualEnvironment(AbstractContextManager):
-    def __init__(self, tools, console, base_path: Path, app: AppConfig):
+class VirtualEnvironmentImpl(AbstractContextManager):
+    def __init__(self, tools, console: Console, base_path: Path, app: AppConfig):
         self.tools = tools
         self.console = console
         self.app = app
@@ -27,7 +29,8 @@ class VirtualEnvironment(AbstractContextManager):
             try:
                 self.venv_path.parent.mkdir(parents=True, exist_ok=True)
                 subprocess.run(
-                    [sys.executable, "-m", "venv", str(self.venv_path)], check=True
+                    [sys.executable, "-m", "venv", str(self.venv_path)],
+                    check=True,
                 )
                 self.console.info("Virtual environment created successfully.")
             except subprocess.CalledProcessError as e:
@@ -42,7 +45,7 @@ class VirtualEnvironment(AbstractContextManager):
 
 
 class NoOpEnvironment(AbstractContextManager):
-    def __init__(self, tools, console, base_path: Path, app: AppConfig):
+    def __init__(self, tools, console: Console, base_path: Path, app: AppConfig):
         self.tools = tools
         self.console = console
         self.app = app
@@ -55,8 +58,32 @@ class NoOpEnvironment(AbstractContextManager):
         return False
 
 
-def virtual_environment(tools, console, base_path: Path, app: AppConfig, **options):
+def virtual_environment(
+    tools, console: Console, base_path: Path, app: AppConfig, **options
+):
     if options.get("no_isolation"):
         return NoOpEnvironment(tools, console, base_path, app)
     else:
-        return VirtualEnvironment(tools, console, base_path, app)
+        return VirtualEnvironmentImpl(tools, console, base_path, app)
+
+
+class VirtualEnvironment(ManagedTool):
+    name = "virtual_environment"
+    full_name = "Virtual Environment"
+    supported_host_os = {"Darwin", "Linux", "Windows"}
+
+    def __init__(self, tools: ToolCache):
+        self.tools = tools
+
+    @classmethod
+    def verify_install(cls, tools: ToolCache, app: AppConfig = None, **kwargs):
+        return cls(tools)
+
+    def exists(self) -> bool:
+        return True
+
+    def install(self):
+        pass
+
+    def uninstall(self):
+        pass
