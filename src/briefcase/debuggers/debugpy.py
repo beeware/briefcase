@@ -1,6 +1,6 @@
 import briefcase
+import briefcase.utils
 from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
-from briefcase.utils import IS_EDITABLE, REPO_ROOT
 
 
 class DebugpyDebugger(BaseDebugger):
@@ -14,9 +14,10 @@ class DebugpyDebugger(BaseDebugger):
     @property
     def debugger_support_pkg(self) -> str:
         """Get the name of the debugger support package."""
-        if IS_EDITABLE and REPO_ROOT is not None:
+        if briefcase.utils.IS_EDITABLE and briefcase.utils.REPO_ROOT is not None:
             local_path = (
-                REPO_ROOT / "debugger-support/briefcase-debugpy-debugger-support"
+                briefcase.utils.REPO_ROOT
+                / "debugger-support/briefcase-debugpy-debugger-support"
             )
             if local_path.exists() and local_path.is_dir():
                 return str(local_path)

@@ -390,16 +390,6 @@ in the macOS configuration section of your pyproject.toml.
 
 
 class macOSRunMixin:
-    def _debugger_app_packages_path_mapping(self, app: AppConfig) -> None:
-        """Get the path mappings for the app packages.
-
-        :param app: The config object for the app
-        :returns: The path mappings for the app packages
-        """
-        # No path mapping is required. The paths are automatically found, because
-        # developing an macOS app also requires a macOS host.
-        return None
-
     def run_app(
         self,
         app: AppConfig,

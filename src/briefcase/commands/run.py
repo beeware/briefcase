@@ -268,7 +268,9 @@ class RunCommand(RunAppMixin, BaseCommand):
         :param app: The config object for the app
         :returns: The path mappings for the app packages
         """
-        raise NotImplementedError
+        # When developing an app on your host system for your host system, no path
+        # mapping is required. The paths are automatically found.
+        return None
 
     def debugger_config(
         self,
