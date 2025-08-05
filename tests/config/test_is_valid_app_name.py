@@ -14,6 +14,7 @@ from briefcase.config import is_valid_app_name
         "helloworld42",
         "a",  # single letter
         "abc123",  # alphanumeric
+        "none",  # daft but legal ;-)
     ],
 )
 def test_is_valid_app_name(name):
@@ -39,7 +40,6 @@ def test_is_valid_app_name(name):
         "socket",
         "test",
         "None",
-        "none",
         # Additional invalid formats
         "my$app",  # dollar sign
         "app@domain",  # at symbol

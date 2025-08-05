@@ -263,7 +263,6 @@ PYTHON_RESERVED_WORDS = {
     "nis",
     "nntplib",
     "ntpath",
-    "none",
     "numbers",
     "operator",
     "optparse",

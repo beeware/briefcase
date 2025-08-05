@@ -33,7 +33,11 @@ def is_valid_pep508_name(app_name):
 
 def is_reserved_keyword(app_name):
     """Determine if the name is a reserved keyword."""
-    return keyword.iskeyword(app_name.lower()) or app_name.lower() in RESERVED_WORDS
+    return (
+        keyword.iskeyword(app_name.lower())
+        or app_name.lower() in RESERVED_WORDS
+        or keyword.iskeyword(app_name)
+    )
 
 
 def is_valid_app_name(app_name):
