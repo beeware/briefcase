@@ -37,7 +37,6 @@ if TYPE_CHECKING:
     from briefcase.integrations.linuxdeploy import LinuxDeploy
     from briefcase.integrations.rcedit import RCEdit
     from briefcase.integrations.subprocess import Subprocess
-    from briefcase.integrations.virtual_environment import VirtualEnvironment
     from briefcase.integrations.visualstudio import VisualStudio
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
@@ -162,7 +161,6 @@ class ToolCache(Mapping):
     wix: WiX
     xcode: Xcode
     xcode_cli: XcodeCliTools
-    virtual_environment: VirtualEnvironment
 
     # Python stdlib tools
     platform = platform

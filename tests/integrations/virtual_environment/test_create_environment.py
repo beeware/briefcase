@@ -8,8 +8,7 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import (
     NoOpEnvironment,
-    VirtualEnvironment,
-    VirtualEnvironmentImpl,
+    VenvEnvironment,
     virtual_environment,
 )
 
@@ -43,7 +42,7 @@ def dummy_app():
 
 def test_virtual_environment_creates_venv(tmp_path, dummy_console, dummy_tools):
     app = DummyApp()
-    env = VirtualEnvironmentImpl(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
 
     pyvenv_cfg = tmp_path / ".briefcase" / app.app_name / "venv" / "pyvenv.cfg"
     venv_root = pyvenv_cfg.parent
@@ -73,7 +72,7 @@ def test_virtual_environment_skips_if_exists(tmp_path, dummy_console, dummy_tool
     pyvenv_cfg.parent.mkdir(parents=True, exist_ok=True)
     pyvenv_cfg.touch()
 
-    env = VirtualEnvironmentImpl(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
 
     with mock.patch("subprocess.run") as mock_run:
         result = env.__enter__()
@@ -84,7 +83,7 @@ def test_virtual_environment_skips_if_exists(tmp_path, dummy_console, dummy_tool
 
 def test_virtual_environment_creation_failure(tmp_path, dummy_console, dummy_tools):
     app = DummyApp()
-    env = VirtualEnvironmentImpl(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
 
     with mock.patch(
         "subprocess.run", side_effect=subprocess.CalledProcessError(1, cmd="python")
@@ -97,7 +96,7 @@ def test_virtual_environment_creation_failure(tmp_path, dummy_console, dummy_too
 def test_virtual_environment_exit(tmp_path, dummy_console, dummy_tools):
     """Ensure __exit__() returns False for context manager."""
     app = DummyApp()
-    env = VirtualEnvironmentImpl(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
     assert env.__exit__(None, None, None) is False
 
 
@@ -113,15 +112,6 @@ def test_noop_environment_exit(tmp_path, dummy_console, dummy_tools):
     app = DummyApp()
     env = NoOpEnvironment(dummy_tools, dummy_console, tmp_path, app)
     assert env.__exit__(None, None, None) is False
-
-
-def test_virtual_environment_tool_coverage(dummy_tools):
-    """Covers the VirtualEnvironment Tool methods directly."""
-    tool = VirtualEnvironment.verify_install(dummy_tools)
-    assert isinstance(tool, VirtualEnvironment)
-    assert tool.exists() is True
-    tool.install()
-    tool.uninstall()
 
 
 def test_virtual_environment_factory_no_isolation(
@@ -141,9 +131,6 @@ def test_virtual_environment_factory_isolated(
     tmp_path, dummy_console, dummy_tools, dummy_app
 ):
     env = virtual_environment(
-        tools=dummy_tools,
-        console=dummy_console,
-        base_path=tmp_path,
-        app=dummy_app,
+        tools=dummy_tools, console=dummy_console, base_path=tmp_path, app=dummy_app
     )
-    assert isinstance(env, VirtualEnvironmentImpl)
+    assert isinstance(env, VenvEnvironment)

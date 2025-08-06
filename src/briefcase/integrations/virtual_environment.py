@@ -1,15 +1,13 @@
 import subprocess
 import sys
-from contextlib import AbstractContextManager
 from pathlib import Path
 
 from briefcase.config import AppConfig
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.base import ManagedTool, ToolCache
 
 
-class VirtualEnvironmentImpl(AbstractContextManager):
+class VenvEnvironment:
     def __init__(self, tools, console: Console, base_path: Path, app: AppConfig):
         self.tools = tools
         self.console = console
@@ -44,7 +42,7 @@ class VirtualEnvironmentImpl(AbstractContextManager):
         return False
 
 
-class NoOpEnvironment(AbstractContextManager):
+class NoOpEnvironment:
     def __init__(self, tools, console: Console, base_path: Path, app: AppConfig):
         self.tools = tools
         self.console = console
@@ -64,26 +62,4 @@ def virtual_environment(
     if options.get("no_isolation"):
         return NoOpEnvironment(tools, console, base_path, app)
     else:
-        return VirtualEnvironmentImpl(tools, console, base_path, app)
-
-
-class VirtualEnvironment(ManagedTool):
-    name = "virtual_environment"
-    full_name = "Virtual Environment"
-    supported_host_os = {"Darwin", "Linux", "Windows"}
-
-    def __init__(self, tools: ToolCache):
-        self.tools = tools
-
-    @classmethod
-    def verify_install(cls, tools: ToolCache, app: AppConfig = None, **kwargs):
-        return cls(tools)
-
-    def exists(self) -> bool:
-        return True
-
-    def install(self):
-        pass
-
-    def uninstall(self):
-        pass
+        return VenvEnvironment(tools, console, base_path, app)
