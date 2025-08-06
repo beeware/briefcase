@@ -492,19 +492,15 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             app=app,
             **options,
         ) as venv_path:
-            return self._dev_with_env(
-                app,
-                venv_path,
-                run_app,
-                update_requirements,
-                passthrough,
-                **options,
+            self.console.info(f"Virtual environment created at: {venv_path}")
+
+            # Raise an error as the dev command for static web is not implemented yet.
+            # This is a placeholder
+            raise UnsupportedCommandError(
+                platform="web",
+                output_format="static",
+                command="dev",
             )
-        raise UnsupportedCommandError(
-            platform="web",
-            output_format="static",
-            command="dev",
-        )
 
 
 # Declare the briefcase command bindings

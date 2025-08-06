@@ -1,9 +1,9 @@
-import re
+import subprocess
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.exceptions import UnsupportedCommandError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedCommandError
 from briefcase.platforms.web.static import StaticWebDevCommand
 
 
@@ -16,11 +16,65 @@ def dev_command(tmp_path):
     )
 
 
-def test_run_dev_app_unsupported(dev_command, first_app_built):
-    with pytest.raises(
-        UnsupportedCommandError,
-        match=re.escape(
-            "The dev command for the web static format has not been implemented (yet!)."
-        ),
-    ):
-        dev_command.run_dev_app(first_app_built, env={})
+def test_web_dev_creates_venv_and_raises(
+    monkeypatch, tmp_path, dev_command, first_app_built
+):
+    """StaticWebDevCommand creates a venv, then raises UnsupportedCommandError."""
+    venv_path = (
+        tmp_path / "base_path" / ".briefcase" / first_app_built.app_name / "venv"
+    )
+    run_log = {}
+
+    # Fake subprocess.run to simulate venv creation
+    def fake_run(cmd, check, **kwargs):
+        run_log["called"] = True
+        venv_path.mkdir(parents=True, exist_ok=True)
+        (venv_path / "pyvenv.cfg").touch()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    dev_command.apps = {"first-app": first_app_built}
+
+    with pytest.raises(UnsupportedCommandError):
+        dev_command(
+            appname="first-app",
+            run_app=True,
+            update_requirements=False,
+            no_isolation=False,
+        )
+
+    assert run_log.get("called") is True
+    assert venv_path.exists()
+    assert (venv_path / "pyvenv.cfg").exists()
+
+
+def test_staticweb_named_app_does_not_exist_direct(dev_command, first_app):
+    class DummyApp:
+        app_name = "second"
+
+    dev_command.apps = {
+        "first": first_app,
+        "second": DummyApp(),
+    }
+
+    with pytest.raises(BriefcaseCommandError) as exc:
+        dev_command(appname="nonexistent")
+
+    assert "doesn't define an application named 'nonexistent'" in str(exc.value)
+
+
+def test_staticweb_multiple_apps_no_app_given_triggers_else(dev_command, first_app):
+    """Raise error if multiple apps exist but no appname is provided."""
+
+    class DummyApp:
+        app_name = "second"
+
+    dev_command.apps = {
+        "first": first_app,
+        "second": DummyApp(),
+    }
+
+    with pytest.raises(BriefcaseCommandError) as exc:
+        dev_command()  # <- No appname provided!
+
+    assert "specifies more than one application" in str(exc.value)
