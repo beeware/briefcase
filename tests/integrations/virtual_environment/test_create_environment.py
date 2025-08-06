@@ -93,6 +93,58 @@ def test_virtual_environment_creation_failure(tmp_path, dummy_console, dummy_too
         assert "Failed to create virtual environment" in str(excinfo.value)
 
 
+def test_virtual_environment_missing_appname_file(tmp_path, dummy_console, dummy_tools):
+    """Ensure venv is created when .briefcase exists but app_name directory is
+    missing."""
+    app = DummyApp()
+
+    # Create .briefcase directory only
+    briefcase_dir = tmp_path / ".briefcase"
+    briefcase_dir.mkdir(parents=True, exist_ok=True)
+
+    # Simulate app_name directory does not exist
+    app_dir = briefcase_dir / app.app_name
+    assert not app_dir.exists()
+
+    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
+    venv_path = app_dir / "venv"
+
+    with mock.patch("subprocess.run") as mock_run:
+        result = env.__enter__()
+        mock_run.assert_called_once_with(
+            [sys.executable, "-m", "venv", str(venv_path)],
+            check=True,
+        )
+
+    assert result == venv_path
+
+
+def test_virtual_environment_missing_venv_file(tmp_path, dummy_console, dummy_tools):
+    """Ensure venv is created when .briefcase/app_name exists but venv directory is
+    missing."""
+    app = DummyApp()
+
+    # Create .briefcase/app_name directory only
+    briefcase_dir = tmp_path / ".briefcase" / app.app_name
+    briefcase_dir.mkdir(parents=True, exist_ok=True)
+
+    # Simulate venv directory does not exist
+    venv_dir = briefcase_dir / "venv"
+    assert not venv_dir.exists()
+
+    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
+    venv_path = venv_dir
+
+    with mock.patch("subprocess.run") as mock_run:
+        result = env.__enter__()
+        mock_run.assert_called_once_with(
+            [sys.executable, "-m", "venv", str(venv_path)],
+            check=True,
+        )
+
+    assert result == venv_path
+
+
 def test_virtual_environment_exit(tmp_path, dummy_console, dummy_tools):
     """Ensure __exit__() returns False for context manager."""
     app = DummyApp()
