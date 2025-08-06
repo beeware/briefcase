@@ -13,6 +13,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
+from briefcase.integrations.virtual_environment import virtual_environment
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -455,8 +456,50 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
     description = "Run a static web project in development mode. (Work in progress)"
 
-    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
-        """Web-specific dev mode (WIP)."""
+    def __call__(
+        self,
+        appname=None,
+        update_requirements=False,
+        run_app=True,
+        test_mode=False,
+        passthrough=None,
+        **options,
+    ):
+        if len(self.apps) == 1:
+            app = list(self.apps.values())[0]
+        elif appname:
+            try:
+                app = self.apps[appname]
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    f"Project doesn't define an application named '{appname}'"
+                ) from e
+
+        else:
+            raise BriefcaseCommandError(
+                "Project specifies more than one application; use --app to specify which one to start."
+            )
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app, test_mode)
+
+        self.verify_app(app)
+
+        with virtual_environment(
+            tools=self.tools,
+            console=self.console,
+            base_path=self.base_path,
+            app=app,
+            **options,
+        ) as venv_path:
+            return self._dev_with_env(
+                app,
+                venv_path,
+                run_app,
+                update_requirements,
+                passthrough,
+                **options,
+            )
         raise UnsupportedCommandError(
             platform="web",
             output_format="static",

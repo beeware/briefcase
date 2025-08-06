@@ -8,7 +8,6 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import virtual_environment
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -263,22 +262,14 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
-        if self.platform == "web":
-            with virtual_environment(
-                self.tools, self.console, self.base_path, app, **options
-            ) as venv:
-                return self._dev_with_env(
-                    app, venv, run_app, update_requirements, passthrough, **options
-                )
-        else:
-            return self._dev_with_env(
-                app,
-                Path(sys.prefix),
-                run_app,
-                update_requirements,
-                passthrough,
-                **options,
-            )
+        return self._dev_with_env(
+            app,
+            Path(sys.prefix),
+            run_app,
+            update_requirements,
+            passthrough,
+            **options,
+        )
 
     def _dev_with_env(
         self, app, venv_path, run_app, update_requirements, passthrough, **options
