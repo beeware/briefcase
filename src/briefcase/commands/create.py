@@ -623,6 +623,10 @@ class CreateCommand(BaseCommand):
                 encoding="UTF-8",
                 **pip_kwargs,
             )
+
+            # move kivy share deps to briefcase default sys.prefix
+            if self.platform.lower() == "window" and "kivy" in pip_args:
+                shutil.move(app_packages_path / "share", app_packages_path.parent)
         except subprocess.CalledProcessError as e:
             raise RequirementsInstallError(install_hint=install_hint) from e
 
