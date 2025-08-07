@@ -1,0 +1,1 @@
+Windows apps can now reference pre-release Python versions as a support revision.
