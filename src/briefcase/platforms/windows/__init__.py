@@ -58,10 +58,9 @@ class WindowsCreateCommand(CreateCommand):
         return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
 
     def support_package_url(self, support_revision):
-        micro = re.match(r"\d+", support_revision).group(0)
         return (
             f"https://www.python.org/ftp/python/"
-            f"{self.python_version_tag}.{micro}/"
+            f"{self.python_version_tag}.{support_revision}/"
             f"{self.support_package_filename(support_revision)}"
         )
 
