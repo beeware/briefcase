@@ -28,3 +28,4 @@ To connect to remote PDB use eg.:
     sys.breakpointhook = remote_pdb.set_trace
 
     print("Debugger client attached.")
+    print("-" * 75)

@@ -85,9 +85,8 @@ def start_debugpy(config_str: str, verbose: bool):
     port = debugger_config["port"]
     path_mappings = _load_path_mappings(debugger_config, verbose)
 
-    # When an app is bundled with briefcase "os.__file__" is not set at runtime
-    # on some platforms (eg. windows). But debugpy accesses it internally, so it
-    # has to be set or an Exception is raised from debugpy.
+    # There is a bug in debugpy that has to be handled until there is a new
+    # debugpy release, see https://github.com/microsoft/debugpy/issues/1943
     if not hasattr(os, "__file__"):
         if verbose:
             print("'os.__file__' not available. Patching it...")
@@ -101,6 +100,7 @@ def start_debugpy(config_str: str, verbose: bool):
         if verbose:
             print("Adding path mappings...")
 
+        # pydevd is dynamically loaded and only available after a debugger has connected
         import pydevd_file_utils
 
         pydevd_file_utils.setup_client_server_paths(path_mappings)
@@ -128,3 +128,4 @@ To connect to debugpy using VSCode add the following configuration to launch.jso
     debugpy.wait_for_client()
 
     print("Debugger attached.")
+    print("-" * 75)

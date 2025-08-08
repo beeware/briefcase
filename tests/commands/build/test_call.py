@@ -1121,7 +1121,7 @@ def test_build_debug(build_command, first_app, second_app):
 
 
 def test_build_debug_unsupported(build_command, first_app, second_app):
-    """If the user requests a build with update and no-update, an error is raised."""
+    """If the user requests a debugger but it is not supported by the build command."""
     # Add two apps
     build_command.apps = {
         "first": first_app,
