@@ -1,1 +1,1 @@
-Windows apps (including Visual Studio projects) can now reference pre-release Python versions as a support revision.
+Windows apps and Visual Studio projects can now reference pre-release Python versions as a support revision.
