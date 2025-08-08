@@ -6,7 +6,7 @@ import plistlib
 import tarfile
 import zipfile
 from email.message import EmailMessage
-from http import HTTPMethod, HTTPStatus
+from http import HTTPStatus
 from pathlib import Path
 
 import httpx
@@ -349,12 +349,12 @@ def assert_url_resolvable(url: str):
             backoff_factor=0.6,
             backoff_jitter=0.3,
             allowed_methods=[
-                HTTPMethod.HEAD,
-                HTTPMethod.GET,
-                HTTPMethod.PUT,
-                HTTPMethod.DELETE,
-                HTTPMethod.OPTIONS,
-                HTTPMethod.TRACE,
+                "HEAD",
+                "GET",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "TRACE",
             ],
             status_forcelist=[
                 HTTPStatus.TOO_MANY_REQUESTS,
