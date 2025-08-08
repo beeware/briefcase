@@ -9,12 +9,12 @@ import sys
 import textwrap
 import time
 import traceback
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from rich.console import Console as RichConsole
 from rich.control import strip_control_codes
@@ -939,7 +939,7 @@ class Console:
         if isinstance(options, dict):
             ordered = list(options.items())
         else:
-            ordered = list(zip(options, options))
+            ordered = list(zip(options, options, strict=True))
 
         if default is not None:
             try:

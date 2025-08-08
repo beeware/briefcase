@@ -12,12 +12,7 @@ from email.message import Message
 from pathlib import Path
 
 import httpx
-
-if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
-    import truststore
-else:  # pragma: no-cover-if-gte-py310
-    # truststore is only available for python 3.10+
-    truststore = None
+import truststore
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -106,13 +101,7 @@ class File(Tool):
         try:
             return self._ssl_context
         except AttributeError:
-            if sys.version_info >= (3, 10):  # pragma: no-cover-if-lt-py310
-                # Set up a TLS trust store based on the system root certificates
-                self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            else:  # pragma: no-cover-if-gte-py310
-                # Truststore requires Python 3.10; on older versions, fall back to the
-                # certifi-based store.
-                self._ssl_context = True
+            self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
             return self._ssl_context
 

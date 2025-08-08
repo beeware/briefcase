@@ -5,7 +5,6 @@ import ssl
 import stat
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Optional
 from unittest import mock
 
 import httpcore
@@ -50,7 +49,7 @@ def _make_httpx_response(
     status_code: int,
     stream: list[bytes],
     method: str = "GET",
-    headers: Optional[dict] = None,
+    headers: dict | None = None,
 ) -> httpx.Response:
     """Create a real ``httpx.Response`` with key methods wrapped by ``mock.Mock`` for
     spying.
