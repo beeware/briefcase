@@ -5,6 +5,8 @@
 /dist
 /build
 automation/build
+debugger-support/briefcase-debugpy-debugger-support/build
+debugger-support/briefcase-pdb-debugger-support/build
 docs/_build/
 distribute-*
 .DS_Store
