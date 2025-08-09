@@ -465,6 +465,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             default=False,
             help="Run without creating an isolated environment",
         )
+        parser.add_argument(
+        "-r",
+        "--update-requirements",
+        action="store_true",
+        help="Update by recreating the isolated environment",
+    )
 
     def _dev_with_env(
         self,
