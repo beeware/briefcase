@@ -110,6 +110,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         else:
             self.console.info("No application requirements.")
 
+
     def run_dev_app(
         self,
         app: AppConfig,
@@ -224,19 +225,28 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
-        # Look for the existence of a dist-info file.
-        # If one exists, assume that the requirements have already been
-        # installed. If a dependency update has been manually requested,
-        # do it regardless.
+        return self._dev_with_env(
+            app,
+            Path(sys.prefix),
+            run_app,
+            update_requirements,
+            passthrough,
+            **options,
+        )
+
+    def _dev_with_env(
+        self, app, venv_path, run_app, update_requirements, passthrough, **options
+    ):
         dist_info_path = (
             self.app_module_path(app).parent / f"{app.module_name}.dist-info"
         )
+
         if not run_app:
-            # If we are not running the app, it means we should update requirements.
             update_requirements = True
+
         if update_requirements or not dist_info_path.exists():
             self.console.info("Installing requirements...", prefix=app.app_name)
-            self.install_dev_requirements(app, **options)
+            self.install_dev_requirements(app, venv_path=venv_path, **options)
             write_dist_info(app, dist_info_path)
 
         if run_app:

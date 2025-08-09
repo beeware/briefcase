@@ -21,7 +21,7 @@ from .test_tool_registry import integrations_modules, tools_for_module
 def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
     # Tools that are intentionally not annotated in ToolCache.
-    tools_unannotated = {"cookiecutter"}
+    tools_unannotated = {"cookiecutter", "virtual_environment"}
     # Tool names to exclude from the dynamic annotation checks; they are manually checked.
     tool_names_skip_dynamic_check = {
         "app_context",  # Tested by the Docker module

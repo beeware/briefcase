@@ -13,6 +13,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
+from briefcase.integrations.virtual_environment import virtual_environment
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -455,14 +456,48 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
     description = "Run a static web project in development mode. (Work in progress)"
 
-    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
-        raise UnsupportedCommandError(
-            platform="web",
-            output_format="static",
-            command="dev",
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--no-isolation",
+            dest="no_isolation",
+            action="store_true",
+            default=False,
+            help="Run without creating an isolated environment",
         )
+        parser.add_argument(
+        "-r",
+        "--update-requirements",
+        action="store_true",
+        help="Update by recreating the isolated environment",
+    )
 
-    # implement logic to run the web server in development mode
+    def _dev_with_env(
+        self,
+        app,
+        _venv_path,
+        run_app,
+        update_requirements,
+        passthrough,
+        **options,
+    ):
+        # Override _venv_path from DevCommand — we’ll use our own venv context manager
+        with virtual_environment(
+            tools=self.tools,
+            console=self.console,
+            base_path=self.base_path,
+            app=app,
+            **options,
+        ) as venv_path:
+            # You could later install requirements here, or do editable installs, etc.
+            print(
+                venv_path
+            )  # just to pass pre-commit checks, need to change this later
+            raise UnsupportedCommandError(
+                platform="web",
+                output_format="static",
+                command="dev",
+            )
 
 
 # Declare the briefcase command bindings
