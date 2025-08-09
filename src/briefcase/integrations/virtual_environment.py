@@ -16,25 +16,18 @@ class VenvEnvironment:
         self.pyvenv_cfg = self.venv_path / "pyvenv.cfg"
 
     def __enter__(self):
-        self.console.info(
-            f"Looking for isolated virtual environment for {self.app.app_name}."
-        )
-
-        if self.pyvenv_cfg.exists():
-            self.console.info("Found existing virtual environment. Skipping creation.")
-        else:
-            self.console.info("No virtual environment found. Creating...")
-            try:
-                self.venv_path.parent.mkdir(parents=True, exist_ok=True)
-                subprocess.run(
-                    [sys.executable, "-m", "venv", str(self.venv_path)],
-                    check=True,
-                )
-                self.console.info("Virtual environment created successfully.")
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Failed to create virtual environment for {self.app.app_name}."
-                ) from e
+        if not self.pyvenv_cfg.exists():
+            with self.console.wait_bar("No virtual environment found. Creating..."):
+                try:
+                    self.venv_path.parent.mkdir(parents=True, exist_ok=True)
+                    subprocess.run(
+                        [sys.executable, "-m", "venv", str(self.venv_path)],
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        f"Failed to create virtual environment for {self.app.app_name}."
+                    ) from e
 
         return self.venv_path
 
@@ -49,7 +42,6 @@ class NoOpEnvironment:
         self.app = app
 
     def __enter__(self):
-        self.console.info(f"Running {self.app.app_name} without isolated environment.")
         return Path(sys.prefix)
 
     def __exit__(self, exc_type, exc_val, exc_tb):

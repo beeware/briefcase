@@ -73,13 +73,6 @@ class DevCommand(RunAppMixin, BaseCommand):
             action="store_true",
             help="Run the app in test mode",
         )
-        parser.add_argument(
-            "--no-isolation",
-            dest="no_isolation",
-            action="store_true",
-            default=False,
-            help="Run without creating an isolated environment",
-        )
 
     def install_dev_requirements(self, app: AppConfig, **options):
         """Install the requirements for the app dev.
