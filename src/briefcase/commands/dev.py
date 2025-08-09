@@ -110,36 +110,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         else:
             self.console.info("No application requirements.")
 
-    def create_environment(self, app: AppConfig, **options):
-        # This path is defined for a venv style environment (currently the default environment manager used)
-        venv_path = self.base_path / ".briefcase" / f"dev-web-venv-{app.app_name}"
-        pyvenv_cfg = venv_path / "pyvenv.cfg"
-
-        self.console.info(
-            f"Looking for isolated virtual environment for {app.app_name}."
-        )
-
-        if pyvenv_cfg.exists():
-            self.console.info(
-                f"Isolated virtual environment for {app.app_name} already exists. Skipping it's creation...."
-            )
-        else:
-            try:
-                self.console.info(
-                    f"No virtual environment was found for {app.app_name}."
-                )
-                self.console.info("Creating virtual environment....")
-
-                # Create the virtual environment
-                venv_path.parent.mkdir(parents=True, exist_ok=True)
-                subprocess.run(
-                    [sys.executable, "-m", "venv", str(venv_path)], check=True
-                )
-                self.console.info("Virtual environment was successfully created.")
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Failed to create virtual environment for {app.app_name}."
-                ) from e
 
     def run_dev_app(
         self,
