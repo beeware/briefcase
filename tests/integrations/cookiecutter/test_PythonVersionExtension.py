@@ -51,3 +51,25 @@ def test_py_libtag(value, expected):
     env.filters = {}
     PythonVersionExtension(env)
     assert env.filters["py_libtag"](value) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        # Single digit minor
+        ("3.8.4", "3.8.4"),
+        ("3.8.4a1", "3.8.4-a1"),
+        ("3.8.4b2", "3.8.4-b2"),
+        ("3.8.4rc3", "3.8.4-rc3"),
+        # Two digit minor
+        ("3.14.4", "3.14.4"),
+        ("3.14.4a1", "3.14.4-a1"),
+        ("3.14.4b2", "3.14.4-b2"),
+        ("3.14.4rc3", "3.14.4-rc3"),
+    ],
+)
+def test_nuget_version(value, expected):
+    env = MagicMock()
+    env.filters = {}
+    PythonVersionExtension(env)
+    assert env.filters["nuget_version"](value) == expected
