@@ -144,8 +144,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     if (
                         len(path.parts) > 1
                         and path.parts[1] == "deploy"
-                        and path.suffix == ".toml"
-                        and path.name == "config"
+                        and path.name == "config.toml"
                     ):
                         self.console.info(f"    Found {filename}")
                         config_counter += 1
