@@ -26,7 +26,6 @@ def mock_tools(mock_tools) -> ToolCache:
 
 def test_non_managed_install(mock_tools, tmp_path, capsys):
     """If the Java install points to a non-managed install, no upgrade is attempted."""
-
     # Make the installation point to somewhere else.
     jdk = JDK(mock_tools, java_home=tmp_path / "other-jdk")
 

@@ -528,7 +528,6 @@ class CreateCommand(BaseCommand):
             additional requirement installer argumentss should be written if the
             template supports it.
         """
-
         with self.console.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
                 # Add timestamp so build systems (such as Gradle) detect a change

@@ -41,8 +41,8 @@ class PublishCommand(BaseCommand):
         )  # pragma: no cover
 
     def _publish_app(self, app: AppConfig, channel: str, **options) -> dict | None:
-        """Internal method to publish a single app. Ensures the app exists, and has been
-        packaged before attempting to issue the actual publish command.
+        """Internal method to publish a single app. packaged before attempting to issue
+        the actual publish command. Ensures the app exists, and has been.
 
         :param app: The application to publish
         :param channel: The publication channel to use

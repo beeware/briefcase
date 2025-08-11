@@ -33,7 +33,6 @@ def android_sdk(android_sdk, mock_tools, tmp_path) -> AndroidSDK:
 
 def test_invalid_emulator(android_sdk):
     """Attempting to start an invalid emulator raises an error."""
-
     with pytest.raises(InvalidDeviceError):
         android_sdk.start_emulator("no-such-avd")
 

@@ -5,7 +5,6 @@ from ...utils import PartialMatchString
 
 def test_question_sequence(new_command):
     """Questions are asked, a context is constructed."""
-
     # Prime answers for all the questions.
     new_command.console.values = [
         "My Application",  # formal name
@@ -42,7 +41,6 @@ def test_question_sequence(new_command):
 
 def test_question_sequence_with_overrides(new_command):
     """Overrides can be used to set the answers for questions."""
-
     # Prime answers for none of the questions.
     new_command.console.values = []
 
@@ -79,7 +77,6 @@ def test_question_sequence_with_overrides(new_command):
 
 def test_question_sequence_with_bad_license_override(new_command):
     """A bad override for license uses user input instead."""
-
     # Prime answers for all the questions.
     new_command.console.values = [
         "4",  # license
@@ -118,7 +115,6 @@ def test_question_sequence_with_bad_license_override(new_command):
 
 def test_question_sequence_with_no_user_input(new_command):
     """If no user input is provided, all user inputs are taken as default."""
-
     new_command.console.input_enabled = False
 
     context = new_command.build_app_context(project_overrides={})

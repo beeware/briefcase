@@ -37,7 +37,6 @@ def test_parse_config(new_command):
 )
 def test_new_app(new_command, cmdline, overrides):
     """A new application can be created."""
-
     # Configure no command line options
     options, _ = new_command.parse_options(cmdline)
 

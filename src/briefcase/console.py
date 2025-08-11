@@ -982,7 +982,6 @@ class Console:
             attempt to parse into bool
         :returns: The user's chosen answer or none if closed without input
         """
-
         self.divider(title=description)
 
         if override_value is not None:

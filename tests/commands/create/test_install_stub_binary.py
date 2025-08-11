@@ -458,7 +458,6 @@ def test_install_custom_stub_binary_with_invalid_url(
     stub_binary_revision_path_index,
 ):
     """Invalid URL for a custom stub binary raises MissingNetworkResourceError."""
-
     # Provide a custom stub binary URL
     url = "https://example.com/custom/stub.zip"
     myapp.stub_binary = url

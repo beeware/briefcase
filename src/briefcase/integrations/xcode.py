@@ -85,16 +85,15 @@ class Xcode(Tool):
             tools.subprocess.check_output(["xcode-select", "-p"])
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                """\
-Could not find an Xcode installation.
+                r"""\ Could not find an Xcode installation.
 
-To select an existing Xcode installation, run:
+                To select an existing Xcode installation, run:
 
-    $ sudo xcode-select --switch path/to/Xcode.app
+                $ sudo xcode-select --switch path/to/Xcode.app
 
-or install Xcode from the macOS App Store. Once you have installed Xcode,
-you can re-run Briefcase.
-"""
+                or install Xcode from the macOS App Store. Once you have installed
+                Xcode, you can re-run Briefcase.
+                """
             ) from e
 
         try:
@@ -132,28 +131,27 @@ you can re-run Briefcase.
                     else:
                         # Version number is acceptable
                         return
-
                 tools.console.warning(
+                    """*****************************************************************
+                    ******** ** WARNING: Unable to determine the version of Xcode that
+                    is installed ** ****************************************************
+                    *********************
+
+                        Briefcase will proceed, assuming everything is OK. If you experience
+                        problems, this is almost certainly the cause of those problems.
+
+                        Please report this as a bug at:
+
+                          https://github.com/beeware/briefcase/issues/new
+
+                        In your report, please including the output from running:
+
+                            $ xcodebuild -version
+
+                        from the command prompt.
+
+                    *************************************************************************
                     """
-*************************************************************************
-** WARNING: Unable to determine the version of Xcode that is installed **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you experience
-    problems, this is almost certainly the cause of those problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-        $ xcodebuild -version
-
-    from the command prompt.
-
-*************************************************************************
-"""
                 )
 
         except subprocess.CalledProcessError as e:
@@ -174,32 +172,30 @@ You have the Xcode command line tools installed; however, Briefcase requires
 a full Xcode install. Xcode can be downloaded from the macOS App Store at
 <https://apps.apple.com/au/app/xcode/id497799835?mt=12>.
 """
-
                 raise BriefcaseCommandError(
                     preamble
-                    + """
-Or, to use a version of Xcode installed in a non-default location:
+                    + """Or, to use a version of Xcode installed in a non-default
+                      location:
 
-    $ sudo xcode-select --switch /path/to/Xcode.app
+                      $ sudo xcode-select --switch /path/to/Xcode.app
 
-and then re-run Briefcase.
-"""
+                      and then re-run Briefcase.
+                      """
                 ) from e
 
             else:
                 tools.subprocess.output_error(e)
                 raise BriefcaseCommandError(
-                    """\
-An Xcode install appears to exist, but Briefcase was unable to
-determine the current Xcode version. Running:
+                    r"""\ An Xcode install appears to exist, but Briefcase was unable to
+                    determine the current Xcode version. Running:
 
-    $ xcodebuild -version
+                    $ xcodebuild -version
 
-should return the current Xcode version, but it raised an error.
+                    should return the current Xcode version, but it raised an error.
 
-You may need to re-install Xcode. Re-run Briefcase once that
-installation is complete.
-"""
+                    You may need to re-install Xcode. Re-run Briefcase once that
+                    installation is complete.
+                    """
                 ) from e
 
 
@@ -253,36 +249,36 @@ class XcodeCliTools(Tool):
         try:
             tools.subprocess.check_output(["xcode-select", "--install"], quiet=1)
             raise BriefcaseCommandError(
-                """\
-The command line developer tools are not installed.
+                r"""\ The command line developer tools are not installed.
 
-You should be shown a dialog prompting you to install them. Select "Install"
-to continue, and re-run Briefcase once that installation is complete.
-"""
+                You should be shown a dialog prompting you to install them. Select
+                "Install" to continue, and re-run Briefcase once that installation is
+                complete.
+                """
             )
         except subprocess.CalledProcessError as e:
             if e.returncode != 1:
                 tools.console.warning(
+                    """*****************************************************************
+                    ******** ** WARNING: Unable to determine if Xcode is installed
+                    ** *****************************************************************
+                    ********
+
+                        Briefcase will proceed, assuming everything is OK. If you experience
+                        problems, this is almost certainly the cause of those problems.
+
+                        Please report this as a bug at:
+
+                           https://github.com/beeware/briefcase/issues/new
+
+                        In your report, please including the output from running:
+
+                            $ xcode-select --install
+
+                        from the command prompt.
+
+                    *************************************************************************
                     """
-*************************************************************************
-** WARNING: Unable to determine if Xcode is installed                  **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you experience
-    problems, this is almost certainly the cause of those problems.
-
-    Please report this as a bug at:
-
-       https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-        $ xcode-select --install
-
-    from the command prompt.
-
-*************************************************************************
-"""
                 )
 
     @classmethod
@@ -299,18 +295,17 @@ to continue, and re-run Briefcase once that installation is complete.
         except subprocess.CalledProcessError as e:
             if e.returncode == 69:
                 tools.console.info(
+                    """Use of Xcode and the iOS developer tools are covered by a license
+                    that must be accepted before you can use those tools.
+
+                    You can accept these licenses by starting Xcode and clicking "Accept"; or, you
+                    can run this command and accept the license when prompted:
+
+                        $ sudo xcodebuild -license
+
+                    Briefcase will try to run this command now. You will need to enter your
+                    password (Briefcase will not store this password anywhere).
                     """
-Use of Xcode and the iOS developer tools are covered by a license that must be
-accepted before you can use those tools.
-
-You can accept these licenses by starting Xcode and clicking "Accept"; or, you
-can run this command and accept the license when prompted:
-
-    $ sudo xcodebuild -license
-
-Briefcase will try to run this command now. You will need to enter your
-password (Briefcase will not store this password anywhere).
-"""
                 )
                 try:
                     tools.subprocess.run(
@@ -323,68 +318,70 @@ password (Briefcase will not store this password anywhere).
                     # status code 69 - license not accepted.
                     if e.returncode == 1:
                         raise BriefcaseCommandError(
-                            """\
-Briefcase was unable to run the Xcode licensing tool. This may be because you
-did not enter your password correctly, or because your account does not have
-administrator privileges on this computer.
+                            r"""\ Briefcase was unable to run the Xcode licensing tool.
+                            This may be because you did not enter your password
+                            correctly, or because your account does not have
+                            administrator privileges on this computer.
 
-You need to accept the Xcode license before Briefcase can package your app.
-"""
+                            You need to accept the Xcode license before Briefcase can
+                            package your app.
+                            """
                         )
                     elif e.returncode == 69:
                         raise BriefcaseCommandError(
-                            """\
-Xcode license has not been accepted. Briefcase cannot continue.
+                            r"""\ Xcode license has not been accepted. Briefcase cannot
+                            continue.
 
-You need to accept the Xcode license before Briefcase can package your app.
-"""
+                            You need to accept the Xcode license before Briefcase can
+                            package your app.
+                            """
                         )
                     else:
                         tools.console.warning(
+                            """*********************************************************
+                            **************** ** WARNING: Unable to determine if the
+                            Xcode license has been accepted ** *************************
+                            ************************************************
+
+                                Briefcase will proceed, assuming everything is OK. If you experience
+                                problems, this is almost certainly the cause of those problems.
+
+                                Please report this as a bug at:
+
+                                  https://github.com/beeware/briefcase/issues/new
+
+                                In your report, please including the output from running:
+
+                                    $ sudo xcodebuild -license
+
+                                from the command prompt.
+
+                            *************************************************************************
                             """
-*************************************************************************
-** WARNING: Unable to determine if the Xcode license has been accepted **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you experience
-    problems, this is almost certainly the cause of those problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-        $ sudo xcodebuild -license
-
-    from the command prompt.
-
-*************************************************************************
-"""
                         )
             else:
                 tools.subprocess.output_error(e)
                 tools.console.warning(
+                    """*****************************************************************
+                    ******** ** WARNING: Unable to determine if the Xcode license has
+                    been accepted ** ***************************************************
+                    **********************
+
+                        Briefcase will proceed, assuming everything is OK. If you experience
+                        problems, this is almost certainly the cause of those problems.
+
+                        Please report this as a bug at:
+
+                          https://github.com/beeware/briefcase/issues/new
+
+                        In your report, please including the output from running:
+
+                            $ /usr/bin/clang --version
+
+                        from the command prompt.
+
+                    *************************************************************************
                     """
-*************************************************************************
-** WARNING: Unable to determine if the Xcode license has been accepted **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you experience
-    problems, this is almost certainly the cause of those problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-        $ /usr/bin/clang --version
-
-    from the command prompt.
-
-*************************************************************************
-"""
                 )
 
 
