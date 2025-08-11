@@ -1,9 +1,9 @@
 import errno
 import shutil
+import re
 import subprocess
 import sys
 import webbrowser
-import re
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from importlib.resources import files
 from pathlib import Path
@@ -52,7 +52,7 @@ class StaticWebMixin:
         return self.project_path(app) / "static"
 
     def wheel_path(self, app):
-        return self.static_path / "wheels"
+        return self.static_path(app) / "wheels"
 
     def distribution_path(self, app):
         return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
