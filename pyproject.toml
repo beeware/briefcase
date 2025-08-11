@@ -95,7 +95,7 @@ dependencies = [
     "tomli_w >= 1.0, < 2.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
@@ -123,6 +123,12 @@ docs = [
     "sphinx-autobuild == 2024.10.3",
     "sphinx-copybutton == 0.5.2",
     "sphinxcontrib-spelling == 8.0.1",
+    "beeware_theme @ git+https://github.com/beeware/beeware-theme",
+]
+# In case you want to install all the dependencies for development, docs, and testing
+all = [
+    {include-group = "dev"},
+    {include-group = "docs"},
 ]
 
 [project.urls]
