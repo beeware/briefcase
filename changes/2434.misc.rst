@@ -1,0 +1,1 @@
+Unit tests are now more resilient to HTTP request failures.

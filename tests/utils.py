@@ -6,9 +6,11 @@ import plistlib
 import tarfile
 import zipfile
 from email.message import EmailMessage
+from http import HTTPStatus
 from pathlib import Path
 
 import httpx
+from httpx_retries import Retry, RetryTransport
 from rich.markup import escape
 
 from briefcase.console import Console, InputDisabled
@@ -333,17 +335,46 @@ def file_content(path: Path) -> str | bytes | None:
 
 def assert_url_resolvable(url: str):
     """Tests whether a URL is resolvable with retries; raises for failure."""
-    transport = httpx.HTTPTransport(
-        # Retry for connection issues
-        retries=3,
+    transport = RetryTransport(
+        # this retry for the underlying transport only applies to connection attempts
+        transport=httpx.HTTPTransport(retries=3),
+        # the underlying retry timing algorithm (first retry is immediate):
+        #  > backoff_factor * (2^attempt) * random.uniform(jitter, 1)
+        # Here are some example backoff timings using the defaults below:
+        #   [0.0, 0.694, 1.939, 3.588]
+        #   [0.0, 0.529, 1.589, 2.002]
+        #   [0.0, 0.599, 1.948, 4.184]
+        retry=Retry(
+            total=3,
+            backoff_factor=0.6,
+            backoff_jitter=0.3,
+            allowed_methods=[
+                "HEAD",
+                "GET",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "TRACE",
+            ],
+            status_forcelist=[
+                HTTPStatus.TOO_MANY_REQUESTS,
+                HTTPStatus.BAD_GATEWAY,
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                HTTPStatus.GATEWAY_TIMEOUT,
+            ],
+            retry_on_exceptions=[
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.RemoteProtocolError,
+                httpx.ReadTimeout,
+            ],
+        ),
     )
-    with httpx.Client(transport=transport, follow_redirects=True) as client:
-        bad_response_retries = 3
-        retry_status_codes = {500, 502, 504}
-        while bad_response_retries > 0:
-            response = client.head(url)
-            if response.status_code not in retry_status_codes:
-                # break if the status code is not one we care to retry (hopefully a success!)
-                break
 
+    try:
+        with httpx.Client(transport=transport, follow_redirects=True) as client:
+            response = client.head(url, timeout=10)
         response.raise_for_status()
+    finally:
+        # RetryTransport doesn't close its transport...so close it manually
+        transport._sync_transport.close()
