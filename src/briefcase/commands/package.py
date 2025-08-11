@@ -62,6 +62,7 @@ class PackageCommand(BaseCommand):
 
         :param app: The application to package
         """
+
         # Default implementation; nothing to do.
 
     def _package_app(
@@ -71,9 +72,9 @@ class PackageCommand(BaseCommand):
         packaging_format: str,
         **options,
     ) -> dict | None:
-        """Internal method to invoke packaging on a single app. Ensures the app exists,
-        and has been updated (if requested) before attempting to issue the actual
-        package command.
+        """Internal method to invoke packaging on a single app. and has been updated (if
+        requested) before attempting to issue the actual Ensures the app exists, package
+        command.
 
         :param app: The application to package
         :param update: Should the application be updated (and rebuilt) first?

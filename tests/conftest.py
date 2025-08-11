@@ -13,7 +13,6 @@ from .utils import create_file
 
 def pytest_sessionstart(session):
     """Ensure that tests don't use a color console."""
-
     os.environ["TERM"] = "dumb"
     os.environ["NO_COLOR"] = "1"
     try:

@@ -67,8 +67,8 @@ def get_process_id_by_command(
     command: str = "",
     console: Console | None = None,
 ) -> int | None:
-    """Find a Process ID (PID) a by its command. If multiple processes are found, then
-    the most recently created process ID is returned.
+    """Find a Process ID (PID) a by its command. the most recently created process ID is
+    returned. If multiple processes are found, then.
 
     :param command_list: list of a command's fully qualified path and its arguments.
     :param command: a partial or complete fully-qualified filepath to a command.
@@ -531,7 +531,6 @@ class Subprocess(Tool):
         :raises ValueError: if a filter function is provided when in non-streaming mode.
         :returns: ``CompletedProcess`` for invoked process
         """
-
         # Stream the output unless the caller explicitly disables it. When a
         # caller sets stream_output=False, then ensure_console_is_safe() will
         # disable any dynamic console elements while the command runs.
@@ -734,8 +733,8 @@ class Subprocess(Tool):
         stop_func: Callable[[], bool] = lambda: False,
         filter_func: Callable[[str], Iterator[str]] | None = None,
     ):
-        """Stream the output of a Popen process until the process exits. If the user
-        sends CTRL+C, the process will be terminated.
+        """Stream the output of a Popen process until the process exits. sends CTRL+C,
+        the process will be terminated. If the user.
 
         This is useful for starting a process via Popen such as tailing a log file, then
         initiating a non-blocking process that populates that log, and finally streaming

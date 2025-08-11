@@ -67,12 +67,11 @@ class LinuxFlatpakMixin(LinuxMixin):
             return app.flatpak_runtime
         except AttributeError as e:
             raise BriefcaseConfigError(
-                """\
-The App does not specify the Flatpak runtime to use.
+                r"""\ The App does not specify the Flatpak runtime to use.
 
-Your application configuration must provide values for
-`flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
-"""
+                Your application configuration must provide values for
+                `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
+                """
             ) from e
 
     def flatpak_runtime_version(self, app):
@@ -80,12 +79,11 @@ Your application configuration must provide values for
             return app.flatpak_runtime_version
         except AttributeError as e:
             raise BriefcaseConfigError(
-                """\
-The App does not specify the version of the Flatpak runtime to use.
+                r"""\ The App does not specify the version of the Flatpak runtime to use.
 
-Your application configuration must provide values for
-`flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
-"""
+                Your application configuration must provide values for
+                `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
+                """
             ) from e
 
     def flatpak_sdk(self, app):
@@ -93,12 +91,11 @@ Your application configuration must provide values for
             return app.flatpak_sdk
         except AttributeError as e:
             raise BriefcaseConfigError(
-                """\
-The App does not specify the Flatpak SDK to use.
+                r"""\ The App does not specify the Flatpak SDK to use.
 
-Your application configuration must provide values for
-`flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
-"""
+                Your application configuration must provide values for
+                `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
+                """
             ) from e
 
 

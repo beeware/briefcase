@@ -901,18 +901,13 @@ def test_install_legacy_support_package(
     the support package."""
     # Hard code the support revision
     first_app_templated.support_revision = "37"
-
     # Rewrite the app's briefcase.toml to use the legacy paths (i.e.,
     # a support path of Resources/support, and no stdlib_path)
     create_file(
         tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
-        """
-[paths]
-app_packages_path="First App.app/Contents/Resources/app_packages"
-support_path="First App.app/Contents/Resources/support"
-info_plist_path="First App.app/Contents/Info.plist"
-entitlements_path="Entitlements.plist"
-""",
+        """[paths] app_packages_path="First App.app/Contents/Resources/app_packages"
+        support_path="First App.app/Contents/Resources/support" info_plist_path="First
+        App.app/Contents/Info.plist" entitlements_path="Entitlements.plist".""",
     )
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
@@ -1063,7 +1058,6 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     """Install_hint (mentioning a missing x86_64 wheel) is added when
     RequirementsInstallError is raised by _install_app_requirements in the macOS create
     command."""
-
     create_command.tools.host_arch = "x86_64"
     first_app_templated.min_os_version = "12.0"
     first_app_templated.requires = ["package-one", "package_two", "packagethree"]
@@ -1094,7 +1088,6 @@ def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
     """Install_hint (mentioning a missing arm64 wheel) is added when
     RequirementsInstallError is raised by _install_app_requirements in the macOS create
     command."""
-
     create_command.tools.host_arch = "x86_64"
     first_app_templated.min_os_version = "12.0"
     first_app_templated.requires = ["package-one", "package_two", "packagethree"]

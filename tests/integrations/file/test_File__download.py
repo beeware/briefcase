@@ -252,7 +252,6 @@ def test_already_downloaded(mock_tools):
 
     The request is still made to derive the filename, but the content is never streamed.
     """
-
     # Create an existing file
     existing_file = mock_tools.base_path / "something.zip"
     with existing_file.open("w", encoding="utf-8") as f:

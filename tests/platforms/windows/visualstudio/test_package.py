@@ -27,7 +27,6 @@ def package_command(tmp_path):
 
 def test_package_msi(package_command, first_app_config, tmp_path):
     """A Windows app can be packaged as an MSI."""
-
     package_command.package_app(first_app_config)
 
     assert package_command.tools.subprocess.run.mock_calls == [

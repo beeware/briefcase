@@ -154,7 +154,6 @@ def test_create_existing_app_input_disabled(tracking_create_command, tmp_path):
 def test_create_app_not_supported(tracking_create_command, tmp_path):
     """If the supported attribute is false, the command will terminate with an error
     message."""
-
     with pytest.raises(UnsupportedPlatform):
         tracking_create_command.create_app(
             AppConfig(

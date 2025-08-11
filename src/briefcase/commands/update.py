@@ -42,7 +42,6 @@ class UpdateCommand(CreateCommand):
         :param update_support: Should app support be updated?
         :param update_stub: Should stub binary be updated?
         """
-
         if app.external_package_path:
             raise BriefcaseCommandError(
                 f"{app.app_name!r} is declared as an external app. External apps "

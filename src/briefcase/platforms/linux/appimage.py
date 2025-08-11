@@ -95,35 +95,34 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
             self.console.warning(
-                """\
-*************************************************************************
-** WARNING: Building a Local AppImage!                                 **
-*************************************************************************
+                r"""\ *******************************************************************
+                ****** ** WARNING: Building a Local AppImage!
+                ** *********************************************************************
+                ****
 
-    You are building an AppImage outside Docker. The resulting AppImage
-    will work, but will not be as portable as a Docker-based AppImage.
-    Any `manylinux` setting will be ignored.
+                    You are building an AppImage outside Docker. The resulting AppImage
+                    will work, but will not be as portable as a Docker-based AppImage.
+                    Any `manylinux` setting will be ignored.
 
-*************************************************************************
-"""
+                *************************************************************************
+                """
             )
-
         self.console.warning(
             """\
-*************************************************************************
-** WARNING: Use of AppImage is not recommended!                        **
-*************************************************************************
+            ************************************************************************* **
+            WARNING: Use of AppImage is not recommended!                        **
+            *************************************************************************
 
-    Briefcase supports AppImage in a best-effort capacity. It has proven
-    to be highly unreliable as a distribution platform. AppImages cannot
-    use pre-compiled binary wheels, and has significant problems with
-    most commonly used GUI toolkits (including GTK and PySide).
+                Briefcase supports AppImage in a best-effort capacity. It has proven
+                to be highly unreliable as a distribution platform. AppImages cannot
+                use pre-compiled binary wheels, and has significant problems with
+                most commonly used GUI toolkits (including GTK and PySide).
 
-    Consider using system packages or Flatpak for Linux app
-    distribution.
+                Consider using system packages or Flatpak for Linux app
+                distribution.
 
-*************************************************************************
-"""
+            *************************************************************************
+            """
         )
 
 
@@ -228,22 +227,21 @@ class LinuxAppImageCreateCommand(
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
         self.console.warning(
+            """*************************************************************************
+            ** WARNING: Support package update may be imperfect                    **
+            *************************************************************************
+
+                Support packages in Linux AppImages are overlaid with app content,
+                so it isn't possible to remove all old support files before
+                installing new ones.
+
+                Briefcase will unpack the new support package without cleaning up
+                existing support package content. This *should* work; however,
+                ensure a reproducible release artefacts, it is advisable to
+                perform a clean app build before release.
+
+            *************************************************************************
             """
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
-
-    Support packages in Linux AppImages are overlaid with app content,
-    so it isn't possible to remove all old support files before
-    installing new ones.
-
-    Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; however,
-    ensure a reproducible release artefacts, it is advisable to
-    perform a clean app build before release.
-
-*************************************************************************
-"""
         )
 
 

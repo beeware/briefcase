@@ -3,7 +3,6 @@ from ...utils import create_installed_package
 
 def test_find_binary_packages(dummy_command, tmp_path):
     """Binary packages can be identified in a app-packages folder."""
-
     create_installed_package(
         tmp_path / "app-packages",
         "pure-package1",
@@ -67,7 +66,6 @@ def test_find_binary_packages(dummy_command, tmp_path):
 def test_find_binary_packages_non_universal(dummy_command, tmp_path):
     """If no universal wheel format is specified, universal wheels are identified as
     binary."""
-
     create_installed_package(
         tmp_path / "app-packages",
         "pure-package1",

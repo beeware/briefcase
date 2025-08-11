@@ -129,9 +129,10 @@ class macOSMixin:
         """
         if self.is_icloud_synced(self.binary_path(app)):
             msg = [
-                """\
-Your project is in a folder that is synchronized with iCloud. This interferes
-with the operation of macOS code signing."""
+                r"""\ Your project is in a folder that is synchronized with iCloud.
+
+                This interferes with the operation of macOS code signing.
+                """
             ]
             if cleanup:
                 self.tools.shutil.rmtree(self.bundle_path(app))
@@ -1045,24 +1046,23 @@ You can store these credentials by invoking:
 
 """
                         )
-
                     self.console.warning(
+                        """The notarization process uses credentials stored on your
+                        system Keychain. You need to do this once for each signing
+                        certificate you use.
+
+                        The credentials are authenticated and stored using your Apple ID, using
+                        an app-specific Apple ID password. To generate an app-specific Apple ID
+                        password:
+
+                          1. Sign into https://appleid.apple.com;
+                          2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
+                          3. Click on the '+' icon. You will need to provide an identifying name
+                             for the password. You can pick any name that makes sense to you - the
+                             name is only there so you can identify passwords. 'Briefcase' would be
+                             one possible name.
+                          4. Record the password somewhere safe.
                         """
-The notarization process uses credentials stored on your system Keychain.
-You need to do this once for each signing certificate you use.
-
-The credentials are authenticated and stored using your Apple ID, using
-an app-specific Apple ID password. To generate an app-specific Apple ID
-password:
-
-  1. Sign into https://appleid.apple.com;
-  2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
-  3. Click on the '+' icon. You will need to provide an identifying name
-     for the password. You can pick any name that makes sense to you - the
-     name is only there so you can identify passwords. 'Briefcase' would be
-     one possible name.
-  4. Record the password somewhere safe.
-"""
                     )
                     try:
                         self.tools.subprocess.run(
@@ -1337,23 +1337,22 @@ password:
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
             self.console.warning(
+                """*********************************************************************
+                **** ** WARNING: Signing with an ad-hoc identity
+                ** *********************************************************************
+                ****
+
+                    This app is being signed with an ad-hoc identity. The resulting
+                    app will run on this computer, but will not run on anyone else's
+                    computer.
+
+                    To generate an app that can be distributed to others, you must
+                    obtain an application distribution certificate from Apple, and
+                    select the developer identity associated with that certificate
+                    when running 'briefcase package'.
+
+                *************************************************************************
                 """
-*************************************************************************
-** WARNING: Signing with an ad-hoc identity                            **
-*************************************************************************
-
-    This app is being signed with an ad-hoc identity. The resulting
-    app will run on this computer, but will not run on anyone else's
-    computer.
-
-    To generate an app that can be distributed to others, you must
-    obtain an application distribution certificate from Apple, and
-    select the developer identity associated with that certificate
-    when running 'briefcase package'.
-
-*************************************************************************
-
-"""
             )
             self.console.info("Signing app with ad-hoc identity...")
         else:
@@ -1453,12 +1452,11 @@ password:
                 )
             else:
                 raise BriefcaseCommandError(
-                    """\
-Your project does not contain a LICENSE file.
+                    r"""\ Your project does not contain a LICENSE file.
 
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms.
-"""
+                    Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+                    with your app's licensing terms.
+                    """
                 )
 
         # pkgbuild's default behavior is to make "relocatable" installs, which means

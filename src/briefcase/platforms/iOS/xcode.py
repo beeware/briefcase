@@ -56,24 +56,23 @@ class iOSXcodePassiveMixin(iOSMixin):
         # This path won't ever be *generated*, as distribution artefacts
         # can't be generated on iOS.
         raise NoDistributionArtefact(
+            """*************************************************************************
+            ** WARNING: No distributable artefact has been generated               **
+            *************************************************************************
+
+                Briefcase has not generated a standalone iOS artefact, as iOS apps
+                must be published through Xcode.
+
+                To open Xcode for your iOS project, run:
+
+                    briefcase open iOS
+
+                and use Xcode's app distribution workflow described at:
+
+                    https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
+
+            *************************************************************************
             """
-*************************************************************************
-** WARNING: No distributable artefact has been generated               **
-*************************************************************************
-
-    Briefcase has not generated a standalone iOS artefact, as iOS apps
-    must be published through Xcode.
-
-    To open Xcode for your iOS project, run:
-
-        briefcase open iOS
-
-    and use Xcode's app distribution workflow described at:
-
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
-
-*************************************************************************
-"""
         )
 
 

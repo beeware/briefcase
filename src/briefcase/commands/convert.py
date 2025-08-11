@@ -754,12 +754,10 @@ class ConvertCommand(NewCommand):
             prefix=context["app_name"],
         )
         self.console.info(
+            """To run your application, type:
+
+            $ briefcase dev
             """
-To run your application, type:
-
-    $ briefcase dev
-
-"""
         )
 
     def validate_pyproject_file(self) -> None:

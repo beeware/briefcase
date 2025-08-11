@@ -29,6 +29,7 @@ class BuildCommand(BaseCommand):
 
         :param app: The application to build
         """
+
         # Default implementation; nothing to build.
 
     def _build_app(
@@ -42,8 +43,8 @@ class BuildCommand(BaseCommand):
         no_update: bool,
         **options,
     ) -> dict | None:
-        """Internal method to invoke a build on a single app. Ensures the app exists,
-        and has been updated (if requested) before attempting to issue the actual build
+        """Internal method to invoke a build on a single app. and has been updated (if
+        requested) before attempting to issue the actual build Ensures the app exists,
         command.
 
         :param app: The application to build

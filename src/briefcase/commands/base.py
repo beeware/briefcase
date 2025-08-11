@@ -433,7 +433,6 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-
         if sys.platform == "win32":  # pragma: no-cover-if-not-windows
             suffix = self.binary_executable_path(app).suffix
         else:  # pragma: no-cover-if-is-windows
@@ -750,7 +749,6 @@ a custom location for Briefcase's tools.
 
         :param app: app configuration
         """
-
         # Skip this check if the template isn't rolled out
         # or if the command doesn't support templates
         try:
@@ -779,7 +777,6 @@ any compatibility problems, and then add the compatibility declaration.
     def verify_required_python(self, app: AppConfig):
         """Verify that the running version of Python meets the project's
         specifications."""
-
         requires_python = getattr(self.global_config, "requires_python", None)
         if not requires_python:
             return
@@ -1126,17 +1123,17 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # warn the user that the template may be stale.
                     self.console.debug(str(e))
                     self.console.warning(
+                        """*************************************************************
+                        ************ ** WARNING: Unable to update template
+                        ** *************************************************************
+                        ************
+
+                            Briefcase is unable the update the application template. This
+                            may be because your computer is currently offline. Briefcase will
+                            use existing template without updating.
+
+                        *************************************************************************
                         """
-*************************************************************************
-** WARNING: Unable to update template                                  **
-*************************************************************************
-
-    Briefcase is unable the update the application template. This
-    may be because your computer is currently offline. Briefcase will
-    use existing template without updating.
-
-*************************************************************************
-"""
                     )
 
                 try:

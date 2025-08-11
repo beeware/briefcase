@@ -28,7 +28,6 @@ def run_command(tmp_path):
 
 def test_run_app(run_command, first_app_config, tmp_path):
     """A windows Visual Studio project app can be started."""
-
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_popen
@@ -59,7 +58,6 @@ def test_run_app(run_command, first_app_config, tmp_path):
 
 def test_run_app_with_args(run_command, first_app_config, tmp_path):
     """A windows Visual Studio project app can be started with args."""
-
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_popen

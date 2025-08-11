@@ -10,7 +10,6 @@ from briefcase.console import LogLevel
 
 def test_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """A simple call will be invoked."""
-
     with mock_sub.tools.console.wait_bar():
         mock_sub.run(["hello", "world"])
 
@@ -28,7 +27,6 @@ def test_call(mock_sub, sub_stream_kw, sleep_zero, capsys):
 
 def test_call_with_arg(mock_sub, sub_stream_kw, sleep_zero, capsys):
     """Any extra keyword arguments are passed through as-is."""
-
     with mock_sub.tools.console.wait_bar():
         mock_sub.run(["hello", "world"], extra_kw="extra")
 

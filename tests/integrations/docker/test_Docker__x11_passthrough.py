@@ -200,7 +200,6 @@ def test_x11_write_xauth_missing_xauth_bin(mock_tools, tmp_path):
 def test_x11_write_xauth_get_cookie_fails(mock_tools, xauth_nlist_outcome, tmp_path):
     """If the attempt to retrieve the current display's cookie fails, an error is
     raised."""
-
     mock_tools.subprocess._subprocess.check_output.side_effect = [xauth_nlist_outcome]
 
     with pytest.raises(
@@ -217,7 +216,6 @@ def test_x11_write_xauth_get_cookie_fails(mock_tools, xauth_nlist_outcome, tmp_p
 def test_x11_write_xauth_add_new_xauth_fails(mock_tools, tmp_path):
     """If the attempt to retrieve the current display's cookie fails, an error is
     raised."""
-
     mock_tools.subprocess._subprocess.check_output.side_effect = [
         # xauth -i nlist :66
         XAUTH_LIST_RET_1,
@@ -252,7 +250,6 @@ def test_x11_write_xauth_add_new_xauth_fails(mock_tools, tmp_path):
 def test_x11_write_xauth_retrieve_xauth_fails(mock_tools, tmp_path):
     """If the attempt to retrieve the target display's xauth list, an error is
     raised."""
-
     mock_tools.subprocess._subprocess.check_output.side_effect = [
         # xauth -i nlist :66
         XAUTH_LIST_RET_1,
@@ -279,7 +276,6 @@ def test_x11_write_xauth_retrieve_xauth_fails(mock_tools, tmp_path):
 def test_x11_write_xauth_merge_xauth_fails(mock_tools, tmp_path):
     """If the attempt to retrieve the target display's xauth list, an error is
     raised."""
-
     mock_tools.subprocess._subprocess.check_output.side_effect = [
         # xauth -i nlist :66
         XAUTH_LIST_RET_1,
@@ -311,7 +307,6 @@ def test_x11_write_xauth_merge_xauth_fails(mock_tools, tmp_path):
 @pytest.mark.usefixtures("mock_docker")
 def test_x11_write_xauth_success(mock_tools, tmp_path, sub_check_output_kw):
     """The attempt to write the xauth database for the target display succeeds."""
-
     mock_tools.subprocess._subprocess.check_output.side_effect = [
         # xauth -i nlist :66
         XAUTH_LIST_RET_1,

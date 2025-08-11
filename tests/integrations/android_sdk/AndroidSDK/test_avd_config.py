@@ -8,17 +8,12 @@ def test_avd_config(mock_tools, android_sdk, tmp_path):
     # * a key whose value explicitly contains an equals sign.
     with config_file.open("w", encoding="utf-8") as f:
         f.write(
-            """
-avd.ini.encoding=UTF-8
-hw.device.manufacturer=Google
-hw.device.name=pixel
-weird.key=good=bad
+            """avd.ini.encoding=UTF-8 hw.device.manufacturer=Google hw.device.name=pixel
+            weird.key=good=bad.
 
-PlayStore.enabled=no
-avd.name=testDevice
-disk.cachePartition=yes
-disk.cachePartition.size=37MB
-"""
+            PlayStore.enabled=no avd.name=testDevice disk.cachePartition=yes
+            disk.cachePartition.size=37MB
+            """
         )
 
     assert android_sdk.avd_config("testDevice") == {
