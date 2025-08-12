@@ -69,8 +69,6 @@ jobs:
         include:
           # Ensure the Python versions between min and max are tested
           - platform: "ubuntu-24.04"
-            python-version: "3.10"
-          - platform: "ubuntu-24.04"
             python-version: "3.11"
           - platform: "ubuntu-24.04"
             python-version: "3.12"
