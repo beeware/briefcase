@@ -12,7 +12,7 @@ from .conftest import DummyCommand
 
 
 @pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
-def test_path_is_realpath(tmp_path):
+def test_path_is_realpath(dummy_console, tmp_path):
     """Briefcase's data path matches its realpath.
 
     For the Windows Store Python, filesystem interaction with `%LOCALAPPDATA%` can be
@@ -21,14 +21,14 @@ def test_path_is_realpath(tmp_path):
     """
     data_path = Path(os.environ["LOCALAPPDATA"]) / "realpathbase"
     try:
-        command = DummyCommand(data_path=data_path)
+        command = DummyCommand(console=dummy_console, data_path=data_path)
         assert command.data_path == Path(os.path.realpath(data_path))
     finally:
         with suppress(FileNotFoundError):
             os.rmdir(data_path)
 
 
-def test_data_path_creation_failure(tmp_path, monkeypatch):
+def test_data_path_creation_failure(dummy_console, tmp_path, monkeypatch):
     """An error is raised if the data path cannot be created."""
 
     def raise_calledprpcesserror(*a, **kw):
@@ -45,19 +45,23 @@ def test_data_path_creation_failure(tmp_path, monkeypatch):
         BriefcaseCommandError,
         match=r"Failed to create the Briefcase directory to store tools and support files:",
     ):
-        DummyCommand(data_path=data_path)
+        DummyCommand(console=dummy_console, data_path=data_path)
 
 
-def test_space_in_path(tmp_path):
+def test_space_in_path(dummy_console, tmp_path):
     """The briefcase data path cannot contain spaces."""
     with pytest.raises(
         BriefcaseCommandError,
         match=r"contains spaces. This will cause problems with some tools",
     ):
-        DummyCommand(base_path=tmp_path / "base", data_path=tmp_path / "somewhere bad")
+        DummyCommand(
+            console=dummy_console,
+            base_path=tmp_path / "base",
+            data_path=tmp_path / "somewhere bad",
+        )
 
 
-def test_empty_custom_path(monkeypatch, tmp_path):
+def test_empty_custom_path(monkeypatch, dummy_console, tmp_path):
     """If the environment-specified BRIEFCASE_HOME is defined, but empty, an error is
     raised."""
     monkeypatch.setenv("BRIEFCASE_HOME", "")
@@ -66,10 +70,10 @@ def test_empty_custom_path(monkeypatch, tmp_path):
         BriefcaseCommandError,
         match=r"The path specified by BRIEFCASE_HOME does not exist.",
     ):
-        DummyCommand(base_path=tmp_path / "base")
+        DummyCommand(console=dummy_console, base_path=tmp_path / "base")
 
 
-def test_custom_path_does_not_exist(monkeypatch, tmp_path):
+def test_custom_path_does_not_exist(monkeypatch, dummy_console, tmp_path):
     """If the environment-specified BRIEFCASE_HOME doesn't exist, an error is raised."""
     monkeypatch.setenv("BRIEFCASE_HOME", str(tmp_path / "custom"))
 
@@ -77,11 +81,12 @@ def test_custom_path_does_not_exist(monkeypatch, tmp_path):
         BriefcaseCommandError,
         match=r"The path specified by BRIEFCASE_HOME does not exist.",
     ):
-        DummyCommand(base_path=tmp_path / "base")
+        DummyCommand(console=dummy_console, base_path=tmp_path / "base")
 
 
 def templated_path_test(
     monkeypatch,
+    dummy_console,
     tmp_path,
     data_path,
     environ_path,
@@ -94,6 +99,7 @@ def templated_path_test(
         monkeypatch.delenv("BRIEFCASE_HOME", raising=False)
 
     command = DummyCommand(
+        console=dummy_console,
         base_path=tmp_path / "base",
         data_path=data_path.format(tmp_path=tmp_path) if data_path else None,
     )
@@ -133,6 +139,7 @@ def templated_path_test(
 )
 def test_macOS_paths(
     monkeypatch,
+    dummy_console,
     tmp_path,
     data_path,
     environ_path,
@@ -140,6 +147,7 @@ def test_macOS_paths(
 ):
     templated_path_test(
         monkeypatch,
+        dummy_console,
         tmp_path,
         data_path,
         environ_path,

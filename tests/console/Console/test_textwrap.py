@@ -1,7 +1,5 @@
 import pytest
 
-from briefcase.console import Console
-
 
 @pytest.mark.parametrize(
     "in_text, out_text",
@@ -50,9 +48,9 @@ from briefcase.console import Console
         ),
     ],
 )
-def test_textwrap(in_text, out_text):
+def test_textwrap(console, in_text, out_text):
     """Text is formatted as expected."""
-    assert Console().textwrap(in_text) == out_text
+    assert console.textwrap(in_text) == out_text
 
 
 @pytest.mark.parametrize(
@@ -78,6 +76,6 @@ def test_textwrap(in_text, out_text):
         ),
     ],
 )
-def test_textwrap_width_override(width, in_text, out_text):
+def test_textwrap_width_override(console, width, in_text, out_text):
     """Width override is respected."""
-    assert Console().textwrap(in_text, width=width) == out_text
+    assert console.textwrap(in_text, width=width) == out_text

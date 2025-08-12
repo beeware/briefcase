@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import parse_freedesktop_os_release
 from briefcase.platforms.linux.system import LinuxSystemRunCommand
@@ -481,10 +480,10 @@ def test_properties_no_version(create_command, first_app_config):
     assert first_app_config.python_version_tag == "3"
 
 
-def test_passive_mixin(first_app_config, tmp_path):
+def test_passive_mixin(dummy_console, first_app_config, tmp_path):
     """An app using the PassiveMixin can be finalized."""
     run_command = LinuxSystemRunCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

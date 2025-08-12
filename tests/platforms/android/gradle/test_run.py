@@ -9,7 +9,6 @@ from unittest import mock
 import httpx
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.java import JDK
@@ -30,9 +29,9 @@ def jdk():
 
 
 @pytest.fixture
-def run_command(tmp_path, first_app_config, jdk):
+def run_command(dummy_console, tmp_path, first_app_config, jdk):
     command = GradleRunCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

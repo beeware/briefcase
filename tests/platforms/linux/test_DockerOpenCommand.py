@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageOpenCommand
@@ -13,9 +12,9 @@ from ...utils import create_file
 
 
 @pytest.fixture
-def open_command(tmp_path):
+def open_command(dummy_console, tmp_path):
     command = LinuxAppImageOpenCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

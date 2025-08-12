@@ -201,8 +201,13 @@ class Console:
         # dynamic elements like the Wait Bar.
         self.is_console_controlled = False
 
-    def __del__(self):
+    def close(self):
         self._dev_null.close()
+        self._dev_null = None
+
+    def __del__(self):
+        if self._dev_null:
+            self.close()
 
     #################################################################
     # Console primitives

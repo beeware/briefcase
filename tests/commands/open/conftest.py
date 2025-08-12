@@ -8,7 +8,7 @@ from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DummyOpenCommand(OpenCommand):
@@ -23,7 +23,6 @@ class DummyOpenCommand(OpenCommand):
     description = "Dummy Open command"
 
     def __init__(self, *args, apps, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps=apps, **kwargs)
 
         # Override the OS services that are used when opening
@@ -77,8 +76,9 @@ class DummyOpenCommand(OpenCommand):
 
 
 @pytest.fixture
-def open_command(tmp_path):
+def open_command(dummy_console, tmp_path):
     return DummyOpenCommand(
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         apps={
             "first": AppConfig(
