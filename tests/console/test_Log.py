@@ -356,7 +356,11 @@ def test_save_log_to_file_extra_interrupted(mock_now, console, command, tmp_path
 
 
 def test_save_log_to_file_missing_pyproject(
-    mock_now, console, command, tmp_path, monkeypatch
+    mock_now,
+    console,
+    command,
+    tmp_path,
+    monkeypatch,
 ):
     """Log file contains pyproject read exception if it's missing."""
     console.save_log = True

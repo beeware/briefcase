@@ -550,8 +550,8 @@ class macOSRunMixin:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
         finally:
             # Ensure the App also terminates when exiting. The ordering here is a little
-            # odd; the if *could* (should?) be outside the context manager, but coverage
-            # has issues with that arrangement on some Python versions (3.10, 3.14)
+            # odd; the if could/should be outside the context manager, but coverage has
+            # issues with that arrangement on some Python versions (3.10, 3.14)
             with suppress(ProcessLookupError):
                 if app_pid:
                     self.tools.os.kill(app_pid, SIGTERM)
