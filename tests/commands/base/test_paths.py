@@ -183,6 +183,7 @@ def test_macOS_paths(
 )
 def test_windows_paths(
     monkeypatch,
+    dummy_console,
     tmp_path,
     data_path,
     environ_path,
@@ -190,6 +191,7 @@ def test_windows_paths(
 ):
     templated_path_test(
         monkeypatch,
+        dummy_console,
         tmp_path,
         data_path,
         environ_path,
@@ -225,6 +227,7 @@ def test_windows_paths(
 )
 def test_linux_paths(
     monkeypatch,
+    dummy_console,
     tmp_path,
     data_path,
     environ_path,
@@ -232,6 +235,7 @@ def test_linux_paths(
 ):
     templated_path_test(
         monkeypatch,
+        dummy_console,
         tmp_path,
         data_path,
         environ_path,
