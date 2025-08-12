@@ -1,11 +1,9 @@
 import pytest
 
-from tests.utils import DummyConsole
 
-
-def test_selection_question():
+def test_selection_question(console):
     "A question with a dictionary of options can be presented to the user."
-    console = DummyConsole("3")
+    console.values = ["3"]
 
     options = {
         "first": "The first option",
@@ -26,11 +24,10 @@ def test_selection_question():
     assert result == "third"
 
 
-def test_selection_question_list():
+def test_selection_question_list(console):
     """If selection_question is given a list of values, they're presented as
     provided."""
-    # Return '3' when prompted
-    console = DummyConsole("3")
+    console.values = ["3"]
 
     options = [
         "The first option",
@@ -51,14 +48,13 @@ def test_selection_question_list():
     assert result == "The third option"
 
 
-def test_selection_question_bad_input():
+def test_selection_question_bad_input(console):
     # In order, return:
     #     blank
     #     'asdf'
     #     '10'
     #     '3'
-    console = DummyConsole("", "asdf", "10", "3")
-
+    console.values = ["", "asdf", "10", "3"]
     options = {
         "first": "The first option",
         "second": "The second option",
@@ -79,10 +75,10 @@ def test_selection_question_bad_input():
 
 
 @pytest.mark.parametrize("index, default", [("1", "first"), ("3", "third")])
-def test_selection_question_default(index, default):
+def test_selection_question_default(console, index, default):
     """If selection_question has a default, it is returned for no input."""
     # Return an empty response when prompted as though the user press entered
-    console = DummyConsole("")
+    console.values = [""]
 
     options = {
         "first": "The first option",
@@ -104,10 +100,8 @@ def test_selection_question_default(index, default):
     assert result == default
 
 
-def test_override_used(capsys):
+def test_override_used(console, capsys):
     """The override is used if valid."""
-    console = DummyConsole()
-
     override_value = "value"
     assert (
         console.selection_question(
@@ -122,9 +116,9 @@ def test_override_used(capsys):
     assert f"Using override value {override_value!r}" in capsys.readouterr().out
 
 
-def test_override_validation(capsys):
+def test_override_validation(console, capsys):
     """The override is not used if it is not a valid option."""
-    console = DummyConsole("3")
+    console.values = ["3"]
 
     result = console.selection_question(
         intro="intro",
@@ -142,9 +136,9 @@ def test_override_validation(capsys):
     assert result == "other_value"
 
 
-def test_default_value_has_correct_index():
+def test_default_value_has_correct_index(console):
     """The default value is used and has the correct index if it is a valid option."""
-    console = DummyConsole("")
+    console.values = [""]
 
     result = console.selection_question(
         intro="intro",
@@ -158,9 +152,9 @@ def test_default_value_has_correct_index():
     assert result == "some_value"
 
 
-def test_exception_if_wrong_default():
+def test_exception_if_wrong_default(console):
     """An exception is raised if the default value is not a valid option."""
-    console = DummyConsole("")
+    console.values = [""]
 
     with pytest.raises(
         ValueError,

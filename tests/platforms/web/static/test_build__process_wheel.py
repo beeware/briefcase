@@ -2,16 +2,15 @@ from io import StringIO
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.platforms.web.static import StaticWebBuildCommand
 
 from ....utils import create_wheel
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     return StaticWebBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

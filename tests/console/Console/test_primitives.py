@@ -11,7 +11,8 @@ def console():
     # clear log; since Printer is a pseudo-singleton,
     # the log can contain existing entries.
     console.export_log()
-    return console
+    yield console
+    console.close()
 
 
 def norm_sp(text: str, max_spaces: int = 100) -> str:

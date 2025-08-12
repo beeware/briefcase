@@ -2,15 +2,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseConfigError, UnsupportedHostError
 from briefcase.platforms.linux.appimage import LinuxAppImageCreateCommand
 
 
 @pytest.fixture
-def create_command(first_app_config, tmp_path):
+def create_command(dummy_console, first_app_config, tmp_path):
     command = LinuxAppImageCreateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

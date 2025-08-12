@@ -8,7 +8,6 @@ from cookiecutter.main import cookiecutter
 import briefcase
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.commands import NewCommand
-from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidTemplateBranch,
@@ -17,11 +16,11 @@ from briefcase.exceptions import (
 
 
 @pytest.fixture
-def new_command(tmp_path):
+def new_command(dummy_console, tmp_path):
     return NewCommand(
+        console=dummy_console,
         base_path=tmp_path / "base",
         data_path=tmp_path / "data",
-        console=Console(),
     )
 
 

@@ -2,15 +2,14 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux.flatpak import LinuxFlatpakPackageCommand
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def package_command(dummy_console, tmp_path):
     return LinuxFlatpakPackageCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

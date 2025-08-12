@@ -4,7 +4,7 @@ from briefcase.commands import PackageCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DefaultPackageCommand(PackageCommand):
@@ -23,8 +23,11 @@ class DefaultPackageCommand(PackageCommand):
 
 
 @pytest.fixture
-def default_package_command(tmp_path):
-    return DefaultPackageCommand(base_path=tmp_path, console=DummyConsole())
+def default_package_command(dummy_console, tmp_path):
+    return DefaultPackageCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
 
 class DummyPackageCommand(PackageCommand):
@@ -47,7 +50,6 @@ class DummyPackageCommand(PackageCommand):
         return "pkg"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -114,9 +116,12 @@ class DummyPackageCommand(PackageCommand):
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def package_command(dummy_console, tmp_path):
     (tmp_path / "base_path").mkdir()
-    return DummyPackageCommand(base_path=tmp_path / "base_path")
+    return DummyPackageCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+    )
 
 
 @pytest.fixture

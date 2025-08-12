@@ -24,7 +24,9 @@ from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 @pytest.fixture
 def console() -> Console:
-    return Console()
+    console = Console()
+    yield console
+    console.close()
 
 
 def do_cmdline_parse(args: list, console: Console):

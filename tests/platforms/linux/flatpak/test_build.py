@@ -2,16 +2,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux.flatpak import LinuxFlatpakBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     return LinuxFlatpakBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

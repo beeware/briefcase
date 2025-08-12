@@ -4,16 +4,15 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppDevCommand
 
 
 @pytest.fixture
-def dev_command(tmp_path):
+def dev_command(dummy_console, tmp_path):
     """Fixture for a WindowsAppDevCommand instance."""
     command = WindowsAppDevCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

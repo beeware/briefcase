@@ -3,7 +3,6 @@ from __future__ import annotations
 import gzip
 import re
 import subprocess
-import sys
 import tarfile
 from pathlib import Path
 
@@ -110,12 +109,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
     def platform_freedesktop_info(self, app):
         try:
-            if sys.version_info < (3, 10):  # pragma: no-cover-if-gte-py310
-                # This reproduces the Python 3.10 platform.freedesktop_os_release() function.
-                with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
-                    freedesktop_info = parse_freedesktop_os_release(f.read())
-            else:  # pragma: no-cover-if-lt-py310
-                freedesktop_info = self.tools.platform.freedesktop_os_release()
+            freedesktop_info = self.tools.platform.freedesktop_os_release()
 
         except OSError as e:
             raise BriefcaseCommandError(
@@ -1172,10 +1166,8 @@ no extension).
 """
                     )
 
-                changelog_source = self.base_path / changelog
-
-                with changelog_source.open(encoding="utf-8") as c:
-                    f.write(c.read())
+                # Write the changelog content
+                f.write((self.base_path / changelog).read_text(encoding="utf-8"))
 
         with self.console.wait_bar("Building source archive..."):
             with tarfile.open(

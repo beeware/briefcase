@@ -4,16 +4,16 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     return iOSXcodeBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

@@ -1,6 +1,5 @@
 import pytest
 
-from briefcase.console import Console
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioCreateCommand
 
 # Most tests and fixtures are the same for both "app" and "visualstudio". This file only
@@ -9,9 +8,9 @@ from ..app.test_create import *  # noqa: F403
 
 
 @pytest.fixture
-def create_command(tmp_path):
+def create_command(dummy_console, tmp_path):
     return WindowsVisualStudioCreateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

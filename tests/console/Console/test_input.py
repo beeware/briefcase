@@ -1,8 +1,26 @@
+import os
+from unittest import mock
+
 import pytest
 from rich.markup import escape
 
-from briefcase.console import InputDisabled
+from briefcase.console import Console, InputDisabled
 from tests.utils import default_rich_prompt
+
+
+@pytest.fixture
+def console(raw_console, monkeypatch) -> Console:
+    raw_console._console_impl.input = mock.MagicMock(spec_set=input)
+    # default console is always interactive
+    monkeypatch.setattr(os, "isatty", lambda _: True)
+    return raw_console
+
+
+@pytest.fixture
+def disabled_console(raw_console) -> Console:
+    raw_console.input_enabled = False
+    raw_console._console_impl.input = mock.MagicMock(spec_set=input)
+    return raw_console
 
 
 def test_call_returns_user_input_when_enabled(console):

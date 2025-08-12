@@ -10,7 +10,7 @@ else:  # pragma: no-cover-if-gte-py311
 
 import pytest
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.web.static import StaticWebBuildCommand
@@ -19,9 +19,9 @@ from ....utils import create_file, create_wheel
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     command = StaticWebBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

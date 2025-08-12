@@ -57,6 +57,7 @@ def main():
         with suppress(KeyboardInterrupt):
             console.save_log_to_file(command)
 
+        console.close()
     return result
 
 

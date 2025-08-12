@@ -27,7 +27,7 @@ def tools_for_module(tool_module_name: str) -> dict[str, type[Tool]]:
             lambda klass: (
                 inspect.isclass(klass)
                 and not inspect.isabstract(klass)
-                and issubclass(klass, (Tool, ManagedTool))
+                and issubclass(klass, Tool | ManagedTool)
             ),
         )
     )

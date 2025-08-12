@@ -6,7 +6,6 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
@@ -14,9 +13,9 @@ from ....utils import create_file
 
 
 @pytest.fixture
-def build_command(tmp_path, first_app):
+def build_command(dummy_console, tmp_path, first_app):
     command = LinuxSystemBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
         apps={"first": first_app},

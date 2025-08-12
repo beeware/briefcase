@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, PropertyMock
 import httpx
 import pytest
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import Subprocess
@@ -14,9 +14,9 @@ from briefcase.platforms.android.gradle import GradleBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path, first_app_generated, monkeypatch):
+def build_command(dummy_console, tmp_path, first_app_generated, monkeypatch):
     command = GradleBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

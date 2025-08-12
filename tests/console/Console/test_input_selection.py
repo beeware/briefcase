@@ -1,9 +1,6 @@
-from unittest.mock import call
-
 import pytest
 
 from briefcase.console import InputDisabled
-from tests.utils import default_rich_prompt
 
 
 @pytest.mark.parametrize(
@@ -19,7 +16,7 @@ def test_input_selection(console, value, expected, default, transform):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    console._console_impl.input.side_effect = [value]
+    console.values = [value]
 
     actual = console.input_selection(
         prompt=prompt,
@@ -29,9 +26,7 @@ def test_input_selection(console, value, expected, default, transform):
     )
 
     assert actual == expected
-    console._console_impl.input.assert_called_once_with(
-        default_rich_prompt(prompt), markup=True
-    )
+    assert console.prompts == [prompt]
 
 
 def test_bad_input(console):
@@ -39,21 +34,12 @@ def test_bad_input(console):
     prompt = "> "
     options = ["A", "B", "C", "D", "E", "F"]
 
-    console._console_impl.input.side_effect = ["G", "Q", "C"]
+    console.values = ["G", "Q", "C"]
 
     actual = console.input_selection(prompt=prompt, choices=options)
 
     assert actual == "C"
-    assert console._console_impl.input.call_count == 3
-    assert console._console_impl.input.call_args_list[0] == call(
-        default_rich_prompt(prompt), markup=True
-    )
-    assert console._console_impl.input.call_args_list[1] == call(
-        default_rich_prompt(prompt), markup=True
-    )
-    assert console._console_impl.input.call_args_list[2] == call(
-        default_rich_prompt(prompt), markup=True
-    )
+    assert console.prompts == [prompt] * 3
 
 
 def test_disabled(disabled_console):
@@ -65,7 +51,7 @@ def test_disabled(disabled_console):
     )
 
     assert actual == "C"
-    disabled_console._console_impl.input.assert_not_called()
+    assert disabled_console.prompts == []
 
 
 def test_disabled_no_default(disabled_console):
@@ -79,4 +65,4 @@ def test_disabled_no_default(disabled_console):
             default=None,
         )
 
-    disabled_console._console_impl.input.assert_not_called()
+    assert disabled_console.prompts == []
