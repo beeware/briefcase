@@ -1166,10 +1166,8 @@ no extension).
 """
                     )
 
-                changelog_source = self.base_path / changelog
-
-                with changelog_source.open(encoding="utf-8") as c:
-                    f.write(c.read())
+                # Write the changelog content
+                f.write((self.base_path / changelog).read_text(encoding="utf-8"))
 
         with self.console.wait_bar("Building source archive..."):
             with tarfile.open(

@@ -354,9 +354,10 @@ def mime_type_to_uti(mime_type: str) -> str | None:  # pragma: no-cover-if-not-m
         # In this case, we return None to indicate that the UTI cannot be determined.
         return None
     plist = plistlib.loads(plist_data)
-    for type_declaration in (
+    type_declarations = (
         plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
-    ):
+    )
+    for type_declaration in type_declarations:
         # We check both the system built-in types (exported) and the known
         # third-party types (imported) to find the UTI for the given MIME type.
         # Most type declarations will have a UTTypeTagSpecification dictionary

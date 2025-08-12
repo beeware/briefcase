@@ -218,7 +218,6 @@ no-cover-if-is-py312 = "python_version == '3.12' and os_environ.get('COVERAGE_EX
 no-cover-if-lt-py312 = "sys_version_info < (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py311 = "sys_version_info < (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-gte-py311 = "sys_version_info >= (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
-no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
