@@ -74,6 +74,8 @@ jobs:
             python-version: "3.11"
           - platform: "ubuntu-24.04"
             python-version: "3.12"
+          - platform: "ubuntu-24.04"
+            python-version: "3.13"
           # # Allow dev Python to fail without failing entire job
           # - python-version: "3.15"
           #   experimental: true
