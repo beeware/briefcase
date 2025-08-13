@@ -16,4 +16,4 @@ class DebugpyDebugger(BaseDebugger):
     @property
     def debugger_support_pkg(self) -> str:
         """Get the name of the debugger support package."""
-        return get_debugger_requirement("briefcase-debugpy-debugger-support")
+        return get_debugger_requirement("briefcase-debugpy")

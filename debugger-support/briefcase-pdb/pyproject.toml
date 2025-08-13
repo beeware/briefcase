@@ -7,11 +7,11 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "briefcase-debugpy-debugger-support"
-description = "Add-on for briefcase to add remote debugging via debugpy."
+name = "briefcase-pdb"
+description = "Add-on for briefcase to add remote debugging via pdb."
 license = "BSD-3-Clause"
 dependencies = [
-    "debugpy>=1.8.14,<2.0.0"
+    "remote-pdb>=2.1.0,<3.0.0"
 ]
 dynamic = ["version"]
 
