@@ -84,9 +84,7 @@ def test_debugger(debugger_name, expected_class, connection_mode):
     debugger = get_debugger(debugger_name)
     assert isinstance(debugger, expected_class)
     assert debugger.connection_mode == connection_mode
-    assert (
-        f"briefcase-{debugger_name}-debugger-support" in debugger.debugger_support_pkg
-    )
+    assert f"briefcase-{debugger_name}" in debugger.debugger_support_pkg
 
 
 @pytest.mark.parametrize(
@@ -96,21 +94,15 @@ def test_debugger(debugger_name, expected_class, connection_mode):
 def test_debugger_editable(debugger_name, monkeypatch):
     with TemporaryDirectory() as tmp_path:
         tmp_path = Path(tmp_path)
-        (
-            tmp_path
-            / "debugger-support"
-            / f"briefcase-{debugger_name}-debugger-support"
-        ).mkdir(parents=True, exist_ok=True)
+        (tmp_path / "debugger-support" / f"briefcase-{debugger_name}").mkdir(
+            parents=True, exist_ok=True
+        )
         monkeypatch.setattr("briefcase.debuggers.base.IS_EDITABLE", True)
         monkeypatch.setattr("briefcase.debuggers.base.REPO_ROOT", tmp_path)
 
         debugger = get_debugger(debugger_name)
         assert (
-            str(
-                tmp_path
-                / "debugger-support"
-                / f"briefcase-{debugger_name}-debugger-support"
-            )
+            str(tmp_path / "debugger-support" / f"briefcase-{debugger_name}")
             == debugger.debugger_support_pkg
         )
 
@@ -126,7 +118,4 @@ def test_debugger_editable_path_not_found(debugger_name, monkeypatch):
         monkeypatch.setattr("briefcase.debuggers.base.REPO_ROOT", tmp_path)
 
         debugger = get_debugger(debugger_name)
-        assert (
-            f"briefcase-{debugger_name}-debugger-support=="
-            in debugger.debugger_support_pkg
-        )
+        assert f"briefcase-{debugger_name}==" in debugger.debugger_support_pkg
