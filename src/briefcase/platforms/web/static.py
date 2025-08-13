@@ -1,4 +1,5 @@
 import errno
+import os
 import subprocess
 import sys
 import webbrowser
@@ -13,7 +14,11 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
-from briefcase.integrations.virtual_environment import virtual_environment
+from briefcase.integrations.virtual_environment import (
+    env_with_venv,
+    venv_python,
+    virtual_environment,
+)
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -453,8 +458,13 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
+POC_PACKAGE = "arrr"  # random package for proof of code
+
+
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
-    description = "Run a static web project in development mode. (Work in progress)"
+    description = (
+        "Run a static web project in development mode. (POC: venv + single install)"
+    )
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -463,36 +473,44 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             dest="no_isolation",
             action="store_true",
             default=False,
-            help="Run without creating an isolated environment",
+            help="Run without creating an isolated environment (not supported for web).",
         )
-        parser.add_argument(
-        "-r",
-        "--update-requirements",
-        action="store_true",
-        help="Update by recreating the isolated environment",
-    )
 
     def _dev_with_env(
         self,
-        app,
-        _venv_path,
-        run_app,
-        update_requirements,
-        passthrough,
+        app: AppConfig,
+        _venv_path: Path | None,
+        run_app: bool,
+        update_requirements: bool,
+        passthrough: list[str] | None,
         **options,
     ):
-        # Override _venv_path from DevCommand — we’ll use our own venv context manager
         with virtual_environment(
             tools=self.tools,
             console=self.console,
             base_path=self.base_path,
             app=app,
-            **options,
+            update_requirements=update_requirements,
+            no_isolation=options.get("no_isolation", False),
         ) as venv_path:
-            # You could later install requirements here, or do editable installs, etc.
-            print(
-                venv_path
-            )  # just to pass pre-commit checks, need to change this later
+            py = os.fspath(venv_python(venv_path))
+            env = env_with_venv(os.environ, venv_path)
+
+            with self.console.wait_bar(
+                f"Installing {POC_PACKAGE} into isolated virtual environment..."
+            ):
+                try:
+                    self.tools.subprocess.run(
+                        [py, "-u", "-X", "utf8", "-m", "pip", "install", POC_PACKAGE],
+                        check=True,
+                        encoding="UTF-8",
+                        env=env,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        f"Failed to install {POC_PACKAGE!r} in the web dev virtual environment"
+                    ) from e
+                self.console.info("Package installed into venv")
             raise UnsupportedCommandError(
                 platform="web",
                 output_format="static",

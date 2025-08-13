@@ -8,6 +8,9 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.virtual_environment import (
+    venv_python,
+)
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -74,13 +77,16 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_requirements(self, app: AppConfig, **options):
+    def install_dev_requirements(
+        self, app: AppConfig, venv_path: Path | None = None, **options
+    ):
         """Install the requirements for the app dev.
 
         This will always include test requirements, if specified.
 
         :param app: The config object for the app
         """
+
         requires = app.requires if app.requires else []
         if app.test_requires:
             requires.extend(app.test_requires)
@@ -88,9 +94,16 @@ class DevCommand(RunAppMixin, BaseCommand):
         if requires:
             with self.console.wait_bar("Installing dev requirements..."):
                 try:
+                    py_exe = (
+                        os.fspath(venv_python(venv_path))
+                        if venv_path
+                        else sys.executable
+                    )
+                    env = self.get_environment(app, venv_path=venv_path)
+
                     self.tools.subprocess.run(
                         [
-                            sys.executable,
+                            py_exe,
                             "-u",
                             "-X",
                             "utf8",
@@ -101,15 +114,15 @@ class DevCommand(RunAppMixin, BaseCommand):
                         ]
                         + (["-vv"] if self.console.is_deep_debug else [])
                         + requires
-                        + app.requirement_installer_args,
+                        + getattr(app, "requirement_installer_args", []),
                         check=True,
                         encoding="UTF-8",
+                        env=env,
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
         else:
             self.console.info("No application requirements.")
-
 
     def run_dev_app(
         self,
