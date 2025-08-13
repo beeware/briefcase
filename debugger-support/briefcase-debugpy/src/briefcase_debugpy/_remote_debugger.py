@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 import debugpy
 
@@ -22,23 +22,26 @@ class AppPackagesPathMappings(TypedDict):
 class DebuggerConfig(TypedDict):
     host: str
     port: int
-    app_path_mappings: AppPathMappings | None
-    app_packages_path_mappings: AppPackagesPathMappings | None
+    app_path_mappings: Optional[AppPathMappings]
+    app_packages_path_mappings: Optional[AppPackagesPathMappings]
 
 
-def _load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str, str]]:
+def find_first_matching_path(regex: str) -> Optional[str]:
+    """Gibt das erste Element aus paths zurück, das auf regex matcht, sonst None."""
+    for p in sys.path:
+        if re.search(regex, p):
+            return p
+    return None
+
+
+def load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str, str]]:
     app_path_mappings = config.get("app_path_mappings", None)
     app_packages_path_mappings = config.get("app_packages_path_mappings", None)
 
     mappings_list = []
     if app_path_mappings:
-        device_app_folder = next(
-            (
-                p
-                for p in sys.path
-                if re.search(app_path_mappings["device_sys_path_regex"], p)
-            ),
-            None,
+        device_app_folder = find_first_matching_path(
+            app_path_mappings["device_sys_path_regex"]
         )
         if device_app_folder:
             for app_subfolder_device, app_subfolder_host in zip(
@@ -52,13 +55,8 @@ def _load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str
                     )
                 )
     if app_packages_path_mappings:
-        device_app_packages_folder = next(
-            (
-                p
-                for p in sys.path
-                if re.search(app_packages_path_mappings["sys_path_regex"], p)
-            ),
-            None,
+        device_app_packages_folder = find_first_matching_path(
+            app_packages_path_mappings["sys_path_regex"]
         )
         if device_app_packages_folder:
             mappings_list.append(
@@ -83,7 +81,7 @@ def start_debugpy(config_str: str, verbose: bool):
 
     host = debugger_config["host"]
     port = debugger_config["port"]
-    path_mappings = _load_path_mappings(debugger_config, verbose)
+    path_mappings = load_path_mappings(debugger_config, verbose)
 
     # There is a bug in debugpy that has to be handled until there is a new
     # debugpy release, see https://github.com/microsoft/debugpy/issues/1943

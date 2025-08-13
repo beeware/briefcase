@@ -9,6 +9,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "briefcase-debugpy"
 description = "Add-on for briefcase to add remote debugging via debugpy."
+readme = "README.md"
 license = "BSD-3-Clause"
 dependencies = [
     "debugpy>=1.8.14,<2.0.0"
@@ -17,3 +18,8 @@ dynamic = ["version"]
 
 [tool.setuptools_scm]
 root = "../../"
+
+[project.optional-dependencies]
+dev = [
+    "pytest == 8.4.1"
+]
