@@ -18,8 +18,8 @@ class install_with_pth(install):
     Please do not replicate this behavior.
     """
 
-    _pth_name = "briefcase_pdb_debugger_support"
-    _pth_contents = "import briefcase_pdb_debugger_support"
+    _pth_name = "briefcase_pdb"
+    _pth_contents = "import briefcase_pdb"
 
     def initialize_options(self):
         install.initialize_options(self)
