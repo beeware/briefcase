@@ -15,6 +15,8 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
+from ....utils import create_file
+
 
 @pytest.fixture
 def create_command(tmp_path):
@@ -66,6 +68,23 @@ def test_extra_pip_args(
     if old_config:
         shutil.rmtree(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
+        )
+        # Create the old-style VERSIONS file with a deliberately weird min iOS version
+        create_file(
+            tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
+            "\n".join(
+                [
+                    "Python version: 3.10.15",
+                    "Build: b11",
+                    "Min iOS version: 12.0",
+                    "---------------------",
+                    "BZip2: 1.0.8-1",
+                    "libFFI: 3.4.6-1",
+                    "OpenSSL: 3.0.15-1",
+                    "XZ: 5.6.2-1",
+                    "",
+                ]
+            ),
         )
 
     # Hard code the current architecture for testing. We only install simulator
