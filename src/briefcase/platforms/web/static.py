@@ -1,5 +1,4 @@
 import errno
-import os
 import subprocess
 import sys
 import webbrowser
@@ -15,8 +14,6 @@ from briefcase.exceptions import (
     UnsupportedCommandError,
 )
 from briefcase.integrations.virtual_environment import (
-    env_with_venv,
-    venv_python,
     virtual_environment,
 )
 
@@ -492,25 +489,11 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             app=app,
             update_requirements=update_requirements,
             no_isolation=options.get("no_isolation", False),
-        ) as venv_path:
-            py = os.fspath(venv_python(venv_path))
-            env = env_with_venv(os.environ, venv_path)
+        ) as runner:
+            with self.tools.console.wait_bar("Installing arrr"):
+                runner.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
 
-            with self.console.wait_bar(
-                f"Installing {POC_PACKAGE} into isolated virtual environment..."
-            ):
-                try:
-                    self.tools.subprocess.run(
-                        [py, "-u", "-X", "utf8", "-m", "pip", "install", POC_PACKAGE],
-                        check=True,
-                        encoding="UTF-8",
-                        env=env,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise BriefcaseCommandError(
-                        f"Failed to install {POC_PACKAGE!r} in the web dev virtual environment"
-                    ) from e
-                self.console.info("Package installed into venv")
+            #
             raise UnsupportedCommandError(
                 platform="web",
                 output_format="static",

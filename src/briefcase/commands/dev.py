@@ -99,7 +99,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                         if venv_path
                         else sys.executable
                     )
-                    env = self.get_environment(app, venv_path=venv_path)
+                    env = self.get_environment(app)
 
                     self.tools.subprocess.run(
                         [

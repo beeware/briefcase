@@ -165,21 +165,49 @@ class VenvEnvironment:
                         raise BriefcaseCommandError(
                             f"Virtual environment created, but failed to bootstrap pip tooling for {self.app.app_name}"
                         ) from e
-        return self.venv_path
+        return make_runner(tools=self.tools, venv_path=self.venv_path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+
+class NoOpEnvironment:
+    def __init__(
+        self,
+        tools,
+        console,
+        base_path,
+        app,
+    ):
+        self.tools = tools
+        self.console = console
+        self.base_path = base_path
+        self.app = app
+
+    def __enter__(self):
+        return make_runner(tools=self.tools, venv_path=None)
+
+    def __exit__(self, exc_type, exc, exc_tb):
         return False
 
 
 def virtual_environment(
     tools, console: Console, base_path: Path, app: AppConfig, **options
 ):
-    return VenvEnvironment(
-        tools,
-        console,
-        base_path,
-        app,
-        recreate=bool(options.get("update_requirements")),
-        path=options.get("path"),
-        upgrade_bootstrap=options.get("upgrade_bootstrap", True),
-    )
+    if options.get("no_isolation", False):
+        return NoOpEnvironment(
+            tools,
+            console,
+            base_path,
+            app,
+        )
+    else:
+        return VenvEnvironment(
+            tools,
+            console,
+            base_path,
+            app,
+            recreate=bool(options.get("update_requirements")),
+            path=options.get("path"),
+            upgrade_bootstrap=options.get("upgrade_bootstrap", True),
+        )
