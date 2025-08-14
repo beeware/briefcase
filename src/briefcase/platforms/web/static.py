@@ -13,6 +13,9 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
+from briefcase.integrations.virtual_environment import (
+    virtual_environment,
+)
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -452,17 +455,50 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
-class StaticWebDevCommand(StaticWebMixin, DevCommand):
-    description = "Run a static web project in development mode. (Work in progress)"
+POC_PACKAGE = "arrr"  # random package for proof of code
 
-    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
-        raise UnsupportedCommandError(
-            platform="web",
-            output_format="static",
-            command="dev",
+
+class StaticWebDevCommand(StaticWebMixin, DevCommand):
+    description = (
+        "Run a static web project in development mode. (POC: venv + single install)"
+    )
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--no-isolation",
+            dest="no_isolation",
+            action="store_true",
+            default=False,
+            help="Run without creating an isolated environment (not supported for web).",
         )
 
-    # implement logic to run the web server in development mode
+    def _dev_with_env(
+        self,
+        app: AppConfig,
+        _venv_path: Path | None,
+        run_app: bool,
+        update_requirements: bool,
+        passthrough: list[str] | None,
+        **options,
+    ):
+        with virtual_environment(
+            tools=self.tools,
+            console=self.console,
+            base_path=self.base_path,
+            app=app,
+            update_requirements=update_requirements,
+            no_isolation=options.get("no_isolation", False),
+        ) as runner:
+            with self.tools.console.wait_bar("Installing arrr"):
+                runner.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
+
+            #
+            raise UnsupportedCommandError(
+                platform="web",
+                output_format="static",
+                command="dev",
+            )
 
 
 # Declare the briefcase command bindings
