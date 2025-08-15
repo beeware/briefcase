@@ -101,3 +101,44 @@ def test_with_debugger(monkeypatch, capsys, verbose):
 
     if verbose:
         assert "Extracted path mappings:\n[0] host =   src/helloworld" in captured.out
+
+
+@pytest.mark.parametrize("verbose", [True, False])
+def test_os_file_bugfix(monkeypatch, capsys, verbose):
+    """Test if the os.__file__ bugfix is applied (see https://github.com/microsoft/debugpy/issues/1943)."""
+    os_environ = {}
+    os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
+    os_environ["BRIEFCASE_DEBUGGER"] = json.dumps(
+        {
+            "host": "somehost",
+            "port": 9999,
+        }
+    )
+    monkeypatch.setattr(os, "environ", os_environ)
+
+    # Fake an environment in that "os.__file__" is not available
+    monkeypatch.delattr(os, "__file__", raising=False)
+
+    fake_debugpy_listen = MagicMock()
+    monkeypatch.setattr(debugpy, "listen", fake_debugpy_listen)
+
+    fake_debugpy_wait_for_client = MagicMock()
+    monkeypatch.setattr(debugpy, "wait_for_client", fake_debugpy_wait_for_client)
+
+    # start test function
+    briefcase_debugpy.start_remote_debugger()
+
+    fake_debugpy_listen.assert_called_once_with(
+        ("somehost", 9999),
+        in_process_debug_adapter=True,
+    )
+
+    assert hasattr(os, "__file__")
+    assert os.__file__ == ""
+
+    captured = capsys.readouterr()
+    assert "Waiting for debugger to attach..." in captured.out
+    assert captured.err == ""
+
+    if verbose:
+        assert "'os.__file__' not available. Patching it..." in captured.out
