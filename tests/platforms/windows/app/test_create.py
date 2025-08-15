@@ -122,12 +122,26 @@ def test_explicit_guid(create_command, first_app_config, tmp_path):
     assert context["guid"] == "e822176f-b755-589f-849c-6c6600f7efb1"
 
 
-def test_support_package_url(create_command, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    "revision, micro",
+    [
+        # Numerical revision
+        (5, "5"),
+        # Text revision
+        ("5", "5"),
+        # Pre-release revision
+        ("0a3", "0"),
+        ("0b2", "0"),
+        ("0rc1", "0"),
+    ],
+)
+def test_support_package_url(
+    create_command, revision, micro, first_app_config, tmp_path
+):
     """A valid support package URL is created for a support revision."""
-    revision = 5
     expected_link = (
         f"https://www.python.org/ftp/python"
-        f"/{sys.version_info.major}.{sys.version_info.minor}.{revision}"
+        f"/{sys.version_info.major}.{sys.version_info.minor}.{micro}"
         f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-amd64.zip"
     )
     assert create_command.support_package_url(revision) == expected_link
