@@ -143,10 +143,12 @@ specifying by the ``--test`` option.
 Run the app in debug mode in the bundled app environment and establish an
 debugger connection via a socket.
 
-Currently the following debuggers are supported (default is ``pdb``):
+Currently the following debuggers are supported:
 
 - ``pdb``: This is used for debugging via console.
 - ``debugpy``: This is used for debugging via VSCode.
+
+If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is used as default.
 
 This is an experimental new feature, that is currently only support on Windows and macOS.
 
