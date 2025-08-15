@@ -76,18 +76,17 @@ entitlements_path="Entitlements.plist"
         """<?xml?>\n<installer-script></installer-script>""",
     )
 
-    # Create the support package VERSIONS file
-    # with a deliberately weird min macOS version
-    create_file(
-        tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-        "\n".join(
-            [
-                "Python version: 3.10.15",
-                "Build: b11",
-                "Min macOS version: 10.12",
-                "",
-            ]
+    # Create the XCframework Info.plist file, with a deliberately weird min macOS version
+    create_plist_file(
+        (
+            tmp_path
+            / "base_path/build/first-app/macos/app/support/Python.xcframework"
+            / "macos-arm64_x86_64/Python.framework/Resources/Info.plist"
         ),
+        {
+            "CFBundleVersion": "3.10.15",
+            "MinimumOSVersion": "10.12",
+        },
     )
 
     # Select dmg packaging by default

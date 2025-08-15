@@ -1,0 +1,1 @@
+iOS and macOS apps now read the minimum supported OS version from the Python framework's metadata, rather than requiring a ``VERSIONS`` file as part of the support package.

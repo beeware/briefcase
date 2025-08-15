@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -478,9 +479,29 @@ def test_install_app_packages(
     )
 
 
-def test_min_os_version(create_command, first_app_templated, tmp_path):
+@pytest.mark.parametrize("old_config", [True, False])
+def test_min_os_version(create_command, first_app_templated, old_config, tmp_path):
     """If the app specifies a min OS version, it is used for wheel installs."""
     create_command.tools.host_arch = "arm64"
+
+    if old_config:
+        # Old support packages didn't contain an XCframework; but they did have a
+        # VERSIONS file. Delete the xcframework, and create the support package VERSIONS
+        # file with a deliberately weird min macOS version
+        shutil.rmtree(
+            tmp_path / "base_path/build/first-app/macos/app/support/Python.xcframework"
+        )
+        create_file(
+            tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
+            "\n".join(
+                [
+                    "Python version: 3.10.15",
+                    "Build: b11",
+                    "Min macOS version: 10.12",
+                    "",
+                ]
+            ),
+        )
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
@@ -996,7 +1017,6 @@ def test_install_support_package(
         side_effect=mock_tgz_download(
             f"Python-3.{sys.version_info.minor}-macOS-support.b37.tar.gz",
             content=[
-                ("VERSIONS", "Version tracking info"),
                 (
                     "platform-site/macosx.arm64/sitecustomize.py",
                     "this is the arm64 platform site",
@@ -1024,7 +1044,6 @@ def test_install_support_package(
     create_command.install_app_support_package(first_app_templated)
 
     # Confirm that the support files have been unpacked into the bundle location
-    assert (bundle_path / "support/VERSIONS").exists()
     assert (
         bundle_path / "support/platform-site/macosx.arm64/sitecustomize.py"
     ).exists()
@@ -1051,7 +1070,6 @@ def test_install_support_package(
     assert not (
         runtime_support_path / "platform-site/macosx.x86_64/sitecustomize.py"
     ).exists()
-    assert not (runtime_support_path / "VERSIONS").exists()
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
