@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - ci-test  # TODO: Remove this
   workflow_call:
     inputs:
       attest-package:
