@@ -18,6 +18,10 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
+from briefcase.debuggers.base import (
+    AppPackagesPathMappings,
+    DebuggerConnectionMode,
+)
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
@@ -215,15 +219,19 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
+        # Extract test packages, to enable features like test discovery and assertion rewriting.
+        extract_sources = app.test_sources or []
+
+        # In debug mode extract all source packages so that the debugger can get the source code
+        # at runtime (eg. via 'll' in pdb).
+        if app.debugger:
+            extract_sources.extend(app.sources)
+
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
-            # Extract test packages, to enable features like test discovery and assertion
-            # rewriting.
             "extract_packages": ", ".join(
-                f'"{name}"'
-                for path in (app.test_sources or [])
-                if (name := Path(path).name)
+                [f'"{name}"' for path in extract_sources if (name := Path(path).name)]
             ),
             "build_gradle_dependencies": {"implementation": dependencies},
         }
@@ -286,6 +294,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
+    supports_debugger = True
 
 
 class GradleOpenCommand(GradleMixin, OpenCommand):
@@ -294,6 +303,7 @@ class GradleOpenCommand(GradleMixin, OpenCommand):
 
 class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
+    supports_debugger = True
 
     def metadata_resource_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
@@ -329,6 +339,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
 class GradleRunCommand(GradleMixin, RunCommand):
     description = "Run an Android debug APK on a device (physical or virtual)."
+    supports_debugger = True
 
     def verify_tools(self):
         super().verify_tools()
@@ -374,9 +385,25 @@ class GradleRunCommand(GradleMixin, RunCommand):
             help="Reverse the specified port from device to host.",
         )
 
+    def _debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
+        return AppPackagesPathMappings(
+            sys_path_regex="requirements$",
+            host_folder=f"{app_packages_path}",
+        )
+
     def run_app(
         self,
         app: AppConfig,
+        debugger_host: str | None,
+        debugger_port: int | None,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -388,6 +415,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
@@ -446,6 +475,19 @@ class GradleRunCommand(GradleMixin, RunCommand):
             forward_ports = forward_ports or []
             reverse_ports = reverse_ports or []
 
+            env = {}
+            if self.console.is_debug:
+                env["BRIEFCASE_DEBUG"] = "1"
+
+            if app.debugger:
+                env["BRIEFCASE_DEBUGGER"] = self.debugger_config(
+                    app, debugger_host, debugger_port
+                )
+                if app.debugger.connection_mode == DebuggerConnectionMode.SERVER:
+                    forward_ports.append(debugger_port)
+                else:
+                    reverse_ports.append(debugger_port)
+
             # Forward/Reverse requested ports
             with self.forward_ports(adb, forward_ports, reverse_ports):
                 # To start the app, we launch `org.beeware.android.MainActivity`.
@@ -454,7 +496,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     device_start_time = adb.datetime()
 
                     adb.start_app(
-                        package, "org.beeware.android.MainActivity", passthrough
+                        package, "org.beeware.android.MainActivity", passthrough, env
                     )
 
                     # Try to get the PID for 5 seconds.
