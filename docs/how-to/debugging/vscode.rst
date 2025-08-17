@@ -70,6 +70,7 @@ creating a configuration like this in the ``.vscode/launch.json`` file:
                     "host": "localhost",
                     "port": 5678
                 }
+                "justMyCode": false
             }
         ]
     }
@@ -78,12 +79,10 @@ The app will not start until you attach the debugger. Once you attached the
 VSCode debugger you are ready to debug your app. You can set `breakpoints <https://code.visualstudio.com/docs/debugtest/debugging#_breakpoints>`_
 , use the `data inspection <https://code.visualstudio.com/docs/debugtest/debugging#_data-inspection>`_
 , use the `debug console REPL <https://code.visualstudio.com/docs/debugtest/debugging#_debug-console-repl>`_
-and all other debugging features of VSCode :)
+and all other debugging features of VSCode 🙂
 
-But there are also some restrictions, that do not work:
- - Restart the debugger via the green circle is not working correctly.
+But there are some restrictions, that must be taken into account:
 
-Some more notes to the ``.vscodelaunch.json`` options:
- - It is not required to specify ``pathMappings``. This will be done by briefcase dynamically.
- - If you want to debug not only your own code but also external libraries that you have defined using :attr:`requires`, you can additionally
-set `justMyCode <https://code.visualstudio.com/docs/python/debugging#_justmycode>`_ to ``false``.
+- Restart the debugger via the green circle is not working correctly.
+- ``justMyCode`` has to be set to ``false``. An incorrect configuration can disrupt debugging support.
+- ``pathMappings`` should not be set manually. This will be set by briefcase dynamically. An incorrect configuration can disrupt debugging support.

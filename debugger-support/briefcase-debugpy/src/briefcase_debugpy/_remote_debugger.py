@@ -117,7 +117,8 @@ To connect to debugpy using VSCode add the following configuration to '.vscode/l
             "connect": {{
                 "host": "{host}",
                 "port": {port}
-            }}
+            }},
+            "justMyCode": false
         }}
     ]
 }}
