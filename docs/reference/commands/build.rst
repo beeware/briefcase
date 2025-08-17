@@ -124,13 +124,19 @@ Currently the following debuggers are supported:
 
 - ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
 - ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
--
+
 If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is used as default.
 
-This is an experimental new feature, that is currently only support on Windows and macOS.
+This is an **experimental** new feature, that is currently only support on Windows and macOS.
 
 This option may slow down the app a little bit.
 
+If you have previously run the app in "normal" mode, you may need to pass ``-r``
+/ ``--update-requirements`` the first time you build in debug mode to ensure that
+the debugger is embedded in your bundled app.
+
+The selected debugger in ``build --debug <debugger>`` has to match the selected
+debugger in ``run --debug <debugger>``.
 
 ``--no-update``
 ---------------

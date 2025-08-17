@@ -155,7 +155,10 @@ not available on the host system.
 
 If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is used as default.
 
-This is an experimental new feature, that is currently only support on Windows and macOS.
+This is an **experimental** new feature, that is currently only support on Windows and macOS.
+
+The selected debugger in ``run --debug <debugger>`` has to match the selected
+debugger in ``build --debug <debugger>``.
 
 ``--debugger-host <host>``
 --------------------------
