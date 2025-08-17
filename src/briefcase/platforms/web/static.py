@@ -476,7 +476,6 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
     def _dev_with_env(
         self,
         app: AppConfig,
-        _venv_path: Path | None,
         run_app: bool,
         update_requirements: bool,
         passthrough: list[str] | None,
@@ -489,11 +488,10 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             app=app,
             update_requirements=update_requirements,
             no_isolation=options.get("no_isolation", False),
-        ) as runner:
+        ) as venv:
             with self.tools.console.wait_bar("Installing arrr"):
-                runner.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
+                venv.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
 
-            #
             raise UnsupportedCommandError(
                 platform="web",
                 output_format="static",

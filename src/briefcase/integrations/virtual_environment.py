@@ -34,10 +34,10 @@ class VenvRunner:
         self.venv_path = venv_path
 
     @property
-    def python(self):
-        if self.venv_path is None:
-            return sys.executable
-        return os.fspath(venv_python(self.venv_path))
+    def executable(self):
+        return (
+            os.fspath(venv_python(self.venv_path)) if self.venv_path else sys.executable
+        )
 
     @property
     def env(self):
@@ -49,7 +49,7 @@ class VenvRunner:
         head = str(args[0]).lower()
         candidates = ("python", "python3", "python.exe", str(sys.executable).lower())
         if head.endswith(candidates):
-            return [self.python, *args[1:]]
+            return [self.executable, *args[1:]]
         return args
 
     def run(self, args: list[str], **kwargs):
