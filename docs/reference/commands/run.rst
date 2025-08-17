@@ -174,9 +174,6 @@ Specifies the port of the socket connection for the debugger. This
 option is only used when the ``--debug <debugger>`` option is specified. The
 default value is ``5678``.
 
-On Android this also forwards the port from the Android device to the host pc
-via ADB if the port is ``localhost``.
-
 Passthrough arguments
 ---------------------
 
