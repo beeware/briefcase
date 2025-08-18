@@ -72,8 +72,8 @@ def pip_install_generic(
     console,
     requires: list[str],
     *,
-    venv_path: Path | None = None,
-    extra_args: list[str] | None = None,
+    venv_path: Optional[Path] = None,
+    extra_args: Optional[list[str]] = None,
     message: str = "Installing requirements...",
     deep_debug: bool = False,
 ):
