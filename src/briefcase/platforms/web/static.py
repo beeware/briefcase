@@ -1,11 +1,9 @@
 import errno
-import shutil
 import re
 import subprocess
 import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from importlib.resources import files
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
@@ -102,39 +100,39 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    def _merge_insert_content(self, inserts, key, path):
-        """Merge multi-file insert content into a single insert file.
+    # def _merge_insert_content(self, inserts, key, path):
+    #    """Merge multi-file insert content into a single insert file.
 
-        Rewrites the inserts, removing the entry for ``key``,
-        producing a merged entry for ``path`` that has a single
-        ``key`` insert.
-        This is used to merge multiple contributed CSS files into
-        a single CSS insert.
+    #    Rewrites the inserts, removing the entry for ``key``,
+    #    producing a merged entry for ``path`` that has a single
+    #    ``key`` insert.
+    #    This is used to merge multiple contributed CSS files into
+    #    a single CSS insert.
 
-        :param inserts: All inserts
-        :param key: The key to merge
-        :param path: The path for the merge insert.
-        """
+    #    :param inserts: All inserts
+    #    :param key: The key to merge
+    #    :param path: The path for the merge insert.
+    #    """
 
-        try:
-            original = inserts.pop(key)
-        except KeyError:
-            # No merging
-            pass
-        else:
-            merged = {}
-            for filename, package_inserts in original.items():
-                for package, css in package_inserts.items():
-                    try:
-                        old_css = merged[package]
-                    except KeyError:
-                        old_css = ""
+    #    try:
+    #        original = inserts.pop(key)
+    #    except KeyError:
+    # No merging
+    #        pass
+    #    else:
+    #        merged = {}
+    #        for filename, package_inserts in original.items():
+    #            for package, css in package_inserts.items():
+    #                try:
+    #                    old_css = merged[package]
+    #                except KeyError:
+    #                    old_css = ""
 
-                    full_css = f"{old_css}/********** {filename} **********/\n{css}\n"
-                    merged[package] = full_css
+    #                full_css = f"{old_css}/********** {filename} **********/\n{css}\n"
+    #                merged[package] = full_css
 
-            # Preserve the merged content as a single insert
-            inserts[path] = {key: merged}
+    # Preserve the merged content as a single insert
+    #        inserts[path] = {key: merged}
 
     def _write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
         """Write inserts into an existing file.
@@ -153,18 +151,16 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             the name of the insert to add, and then package that contributed the
             insert.
         """
-        # Read the current content
+        # Load file content, skip if file not found
         target_path = self.project_path(app) / filename
-        if not target_path.exists():
+        try:
+            file_text = target_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
             self.console.warning(f"  Target {filename} not found; skipping inserts.")
             return
 
-        with target_path.open("r", encoding="utf-8") as f:
-            file_text = f.read()
-
-        for insert in sorted(inserts.keys()):
-            packages = inserts[insert]
-
+        # Each insert slot may have multiple package contributions
+        for insert, packages in inserts.items():
             html_banner = (
                 "<!--------------------------------------------------\n"
                 " * {package}\n"
@@ -178,6 +174,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 "{content}"
             )
 
+            # Marker patterns for HTML and CSS/JS
             marker_styles = [
                 # HTML
                 (
@@ -193,36 +190,42 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ),
             ]
 
+            # Build bodies for HTML and CSS inserts
             html_body = "\n".join(
-                html_banner.format(package=pkg, content=packages[pkg])
-                for pkg in sorted(packages.keys())
+                html_banner.format(package=pkg, content=pkg_content.get("html", ""))
+                for pkg, pkg_content in (packages.items())
+                if pkg_content.get("html")
             )
             css_body = "\n".join(
-                css_banner.format(package=pkg, content=packages[pkg])
-                for pkg in sorted(packages.keys())
+                css_banner.format(package=pkg, content=pkg_content.get("css", ""))
+                for pkg, pkg_content in (packages.items())
+                if pkg_content.get("css")
             )
 
-            replaced = False
+            # Find first matching marker in file
+            matched_style = None
             for pattern_tmpl, repl_tmpl, kind in marker_styles:
                 pattern = re.compile(
-                    pattern_tmpl.format(nsert=insert), flags=re.MULTILINE | re.DOTALL
+                    pattern_tmpl.format(insert=insert),
+                    flags=re.MULTILINE | re.DOTALL,
                 )
-                if pattern.search(file_text):
-                    body = html_body if kind == "html" else css_body
-                    file_text = pattern.sub(
-                        repl_tmpl.format(insert=insert, content=body),
-                        file_text,
-                    )
-                    replaced = True
-                    break
+                if matched_style is None and pattern.search(file_text):
+                    matched_style = (pattern, repl_tmpl, kind)
 
-            if not replaced:
+            if matched_style is not None:
+                # Replace marker region with assembled body
+                pattern, repl_tmpl, kind = matched_style
+                body = html_body if kind == "html" else css_body
+                file_text = pattern.sub(
+                    repl_tmpl.format(insert=insert, content=body),
+                    file_text,
+                )
+            else:
                 self.console.warning(
                     f"  Slot '{insert}' markers not found in {filename}; skipping."
                 )
-
-        with target_path.open("w", encoding="utf-8") as f:
-            f.write(file_text)
+        # Save modified content
+        target_path.write_text(file_text, encoding="utf-8")
 
     def _process_wheel(self, wheelfile, inserts, static_path):
         """Process a wheel, extracting any content that needs to be compiled into the
@@ -245,7 +248,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         package_version = parts[1]
         package_key = f"{package_name} {package_version}"
 
-        # Purge any existing extracted static files for this wheel
+        # Purge any old static files for this wheel
         pkg_static_root = static_path / package_name
         if pkg_static_root.exists():
             self.tools.shutil.rmtree(pkg_static_root)
@@ -256,12 +259,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 if len(path.parts) < 2:
                     continue
 
+                # Detect "inserts" paths inside the wheel
                 is_inserts = (path.parts[1] == "inserts") or (
                     len(path.parts) >= 3
                     and path.parts[1] == "deploy"
                     and path.parts[2] == "inserts"
                 )
                 if is_inserts and path.name:
+                    # Derive target file and insert slot
                     source = (
                         str(Path(*path.parts[2:]))
                         if path.parts[1] == "inserts"
@@ -278,16 +283,26 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     )
                     try:
                         text = wheel.read(filename).decode("utf-8")
-                    except UnicodeDecodeError:
-                        self.console.warning(
-                            f"    {source}: non-UTF8 insert; skipping."
-                        )
-                        continue
-                    inserts.setdefault(target, {}).setdefault(insert, {})[
-                        package_key
-                    ] = text
+                    except UnicodeDecodeError as e:
+                        raise BriefcaseCommandError(
+                            f"{source}: insert must be UTF-8 encoded"
+                        ) from e
+
+                    # Classify insert as HTML vs CSS/JS
+                    ext = Path(filename).suffix.lower()
+                    kind = "css" if ext in {".css", ".js"} else "html"
+
+                    # Ensure nested dict structure exists
+                    pkg_entry = (
+                        inserts.setdefault(target, {})
+                        .setdefault(insert, {})
+                        .setdefault(package_key, {"html": "", "css": ""})
+                    )
+                    # Append into the right bucket
+                    pkg_entry[kind] += text
                     continue
 
+                # Detect "static" paths inside the wheel
                 is_static = (path.parts[1] == "static") or (
                     len(path.parts) >= 3
                     and path.parts[1] == "deploy"
@@ -296,6 +311,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 if is_static:
                     if filename.endswith("/"):
                         continue
+                    # Compute output path relative to static/
                     rel_parts = (
                         path.parts[2:] if path.parts[1] == "static" else path.parts[3:]
                     )
@@ -305,7 +321,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         f.write(wheel.read(filename))
 
     def _gather_backend_config(self, wheels):
-        """Processes multiple wheels to gather a config.toml and a base pyscript.toml file.
+        """Processes multiple wheels to gather a config.toml and a base pyscript.toml
+        file.
 
         :param wheels: A list of wheel files to be scanned.
         """
@@ -345,25 +362,16 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                         "Only 'pyscript' backend is currently supported for web static builds."
                                     )
 
-                                # Try to find pyscript.toml configuration file.
-                                try:
-                                    with wheel.open(f"{path.parent}/pyscript.toml") as pyscript_file:
-                                        pyscript_config = tomllib.load(pyscript_file)
-                                except KeyError:
-                                    raise BriefcaseConfigError(
-                                        f"Pyscript configuration file not found in package: {config_package}"
-                                    )
-                                # pyscript_config = self._gather_backend_config_file(wheel, backend, path)
+                                pyscript_config = self._gather_backend_config_file(
+                                    wheel, backend, path
+                                )
 
                             else:
                                 raise BriefcaseConfigError(
-                                    'No backend was provided in config.toml file.'
+                                    "No backend was provided in config.toml file."
                                 )
         # Return a blank pyscript config if no configuration file is found.
-        if (
-            config_counter == 0
-            and pyscript_config is None
-        ):
+        if config_counter == 0 and pyscript_config is None:
             pyscript_config = {}
 
         return pyscript_config
@@ -482,7 +490,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             except AttributeError:
                 pass
 
-            # Write the final configuration.
+            # Write the final configuration
             with (self.project_path(app) / "pyscript.toml").open("wb") as f:
                 tomli_w.dump(config, f)
 
@@ -495,7 +503,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 sentinel=" ******************* Wheel contributed styles **********************/",
             )
 
-            inserts: dict[str, dict[str, dict[str, str]]] = {}
+            inserts: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
             static_root = self.static_path(app)
 
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
@@ -507,11 +515,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 )
 
             # Write inserts per target
-            for target in sorted(inserts.keys()):
-                self._write_inserts(app, Path(target), inserts[target])
+            for target, target_inserts in inserts.items():
+                self._write_inserts(app, Path(target), target_inserts)
 
         return {}
-    
+
 
 class HTTPHandler(SimpleHTTPRequestHandler):
     """Convert any HTTP request into a path request on the static content folder."""
