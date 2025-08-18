@@ -142,7 +142,19 @@ jobs:
     - name: Get Packages
       uses: actions/download-artifact@v5.0.0
       with:
-        pattern: ${{ needs.package.outputs.artifact-name }},${{ needs.package-debugpy.outputs.artifact-name }},${{ needs.package-pdb.outputs.artifact-name }}
+        name: ${{ needs.package.outputs.artifact-name }}
+        path: dist
+
+    - name: Get Packages
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: ${{ needs.package-debugpy.outputs.artifact-name }}
+        path: dist
+
+    - name: Get Packages
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: ${{ needs.package-pdb.outputs.artifact-name }}
         path: dist
 
     - name: Install Tox
