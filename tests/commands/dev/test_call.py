@@ -1,6 +1,3 @@
-import sys
-from pathlib import Path
-
 import pytest
 
 from briefcase.commands import DevCommand
@@ -27,6 +24,9 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
 
+    def _app_dev_env(self, app, venv):
+        return self.env
+
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))
@@ -43,8 +43,14 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def install_dev_requirements(self, app, **kwargs):
-        self.actions.append(("dev_requirements", app.app_name, kwargs))
+    def install_dev_requirements(self, app, venv, **kwargs):
+        self.actions.append(
+            (
+                "dev_requirements",
+                app.app_name,
+                {"has_run": hasattr(venv, "run")},
+            )
+        )
 
     def get_environment(self, app):
         return self.env
@@ -87,7 +93,7 @@ def test_no_args_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -140,7 +146,7 @@ def test_with_arg_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -175,7 +181,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
             "run_dev",
             "second",
             False,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -214,8 +220,6 @@ def test_update_requirements(dev_command, first_app):
     # Run the run command
     dev_command(**options)
 
-    venv_path = Path(sys.prefix)
-
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -231,8 +235,7 @@ def test_update_requirements(dev_command, first_app):
             "dev_requirements",
             "first",
             {
-                "venv_path": venv_path,
-                "no_isolation": False,
+                "has_run": True,
             },
         ),
         # Then, it will be started
@@ -240,7 +243,7 @@ def test_update_requirements(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -259,8 +262,6 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    venv_path = Path(sys.prefix)
-
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -276,8 +277,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
             "dev_requirements",
             "first",
             {
-                "venv_path": venv_path,
-                "no_isolation": False,
+                "has_run": True,
             },
         ),
         # Then, it will be started
@@ -285,7 +285,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
             "run_dev",
             "first",
             False,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -305,8 +305,6 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    venv_path = Path(sys.prefix)
-
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -322,8 +320,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
             "dev_requirements",
             "first",
             {
-                "venv_path": venv_path,
-                "no_isolation": False,
+                "has_run": True,
             },
         ),
         # Then, it will be started
@@ -331,7 +328,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
             "run_dev",
             "first",
             False,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -350,8 +347,6 @@ def test_no_run(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    venv_path = Path(sys.prefix)
-
     assert dev_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -366,8 +361,7 @@ def test_no_run(dev_command, first_app_uninstalled):
             "dev_requirements",
             "first",
             {
-                "venv_path": venv_path,
-                "no_isolation": False,
+                "has_run": True,
             },
         ),
     ]
@@ -401,7 +395,7 @@ def test_run_test(dev_command, first_app):
             "run_dev",
             "first",
             True,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -420,7 +414,6 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    venv_path = Path(sys.prefix)
     # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
@@ -432,13 +425,13 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Development requirements will be installed
-        ("dev_requirements", "first", {"venv_path": venv_path, "no_isolation": False}),
+        ("dev_requirements", "first", {"has_run": True}),
         # Then, it will be started
         (
             "run_dev",
             "first",
             True,
-            {"passthrough": [], "no_isolation": False},
+            {"passthrough": []},
             dev_command.env,
         ),
     ]
@@ -452,10 +445,9 @@ def test_web_platform_dev_with_env_called(monkeypatch, tmp_path, first_app):
         platform = "web"
 
         def _dev_with_env(
-            self, app, env, run_app, update_requirements, passthrough, **options
+            self, app, run_app, update_requirements, passthrough, **options
         ):
             log["called"] = True
-            log["venv"] = env
             return "success"
 
     cmd = WebDevCommand(base_path=tmp_path)
@@ -466,4 +458,3 @@ def test_web_platform_dev_with_env_called(monkeypatch, tmp_path, first_app):
 
     assert result == "success"
     assert log["called"] is True
-    assert log["venv"] == Path(sys.prefix)

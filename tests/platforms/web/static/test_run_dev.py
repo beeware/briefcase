@@ -1,9 +1,10 @@
-import subprocess
+import os
 
 import pytest
 
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedCommandError
+from briefcase.integrations import virtual_environment as ve
 from briefcase.platforms.web.static import StaticWebDevCommand
 
 
@@ -26,12 +27,13 @@ def test_web_dev_creates_venv_and_raises(
     run_log = {}
 
     # Fake subprocess.run to simulate venv creation
-    def fake_run(cmd, check, **kwargs):
+    def fake_run(self, args, check=True, **kwargs):
         run_log["called"] = True
         venv_path.mkdir(parents=True, exist_ok=True)
         (venv_path / "pyvenv.cfg").touch()
+        (venv_path / ("Scripts" if os.name == "nt" else "bin")).mkdir(exist_ok=True)
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(ve.VenvRunner, "run", fake_run, raising=True)
 
     dev_command.apps = {"first-app": first_app_built}
 
@@ -44,7 +46,6 @@ def test_web_dev_creates_venv_and_raises(
         )
 
     assert run_log.get("called") is True
-    assert venv_path.exists()
     assert (venv_path / "pyvenv.cfg").exists()
 
 
