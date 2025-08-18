@@ -4,7 +4,7 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from zipfile import ZipFile
 
 from briefcase.console import Console
@@ -478,7 +478,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         app: AppConfig,
         run_app: bool,
         update_requirements: bool,
-        passthrough: list[str] | None,
+        passthrough: Optional[list[str]] = None,
         **options,
     ):
         with virtual_environment(
