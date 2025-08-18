@@ -78,3 +78,16 @@ def test_staticweb_multiple_apps_no_app_given_triggers_else(dev_command, first_a
         dev_command()  # <- No appname provided!
 
     assert "specifies more than one application" in str(exc.value)
+
+
+def test_staticweb_raises_unsupported_error(dev_command, first_app):
+    """Raise error if an unsupported command is called."""
+    dev_command.apps = {"first": first_app}
+
+    with pytest.raises(UnsupportedCommandError):
+        dev_command(
+            appname="first",
+            run_app=True,
+            update_requirements=False,
+            no_isolation=False,
+        )

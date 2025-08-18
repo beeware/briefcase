@@ -10,7 +10,7 @@ from briefcase.exceptions import MissingAppSources
 from ...utils import create_file
 
 
-def assert_dist_info(app_path):
+def assert_dist_info(app_path, download_url="https://example.com"):
     dist_info_path = app_path / "my_app-1.2.3.dist-info"
 
     # Confirm the metadata files exist.
@@ -21,21 +21,72 @@ def assert_dist_info(app_path):
         assert f.read() == "briefcase\n"
 
     with (dist_info_path / "METADATA").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == f"""Metadata-Version: 2.1
+        if download_url == "":
+            assert (
+                f.read()
+                == f"""Metadata-Version: 2.1
+Briefcase-Version: {briefcase.__version__}
+Name: my-app
+Formal-Name: My App
+App-ID: com.example.my-app
+Version: 1.2.3
+Download-URL:
+Author: First Last
+Author-email: first@example.com
+Summary: This is a simple app
+"""
+            )
+        else:
+            assert (
+                f.read()
+                == f"""Metadata-Version: 2.1
 Briefcase-Version: {briefcase.__version__}
 Name: my-app
 Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3
 Home-page: https://example.com
-Download-URL: https://example.com
+Download-URL: {download_url}
 Author: First Last
 Author-email: first@example.com
 Summary: This is a simple app
 """
-        )
+            )
+
+
+def test_no_metadata_url(create_command, myapp, app_path, app_requirements_path_index):
+    """If the app metadata does not define a URL, the dist-info file is created without
+    a URL."""
+
+    # Mock shutil so we can track usage.
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
+
+    # Remove the URL from the app metadata
+    myapp.url = None
+    myapp.sources = None
+    create_command.install_app_code(myapp)
+
+    assert_dist_info(app_path, download_url="")
+
+
+def test_no_metadata_author_and_email(
+    create_command, myapp, app_path, app_requirements_path_index
+):
+    """If the app metadata does not define an author or email, the dist-info file is
+    created without an author or email."""
+
+    # Mock shutil so we can track usage.
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
+
+    # Remove the author and email from the app metadata
+    myapp.author = None
+    myapp.author_email = None
+    myapp.sources = None
+    create_command.install_app_code(myapp)
+
+    assert_dist_info(app_path, download_url="")
 
 
 def test_no_code(

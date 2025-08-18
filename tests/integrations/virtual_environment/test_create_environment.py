@@ -1,6 +1,5 @@
 import subprocess
 import sys
-from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -9,6 +8,8 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import (
     NoOpEnvironment,
     VenvEnvironment,
+    VenvRunner,
+    pip_install_generic,
     virtual_environment,
 )
 
@@ -40,9 +41,135 @@ def dummy_app():
     return DummyApp()
 
 
+def test_rewrite_head_no_args(dummy_tools, tmp_path):
+    """Test that rewrite_head returns an empty list when no args are provided."""
+    runner = VenvRunner(dummy_tools, tmp_path)
+    assert runner._rewrite_head([]) == []
+
+
+def test_rewrite_head_with_matching_args(dummy_tools, tmp_path):
+    """Test that rewrite_head returns the matching interpreter and remaining args."""
+    runner = VenvRunner(dummy_tools, tmp_path)
+    assert runner._rewrite_head(["python", "args1"]) == [runner.executable, "args1"]
+
+
+def test_rewrite_head_with_no_matching_args(dummy_tools, tmp_path):
+    """Test that rewrite_head returns the original args when no matching interpreter is
+    found."""
+    runner = VenvRunner(dummy_tools, tmp_path)
+    assert runner._rewrite_head(["args1", "args2"]) == ["args1", "args2"]
+
+
+def test_popen_returns_process(dummy_tools, tmp_path):
+    """Test that Popen returns a process object and calls subprocess.Popen with the
+    correct arguments."""
+    runner = VenvRunner(dummy_tools, tmp_path)
+
+    runner.Popen(["python", "args1", "args2"])
+    dummy_tools.subprocess.Popen.assert_called_once_with(
+        [runner.executable, "args1", "args2"],
+        env=runner.env,
+    )
+
+
+def test_pip_install_generic_no_requirements(tmp_path, dummy_console, dummy_tools):
+    """Test pip_install_generic with no requirements returns nothing."""
+    pip_install_generic(dummy_tools, dummy_console, [], venv_path=tmp_path)
+    dummy_tools.subprocess.run.assert_not_called()
+
+
+def test_pip_install_generic_with_requirements(dummy_console, dummy_tools):
+    """Test pip_install_generic with requirements, deep debug and extra args."""
+    pip_install_generic(
+        dummy_tools,
+        dummy_console,
+        ["req1", "req2"],
+        extra_args=["extra1"],
+        deep_debug=True,
+    )
+    dummy_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "-vv",
+            "extra1",
+            "req1",
+            "req2",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=mock.ANY,
+    )
+
+
+def test_pip_install_generic_no_deep_debug(dummy_console, dummy_tools):
+    """Test pip_install_generic with no deep debug."""
+    pip_install_generic(
+        dummy_tools,
+        dummy_console,
+        ["req1", "req2"],
+        extra_args=["extra1"],
+        deep_debug=False,
+    )
+    dummy_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "extra1",
+            "req1",
+            "req2",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=mock.ANY,
+    )
+
+
+def test_pip_install_generic_no_extra_args(dummy_console, dummy_tools):
+    """Test pip_install_generic with no extra args."""
+    pip_install_generic(
+        dummy_tools,
+        dummy_console,
+        ["req1", "req2"],
+        deep_debug=True,
+    )
+    dummy_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "-vv",
+            "req1",
+            "req2",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=mock.ANY,
+    )
+
+
 def test_virtual_environment_creates_venv(tmp_path, dummy_console, dummy_tools):
     app = DummyApp()
-    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(
+        dummy_tools, dummy_console, tmp_path, app, upgrade_bootstrap=False
+    )
 
     pyvenv_cfg = tmp_path / ".briefcase" / app.app_name / "venv" / "pyvenv.cfg"
     venv_root = pyvenv_cfg.parent
@@ -62,7 +189,63 @@ def test_virtual_environment_creates_venv(tmp_path, dummy_console, dummy_tools):
             check=True,
         )
 
-    assert result == venv_root
+    assert isinstance(result, VenvRunner)
+
+
+def test_virtual_environment_upgrade_bootstrap_error(
+    tmp_path, dummy_console, dummy_tools
+):
+    """Test error in upgrading the bootstrap is handled gracefully."""
+    app = DummyApp()
+    env = VenvEnvironment(
+        dummy_tools, dummy_console, tmp_path, app, upgrade_bootstrap=True
+    )
+
+    with mock.patch(
+        "subprocess.run",
+        side_effect=[None, subprocess.CalledProcessError(1, cmd="python")],
+    ):
+        with pytest.raises(BriefcaseCommandError) as excinfo:
+            env.__enter__()
+        assert (
+            f"Virtual environment created, but failed to bootstrap pip tooling for {app.app_name}"
+            in str(excinfo.value)
+        )
+
+
+def test_virtual_environment_recreate(tmp_path, dummy_console, dummy_tools):
+    """Test the old virtual environment is deleted and recreated."""
+    app = DummyApp()
+    venv_dir = tmp_path / ".briefcase" / app.app_name / "venv"
+    venv_dir.mkdir(parents=True, exist_ok=True)
+    (venv_dir / "pyvenv.cfg").touch()
+
+    pyvenv_cfg = tmp_path / ".briefcase" / app.app_name / "venv" / "pyvenv.cfg"
+    venv_root = pyvenv_cfg.parent
+
+    env = VenvEnvironment(
+        dummy_tools,
+        dummy_console,
+        tmp_path,
+        app,
+        recreate=True,
+        upgrade_bootstrap=False,
+    )
+
+    with mock.patch("subprocess.run") as mock_run:
+        result = env.__enter__()
+        assert not venv_dir.exists()
+        mock_run.assert_called_once_with(
+            [
+                sys.executable,
+                "-m",
+                "venv",
+                str(venv_root),
+            ],
+            check=True,
+        )
+
+    assert isinstance(result, VenvRunner)
 
 
 def test_virtual_environment_skips_if_exists(tmp_path, dummy_console, dummy_tools):
@@ -72,13 +255,15 @@ def test_virtual_environment_skips_if_exists(tmp_path, dummy_console, dummy_tool
     pyvenv_cfg.parent.mkdir(parents=True, exist_ok=True)
     pyvenv_cfg.touch()
 
-    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(
+        dummy_tools, dummy_console, tmp_path, app, upgrade_bootstrap=False
+    )
 
     with mock.patch("subprocess.run") as mock_run:
         result = env.__enter__()
         mock_run.assert_not_called()
 
-    assert result == venv_path
+    assert isinstance(result, VenvRunner)
 
 
 def test_virtual_environment_creation_failure(tmp_path, dummy_console, dummy_tools):
@@ -106,7 +291,9 @@ def test_virtual_environment_missing_appname_file(tmp_path, dummy_console, dummy
     app_dir = briefcase_dir / app.app_name
     assert not app_dir.exists()
 
-    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(
+        dummy_tools, dummy_console, tmp_path, app, upgrade_bootstrap=False
+    )
     venv_path = app_dir / "venv"
 
     with mock.patch("subprocess.run") as mock_run:
@@ -116,7 +303,7 @@ def test_virtual_environment_missing_appname_file(tmp_path, dummy_console, dummy
             check=True,
         )
 
-    assert result == venv_path
+    assert isinstance(result, VenvRunner)
 
 
 def test_virtual_environment_missing_venv_file(tmp_path, dummy_console, dummy_tools):
@@ -132,7 +319,9 @@ def test_virtual_environment_missing_venv_file(tmp_path, dummy_console, dummy_to
     venv_dir = briefcase_dir / "venv"
     assert not venv_dir.exists()
 
-    env = VenvEnvironment(dummy_tools, dummy_console, tmp_path, app)
+    env = VenvEnvironment(
+        dummy_tools, dummy_console, tmp_path, app, upgrade_bootstrap=False
+    )
     venv_path = venv_dir
 
     with mock.patch("subprocess.run") as mock_run:
@@ -142,7 +331,7 @@ def test_virtual_environment_missing_venv_file(tmp_path, dummy_console, dummy_to
             check=True,
         )
 
-    assert result == venv_path
+    assert isinstance(result, VenvRunner)
 
 
 def test_virtual_environment_exit(tmp_path, dummy_console, dummy_tools):
@@ -156,7 +345,7 @@ def test_noop_environment_returns_sys_prefix(tmp_path, dummy_console, dummy_tool
     app = DummyApp()
     env = NoOpEnvironment(dummy_tools, dummy_console, tmp_path, app)
     result = env.__enter__()
-    assert result == Path(sys.prefix)
+    assert isinstance(result, VenvRunner)
 
 
 def test_noop_environment_exit(tmp_path, dummy_console, dummy_tools):

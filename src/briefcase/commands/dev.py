@@ -7,7 +7,7 @@ from pathlib import Path
 
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.virtual_environment import virtual_environment
 
 from .base import BaseCommand
@@ -83,31 +83,34 @@ class DevCommand(RunAppMixin, BaseCommand):
         :param app: The config object for the app
         """
 
-        requires = app.requires
-        if options.get("test_mode", False):
-            requires = requires = app.test_requires
-        if not requires:
+        requires = app.requires if app.requires else []
+        if app.test_requires:
+            requires.extend(app.test_requires)
+        if requires == []:
             self.console.info("No application requirements")
             return
 
         with self.console.wait_bar("Installing dev requirements..."):
-            venv.run(
-                [
-                    "python",
-                    "-u",
-                    "-X",
-                    "utf8",
-                    "-m",
-                    "pip",
-                    "install",
-                    "--upgrade",
-                    *(["-vv"] if self.console.is_deep_debug else []),
-                    *requires,
-                    *getattr(app, "requirement_installer_args", []),
-                ],
-                check=True,
-                encoding="UTF-8",
-            )
+            try:
+                venv.run(
+                    [
+                        "python",
+                        "-u",
+                        "-X",
+                        "utf8",
+                        "-m",
+                        "pip",
+                        "install",
+                        "--upgrade",
+                        *(["-vv"] if self.console.is_deep_debug else []),
+                        *requires,
+                        *getattr(app, "requirement_installer_args", []),
+                    ],
+                    check=True,
+                    encoding="UTF-8",
+                )
+            except subprocess.CalledProcessError as e:
+                raise RequirementsInstallError() from e
 
     def run_dev_app(
         self,
