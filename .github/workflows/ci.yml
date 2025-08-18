@@ -108,7 +108,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: [ pre-commit, towncrier, package ]
+    needs: [ pre-commit, towncrier, package, package-debugpy, package-pdb ]
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental || false }}
     strategy:
@@ -142,7 +142,7 @@ jobs:
     - name: Get Packages
       uses: actions/download-artifact@v5.0.0
       with:
-        name: ${{ needs.package.outputs.artifact-name }}
+        pattern: ${{ needs.package.outputs.artifact-name }},${{ needs.package-debugpy.outputs.artifact-name }},${{ needs.package-pdb.outputs.artifact-name }}
         path: dist
 
     - name: Install Tox
@@ -159,6 +159,14 @@ jobs:
         COVERAGE_FILE=".coverage.${RUNNER_OS}.${RUNNER_VERSION}.${{ matrix.python-version }}" \
           tox -e py-cov --installpkg dist/briefcase-*.whl
 
+    - name: Test Briefcase Debugpy
+      run: |
+          tox -e py-debugpy --installpkg dist/briefcase_debugpy-*.whl
+
+    - name: Test Briefcase Pdb
+      run: |
+          tox -e py-pdb --installpkg dist/briefcase_pdb-*.whl
+
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
       uses: actions/upload-artifact@v4.6.2
@@ -173,104 +181,6 @@ jobs:
       if: always() && contains('success,failure', steps.test.outcome)
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
-
-  unit-tests-debugpy:
-    name: Unit tests (Debugpy)
-    needs: [ pre-commit, towncrier, package-debugpy ]
-    runs-on: ${{ matrix.platform }}
-    continue-on-error: ${{ matrix.experimental || false }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
-        python-version: [ "3.9", "3.13" ]
-        include:
-          # Ensure the Python versions between min and max are tested
-          - platform: "ubuntu-24.04"
-            python-version: "3.10"
-          - platform: "ubuntu-24.04"
-            python-version: "3.11"
-          - platform: "ubuntu-24.04"
-            python-version: "3.12"
-          # # Allow dev Python to fail without failing entire job
-          # - python-version: "3.14"
-          #   experimental: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
-
-    - name: Get Packages
-      uses: actions/download-artifact@v4.3.0
-      with:
-        name: ${{ needs.package-debugpy.outputs.artifact-name }}
-        path: dist
-
-    - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
-
-    - name: Test Briefcase Debugpy
-      run: |
-          tox -e py-debugpy --installpkg dist/briefcase_debugpy-*.whl
-
-  unit-tests-pdb:
-    name: Unit tests (Pdb)
-    needs: [ pre-commit, towncrier, package-pdb ]
-    runs-on: ${{ matrix.platform }}
-    continue-on-error: ${{ matrix.experimental || false }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
-        python-version: [ "3.9", "3.13" ]
-        include:
-          # Ensure the Python versions between min and max are tested
-          - platform: "ubuntu-24.04"
-            python-version: "3.10"
-          - platform: "ubuntu-24.04"
-            python-version: "3.11"
-          - platform: "ubuntu-24.04"
-            python-version: "3.12"
-          # # Allow dev Python to fail without failing entire job
-          # - python-version: "3.14"
-          #   experimental: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
-
-    - name: Get Packages
-      uses: actions/download-artifact@v4.3.0
-      with:
-        name: ${{ needs.package-pdb.outputs.artifact-name }}
-        path: dist
-
-    - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
-
-    - name: Test Briefcase Pdb
-      run: |
-          tox -e py-pdb --installpkg dist/briefcase_pdb-*.whl
 
   coverage:
     name: Project coverage
