@@ -100,40 +100,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    # def _merge_insert_content(self, inserts, key, path):
-    #    """Merge multi-file insert content into a single insert file.
-
-    #    Rewrites the inserts, removing the entry for ``key``,
-    #    producing a merged entry for ``path`` that has a single
-    #    ``key`` insert.
-    #    This is used to merge multiple contributed CSS files into
-    #    a single CSS insert.
-
-    #    :param inserts: All inserts
-    #    :param key: The key to merge
-    #    :param path: The path for the merge insert.
-    #    """
-
-    #    try:
-    #        original = inserts.pop(key)
-    #    except KeyError:
-    # No merging
-    #        pass
-    #    else:
-    #        merged = {}
-    #        for filename, package_inserts in original.items():
-    #            for package, css in package_inserts.items():
-    #                try:
-    #                    old_css = merged[package]
-    #                except KeyError:
-    #                    old_css = ""
-
-    #                full_css = f"{old_css}/********** {filename} **********/\n{css}\n"
-    #                merged[package] = full_css
-
-    # Preserve the merged content as a single insert
-    #        inserts[path] = {key: merged}
-
     def _write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
         """Write inserts into an existing file.
 
@@ -144,6 +110,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         and CSS/JS comment conventions:
         * HTML: ``<!--@@ insert:start @@-->`` and ``<!--@@ insert:end @@-->``
         * CSS/JS: ``/*@@ insert:start @@*/`` and ``/*@@ insert:end @@*/``
+
+        Inserts and package contributions are processed in sorted order to ensure deterministic builds.
 
         :param app: The application whose ``pyscript.toml`` is being written.
         :param filename: The file whose insert is to be written.
@@ -159,8 +127,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             self.console.warning(f"  Target {filename} not found; skipping inserts.")
             return
 
-        # Each insert slot may have multiple package contributions
-        for insert, packages in inserts.items():
+        # Each insert slot and its package contributions are processed in sorted order
+        for insert, packages in sorted(inserts.items()):
+            packages = inserts[insert]
+
             html_banner = (
                 "<!--------------------------------------------------\n"
                 " * {package}\n"
@@ -190,15 +160,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ),
             ]
 
-            # Build bodies for HTML and CSS inserts
+            # Sort and build bodies for HTML and CSS inserts
             html_body = "\n".join(
                 html_banner.format(package=pkg, content=pkg_content.get("html", ""))
-                for pkg, pkg_content in (packages.items())
+                for pkg, pkg_content in sorted(packages.items())
                 if pkg_content.get("html")
             )
             css_body = "\n".join(
                 css_banner.format(package=pkg, content=pkg_content.get("css", ""))
-                for pkg, pkg_content in (packages.items())
+                for pkg, pkg_content in sorted(packages.items())
                 if pkg_content.get("css")
             )
 
@@ -255,32 +225,30 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         with ZipFile(wheelfile) as wheel:
             for filename in wheel.namelist():
+                # Skip directories and shallow paths
+                if filename.endswith("/"):
+                    continue
                 path = Path(filename)
-                if len(path.parts) < 2:
+                parts = path.parts
+                if len(parts) < 3:
                     continue
 
-                # Detect "inserts" paths inside the wheel
-                is_inserts = (path.parts[1] == "inserts") or (
-                    len(path.parts) >= 3
-                    and path.parts[1] == "deploy"
-                    and path.parts[2] == "inserts"
-                )
-                if is_inserts and path.name:
-                    # Derive target file and insert slot
-                    source = (
-                        str(Path(*path.parts[2:]))
-                        if path.parts[1] == "inserts"
-                        else str(Path(*path.parts[3:]))
-                    )
-                    if ":" not in path.name:
+                # Handle inserts under deploy/inserts
+                if parts[:2] == ("deploy", "inserts"):
+                    source = str(Path(*parts[2:]))
+
+                    try:
+                        target, insert = source.split(":", 1)
+                    except ValueError:
                         self.console.warning(
                             f"    {source}: missing ':<insert>'; skipping insert."
                         )
                         continue
-                    target, insert = source.split(":", 1)
+
                     self.console.info(
                         f"    {source}: Adding {insert} insert for {target}"
                     )
+
                     try:
                         text = wheel.read(filename).decode("utf-8")
                     except UnicodeDecodeError as e:
@@ -289,8 +257,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         ) from e
 
                     # Classify insert as HTML vs CSS/JS
-                    ext = Path(filename).suffix.lower()
-                    kind = "css" if ext in {".css", ".js"} else "html"
+                    t_ext = Path(target).suffix.lower()
+                    kind = "css" if t_ext in {".css", ".js"} else "html"
 
                     # Ensure nested dict structure exists
                     pkg_entry = (
@@ -299,26 +267,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         .setdefault(package_key, {"html": "", "css": ""})
                     )
                     # Append into the right bucket
+                    if pkg_entry[kind]:
+                        pkg_entry[kind] += "\n"
                     pkg_entry[kind] += text
                     continue
 
-                # Detect "static" paths inside the wheel
-                is_static = (path.parts[1] == "static") or (
-                    len(path.parts) >= 3
-                    and path.parts[1] == "deploy"
-                    and path.parts[2] == "static"
-                )
-                if is_static:
-                    if filename.endswith("/"):
-                        continue
-                    # Compute output path relative to static/
-                    rel_parts = (
-                        path.parts[2:] if path.parts[1] == "static" else path.parts[3:]
-                    )
-                    outfilename = pkg_static_root / Path(*rel_parts)
+                # Handle static files under deploy/static
+                if parts[:2] == ("deploy", "static"):
+                    rel = Path(*parts[2:])
+                    outfilename = pkg_static_root / rel
                     outfilename.parent.mkdir(parents=True, exist_ok=True)
                     with outfilename.open("wb") as f:
                         f.write(wheel.read(filename))
+                    continue
 
     def _gather_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
@@ -349,6 +310,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 Duplicate config.toml found in package: {wheel.filename}"""
                             )
                         config_package = wheel.filename
+
                         # Check which backend type is used. Raise error if no backend is present in config.toml
                         with wheel.open(filename) as config_file:
                             config_data = tomllib.load(config_file)
@@ -362,9 +324,17 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                         "Only 'pyscript' backend is currently supported for web static builds."
                                     )
 
-                                pyscript_config = self._gather_backend_config_file(
-                                    wheel, backend, path
-                                )
+                                # Try to find pyscript.toml configuration file.
+                                try:
+                                    with wheel.open(
+                                        f"{path.parent}/pyscript.toml"
+                                    ) as pyscript_file:
+                                        pyscript_config = tomllib.load(pyscript_file)
+                                except KeyError:
+                                    raise BriefcaseConfigError(
+                                        f"Pyscript configuration file not found in package: {config_package}"
+                                    )
+                                # pyscript_config = self._gather_backend_config_file(wheel, backend, path)
 
                             else:
                                 raise BriefcaseConfigError(
@@ -375,34 +345,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             pyscript_config = {}
 
         return pyscript_config
-
-    # def _gather_backend_config_file(self, wheel, backend, path):
-    #     """Find backend config file (eg: pyscript.toml) from a wheel and save it to
-    #     project pyscript.toml if found.
-
-    #     :param wheel: Wheel file to scan for configuration file.
-    #     :param backend: The backend type as a String (eg "pyscript")
-    #     :param path: Path to the wheels configuration file (config.toml). This should be
-    #         in the same directory as the backend configuration file.
-    #     """
-    #     backend_config = None
-    #     deploy_dir = path.parent
-
-    #     for deploy_file in wheel.namelist():
-    #         deploy_parent = Path(deploy_file).parent
-    #         if (
-    #             deploy_parent == deploy_dir
-    #             and Path(deploy_file).name == "pyscript.toml"
-    #         ):
-    #             # Save pyscript config file.
-    #             try:
-    #                 with wheel.open(deploy_file) as pyscript_file:
-    #                     backend_config = tomllib.load(pyscript_file)
-    #             except tomllib.TOMLDecodeError as e:
-    #                 raise BriefcaseConfigError(
-    #                     f"pyscript.toml content isn't valid TOML: {e}"
-    #                 ) from e
-    #     return backend_config
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build the static web deployment for the application.
@@ -515,7 +457,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 )
 
             # Write inserts per target
-            for target, target_inserts in inserts.items():
+            for target, target_inserts in sorted(inserts.items()):
                 self._write_inserts(app, Path(target), target_inserts)
 
         return {}
