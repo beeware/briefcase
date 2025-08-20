@@ -206,3 +206,8 @@ jobs:
             runner-os: "macos-15"
             xcode-version: "16.4"
             ios-simulator: "iPhone 16e::iOS 18.5"
+
+          # Default xcode handling works for macOS-13
+          - framework: "toga"
+            runner-os: "macos-13"
+            ios-simulator: "iPhone SE (3rd generation)"
