@@ -194,8 +194,15 @@ jobs:
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
+      xcode-version: ${{ matrix.xcode-version }}
+      ios-simulator: ${{ matrix.ios-simulator }}
     strategy:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        include:
+          - framework: "toga"
+            runner-os: "macos-15"
+            xcode-version: "16.4"
+            ios-simulator: "iPhone 16e::iOS 18.5"
