@@ -79,7 +79,7 @@ jobs:
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v5.0.0
       with:
         fetch-depth: 0
 
@@ -131,7 +131,7 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v5.0.0
       with:
         fetch-depth: 0
 
@@ -200,4 +200,14 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        include:
+          - framework: "toga"
+            runner-os: "macos-15"
+            xcode-version: "16.4"
+            ios-simulator: "iPhone 16e::iOS 18.5"
+
+          # Default xcode handling works for macOS-13
+          - framework: "toga"
+            runner-os: "macos-13"
+            ios-simulator: "iPhone SE (3rd generation)"

@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==8.3.1",
+    "setuptools_scm==9.2.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -99,7 +99,7 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.10.2",
+    "coverage[toml] == 7.10.4",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.4.0",
     "pre-commit == 4.3.0",
