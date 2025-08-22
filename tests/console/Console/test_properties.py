@@ -1,41 +1,50 @@
+import os
+
 from briefcase.console import Console
 
 
-def test_default_constructor():
+def test_default_constructor(raw_console):
     """A console is enabled by default."""
-    console = Console()
-    assert console.input_enabled
+    assert raw_console.input_enabled
 
 
 def test_constructor_with_enabled_false():
     """A console can be constructed in a disabled state."""
-    console = Console(input_enabled=False)
-    assert not console.input_enabled
+    try:
+        console = Console(input_enabled=False)
+        assert not console.input_enabled
+    finally:
+        console.close()
 
 
-def test_enable(disabled_console):
+def test_enable():
     """A disabled console can be enabled."""
-    assert not disabled_console.input_enabled
+    try:
+        console = Console(input_enabled=False)
+        assert not console.input_enabled
 
-    disabled_console.input_enabled = True
+        console.input_enabled = True
 
-    assert disabled_console.input_enabled
+        assert console.input_enabled
+    finally:
+        console.close()
 
 
-def test_disable():
+def test_disable(raw_console):
     """A disabled console can be enabled."""
-    console = Console()
-    assert console.input_enabled
+    assert raw_console.input_enabled
 
-    console.input_enabled = False
-    assert not console.input_enabled
+    raw_console.input_enabled = False
+    assert not raw_console.input_enabled
 
 
-def test_is_interactive_non_interactive(non_interactive_console):
+def test_is_interactive_non_interactive(monkeypatch, raw_console):
     """Console is non-interactive when stdout has no tty."""
-    assert non_interactive_console.is_interactive is False
+    monkeypatch.setattr(os, "isatty", lambda _: False)
+    assert raw_console.is_interactive is False
 
 
-def test_is_interactive_always_interactive(console):
+def test_is_interactive_always_interactive(monkeypatch, raw_console):
     """Console is interactive when stdout has a tty."""
-    assert console.is_interactive is True
+    monkeypatch.setattr(os, "isatty", lambda _: True)
+    assert raw_console.is_interactive is True

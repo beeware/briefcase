@@ -6,7 +6,6 @@ import pytest
 import briefcase.commands.convert
 from briefcase.commands import ConvertCommand
 from briefcase.commands.base import full_options
-from tests.utils import DummyConsole
 
 
 class DummyConvertCommand(ConvertCommand):
@@ -18,7 +17,6 @@ class DummyConvertCommand(ConvertCommand):
     description = "Dummy convert command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -53,9 +51,12 @@ class DummyConvertCommand(ConvertCommand):
 
 
 @pytest.fixture
-def convert_command(tmp_path):
+def convert_command(dummy_console, tmp_path):
     (tmp_path / "project").mkdir()
-    command = DummyConvertCommand(base_path=tmp_path / "project")
+    command = DummyConvertCommand(
+        console=dummy_console,
+        base_path=tmp_path / "project",
+    )
     command.get_git_config_value = MagicMock(return_value=None)
     return command
 

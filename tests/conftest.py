@@ -8,7 +8,7 @@ import pytest
 
 from briefcase.config import AppConfig
 
-from .utils import create_file
+from .utils import DummyConsole, create_file
 
 
 def pytest_sessionstart(session):
@@ -39,6 +39,13 @@ def monkeypatched_print(*args, **kwargs):
         )
 
     _print(*args, **kwargs)
+
+
+@pytest.fixture
+def dummy_console():
+    console = DummyConsole()
+    yield console
+    console.close()
 
 
 @pytest.fixture(autouse=True)

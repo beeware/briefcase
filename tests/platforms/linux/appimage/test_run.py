@@ -3,16 +3,16 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.appimage import LinuxAppImageRunCommand
 
 
 @pytest.fixture
-def run_command(tmp_path):
+def run_command(dummy_console, tmp_path):
     command = LinuxAppImageRunCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

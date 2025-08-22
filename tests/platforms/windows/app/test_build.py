@@ -9,7 +9,6 @@ import pytest
 import tomli_w
 
 import briefcase.platforms.windows.app
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.subprocess import Subprocess
@@ -20,9 +19,9 @@ from ....utils import create_file
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     command = WindowsAppBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

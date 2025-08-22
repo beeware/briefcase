@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 import tomli_w
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import (
     BriefcaseCommandError,
     NetworkFailure,
@@ -39,9 +39,9 @@ def first_app(first_app_config, tmp_path):
 
 
 @pytest.fixture
-def build_command(tmp_path, first_app_config):
+def build_command(dummy_console, tmp_path, first_app_config):
     command = LinuxAppImageBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
         apps={"first": first_app_config},

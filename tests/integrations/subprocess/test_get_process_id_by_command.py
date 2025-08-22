@@ -2,7 +2,6 @@ from collections import namedtuple
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.subprocess import get_process_id_by_command
 
 Process = namedtuple("Process", "info")
@@ -90,11 +89,15 @@ def test_get_process_id_by_command_w_command_line(
     expected_pid,
     expected_stdout,
     monkeypatch,
+    dummy_console,
     capsys,
 ):
     """Finds correct process for command line or returns None."""
     monkeypatch.setattr("psutil.process_iter", lambda attrs: process_list)
-    found_pid = get_process_id_by_command(command_list=command_list, console=Console())
+    found_pid = get_process_id_by_command(
+        command_list=command_list,
+        console=dummy_console,
+    )
     assert found_pid == expected_pid
     assert capsys.readouterr().out == expected_stdout
 
@@ -125,11 +128,12 @@ def test_get_process_id_by_command_w_command(
     expected_pid,
     expected_stdout,
     monkeypatch,
+    dummy_console,
     capsys,
 ):
     """Finds correct process for command or returns None."""
     monkeypatch.setattr("psutil.process_iter", lambda attrs: process_list)
-    found_pid = get_process_id_by_command(command=command, console=Console())
+    found_pid = get_process_id_by_command(command=command, console=dummy_console)
     assert found_pid == expected_pid
     assert capsys.readouterr().out == expected_stdout
 
