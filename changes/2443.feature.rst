@@ -1,0 +1,1 @@
+If an iOS or macOS app doesn't specify a minimum OS version, the minimum OS version is now derived from the support package, rather than being hard coded.

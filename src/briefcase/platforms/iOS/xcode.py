@@ -332,7 +332,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             with plist_file.open("rb") as f:
                 info_plist = plistlib.load(f)
 
-            support_min_version = Version(info_plist.get("MinimumOSVersion", "13.0"))
+            support_min_version = info_plist.get("MinimumOSVersion", "13.0")
         except FileNotFoundError:
             # If a plist file couldn't be found, it's an old-style support package;
             # Determine the min iOS version from the VERSIONS file in the support package.
@@ -345,17 +345,20 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                 )
                 if ": " in line
             )
-            support_min_version = Version(versions.get("Min iOS version", "13.0"))
+            support_min_version = versions.get("Min iOS version", "13.0")
 
-        # Check that the app's definition is compatible with the support package
-        ios_min_version = Version(getattr(app, "min_os_version", "13.0"))
-        if ios_min_version < support_min_version:
+        # Check that the app's definition is compatible with the support package.
+        # If the app doesn't specify a minimum version, use the support package
+        # minimum version as a default.
+        ios_min_version = getattr(app, "min_os_version", support_min_version)
+
+        if Version(ios_min_version) < Version(support_min_version):
             raise BriefcaseCommandError(
                 f"Your iOS app specifies a minimum iOS version of {ios_min_version}, "
                 f"but the support package only supports {support_min_version}"
             )
 
-        ios_min_tag = str(ios_min_version).replace(".", "_")
+        ios_min_tag = ios_min_version.replace(".", "_")
 
         # Feb 2025: The platform-site was moved into the xcframework as
         # `platform-config`. Look for the new location; fall back to the old location.

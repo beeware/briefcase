@@ -14,7 +14,12 @@ from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
-from ....utils import create_file, create_installed_package, mock_tgz_download
+from ....utils import (
+    create_file,
+    create_installed_package,
+    create_plist_file,
+    mock_tgz_download,
+)
 
 
 @pytest.fixture
@@ -362,7 +367,7 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
     "host_arch, other_arch",
     [
         ("arm64", "x86_64"),
-        ("arm64", "x86_64"),
+        ("x86_64", "arm64"),
     ],
 )
 def test_install_app_packages(
@@ -420,7 +425,7 @@ def test_install_app_packages(
                 "--only-binary",
                 ":all:",
                 "--platform",
-                f"macosx_11_0_{host_arch}",
+                f"macosx_10_12_{host_arch}",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
@@ -444,7 +449,7 @@ def test_install_app_packages(
                 f"--target={bundle_path / ('app_packages.' + other_arch)}",
                 "--no-deps",
                 "--platform",
-                f"macosx_11_0_{other_arch}",
+                f"macosx_10_12_{other_arch}",
                 "--only-binary",
                 ":all:",
                 "second==1.2.3",
@@ -611,6 +616,153 @@ def test_min_os_version(create_command, first_app_templated, old_config, tmp_pat
     )
 
 
+@pytest.mark.parametrize("old_config", [True, False])
+def test_default_min_os_version(
+    create_command,
+    first_app_templated,
+    old_config,
+    tmp_path,
+):
+    """If the support package doesn't specify a min OS version, a default is used."""
+    create_command.tools.host_arch = "arm64"
+
+    if old_config:
+        # Old support packages didn't contain an XCframework; but they did have a
+        # VERSIONS file. Delete the xcframework, and create the support package VERSIONS
+        # file with *no* min macOS version
+        shutil.rmtree(
+            tmp_path / "base_path/build/first-app/macos/app/support/Python.xcframework"
+        )
+        create_file(
+            tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
+            "\n".join(
+                [
+                    "Python version: 3.10.15",
+                    "Build: b11",
+                    "",
+                ]
+            ),
+        )
+    else:
+        # Replace the framework plist file with one without a min OS version.
+        framework_plist = (
+            tmp_path
+            / "base_path/build/first-app/macos/app/support/Python.xcframework"
+            / "macos-arm64_x86_64/Python.framework/Resources/Info.plist"
+        )
+        framework_plist.unlink()
+        create_plist_file(
+            framework_plist,
+            {
+                "CFBundleVersion": "3.10.15",
+            },
+        )
+
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+
+    # Mock the result of finding the binary packages - 2 of the packages are binary;
+    # the version on the loosely specified package doesn't match the lower bound.
+    create_command.find_binary_packages = mock.Mock(
+        return_value=[
+            ("second", "1.2.3"),
+            ("third", "3.4.5"),
+        ]
+    )
+
+    # Mock the thin command so we can confirm it was invoked.
+    create_command.thin_app_packages = mock.Mock()
+
+    # Mock the merge command so we can confirm it was invoked.
+    create_command.merge_app_packages = mock.Mock()
+
+    create_command.install_app_requirements(first_app_templated)
+
+    # We looked for binary packages in the host app_packages
+    create_command.find_binary_packages.assert_called_once_with(
+        bundle_path / "app_packages.arm64",
+        universal_suffix="_universal2",
+    )
+
+    # A request was made to install requirements
+    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
+        # First call is to install the initial packages on the host arch
+        mock.call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.arm64'}",
+                "--only-binary",
+                ":all:",
+                "--platform",
+                "macosx_11_0_arm64",
+                "first",
+                "second==1.2.3",
+                "third>=3.2.1",
+            ],
+            check=True,
+            encoding="UTF-8",
+        ),
+        # Second call installs the binary packages for the other architecture.
+        mock.call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.x86_64'}",
+                "--no-deps",
+                "--platform",
+                "macosx_11_0_x86_64",
+                "--only-binary",
+                ":all:",
+                "second==1.2.3",
+                "third==3.4.5",
+            ],
+            check=True,
+            encoding="UTF-8",
+        ),
+    ]
+
+    # The app packages folder has been created. The existence of the target and host
+    # versions is validated as a result of the underlying install/merge methods.
+    assert (bundle_path / "app_packages.x86_64").is_dir()
+
+    # An attempt was made thin the "other" arch packages.
+    create_command.thin_app_packages.assert_called_once_with(
+        bundle_path / "app_packages.x86_64",
+        arch="x86_64",
+    )
+
+    # An attempt was made to merge packages.
+    create_command.merge_app_packages.assert_called_once_with(
+        target_app_packages=bundle_path
+        / "First App.app"
+        / "Contents"
+        / "Resources"
+        / "app_packages",
+        sources=[
+            bundle_path / "app_packages.arm64",
+            bundle_path / "app_packages.x86_64",
+        ],
+    )
+
+
 def test_invalid_min_os_version(create_command, first_app_templated):
     """If the app defines a min OS version that is incompatible with the support
     package, an error is raised."""
@@ -691,7 +843,7 @@ def test_install_app_packages_no_binary(
                 "--only-binary",
                 ":all:",
                 "--platform",
-                f"macosx_11_0_{host_arch}",
+                f"macosx_10_12_{host_arch}",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
@@ -791,7 +943,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
                 "--only-binary",
                 ":all:",
                 "--platform",
-                "macosx_11_0_arm64",
+                "macosx_10_12_arm64",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",
@@ -816,7 +968,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
                 f"--target={bundle_path / 'app_packages.x86_64'}",
                 "--no-deps",
                 "--platform",
-                "macosx_11_0_x86_64",
+                "macosx_10_12_x86_64",
                 "--only-binary",
                 ":all:",
                 "second==1.2.3",
@@ -891,7 +1043,7 @@ def test_install_app_packages_non_universal(
                 "--only-binary",
                 ":all:",
                 "--platform",
-                f"macosx_11_0_{host_arch}",
+                f"macosx_10_12_{host_arch}",
                 "first",
                 "second==1.2.3",
                 "third>=3.2.1",

@@ -15,7 +15,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
-from ....utils import create_file
+from ....utils import create_file, create_plist_file
 
 
 @pytest.fixture
@@ -54,29 +54,50 @@ def test_unsupported_host_os(create_command, host_os):
         ),
     ],
 )
+@pytest.mark.parametrize("include_version", [True, False])
 def test_extra_pip_args(
     create_command,
     first_app_generated,
     old_config,
     device_config_path,
     sim_config_path,
+    include_version,
     tmp_path,
 ):
     """Extra iOS-specific args are included in calls to pip during update."""
+    # Remove the version tag from the framework if the test requires
+    if include_version:
+        version_tag = "12_0"
+    else:
+        version_tag = "13_0"
+        plist_file = (
+            tmp_path
+            / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
+            / "ios-arm64/Python.framework/Info.plist"
+        )
+        plist_file.unlink()
+        create_plist_file(
+            plist_file,
+            {
+                "CFBundleSupportedPlatforms": "iPhoneOS",
+                "CFBundleVersion": "3.10.15",
+            },
+        )
+
     # If we're testing an old config, delete the xcframework. This deletes the platform
     # config folders, forcing a fallback to the older locations.
     if old_config:
         shutil.rmtree(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
         )
-        # Create the old-style VERSIONS file with a deliberately weird min iOS version
+        # Create the old-style VERSIONS file with a deliberately weird min iOS version.
         create_file(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
             "\n".join(
                 [
                     "Python version: 3.10.15",
                     "Build: b11",
-                    "Min iOS version: 12.0",
+                    ("Min iOS version: 12.0" if include_version else ""),
                     "---------------------",
                     "BZip2: 1.0.8-1",
                     "libFFI: 3.4.6-1",
@@ -117,7 +138,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_13_0_arm64_iphoneos",
+                f"--platform=ios_{version_tag}_arm64_iphoneos",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
@@ -148,7 +169,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_13_0_wonky_iphonesimulator",
+                f"--platform=ios_{version_tag}_wonky_iphonesimulator",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
