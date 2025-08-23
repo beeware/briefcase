@@ -8,7 +8,7 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import virtual_environment
+from briefcase.integrations.virtual_environment import VenvContext, virtual_environment
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -75,18 +75,20 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_requirements(self, app: AppConfig, venv, **options):
+    def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
         """Install the requirements for the app dev.
 
         This will always include test requirements, if specified.
 
         :param app: The config object for the app
+        :param venv: The context object used to run commands inside the virtual environment.
+
         """
 
         requires = app.requires if app.requires else []
         if app.test_requires:
             requires.extend(app.test_requires)
-        if requires == []:
+        if not requires:
             self.console.info("No application requirements")
             return
 
@@ -116,6 +118,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         self,
         app: AppConfig,
         env: dict,
+        venv: VenvContext,
         passthrough: list[str],
         **options,
     ):
@@ -147,18 +150,16 @@ class DevCommand(RunAppMixin, BaseCommand):
         # that we can see the test exit sentinel
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
-            self.tools.subprocess.run(
+            venv.run(
                 cmdline,
-                env=env,
                 encoding="UTF-8",
                 cwd=self.tools.home_path,
                 bufsize=1,
                 stream_output=False,
             )
         else:
-            app_popen = self.tools.subprocess.Popen(
+            app_popen = venv.Popen(
                 cmdline,
-                env=env,
                 encoding="UTF-8",
                 cwd=self.tools.home_path,
                 stdout=subprocess.PIPE,
