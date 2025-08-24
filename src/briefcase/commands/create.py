@@ -336,7 +336,7 @@ class CreateCommand(BaseCommand):
                 try:
                     # If the app has a custom support package *and* a support revision,
                     # that's an error.
-                    app.support_revision
+                    _ = app.support_revision
                     self.console.warning(
                         "App specifies both a support package and a support revision; "
                         "support revision will be ignored."
@@ -454,7 +454,7 @@ class CreateCommand(BaseCommand):
                 try:
                     # If the app has a custom stub binary *and* a support revision,
                     # that's an error.
-                    app.stub_binary_revision
+                    _ = app.stub_binary_revision
                     self.console.warning(
                         "App specifies both a stub binary and a stub binary revision; "
                         "stub binary revision will be ignored."
@@ -524,9 +524,9 @@ class CreateCommand(BaseCommand):
         :param requires: The full list of requirements
         :param requirements_path: The full path to a requirements.txt file that will be
             written.
-        :param requirement_installer_args_path: The full path to where newline
-            delimited additional requirement installer argumentss should be written if
-            the template supports it.
+        :param requirement_installer_args_path: The full path to where newline delimited
+            additional requirement installer argumentss should be written if the
+            template supports it.
         """
 
         with self.console.wait_bar("Writing requirements file..."):
@@ -631,9 +631,11 @@ class CreateCommand(BaseCommand):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        *,
         progress_message: str = "Installing app requirements...",
         pip_args: list[str] | None = None,
-        pip_kwargs: dict[str, str] | None = None,
+        pip_kwargs: dict[str, dict[str, str | None]] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements for the app with pip.
 
@@ -645,6 +647,8 @@ class CreateCommand(BaseCommand):
         :param pip_args: Any additional command line arguments to use when invoking pip.
         :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
             when invoking pip.
+        :param install_hint: Additional hint information to provide in the exception
+            message if the pip install call fails.
         """
         # Clear existing dependency directory
         if app_packages_path.is_dir():
@@ -661,12 +665,13 @@ class CreateCommand(BaseCommand):
                         ([] if pip_args is None else pip_args)
                         + self._pip_requires(app, requires)
                     ),
+                    install_hint=install_hint,
                     **(pip_kwargs if pip_kwargs else {}),
                 )
         else:
             self.console.info("No application requirements.")
 
-    def install_app_requirements(self, app: AppConfig, test_mode: bool):
+    def install_app_requirements(self, app: AppConfig):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -675,16 +680,13 @@ class CreateCommand(BaseCommand):
          * requirements being installed with pip into the location specified
            by the ``app_packages_path`` in the template path index.
 
-        If ``test_mode`` is True, the test requirements will also be installed.
-
         If the path index doesn't specify either of the path index entries,
         an error is raised.
 
         :param app: The config object for the app
-        :param test_mode: Should the test requirements be installed?
         """
         requires = app.requires.copy() if app.requires else []
-        if test_mode and app.test_requires:
+        if app.test_mode and app.test_requires:
             requires.extend(app.test_requires)
 
         try:
@@ -713,11 +715,10 @@ class CreateCommand(BaseCommand):
                     "`app_requirements_path` or `app_packages_path`"
                 ) from e
 
-    def install_app_code(self, app: AppConfig, test_mode: bool):
+    def install_app_code(self, app: AppConfig):
         """Install the application code into the bundle.
 
         :param app: The config object for the app
-        :param test_mode: Should the application test code also be installed?
         """
         # Remove existing app folder if it exists
         app_path = self.app_path(app)
@@ -725,9 +726,7 @@ class CreateCommand(BaseCommand):
             self.tools.shutil.rmtree(app_path)
         self.tools.os.mkdir(app_path)
 
-        sources = app.sources.copy() if app.sources else []
-        if test_mode and app.test_sources:
-            sources.extend(app.test_sources)
+        sources = app.all_sources()
 
         # Install app code.
         if sources:
@@ -908,11 +907,10 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: AppConfig, test_mode: bool = False, **options):
+    def create_app(self, app: AppConfig, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
-        :param test_mode: Should the app be updated in test mode? (default: False)
         """
         if not app.supported:
             raise UnsupportedPlatform(self.platform)
@@ -921,53 +919,72 @@ class CreateCommand(BaseCommand):
         if bundle_path.exists():
             self.console.info()
             confirm = self.console.input_boolean(
-                f"Application {app.app_name!r} already exists; overwrite", default=False
+                f"The directory {self.bundle_path(app).relative_to(self.base_path)} "
+                "already exists; overwrite",
+                default=False,
             )
             if not confirm:
                 self.console.error(
-                    f"Aborting creation of app {app.app_name!r}; existing application will not be overwritten."
+                    f"Aborting creation of app {app.app_name!r}; "
+                    "existing application template will not be overwritten."
                 )
                 return
-            self.console.info("Removing old application bundle...", prefix=app.app_name)
+            self.console.info(
+                "Removing old application template...", prefix=app.app_name
+            )
             self.tools.shutil.rmtree(bundle_path)
 
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        self.console.info("Installing support package...", prefix=app.app_name)
-        self.install_app_support_package(app=app)
+        # External apps (apps that define 'external_package_path') need the packaging metadata
+        # from the template, but not the app content, dependencies, support package etc.
+        if app.external_package_path:
+            self.console.info("Removing generated app content...", prefix=app.app_name)
+            self.tools.shutil.rmtree(self.bundle_package_path(app))
 
-        try:
-            # If the platform uses a stub binary, the template will define a binary
-            # revision. If this template configuration item doesn't exist, no stub
-            # binary is required.
-            self.stub_binary_revision(app)
-        except KeyError:
-            pass
+            self.console.info(
+                "Created configuration for an externally packaged app "
+                f"in {bundle_path.relative_to(self.base_path)}",
+                prefix=app.app_name,
+            )
         else:
-            self.console.info("Installing stub binary...", prefix=app.app_name)
-            self.install_stub_binary(app=app)
+            self.console.info("Installing support package...", prefix=app.app_name)
+            self.install_app_support_package(app=app)
 
-        # Verify the app after the app template and support package
-        # are in place since the app tools may be dependent on them.
-        self.verify_app(app)
+            try:
+                # If the platform uses a stub binary, the template will define a binary
+                # revision. If this template configuration item doesn't exist, no stub
+                # binary is required.
+                self.stub_binary_revision(app)
+            except KeyError:
+                pass
+            else:
+                self.console.info("Installing stub binary...", prefix=app.app_name)
+                self.install_stub_binary(app=app)
 
-        self.console.info("Installing application code...", prefix=app.app_name)
-        self.install_app_code(app=app, test_mode=test_mode)
+            # Verify the app after the app template and support package
+            # are in place since the app tools may be dependent on them.
+            self.verify_app(app)
 
-        self.console.info("Installing requirements...", prefix=app.app_name)
-        self.install_app_requirements(app=app, test_mode=test_mode)
+            self.console.info("Installing application code...", prefix=app.app_name)
+            self.install_app_code(app=app)
 
-        self.console.info("Installing application resources...", prefix=app.app_name)
-        self.install_app_resources(app=app)
+            self.console.info("Installing requirements...", prefix=app.app_name)
+            self.install_app_requirements(app=app)
 
-        self.console.info("Removing unneeded app content...", prefix=app.app_name)
-        self.cleanup_app_content(app=app)
+            self.console.info(
+                "Installing application resources...", prefix=app.app_name
+            )
+            self.install_app_resources(app=app)
 
-        self.console.info(
-            f"Created {bundle_path.relative_to(self.base_path)}",
-            prefix=app.app_name,
-        )
+            self.console.info("Removing unneeded app content...", prefix=app.app_name)
+            self.cleanup_app_content(app=app)
+
+            self.console.info(
+                f"Created {bundle_path.relative_to(self.base_path)}",
+                prefix=app.app_name,
+            )
 
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.
@@ -1005,7 +1022,7 @@ class CreateCommand(BaseCommand):
             apps_to_create = self.apps
 
         state = None
-        for app_name, app_obj in sorted(apps_to_create.items()):
+        for _, app_obj in sorted(apps_to_create.items()):
             state = self.create_app(
                 app_obj,
                 **full_options(state, options),

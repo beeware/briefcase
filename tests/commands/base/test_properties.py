@@ -1,14 +1,58 @@
+from pathlib import Path
+
 from .conftest import DummyCommand
 
 
 def test_briefcase_required_python_version(base_command):
-    assert base_command.briefcase_required_python_version == (3, 9)
+    assert base_command.briefcase_required_python_version == (3, 10)
 
 
 def test_bundle_path(base_command, my_app, tmp_path):
     bundle_path = base_command.bundle_path(my_app)
 
     assert bundle_path == tmp_path / "base_path/build/my-app/tester/dummy"
+
+
+def test_package_path(base_command, my_app, tmp_path):
+    package_path = base_command.package_path(my_app)
+    bundle_package_path = base_command.bundle_package_path(my_app)
+
+    assert package_path == tmp_path / "base_path/build/my-app/tester/dummy/src/package"
+    assert (
+        bundle_package_path
+        == tmp_path / "base_path/build/my-app/tester/dummy/src/package"
+    )
+
+
+def test_external_package_path(base_command, my_app, tmp_path):
+    my_app.external_package_path = "path/to/package"
+
+    package_path = base_command.package_path(my_app)
+    bundle_package_path = base_command.bundle_package_path(my_app)
+
+    assert package_path == (Path.cwd() / "path/to/package")
+    assert (
+        bundle_package_path
+        == tmp_path / "base_path/build/my-app/tester/dummy/src/package"
+    )
+
+
+def test_package_executable_path(base_command, my_app, tmp_path):
+    package_executable_path = base_command.package_executable_path(my_app)
+    bundle_package_executable_path = base_command.bundle_package_executable_path(my_app)
+
+    assert package_executable_path == "internal/my-app.exe"
+    assert bundle_package_executable_path == "internal/my-app.exe"
+
+
+def test_external_package_executable_path(base_command, my_app, tmp_path):
+    my_app.external_package_executable_path = "alternate/the_app.exe"
+
+    package_executable_path = base_command.package_executable_path(my_app)
+    bundle_package_executable_path = base_command.bundle_package_executable_path(my_app)
+
+    assert package_executable_path == "alternate/the_app.exe"
+    assert bundle_package_executable_path == "internal/my-app.exe"
 
 
 def test_create_command(base_command):
@@ -41,9 +85,9 @@ def test_publish_command(base_command):
     assert base_command.publish_command.description == "Test Publish"
 
 
-def test_command_state_transferred(tmp_path):
+def test_command_state_transferred(dummy_console, tmp_path):
     """Command state is transferred to created subcommands."""
-    command = DummyCommand(base_path=tmp_path)
+    command = DummyCommand(console=dummy_console, base_path=tmp_path)
     command.tools.console.input_enabled = False
 
     # Check the enabled state of subcommands

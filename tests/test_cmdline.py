@@ -24,7 +24,9 @@ from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 @pytest.fixture
 def console() -> Console:
-    return Console()
+    console = Console()
+    yield console
+    console.close()
 
 
 def do_cmdline_parse(args: list, console: Console):
@@ -121,7 +123,7 @@ def test_new_command(console, cmdline, expected_options, expected_overrides):
 
     assert isinstance(cmd, NewCommand)
     assert cmd.platform == "all"
-    assert cmd.output_format is None
+    assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
@@ -160,7 +162,7 @@ def test_convert_command(console, cmdline, expected_options, expected_overrides)
 
     assert isinstance(cmd, ConvertCommand)
     assert cmd.platform == "all"
-    assert cmd.output_format is None
+    assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
@@ -206,16 +208,19 @@ def dev_run_parameters(command):
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_options, expected_overrides",
-    dev_run_parameters("dev")
-    + [
-        ("dev --no-run", {"run_app": False}, {}),
+    "cmdline, expected_output_format, expected_options, expected_overrides",
+    [
+        *[(c, "app", o, ov) for c, o, ov in dev_run_parameters("dev")],
+        ("dev --no-run", "app", {"run_app": False}, {}),
+        ("dev macOS", "app", {}, {}),
+        ("dev macOS Xcode", "Xcode", {}, {}),
     ],
 )
 def test_dev_command(
     monkeypatch,
     console,
     cmdline,
+    expected_output_format,
     expected_options,
     expected_overrides,
 ):
@@ -227,7 +232,7 @@ def test_dev_command(
 
     assert isinstance(cmd, DevCommand)
     assert cmd.platform == "macOS"
-    assert cmd.output_format is None
+    assert cmd.output_format == expected_output_format
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == {
@@ -325,7 +330,7 @@ def test_upgrade_command(
 
     assert isinstance(cmd, UpgradeCommand)
     assert cmd.platform == "macOS"
-    assert cmd.output_format is None
+    assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == expected_options
@@ -628,3 +633,21 @@ def test_unknown_command_options(monkeypatch, capsys, console):
         "                                     [--no-input] [--log] [-c {s3}]\n"
         "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
     )
+
+
+@pytest.mark.parametrize(
+    "cmdline",
+    [
+        ["dev", "iOS"],
+        ["dev", "Android"],
+    ],
+)
+def test_dev_command_unsupported_platform(cmdline, console):
+    """Unsupported platforms should raise an UnsupportedCommandError."""
+
+    with pytest.raises(UnsupportedCommandError) as e:
+        do_cmdline_parse(cmdline, console)
+
+    msg = str(e.value)
+    assert "dev command for the" in msg
+    assert "not been implemented" in msg

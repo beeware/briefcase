@@ -2,7 +2,13 @@ import subprocess
 from contextlib import suppress
 from pathlib import Path
 
-from briefcase.commands import BuildCommand, OpenCommand, PublishCommand, UpdateCommand
+from briefcase.commands import (
+    BuildCommand,
+    DevCommand,
+    OpenCommand,
+    PublishCommand,
+    UpdateCommand,
+)
 from briefcase.config import BaseConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
@@ -18,6 +24,7 @@ from briefcase.platforms.windows import (
 class WindowsAppMixin(WindowsMixin):
     output_format = "app"
     packaging_root = Path("src")
+    supports_external_packaging = True
 
     def project_path(self, app):
         return self.bundle_path(app)
@@ -56,7 +63,12 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
         # Move the stub binary in to the final executable location
         unbuilt_binary_path = self.unbuilt_executable_path(app)
-        if unbuilt_binary_path.exists():
+
+        # We can run this test on non-Windows platforms, but when we run on
+        # non-windows platforms, the ".exe" suffix doesn't exist, so it doesn't
+        # hit this branch. That's not actually a problem, as long as we *are*
+        # hitting the branch under Windows.
+        if unbuilt_binary_path.exists():  # pragma: no-cover-if-not-windows
             with self.console.wait_bar("Renaming stub binary..."):
                 unbuilt_binary_path.rename(self.binary_executable_path(app))
 
@@ -132,12 +144,21 @@ Recreating the app layout may also help resolve this issue:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to update details on stub app for {app.app_name}."
+                    f"""\
+Unable to update details on stub app for {app.app_name}.
+
+This may be caused by a virus scanner misidentifying the Briefcase build as malicious
+activity. Try disabling your virus checker, and re-run briefcase build.
+"""
                 ) from e
 
 
 class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
     description = "Run a Windows app."
+
+
+class WindowsAppDevCommand(WindowsAppMixin, DevCommand):
+    description = "Run a Windows app in development mode."
 
 
 class WindowsAppPackageCommand(WindowsAppMixin, WindowsPackageCommand):
@@ -156,3 +177,4 @@ build = WindowsAppBuildCommand
 run = WindowsAppRunCommand
 package = WindowsAppPackageCommand
 publish = WindowsAppPublishCommand
+dev = WindowsAppDevCommand

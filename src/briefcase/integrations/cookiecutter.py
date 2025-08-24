@@ -1,5 +1,6 @@
 """Jinja2 extensions."""
 
+import re
 import uuid
 from xml.sax.saxutils import escape, quoteattr
 
@@ -22,8 +23,16 @@ class PythonVersionExtension(Extension):
             """A Python version library tag (311)"""
             return "".join(obj.split(".")[:2])
 
+        def nuget_version(obj):
+            """A Python version in Nuget format (3.14.0-rc1)."""
+            parts = obj.split(".")[:3]
+            if not parts[2].isnumeric():
+                parts[2] = re.sub(r"(\d+)", r"\1-", parts[2], count=1)
+            return ".".join(parts)
+
         environment.filters["py_tag"] = py_tag
         environment.filters["py_libtag"] = py_libtag
+        environment.filters["nuget_version"] = nuget_version
 
 
 class RGBExtension(Extension):
@@ -141,7 +150,7 @@ class XMLExtension(Extension):
             return "true" if obj else "false"
 
         def xml_escape(obj):
-            """Filter to escape characters <, >, &, " and '"""
+            """Filter to escape characters <, >, &, " and '."""
             return escape(obj)
 
         def xml_attr(obj):

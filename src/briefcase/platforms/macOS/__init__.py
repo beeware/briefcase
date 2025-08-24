@@ -21,7 +21,7 @@ from briefcase.integrations.subprocess import (
 )
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
-from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_binary
 
 try:
     import dmgbuild
@@ -80,17 +80,109 @@ class macOSMixin:
     supported_host_os = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
+
+    def bundle_package_path(self, app) -> Path:
+        return self.binary_path(app)
+
+    def is_icloud_synced(self, path: Path) -> bool:
+        """Determine if a path is on an iCloud drive.
+
+        This is done by looking for the "com.apple.fileprovider.fpfs#P" resource fork.
+        This fork only appears on *some* directories - most notably, `.app` folders.
+
+        :param path: The location to check.
+        :returns: True if the location has iCloud resource markers.
+        """
+        # Check if the path is on an iCloud mounted drive.
+        try:
+            # Check for the iCloud resource fork. "Good" operation produces an error,
+            # so use quiet mode.
+            self.tools.subprocess.check_output(
+                [
+                    "xattr",
+                    "-p",
+                    "com.apple.fileprovider.fpfs#P",
+                    path,
+                ],
+                quiet=1,
+            )
+            # The resource fork was found.
+            return True
+        except subprocess.CalledProcessError:
+            # The resource fork was not found.
+            # This includes the file not existing.
+            return False
+
+    def verify_not_on_icloud(self, app: AppConfig, cleanup=False):
+        """Confirm that the app is *not* on an iCloud synchronized drive.
+
+        When a `.app` folder is on an iCloud-synchronized drive, iCloud adds filesystem
+        metadata to the folder. This metadata can't be removed (iCloud will just put it
+        back again), but it also conflicts with app signing. So - if we detect this
+        metadata, the project has been generated somewhere that ultimately won't work.
+
+        Optionally, this method will clean up the bundle if the verification fails.
+
+        :param app: The app to check.
+        :param cleanup: Should the app bundle be deleted if verification fails?
+        """
+        if self.is_icloud_synced(self.binary_path(app)):
+            msg = [
+                """\
+Your project is in a folder that is synchronized with iCloud. This interferes
+with the operation of macOS code signing."""
+            ]
+            if cleanup:
+                self.tools.shutil.rmtree(self.bundle_path(app))
+                msg.append(
+                    f"""
+Move your project to a location that is not synchronized with iCloud,
+and re-run `briefcase {self.command}`."""
+                )
+            else:
+                bundle_path = self.bundle_path(app).relative_to(self.base_path)
+                msg.append(
+                    f"""
+Delete the {bundle_path} folder, move your project to location
+that is not synchronized with iCloud, and re-run `briefcase {self.command}`."""
+                )
+            raise BriefcaseCommandError("\n".join(msg))
 
 
 class macOSCreateMixin(AppPackagesMergeMixin):
     hidden_app_properties = {"permission", "entitlement"}
+
+    def generate_app_template(self, app: AppConfig):
+        """Create an application bundle.
+
+        :param app: The config object for the app
+        """
+        # Before we generate the app template, make sure the package path and formal
+        # name match. This will always be the case for internal apps; they might not be
+        # aligned for external apps. We can't do this in verify, because app
+        # verification occurs after the template is generated.
+        if self.package_path(app).name != f"{app.formal_name}.app":
+            raise BriefcaseCommandError(
+                "The app bundle referenced by external_package_path "
+                f"({self.package_path(app).name})\n"
+                f"does not match the formal name of the app ({app.formal_name!r}).\n"
+            )
+
+        super().generate_app_template(app=app)
+        # If we discover we're on iCloud during app creation, we can clean up the app
+        # folder. This *may* return a false negative (i.e., not accurately detect that
+        # we *are* on iCloud, because it takes a moment for the iCloud daemon to detect
+        # that a new folder has been created; however, if this occurs, it will be
+        # picked up on the next run of any Briefcase command).
+        self.verify_not_on_icloud(app, cleanup=True)
 
     def _install_app_requirements(
         self,
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
         # Determine the min macOS version from the VERSIONS file in the support package.
         versions = dict(
@@ -149,6 +241,11 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                     "--platform",
                     f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
                 ],
+                install_hint=f"""
+
+This may be because an {self.tools.host_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+""",
             )
 
             # Find all the packages with binary components.
@@ -192,8 +289,10 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                         ],
                         install_hint=f"""
 
-If an {other_arch} wheel has not been published for one or more of your requirements,
-you must compile those wheels yourself, or build a non-universal app by setting:
+This may be because an {other_arch} wheel that is compatible with a minimum
+macOS version of {macOS_min_version} is not available.
+
+You may need to build a non-universal app by setting:
 
     universal_build = False
 
@@ -294,14 +393,12 @@ class macOSRunMixin:
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Console apps must operate in non-streaming mode so that console input can
@@ -310,14 +407,12 @@ class macOSRunMixin:
         if app.console_app:
             self.run_console_app(
                 app,
-                test_mode=test_mode,
                 passthrough=passthrough,
                 **kwargs,
             )
         else:
             self.run_gui_app(
                 app,
-                test_mode=test_mode,
                 passthrough=passthrough,
                 **kwargs,
             )
@@ -325,21 +420,19 @@ class macOSRunMixin:
     def run_console_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the console application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
-        sub_kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        sub_kwargs = self._prepare_app_kwargs(app=app)
         cmdline = [self.binary_path(app) / f"Contents/MacOS/{app.formal_name}"]
         cmdline.extend(passthrough)
 
-        if test_mode:
+        if app.test_mode:
             # Stream the app's output for testing.
             # When a console app runs normally, its stdout should be connected
             # directly to the terminal to properly display the app. When its test
@@ -353,7 +446,7 @@ class macOSRunMixin:
                 bufsize=1,
                 **sub_kwargs,
             )
-            self._stream_app_logs(app, popen=app_popen, test_mode=test_mode)
+            self._stream_app_logs(app, popen=app_popen)
 
         else:
             try:
@@ -374,14 +467,12 @@ class macOSRunMixin:
     def run_gui_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the GUI application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Start log stream for the app.
@@ -423,7 +514,7 @@ class macOSRunMixin:
         app_pid = None
         try:
             # Set up the log stream
-            sub_kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+            sub_kwargs = self._prepare_app_kwargs(app=app)
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
@@ -450,7 +541,6 @@ class macOSRunMixin:
             self._stream_app_logs(
                 app,
                 popen=log_popen,
-                test_mode=test_mode,
                 clean_filter=macOS_log_clean_filter,
                 clean_output=True,
                 stop_func=lambda: is_process_dead(app_pid),
@@ -459,34 +549,12 @@ class macOSRunMixin:
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
         finally:
-            # Ensure the App also terminates when exiting
-            if app_pid:  # pragma: no-cover-if-is-py310
-                with suppress(ProcessLookupError):
+            # Ensure the App also terminates when exiting. The ordering here is a little
+            # odd; the if could/should be outside the context manager, but coverage has
+            # issues with that arrangement on some Python versions (3.10, 3.14)
+            with suppress(ProcessLookupError):
+                if app_pid:
                     self.tools.os.kill(app_pid, SIGTERM)
-
-
-def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
-    """Determine if the file at the given path is a Mach-O binary.
-
-    :param path: The path to check
-    :returns: True if the file at the given location is a Mach-O binary.
-    """
-    # A binary is any file that is executable, or has a suffix from a known list
-    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
-        # File is a binary; read the file magic to determine if it's Mach-O.
-        with path.open("rb") as f:
-            magic = f.read(4)
-            return magic in (
-                b"\xca\xfe\xba\xbe",
-                b"\xcf\xfa\xed\xfe",
-                b"\xce\xfa\xed\xfe",
-                b"\xbe\xba\xfe\xca",
-                b"\xfe\xed\xfa\xcf",
-                b"\xfe\xed\xfa\xce",
-            )
-    else:
-        # Not a binary
-        return False
 
 
 class macOSSigningMixin:
@@ -653,6 +721,7 @@ or
                 )
                 return
             else:
+                self.tools.subprocess.output_error(e)
                 raise BriefcaseCommandError(f"Unable to code sign {path}.")
 
     def sign_app(
@@ -665,7 +734,7 @@ or
         :param app: The app to sign
         :param identity: The signing identity to use
         """
-        bundle_path = self.binary_path(app)
+        bundle_path = self.package_path(app)
         resources_path = bundle_path / "Contents/Resources"
         frameworks_path = bundle_path / "Contents/Frameworks"
 
@@ -757,7 +826,7 @@ class macOSPackageMixin(macOSSigningMixin):
             # Notarization for bare .app's is applied to the binary, not the
             # distribution artefact, with the distribution artefact being
             # created after notarization has completed.
-            return self.binary_path(app)
+            return self.package_path(app)
         else:
             return self.distribution_path(app)
 
@@ -839,8 +908,8 @@ class macOSPackageMixin(macOSSigningMixin):
     def clean_dist_folder(self, app, **options):
         """Clean up any existing artefacts in the dist folder.
 
-        If we are resuming a notarization session verify that the artefact exists,
-        but *do not* delete it.
+        If we are resuming a notarization session verify that the artefact exists, but
+        *do not* delete it.
 
         :param app: The app being packaged.
         :param submission_id: The notarization submission being resumed.
@@ -902,7 +971,8 @@ class macOSPackageMixin(macOSSigningMixin):
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
     ):
-        """Submit a file for notarization, and wait for that notarization to be completed.
+        """Submit a file for notarization, and wait for that notarization to be
+        completed.
 
         :param app: The app to notarize.
         :param identity: The code signing used to notarize the app.
@@ -1220,6 +1290,9 @@ password:
             installer. Ignored unless the packaging format is ``pkg``.
         :param submission_id: The submission ID of the notarization task to resume.
         """
+        # Confirm the project isn't currently on an iCloud synced drive.
+        self.verify_not_on_icloud(app)
+
         if submission_id:
             # If we're resuming notarization, we *can't* use an adhoc identity,
             # so don't allow it to be selected.
@@ -1354,9 +1427,9 @@ password:
         """Finalize the zip packaging process."""
         # Build the final archive for distribution
         with self.console.wait_bar(
-            f"Building final distribution archive for {self.binary_path(app).name}..."
+            f"Building final distribution archive for {self.package_path(app).name}..."
         ):
-            self.ditto_archive(self.binary_path(app), self.distribution_path(app))
+            self.ditto_archive(self.package_path(app), self.distribution_path(app))
 
     def package_pkg(
         self,
@@ -1399,11 +1472,11 @@ with your app's licensing terms.
         # the products you want to install. So - we need to copy the built app to a
         # "clean" packaging location.
         with self.console.wait_bar("Copying app into products folder..."):
-            installed_app_path = installer_path / "root" / self.binary_path(app).name
+            installed_app_path = installer_path / "root" / self.package_path(app).name
             if installed_app_path.exists():
                 self.tools.shutil.rmtree(installed_app_path)
             self.tools.shutil.copytree(
-                self.binary_path(app),
+                self.package_path(app),
                 installed_app_path,
                 # Ensure that symlinks are preserved in the duplication.
                 symlinks=True,
@@ -1420,7 +1493,7 @@ with your app's licensing terms.
                             "BundleIsRelocatable": False,
                             "BundleIsVersionChecked": True,
                             "BundleOverwriteAction": "upgrade",
-                            "RootRelativeBundlePath": self.binary_path(app).name,
+                            "RootRelativeBundlePath": self.package_path(app).name,
                         }
                     ],
                     components_plist,
@@ -1507,10 +1580,10 @@ with your app's licensing terms.
 
         with self.console.wait_bar(f"Building {dist_path.name}..."):
             dmg_settings = {
-                "files": [os.fsdecode(self.binary_path(app))],
+                "files": [os.fsdecode(self.package_path(app))],
                 "symlinks": {"Applications": "/Applications"},
                 "icon_locations": {
-                    f"{app.formal_name}.app": (75, 75),
+                    self.package_path(app).name: (75, 75),
                     "Applications": (225, 75),
                 },
                 "window_rect": ((600, 600), (350, 150)),

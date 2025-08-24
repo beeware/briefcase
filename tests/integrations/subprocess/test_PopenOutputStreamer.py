@@ -3,17 +3,16 @@ from io import StringIO
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations import subprocess
 from briefcase.integrations.subprocess import PopenOutputStreamer
 
 
 @pytest.fixture
-def streamer(streaming_process):
+def streamer(dummy_console, streaming_process):
     return PopenOutputStreamer(
         label="test",
         popen_process=streaming_process,
-        console=Console(),
+        console=dummy_console,
     )
 
 

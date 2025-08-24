@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -8,7 +9,6 @@ import pytest
 import tomli_w
 
 import briefcase.platforms.windows.app
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.subprocess import Subprocess
@@ -19,9 +19,9 @@ from ....utils import create_file
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     command = WindowsAppBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -94,6 +94,7 @@ def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch):
     assert isinstance(build_command.tools.windows_sdk, WindowsSDK)
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 @pytest.mark.parametrize("pre_existing", [True, False])
 @pytest.mark.parametrize("console_app", [True, False])
 def test_build_app_without_windows_sdk(
@@ -376,11 +377,14 @@ def test_build_app_with_support_package_update(
         "wb"
     ) as f:
         index = {
+            "briefcase": {
+                "target_version": "0.3.24",
+            },
             "paths": {
                 "app_path": "src/app",
                 "app_package_path": "src/app_packages",
                 "support_path": "src",
-            }
+            },
         }
         tomli_w.dump(index, f)
 

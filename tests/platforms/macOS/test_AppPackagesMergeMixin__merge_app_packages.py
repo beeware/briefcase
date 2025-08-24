@@ -28,9 +28,10 @@ def test_merge(dummy_command, pre_existing, tmp_path):
             ("second/other.py", "# other python"),
             ("second/different.py", "# different python"),
             ("second/some-binary", "# A file with executable permissions", 0o755),
-            ("second/sub1/module1.dylib", "dylib-gothic"),
-            ("second/sub1/module2.so", "dylib-gothic"),
-            ("second/sub1/module3.dylib", "dylib-gothic"),
+            ("second/sub1/module1.dylib", b"\xca\xfe\xba\xbedylib-gothic"),
+            ("second/sub1/module2.so", b"\xca\xfe\xba\xbedylib-gothic"),
+            ("second/sub1/module3.dylib", b"\xca\xfe\xba\xbedylib-gothic"),
+            ("second/sub1/module5.so", "\x7fELFso-elf"),
         ],
     )
 
@@ -46,9 +47,10 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         tag="macOS_11_0_modern",
         extra_content=[
             ("second/different.py", "# I need to be different"),
-            ("second/sub1/module1.dylib", "dylib-modern"),
-            ("second/sub1/module2.so", "dylib-modern"),
-            ("second/sub1/module4.dylib", "dylib-modern"),
+            ("second/sub1/module1.dylib", b"\xca\xfe\xba\xbedylib-modern"),
+            ("second/sub1/module2.so", b"\xca\xfe\xba\xbedylib-modern"),
+            ("second/sub1/module4.dylib", b"\xca\xfe\xba\xbedylib-modern"),
+            ("second/sub1/module5.so", "\x7fELFso-elf"),
             ("second/sub2/extra.py", "# extra python"),
         ],
     )
@@ -58,7 +60,7 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         if cmd[0] != "lipo":
             pytest.fail(f"Subprocess called {cmd[0]}, not lipo")
 
-        create_file(cmd[3], "dylib-merged")
+        create_file(cmd[3], b"\xca\xfe\xba\xbedylib-merged", mode="wb")
 
     dummy_command.tools.subprocess.run.side_effect = lipo
 
@@ -116,10 +118,11 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         (Path("second/some-binary"), "# A file with executable permissions"),
         (Path("second/other.py"), "# other python"),
         (Path("second/sub1"), None),
-        (Path("second/sub1/module1.dylib"), "dylib-merged"),
-        (Path("second/sub1/module2.so"), "dylib-merged"),
-        (Path("second/sub1/module3.dylib"), "dylib-merged"),
-        (Path("second/sub1/module4.dylib"), "dylib-merged"),
+        (Path("second/sub1/module1.dylib"), b"\xca\xfe\xba\xbedylib-merged"),
+        (Path("second/sub1/module2.so"), b"\xca\xfe\xba\xbedylib-merged"),
+        (Path("second/sub1/module3.dylib"), b"\xca\xfe\xba\xbedylib-merged"),
+        (Path("second/sub1/module4.dylib"), b"\xca\xfe\xba\xbedylib-merged"),
+        (Path("second/sub1/module5.so"), "\x7fELFso-elf"),
         (Path("second/sub2"), None),
         (Path("second/sub2/extra.py"), "# extra python"),
         (Path("second-2.3.4.dist-info"), None),
@@ -168,7 +171,7 @@ def test_merge_problem(dummy_command, tmp_path):
         "2.3.4",
         tag="macOS_11_0_gothic",
         extra_content=[
-            ("second/sub1/module1.dylib", "dylib-gothic"),
+            ("second/sub1/module1.dylib", b"\xca\xfe\xba\xbedylib-gothic"),
         ],
     )
     # Create 2 packages in the "modern" architecture app package sources
@@ -182,7 +185,7 @@ def test_merge_problem(dummy_command, tmp_path):
         "2.3.4",
         tag="macOS_11_0_modern",
         extra_content=[
-            ("second/sub1/module1.dylib", "dylib-modern"),
+            ("second/sub1/module1.dylib", b"\xca\xfe\xba\xbedylib-modern"),
         ],
     )
 
@@ -192,7 +195,10 @@ def test_merge_problem(dummy_command, tmp_path):
     )
 
     # Merge the two sources into a final location. This will raise an exception.
-    with pytest.raises(BriefcaseCommandError, match=r""):
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to create fat library for second[/\\]sub1[/\\]module1.dylib",
+    ):
         merged_path = tmp_path / "merged_app_packages"
         dummy_command.merge_app_packages(
             merged_path,

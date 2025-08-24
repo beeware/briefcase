@@ -3,8 +3,6 @@ import pytest
 from briefcase.commands.base import BaseCommand
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole
-
 
 class DummyCommand(BaseCommand):
     """A dummy command to test the BaseCommand interface."""
@@ -16,7 +14,6 @@ class DummyCommand(BaseCommand):
     description = "Dummy base command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, **kwargs)
 
         self.actions = []
@@ -32,6 +29,12 @@ class DummyCommand(BaseCommand):
     def binary_path(self, app):
         raise NotImplementedError()
 
+    def bundle_package_path(self, app):
+        return self.bundle_path(app) / "src/package"
+
+    def bundle_package_executable_path(self, app):
+        return f"internal/{app.app_name}.exe"
+
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))
@@ -46,8 +49,9 @@ class DummyCommand(BaseCommand):
 
 
 @pytest.fixture
-def base_command(tmp_path):
+def base_command(dummy_console, tmp_path):
     command = DummyCommand(
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "data_path",
     )
@@ -104,8 +108,11 @@ class OtherDummyCommand(BaseCommand):
 
 
 @pytest.fixture
-def other_command(tmp_path):
-    return OtherDummyCommand(base_path=tmp_path, console=DummyConsole())
+def other_command(dummy_console, tmp_path):
+    return OtherDummyCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
 
 @pytest.fixture

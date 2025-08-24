@@ -78,8 +78,8 @@ def test_no_requirements(dev_command, first_app):
 
 
 def test_no_requirements_with_requirement_installer_Args(dev_command, first_app):
-    """Ensure dependency installation is not attempted when nothing to install,
-    even if requirement installer args are defined."""
+    """Ensure dependency installation is not attempted when nothing to install, even if
+    requirement installer args are defined."""
     first_app.requires = []
     first_app.requirement_installer_args = ["--no-cache"]
 

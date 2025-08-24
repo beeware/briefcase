@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock
 
 import briefcase.console
-from briefcase.console import Console, NotDeadYet
+from briefcase.console import NotDeadYet
 
 
-def test_update(capsys, monkeypatch):
+def test_update(capsys, monkeypatch, dummy_console):
     """The message is only printed once for each interval."""
     # initialization will set interval to 0 + 10
     # update() will see time either at 5 or 15 and print the message accordingly
@@ -15,7 +15,7 @@ def test_update(capsys, monkeypatch):
         MagicMock(side_effect=[0] + [10 - 5, 10 + 5, 0] * 3),
     )
 
-    keep_alive = NotDeadYet(console=Console())
+    keep_alive = NotDeadYet(console=dummy_console)
 
     for _ in range(3):
         keep_alive.update()
@@ -26,7 +26,7 @@ def test_update(capsys, monkeypatch):
     )
 
 
-def test_reset(capsys, monkeypatch):
+def test_reset(capsys, monkeypatch, dummy_console):
     """Calling reset always puts the interval in the future and nothing prints."""
     # initialization will set interval to 0 + 10
     # the reset updates the interval to 10 + 10
@@ -37,7 +37,7 @@ def test_reset(capsys, monkeypatch):
         MagicMock(side_effect=[0] + [10, 15] * 10),
     )
 
-    keep_alive = NotDeadYet(console=Console())
+    keep_alive = NotDeadYet(console=dummy_console)
 
     for _ in range(10):
         keep_alive.reset()

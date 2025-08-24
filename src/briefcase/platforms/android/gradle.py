@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import datetime
 import re
 import subprocess
@@ -18,7 +19,7 @@ from briefcase.commands import (
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import AndroidSDK
+from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 
@@ -297,7 +298,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     def metadata_resource_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
-    def update_app_metadata(self, app: AppConfig, test_mode: bool):
+    def update_app_metadata(self, app: AppConfig):
         with self.console.wait_bar("Setting main module..."):
             with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
                 # Set the name of the app's main module; this will depend
@@ -305,19 +306,18 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
                 f.write(
                     f"""\
 <resources>
-    <string name="main_module">{app.main_module(test_mode)}</string>
+    <string name="main_module">{app.main_module()}</string>
 </resources>
 """
                 )
 
-    def build_app(self, app: AppConfig, test_mode: bool, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
-        :param test_mode: Should the app be updated in test mode? (default: False)
         """
         self.console.info("Updating app metadata...", prefix=app.app_name)
-        self.update_app_metadata(app=app, test_mode=test_mode)
+        self.update_app_metadata(app=app)
 
         self.console.info("Building Android APK...", prefix=app.app_name)
         with self.console.wait_bar("Building..."):
@@ -359,26 +359,42 @@ class GradleRunCommand(GradleMixin, RunCommand):
             help="Shutdown the emulator on exit",
             required=False,
         )
+        parser.add_argument(
+            "--forward-port",
+            action="append",
+            dest="forward_ports",
+            type=int,
+            help="Forward the specified port from host to device.",
+        )
+        parser.add_argument(
+            "--reverse-port",
+            action="append",
+            dest="reverse_ports",
+            type=int,
+            help="Reverse the specified port from device to host.",
+        )
 
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
+        forward_ports: list[int] | None = None,
+        reverse_ports: list[int] | None = None,
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
+        :param forward_ports: A list of ports to forward for the app.
+        :param reverse_ports: A list of ports to reversed for the app.
         """
         device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
 
@@ -405,7 +421,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             )
 
         try:
-            label = "test suite" if test_mode else "app"
+            label = "test suite" if app.test_mode else "app"
 
             self.console.info(
                 f"Starting {label} on {name} (device ID {device})", prefix=app.app_name
@@ -427,55 +443,88 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
-            # To start the app, we launch `org.beeware.android.MainActivity`.
-            with self.console.wait_bar(f"Launching {label}..."):
-                # capture the earliest time for device logging in case PID not found
-                device_start_time = adb.datetime()
+            forward_ports = forward_ports or []
+            reverse_ports = reverse_ports or []
 
-                adb.start_app(package, "org.beeware.android.MainActivity", passthrough)
+            # Forward/Reverse requested ports
+            with self.forward_ports(adb, forward_ports, reverse_ports):
+                # To start the app, we launch `org.beeware.android.MainActivity`.
+                with self.console.wait_bar(f"Launching {label}..."):
+                    # capture the earliest time for device logging in case PID not found
+                    device_start_time = adb.datetime()
 
-                # Try to get the PID for 5 seconds.
-                pid = None
-                fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
-                while not pid and datetime.datetime.now() < fail_time:
-                    # Try to get the PID; run in quiet mode because we may
-                    # need to do this a lot in the next 5 seconds.
-                    pid = adb.pidof(package, quiet=2)
-                    if not pid:
-                        time.sleep(0.01)
+                    adb.start_app(
+                        package, "org.beeware.android.MainActivity", passthrough
+                    )
 
-            if pid:
-                self.console.info(
-                    "Following device log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-                # Start adb's logcat in a way that lets us stream the logs
-                log_popen = adb.logcat(pid=pid)
+                    # Try to get the PID for 5 seconds.
+                    pid = None
+                    fail_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
+                    while not pid and datetime.datetime.now() < fail_time:
+                        # Try to get the PID; run in quiet mode because we may
+                        # need to do this a lot in the next 5 seconds.
+                        pid = adb.pidof(package, quiet=2)
+                        if not pid:
+                            time.sleep(0.01)
 
-                # Stream the app logs.
-                self._stream_app_logs(
-                    app,
-                    popen=log_popen,
-                    test_mode=test_mode,
-                    clean_filter=android_log_clean_filter,
-                    clean_output=False,
-                    # Check for the PID in quiet mode so logs aren't corrupted.
-                    stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
-                    log_stream=True,
-                )
-            else:
-                self.console.error("Unable to find PID for app", prefix=app.app_name)
-                self.console.error("Logs for launch attempt follow...")
-                self.console.error("=" * 75)
+                if pid:
+                    self.console.info(
+                        "Following device log output (type CTRL-C to stop log)...",
+                        prefix=app.app_name,
+                    )
+                    # Start adb's logcat in a way that lets us stream the logs
+                    log_popen = adb.logcat(pid=pid)
 
-                # Show the log from the start time of the app
-                adb.logcat_tail(since=device_start_time)
+                    # Stream the app logs.
+                    self._stream_app_logs(
+                        app,
+                        popen=log_popen,
+                        clean_filter=android_log_clean_filter,
+                        clean_output=False,
+                        # Check for the PID in quiet mode so logs aren't corrupted.
+                        stop_func=lambda: not adb.pid_exists(pid=pid, quiet=2),
+                        log_stream=True,
+                    )
+                else:
+                    self.console.error(
+                        "Unable to find PID for app", prefix=app.app_name
+                    )
+                    self.console.error("Logs for launch attempt follow...")
+                    self.console.error("=" * 75)
 
-                raise BriefcaseCommandError(f"Problem starting app {app.app_name!r}")
+                    # Show the log from the start time of the app
+                    adb.logcat_tail(since=device_start_time)
+
+                    raise BriefcaseCommandError(
+                        f"Problem starting app {app.app_name!r}"
+                    )
+
         finally:
             if shutdown_on_exit:
                 with self.tools.console.wait_bar("Stopping emulator..."):
                     adb.kill()
+
+    @contextlib.contextmanager
+    def forward_ports(
+        self, adb: ADB, forward_ports: list[int], reverse_ports: list[int]
+    ):
+        """Establish a port forwarding/reversion.
+
+        :param adb: The ADB wrapper for the device
+        :param forward_ports: Ports to forward via ADB
+        :param reverse_ports: Ports to reverse via ADB
+        """
+        for port in forward_ports:
+            adb.forward(port, port)
+        for port in reverse_ports:
+            adb.reverse(port, port)
+
+        yield
+
+        for port in forward_ports:
+            adb.forward_remove(port)
+        for port in reverse_ports:
+            adb.reverse_remove(port)
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):

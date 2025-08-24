@@ -2,15 +2,14 @@ import sys
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
 @pytest.fixture
-def create_command(tmp_path):
+def create_command(dummy_console, tmp_path):
     return WindowsAppCreateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -62,6 +61,17 @@ def test_unsupported_32bit_python(create_command):
         create_command()
 
 
+def test_context(create_command, first_app_config):
+    context = create_command.output_format_template_context(first_app_config)
+    assert sorted(context.keys()) == [
+        "binary_path",
+        "guid",
+        "install_scope",
+        "package_path",
+        "version_triple",
+    ]
+
+
 @pytest.mark.parametrize(
     "version, version_triple",
     [
@@ -111,49 +121,67 @@ def test_explicit_guid(create_command, first_app_config, tmp_path):
     assert context["guid"] == "e822176f-b755-589f-849c-6c6600f7efb1"
 
 
-def test_support_package_url(create_command, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    "revision, micro",
+    [
+        # Numerical revision
+        (5, "5"),
+        # Text revision
+        ("5", "5"),
+        # Pre-release revision
+        ("0a3", "0"),
+        ("0b2", "0"),
+        ("0rc1", "0"),
+    ],
+)
+def test_support_package_url(
+    create_command, revision, micro, first_app_config, tmp_path
+):
     """A valid support package URL is created for a support revision."""
-    revision = 5
     expected_link = (
         f"https://www.python.org/ftp/python"
-        f"/{sys.version_info.major}.{sys.version_info.minor}.{revision}"
+        f"/{sys.version_info.major}.{sys.version_info.minor}.{micro}"
         f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-amd64.zip"
     )
     assert create_command.support_package_url(revision) == expected_link
 
 
 def test_default_install_scope(create_command, first_app_config, tmp_path):
-    """By default, app should be installed per user."""
+    """By default, the installer gives a choice between per user and per machine."""
     context = create_command.output_format_template_context(first_app_config)
-
-    assert context == {
-        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
-        "version_triple": "0.0.1",
-        "install_scope": None,
-    }
+    assert context["install_scope"] == "perUserOrMachine"
 
 
 def test_per_machine_install_scope(create_command, first_app_config, tmp_path):
-    """By default, app should be installed per user."""
+    """App can be set to have explicit per-machine scope."""
     first_app_config.system_installer = True
-
     context = create_command.output_format_template_context(first_app_config)
-
-    assert context == {
-        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
-        "version_triple": "0.0.1",
-        "install_scope": "perMachine",
-    }
+    assert context["install_scope"] == "perMachine"
 
 
 def test_per_user_install_scope(create_command, first_app_config, tmp_path):
     """App can be set to have explicit per-user scope."""
     first_app_config.system_installer = False
-
     context = create_command.output_format_template_context(first_app_config)
+    assert context["install_scope"] == "perUser"
 
-    assert context == {
-        "guid": "d666a4f1-c7b7-52cc-888a-3a35a7cc97e5",
-        "version_triple": "0.0.1",
-        "install_scope": "perUser",
-    }
+
+def test_package_path(create_command, first_app_config, tmp_path):
+    """The default package_path is passed as an absolute path."""
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["package_path"] == str(
+        tmp_path / "base_path/build/first-app/windows/app/src"
+    )
+
+
+def test_binary_path(create_command, first_app_config, tmp_path):
+    """The default binary_path is passed as a path relative to package_path."""
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["binary_path"] == "First App.exe"
+
+
+def test_external(create_command, external_first_app, tmp_path):
+    """The package_path and binary_path can be overridden by the user."""
+    context = create_command.output_format_template_context(external_first_app)
+    assert context["package_path"] == str(tmp_path / "base_path/external/src")
+    assert context["binary_path"] == "internal/app.exe"

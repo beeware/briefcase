@@ -12,7 +12,6 @@ import pytest
 from cookiecutter.main import cookiecutter
 
 import briefcase.integrations
-from briefcase.console import Console
 from briefcase.integrations.base import ToolCache
 
 from .test_tool_registry import integrations_modules, tools_for_module
@@ -98,7 +97,7 @@ def test_mapping_protocol(simple_tools):
     simple_tools["app-1"].tool = "tool 1"
     simple_tools["app-2"].tool = "tool 2"
 
-    assert [app for app in simple_tools] == ["app-1", "app-2"]
+    assert list(simple_tools) == ["app-1", "app-2"]
     assert len(simple_tools) == 2
     assert simple_tools["app-1"].tool == "tool 1"
     assert simple_tools["app-2"].tool == "tool 2"
@@ -110,12 +109,12 @@ def test_host_arch_and_os(simple_tools):
     assert simple_tools.host_os == platform.system()
 
 
-def test_base_path_is_path(simple_tools):
+def test_base_path_is_path(dummy_console, simple_tools):
     """Base path is always a Path."""
     # The BaseCommand tests have much more extensive tests for this path.
     assert isinstance(simple_tools.base_path, Path)
     tools = ToolCache(
-        console=Console(),
+        console=dummy_console,
         base_path="/home/data",
     )
     assert isinstance(tools.base_path, Path)
@@ -136,10 +135,10 @@ def test_home_path_default(simple_tools):
         ("~/dir", Path.home() / "dir"),
     ],
 )
-def test_nonwindows_home_path(home_path, expected_path, tmp_path):
+def test_nonwindows_home_path(dummy_console, home_path, expected_path, tmp_path):
     """Home path is always expanded or defaulted."""
     tools = ToolCache(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path,
         home_path=home_path,
     )
@@ -156,10 +155,10 @@ def test_nonwindows_home_path(home_path, expected_path, tmp_path):
         ("~/dir", Path.home() / "dir"),
     ],
 )
-def test_windows_home_path(home_path, expected_path, tmp_path):
+def test_windows_home_path(dummy_console, home_path, expected_path, tmp_path):
     """Home path is always expanded or defaulted."""
     tools = ToolCache(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path,
         home_path=home_path,
     )
@@ -167,12 +166,12 @@ def test_windows_home_path(home_path, expected_path, tmp_path):
 
 
 @pytest.mark.parametrize("maxsize, is_32bit", [(2**32, True), (2**64, False)])
-def test_is_32bit_python(maxsize, is_32bit, monkeypatch, tmp_path):
+def test_is_32bit_python(dummy_console, maxsize, is_32bit, monkeypatch, tmp_path):
     """Whether Python is 32bits is sensitive to `sys.maxsize`."""
     monkeypatch.setattr(sys, "maxsize", maxsize)
 
     tools = ToolCache(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path,
     )
 

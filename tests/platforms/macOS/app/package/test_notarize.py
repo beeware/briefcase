@@ -6,16 +6,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import Subprocess, json_parser
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def package_command(dummy_console, tmp_path):
     command = macOSAppPackageCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -1018,7 +1017,8 @@ def test_unknown_notarization_status_failure(
     sleep_zero,
     tmp_path,
 ):
-    """If the notarization log process fails with an unexpected status code, an error is raised."""
+    """If the notarization log process fails with an unexpected status code, an error is
+    raised."""
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()
 

@@ -3,7 +3,7 @@ import pytest
 from briefcase.commands import UpdateCommand
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DummyUpdateCommand(UpdateCommand):
@@ -18,7 +18,6 @@ class DummyUpdateCommand(UpdateCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, apps, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps=apps, **kwargs)
 
         self.actions = []
@@ -52,12 +51,12 @@ class DummyUpdateCommand(UpdateCommand):
 
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.
-    def install_app_requirements(self, app, test_mode):
-        self.actions.append(("requirements", app.app_name, test_mode))
+    def install_app_requirements(self, app):
+        self.actions.append(("requirements", app.app_name, app.test_mode))
         create_file(self.bundle_path(app) / "requirements", "app requirements")
 
-    def install_app_code(self, app, test_mode):
-        self.actions.append(("code", app.app_name, test_mode))
+    def install_app_code(self, app):
+        self.actions.append(("code", app.app_name, app.test_mode))
         create_file(self.bundle_path(app) / "code.py", "print('app')")
 
     def install_app_resources(self, app):
@@ -83,33 +82,20 @@ class DummyUpdateCommand(UpdateCommand):
 
 
 @pytest.fixture
-def update_command(tmp_path):
-    return DummyUpdateCommand(
-        base_path=tmp_path / "base_path",
-        apps={
-            "first": AppConfig(
-                app_name="first",
-                bundle="com.example",
-                version="0.0.1",
-                description="The first simple app",
-                sources=["src/first"],
-                license={"file": "LICENSE"},
-            ),
-            "second": AppConfig(
-                app_name="second",
-                bundle="com.example",
-                version="0.0.2",
-                description="The second simple app",
-                sources=["src/second"],
-                license={"file": "LICENSE"},
-            ),
-        },
+def first_app_config():
+    """Populate skeleton app content for the first app."""
+    return AppConfig(
+        app_name="first",
+        bundle="com.example",
+        version="0.0.1",
+        description="The first simple app",
+        sources=["src/first"],
+        license={"file": "LICENSE"},
     )
 
 
 @pytest.fixture
-def first_app(tmp_path):
-    """Populate skeleton app content for the first app."""
+def first_app(tmp_path, first_app_config):
     create_file(
         tmp_path
         / "base_path"
@@ -120,10 +106,24 @@ def first_app(tmp_path):
         / "first.bundle",
         "first.bundle",
     )
+    return first_app_config
 
 
 @pytest.fixture
-def second_app(tmp_path):
+def second_app_config():
+    """Populate skeleton app content for the second app."""
+    return AppConfig(
+        app_name="second",
+        bundle="com.example",
+        version="0.0.2",
+        description="The second simple app",
+        sources=["src/second"],
+        license={"file": "LICENSE"},
+    )
+
+
+@pytest.fixture
+def second_app(tmp_path, second_app_config):
     """Populate skeleton app content for the second app."""
     create_file(
         tmp_path
@@ -134,4 +134,22 @@ def second_app(tmp_path):
         / "dummy"
         / "second.bundle",
         "second.bundle",
+    )
+    return second_app_config
+
+
+@pytest.fixture
+def update_command(
+    dummy_console,
+    tmp_path,
+    first_app_config,
+    second_app_config,
+):
+    return DummyUpdateCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+        apps={
+            "first": first_app_config,
+            "second": second_app_config,
+        },
     )

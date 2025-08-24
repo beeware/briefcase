@@ -478,7 +478,7 @@ def get_device_state(tools: ToolCache, udid: str) -> str:
             ["xcrun", "simctl", "list", "devices", "-j", udid],
         )
 
-        for runtime, devices in simctl_data["devices"].items():
+        for _, devices in simctl_data["devices"].items():
             for device in devices:
                 if device["udid"] == udid:
                     return {

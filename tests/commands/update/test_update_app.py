@@ -6,7 +6,6 @@ def test_update_app(update_command, first_app, tmp_path):
         update_resources=False,
         update_support=False,
         update_stub=False,
-        test_mode=False,
     )
 
     # The right sequence of things will be done
@@ -39,7 +38,6 @@ def test_update_non_existing_app(update_command, tmp_path):
         update_resources=False,
         update_support=False,
         update_stub=False,
-        test_mode=False,
     )
 
     # No app creation actions will be performed
@@ -58,7 +56,6 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         update_resources=False,
         update_support=False,
         update_stub=False,
-        test_mode=False,
     )
 
     # The right sequence of things will be done
@@ -91,7 +88,6 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
         update_resources=True,
         update_support=False,
         update_stub=False,
-        test_mode=False,
     )
 
     # The right sequence of things will be done
@@ -124,7 +120,6 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
         update_resources=False,
         update_support=True,
         update_stub=False,
-        test_mode=False,
     )
 
     # The right sequence of things will be done
@@ -163,7 +158,6 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
         update_resources=False,
         update_support=False,
         update_stub=True,
-        test_mode=False,
     )
 
     # The right sequence of things will be done
@@ -198,7 +192,6 @@ def test_update_app_stub_without_stub(update_command, first_app, tmp_path):
         update_resources=False,
         update_support=False,
         update_stub=True,
-        test_mode=False,
     )
 
     # The right sequence of things will be done
@@ -224,10 +217,11 @@ def test_update_app_stub_without_stub(update_command, first_app, tmp_path):
 
 def test_update_app_test_mode(update_command, first_app, tmp_path):
     """Update app in test mode."""
+    update_command.apps["first"].test_mode = True
+
     # Pass in the defaults for the update flags
     update_command.update_app(
         update_command.apps["first"],
-        test_mode=True,
         update_requirements=False,
         update_resources=False,
         update_support=False,
@@ -257,10 +251,11 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
 
 def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
     """Update app in test mode, but with requirements."""
+    update_command.apps["first"].test_mode = True
+
     # Pass in the defaults for the update flags
     update_command.update_app(
         update_command.apps["first"],
-        test_mode=True,
         update_requirements=True,
         update_resources=False,
         update_support=False,
@@ -291,10 +286,11 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
 
 def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
     """Update app in test mode, but with resources."""
+    update_command.apps["first"].test_mode = True
+
     # Pass in the defaults for the update flags
     update_command.update_app(
         update_command.apps["first"],
-        test_mode=True,
         update_requirements=False,
         update_resources=True,
         update_support=False,

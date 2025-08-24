@@ -6,20 +6,18 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux import parse_freedesktop_os_release, system
 from briefcase.platforms.linux.system import LinuxSystemRunCommand
 
-from ....utils import create_file
-
 
 @pytest.fixture
-def run_command(tmp_path, first_app, monkeypatch):
+def run_command(dummy_console, tmp_path, first_app, monkeypatch):
     command = LinuxSystemRunCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
         apps={"app": first_app},
@@ -83,15 +81,9 @@ def mock_linux_env(run_command, tmp_path, monkeypatch):
             "ID_LIKE=debian",
         ]
     )
-    if sys.version_info >= (3, 10):
-        # mock platform.freedesktop_os_release()
-        run_command.tools.platform.freedesktop_os_release = mock.MagicMock(
-            return_value=parse_freedesktop_os_release(os_release)
-        )
-    else:
-        # For Pre Python3.10, mock the /etc/release file
-        create_file(tmp_path / "os-release", os_release)
-        run_command.tools.ETC_OS_RELEASE = tmp_path / "os-release"
+    run_command.tools.platform.freedesktop_os_release = mock.MagicMock(
+        return_value=parse_freedesktop_os_release(os_release)
+    )
 
     # Mock the glibc version
     run_command.target_glibc_version = mock.MagicMock(return_value="2.42")
@@ -152,7 +144,6 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -227,7 +218,6 @@ def test_supported_host_os_docker(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -245,7 +235,7 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=[])
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -266,7 +256,6 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -285,7 +274,7 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=["foo", "--bar"])
+    run_command.run_app(first_app, passthrough=["foo", "--bar"])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -313,7 +302,6 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -327,7 +315,7 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
+        run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -356,7 +344,7 @@ def test_run_console_app(run_command, first_app, tmp_path):
     run_command.verify_app_tools(app=first_app)
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=[])
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     assert run_command.tools.subprocess.run.mock_calls == [
@@ -385,7 +373,7 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
     run_command.verify_app_tools(app=first_app)
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=["foo", "--bar"])
+    run_command.run_app(first_app, passthrough=["foo", "--bar"])
 
     # The process was started
     assert run_command.tools.subprocess.run.mock_calls == [
@@ -417,7 +405,7 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
     run_command.tools.subprocess.run.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
+        run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
     assert run_command.tools.subprocess.run.mock_calls == [
@@ -459,7 +447,7 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=False, passthrough=[])
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -495,7 +483,6 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -520,7 +507,7 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
     run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
 
     with pytest.raises(OSError):
-        run_command.run_app(first_app, test_mode=False, passthrough=[])
+        run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -568,6 +555,7 @@ def test_run_app_test_mode(
     """A linux App can be started in test mode."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -580,7 +568,7 @@ def test_run_app_test_mode(
     monkeypatch.setattr(run_command.tools.os, "environ", {"ENVVAR": "Value"})
 
     # Run the app
-    run_command.run_app(first_app, test_mode=True, passthrough=[])
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -602,7 +590,6 @@ def test_run_app_test_mode(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -620,6 +607,7 @@ def test_run_app_test_mode_docker(
     """A linux App can be started in Docker in test mode."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
@@ -639,7 +627,7 @@ def test_run_app_test_mode_docker(
     )
 
     # Run the app
-    run_command.run_app(first_app, test_mode=True, passthrough=[])
+    run_command.run_app(first_app, passthrough=[])
 
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
@@ -677,7 +665,6 @@ def test_run_app_test_mode_docker(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -694,6 +681,7 @@ def test_run_app_test_mode_with_args(
     """A linux App can be started in test mode with args."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
@@ -708,7 +696,6 @@ def test_run_app_test_mode_with_args(
     # Run the app with args
     run_command.run_app(
         first_app,
-        test_mode=True,
         passthrough=["foo", "--bar"],
     )
 
@@ -734,7 +721,6 @@ def test_run_app_test_mode_with_args(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -752,6 +738,7 @@ def test_run_app_test_mode_with_args_docker(
     """A linux App can be started in Docker in test mode with args."""
     # Test mode apps are always streamed
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
@@ -773,7 +760,6 @@ def test_run_app_test_mode_with_args_docker(
     # Run the app with args
     run_command.run_app(
         first_app,
-        test_mode=True,
         passthrough=["foo", "--bar"],
     )
 
@@ -815,6 +801,5 @@ def test_run_app_test_mode_with_args_docker(
     run_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=log_popen,
-        test_mode=True,
         clean_output=False,
     )

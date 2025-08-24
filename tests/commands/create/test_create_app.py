@@ -26,7 +26,11 @@ def test_create_app(tracking_create_command, tmp_path):
     # New app content has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     # A stub binary has *not* been created
-    assert not (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()
+    assert not (
+        tmp_path
+        / "base_path/build/first/tester/dummy"
+        / tracking_create_command.exe_name("first")
+    ).exists()
 
 
 def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
@@ -35,7 +39,8 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     tracking_create_command.console.values = ["y"]
 
     # Generate an app in the location.
-    bundle_path = tmp_path / "base_path/build/first/tester/dummy"
+    base_path = tmp_path / "base_path"
+    bundle_path = base_path / "build/first/tester/dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
@@ -44,7 +49,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        "Application 'first' already exists; overwrite [y/N]? "
+        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
     ]
 
     # The right sequence of things will be done
@@ -71,7 +76,8 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
     # Answer no when asked
     tracking_create_command.console.values = ["n"]
 
-    bundle_path = tmp_path / "base_path/build/first/tester/dummy"
+    base_path = tmp_path / "base_path"
+    bundle_path = base_path / "build/first/tester/dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
@@ -79,7 +85,7 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        "Application 'first' already exists; overwrite [y/N]? "
+        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
     ]
 
     # No app creation actions will be performed
@@ -97,7 +103,8 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
     # Answer '' (i.e., just press return) when asked
     tracking_create_command.console.values = [""]
 
-    bundle_path = tmp_path / "base_path/build/first/tester/dummy"
+    base_path = tmp_path / "base_path"
+    bundle_path = base_path / "build/first/tester/dummy"
     bundle_path.mkdir(parents=True)
     with (bundle_path / "original").open("w", encoding="utf-8") as f:
         f.write("original template!")
@@ -106,7 +113,7 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        "Application 'first' already exists; overwrite [y/N]? "
+        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
     ]
 
     # And no actions were necessary
@@ -168,11 +175,13 @@ def test_create_app_not_supported(tracking_create_command, tmp_path):
 def test_create_app_with_stub(tracking_create_command, tmp_path):
     """If an app template defines a stub revision, the stub will be created."""
     # Add an entry to the path index indicating a stub is required
-    tracking_create_command._briefcase_toml[tracking_create_command.apps["first"]] = {
+    first_app = tracking_create_command.apps["first"]
+
+    tracking_create_command._briefcase_toml[first_app] = {
         "paths": {"stub_binary_revision": "b1"}
     }
 
-    tracking_create_command.create_app(tracking_create_command.apps["first"])
+    tracking_create_command.create_app(first_app)
 
     # Input wasn't required by the user
     assert tracking_create_command.console.prompts == []
@@ -192,4 +201,8 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
 
     # New app content and stub binary has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
-    assert (tmp_path / "base_path/build/first/tester/dummy/Stub.bin").exists()
+    assert (
+        tmp_path
+        / "base_path/build/first/tester/dummy"
+        / tracking_create_command.exe_name("first")
+    ).exists()

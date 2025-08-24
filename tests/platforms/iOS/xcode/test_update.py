@@ -4,15 +4,14 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeUpdateCommand
 
 
 @pytest.fixture
-def update_command(tmp_path):
+def update_command(dummy_console, tmp_path):
     return iOSXcodeUpdateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -59,7 +58,7 @@ def test_extra_pip_args(
         spec_set=Subprocess
     )
 
-    update_command.install_app_requirements(first_app_generated, test_mode=False)
+    update_command.install_app_requirements(first_app_generated)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
     assert update_command.tools[first_app_generated].app_context.run.mock_calls == [
@@ -90,7 +89,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / device_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
         call(
@@ -120,7 +120,8 @@ def test_extra_pip_args(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
                     / sim_config_path
-                )
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
             },
         ),
     ]

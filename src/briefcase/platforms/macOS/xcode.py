@@ -5,6 +5,7 @@ import subprocess
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -64,6 +65,9 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
 
         :param app: The application to build
         """
+        # Confirm the project isn't currently on an iCloud synced drive.
+        self.verify_not_on_icloud(app)
+
         self.console.info("Building Xcode project...", prefix=app.app_name)
         with self.console.wait_bar("Building..."):
             try:
@@ -93,6 +97,10 @@ class macOSXcodeRunCommand(macOSRunMixin, macOSXcodeMixin, RunCommand):
     description = "Run a macOS app."
 
 
+class macOSXcodeDevCommand(macOSXcodeMixin, DevCommand):
+    description = "Run a macOS app in development mode."
+
+
 class macOSXcodePackageCommand(macOSPackageMixin, macOSXcodeMixin, PackageCommand):
     description = "Package a macOS app for distribution."
 
@@ -109,3 +117,4 @@ build = macOSXcodeBuildCommand
 run = macOSXcodeRunCommand
 package = macOSXcodePackageCommand
 publish = macOSXcodePublishCommand
+dev = macOSXcodeDevCommand

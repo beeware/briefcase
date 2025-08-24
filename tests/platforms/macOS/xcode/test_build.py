@@ -3,19 +3,22 @@ from unittest.mock import ANY, MagicMock
 
 import pytest
 
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.xcode import macOSXcodeBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path):
-    return macOSXcodeBuildCommand(
-        console=Console(),
+def build_command(dummy_console, tmp_path):
+    command = macOSXcodeBuildCommand(
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.verify_not_on_icloud = MagicMock()
+
+    return command
 
 
 @pytest.mark.parametrize("tool_debug_mode", (True, False))
@@ -26,7 +29,10 @@ def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path
         build_command.tools.console.verbosity = LogLevel.DEEP_DEBUG
 
     build_command.tools.subprocess = MagicMock(spec_set=Subprocess)
-    build_command.build_app(first_app_generated, test_mode=False)
+    build_command.build_app(first_app_generated)
+
+    # We verified we aren't on iCloud
+    build_command.verify_not_on_icloud.assert_called_once_with(first_app_generated)
 
     build_command.tools.subprocess.run.assert_called_with(
         [
@@ -59,7 +65,10 @@ def test_build_app_failed(build_command, first_app_generated, tmp_path):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        build_command.build_app(first_app_generated, test_mode=False)
+        build_command.build_app(first_app_generated)
+
+    # We verified we aren't on iCloud
+    build_command.verify_not_on_icloud.assert_called_once_with(first_app_generated)
 
     build_command.tools.subprocess.run.assert_called_with(
         [

@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.config import AppConfig
@@ -21,6 +23,9 @@ def test_minimal_AppConfig():
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.requires is None
+    assert config.sources == ["src/myapp", "somewhere/else/interesting", "local_app"]
+    assert config.external_package_path is None
+    assert config.external_package_executable_path is None
 
     # Derived properties have been set.
     assert config.bundle_name == "myapp"
@@ -33,9 +38,54 @@ def test_minimal_AppConfig():
     assert config.icon is None
 
     # The PYTHONPATH is derived correctly
-    assert config.PYTHONPATH(False) == ["src", "somewhere/else", ""]
+    config.test_mode = False
+    assert config.PYTHONPATH() == ["src", "somewhere/else", ""]
     # The test mode PYTHONPATH is the same
-    assert config.PYTHONPATH(True) == ["src", "somewhere/else", ""]
+    config.test_mode = True
+    assert config.PYTHONPATH() == ["src", "somewhere/else", ""]
+
+    # The object has a meaningful REPL
+    assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
+
+
+def test_minimal_external_AppConfig():
+    """A simple config for an external app can be defined."""
+    config = AppConfig(
+        app_name="myapp",
+        version="1.2.3",
+        bundle="org.beeware",
+        description="A simple app",
+        license={"file": "LICENSE"},
+        external_package_path="path/to/package",
+        external_package_executable_path="internal/app.exe",
+    )
+
+    # The basic properties have been set.
+    assert config.app_name == "myapp"
+    assert config.version == "1.2.3"
+    assert config.bundle == "org.beeware"
+    assert config.description == "A simple app"
+    assert config.requires is None
+    assert config.sources is None
+    assert config.external_package_path == "path/to/package"
+    assert config.external_package_executable_path == "internal/app.exe"
+
+    # Derived properties have been set.
+    assert config.bundle_name == "myapp"
+    assert config.bundle_identifier == "org.beeware.myapp"
+    assert config.formal_name == "myapp"
+    assert config.class_name == "myapp"
+    assert config.document_types == {}
+
+    # There is no icon of any kind
+    assert config.icon is None
+
+    # The PYTHONPATH is derived correctly
+    config.test_mode = False
+    assert config.PYTHONPATH() == []
+    # The test mode PYTHONPATH is the same
+    config.test_mode = True
+    assert config.PYTHONPATH() == []
 
     # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
@@ -60,6 +110,7 @@ def test_extra_attrs():
                 "extension": "doc",
                 "description": "A document",
                 "url": "https://testurl.com",
+                "mime_type": "application/x-my-doc-type",
             }
         },
         first="value 1",
@@ -78,14 +129,36 @@ def test_extra_attrs():
     # Properties that are derived by default have been set explicitly
     assert config.formal_name == "My App!"
     assert config.class_name == "MyApp"
-    assert config.document_types == {
-        "document": {
-            "icon": "icon",
-            "extension": "doc",
-            "description": "A document",
-            "url": "https://testurl.com",
+
+    if sys.platform == "darwin":
+        assert config.document_types == {
+            "document": {
+                "icon": "icon",
+                "extension": "doc",
+                "description": "A document",
+                "url": "https://testurl.com",
+                "mime_type": "application/x-my-doc-type",
+                "macOS": {
+                    "CFBundleTypeRole": "Viewer",
+                    "LSHandlerRank": "Owner",
+                    "UTTypeConformsTo": [
+                        "public.data",
+                        "public.content",
+                    ],
+                    "is_core_type": False,
+                },
+            }
         }
-    }
+    else:
+        assert config.document_types == {
+            "document": {
+                "icon": "icon",
+                "extension": "doc",
+                "description": "A document",
+                "url": "https://testurl.com",
+                "mime_type": "application/x-my-doc-type",
+            }
+        }
 
     # Explicit additional properties have been set
     assert config.first == "value 1"

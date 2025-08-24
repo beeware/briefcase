@@ -7,12 +7,13 @@ from briefcase.commands import UpgradeCommand
 from briefcase.exceptions import MissingToolError
 from briefcase.integrations.base import ManagedTool, Tool
 
-from ...utils import DummyConsole
-
 
 @pytest.fixture
-def upgrade_command(tmp_path):
-    command = DummyUpgradeCommand(base_path=tmp_path)
+def upgrade_command(dummy_console, tmp_path):
+    command = DummyUpgradeCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
     command.tools.host_os = "wonky"
     return command
 
@@ -29,7 +30,6 @@ class DummyUpgradeCommand(UpgradeCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, **kwargs)
 
     def bundle_path(self, app):
@@ -51,7 +51,7 @@ def mock_tool_registry(monkeypatch):
         DummyNotInstalledManagedTool,
     ]
 
-    tool_registry = dict()
+    tool_registry = {}
     for tool in tool_list:
         monkeypatch.setattr(tool, "verify", MagicMock(wraps=tool.verify))
         tool_registry[tool.name] = tool
@@ -68,7 +68,7 @@ def mock_no_managed_tool_registry(monkeypatch):
         DummyNotInstalledManagedTool,
     ]
 
-    tool_registry = dict()
+    tool_registry = {}
     for tool in tool_list:
         monkeypatch.setattr(tool, "verify", MagicMock(wraps=tool.verify))
         tool_registry[tool.name] = tool

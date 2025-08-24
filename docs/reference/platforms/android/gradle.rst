@@ -88,11 +88,12 @@ application must provide the icons in the following sizes, for 3 variants:
 The ``round`` and ``square`` icons should include their background color in the image.
 The ``adaptive`` icons should have a transparent background; the icon image should be
 centered in the overall image, and should not exceed the drawable area. The background
-color of the adaptive icon will be the value specified with ``splash_background_color``.
+color of the adaptive icon will be the value specified with
+:attr:`splash_background_color`.
 
-The icon will also be used to populate the splash screen. You can specify a
-background color for the splash screen using the ``splash_background_color``
-configuration setting.
+The icon will also be used to populate the splash screen. You can specify a background
+color for the splash screen using the :attr:`splash_background_color` configuration
+setting.
 
 Android projects do not support installer images.
 
@@ -101,16 +102,15 @@ Colors
 
 Android allows for some customization of the colors used by your app:
 
-* ``base_theme`` is used to set the base Android theme.
-* ``accent_color`` is used as a subtle highlight throughout your app to
-  call attention to key elements. It's used on things like form labels and
-  inputs.
-* ``primary_color`` is the main branding color of the app and is used to
-  color the app bar in the main window.
-* ``primary_color_dark`` is used alongside the primary color to color the
-  status bar at the top of the screen.
-* ``splash_background_color`` is the color of the splash background that
-  displays while an app is loading.
+* :attr:`base_theme` is used to set the base Android theme.
+* :attr:`accent_color` is used as a subtle highlight throughout your app to call
+  attention to key elements. It's used on things like form labels and inputs.
+* :attr:`primary_color` is the main branding color of the app and is used to color the
+  app bar in the main window.
+* :attr:`primary_color_dark` is used alongside the primary color to color the status bar
+  at the top of the screen.
+* :attr:`splash_background_color` is the color of the splash background that displays
+  while an app is loading.
 
 Additional options
 ==================
@@ -159,7 +159,7 @@ You may specify multiple ``--Xemulator`` arguments; each one specifies a
 single argument to pass to the emulator, in the order they are specified.
 
 ``--shutdown-on-exit``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Instruct Briefcase to shut down the emulator when the run finishes. This is
 especially useful if you are running in headless mode, as the emulator will
@@ -167,55 +167,71 @@ continue to run in the background, but there will be no visual manifestation
 that it is running. It may also be useful as a cleanup mechanism when running
 in a CI configuration.
 
+``--forward-port=<port>``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Forward a port via ADB from the host to the Android device. This is useful when
+a network service is running on the Android app that you want to connect to from
+the host.
+
+You may specify multiple ``--forward-port`` arguments; each one specifies a
+single port.
+
+``--reverse-port=<port>``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Reverse a port via ADB from the Android device to the host. This is useful when
+a network service is running on the host that you want to connect to from the
+Android app.
+
+You may specify multiple ``--reverse-port`` arguments; each one specifies a
+single port.
+
+
 Application configuration
 =========================
+
+.. currentmodule:: android
 
 The following options can be added to the ``tool.briefcase.app.<appname>.android``
 section of your ``pyproject.toml`` file.
 
-``android_manifest_attrs_extra_content``
-----------------------------------------
+.. attribute:: android_manifest_attrs_extra_content
 
 Additional attributes that will be added verbatim to the ``<manifest>`` declaration of
 the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_extra_content``
-----------------------------------
+.. attribute:: android_manifest_extra_content
 
 Additional content that will be added verbatim just before the closing ``</manifest>``
 declaration of the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_application_attrs_extra_content``
-----------------------------------------------------
+.. attribute:: android_manifest_application_attrs_extra_content
 
 Additional attributes that will be added verbatim to the ``<application>`` declaration
 of the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_application_extra_content``
-----------------------------------------------
+.. attribute:: android_manifest_application_extra_content
 
 Additional content that will be added verbatim just before the closing
 ``</application>`` declaration of the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_activity_attrs_extra_content``
--------------------------------------------------
+.. attribute:: android_manifest_activity_attrs_extra_content
 
 Additional attributes that will be added verbatim to the ``<activity>`` declaration of
 the ``AndroidManifest.xml`` of your app.
 
-``android_manifest_activity_extra_content``
--------------------------------------------
+.. attribute:: android_manifest_activity_extra_content
+
 
 Additional content that will be added verbatim just before the closing ``</activity>``
 declaration of the ``AndroidManifest.xml`` of your app.
 
-``base_theme``
---------------
+.. attribute:: base_theme
 
 The base theme for the application. Defaults to ``Theme.AppCompat.Light.DarkActionBar``
 
-``build_gradle_dependencies``
------------------------------
+.. attribute:: build_gradle_dependencies
 
 The list of libraries that should be linked into the Android application. Each library
 should be a versioned Maven package specifier. If unspecified, three libraries will be
@@ -225,14 +241,12 @@ linked into the app:
 * ``androidx.constraintlayout:constraintlayout:1.1.3``
 * ``androidx.swiperefreshlayout:swiperefreshlayout:1.1.0``
 
-``build_gradle_extra_content``
-------------------------------
+.. attribute:: build_gradle_extra_content
 
 A string providing additional Gradle settings to use when building your app.
 This will be added verbatim to the end of your ``app/build.gradle`` file.
 
-``feature``
------------
+.. attribute:: feature
 
 A property whose sub-properties define the features that will be marked as required by
 the final app. Each entry will be converted into a ``<uses-feature>`` declaration in
@@ -250,16 +264,15 @@ will result in an ``AndroidManifest.xml`` declaration of::
 The use of some cross-platform permissions will imply the addition of features; see
 :ref:`the discussion on Android permissions <android-permissions>` for more details.
 
-``min_os_version``
-------------------
+.. attribute:: min_os_version
+   :no-index:
 
 The minimum API level that the app will support (i.e., the ``minSdkVersion`` for the
 app). This is *not* the Android version; it is the underlying API level. For example,
 Android 9 uses an API level of 28; if you wanted to specify Android 9 as your minimum
 supported version, you would define ``min_os_version = "28"``.
 
-``permission``
---------------
+.. attribute:: permission
 
 A property whose sub-properties define the platform-specific permissions that will be
 marked as required by the final app. Each entry will be converted into a
@@ -274,8 +287,7 @@ will result in an ``AndroidManifest.xml`` declaration of::
 
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
 
-``target_os_version``
-----------------------
+.. attribute:: target_os_version
 
 The API level that the app will target. This controls the version of the Android SDK that
 is used to build your app (by setting the ``compileSdkVersion`` for your app), and the
@@ -284,8 +296,7 @@ forwards compatibility behavioral changes your app will enable (by setting the
 API level. For example, Android 15 uses an API level of 35; if you wanted to specify
 Android 15 as your target API level, you would define ``target_os_version = "35"``.
 
-``version_code``
-----------------
+.. attribute:: version_code
 
 In addition to a version number, Android projects require a version "code".
 This code is an integer version of your version number that *must* increase
@@ -313,18 +324,18 @@ Permissions
 Briefcase cross platform permissions map to ``<uses-permission>`` declarations in the
 app's ``AppManifest.xml``:
 
-* ``camera``: ``android.permission.CAMERA``
-* ``microphone``: ``android.permission.RECORD_AUDIO``
-* ``coarse_location``: ``android.permission.ACCESS_COARSE_LOCATION``
-* ``fine_location``: ``android.permission.ACCESS_FINE_LOCATION``
-* ``background_location``: ``android.permission.ACCESS_BACKGROUND_LOCATION``
-* ``photo_library``: ``android.permission.READ_MEDIA_VISUAL_USER_SELECTED``
+* :attr:`permission.camera`: ``android.permission.CAMERA``
+* :attr:`permission.microphone`: ``android.permission.RECORD_AUDIO``
+* :attr:`permission.coarse_location`: ``android.permission.ACCESS_COARSE_LOCATION``
+* :attr:`permission.fine_location`: ``android.permission.ACCESS_FINE_LOCATION``
+* :attr:`permission.background_location`: ``android.permission.ACCESS_BACKGROUND_LOCATION``
+* :attr:`permission.photo_library`: ``android.permission.READ_MEDIA_VISUAL_USER_SELECTED``
 
 Every application will be automatically granted the ``android.permission.INTERNET`` and
 ``android.permission.NETWORK_STATE`` permissions.
 
-Specifying a ``camera`` permission will result in the following non-required ``feature``
-definitions being implicitly added to your app:
+Specifying a :attr:`permission.camera` permission will result in the following
+non-required :attr:`feature` definitions being implicitly added to your app:
 
 * ``android.hardware.camera``,
 * ``android.hardware.camera.any``,
@@ -332,9 +343,9 @@ definitions being implicitly added to your app:
 * ``android.hardware.camera.external`` and
 * ``android.hardware.camera.autofocus``.
 
-Specifying the ``coarse_location``, ``fine_location`` or ``background_location``
-permissions will result in the following non-required ``feature`` declarations being
-implicitly added to your app:
+Specifying the :attr:`permission.coarse_location`, :attr:`permission.fine_location` or
+:attr:`permission.background_location` permissions will result in the following
+non-required :attr:`feature` declarations being implicitly added to your app:
 
 * ``android.hardware.location.network``
 * ``android.hardware.location.gps``
@@ -357,7 +368,7 @@ Availability of third-party packages
 
 Briefcase is able to use third-party packages in Android apps. As long as the package is
 available on PyPI, or you can provide a wheel file for the package, it can be added to
-the ``requires`` declaration in your ``pyproject.toml`` file and used by your app at
+the :attr:`requires` declaration in your ``pyproject.toml`` file and used by your app at
 runtime.
 
 If the package is pure Python (i.e., it does not contain a binary library), that's all
@@ -368,10 +379,12 @@ extensions (e.g., ``-cp311-cp311-macosx_11_0_universal2.whl``), then the wheel c
 a binary component.
 
 If the package contains a binary component, that wheel needs to be compiled for Android.
-PyPI does not currently support uploading Android-compatible wheels, so you can't rely
-on PyPI to provide those wheels. Briefcase uses a `secondary repository
-<https://chaquo.com/pypi-13.1/>`__ to provide pre-compiled Android wheels.
+PyPI allows projects to upload Android-compatible wheels (identified by suffixes like
+``-cp314-cp314-android_24_arm64.whl``). However, at this time, most projects do not
+provide Android-compatible wheels.
 
+This is expected to improve over time. In the mean time, Briefcase uses a `secondary
+repository <https://chaquo.com/pypi-13.1/>`__ to provide pre-compiled Android wheels.
 This repository is maintained by the BeeWare project, and as a result, it does not have
 binary wheels for *every* package that is available on PyPI, or even every *version* of
 every package that is on PyPI. If you see any of the following messages when building an
@@ -391,17 +404,29 @@ build tools that don't support Android, such as a compiler that can't target And
 a PEP517 build system that doesn't support cross-compilation, it may not be possible to
 build an Android wheel.
 
-The `Chaquopy repository <https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__
-contains tools to assist with cross-compiling Android binary wheels. This repository contains
-recipes for building the packages that are stored in the `secondary package repository
-<https://chaquo.com/pypi-13.1/>`__. Contributions of new package recipes are welcome, and
-can be submitted as pull requests. Or, if you have a particular package that you'd like
-us to support, please visit the `issue tracker
-<https://github.com/chaquo/chaquopy/issues>`__ and provide details about that package.
+The recommended way to build Android-compatible wheels is to use `cibuildwheel
+<https://cibuildwheel.pypa.io/en/stable/platforms/#android>`__. Despite the name, the
+tool is not limited to CI environments; it can be run locally on macOS and Linux
+machines. Many projects already use cibuildwheel to manage publication of binary wheels.
+For those projects, it may be possible to generate Android wheels by invoking
+``cibuildwheel --platform=android``. Some modifications of the cibuildwheel
+configuration may be necessary to provide Android-specific customizations.
+
+The `Chaquopy repository
+<https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__ also contains
+tools to assist with cross-compiling Android binary wheels. This project is mostly of
+historical significance; the BeeWare and Chaquopy teams are now focused on contributing
+Android support upstream, rather than maintaining independent packaging efforts. If you
+would like a project to officially support Android, you should open a feature request
+with that project requesting Android support, and consider providing a PR to contribute
+that support.
+
+Signing of ``briefcase package`` artefacts
+------------------------------------------
 
 While it is possible to use `briefcase package android` to produce an APK or AAB
 file for distribution, the file is *not* usable as-is. It must be signed
 regardless of whether you're distributing your app through the Play Store, or
 via loading the APK directly. For details on how to manually sign your code,
 see the instructions on `signing an Android App Bundle
-<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.```
+<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.

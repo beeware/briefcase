@@ -27,7 +27,7 @@ class ConvertCommand(NewCommand):
     cmd_line = "briefcase convert"
     command = "convert"
     platform = "all"
-    output_format = None
+    output_format = ""
     description = "Set up an existing project for Briefcase."
 
     @cached_property
@@ -807,8 +807,8 @@ def find_changelog_filename(base_path):
     """Find a valid changelog file in a given directory.
 
     :param base_path: The directory to search
-    :returns: The filename of the changelog that was found; None if a changelog
-        with a known name could not be found.
+    :returns: The filename of the changelog that was found; None if a changelog with a
+        known name could not be found.
     """
     changelog_formats = [
         f"{name}{extension}"

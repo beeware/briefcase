@@ -14,7 +14,6 @@ def test_dev_run(dev_command, first_app, tmp_path):
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
-        test_mode=False,
         passthrough=[],
     )
 
@@ -46,7 +45,6 @@ def test_dev_run(dev_command, first_app, tmp_path):
     dev_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=app_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -60,7 +58,6 @@ def test_dev_run_with_args(dev_command, first_app, tmp_path):
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
-        test_mode=False,
         passthrough=["foo", "bar", "--whiz"],
     )
 
@@ -92,7 +89,6 @@ def test_dev_run_with_args(dev_command, first_app, tmp_path):
     dev_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=app_popen,
-        test_mode=False,
         clean_output=False,
     )
 
@@ -102,6 +98,7 @@ def test_dev_test_mode(dev_command, first_app, is_console_app, tmp_path):
     """The test suite can be run in development mode."""
     # Test mode is the same regardless of whether it's a console app or not.
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     dev_command._stream_app_logs = mock.MagicMock()
     app_popen = mock.MagicMock()
@@ -110,7 +107,6 @@ def test_dev_test_mode(dev_command, first_app, is_console_app, tmp_path):
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
-        test_mode=True,
         passthrough=[],
     )
 
@@ -142,7 +138,6 @@ def test_dev_test_mode(dev_command, first_app, is_console_app, tmp_path):
     dev_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=app_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -152,6 +147,7 @@ def test_dev_test_mode_with_args(dev_command, first_app, is_console_app, tmp_pat
     """The test suite can be run in development mode with args."""
     # Test mode is the same regardless of whether it's a console app or not.
     first_app.console_app = is_console_app
+    first_app.test_mode = True
 
     dev_command._stream_app_logs = mock.MagicMock()
     app_popen = mock.MagicMock()
@@ -160,7 +156,6 @@ def test_dev_test_mode_with_args(dev_command, first_app, is_console_app, tmp_pat
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
-        test_mode=True,
         passthrough=["foo", "bar", "--whiz"],
     )
 
@@ -192,7 +187,6 @@ def test_dev_test_mode_with_args(dev_command, first_app, is_console_app, tmp_pat
     dev_command._stream_app_logs.assert_called_once_with(
         first_app,
         popen=app_popen,
-        test_mode=True,
         clean_output=False,
     )
 
@@ -207,7 +201,6 @@ def test_dev_run_console(dev_command, first_app, tmp_path):
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
-        test_mode=False,
         passthrough=[],
     )
 
@@ -250,7 +243,6 @@ def test_dev_run_console_with_args(dev_command, first_app, tmp_path):
     dev_command.run_dev_app(
         first_app,
         env={"a": 1, "b": 2, "c": 3},
-        test_mode=False,
         passthrough=["foo", "bar", "--whiz"],
     )
 

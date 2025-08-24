@@ -1,0 +1,24 @@
+import pytest
+
+from briefcase.platforms.windows.visualstudio import WindowsVisualStudioCreateCommand
+
+# Most tests and fixtures are the same for both "app" and "visualstudio". This file only
+# contains those that need to be overridden.
+from ..app.test_create import *  # noqa: F403
+
+
+@pytest.fixture
+def create_command(dummy_console, tmp_path):
+    return WindowsVisualStudioCreateCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+        data_path=tmp_path / "briefcase",
+    )
+
+
+def test_package_path(create_command, first_app_config, tmp_path):
+    """The default package_path is passed as an absolute path."""
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["package_path"] == str(
+        tmp_path / "base_path/build/first-app/windows/visualstudio/x64/Release"
+    )

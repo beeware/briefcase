@@ -7,7 +7,6 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import system
 from briefcase.platforms.linux.system import LinuxSystemPackageCommand
@@ -16,9 +15,9 @@ from ....utils import create_file, create_tgz_file
 
 
 @pytest.fixture
-def package_command(first_app, tmp_path):
+def package_command(dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -74,6 +73,21 @@ def first_app_pkg(first_app, tmp_path):
     create_file(usr_dir / "share/man/man1/first-app.1.gz", "man")
 
     return first_app
+
+
+@pytest.fixture
+def external_first_app_pkg(first_app_pkg, tmp_path):
+    # Make the app external
+    first_app_pkg.sources = None
+    first_app_pkg.external_package_path = tmp_path / "base_path/external/package-pkg"
+
+    # Move the generated first app to the external location
+    (tmp_path / "base_path/external").mkdir()
+    shutil.move(
+        tmp_path / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1",
+        tmp_path / "base_path/external/package-pkg",
+    )
+    return first_app_pkg
 
 
 def test_verify_no_docker(package_command, first_app_pkg, monkeypatch):
@@ -497,3 +511,94 @@ def test_no_changelog(package_command, first_app_pkg, tmp_path):
 
     # The pkg wasn't built, so it wasn't moved.
     package_command.tools.shutil.move.assert_not_called()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
+def test_external_pkg_package(
+    package_command,
+    external_first_app_pkg,
+    tmp_path,
+):
+    """An external app can be packaged as a PKD."""
+    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+
+    # Package the app
+    package_command.package_app(external_first_app_pkg)
+
+    # The CHANGELOG file is copied
+    assert (bundle_path / "pkgbuild/CHANGELOG").exists()
+
+    # The PKGBUILD file is written
+    assert (bundle_path / "pkgbuild/PKGBUILD").exists()
+    with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
+        assert f.read() == "\n".join(
+            [
+                "# Maintainer: Megacorp <maintainer@example.com>",
+                'export PACKAGER="Megacorp <maintainer@example.com>"',
+                "pkgname=first-app",
+                "pkgver=0.0.1",
+                "pkgrel=1",
+                'pkgdesc="Description for the app"',
+                "arch=('wonky')",
+                'url="https://example.com/first-app"',
+                "license=('Unknown')",
+                "depends=('glibc>=2.99' 'python3')",
+                "changelog=CHANGELOG",
+                'source=("$pkgname-$pkgver.tar.gz")',
+                "md5sums=('SKIP')",
+                "options=('!strip')",
+                "package() {",
+                '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
+                "}",
+            ]
+        )
+
+    # A source tarball was created with the right content
+    # In particular, the top level path is `first-app-0.0.1`, not `package-pkg`
+    archive_file = bundle_path / "pkgbuild/first-app-0.0.1.tar.gz"
+    assert archive_file.exists()
+    with tarfile.open(archive_file, "r:gz") as archive:
+        assert sorted(archive.getnames()) == [
+            "first-app-0.0.1",
+            "first-app-0.0.1/usr",
+            "first-app-0.0.1/usr/bin",
+            "first-app-0.0.1/usr/bin/first-app",
+            "first-app-0.0.1/usr/lib",
+            "first-app-0.0.1/usr/lib/first-app",
+            "first-app-0.0.1/usr/lib/first-app/app",
+            "first-app-0.0.1/usr/lib/first-app/app/support.so",
+            "first-app-0.0.1/usr/lib/first-app/app/support_same_perms.so",
+            "first-app-0.0.1/usr/lib/first-app/app_packages",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/firstlib",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/firstlib/first.so",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/firstlib/first.so.1.0",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/secondlib",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/secondlib/second_a.so",
+            "first-app-0.0.1/usr/lib/first-app/app_packages/secondlib/second_b.so",
+            "first-app-0.0.1/usr/share",
+            "first-app-0.0.1/usr/share/doc",
+            "first-app-0.0.1/usr/share/doc/first-app",
+            "first-app-0.0.1/usr/share/doc/first-app/UserManual",
+            "first-app-0.0.1/usr/share/doc/first-app/license",
+            "first-app-0.0.1/usr/share/man",
+            "first-app-0.0.1/usr/share/man/man1",
+            "first-app-0.0.1/usr/share/man/man1/first-app.1.gz",
+        ]
+
+    # makepkg was invoked
+    package_command.tools.app_tools[
+        external_first_app_pkg
+    ].app_context.run.assert_called_once_with(
+        [
+            "makepkg",
+        ],
+        check=True,
+        cwd=(bundle_path / "pkgbuild"),
+        env={"PKGEXT": ".pkg.tar.zst"},
+    )
+
+    # The pkg was moved into the final location
+    package_command.tools.shutil.move.assert_called_once_with(
+        bundle_path / "pkgbuild/first-app-0.0.1-1-wonky.pkg.tar.zst",
+        tmp_path / "base_path/dist/first-app-0.0.1-1-wonky.pkg.tar.zst",
+    )

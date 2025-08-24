@@ -16,7 +16,7 @@ from .base import BaseCommand
 class UpgradeCommand(BaseCommand):
     cmd_line = "briefcase upgrade"
     command = "upgrade"
-    output_format = None
+    output_format = ""
     description = "Upgrade Briefcase-managed tools."
 
     @property
@@ -93,7 +93,7 @@ class UpgradeCommand(BaseCommand):
                 else:
                     self.console.warning(error_msg)
 
-        return sorted(list(tools_to_upgrade), key=attrgetter("name"))
+        return sorted(tools_to_upgrade, key=attrgetter("name"))
 
     def __call__(self, tool_list: list[str], list_tools: bool = False, **options):
         """Perform tool upgrades or list tools qualifying for upgrade.

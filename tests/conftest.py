@@ -8,7 +8,7 @@ import pytest
 
 from briefcase.config import AppConfig
 
-from .utils import create_file
+from .utils import DummyConsole, create_file
 
 
 def pytest_sessionstart(session):
@@ -41,6 +41,13 @@ def monkeypatched_print(*args, **kwargs):
     _print(*args, **kwargs)
 
 
+@pytest.fixture
+def dummy_console():
+    console = DummyConsole()
+    yield console
+    console.close()
+
+
 @pytest.fixture(autouse=True)
 def no_print(monkeypatch):
     """Replace builtin ``print()`` for ALL tests."""
@@ -56,11 +63,11 @@ def sleep_zero(monkeypatch):
 @pytest.fixture
 def sub_kw():
     """Default keyword arguments for all subprocess calls."""
-    return dict(
-        text=True,
-        encoding=ANY,
-        errors="backslashreplace",
-    )
+    return {
+        "text": True,
+        "encoding": ANY,
+        "errors": "backslashreplace",
+    }
 
 
 @pytest.fixture
@@ -68,9 +75,9 @@ def sub_check_output_kw(sub_kw):
     """Default keyword arguments for all subprocess.check_output calls."""
     return {
         **sub_kw,
-        **dict(
-            stderr=subprocess.STDOUT,
-        ),
+        **{
+            "stderr": subprocess.STDOUT,
+        },
     }
 
 
@@ -79,11 +86,11 @@ def sub_stream_kw(sub_kw):
     """Default keyword arguments for all output streaming subprocess calls."""
     return {
         **sub_kw,
-        **dict(
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-        ),
+        **{
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.STDOUT,
+            "bufsize": 1,
+        },
     }
 
 

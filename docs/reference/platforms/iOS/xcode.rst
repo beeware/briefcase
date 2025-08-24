@@ -48,7 +48,7 @@ Colors
 
 iOS allows for some customization of the colors used by your app:
 
-* ``splash_background_color`` is the color of the splash background that
+* :attr:`splash_background_color` is the color of the splash background that
   displays while an app is loading.
 
 Additional options
@@ -69,11 +69,12 @@ The device simulator to target. Can be either a UDID, a device name (e.g.,
 Application configuration
 =========================
 
+.. currentmodule:: iOS
+
 The following options can be added to the ``tool.briefcase.app.<appname>.iOS.app``
 section of your ``pyproject.toml`` file.
 
-``info``
---------
+.. attribute:: info
 
 A property whose sub-attributes define keys that will be added to the app's
 ``Info.plist`` file. Each entry will be converted into a key in the entitlements
@@ -87,8 +88,7 @@ will result in an ``Info.plist`` declaration of::
 
 Any Boolean or string value can be used for an ``Info.plist`` value.
 
-``min_os_version``
-------------------
+.. attribute:: min_os_version
 
 The minimum iOS version that the app will support. This controls the value of
 ``IPHONEOS_DEPLOYMENT_TARGET`` used when building the app.
@@ -96,21 +96,29 @@ The minimum iOS version that the app will support. This controls the value of
 Permissions
 ===========
 
-Briefcase cross platform permissions map to the following ``info`` keys:
+Briefcase cross platform permissions map to the following :attr:`info` keys:
 
-* ``camera``: ``NSCameraUsageDescription``
-* ``microphone``: ``NSMicrophoneUsageDescription``
-* ``coarse_location``
+* :attr:`permission.camera`: ``NSCameraUsageDescription``
+* :attr:`permission.microphone`: ``NSMicrophoneUsageDescription``
+* :attr:`permission.coarse_location`:
+
   - ``NSLocationDefaultAccuracyReduced=True``
   - ``NSLocationWhenInUseUsageDescription`` if ``fine_location`` is not defined
-* ``fine_location``
+
+* :attr:`permission.fine_location`:
+
   - ``NSLocationDefaultAccuracyReduced=False``
   - ``NSLocationWhenInUseUsageDescription``
-* ``background_location``:
+
+* :attr:`permission.background_location`:
+
   - ``NSLocationAlwaysAndWhenInUseUsageDescription``
-  - ``NSLocationWhenInUseUsageDescription`` if neither ``fine_location`` or ``coarse_location`` is set
+  - ``NSLocationWhenInUseUsageDescription`` if neither
+    :attr:`permission.fine_location` or
+    :attr:`permission.coarse_location` is set
   - ``UIBackgroundModes`` will include ``location`` and ``processing``
-* ``photo_library``: ``NSPhotoLibraryAddUsageDescription``
+
+* :attr:`permission.photo_library`: ``NSPhotoLibraryAddUsageDescription``
 
 Platform quirks
 ===============
@@ -122,7 +130,7 @@ Availability of third-party packages
 
 Briefcase is able to use third-party packages in iOS apps. As long as the package is
 available on PyPI, or you can provide a wheel file for the package, it can be added to
-the ``requires`` declaration in your ``pyproject.toml`` file and used by your app at
+the :attr:`requires` declaration in your ``pyproject.toml`` file and used by your app at
 runtime.
 
 If the package is pure Python (i.e., it does not contain a binary library), that's all
@@ -133,13 +141,16 @@ extensions (e.g., ``-cp311-cp311-macosx_11_0_universal2.whl``), then the wheel c
 a binary component.
 
 If the package contains a binary component, that wheel needs to be compiled for iOS.
-PyPI does not currently support uploading iOS-compatible wheels, so you can't rely on
-PyPI to provide those wheels. Briefcase uses a `secondary repository
-<https://anaconda.org/beeware/repo>`__ to store pre-compiled iOS wheels.
+PyPI allows projects to upload iOS-compatible wheels (identified by suffixes like
+``-cp314-cp314-ios_15_4_arm64_iphoneos.whl`` or
+``-cp313-cp313-ios_13_0_x86_64_iphonesimulator.whl``). However, at this time, most
+projects do not provide iOS-compatible wheels.
 
-This repository is maintained by the BeeWare project, and as a result, it does not have
-binary wheels for *every* package that is available on PyPI, or even every *version* of
-every package that is on PyPI. If you see the message::
+This is expected to improve over time. In the mean time, Briefcase uses a `secondary
+repository <https://anaconda.org/beeware/repo>`__ to store some popular pre-compiled iOS
+wheels. This repository is maintained by the BeeWare project, and as a result, it does
+not have binary wheels for *every* package that is available on PyPI, or even every
+*version* of every package that is on PyPI. If you see the message::
 
     ERROR: Could not find a version that satisfies the requirement <package name> (from versions: none)
     ERROR: No matching distribution found for <package name>
@@ -154,14 +165,22 @@ build tools that don't support iOS, such as a compiler that can't target iOS, or
 PEP517 build system that doesn't support cross-compilation, it may not be possible to
 build an iOS wheel.
 
-The BeeWare Project provides the `Mobile Forge
+The recommended way to build iOS-compatible wheels is to use `cibuildwheel
+<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__. Despite the name, the tool
+is not limited to CI environments; it can be run locally on macOS machines. Many
+projects already use cibuildwheel to manage publication of binary wheels. For those
+projects, it may be possible to generate iOS wheels by invoking ``cibuildwheel
+--platform=ios``. Some modifications of the cibuildwheel configuration may be necessary
+to provide iOS-specific customizations.
+
+The BeeWare Project also provides the `Mobile Forge
 <https://github.com/beeware/mobile-forge>`__ project to assist with cross-compiling iOS
-binary wheels. This repository contains recipes for building the packages that are
-stored in the `secondary package repository <https://anaconda.org/beeware/repo>`__.
-Contributions of new package recipes are welcome, and can be submitted as pull requests.
-Or, if you have a particular package that you'd like us to support, please visit the
-`issue tracker <https://github.com/beeware/mobile-forge/issues>`__ and provide details
-about that package.
+binary wheels for the `secondary package repository
+<https://anaconda.org/beeware/repo>`__. This project is mostly of historical
+significance; the BeeWare team is now focused on contributing iOS support upstream,
+rather than maintaining independent packaging efforts. If you would like a project to
+officially support iOS, you should open a feature request with that project requesting
+iOS support, and consider providing a PR to contribute that support.
 
 Requirements cannot be provided as source tarballs
 --------------------------------------------------
@@ -173,11 +192,11 @@ This is an inherent limitation in the use of source tarballs as a distribution f
 If you need to install a package in an iOS app that is only published as a source
 tarball, you'll need to compile that package into a wheel first. If the package is pure
 Python, you can generate a ``py3-none-any`` wheel using ``pip wheel <package name>``. If
-the project has a binary component, you'll need to use `Mobile Forge
-<https://github.com/beeware/mobile-forge>`__ (or similar tooling) to compile compatible
-wheels.
+the project has a binary component, you'll need to use `cibuildwheel
+<https://cibuildwheel.pypa.io/en/stable/platforms/#ios>`__ or other similar tooling to
+compile compatible wheels.
 
-You can then directly add the wheel file to the ``requires`` definition for your app, or
+You can then directly add the wheel file to the :attr:`requires` definition for your app, or
 put the wheel in a folder and add:
 
 .. code-block:: TOML
@@ -217,6 +236,7 @@ can do this using the ``cleanup_paths`` configuration option::
 This will find and purge all ``.a`` content in your app's dependencies. You can add
 additional patterns to remove other problematic content.
 
+.. _ios-deploy:
 
 Deployment to Simulated and Physical iOS Devices
 ------------------------------------------------

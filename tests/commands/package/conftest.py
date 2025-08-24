@@ -4,7 +4,7 @@ from briefcase.commands import PackageCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DefaultPackageCommand(PackageCommand):
@@ -23,8 +23,11 @@ class DefaultPackageCommand(PackageCommand):
 
 
 @pytest.fixture
-def default_package_command(tmp_path):
-    return DefaultPackageCommand(base_path=tmp_path, console=DummyConsole())
+def default_package_command(dummy_console, tmp_path):
+    return DefaultPackageCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
 
 class DummyPackageCommand(PackageCommand):
@@ -47,7 +50,6 @@ class DummyPackageCommand(PackageCommand):
         return "pkg"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -92,7 +94,6 @@ class DummyPackageCommand(PackageCommand):
     def create_command(self, app, **kwargs):
         self.actions.append(("create", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
-        kwargs.pop("test_mode", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
@@ -102,7 +103,6 @@ class DummyPackageCommand(PackageCommand):
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("update_support", None)
-        kwargs.pop("test_mode", None)
         return full_options({"update_state": app.app_name}, kwargs)
 
     def build_command(self, app, **kwargs):
@@ -112,14 +112,16 @@ class DummyPackageCommand(PackageCommand):
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
         kwargs.pop("update_support", None)
-        kwargs.pop("test_mode", None)
         return full_options({"build_state": app.app_name}, kwargs)
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def package_command(dummy_console, tmp_path):
     (tmp_path / "base_path").mkdir()
-    return DummyPackageCommand(base_path=tmp_path / "base_path")
+    return DummyPackageCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+    )
 
 
 @pytest.fixture

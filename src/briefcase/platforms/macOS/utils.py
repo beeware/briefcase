@@ -3,10 +3,39 @@ from __future__ import annotations
 import concurrent
 import email
 import hashlib
+import os
+import pathlib
+import plistlib
 import subprocess
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
+
+CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
+
+
+def is_mach_o_binary(path: Path):  # pragma: no-cover-if-is-windows
+    """Determine if the file at the given path is a Mach-O binary.
+
+    :param path: The path to check
+    :returns: True if the file at the given location is a Mach-O binary.
+    """
+    # A binary is any file that is executable, or has a suffix from a known list
+    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
+        # File is a binary; read the file magic to determine if it's Mach-O.
+        with path.open("rb") as f:
+            magic = f.read(4)
+            return magic in (
+                b"\xca\xfe\xba\xbe",
+                b"\xcf\xfa\xed\xfe",
+                b"\xce\xfa\xed\xfe",
+                b"\xbe\xba\xfe\xca",
+                b"\xfe\xed\xfa\xcf",
+                b"\xfe\xed\xfa\xce",
+            )
+    else:
+        # Not a binary
+        return False
 
 
 def sha256_file_digest(path: Path) -> str:
@@ -165,7 +194,7 @@ class AppPackagesMergeMixin:
         """Ensure that all the dylibs in a given app_packages folder are thin."""
         dylibs = []
         for source_path in app_packages.glob("**/*"):
-            if source_path.suffix in {".so", ".dylib"}:
+            if not source_path.is_dir() and is_mach_o_binary(source_path):
                 dylibs.append(source_path)
 
         # Call lipo on each dylib that was found to ensure it is thin.
@@ -225,7 +254,7 @@ class AppPackagesMergeMixin:
                     if source_path.is_dir():
                         target_path.mkdir(exist_ok=True)
                     else:
-                        if source_path.suffix in {".so", ".dylib"}:
+                        if is_mach_o_binary(source_path):
                             # Dynamic libraries need to be merged; do this in a second pass.
                             dylibs.add(relative_path)
                         elif target_path.exists():
@@ -239,7 +268,9 @@ class AppPackagesMergeMixin:
                             ):
                                 self.console.warning(
                                     f"{relative_path} has different content "
-                                    f"between sources; ignoring {source_app_packages.suffix[1:]} version."
+                                    f"between sources; ignoring {source_app_packages.suffix[1:]} version. "
+                                    f"This is usually safe if the file content is not used at runtime. "
+                                    f"See https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels for more details."
                                 )
                         else:
                             # The file doesn't exist yet; copy it as is (including
@@ -272,3 +303,82 @@ class AppPackagesMergeMixin:
                             raise future.exception()
         else:
             self.console.info("No libraries require merging.")
+
+
+def is_uti_core_type(uti: str) -> bool:  # pragma: no-cover-if-not-macos
+    """Check if a UTI is a built-in Core Type.
+
+    This function checks if a given UTI is a built-in Core Type by reading the
+    system's CoreTypes Info.plist file. If the file is not found, it assumes
+    that the system is not macOS or the file has been moved in recent macOS
+    versions, and returns False.
+
+    Args:
+        uti: The UTI to check.
+
+    Returns:
+        True if the UTI is a built-in Core Type, False otherwise.
+    """
+    try:
+        plist_data = pathlib.Path(CORETYPES_PATH).read_bytes()
+    except FileNotFoundError:
+        # If the file is not found, we assume that the system is not macOS
+        # or the file has been moved in recent macOS versions.
+        # In this case, we return False to indicate that the UTI is not built-in.
+        return False
+    plist = plistlib.loads(plist_data)
+    return uti in {
+        type_declaration["UTTypeIdentifier"]
+        for type_declaration in plist["UTExportedTypeDeclarations"]
+        + plist["UTImportedTypeDeclarations"]
+    }
+
+
+def mime_type_to_uti(mime_type: str) -> str | None:  # pragma: no-cover-if-not-macos
+    """Convert a MIME type to a Uniform Type Identifier (UTI).
+
+    This function reads the system's CoreTypes Info.plist file to determine the
+    UTI for a given MIME type.
+
+    Args:
+        mime_type: The MIME type to convert.
+
+    Returns:
+        The UTI for the MIME type, or None if the UTI cannot be determined.
+    """
+    try:
+        plist_data = pathlib.Path(CORETYPES_PATH).read_bytes()
+    except FileNotFoundError:
+        # If the file is not found, we assume that the system is not macOS
+        # or the file has been moved in recent macOS versions.
+        # In this case, we return None to indicate that the UTI cannot be determined.
+        return None
+    plist = plistlib.loads(plist_data)
+    type_declarations = (
+        plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
+    )
+    for type_declaration in type_declarations:
+        # We check both the system built-in types (exported) and the known
+        # third-party types (imported) to find the UTI for the given MIME type.
+        # Most type declarations will have a UTTypeTagSpecification dictionary
+        # with a "public.mime-type" key. That can be either a list of MIME types
+        # or a single MIME type. We check if the MIME type is in the list or
+        # matches the single MIME type. If we find a match, we return the UTI
+        # identifier. If we don't find a match, we return None.
+
+        mime_types = type_declaration.get("UTTypeTagSpecification", {}).get(
+            "public.mime-type", []
+        )
+        if isinstance(mime_types, list):
+            # Most MIME types are declared as a list even if they are a
+            # single type. Some types define multiple closely-related MIME
+            # types.
+            if mime_type in mime_types:
+                return type_declaration["UTTypeIdentifier"]
+        else:
+            # some MIME types are declared as a single type
+            if mime_types == mime_type:
+                return type_declaration["UTTypeIdentifier"]
+
+    # If no match is found in the entire list, return None
+    return None

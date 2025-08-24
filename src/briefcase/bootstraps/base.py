@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -23,7 +22,7 @@ class AppContext(TypedDict):
     license: str
 
 
-class BaseGuiBootstrap(ABC):
+class BaseGuiBootstrap:
     """Definition for a plugin that defines a new Briefcase app."""
 
     # These are the field names that will be defined in the cookiecutter context.
@@ -124,8 +123,8 @@ class BaseGuiBootstrap(ABC):
     def post_generate(self, base_path: Path) -> None:
         """Runs after the template has been generated.
 
-        This can be used to produce any additional files that the base
-        template doesn't provide.
+        This can be used to produce any additional files that the base template doesn't
+        provide.
 
         :param base_path: The path to the root of the generated project.
         """

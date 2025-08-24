@@ -3,12 +3,13 @@ from __future__ import annotations
 import gzip
 import re
 import subprocess
-import sys
+import tarfile
 from pathlib import Path
 
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     PackageCommand,
     PublishCommand,
     RunCommand,
@@ -40,6 +41,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     supported_host_os_reason = (
         "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
+    supports_external_packaging = True
 
     @property
     def use_docker(self):
@@ -88,6 +90,9 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     def binary_path(self, app):
         return self.project_path(app) / "usr/bin" / app.app_name
 
+    def bundle_package_path(self, app):
+        return self.project_path(app)
+
     def rpm_tag(self, app):
         if app.target_vendor == "fedora":
             return f"fc{app.target_codename}"
@@ -104,12 +109,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
     def platform_freedesktop_info(self, app):
         try:
-            if sys.version_info < (3, 10):  # pragma: no-cover-if-gte-py310
-                # This reproduces the Python 3.10 platform.freedesktop_os_release() function.
-                with self.tools.ETC_OS_RELEASE.open(encoding="utf-8") as f:
-                    freedesktop_info = parse_freedesktop_os_release(f.read())
-            else:  # pragma: no-cover-if-lt-py310
-                freedesktop_info = self.tools.platform.freedesktop_os_release()
+            freedesktop_info = self.tools.platform.freedesktop_os_release()
 
         except OSError as e:
             raise BriefcaseCommandError(
@@ -150,6 +150,12 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         if not self.use_docker:
             app.target_image = f"{app.target_vendor}:{app.target_codename}"
         else:
+            if app.external_package_path:
+                raise BriefcaseCommandError(
+                    "Briefcase can't currently use Docker to package "
+                    "external apps as Linux system packages."
+                )
+
             # If we're building for Arch, and Docker does user mapping, we can't build,
             # because Arch won't let makepkg run as root. Docker on macOS *does* map the
             # user, but introducing a step-down user doesn't alter behavior, so we can
@@ -766,7 +772,7 @@ app's configuration.
                 raise BriefcaseCommandError(
                     """\
 Your project does not contain a changelog file with a known file name. You
-must provided a changelog file in the same directory as your `pyproject.toml`,
+must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
@@ -838,24 +844,22 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(app=app, test_mode=test_mode)
+        kwargs = self._prepare_app_kwargs(app=app)
 
         with self.tools[app].app_context.run_app_context(kwargs) as kwargs:
             # Console apps must operate in non-streaming mode so that console input can
             # be handled correctly. However, if we're in test mode, we *must* stream so
             # that we can see the test exit sentinel
-            if app.console_app and not test_mode:
+            if app.console_app and not app.test_mode:
                 self.console.info("=" * 75)
                 self.tools[app].app_context.run(
                     [self.binary_path(app)] + passthrough,
@@ -879,9 +883,15 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
                 self._stream_app_logs(
                     app,
                     popen=app_popen,
-                    test_mode=test_mode,
                     clean_output=False,
                 )
+
+
+class LinuxSystemDevCommand(LinuxMixin, DevCommand):
+    description = "Run a Linux system app in development mode"
+    output_format = "system"
+    supported_host_os = {"Linux"}
+    supported_host_os_reason = "Linux system dev mode is only supported on Linux."
 
 
 def debian_multiline_description(description):
@@ -970,7 +980,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
         # Write the Debian metadata control file.
         with self.console.wait_bar("Write Debian package control file..."):
-            DEBIAN_path = self.project_path(app) / "DEBIAN"
+            DEBIAN_path = self.package_path(app) / "DEBIAN"
 
             if DEBIAN_path.exists():
                 self.tools.shutil.rmtree(DEBIAN_path)
@@ -1017,7 +1027,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                         "dpkg-deb",
                         "--build",
                         "--root-owner-group",
-                        f"{app.app_name}-{app.version}",
+                        self.package_path(app),
                     ],
                     check=True,
                     cwd=self.bundle_path(app),
@@ -1029,7 +1039,7 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
 
             # Move the deb file to its final location
             self.tools.shutil.move(
-                self.bundle_path(app) / f"{app.app_name}-{app.version}.deb",
+                self.package_path(app).parent / f"{self.package_path(app).name}.deb",
                 self.distribution_path(app),
             )
 
@@ -1132,8 +1142,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
                 # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
                 # *not* cleaned up, as they're part of more general system structures.
-                for filename in sorted(self.project_path(app).glob("**/*")):
-                    path = filename.relative_to(self.project_path(app))
+                for filename in sorted(self.package_path(app).glob("**/*")):
+                    path = filename.relative_to(self.package_path(app))
 
                     if filename.is_dir():
                         if app.app_name in path.parts:
@@ -1149,29 +1159,29 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                     raise BriefcaseCommandError(
                         """\
 Your project does not contain a changelog file with a known file name. You
-must provided a changelog file in the same directory as your `pyproject.toml`,
+must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
 """
                     )
 
-                changelog_source = self.base_path / changelog
-
-                with changelog_source.open(encoding="utf-8") as c:
-                    f.write(c.read())
+                # Write the changelog content
+                f.write((self.base_path / changelog).read_text(encoding="utf-8"))
 
         with self.console.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                rpmbuild_path / "SOURCES" / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
-            )
+            with tarfile.open(
+                rpmbuild_path / f"SOURCES/{self.bundle_package_path(app).name}.tar.gz",
+                "w:gz",
+            ) as archive:
+                archive.add(
+                    self.package_path(app),
+                    arcname=self.bundle_package_path(app).name,
+                )
 
         with self.console.wait_bar("Building RPM package..."):
             try:
-                # Build the dpkg.
+                # Build the rpm.
                 self.tools[app].app_context.run(
                     [
                         "rpmbuild",
@@ -1234,12 +1244,14 @@ with details about the release.
 
         # Build the source archive
         with self.console.wait_bar("Building source archive..."):
-            self.tools.shutil.make_archive(
-                pkgbuild_path / f"{app.app_name}-{app.version}",
-                format="gztar",
-                root_dir=self.bundle_path(app),
-                base_dir=f"{app.app_name}-{app.version}",
-            )
+            with tarfile.open(
+                pkgbuild_path / f"{self.bundle_package_path(app).name}.tar.gz",
+                "w:gz",
+            ) as archive:
+                archive.add(
+                    self.package_path(app),
+                    arcname=self.bundle_package_path(app).name,
+                )
 
         # Write the arch PKGBUILD file.
         with self.console.wait_bar("Write PKGBUILD file..."):
@@ -1314,3 +1326,4 @@ build = LinuxSystemBuildCommand
 run = LinuxSystemRunCommand
 package = LinuxSystemPackageCommand
 publish = LinuxSystemPublishCommand
+dev = LinuxSystemDevCommand

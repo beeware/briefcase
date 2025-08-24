@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools
 import os
 import shutil
+import ssl
 import sys
 import tempfile
 from collections.abc import Iterable, Sequence
@@ -11,6 +12,7 @@ from email.message import Message
 from pathlib import Path
 
 import httpx
+import truststore
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -93,6 +95,16 @@ class File(Tool):
             )
         )
 
+    @property
+    def ssl_context(self):
+        """The SSL context to use for downloads."""
+        try:
+            return self._ssl_context
+        except AttributeError:
+            self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+            return self._ssl_context
+
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?
 
@@ -174,7 +186,12 @@ class File(Tool):
         download_path.mkdir(parents=True, exist_ok=True)
         filename: Path = None
         try:
-            with self.tools.httpx.stream("GET", url, follow_redirects=True) as response:
+            with self.tools.httpx.stream(
+                "GET",
+                url,
+                follow_redirects=True,
+                verify=self.ssl_context,
+            ) as response:
                 if response.status_code == 404:
                     raise MissingNetworkResourceError(url=url)
                 elif response.status_code != 200:
@@ -223,10 +240,35 @@ class File(Tool):
                 hint = "exceeded redirects when downloading the file.\n\nPlease report this as a bug to Briefcase."
             elif isinstance(e, httpx.DecodingError):
                 hint = "the server sent a malformed response."
+            elif isinstance(e, httpx.ConnectError):
+                try:
+                    # It's a little difficult to verify exactly what might cause httpx
+                    # to raise a ConnectError, but `__context__.__context__` should be
+                    # an SSLCertVerificationError if there's a certificate problem.
+                    # Catch that case, and print the raw exception in other cases.
+                    context = e.__context__.__context__
+                except AttributeError:
+                    context = None
+
+                if isinstance(context, ssl.SSLCertVerificationError):
+                    hint = (
+                        "a connection to the server could not be established due to "
+                        "a certificate verification problem.\n\n"
+                        "This probably indicates an issue with a proxy configuration "
+                        "on your computer."
+                    )
+                else:
+                    hint = (
+                        "a connection to the server could not be established.\n\n"
+                        f"The reported cause of the problem was {e}"
+                    )
             else:
                 # httpx.TransportError
                 # Use the default hint for generic network communication errors
-                hint = None
+                hint = (
+                    "is your computer offline?\n\n"
+                    f"The reported cause of the problem was {e}"
+                )
 
             raise NetworkFailure(
                 f"download {description}",

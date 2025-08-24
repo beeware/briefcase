@@ -57,7 +57,7 @@ class OpenCommand(BaseCommand):
             state = self.open_app(app, **options)
         else:
             state = None
-            for app_name, app in sorted(self.apps.items()):
+            for _, app in sorted(self.apps.items()):
                 state = self.open_app(app, **full_options(state, options))
 
         return state

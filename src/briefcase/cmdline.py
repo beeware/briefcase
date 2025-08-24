@@ -102,7 +102,7 @@ def parse_cmdline(args, console: Console | None = None):
     # usage string so that the instructions displayed are correct
     parser.add_argument(
         "command",
-        choices=list(cmd.command for cmd in COMMANDS),
+        choices=[cmd.command for cmd in COMMANDS],
         metavar="command",
         nargs="?",
         help=argparse.SUPPRESS,
@@ -131,8 +131,6 @@ def parse_cmdline(args, console: Console | None = None):
         Command = ConvertCommand
     elif options.command == "new":
         Command = NewCommand
-    elif options.command == "dev":
-        Command = DevCommand
     elif options.command == "upgrade":
         Command = UpgradeCommand
     else:
@@ -193,5 +191,4 @@ def parse_cmdline(args, console: Console | None = None):
                 output_format=output_format,
                 command=options.command,
             )
-
     return Command, extra

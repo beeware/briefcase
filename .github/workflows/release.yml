@@ -39,7 +39,7 @@ jobs:
           python-version: "3.x"
 
       - name: Get packages
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@v5.0.0
         with:
           name: ${{ needs.ci.outputs.artifact-name }}
           path: dist
@@ -58,7 +58,7 @@ jobs:
           test $(briefcase --version) = $VERSION
 
       - name: Create release
-        uses: ncipollo/release-action@v1.16.0
+        uses: ncipollo/release-action@v1.18.0
         with:
           name: ${{ env.VERSION }}
           draft: true

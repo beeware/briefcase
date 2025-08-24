@@ -32,9 +32,16 @@ def mock_now(monkeypatch):
 
 
 @pytest.fixture
-def command(mock_now, tmp_path) -> DevCommand:
+def console() -> Console:
+    console = Console()
+    yield console
+    console.close()
+
+
+@pytest.fixture
+def command(mock_now, console, tmp_path) -> DevCommand:
     """Provides a mocked DevCommand."""
-    command = MagicMock(spec_set=DevCommand(console=Console()))
+    command = MagicMock(spec_set=DevCommand(console=console))
     command.base_path = tmp_path
     command.command = "dev"
     command.tools.os.environ = {}
@@ -65,16 +72,23 @@ def logging_console() -> logging.Logger:
         (5, True, True, True),
     ],
 )
-def test_log_level(verbosity, verbose_enabled, debug_enabled, deep_debug_enabled):
+def test_log_level(
+    console,
+    verbosity,
+    verbose_enabled,
+    debug_enabled,
+    deep_debug_enabled,
+):
     """Logging level is correct."""
-    assert Console(verbosity=verbosity).is_verbose is verbose_enabled
-    assert Console(verbosity=verbosity).is_debug is debug_enabled
-    assert Console(verbosity=verbosity).is_deep_debug is deep_debug_enabled
+    console.verbosity = verbosity
+
+    assert console.is_verbose is verbose_enabled
+    assert console.is_debug is debug_enabled
+    assert console.is_deep_debug is deep_debug_enabled
 
 
-def test_info_logging(capsys):
+def test_info_logging(console, capsys):
     """The info level logging only includes info logs."""
-    console = Console()
 
     console.info("info")
     console.verbose("verbose")
@@ -87,9 +101,9 @@ def test_info_logging(capsys):
     assert "debug" not in output
 
 
-def test_verbose_logging(capsys):
+def test_verbose_logging(console, capsys):
     """The verbose level logging includes info and verbose logs."""
-    console = Console(verbosity=LogLevel.VERBOSE)
+    console.verbosity = LogLevel.VERBOSE
 
     console.info("info")
     console.verbose("verbose")
@@ -102,9 +116,9 @@ def test_verbose_logging(capsys):
     assert "debug" not in output
 
 
-def test_debug_logging(capsys):
+def test_debug_logging(console, capsys):
     """The debug level logging includes info, verbose and debug logs."""
-    console = Console(verbosity=LogLevel.DEBUG)
+    console.verbosity = LogLevel.DEBUG
 
     console.info("info")
     console.verbose("verbose")
@@ -117,13 +131,12 @@ def test_debug_logging(capsys):
     assert "debug" in output
 
 
-def test_capture_stacktrace():
+def test_capture_stacktrace(console):
     """capture_stacktrace sets Log.stacktrace."""
-    console = Console()
     assert console.skip_log is False
 
     try:
-        1 / 0
+        _ = 1 / 0
     except ZeroDivisionError:
         console.capture_stacktrace()
 
@@ -134,9 +147,8 @@ def test_capture_stacktrace():
 
 
 @pytest.mark.parametrize("skip_logfile", [True, False])
-def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
+def test_capture_stacktrace_for_briefcaseerror(console, skip_logfile):
     """skip_log is updated for BriefcaseError exceptions."""
-    console = Console()
     assert console.skip_log is False
 
     try:
@@ -150,9 +162,8 @@ def test_capture_stacktrace_for_briefcaseerror(skip_logfile):
     assert console.skip_log is skip_logfile
 
 
-def test_save_log_to_file_do_not_log(command):
+def test_save_log_to_file_do_not_log(console, command):
     """Nothing is done to save log if no command or --log wasn't passed."""
-    console = Console()
     console.save_log_to_file(command=None)
 
     console.save_log = False
@@ -163,7 +174,13 @@ def test_save_log_to_file_do_not_log(command):
     assert len(console.stacktraces) == 0
 
 
-def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch):
+def test_save_log_to_file_no_exception(
+    monkeypatch,
+    mock_now,
+    console,
+    command,
+    tmp_path,
+):
     """Log file contains everything printed to log; env vars are sanitized; no
     stacktrace if one is not captured."""
     command.tools.os.environ = {
@@ -171,7 +188,7 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch)
         "ANDROID_HOME": "/androidsdk",
     }
 
-    console = Console(verbosity=LogLevel.DEBUG)
+    console.verbosity = LogLevel.DEBUG
     command.tools.console = console
     console.save_log = True
 
@@ -246,12 +263,11 @@ def test_save_log_to_file_no_exception(mock_now, command, tmp_path, monkeypatch)
     assert EXTRA_HEADER not in log_contents
 
 
-def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
+def test_save_log_to_file_with_exception(mock_now, console, command, tmp_path):
     """Log file contains exception stacktrace when one is captured."""
-    console = Console()
     console.save_log = True
     try:
-        1 / 0
+        _ = 1 / 0
     except ZeroDivisionError:
         console.capture_stacktrace()
     console.save_log_to_file(command=command)
@@ -267,13 +283,17 @@ def test_save_log_to_file_with_exception(mock_now, command, tmp_path):
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 
-def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
+def test_save_log_to_file_with_multiple_exceptions(
+    mock_now,
+    console,
+    command,
+    tmp_path,
+):
     """Log file contains exception stacktrace when more than one is captured."""
-    console = Console()
     console.save_log = True
     for i in range(1, 5):
         try:
-            1 / 0
+            _ = 1 / 0
         except ZeroDivisionError:
             console.capture_stacktrace(f"Thread {i}")
 
@@ -292,9 +312,8 @@ def test_save_log_to_file_with_multiple_exceptions(mock_now, command, tmp_path):
     assert log_contents.splitlines()[-1].startswith("ZeroDivisionError")
 
 
-def test_save_log_to_file_extra(mock_now, command, tmp_path):
+def test_save_log_to_file_extra(mock_now, console, command, tmp_path):
     """Log file extras are called when the log is written."""
-    console = Console()
     console.save_log = True
 
     def extra1():
@@ -319,9 +338,8 @@ def test_save_log_to_file_extra(mock_now, command, tmp_path):
     assert "Log extra 3" in log_contents
 
 
-def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
+def test_save_log_to_file_extra_interrupted(mock_now, console, command, tmp_path):
     """Log file extras can be interrupted by Ctrl-C."""
-    console = Console()
     console.save_log = True
 
     def extra1():
@@ -337,9 +355,14 @@ def test_save_log_to_file_extra_interrupted(mock_now, command, tmp_path):
     assert log_filepath.stat().st_size == 0
 
 
-def test_save_log_to_file_missing_pyproject(mock_now, command, tmp_path, monkeypatch):
+def test_save_log_to_file_missing_pyproject(
+    mock_now,
+    console,
+    command,
+    tmp_path,
+    monkeypatch,
+):
     """Log file contains pyproject read exception if it's missing."""
-    console = Console()
     console.save_log = True
 
     # ensure in a directory without a pyproject.toml
@@ -357,10 +380,11 @@ def test_save_log_to_file_missing_pyproject(mock_now, command, tmp_path, monkeyp
 
 
 def test_save_log_to_file_fail_to_make_logs_dir(
+    monkeypatch,
     mock_now,
+    console,
     command,
     capsys,
-    monkeypatch,
     tmp_path,
 ):
     """User is informed when the ``logs`` directory cannot be created."""
@@ -377,7 +401,6 @@ def test_save_log_to_file_fail_to_make_logs_dir(
     #  - raises for the call to ``mkdir`` to create the ``logs`` directory
     mock_base_path.mkdir.side_effect = OSError("directory creation denied")
 
-    console = Console()
     console.save_log = True
 
     console.print("a line of output")
@@ -395,10 +418,11 @@ def test_save_log_to_file_fail_to_make_logs_dir(
 
 
 def test_save_log_to_file_fail_to_write_file(
+    monkeypatch,
     mock_now,
+    console,
     command,
     capsys,
-    monkeypatch,
     tmp_path,
 ):
     """User is informed when the log file cannot be written."""
@@ -409,7 +433,6 @@ def test_save_log_to_file_fail_to_write_file(
     mock_open.return_value.__enter__.return_value = mock_log_file
     mock_log_file.write.side_effect = OSError("file write denied")
 
-    console = Console()
     console.save_log = True
 
     console.print("a line of output")
@@ -427,9 +450,9 @@ def test_save_log_to_file_fail_to_write_file(
     )
 
 
-def test_log_with_context(capsys):
+def test_log_with_context(console, capsys):
     """Log file can be given a persistent context."""
-    console = Console(verbosity=LogLevel.DEBUG)
+    console.verbosity = LogLevel.DEBUG
     console.save_log = False
 
     console.info("this is info output")
@@ -478,9 +501,9 @@ def test_log_with_context(capsys):
     )
 
 
-def test_log_error_with_context(capsys):
+def test_log_error_with_context(console, capsys):
     """If an exception is raised in a logging context, the context is cleared."""
-    console = Console(verbosity=LogLevel.DEBUG)
+    console.verbosity = LogLevel.DEBUG
     console.save_log = False
 
     console.info("this is info output")
@@ -516,9 +539,14 @@ def test_log_error_with_context(capsys):
         (LogLevel.INFO, False),
     ],
 )
-def test_stdlib_logging_config(logging_level, handler_expected, logging_console):
+def test_stdlib_logging_config(
+    console,
+    logging_level,
+    handler_expected,
+    logging_console,
+):
     """A logging handler is only added for DEEP_DEBUG mode."""
-    console = Console(verbosity=logging_level)
+    console.verbosity = logging_level
 
     console.configure_stdlib_logging("test_pkg")
 
@@ -527,9 +555,9 @@ def test_stdlib_logging_config(logging_level, handler_expected, logging_console)
     )
 
 
-def test_stdlib_logging_only_one(logging_console):
+def test_stdlib_logging_only_one(console, logging_console):
     """Only one logging handler is ever created for a package."""
-    console = Console(verbosity=LogLevel.DEEP_DEBUG)
+    console.verbosity = LogLevel.DEEP_DEBUG
 
     console.configure_stdlib_logging("test_pkg")
     console.configure_stdlib_logging("test_pkg")
@@ -538,9 +566,9 @@ def test_stdlib_logging_only_one(logging_console):
     assert len(logging_console.handlers) == 1
 
 
-def test_stdlib_logging_handler_writes_to_debug(logging_console):
+def test_stdlib_logging_handler_writes_to_debug(console, logging_console):
     """The logging handler writes to the console through Console()."""
-    console = Console(verbosity=LogLevel.DEEP_DEBUG)
+    console.verbosity = LogLevel.DEEP_DEBUG
     console.debug = MagicMock(wraps=console.debug)
 
     console.configure_stdlib_logging("test_pkg")

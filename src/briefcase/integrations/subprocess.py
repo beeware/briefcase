@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import TypeVar, Union
+from typing import TypeVar
 
 import psutil
 
@@ -23,9 +23,9 @@ from briefcase.console import Console, LogLevel
 from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
 
-SubprocessArgT = Union[str, Path]
+SubprocessArgT = str | Path
 SubprocessArgsT = Sequence[SubprocessArgT]
-JsonT = Union[Mapping[str, "JsonT"], Sequence["JsonT"], str, int, float, bool, None]
+JsonT = Mapping[str, "JsonT"] | Sequence["JsonT"] | str | int | float | bool | None
 ParserOutputT = TypeVar("ParserOutputT")
 
 
@@ -888,8 +888,8 @@ class Subprocess(Tool):
     def output_error(self, exception: subprocess.CalledProcessException):
         """Print error from a subprocess to the console.
 
-        This will output the command, output and return code to the console,
-        but *not* to the log.
+        This will output the command, output and return code to the console, but *not*
+        to the log.
 
         :param exception: The raw exception raised by a subprocess
         """

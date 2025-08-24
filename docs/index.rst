@@ -28,15 +28,20 @@ Get started with a hands-on introduction for beginners.
 
 Guides and recipes for common problems and tasks, including how to contribute.
 
-:ref:`Background <background>`
-------------------------------
+:ref:`Topic guides <topics>`
+----------------------------
 
-Explanation and discussion of key topics and concepts.
+Deeper explorations of concepts and issues related to Briefcase usage.
 
 :ref:`Reference <reference>`
 ----------------------------
 
 Technical reference - commands, modules, classes, methods.
+
+:ref:`About Briefcase <about>`
+------------------------------
+
+Frequently Asked Questions, success stories, and other details about Briefcase as a project.
 
 Community
 =========
@@ -59,5 +64,6 @@ Briefcase is part of the `BeeWare suite`_. You can talk to the community through
 
    tutorial/index
    how-to/index
-   background/index
+   topics/index
    reference/index
+   about/index

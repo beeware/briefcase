@@ -22,10 +22,10 @@ def test_incomplete_global_config(base_command):
         """
         [tool.briefcase]
         version = "1.2.3"
-        description = "A sample app"
         license.file = "LICENSE"
 
         [tool.briefcase.app.my-app]
+        description = "A sample app"
     """,
     )
 
@@ -38,7 +38,7 @@ def test_incomplete_global_config(base_command):
 
 def test_incomplete_config(base_command):
     """If the configuration is missing a required argument, an error is raised."""
-    # Provide a configuration that is missing `bundle`, a required attribute
+    # Provide a configuration that is missing `description`, a required attribute
     filename = base_command.base_path / "pyproject.toml"
     create_file(
         filename,
@@ -47,7 +47,6 @@ def test_incomplete_config(base_command):
         project_name = "Sample project"
         version = "1.2.3"
         bundle = "com.example"
-        description = "A sample app"
         license.file = "LICENSE"
 
         [tool.briefcase.app.my-app]
@@ -56,7 +55,7 @@ def test_incomplete_config(base_command):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Configuration for 'my-app' is incomplete \(missing 'sources'\)",
+        match=r"Configuration for 'my-app' is incomplete \(missing 'description'\)",
     ):
         base_command.parse_config(filename, {})
 

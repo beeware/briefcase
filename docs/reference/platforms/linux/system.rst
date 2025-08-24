@@ -82,8 +82,8 @@ will be copied into your project. You should ensure these files are complete and
 correct before publishing your app.
 
 The Linux system app template also includes an initial draft manfile for your
-app. This manfile will be populated with the ``description`` and
-``long_description`` of your app. You may wish to add more details on app usage.
+app. This manfile will be populated with the :attr:`description` and
+:attr:`long_description` of your app. You may wish to add more details on app usage.
 
 Additional options
 ==================
@@ -122,6 +122,8 @@ The following Linux vendors are known to work as Docker targets:
 Application configuration
 =========================
 
+.. currentmodule:: linux.system
+
 The following options can be added to the
 ``tool.briefcase.app.<appname>.linux.system`` section of your ``pyproject.toml``
 file; if defined in this section, the values will apply for *all* Linux
@@ -157,8 +159,7 @@ will override the generic vendor definitions; any vendor definitions will
 override the vendor-base definitions; and any vendor-base definitions will
 override generic system package definitions.
 
-``system_requires``
-~~~~~~~~~~~~~~~~~~~
+.. attribute:: system_requires
 
 A list of operating system packages that must be installed for the system package
 build to succeed. If a Docker build is requested, this list will be passed to
@@ -178,23 +179,22 @@ If you see errors during ``briefcase build`` of the form::
     Could not find dependency: libSomething.so.1
 
 but the app works under ``briefcase dev``, the problem may be an incomplete
-``system_requires`` definition. The ``briefcase build`` process generates
+:attr:`system_requires` definition. The ``briefcase build`` process generates
 a new environment that is completely isolated from your development
 environment, so if your app has any operating system dependencies, they
-*must* be listed in your ``system_requires`` definition.
+*must* be listed in your :attr:`system_requires` definition.
 
-``system_requires`` are the packages required at *build* time. To specify
-*runtime* system requirements, use the ``system_runtime_requires`` setting.
+:attr:`system_requires` are the packages required at *build* time. To specify
+*runtime* system requirements, use the :attr:`system_runtime_requires` setting.
 
-``system_runtime_requires``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: system_runtime_requires
 
 A list of system packages that your app requires at *runtime*. These will be
-closely related to the ``system_requires`` setting, but will likely be
+closely related to the :attr:`system_requires` setting, but will likely be
 different; most notably, you will probably need ``-dev`` packages at build time,
 but non ``-dev`` packages at runtime.
 
-``system_runtime_requires`` should be specified as system package requirements;
+:attr:`system_runtime_requires` should be specified as system package requirements;
 they can optionally include version pins. Briefcase will automatically include
 the dependencies needed for Python. For example::
 
@@ -204,27 +204,25 @@ will specify that your app needs Python 3, a version of ``libgtk >= 3.14``, and 
 version of ``libwebkit2gtk``.
 
 Any problems with installing or running your system package likely indicate an
-issue with your ``system_runtime_requires`` definition.
+issue with your :attr:`system_runtime_requires` definition.
 
-``system_section``
-~~~~~~~~~~~~~~~~~~
+.. attribute:: system_section
 
-When an application is published as a ``.deb`` file, Debian requires that you
-specify a "section", describing a classification of the application area. The
-template will provide a default section of ``utils``; if you want to override
-that default, you can specify a value for ``system_section``. For details on the
-allowed values for ``system_section``, refer to the `Debian Policy Manual
+When an application is published as a ``.deb`` file, Debian requires that you specify a
+"section", describing a classification of the application area. The template will
+provide a default section of ``utils``; if you want to override that default, you can
+specify a value for :attr:`system_section`. For details on the allowed values for
+:attr:`system_section`, refer to the `Debian Policy Manual
 <https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section>`__.
 
-``dockerfile_extra_content``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. attribute:: dockerfile_extra_content
 
-Any additional Docker instructions that are required to configure the container
-used to build your Python app. For example, any dependencies that cannot be
-configured with ``apt-get`` could be installed. ``dockerfile_extra_content`` is
-string literal that will be added verbatim to the end of the project Dockerfile.
+Any additional Docker instructions that are required to configure the container used to
+build your Python app. For example, any dependencies that cannot be configured with
+``apt-get`` could be installed. :attr:`dockerfile_extra_content` is string literal that
+will be added verbatim to the end of the project Dockerfile.
 
-Any Dockerfile instructions added by ``dockerfile_extra_content`` will be
+Any Dockerfile instructions added by :attr:`dockerfile_extra_content` will be
 executed as the ``brutus`` user, rather than the ``root`` user. If you need to
 perform container setup operations as ``root``, switch the container's user to
 ``root``, perform whatever operations are required, then switch back to the
@@ -245,8 +243,8 @@ Platform quirks
 Local path references and Docker builds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Docker builds are not able to reference local paths in the ``requires`` and
-``requirement_installer_args`` configurations. This is because the Docker container only
-has access to specific file paths on the host system. See `issue #2018
+Docker builds are not able to reference local paths in the :attr:`requires` and
+:attr:`requirement_installer_args` configurations. This is because the Docker container
+only has access to specific file paths on the host system. See `issue #2018
 <https://github.com/beeware/briefcase/issues/2081>`__ for more discussion of the
 problem, and some possible workarounds.

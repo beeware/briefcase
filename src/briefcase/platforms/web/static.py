@@ -8,6 +8,11 @@ from typing import Any
 from zipfile import ZipFile
 
 from briefcase.console import Console
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -19,6 +24,7 @@ import tomli_w
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
+    DevCommand,
     OpenCommand,
     PackageCommand,
     PublishCommand,
@@ -26,7 +32,6 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
 
 class StaticWebMixin:
@@ -310,7 +315,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        test_mode: bool,
         passthrough: list[str],
         host,
         port,
@@ -320,13 +324,12 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         """Start the application.
 
         :param app: The config object for the app
-        :param test_mode: Boolean; Is the app running in test mode?
         :param passthrough: The list of arguments to pass to the app
         :param host: The host on which to run the server
         :param port: The port on which to run the server
         :param open_browser: Should a browser be opened on the newly started server.
         """
-        if test_mode:
+        if app.test_mode:
             raise BriefcaseCommandError("Briefcase can't run web apps in test mode.")
 
         self.console.info("Starting web server...", prefix=app.app_name)
@@ -449,6 +452,19 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
+class StaticWebDevCommand(StaticWebMixin, DevCommand):
+    description = "Run a static web project in development mode. (Work in progress)"
+
+    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
+        raise UnsupportedCommandError(
+            platform="web",
+            output_format="static",
+            command="dev",
+        )
+
+    # implement logic to run the web server in development mode
+
+
 # Declare the briefcase command bindings
 create = StaticWebCreateCommand
 update = StaticWebUpdateCommand
@@ -457,3 +473,4 @@ build = StaticWebBuildCommand
 run = StaticWebRunCommand
 package = StaticWebPackageCommand
 publish = StaticWebPublishCommand
+dev = StaticWebDevCommand

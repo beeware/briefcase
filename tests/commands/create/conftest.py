@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from unittest import mock
 
 import pytest
@@ -11,7 +12,7 @@ from briefcase.config import AppConfig
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 @pytest.fixture
@@ -34,8 +35,11 @@ class DefaultCreateCommand(CreateCommand):
 
 
 @pytest.fixture
-def default_create_command(tmp_path):
-    return DefaultCreateCommand(base_path=tmp_path, console=DummyConsole())
+def default_create_command(dummy_console, tmp_path):
+    return DefaultCreateCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
 
 class DummyCreateCommand(CreateCommand):
@@ -50,7 +54,6 @@ class DummyCreateCommand(CreateCommand):
     hidden_app_properties = {"permission", "request"}
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, **kwargs)
 
         # Override the host properties
@@ -77,8 +80,20 @@ class DummyCreateCommand(CreateCommand):
             ("arch", self.tools.host_arch),
         ]
 
+    def exe_name(self, app_name=None):
+        if sys.platform == "win32":
+            return f"{'Stub' if app_name is None else app_name}.exe"
+        else:
+            return "Stub" if app_name is None else app_name
+
     def binary_path(self, app):
-        return self.bundle_path(app) / f"{app.app_name}.bin"
+        return self.bundle_path(app) / self.exe_name(app.formal_name)
+
+    def bundle_package_path(self, app):
+        return self.bundle_path(app) / "src/package"
+
+    def bundle_package_executable_path(self, app):
+        return f"internal/{app.app_name}.exe"
 
     # Hard code the python version to make testing easier.
     @property
@@ -157,15 +172,19 @@ class TrackingCreateCommand(DummyCreateCommand):
 
         # A mock version of template generation.
         create_file(self.bundle_path(app) / "new", "new template!")
+        create_file(
+            self.bundle_path(app) / "src/package/README",
+            "The packaged app goes here",
+        )
 
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
 
-    def install_app_requirements(self, app, test_mode):
-        self.actions.append(("requirements", app.app_name, test_mode))
+    def install_app_requirements(self, app):
+        self.actions.append(("requirements", app.app_name, app.test_mode))
 
-    def install_app_code(self, app, test_mode):
-        self.actions.append(("code", app.app_name, test_mode))
+    def install_app_code(self, app):
+        self.actions.append(("code", app.app_name, app.test_mode))
 
     def install_app_resources(self, app):
         self.actions.append(("resources", app.app_name))
@@ -173,15 +192,16 @@ class TrackingCreateCommand(DummyCreateCommand):
     def install_stub_binary(self, app):
         self.actions.append(("stub", app.app_name))
         # A mock version of a stub binary
-        create_file(self.bundle_path(app) / "Stub.bin", "stub binary")
+        create_file(self.binary_path(app), "stub binary")
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
 
 
 @pytest.fixture
-def create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
+def create_command(dummy_console, tmp_path, mock_git, monkeypatch_tool_host_os):
     return DummyCreateCommand(
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "data",
         git=mock_git,
@@ -190,8 +210,14 @@ def create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
 
 
 @pytest.fixture
-def tracking_create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
+def tracking_create_command(
+    dummy_console,
+    tmp_path,
+    mock_git,
+    monkeypatch_tool_host_os,
+):
     return TrackingCreateCommand(
+        console=dummy_console,
         git=mock_git,
         base_path=tmp_path / "base_path",
         apps={
@@ -233,9 +259,8 @@ def myapp():
 
 @pytest.fixture
 def bundle_path(myapp, tmp_path):
-    # Return the bundle path for the app; however, as a side effect,
-    # ensure that the app, and app_packages target directories
-    # exist, and the briefcase index file has been created.
+    # Return the bundle path for the app; however, as a side effect, ensure that the app
+    # and package target directories exist.
     bundle_path = tmp_path / "base_path/build" / myapp.app_name / "tester/dummy"
     (bundle_path / "path/to/app").mkdir(parents=True, exist_ok=True)
 

@@ -6,12 +6,12 @@ from ...utils import create_file
 
 
 def test_no_changelog(tmp_path):
-    """Changelog file does not exist"""
+    """Changelog file does not exist."""
     assert find_changelog_filename(tmp_path) is None
 
 
 def test_no_valid_changelog(tmp_path):
-    """Changelog file exists but with invalid name format so its not accepted"""
+    """Changelog file exists but with invalid name format so its not accepted."""
     changelog_file = tmp_path / "base_path/invalid_changelog_format"
     create_file(changelog_file, "First App Changelog")
     assert find_changelog_filename(tmp_path / "base_path") is None
@@ -26,7 +26,7 @@ def test_no_valid_changelog(tmp_path):
     ],
 )
 def test_has_changelog(tmp_path, changelog_filename):
-    """Makes sure all formats are accepted"""
+    """Makes sure all formats are accepted."""
     changelog_file = tmp_path / f"base_path/{changelog_filename}"
     create_file(changelog_file, "First App Changelog")
     assert find_changelog_filename(tmp_path / "base_path") == changelog_filename

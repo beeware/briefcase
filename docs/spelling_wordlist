@@ -13,7 +13,9 @@ blobless
 Bugfix
 Bugfixes
 ce
+Chaquopy
 checkmarks
+cibuildwheel
 codebase
 Cookiecutter
 cryptographic
@@ -25,7 +27,6 @@ distributable
 Django
 dmg
 Dockerfile
-dr
 drawable
 embeddable
 executables
@@ -41,6 +42,7 @@ gradlew
 gtk
 hoc
 hostname
+iCloud
 installable
 iOS
 jarsigner
@@ -89,9 +91,9 @@ subdirectory
 subfolders
 submodule
 subprocesses
+templated
 Tk
 Tkinter
-tl
 toml
 toolkits
 towncrier
