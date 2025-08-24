@@ -332,7 +332,11 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             with plist_file.open("rb") as f:
                 info_plist = plistlib.load(f)
 
-            support_min_version = info_plist.get("MinimumOSVersion", "13.0")
+            support_min_version = info_plist["MinimumOSVersion"]
+        except KeyError:
+            raise BriefcaseCommandError(
+                "Your iOS XCframework doesn't specify a minimum iOS version."
+            )
         except FileNotFoundError:
             # If a plist file couldn't be found, it's an old-style support package;
             # Determine the min iOS version from the VERSIONS file in the support package.
