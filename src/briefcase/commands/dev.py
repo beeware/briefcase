@@ -81,8 +81,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         This will always include test requirements, if specified.
 
         :param app: The config object for the app
-        :param venv: The context object used to run commands inside the virtual environment.
-
+        :param venv: The context object used to run commands inside the virtual
+            environment.
         """
 
         requires = app.requires if app.requires else []
