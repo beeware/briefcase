@@ -379,10 +379,12 @@ extensions (e.g., ``-cp311-cp311-macosx_11_0_universal2.whl``), then the wheel c
 a binary component.
 
 If the package contains a binary component, that wheel needs to be compiled for Android.
-PyPI does not currently support uploading Android-compatible wheels, so you can't rely
-on PyPI to provide those wheels. Briefcase uses a `secondary repository
-<https://chaquo.com/pypi-13.1/>`__ to provide pre-compiled Android wheels.
+PyPI allows projects to upload Android-compatible wheels (identified by suffixes like
+``-cp314-cp314-android_24_arm64.whl``). However, at this time, most projects do not
+provide Android-compatible wheels.
 
+This is expected to improve over time. In the mean time, Briefcase uses a `secondary
+repository <https://chaquo.com/pypi-13.1/>`__ to provide pre-compiled Android wheels.
 This repository is maintained by the BeeWare project, and as a result, it does not have
 binary wheels for *every* package that is available on PyPI, or even every *version* of
 every package that is on PyPI. If you see any of the following messages when building an
@@ -402,17 +404,29 @@ build tools that don't support Android, such as a compiler that can't target And
 a PEP517 build system that doesn't support cross-compilation, it may not be possible to
 build an Android wheel.
 
-The `Chaquopy repository <https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__
-contains tools to assist with cross-compiling Android binary wheels. This repository contains
-recipes for building the packages that are stored in the `secondary package repository
-<https://chaquo.com/pypi-13.1/>`__. Contributions of new package recipes are welcome, and
-can be submitted as pull requests. Or, if you have a particular package that you'd like
-us to support, please visit the `issue tracker
-<https://github.com/chaquo/chaquopy/issues>`__ and provide details about that package.
+The recommended way to build Android-compatible wheels is to use `cibuildwheel
+<https://cibuildwheel.pypa.io/en/stable/platforms/#android>`__. Despite the name, the
+tool is not limited to CI environments; it can be run locally on macOS and Linux
+machines. Many projects already use cibuildwheel to manage publication of binary wheels.
+For those projects, it may be possible to generate Android wheels by invoking
+``cibuildwheel --platform=android``. Some modifications of the cibuildwheel
+configuration may be necessary to provide Android-specific customizations.
+
+The `Chaquopy repository
+<https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md>`__ also contains
+tools to assist with cross-compiling Android binary wheels. This project is mostly of
+historical significance; the BeeWare and Chaquopy teams are now focused on contributing
+Android support upstream, rather than maintaining independent packaging efforts. If you
+would like a project to officially support Android, you should open a feature request
+with that project requesting Android support, and consider providing a PR to contribute
+that support.
+
+Signing of ``briefcase package`` artefacts
+------------------------------------------
 
 While it is possible to use `briefcase package android` to produce an APK or AAB
 file for distribution, the file is *not* usable as-is. It must be signed
 regardless of whether you're distributing your app through the Play Store, or
 via loading the APK directly. For details on how to manually sign your code,
 see the instructions on `signing an Android App Bundle
-<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.```
+<https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle>`__.

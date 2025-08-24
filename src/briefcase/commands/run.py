@@ -249,7 +249,13 @@ class RunCommand(RunAppMixin, BaseCommand):
         return args
 
     @abstractmethod
-    def run_app(self, app: AppConfig, **options) -> dict | None:
+    def run_app(
+        self,
+        app: AppConfig,
+        *,
+        passthrough: list[str],
+        **options,
+    ) -> dict | None:
         """Start an application.
 
         :param app: The application to start

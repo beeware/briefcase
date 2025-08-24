@@ -4,7 +4,7 @@ from briefcase.commands import PublishCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DummyPublishCommand(PublishCommand):
@@ -19,7 +19,6 @@ class DummyPublishCommand(PublishCommand):
     description = "Dummy publish command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -87,8 +86,11 @@ class DummyPublishCommand(PublishCommand):
 
 
 @pytest.fixture
-def publish_command(tmp_path):
-    return DummyPublishCommand(base_path=tmp_path / "base_path")
+def publish_command(dummy_console, tmp_path):
+    return DummyPublishCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+    )
 
 
 @pytest.fixture

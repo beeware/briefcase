@@ -6,12 +6,13 @@ from briefcase.commands import DevCommand
 from briefcase.config import AppConfig
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import DummyConsole
-
 
 @pytest.fixture
-def dev_command(tmp_path):
-    command = DevCommand(console=DummyConsole(), base_path=tmp_path)
+def dev_command(dummy_console, tmp_path):
+    command = DevCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     return command
 

@@ -2,15 +2,14 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.platforms.macOS import SigningIdentity
 from briefcase.platforms.macOS.app import macOSAppBuildCommand
 
 
 @pytest.fixture
-def build_command(tmp_path):
+def build_command(dummy_console, tmp_path):
     command = macOSAppBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

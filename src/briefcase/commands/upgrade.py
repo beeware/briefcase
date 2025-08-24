@@ -16,7 +16,7 @@ from .base import BaseCommand
 class UpgradeCommand(BaseCommand):
     cmd_line = "briefcase upgrade"
     command = "upgrade"
-    output_format = None
+    output_format = ""
     description = "Upgrade Briefcase-managed tools."
 
     @property

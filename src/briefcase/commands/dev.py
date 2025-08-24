@@ -17,7 +17,7 @@ from .create import write_dist_info
 class DevCommand(RunAppMixin, BaseCommand):
     cmd_line = "briefcase dev"
     command = "dev"
-    output_format = None
+    output_format = ""
     description = "Run a Briefcase project in the dev environment."
 
     # On macOS CoreFoundation/NSApplication will do its own independent parsing of argc/argv.
