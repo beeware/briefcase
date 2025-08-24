@@ -106,7 +106,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                         "--upgrade",
                         *(["-vv"] if self.console.is_deep_debug else []),
                         *requires,
-                        *getattr(app, "requirement_installer_args", []),
+                        *app.requirement_installer_args,
                     ],
                     check=True,
                     encoding="UTF-8",
@@ -152,6 +152,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("=" * 75)
             venv.run(
                 cmdline,
+                env=env,
                 encoding="UTF-8",
                 cwd=self.tools.home_path,
                 bufsize=1,
@@ -160,6 +161,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         else:
             app_popen = venv.Popen(
                 cmdline,
+                env=env,
                 encoding="UTF-8",
                 cwd=self.tools.home_path,
                 stdout=subprocess.PIPE,
@@ -194,6 +196,16 @@ class DevCommand(RunAppMixin, BaseCommand):
             env["BRIEFCASE_DEBUG"] = "1"
 
         return env
+    
+    def _app_dev_env(self, app, venv):
+        env = dict(venv.env)
+        src_root = self.app_module_path(app).parent
+
+        existing = env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = os.pathsep.join(
+            [os.fspath(src_root)] + ([existing] if existing else [])
+        )
+        return env
 
     def __call__(
         self,
@@ -207,6 +219,11 @@ class DevCommand(RunAppMixin, BaseCommand):
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
+        
+        dist_info_path = (
+            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
+        )
+        
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
         elif appname:
@@ -227,19 +244,6 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
-        return self._dev_with_env(
-            app,
-            run_app,
-            update_requirements,
-            passthrough,
-            **options,
-        )
-
-    def _dev_with_env(self, app, run_app, update_requirements, passthrough, **options):
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
-
         if not run_app:
             update_requirements = True
 
@@ -249,7 +253,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             base_path=self.base_path,
             app=app,
             update_requirements=update_requirements,
-            no_isolation=True,
+            isolation=False,
         ) as venv:
             if update_requirements or not dist_info_path.exists():
                 self.console.info("Installing requirements...", prefix=app.app_name)
@@ -268,13 +272,3 @@ class DevCommand(RunAppMixin, BaseCommand):
                     passthrough=[] if passthrough is None else passthrough,
                     **options,
                 )
-
-    def _app_dev_env(self, app, venv):
-        env = dict(venv.env)
-        src_root = self.app_module_path(app).parent
-
-        existing = env.get("PYTHONPATH", "")
-        env["PYTHONPATH"] = os.pathsep.join(
-            [os.fspath(src_root)] + ([existing] if existing else [])
-        )
-        return env

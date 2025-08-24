@@ -466,28 +466,53 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
-            "--no-isolation",
-            dest="no_isolation",
+            "--isolated",
+            dest="isolated",
             action="store_true",
             default=False,
             help="Run without creating an isolated environment (not supported for web).",
         )
 
-    def _dev_with_env(
+    def __call__(
         self,
-        app: AppConfig,
-        run_app: bool,
-        update_requirements: bool,
-        passthrough: Optional[list[str]] = None,
+        appname: str | None = None,
+        update_requirements: bool | None = False,
+        run_app: bool | None = True,
+        test_mode: bool | None = False,
+        passthrough: list[str] | None = None,
         **options,
     ):
+        # Which web app should we run? If there's only one defined
+        # in pyproject.toml, then we can use it as a default;
+        # otherwise look for a -a/--app option.
+        
+        if len(self.apps) == 1:
+            app = list(self.apps.values())[0]
+        elif appname:
+            try:
+                app = self.apps[appname]
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    f"Project doesn't define an application named '{appname}'"
+                ) from e
+
+        else:
+            raise BriefcaseCommandError(
+                "Project specifies more than one application; use --app to specify which one to start."
+            )
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app, test_mode)
+
+        self.verify_app(app)
+        
         with virtual_environment(
             tools=self.tools,
             console=self.console,
             base_path=self.base_path,
             app=app,
             update_requirements=update_requirements,
-            no_isolation=options.get("no_isolation", False),
+            isolated=options.get("isolated", True),
         ) as venv:
             with self.tools.console.wait_bar("Installing arrr"):
                 venv.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
