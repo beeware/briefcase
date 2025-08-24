@@ -1,11 +1,8 @@
 from unittest.mock import Mock
 
-from briefcase.console import Console
 
-
-def test_console_is_controlled():
+def test_console_is_controlled(console):
     """Console control is released and then restored."""
-    console = Console()
 
     console.is_console_controlled = True
 
@@ -15,10 +12,8 @@ def test_console_is_controlled():
     assert console.is_console_controlled is True
 
 
-def test_console_is_not_controlled():
+def test_console_is_not_controlled(console):
     """Effective no-op when console is not currently controlled."""
-    console = Console()
-
     assert console.is_console_controlled is False
 
     with console.release_console_control():
@@ -50,10 +45,8 @@ def test_wait_bar_is_active(console):
         assert console.is_console_controlled is True
 
 
-def test_wait_bar_is_not_active():
+def test_wait_bar_is_not_active(console):
     """An inactive Wait Bar is not effected."""
-    console = Console()
-
     # Instantiate the Wait Bar
     with console.wait_bar("Testing..."):
         pass

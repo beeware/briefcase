@@ -320,6 +320,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
         # Determine the min iOS version from the VERSIONS file in the support package.
         versions = dict(
@@ -493,10 +494,11 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     def run_app(
         self,
         app: AppConfig,
+        *,
         passthrough: list[str],
         udid=None,
-        **kwargs,
-    ):
+        **options,
+    ) -> dict | None:
         """Start the application.
 
         :param app: The config object for the app

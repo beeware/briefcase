@@ -3,8 +3,6 @@ from unittest.mock import PropertyMock
 import pytest
 from rich.console import ColorSystem
 
-from briefcase.console import Console
-
 
 @pytest.mark.parametrize(
     "no_color, color_system, is_enabled",
@@ -15,18 +13,23 @@ from briefcase.console import Console
         (True, None, False),
     ],
 )
-def test_is_color_enabled(no_color, color_system, is_enabled, monkeypatch):
+def test_is_color_enabled(
+    raw_console,
+    no_color,
+    color_system,
+    is_enabled,
+    monkeypatch,
+):
     """Color is enabled/disabled based on no_color and color_system."""
-    console = Console()
-    console._console_impl.no_color = no_color
+    raw_console._console_impl.no_color = no_color
     monkeypatch.setattr(
-        type(console._console_impl),
+        type(raw_console._console_impl),
         "color_system",
         PropertyMock(return_value=color_system),
     )
 
     # confirm these values to make sure they didn't change somehow...
-    assert console._console_impl.no_color is no_color
-    assert console._console_impl.color_system is color_system
+    assert raw_console._console_impl.no_color is no_color
+    assert raw_console._console_impl.color_system is color_system
 
-    assert console.is_color_enabled is is_enabled
+    assert raw_console.is_color_enabled is is_enabled

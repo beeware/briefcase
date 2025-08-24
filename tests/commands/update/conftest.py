@@ -3,7 +3,7 @@ import pytest
 from briefcase.commands import UpdateCommand
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DummyUpdateCommand(UpdateCommand):
@@ -18,7 +18,6 @@ class DummyUpdateCommand(UpdateCommand):
     description = "Dummy update command"
 
     def __init__(self, *args, apps, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps=apps, **kwargs)
 
         self.actions = []
@@ -140,8 +139,14 @@ def second_app(tmp_path, second_app_config):
 
 
 @pytest.fixture
-def update_command(tmp_path, first_app_config, second_app_config):
+def update_command(
+    dummy_console,
+    tmp_path,
+    first_app_config,
+    second_app_config,
+):
     return DummyUpdateCommand(
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         apps={
             "first": first_app_config,

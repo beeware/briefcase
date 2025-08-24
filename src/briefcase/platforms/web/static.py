@@ -4,7 +4,7 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from zipfile import ZipFile
 
 from briefcase.console import Console
@@ -475,10 +475,9 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def __call__(
         self,
-        appname: str | None = None,
-        update_requirements: bool | None = False,
-        run_app: bool | None = True,
-        test_mode: bool | None = False,
+        app: AppConfig,
+        run_app: bool,
+        update_requirements: bool,
         passthrough: list[str] | None = None,
         **options,
     ):
@@ -488,12 +487,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
-        elif appname:
+        elif app.name:
             try:
-                app = self.apps[appname]
+                app = self.apps[app.name]
             except KeyError as e:
                 raise BriefcaseCommandError(
-                    f"Project doesn't define an application named '{appname}'"
+                    f"Project doesn't define an application named '{app.name}'"
                 ) from e
 
         else:

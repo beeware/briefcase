@@ -2,16 +2,15 @@ import os
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedCommandError
 from briefcase.integrations import virtual_environment as ve
 from briefcase.platforms.web.static import StaticWebDevCommand
 
 
 @pytest.fixture
-def dev_command(tmp_path):
+def dev_command(dummy_console, tmp_path):
     return StaticWebDevCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

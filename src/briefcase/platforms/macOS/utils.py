@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent
 import email
 import hashlib
+import os
 import pathlib
 import plistlib
 import subprocess
@@ -11,6 +12,30 @@ from pathlib import Path
 from briefcase.exceptions import BriefcaseCommandError
 
 CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
+
+
+def is_mach_o_binary(path: Path):  # pragma: no-cover-if-is-windows
+    """Determine if the file at the given path is a Mach-O binary.
+
+    :param path: The path to check
+    :returns: True if the file at the given location is a Mach-O binary.
+    """
+    # A binary is any file that is executable, or has a suffix from a known list
+    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
+        # File is a binary; read the file magic to determine if it's Mach-O.
+        with path.open("rb") as f:
+            magic = f.read(4)
+            return magic in (
+                b"\xca\xfe\xba\xbe",
+                b"\xcf\xfa\xed\xfe",
+                b"\xce\xfa\xed\xfe",
+                b"\xbe\xba\xfe\xca",
+                b"\xfe\xed\xfa\xcf",
+                b"\xfe\xed\xfa\xce",
+            )
+    else:
+        # Not a binary
+        return False
 
 
 def sha256_file_digest(path: Path) -> str:
@@ -169,7 +194,7 @@ class AppPackagesMergeMixin:
         """Ensure that all the dylibs in a given app_packages folder are thin."""
         dylibs = []
         for source_path in app_packages.glob("**/*"):
-            if source_path.suffix in {".so", ".dylib"}:
+            if not source_path.is_dir() and is_mach_o_binary(source_path):
                 dylibs.append(source_path)
 
         # Call lipo on each dylib that was found to ensure it is thin.
@@ -229,7 +254,7 @@ class AppPackagesMergeMixin:
                     if source_path.is_dir():
                         target_path.mkdir(exist_ok=True)
                     else:
-                        if source_path.suffix in {".so", ".dylib"}:
+                        if is_mach_o_binary(source_path):
                             # Dynamic libraries need to be merged; do this in a second pass.
                             dylibs.add(relative_path)
                         elif target_path.exists():
@@ -329,9 +354,10 @@ def mime_type_to_uti(mime_type: str) -> str | None:  # pragma: no-cover-if-not-m
         # In this case, we return None to indicate that the UTI cannot be determined.
         return None
     plist = plistlib.loads(plist_data)
-    for type_declaration in (
+    type_declarations = (
         plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
-    ):
+    )
+    for type_declaration in type_declarations:
         # We check both the system built-in types (exported) and the known
         # third-party types (imported) to find the UTI for the given MIME type.
         # Most type declarations will have a UTTypeTagSpecification dictionary

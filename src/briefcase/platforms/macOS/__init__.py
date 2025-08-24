@@ -21,7 +21,7 @@ from briefcase.integrations.subprocess import (
 )
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
-from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_binary
 
 try:
     import dmgbuild
@@ -80,7 +80,7 @@ class macOSMixin:
     supported_host_os = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
 
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
@@ -182,6 +182,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
         # Determine the min macOS version from the VERSIONS file in the support package.
         versions = dict(
@@ -548,34 +549,12 @@ class macOSRunMixin:
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
         finally:
-            # Ensure the App also terminates when exiting
-            if app_pid:  # pragma: no-cover-if-is-py310
-                with suppress(ProcessLookupError):
+            # Ensure the App also terminates when exiting. The ordering here is a little
+            # odd; the if could/should be outside the context manager, but coverage has
+            # issues with that arrangement on some Python versions (3.10, 3.14)
+            with suppress(ProcessLookupError):
+                if app_pid:
                     self.tools.os.kill(app_pid, SIGTERM)
-
-
-def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
-    """Determine if the file at the given path is a Mach-O binary.
-
-    :param path: The path to check
-    :returns: True if the file at the given location is a Mach-O binary.
-    """
-    # A binary is any file that is executable, or has a suffix from a known list
-    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
-        # File is a binary; read the file magic to determine if it's Mach-O.
-        with path.open("rb") as f:
-            magic = f.read(4)
-            return magic in (
-                b"\xca\xfe\xba\xbe",
-                b"\xcf\xfa\xed\xfe",
-                b"\xce\xfa\xed\xfe",
-                b"\xbe\xba\xfe\xca",
-                b"\xfe\xed\xfa\xcf",
-                b"\xfe\xed\xfa\xce",
-            )
-    else:
-        # Not a binary
-        return False
 
 
 class macOSSigningMixin:

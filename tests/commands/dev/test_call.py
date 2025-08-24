@@ -2,7 +2,6 @@ import pytest
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -18,7 +17,6 @@ class DummyDevCommand(DevCommand):
     description = "Dummy dev command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", Console())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -61,8 +59,11 @@ class DummyDevCommand(DevCommand):
 
 
 @pytest.fixture
-def dev_command(tmp_path):
-    return DummyDevCommand(base_path=tmp_path)
+def dev_command(dummy_console, tmp_path):
+    return DummyDevCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
 
 def test_no_args_one_app(dev_command, first_app):

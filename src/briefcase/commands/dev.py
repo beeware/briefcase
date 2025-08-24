@@ -17,7 +17,7 @@ from .create import write_dist_info
 class DevCommand(RunAppMixin, BaseCommand):
     cmd_line = "briefcase dev"
     command = "dev"
-    output_format = None
+    output_format = ""
     description = "Run a Briefcase project in the dev environment."
 
     # On macOS CoreFoundation/NSApplication will do its own independent parsing of argc/argv.
@@ -81,8 +81,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         This will always include test requirements, if specified.
 
         :param app: The config object for the app
-        :param venv: The context object used to run commands inside the virtual environment.
-
+        :param venv: The context object used to run commands inside the virtual
+            environment.
         """
 
         requires = app.requires if app.requires else []

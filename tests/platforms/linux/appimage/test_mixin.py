@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 import pytest
 
 import briefcase.platforms.linux.appimage
-from briefcase.console import Console
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import Subprocess
@@ -15,9 +14,9 @@ from briefcase.platforms.linux.appimage import (
 
 
 @pytest.fixture
-def create_command(tmp_path):
+def create_command(dummy_console, tmp_path):
     command = LinuxAppImageCreateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -228,10 +227,10 @@ def test_verify_non_linux_docker(
     )
 
 
-def test_clone_options(tmp_path):
+def test_clone_options(dummy_console, tmp_path):
     """Docker options are cloned."""
     build_command = LinuxAppImageBuildCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
