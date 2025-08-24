@@ -2,7 +2,6 @@ import os
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedCommandError
 from briefcase.integrations import virtual_environment as ve
 from briefcase.platforms.web.static import StaticWebDevCommand
