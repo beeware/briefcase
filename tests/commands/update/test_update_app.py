@@ -63,7 +63,7 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("cleanup", "first"),
     ]
 
@@ -267,7 +267,7 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
-        ("requirements", "first", True),
+        ("requirements", "first", True, False),
         ("cleanup", "first"),
     ]
 

@@ -46,6 +46,56 @@ jobs:
     with:
       attest: ${{ inputs.attest-package }}
 
+  package-debugpy:
+    name: Package Briefcase Debugpy
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+  # This does not work. It gerates a CI Error: Error: The artifact name is not valid: Packages-briefcase-debugger-support/briefcase-debugpy. Contains the following character:  Forward slash /
+  #   uses: beeware/.github/.github/workflows/python-package-create.yml@main
+  #   with:
+  #     build-subdirectory: "debugger-support/briefcase-debugpy"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hynek/build-and-inspect-python-package@v2
+        id: package
+        with:
+          path: "debugger-support/briefcase-debugpy"
+          upload-name-suffix: "-briefcase-debugpy"
+          attest-build-provenance-github: ${{ inputs.attest-package }}
+      - name: Set artifact-name output
+        run: echo "artifact-name=${{ steps.package.outputs.artifact-name }}" >> $GITHUB_OUTPUT
+        id: set-artifact-name
+    outputs:
+      artifact-name: ${{ steps.set-artifact-name.outputs.artifact-name }}
+
+  package-pdb:
+    name: Package Briefcase PDB
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+  # This does not work. It gerates a CI Error: Error: The artifact name is not valid: Packages-briefcase-debugger-support/briefcase-pdb. Contains the following character:  Forward slash /
+  #   uses: beeware/.github/.github/workflows/python-package-create.yml@main
+  #   with:
+  #     build-subdirectory: "debugger-support/briefcase-pdb"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hynek/build-and-inspect-python-package@v2
+        id: package
+        with:
+          path: "debugger-support/briefcase-pdb"
+          upload-name-suffix: "-briefcase-pdb"
+          attest-build-provenance-github: ${{ inputs.attest-package }}
+      - name: Set artifact-name output
+        run: echo "artifact-name=${{ steps.package.outputs.artifact-name }}" >> $GITHUB_OUTPUT
+        id: set-artifact-name
+    outputs:
+      artifact-name: ${{ steps.set-artifact-name.outputs.artifact-name }}
+
   package-automation:
     name: Package Automation
     permissions:
@@ -58,7 +108,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: [ pre-commit, towncrier, package ]
+    needs: [ pre-commit, towncrier, package, package-debugpy, package-pdb ]
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental || false }}
     strategy:
@@ -95,19 +145,39 @@ jobs:
         name: ${{ needs.package.outputs.artifact-name }}
         path: dist
 
+    - name: Get Packages
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: ${{ needs.package-debugpy.outputs.artifact-name }}
+        path: dist
+
+    - name: Get Packages
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: ${{ needs.package-pdb.outputs.artifact-name }}
+        path: dist
+
     - name: Install Tox
       uses: beeware/.github/.github/actions/install-requirement@main
       with:
         requirements: tox
         extra: dev
 
-    - name: Test
+    - name: Test Briefcase
       id: test
       run: |
         RUNNER_OS=$(cut -d- -f1 <<< ${{ matrix.platform }})
         RUNNER_VERSION=$(cut -d- -f2 <<< ${{ matrix.platform }})
         COVERAGE_FILE=".coverage.${RUNNER_OS}.${RUNNER_VERSION}.${{ matrix.python-version }}" \
           tox -e py-cov --installpkg dist/briefcase-*.whl
+
+    - name: Test Briefcase Debugpy
+      run: |
+          tox -e py-debugpy --installpkg dist/briefcase_debugpy-*.whl
+
+    - name: Test Briefcase Pdb
+      run: |
+          tox -e py-pdb --installpkg dist/briefcase_pdb-*.whl
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
