@@ -97,7 +97,7 @@ dependencies = [
 dev = [
     "coverage[toml] == 7.10.4",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.0",
+    "httpx-retries == 0.4.1",
     "pre-commit == 4.3.0",
     "pytest == 8.4.1",
     "pytest-xdist == 3.8.0",
