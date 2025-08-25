@@ -184,27 +184,44 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app_packages_path: Path,
         **kwargs,
     ):
-        # Determine the min macOS version from the VERSIONS file in the support package.
-        versions = dict(
-            [part.strip() for part in line.split(": ", 1)]
-            for line in (
-                (self.support_path(app) / "VERSIONS")
-                .read_text(encoding="UTF-8")
-                .split("\n")
+        try:
+            # Determine the min macOS version from the framework metadata
+            # of the macos-arm64_x86_64 slice of the XCframework
+            plist_file = (
+                self.support_path(app)
+                / "Python.xcframework/macos-arm64_x86_64"
+                / "Python.framework/Resources/Info.plist"
             )
-            if ": " in line
-        )
-        support_min_version = Version(versions.get("Min macOS version", "11.0"))
+            with plist_file.open("rb") as f:
+                info_plist = plistlib.load(f)
+
+            support_min_version = info_plist.get("MinimumOSVersion", "11.0")
+        except FileNotFoundError:
+            # If a plist file couldn't be found, it's an old-style support package;
+            # Determine the min macOS version from the VERSIONS file in the support package.
+            versions = dict(
+                [part.strip() for part in line.split(": ", 1)]
+                for line in (
+                    (self.support_path(app) / "VERSIONS")
+                    .read_text(encoding="UTF-8")
+                    .split("\n")
+                )
+                if ": " in line
+            )
+            support_min_version = versions.get("Min macOS version", "11.0")
 
         # Check that the app's definition is compatible with the support package
-        macOS_min_version = Version(getattr(app, "min_os_version", "11.0"))
-        if macOS_min_version < support_min_version:
+        # If the app doesn't specify a minimum version, use the support package
+        # minimum version as a default.
+        macOS_min_version = getattr(app, "min_os_version", support_min_version)
+
+        if Version(macOS_min_version) < Version(support_min_version):
             raise BriefcaseCommandError(
                 f"Your macOS app specifies a minimum macOS version of {macOS_min_version}, "
                 f"but the support package only supports {support_min_version}"
             )
 
-        macOS_min_tag = str(macOS_min_version).replace(".", "_")
+        macOS_min_tag = macOS_min_version.replace(".", "_")
 
         if getattr(app, "universal_build", True):
             # Perform the initial install targeting the current platform
