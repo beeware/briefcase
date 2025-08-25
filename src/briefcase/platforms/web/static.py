@@ -13,6 +13,9 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
+from briefcase.integrations.virtual_environment import (
+    virtual_environment,
+)
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -452,17 +455,73 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
-class StaticWebDevCommand(StaticWebMixin, DevCommand):
-    description = "Run a static web project in development mode. (Work in progress)"
+POC_PACKAGE = "arrr"  # random package for proof of code
 
-    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
-        raise UnsupportedCommandError(
-            platform="web",
-            output_format="static",
-            command="dev",
+
+class StaticWebDevCommand(StaticWebMixin, DevCommand):
+    description = (
+        "Run a static web project in development mode. (POC: venv + single install)"
+    )
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--isolated",
+            dest="isolated",
+            action="store_true",
+            default=False,
+            help="Run without creating an isolated environment (not supported for web).",
         )
 
-    # implement logic to run the web server in development mode
+    def __call__(
+        self,
+        app: AppConfig,
+        run_app: bool,
+        update_requirements: bool,
+        test_mode: bool | None = False,
+        passthrough: list[str] | None = None,
+        **options,
+    ):
+        # Which web app should we run? If there's only one defined
+        # in pyproject.toml, then we can use it as a default;
+        # otherwise look for a -a/--app option.
+
+        if len(self.apps) == 1:
+            app = list(self.apps.values())[0]
+        elif app.name:
+            try:
+                app = self.apps[app.name]
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    f"Project doesn't define an application named '{app.name}'"
+                ) from e
+
+        else:
+            raise BriefcaseCommandError(
+                "Project specifies more than one application; use --app to specify which one to start."
+            )
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app, test_mode)
+
+        self.verify_app(app)
+
+        with virtual_environment(
+            tools=self.tools,
+            console=self.console,
+            base_path=self.base_path,
+            app=app,
+            update_requirements=update_requirements,
+            isolated=options.get("isolated", True),
+        ) as venv:
+            with self.tools.console.wait_bar("Installing arrr"):
+                venv.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
+
+            raise UnsupportedCommandError(
+                platform="web",
+                output_format="static",
+                command="dev",
+            )
 
 
 # Declare the briefcase command bindings

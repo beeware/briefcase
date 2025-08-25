@@ -22,6 +22,9 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
 
+    def _app_dev_env(self, app, venv):
+        return self.env
+
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))
@@ -38,8 +41,14 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def install_dev_requirements(self, app, **kwargs):
-        self.actions.append(("dev_requirements", app.app_name, kwargs))
+    def install_dev_requirements(self, app, venv, **kwargs):
+        self.actions.append(
+            (
+                "dev_requirements",
+                app.app_name,
+                {"has_run": hasattr(venv, "run")},
+            )
+        )
 
     def get_environment(self, app):
         return self.env
@@ -81,7 +90,13 @@ def test_no_args_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -128,7 +143,13 @@ def test_with_arg_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Run the first app devly
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -157,7 +178,13 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Run the second app devly
-        ("run_dev", "second", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "second",
+            False,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -205,9 +232,21 @@ def test_update_requirements(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            {
+                "has_run": True,
+            },
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -235,9 +274,21 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # The app will be installed
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            {
+                "has_run": True,
+            },
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -266,9 +317,21 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # An update was requested
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            {
+                "has_run": True,
+            },
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -285,7 +348,6 @@ def test_no_run(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -295,8 +357,14 @@ def test_no_run(dev_command, first_app_uninstalled):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
-        # Only update requirements without running the app
-        ("dev_requirements", "first", {}),
+        # An update was requested
+        (
+            "dev_requirements",
+            "first",
+            {
+                "has_run": True,
+            },
+        ),
     ]
 
 
@@ -324,7 +392,13 @@ def test_run_test(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Then, it will be started
-        ("run_dev", "first", True, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            True,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
 
 
@@ -352,7 +426,36 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Development requirements will be installed
-        ("dev_requirements", "first", {}),
+        ("dev_requirements", "first", {"has_run": True}),
         # Then, it will be started
-        ("run_dev", "first", True, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            True,
+            {"passthrough": []},
+            dev_command.env,
+        ),
     ]
+
+
+def test_web_platform_dev_with_env_called(monkeypatch, tmp_path, first_app):
+    """Ensure that _dev_with_env is called for web platform with a venv."""
+    log = {}
+
+    class WebDevCommand(DummyDevCommand):
+        platform = "web"
+
+        def _dev_with_env(
+            self, app, run_app, update_requirements, passthrough, **options
+        ):
+            log["called"] = True
+            return "success"
+
+    cmd = WebDevCommand(base_path=tmp_path)
+    cmd.apps = {"first": first_app}
+
+    options, _ = cmd.parse_options([])
+    result = cmd(**options)
+
+    assert result == "success"
+    assert log["called"] is True

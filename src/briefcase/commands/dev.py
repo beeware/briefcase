@@ -8,6 +8,7 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.virtual_environment import VenvContext, virtual_environment
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -74,46 +75,50 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_requirements(self, app: AppConfig, **options):
+    def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
         """Install the requirements for the app dev.
 
         This will always include test requirements, if specified.
 
         :param app: The config object for the app
+        :param venv: The context object used to run commands inside the virtual
+            environment.
         """
+
         requires = app.requires if app.requires else []
         if app.test_requires:
             requires.extend(app.test_requires)
+        if not requires:
+            self.console.info("No application requirements")
+            return
 
-        if requires:
-            with self.console.wait_bar("Installing dev requirements..."):
-                try:
-                    self.tools.subprocess.run(
-                        [
-                            sys.executable,
-                            "-u",
-                            "-X",
-                            "utf8",
-                            "-m",
-                            "pip",
-                            "install",
-                            "--upgrade",
-                        ]
-                        + (["-vv"] if self.console.is_deep_debug else [])
-                        + requires
-                        + app.requirement_installer_args,
-                        check=True,
-                        encoding="UTF-8",
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise RequirementsInstallError() from e
-        else:
-            self.console.info("No application requirements.")
+        with self.console.wait_bar("Installing dev requirements..."):
+            try:
+                venv.run(
+                    [
+                        "python",
+                        "-u",
+                        "-X",
+                        "utf8",
+                        "-m",
+                        "pip",
+                        "install",
+                        "--upgrade",
+                        *(["-vv"] if self.console.is_deep_debug else []),
+                        *requires,
+                        *app.requirement_installer_args,
+                    ],
+                    check=True,
+                    encoding="UTF-8",
+                )
+            except subprocess.CalledProcessError as e:
+                raise RequirementsInstallError() from e
 
     def run_dev_app(
         self,
         app: AppConfig,
         env: dict,
+        venv: VenvContext,
         passthrough: list[str],
         **options,
     ):
@@ -145,7 +150,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # that we can see the test exit sentinel
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
-            self.tools.subprocess.run(
+            venv.run(
                 cmdline,
                 env=env,
                 encoding="UTF-8",
@@ -154,7 +159,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 stream_output=False,
             )
         else:
-            app_popen = self.tools.subprocess.Popen(
+            app_popen = venv.Popen(
                 cmdline,
                 env=env,
                 encoding="UTF-8",
@@ -192,6 +197,16 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         return env
 
+    def _app_dev_env(self, app, venv):
+        env = dict(venv.env)
+        src_root = self.app_module_path(app).parent
+
+        existing = env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = os.pathsep.join(
+            [os.fspath(src_root)] + ([existing] if existing else [])
+        )
+        return env
+
     def __call__(
         self,
         appname: str | None = None,
@@ -218,38 +233,56 @@ class DevCommand(RunAppMixin, BaseCommand):
             raise BriefcaseCommandError(
                 "Project specifies more than one application; use --app to specify which one to start."
             )
+
+        dist_info_path = (
+            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
+        )
+
+        if len(self.apps) == 1:
+            app = list(self.apps.values())[0]
+        elif appname:
+            try:
+                app = self.apps[appname]
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    f"Project doesn't define an application named '{appname}'"
+                ) from e
+
+        else:
+            raise BriefcaseCommandError(
+                "Project specifies more than one application; use --app to specify which one to start."
+            )
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app, test_mode)
 
         self.verify_app(app)
 
-        # Look for the existence of a dist-info file.
-        # If one exists, assume that the requirements have already been
-        # installed. If a dependency update has been manually requested,
-        # do it regardless.
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
         if not run_app:
-            # If we are not running the app, it means we should update requirements.
             update_requirements = True
-        if update_requirements or not dist_info_path.exists():
-            self.console.info("Installing requirements...", prefix=app.app_name)
-            self.install_dev_requirements(app, **options)
-            write_dist_info(app, dist_info_path)
 
-        if run_app:
-            if app.test_mode:
-                self.console.info(
-                    "Running test suite in dev environment...", prefix=app.app_name
+        with virtual_environment(
+            tools=self.tools,
+            console=self.console,
+            base_path=self.base_path,
+            app=app,
+            update_requirements=update_requirements,
+            isolation=False,
+        ) as venv:
+            if update_requirements or not dist_info_path.exists():
+                self.console.info("Installing requirements...", prefix=app.app_name)
+                self.install_dev_requirements(app, venv, **options)
+                write_dist_info(app, dist_info_path)
+            if run_app:
+                if app.test_mode:
+                    self.console.info(
+                        "Running test suite in dev environment...", prefix=app.app_name
+                    )
+                else:
+                    self.console.info("Starting in dev mode...", prefix=app.app_name)
+                return self.run_dev_app(
+                    app,
+                    env=self._app_dev_env(app, venv),
+                    passthrough=[] if passthrough is None else passthrough,
+                    **options,
                 )
-            else:
-                self.console.info("Starting in dev mode...", prefix=app.app_name)
-            env = self.get_environment(app)
-            return self.run_dev_app(
-                app,
-                env,
-                passthrough=[] if passthrough is None else passthrough,
-                **options,
-            )
