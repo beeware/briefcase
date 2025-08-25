@@ -11,7 +11,10 @@ from briefcase.integrations.subprocess import SubprocessArgsT
 
 
 class VenvContext:
-    """Context for running commands in a virtual environment."""
+    """Context for running commands in a virtual environment.
+
+    Wraps subprocess functions to ensure commands are run in the venv.
+    """
 
     def __init__(self, tools, venv_path: Path):
         self.tools = tools
@@ -19,18 +22,29 @@ class VenvContext:
 
     @property
     def bin_dir(self) -> Path:
-        """Return the path to the virtual environment's binary directory."""
+        r"""Return the path to the virtual environment's binary directory.
+
+        :return: <venv>/bin (or <venv>\Scripts on Windows)
+        """
         return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
 
     @property
     def executable(self) -> str:
-        """Return the path to the Python executable in the virtual environment."""
+        """Path to the Python executable in the virtual environment.
+
+        :return: Absolute filesystem path to the venv's Python executable.
+        """
         python = self.bin_dir / ("python.exe" if os.name == "nt" else "python")
         return os.fspath(python)
 
     @property
     def env(self) -> dict:
-        "Environment variables for the venv"
+        """Base environment variables for invoking processes in the venv.
+
+        The returned environment includes the venv's bin directory at the front of the
+        PATH, and sets VIRTUAL_ENV to the venv path. On Windows, PYTHONHOME is removed.
+        """
+
         env = dict(os.environ)
         old_path = env.get("PATH", "")
         env["PATH"] = os.fspath(self.bin_dir) + (
@@ -42,9 +56,17 @@ class VenvContext:
         return env
 
     def exists(self) -> bool:
+        """Check whether the virtual environment exists.
+
+        :return True if venv exists and contains a pyvenv.cfg file. else False
+        """
         return self.venv_path.exists() and (self.venv_path / "pyvenv.cfg").exists()
 
-    def create(self):
+    def create(self) -> None:
+        """Create the virtual environment(if it doesn't already exist).
+
+        :raises BriefcaseCommandError if creation fails.
+        """
         if not self.exists():
             with self.console.wait_bar(
                 f"Creating virtual environment at {self.venv_path}..."
@@ -60,13 +82,15 @@ class VenvContext:
                         f"Failed to create virtual environment at {self.venv_path}"
                     ) from e
 
-    def recreate(self):
+    def recreate(self) -> None:
+        """Remove and re-create the virtual environment."""
         if self.exists():
             self.tools.console.info("Recreating virtual environment...")
             shutil.rmtree(self.venv_path)
         self.create()
 
     def update_core_tools(self):
+        """Upgrade core Python packaging tooling in the venv."""
         with self.tools.console.wait_bar(
             "Upgrading pup tooling in virtual environment"
         ):
@@ -82,7 +106,11 @@ class VenvContext:
 
     def _rewrite_head(self, args: SubprocessArgsT) -> SubprocessArgsT:
         """Rewrite the first argument to ensure it points to the venv's Python
-        executable."""
+        executable.
+
+        param args: Original subprocess arguments.
+        :return: Updated subprocess arguments.
+        """
         if not args:
             return args
         head = os.fspath(args[0])
@@ -102,6 +130,7 @@ class VenvContext:
         :param overrides: Environment variables to override or unset. Can be None if
             their are no explicit environment changes Use None values to unset
             environment variables
+        :return: environment mapping for the venv with overrides applied.
         """
         env = self.env.copy()
 
@@ -112,20 +141,32 @@ class VenvContext:
         return env
 
     def run(self, args: list[str], **kwargs):
-        """Run a command in the virtual environment."""
+        """Run a command in the virtual environment.
+
+        :param args: Command and arguments to run.
+        :param kwargs: Additional keyword arguments to pass to subprocess.run.
+        """
         args = self._rewrite_head(list(args))
         user_env = kwargs.pop("env", None)
         kwargs["env"] = self.full_env(user_env)
         return self.tools.subprocess.run(args, **kwargs)
 
     def Popen(self, args: list[str], **kwargs):
-        """Run a command in the virtual environment using Popen."""
+        """Run a command in the virtual environment using Popen.
+
+        :param args: Command and arguments to run.
+        :param kwargs: Additional keyword arguments to pass to subprocess.check_output.
+        """
         args = self._rewrite_head(list(args))
         kwargs.setdefault("env", self.env)
         return self.tools.subprocess.Popen(args, **kwargs)
 
     def check_output(self, args: list[str], **kwargs):
-        """Run a command in the virtual environment and return its output."""
+        """Run a command in the virtual environment and return its output.
+
+        :param args: Command and arguments to run.
+        :param kwargs: Additional keyword arguments to pass to subprocess.check_output.
+        """
         args = self._rewrite_head(list(args))
         kwargs.setdefault("env", self.env)
         return self.tools.subprocess.check_output(args, **kwargs)
@@ -182,13 +223,18 @@ class NoOpEnvironment:
 
 def virtual_environment(
     tools, console: Console, base_path: Path, app: AppConfig, **options
-):
-    """Return a environment context for the requested isolation settings".
+) -> VenvEnvironment | NoOpEnvironment:
+    """Return a environment context for the requested isolation settings". Creates
+    either a virtual environment context or a no-op context.
 
-    Args:
-    - isolated: bool = True -> return NoOpEnvironment
-    - base_path: Path -> base dir for venv
-    - upgrade_bootstrap: bool
+    :param options: Configuration options including:
+         - isolated (bool): If False, return NoOpEnvironment. Default True.
+         - recreate (bool): Whether to recreate existing venv. Default False.
+         - update_pip (bool): Whether to update pip after setup. Default True.
+
+     :raises BriefcaseCommandError: if isolated=True but base_path is None.
+
+     returns: VenvEnvironment or NoOpEnvironment
     """
 
     isolated = options.get("isolated", True)

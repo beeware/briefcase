@@ -196,7 +196,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             env["BRIEFCASE_DEBUG"] = "1"
 
         return env
-    
+
     def _app_dev_env(self, app, venv):
         env = dict(venv.env)
         src_root = self.app_module_path(app).parent
@@ -219,11 +219,25 @@ class DevCommand(RunAppMixin, BaseCommand):
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
-        
+        if len(self.apps) == 1:
+            app = list(self.apps.values())[0]
+        elif appname:
+            try:
+                app = self.apps[appname]
+            except KeyError as e:
+                raise BriefcaseCommandError(
+                    f"Project doesn't define an application named '{appname}'"
+                ) from e
+
+        else:
+            raise BriefcaseCommandError(
+                "Project specifies more than one application; use --app to specify which one to start."
+            )
+
         dist_info_path = (
             self.app_module_path(app).parent / f"{app.module_name}.dist-info"
         )
-        
+
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
         elif appname:

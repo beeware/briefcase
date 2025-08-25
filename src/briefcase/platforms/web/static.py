@@ -478,13 +478,14 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         app: AppConfig,
         run_app: bool,
         update_requirements: bool,
+        test_mode: bool | None = False,
         passthrough: list[str] | None = None,
         **options,
     ):
         # Which web app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
-        
+
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
         elif app.name:
@@ -504,7 +505,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         self.finalize(app, test_mode)
 
         self.verify_app(app)
-        
+
         with virtual_environment(
             tools=self.tools,
             console=self.console,
