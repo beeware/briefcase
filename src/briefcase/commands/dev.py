@@ -197,10 +197,16 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         return env
 
-    def _app_dev_env(self, app, venv):
+    def _app_dev_env(self, app: AppConfig, venv: VenvContext):
+        """Setup an environment for running the app in dev mode.
+        
+        :param app: The config object for the app
+        :param venv: The context object used to run commands inside the virtual environment
+        """
         env = dict(venv.env)
         src_root = self.app_module_path(app).parent
 
+        # Prepend the app source code directory so its discoverable
         existing = env.get("PYTHONPATH", "")
         env["PYTHONPATH"] = os.pathsep.join(
             [os.fspath(src_root)] + ([existing] if existing else [])
