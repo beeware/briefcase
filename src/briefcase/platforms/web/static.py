@@ -100,7 +100,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    def write_inserts(self, app: AppConfig, filename: Path, inserts: dict[str,dict[str, str]]):
+    def write_inserts(
+        self, app: AppConfig, filename: Path, inserts: dict[str, dict[str, str]]
+    ):
         """Write inserts into an existing file.
 
         This function looks for start and end markers in the named file and
@@ -226,7 +228,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 # Skip directories and shallow paths
                 path = Path(filename)
                 parts = path.parts
-                if (len(parts) >= 3 and not (filename.endswith("/"))):
+                if len(parts) >= 3 and not (filename.endswith("/")):
                     # Handle inserts under deploy/inserts
                     if parts[:2] == ("deploy", "inserts"):
                         source = str(Path(*parts[2:]))
@@ -250,19 +252,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 f"{source}: insert must be UTF-8 encoded"
                             ) from e
 
-                    # Store raw contribution text per package
-                    pkg_map = (
-                    inserts
-                    .setdefault(target, {})
-                    .setdefault(insert, {})
-                    )
-                    # Append if the same package contributes multiple files for the same slot
-                    if package_key in pkg_map and pkg_map[package_key]:
-                        pkg_map[package_key] += "\n" + text
-                    else:
-                        pkg_map[package_key] = text
+                        # Store raw contribution text per package
+                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                        # Append if the same package contributes multiple files for the same slot
+                        if package_key in pkg_map and pkg_map[package_key]:
+                            pkg_map[package_key] += "\n" + text
+                        else:
+                            pkg_map[package_key] = text
 
-                    continue
+                        continue
 
                 # Handle static files under deploy/static
                 if parts[:2] == ("deploy", "static"):
@@ -325,7 +323,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 "Only 'pyscript' backend is currently supported for web static builds."
                             )
 
-                        pyscript_path = config_filename.replace("config.toml", "pyscript.toml")
+                        pyscript_path = config_filename.replace(
+                            "config.toml", "pyscript.toml"
+                        )
                         try:
                             with wheel.open(pyscript_path) as pyscript_file:
                                 pyscript_config = tomllib.load(pyscript_file)
