@@ -128,9 +128,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             return
 
         # Each insert slot and its package contributions are processed in sorted order
-        for insert, packages in sorted(inserts.items()):
-            packages = inserts[insert]
-
+        for insert, pkg_contribs in sorted(inserts.items()):
             html_banner = (
                 "<!--------------------------------------------------\n"
                 " * {package}\n"
@@ -143,6 +141,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 " *************************************************/\n"
                 "{content}"
             )
+
+            # Build bodies from the same contributions
+            html_body = "\n".join(
+                html_banner.format(package=pkg, content=text)
+                for pkg, text in sorted(pkg_contribs.items())
+                if text
+            )
+            css_body = "\n".join(
+                css_banner.format(package=pkg, content=text)
+                for pkg, text in sorted(pkg_contribs.items())
+                if text
+            )
+            body_map = {"html": html_body, "css": css_body}
 
             # Marker patterns for HTML and CSS/JS
             marker_styles = [
@@ -160,44 +171,31 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ),
             ]
 
-            # Sort and build bodies for HTML and CSS inserts
-            html_body = "\n".join(
-                html_banner.format(package=pkg, content=pkg_content.get("html", ""))
-                for pkg, pkg_content in sorted(packages.items())
-                if pkg_content.get("html")
-            )
-            css_body = "\n".join(
-                css_banner.format(package=pkg, content=pkg_content.get("css", ""))
-                for pkg, pkg_content in sorted(packages.items())
-                if pkg_content.get("css")
-            )
-
-            # Find first matching marker in file
-            matched_style = None
-            pattern = re.compile(
-                pattern_tmpl.format(insert=insert),
-                flags=re.MULTILINE | re.DOTALL,
-            )
+            # Apply all matching marker styles
+            any_match = False
             for pattern_tmpl, repl_tmpl, kind in marker_styles:
-                if matched_style is None and pattern.search(file_text):
-                    matched_style = (pattern, repl_tmpl, kind)
-
-            if matched_style is not None:
-                # Replace marker region with assembled body
-                pattern, repl_tmpl, kind = matched_style
-                body = html_body if kind == "html" else css_body
-                file_text = pattern.sub(
-                    repl_tmpl.format(insert=insert, content=body),
-                    file_text,
+                pattern = re.compile(
+                    pattern_tmpl.format(insert=insert),
+                    flags=re.MULTILINE | re.DOTALL,
                 )
-            else:
+                if pattern.search(file_text):
+                    file_text = pattern.sub(
+                        repl_tmpl.format(insert=insert, content=body_map.get(kind, "")),
+                        file_text,
+                    )
+                    any_match = True
+
+            if not any_match:
                 self.console.warning(
                     f"  Slot '{insert}' markers not found in {filename}; skipping."
                 )
+
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
 
-    def _process_wheel(self, wheelfile, inserts, static_path):
+    def _process_wheel(
+        self, wheelfile, inserts: dict[str, dict[str, dict[str, str]]], static_path
+    ):
         """Process a wheel, extracting any content that needs to be compiled into the
         final project.
 
@@ -252,28 +250,28 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 f"{source}: insert must be UTF-8 encoded"
                             ) from e
 
-                        # Classify insert as HTML vs CSS/JS
-                        t_ext = Path(target).suffix.lower()
-                        kind = "css" if t_ext in {".css", ".js"} else "html"
+                    # Store raw contribution text per package
+                    pkg_map = (
+                    inserts
+                    .setdefault(target, {})
+                    .setdefault(insert, {})
+                    )
+                    # Append if the same package contributes multiple files for the same slot
+                    if package_key in pkg_map and pkg_map[package_key]:
+                        pkg_map[package_key] += "\n" + text
+                    else:
+                        pkg_map[package_key] = text
 
-                        # Ensure nested dict structure exists
-                        pkg_entry = (
-                            inserts.setdefault(target, {})
-                            .setdefault(insert, {})
-                            .setdefault(package_key, {"html": "", "css": ""})
-                        )
-                        # Append into the right bucket
-                        if pkg_entry[kind]:
-                            pkg_entry[kind] += "\n"
-                        pkg_entry[kind] += text
+                    continue
 
-                    # Handle static files under deploy/static
-                    elif parts[:2] == ("deploy", "static"):
-                        rel = Path(*parts[2:])
-                        outfilename = pkg_static_root / rel
-                        outfilename.parent.mkdir(parents=True, exist_ok=True)
-                        with outfilename.open("wb") as f:
-                            f.write(wheel.read(filename))
+                # Handle static files under deploy/static
+                if parts[:2] == ("deploy", "static"):
+                    rel = Path(*parts[2:])
+                    outfilename = pkg_static_root / rel
+                    outfilename.parent.mkdir(parents=True, exist_ok=True)
+                    with outfilename.open("wb") as f:
+                        f.write(wheel.read(filename))
+                    continue
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
@@ -443,7 +441,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 sentinel=" ******************* Wheel contributed styles **********************/",
             )
 
-            inserts: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
+            inserts: dict[str, dict[str, dict[str, str]]] = {}
             static_root = self.static_path(app)
 
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
