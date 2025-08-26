@@ -226,60 +226,54 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with ZipFile(wheelfile) as wheel:
             for filename in wheel.namelist():
                 # Skip directories and shallow paths
-                if filename.endswith("/"):
-                    continue
                 path = Path(filename)
                 parts = path.parts
-                if len(parts) < 3:
-                    continue
+                if (len(parts) >= 3 and not (filename.endswith("/"))):
+                    # Handle inserts under deploy/inserts
+                    if parts[:2] == ("deploy", "inserts"):
+                        source = str(Path(*parts[2:]))
 
-                # Handle inserts under deploy/inserts
-                if parts[:2] == ("deploy", "inserts"):
-                    source = str(Path(*parts[2:]))
+                        try:
+                            target, insert = source.split(":", 1)
+                        except ValueError:
+                            self.console.warning(
+                                f"    {source}: missing ':<insert>'; skipping insert."
+                            )
+                            continue
 
-                    try:
-                        target, insert = source.split(":", 1)
-                    except ValueError:
-                        self.console.warning(
-                            f"    {source}: missing ':<insert>'; skipping insert."
+                        self.console.info(
+                            f"    {source}: Adding {insert} insert for {target}"
                         )
-                        continue
 
-                    self.console.info(
-                        f"    {source}: Adding {insert} insert for {target}"
-                    )
+                        try:
+                            text = wheel.read(filename).decode("utf-8")
+                        except UnicodeDecodeError as e:
+                            raise BriefcaseCommandError(
+                                f"{source}: insert must be UTF-8 encoded"
+                            ) from e
 
-                    try:
-                        text = wheel.read(filename).decode("utf-8")
-                    except UnicodeDecodeError as e:
-                        raise BriefcaseCommandError(
-                            f"{source}: insert must be UTF-8 encoded"
-                        ) from e
+                        # Classify insert as HTML vs CSS/JS
+                        t_ext = Path(target).suffix.lower()
+                        kind = "css" if t_ext in {".css", ".js"} else "html"
 
-                    # Classify insert as HTML vs CSS/JS
-                    t_ext = Path(target).suffix.lower()
-                    kind = "css" if t_ext in {".css", ".js"} else "html"
+                        # Ensure nested dict structure exists
+                        pkg_entry = (
+                            inserts.setdefault(target, {})
+                            .setdefault(insert, {})
+                            .setdefault(package_key, {"html": "", "css": ""})
+                        )
+                        # Append into the right bucket
+                        if pkg_entry[kind]:
+                            pkg_entry[kind] += "\n"
+                        pkg_entry[kind] += text
 
-                    # Ensure nested dict structure exists
-                    pkg_entry = (
-                        inserts.setdefault(target, {})
-                        .setdefault(insert, {})
-                        .setdefault(package_key, {"html": "", "css": ""})
-                    )
-                    # Append into the right bucket
-                    if pkg_entry[kind]:
-                        pkg_entry[kind] += "\n"
-                    pkg_entry[kind] += text
-                    continue
-
-                # Handle static files under deploy/static
-                if parts[:2] == ("deploy", "static"):
-                    rel = Path(*parts[2:])
-                    outfilename = pkg_static_root / rel
-                    outfilename.parent.mkdir(parents=True, exist_ok=True)
-                    with outfilename.open("wb") as f:
-                        f.write(wheel.read(filename))
-                    continue
+                    # Handle static files under deploy/static
+                    elif parts[:2] == ("deploy", "static"):
+                        rel = Path(*parts[2:])
+                        outfilename = pkg_static_root / rel
+                        outfilename.parent.mkdir(parents=True, exist_ok=True)
+                        with outfilename.open("wb") as f:
+                            f.write(wheel.read(filename))
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
