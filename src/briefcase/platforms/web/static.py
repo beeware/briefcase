@@ -100,7 +100,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    def _write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
+    def write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
         """Write inserts into an existing file.
 
         This function looks for start and end markers in the named file and
@@ -281,7 +281,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         f.write(wheel.read(filename))
                     continue
 
-    def _gather_backend_config(self, wheels):
+    def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
         file.
 
@@ -415,7 +415,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with self.console.wait_bar("Writing Pyscript configuration file..."):
             # Load any pre-existing pyscript.toml provided by the template. If the file
             # doesn't exist, assume an empty pyscript.toml as a starting point.
-            config = self._gather_backend_config(self.wheel_path(app).glob("*.whl"))
+            config = self.extract_backend_config(self.wheel_path(app).glob("*.whl"))
 
             # Add the packages declaration to the existing pyscript.toml.
             # Ensure that we're using Unix path separators, as the content
@@ -463,7 +463,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             # Write inserts per target
             for target, target_inserts in sorted(inserts.items()):
-                self._write_inserts(app, Path(target), target_inserts)
+                self.write_inserts(app, Path(target), target_inserts)
 
         return {}
 
