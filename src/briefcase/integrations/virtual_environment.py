@@ -22,7 +22,7 @@ class VenvContext:
 
     @property
     def bin_dir(self) -> Path:
-        r"""Return the path to the virtual environment's binary directory.
+        """Return the path to the virtual environment's binary directory.
 
         :return: <venv>/bin (or <venv>\Scripts on Windows)
         """
@@ -92,7 +92,7 @@ class VenvContext:
     def update_core_tools(self):
         """Upgrade core Python packaging tooling in the venv."""
         with self.tools.console.wait_bar(
-            "Upgrading pup tooling in virtual environment"
+            "Upgrading pip tooling in virtual environment"
         ):
             try:
                 runner = VenvContext(self.tools, self.venv_path)
