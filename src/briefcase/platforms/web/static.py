@@ -201,11 +201,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     f"  Slot '{insert}' markers not found in {filename}; skipping."
                 )
 
-                if not any_match:
-                    self.console.warning(
-                        f"  Slot '{insert}' markers not found in {filename}; skipping."
-                    )
-
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
 
