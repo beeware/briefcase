@@ -174,11 +174,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             # Find first matching marker in file
             matched_style = None
+            pattern = re.compile(
+                pattern_tmpl.format(insert=insert),
+                flags=re.MULTILINE | re.DOTALL,
+            )
             for pattern_tmpl, repl_tmpl, kind in marker_styles:
-                pattern = re.compile(
-                    pattern_tmpl.format(insert=insert),
-                    flags=re.MULTILINE | re.DOTALL,
-                )
                 if matched_style is None and pattern.search(file_text):
                     matched_style = (pattern, repl_tmpl, kind)
 
