@@ -173,13 +173,22 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ),
             ]
 
+            # Pre-compile patterns once per insert
+            compiled_markers = [
+                (
+                    re.compile(
+                        pattern_tmpl.format(insert=insert),
+                        flags=re.MULTILINE | re.DOTALL,
+                    ),
+                    repl_tmpl,
+                    kind,
+                )
+                for (pattern_tmpl, repl_tmpl, kind) in marker_styles
+            ]
+
             # Apply all matching marker styles
             any_match = False
-            for pattern_tmpl, repl_tmpl, kind in marker_styles:
-                pattern = re.compile(
-                    pattern_tmpl.format(insert=insert),
-                    flags=re.MULTILINE | re.DOTALL,
-                )
+            for pattern, repl_tmpl, kind in compiled_markers:
                 if pattern.search(file_text):
                     file_text = pattern.sub(
                         repl_tmpl.format(insert=insert, content=body_map.get(kind, "")),
@@ -191,6 +200,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 self.console.warning(
                     f"  Slot '{insert}' markers not found in {filename}; skipping."
                 )
+
+                if not any_match:
+                    self.console.warning(
+                        f"  Slot '{insert}' markers not found in {filename}; skipping."
+                    )
 
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
