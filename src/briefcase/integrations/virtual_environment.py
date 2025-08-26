@@ -3,7 +3,6 @@ import shutil
 import sys
 from pathlib import Path
 
-from briefcase.config import AppConfig
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations import subprocess
@@ -22,7 +21,7 @@ class VenvContext:
 
     @property
     def bin_dir(self) -> Path:
-        """Return the path to the virtual environment's binary directory.
+        r"""Return the path to the virtual environment's binary directory.
 
         :return: <venv>/bin (or <venv>\Scripts on Windows)
         """
@@ -63,46 +62,35 @@ class VenvContext:
         return self.venv_path.exists() and (self.venv_path / "pyvenv.cfg").exists()
 
     def create(self) -> None:
-        """Create the virtual environment(if it doesn't already exist).
+        """Create the virtual environment.
 
         :raises BriefcaseCommandError if creation fails.
         """
-        if not self.exists():
-            with self.console.wait_bar(
-                f"Creating virtual environment at {self.venv_path}..."
-            ):
-                try:
-                    self.venv_path.parent.mkdir(parents=True, exist_ok=True)
-                    self.tools.subprocess.run(
-                        [sys.executable, "-m", "venv", os.fspath(self.venv_path)],
-                        check=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise BriefcaseCommandError(
-                        f"Failed to create virtual environment at {self.venv_path}"
-                    ) from e
+        try:
+            self.venv_path.parent.mkdir(parents=True, exist_ok=True)
+            self.tools.subprocess.run(
+                [sys.executable, "-m", "venv", os.fspath(self.venv_path)],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Failed to create virtual environment at {self.venv_path}"
+            ) from e
 
     def recreate(self) -> None:
         """Remove and re-create the virtual environment."""
         if self.exists():
-            self.tools.console.info("Recreating virtual environment...")
             shutil.rmtree(self.venv_path)
         self.create()
 
     def update_core_tools(self):
         """Upgrade core Python packaging tooling in the venv."""
-        with self.tools.console.wait_bar(
-            "Upgrading pip tooling in virtual environment"
-        ):
-            try:
-                runner = VenvContext(self.tools, self.venv_path)
-                runner.run(
-                    [runner.executable, "-m", "pip", "install", "-U", "pip"], check=True
-                )
-            except Exception as e:
-                raise BriefcaseCommandError(
-                    f"Virtual environment created, but failed to bootstrap pip tooling at {self.venv_path}"
-                ) from e
+        try:
+            self.run([self.executable, "-m", "pip", "install", "-U", "pip"], check=True)
+        except Exception as e:
+            raise BriefcaseCommandError(
+                f"Virtual environment created, but failed to bootstrap pip tooling at {self.venv_path}"
+            ) from e
 
     def _rewrite_head(self, args: SubprocessArgsT) -> SubprocessArgsT:
         """Rewrite the first argument to ensure it points to the venv's Python
@@ -158,7 +146,10 @@ class VenvContext:
         :param kwargs: Additional keyword arguments to pass to subprocess.check_output.
         """
         args = self._rewrite_head(list(args))
-        kwargs.setdefault("env", self.env)
+
+        user_env = kwargs.pop("env", None)
+        kwargs["env"] = self.full_env(user_env)
+
         return self.tools.subprocess.Popen(args, **kwargs)
 
     def check_output(self, args: list[str], **kwargs):
@@ -194,12 +185,17 @@ class VenvEnvironment:
 
     def __enter__(self):
         if self.recreate:
-            self.venv_context.recreate()
+            with self.console.wait_bar("Recreating virtual environment..."):
+                self.venv_context.recreate()
         elif not self.venv_context.exists():
-            self.venv_context.create()
+            with self.console.wait_bar(
+                f"Creating virtual environment at {self.venv_path}..."
+            ):
+                self.venv_context.create()
 
         if self.update_pip:
-            self.venv_context.update_core_tools()
+            with self.console.wait_bar("Upgrading pip tooling in virtual environment"):
+                self.venv_context.update_core_tools()
 
         return self.venv_context
 
@@ -222,27 +218,32 @@ class NoOpEnvironment:
 
 
 def virtual_environment(
-    tools, console: Console, base_path: Path, app: AppConfig, **options
+    tools,
+    console: Console,
+    base_path: Path,
+    *,
+    isolated: bool = True,
+    recreate: bool = False,
+    update_pip: bool = True,
 ) -> VenvEnvironment | NoOpEnvironment:
-    """Return a environment context for the requested isolation settings". Creates
-    either a virtual environment context or a no-op context.
+    """Return a environment context for the requested isolation settings. Creates either
+    a virtual environment context or a no-op context.
 
-    :param options: Configuration options including:
-         - isolated (bool): If False, return NoOpEnvironment. Default True.
-         - recreate (bool): Whether to recreate existing venv. Default False.
-         - update_pip (bool): Whether to update pip after setup. Default True.
-
-     :raises BriefcaseCommandError: if isolated=True but base_path is None.
-
-     returns: VenvEnvironment or NoOpEnvironment
+    :param tools: The tools instance
+    :param console: The console instance
+    :param base_path: Base path for the virtual environment
+    :param app: Application configuration
+    :param isolated: If False, return NoOpEnvironment. Default True.
+    :param recreate: Whether to recreate existing venv. Default False.
+    :param update_pip: Whether to update pip after setup. Default True.
+    :raises BriefcaseCommandError: if isolated=True but base_path is None.
+    :returns: VenvEnvironment or NoOpEnvironment
     """
-
-    isolated = options.get("isolated", True)
     if not isolated:
         return NoOpEnvironment(tools=tools, console=console)
 
     if base_path is None:
-        raise BriefcaseCommandError("A virtual environment path must be providded")
+        raise BriefcaseCommandError("A virtual environment path must be provided")
 
     venv_path = base_path / "venv"
 
@@ -250,6 +251,6 @@ def virtual_environment(
         tools=tools,
         console=console,
         path=venv_path,
-        recreate=options.get("recreate", False),
-        update_pip=options.get("update_pip", True),
+        recreate=recreate,
+        update_pip=update_pip,
     )
