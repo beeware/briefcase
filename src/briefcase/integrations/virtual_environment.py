@@ -36,24 +36,6 @@ class VenvContext:
         python = self.bin_dir / ("python.exe" if os.name == "nt" else "python")
         return os.fspath(python)
 
-    @property
-    def env(self) -> dict:
-        """Base environment variables for invoking processes in the venv.
-
-        The returned environment includes the venv's bin directory at the front of the
-        PATH, and sets VIRTUAL_ENV to the venv path. On Windows, PYTHONHOME is removed.
-        """
-
-        env = dict(os.environ)
-        old_path = env.get("PATH", "")
-        env["PATH"] = os.fspath(self.bin_dir) + (
-            os.pathsep + old_path if old_path else ""
-        )
-        env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
-        if os.name == "nt":
-            env.pop("PYTHONHOME", None)
-        return env
-
     def exists(self) -> bool:
         """Check whether the virtual environment exists.
 
@@ -112,19 +94,27 @@ class VenvContext:
     def full_env(self, overrides: dict[str, str | None] | None) -> dict[str, str]:
         """Generate the full environment for the venv.
 
-        Merges the venv environment with user provided overrides, follows the pattern
-        from tools.subprocess,full_env()
-
         :param overrides: Environment variables to override or unset. Can be None if
-            their are no explicit environment changes Use None values to unset
+            there are no explicit environment changes. Use None values to unset
             environment variables
         :return: environment mapping for the venv with overrides applied.
         """
-        env = self.env.copy()
+
+        env = dict(os.environ)
 
         if overrides:
             env.update(overrides)
+
             env = {k: v for k, v in env.items() if v is not None}
+
+        old_path = env.get("PATH", "")
+        env["PATH"] = os.fspath(self.bin_dir) + (
+            os.pathsep + old_path if old_path else ""
+        )
+        env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
+
+        if os.name == "nt":
+            env.pop("PYTHONHOME", None)
 
         return env
 
@@ -143,13 +133,11 @@ class VenvContext:
         """Run a command in the virtual environment using Popen.
 
         :param args: Command and arguments to run.
-        :param kwargs: Additional keyword arguments to pass to subprocess.check_output.
+        :param kwargs: Additional keyword arguments to pass to subprocess.Popen.
         """
         args = self._rewrite_head(list(args))
-
         user_env = kwargs.pop("env", None)
         kwargs["env"] = self.full_env(user_env)
-
         return self.tools.subprocess.Popen(args, **kwargs)
 
     def check_output(self, args: list[str], **kwargs):
@@ -159,7 +147,8 @@ class VenvContext:
         :param kwargs: Additional keyword arguments to pass to subprocess.check_output.
         """
         args = self._rewrite_head(list(args))
-        kwargs.setdefault("env", self.env)
+        user_env = kwargs.pop("env", None)
+        kwargs["env"] = self.full_env(user_env)
         return self.tools.subprocess.check_output(args, **kwargs)
 
 
