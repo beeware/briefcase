@@ -100,7 +100,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    def write_inserts(self, app: AppConfig, filename: Path, inserts: dict):
+    def write_inserts(self, app: AppConfig, filename: Path, inserts: dict[str,dict[str, str]]):
         """Write inserts into an existing file.
 
         This function looks for start and end markers in the named file and
