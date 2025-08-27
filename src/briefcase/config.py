@@ -33,11 +33,30 @@ def is_valid_pep508_name(app_name):
 
 def is_reserved_keyword(app_name):
     """Determine if the name is a reserved keyword."""
-    return keyword.iskeyword(app_name.lower()) or app_name.lower() in RESERVED_WORDS
+    return (
+        keyword.iskeyword(app_name.lower())
+        or app_name.lower() in RESERVED_WORDS
+        or keyword.iskeyword(app_name)
+    )
 
 
 def is_valid_app_name(app_name):
-    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
+    """Determine if the app name is valid.
+
+    Checks the following:
+        - It is not a reserved keyword.
+        - It is a valid PEP508 name.
+
+    :param app_name: The app name to validate.
+    :returns: True if the app name is valid; False otherwise.
+    """
+    return all(
+        [
+            is_valid_pep508_name(app_name),
+            not is_reserved_keyword(app_name),
+            app_name.lower().replace("-", "_").isidentifier(),
+        ]
+    )
 
 
 def make_class_name(formal_name):
@@ -400,9 +419,12 @@ class AppConfig(BaseConfig):
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
                 f"{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
-                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
-                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+                "App names must:\n"
+                "- Not be reserved keywords (like 'and', 'for', 'while', 'main', 'test', etc.)\n"
+                "- Only letters, numbers, hyphens, and underscores only\n"
+                "- Start with a letter (not a number, hyphen, or underscore)\n"
+                "- Not end with a hyphen or underscore\n"
+                "- Be valid Python identifiers when hyphens are replaced with underscores"
             )
 
         if not is_valid_bundle_identifier(self.bundle):
