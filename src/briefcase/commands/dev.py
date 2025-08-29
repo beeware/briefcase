@@ -96,7 +96,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             try:
                 venv.run(
                     [
-                        "python",
+                        sys.executable,
                         "-u",
                         "-X",
                         "utf8",
@@ -177,11 +177,17 @@ class DevCommand(RunAppMixin, BaseCommand):
             )
 
     def get_environment(self, app: AppConfig):
-        # Create a shell environment where PYTHONPATH points to the source
-        # directories described by the app config.
+        """ Create a shell environment where PYTHONPATH points to the source
+        directories described by the app config.
+
+        param app: The config object for the app
+        """
+        src_root = self.app_module_path(app).parent
+        
         env = {
             "PYTHONPATH": os.pathsep.join(
-                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()
+                [os.fspath(src_root)] +
+                [os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()]
             )
         }
 
@@ -195,22 +201,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         if self.console.is_debug:
             env["BRIEFCASE_DEBUG"] = "1"
 
-        return env
-
-    def _app_dev_env(self, app: AppConfig, venv: VenvContext):
-        """Setup an environment for running the app in dev mode.
-        
-        :param app: The config object for the app
-        :param venv: The context object used to run commands inside the virtual environment
-        """
-        env = dict(venv.env)
-        src_root = self.app_module_path(app).parent
-
-        # Prepend the app source code directory so its discoverable
-        existing = env.get("PYTHONPATH", "")
-        env["PYTHONPATH"] = os.pathsep.join(
-            [os.fspath(src_root)] + ([existing] if existing else [])
-        )
         return env
 
     def __call__(
@@ -240,31 +230,21 @@ class DevCommand(RunAppMixin, BaseCommand):
                 "Project specifies more than one application; use --app to specify which one to start."
             )
 
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
-
-        if len(self.apps) == 1:
-            app = list(self.apps.values())[0]
-        elif appname:
-            try:
-                app = self.apps[appname]
-            except KeyError as e:
-                raise BriefcaseCommandError(
-                    f"Project doesn't define an application named '{appname}'"
-                ) from e
-
-        else:
-            raise BriefcaseCommandError(
-                "Project specifies more than one application; use --app to specify which one to start."
-            )
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
         self.finalize(app, test_mode)
 
         self.verify_app(app)
 
+        # Look for the existence of a dist-info file.
+        # If one exists, assume that the requirements have already been
+        # installed. If a dependency update has been manually requested,
+        # do it regardless.
+        dist_info_path = (
+            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
+        )
         if not run_app:
+            # If we are not running the app, it means we should update requirements.
             update_requirements = True
 
         with virtual_environment(
@@ -279,6 +259,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 self.console.info("Installing requirements...", prefix=app.app_name)
                 self.install_dev_requirements(app, venv, **options)
                 write_dist_info(app, dist_info_path)
+                
             if run_app:
                 if app.test_mode:
                     self.console.info(
@@ -288,7 +269,8 @@ class DevCommand(RunAppMixin, BaseCommand):
                     self.console.info("Starting in dev mode...", prefix=app.app_name)
                 return self.run_dev_app(
                     app,
-                    env=self._app_dev_env(app, venv),
+                    env=self.get_environment(app),
+                    venv=venv,
                     passthrough=[] if passthrough is None else passthrough,
                     **options,
                 )
