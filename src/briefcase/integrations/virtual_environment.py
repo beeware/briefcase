@@ -117,33 +117,36 @@ class VenvContext:
 
         return env
 
-    def run(self, args: list[str], **kwargs):
+    def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
         """Run a command in the virtual environment.
 
         :param args: Command and arguments to run.
         :param kwargs: Additional keyword arguments to pass to subprocess.run.
+        :returns: CompletedProcess from the subprocess execution.
         """
         args = self._rewrite_head(list(args))
         user_env = kwargs.pop("env", None)
         kwargs["env"] = self.full_env(user_env)
         return self.tools.subprocess.run(args, **kwargs)
 
-    def Popen(self, args: list[str], **kwargs):
+    def Popen(self, args: SubprocessArgsT, **kwargs) -> subprocess.Popen:
         """Run a command in the virtual environment using Popen.
 
         :param args: Command and arguments to run.
         :param kwargs: Additional keyword arguments to pass to subprocess.Popen.
+        :returns: A Popen instance for the subprocess execution.
         """
         args = self._rewrite_head(list(args))
         user_env = kwargs.pop("env", None)
         kwargs["env"] = self.full_env(user_env)
         return self.tools.subprocess.Popen(args, **kwargs)
 
-    def check_output(self, args: list[str], **kwargs):
+    def check_output(self, args: SubprocessArgsT, **kwargs) -> str:
         """Run a command in the virtual environment and return its output.
 
         :param args: Command and arguments to run.
         :param kwargs: Additional keyword arguments to pass to subprocess.check_output.
+        :returns: String output from the subprocess execution.
         """
         args = self._rewrite_head(list(args))
         user_env = kwargs.pop("env", None)
