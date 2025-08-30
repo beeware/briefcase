@@ -66,7 +66,7 @@ class VenvContext:
             shutil.rmtree(self.venv_path)
         self.create()
 
-    def update_core_tools(self):
+    def update_core_tools(self) -> None:
         """Upgrade core Python packaging tooling in the venv."""
         try:
             self.run([self.executable, "-m", "pip", "install", "-U", "pip"], check=True)
