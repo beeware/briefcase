@@ -177,17 +177,17 @@ class DevCommand(RunAppMixin, BaseCommand):
             )
 
     def get_environment(self, app: AppConfig):
-        """ Create a shell environment where PYTHONPATH points to the source
-        directories described by the app config.
+        """Create a shell environment where PYTHONPATH points to the source directories
+        described by the app config.
 
         param app: The config object for the app
         """
         src_root = self.app_module_path(app).parent
-        
+
         env = {
             "PYTHONPATH": os.pathsep.join(
-                [os.fspath(src_root)] +
-                [os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()]
+                [os.fspath(src_root)]
+                + [os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()]
             )
         }
 
@@ -259,7 +259,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 self.console.info("Installing requirements...", prefix=app.app_name)
                 self.install_dev_requirements(app, venv, **options)
                 write_dist_info(app, dist_info_path)
-                
+
             if run_app:
                 if app.test_mode:
                     self.console.info(

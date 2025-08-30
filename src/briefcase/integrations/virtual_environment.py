@@ -54,6 +54,7 @@ class VenvContext:
                 [sys.executable, "-m", "venv", os.fspath(self.venv_path)],
                 check=True,
             )
+            self.update_core_tools()
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Failed to create virtual environment at {self.venv_path}"
@@ -71,7 +72,7 @@ class VenvContext:
             self.run([self.executable, "-m", "pip", "install", "-U", "pip"], check=True)
         except Exception as e:
             raise BriefcaseCommandError(
-                f"Virtual environment created, but failed to bootstrap pip tooling at {self.venv_path}"
+                f"Failed to bootstrap pip tooling at {self.venv_path}"
             ) from e
 
     def _rewrite_head(self, args: SubprocessArgsT) -> SubprocessArgsT:
@@ -100,14 +101,12 @@ class VenvContext:
         :return: environment mapping for the venv with overrides applied.
         """
 
-        env = dict(os.environ)
+        env = {}
 
         if overrides:
-            env.update(overrides)
+            env.update({k: v for k, v in overrides.items() if v is not None})
 
-            env = {k: v for k, v in env.items() if v is not None}
-
-        old_path = env.get("PATH", "")
+        old_path = env.get("PATH") or os.environ.get("PATH", "")
         env["PATH"] = os.fspath(self.bin_dir) + (
             os.pathsep + old_path if old_path else ""
         )
@@ -162,14 +161,11 @@ class VenvEnvironment:
         *,
         path: Path,
         recreate: bool = False,
-        update_pip: bool = True,
     ):
         self.tools = tools
         self.console = console
         self.venv_path = path
-        self.pyvenv_cfg = self.venv_path / "pyvenv.cfg"
         self.recreate = recreate
-        self.update_pip = update_pip
         self.venv_context = VenvContext(self.tools, self.venv_path)
 
     def __enter__(self):
@@ -181,10 +177,6 @@ class VenvEnvironment:
                 f"Creating virtual environment at {self.venv_path}..."
             ):
                 self.venv_context.create()
-
-        if self.update_pip:
-            with self.console.wait_bar("Upgrading pip tooling in virtual environment"):
-                self.venv_context.update_core_tools()
 
         return self.venv_context
 
@@ -209,37 +201,31 @@ class NoOpEnvironment:
 def virtual_environment(
     tools,
     console: Console,
-    base_path: Path,
+    venv_path: Path,
     *,
     isolated: bool = True,
     recreate: bool = False,
-    update_pip: bool = True,
 ) -> VenvEnvironment | NoOpEnvironment:
     """Return a environment context for the requested isolation settings. Creates either
     a virtual environment context or a no-op context.
 
     :param tools: The tools instance
     :param console: The console instance
-    :param base_path: Base path for the virtual environment
-    :param app: Application configuration
+    :param venv_path: Complete path for the virtual environment
     :param isolated: If False, return NoOpEnvironment. Default True.
     :param recreate: Whether to recreate existing venv. Default False.
-    :param update_pip: Whether to update pip after setup. Default True.
-    :raises BriefcaseCommandError: if isolated=True but base_path is None.
+    :raises BriefcaseCommandError: if isolated=True but venv_path is None.
     :returns: VenvEnvironment or NoOpEnvironment
     """
     if not isolated:
         return NoOpEnvironment(tools=tools, console=console)
 
-    if base_path is None:
+    if venv_path is None:
         raise BriefcaseCommandError("A virtual environment path must be provided")
-
-    venv_path = base_path / "venv"
 
     return VenvEnvironment(
         tools=tools,
         console=console,
         path=venv_path,
         recreate=recreate,
-        update_pip=update_pip,
     )
