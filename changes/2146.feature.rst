@@ -1,0 +1,1 @@
+Add initial support for PEP639-style license metadata
