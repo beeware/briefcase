@@ -95,6 +95,7 @@ def start_debugpy(config_str: str, verbose: bool):
     debugpy.listen((host, port), in_process_debug_adapter=True)
 
     if verbose:
+        # pydevd is dynamically loaded and only available after debugpy is started
         import pydevd
 
         pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 3
@@ -103,7 +104,7 @@ def start_debugpy(config_str: str, verbose: bool):
         if verbose:
             print("Adding path mappings...")
 
-        # pydevd is dynamically loaded and only available after a debugger has connected
+        # pydevd is dynamically loaded and only available after debugpy is started
         import pydevd_file_utils
 
         pydevd_file_utils.setup_client_server_paths(path_mappings)
