@@ -287,6 +287,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         app_path_mappings = self._debugger_app_path_mappings(app)
         app_packages_path_mappings = self._debugger_app_packages_path_mapping(app)
         config = DebuggerConfig(
+            debugger=app.debugger.name,
             host=debugger_host,
             port=debugger_port,
             app_path_mappings=app_path_mappings,

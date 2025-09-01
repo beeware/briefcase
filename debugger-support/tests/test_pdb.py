@@ -3,8 +3,8 @@ import os
 import sys
 from unittest.mock import MagicMock
 
-import briefcase_pdb
-import briefcase_pdb._remote_debugger
+import briefcase_debugger
+import briefcase_debugger.pdb
 
 # import remote_pdb
 import pytest
@@ -16,7 +16,7 @@ def test_no_env_vars(monkeypatch, capsys):
     monkeypatch.setattr(os, "environ", os_environ)
 
     # start test function
-    briefcase_pdb.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -31,7 +31,7 @@ def test_no_debugger_verbose(monkeypatch, capsys):
     monkeypatch.setattr(os, "environ", os_environ)
 
     # start test function
-    briefcase_pdb.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     captured = capsys.readouterr()
     assert (
@@ -55,7 +55,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     monkeypatch.setattr(os, "environ", os_environ)
 
     fake_remote_pdb = MagicMock()
-    monkeypatch.setattr(briefcase_pdb._remote_debugger, "RemotePdb", fake_remote_pdb)
+    monkeypatch.setattr(briefcase_debugger.pdb, "RemotePdb", fake_remote_pdb)
 
     # pydevd is dynamically loaded and only available when a real debugger is attached. So
     # we fake the whole module, as otherwise the import in start_remote_debugger would fail
@@ -64,7 +64,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     monkeypatch.setitem(sys.modules, "pydevd_file_utils", fake_pydevd_file_utils)
 
     # start test function
-    briefcase_pdb.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     fake_remote_pdb.assert_called_once_with(
         "somehost",

@@ -1,8 +1,9 @@
+import json
 import os
 import sys
 import traceback
 
-from ._remote_debugger import start_pdb
+from briefcase_debugger.config import DebuggerConfig
 
 REMOTE_DEBUGGER_STARTED = False
 
@@ -28,9 +29,19 @@ def start_remote_debugger():
     if verbose:
         print(f"'BRIEFCASE_DEBUGGER'={config_str}")
 
+    # Parsing config json
+    config: DebuggerConfig = json.loads(config_str)
+
     # start debugger
     print("Starting remote debugger...")
-    start_pdb(config_str, verbose)
+    if config["debugger"] == "debugpy":
+        from briefcase_debugger.debugpy import start_debugpy
+
+        start_debugpy(config, verbose)
+    elif config["debugger"] == "pdb":
+        from briefcase_debugger.pdb import start_pdb
+
+        start_pdb(config_str, verbose)
 
 
 # only start remote debugger on the first import

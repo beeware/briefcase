@@ -36,7 +36,7 @@ IS_EDITABLE = _is_editable_pep610("briefcase")
 REPO_ROOT = Path(__file__).parent.parent.parent.parent if IS_EDITABLE else None
 
 
-def get_debugger_requirement(package_name: str):
+def get_debugger_requirement(package_name: str, extras: str = ""):
     """Get the requirement of a debugger support package.
 
     On editable installs of briefcase the path to the local package is used, to simplify
@@ -45,10 +45,10 @@ def get_debugger_requirement(package_name: str):
     version of briefcase.
     """
     if IS_EDITABLE and REPO_ROOT is not None:
-        local_path = REPO_ROOT / "debugger-support" / package_name
+        local_path = REPO_ROOT / "debugger-support"
         if local_path.exists() and local_path.is_dir():
-            return str(local_path)
-    return f"{package_name}=={briefcase.__version__}"
+            return f"{local_path}{extras}"
+    return f"{package_name}{extras}=={briefcase.__version__}"
 
 
 class AppPathMappings(TypedDict):
@@ -63,6 +63,7 @@ class AppPackagesPathMappings(TypedDict):
 
 
 class DebuggerConfig(TypedDict):
+    debugger: str
     host: str
     port: int
     app_path_mappings: AppPathMappings | None
@@ -76,6 +77,11 @@ class DebuggerConnectionMode(str, enum.Enum):
 
 class BaseDebugger(ABC):
     """Definition for a plugin that defines a new Briefcase debugger."""
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Return the name debugger."""
 
     @property
     @abstractmethod

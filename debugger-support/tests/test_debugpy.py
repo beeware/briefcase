@@ -4,7 +4,7 @@ import sys
 from pathlib import Path, PosixPath, PureWindowsPath
 from unittest.mock import MagicMock
 
-import briefcase_debugpy
+import briefcase_debugger
 import debugpy
 import pytest
 
@@ -15,7 +15,7 @@ def test_no_env_vars(monkeypatch, capsys):
     monkeypatch.setattr(os, "environ", os_environ)
 
     # start test function
-    briefcase_debugpy.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -30,7 +30,7 @@ def test_no_debugger_verbose(monkeypatch, capsys):
     monkeypatch.setattr(os, "environ", os_environ)
 
     # start test function
-    briefcase_debugpy.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     captured = capsys.readouterr()
     assert (
@@ -45,7 +45,9 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     """Test a normal debug session."""
     # When running tests on Linux/macOS, we have to switch to WindowsPath.
     if isinstance(Path(), PosixPath):
-        monkeypatch.setattr(briefcase_debugpy._remote_debugger, "Path", PureWindowsPath)
+        monkeypatch.setattr(
+            briefcase_debugger._remote_debugger, "Path", PureWindowsPath
+        )
 
     os_environ = {}
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
@@ -81,7 +83,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     monkeypatch.setitem(sys.modules, "pydevd_file_utils", fake_pydevd_file_utils)
 
     # start test function
-    briefcase_debugpy.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     fake_debugpy_listen.assert_called_once_with(
         ("somehost", 9999),
@@ -126,7 +128,7 @@ def test_os_file_bugfix(monkeypatch, capsys, verbose):
     monkeypatch.setattr(debugpy, "wait_for_client", fake_debugpy_wait_for_client)
 
     # start test function
-    briefcase_debugpy.start_remote_debugger()
+    briefcase_debugger.start_remote_debugger()
 
     fake_debugpy_listen.assert_called_once_with(
         ("somehost", 9999),

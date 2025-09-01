@@ -7,19 +7,25 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "briefcase-pdb"
-description = "Add-on for briefcase to add remote debugging via pdb."
+name = "briefcase-debugger"
+description = "Add-on for briefcase to add remote debugging."
 readme = "README.md"
 license = "BSD-3-Clause"
 dependencies = [
-    "remote-pdb>=2.1.0,<3.0.0"
+    # see "pdb" or "debugpy" optional dependencies below
 ]
 dynamic = ["version"]
 
 [tool.setuptools_scm]
-root = "../../"
+root = "../"
 
 [project.optional-dependencies]
 dev = [
     "pytest == 8.4.1"
+]
+pdb = [
+    "remote-pdb>=2.1.0,<3.0.0"
+]
+debugpy = [
+    "debugpy>=1.8.14,<2.0.0"
 ]

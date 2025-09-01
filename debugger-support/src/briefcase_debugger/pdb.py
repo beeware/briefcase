@@ -1,16 +1,15 @@
-import json
 import sys
 
 from remote_pdb import RemotePdb
 
+from briefcase_debugger.config import DebuggerConfig
 
-def start_pdb(config_str: str, verbose: bool):
+
+def start_pdb(config: DebuggerConfig, verbose: bool):
     """Start remote PDB server."""
-    debugger_config: dict = json.loads(config_str)
-
     # Parsing host/port
-    host = debugger_config["host"]
-    port = debugger_config["port"]
+    host = config["host"]
+    port = config["port"]
 
     print(
         f"""

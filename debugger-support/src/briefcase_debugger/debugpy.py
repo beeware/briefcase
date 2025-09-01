@@ -1,29 +1,12 @@
-import json
 import os
 import re
 import sys
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import Optional
 
 import debugpy
 
-
-class AppPathMappings(TypedDict):
-    device_sys_path_regex: str
-    device_subfolders: list[str]
-    host_folders: list[str]
-
-
-class AppPackagesPathMappings(TypedDict):
-    sys_path_regex: str
-    host_folder: str
-
-
-class DebuggerConfig(TypedDict):
-    host: str
-    port: int
-    app_path_mappings: Optional[AppPathMappings]
-    app_packages_path_mappings: Optional[AppPackagesPathMappings]
+from briefcase_debugger.config import DebuggerConfig
 
 
 def find_first_matching_path(regex: str) -> Optional[str]:
@@ -75,13 +58,10 @@ def load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str,
     return mappings_list
 
 
-def start_debugpy(config_str: str, verbose: bool):
-    # Parsing config json
-    debugger_config: dict = json.loads(config_str)
-
-    host = debugger_config["host"]
-    port = debugger_config["port"]
-    path_mappings = load_path_mappings(debugger_config, verbose)
+def start_debugpy(config: DebuggerConfig, verbose: bool):
+    host = config["host"]
+    port = config["port"]
+    path_mappings = load_path_mappings(config, verbose)
 
     # There is a bug in debugpy that has to be handled until there is a new
     # debugpy release, see https://github.com/microsoft/debugpy/issues/1943
@@ -104,7 +84,7 @@ def start_debugpy(config_str: str, verbose: bool):
         if verbose:
             print("Adding path mappings...")
 
-        # pydevd is dynamically loaded and only available after debugpy is started
+        # pydevd is dynamically loaded and only available after a debugger has connected
         import pydevd_file_utils
 
         pydevd_file_utils.setup_client_server_paths(path_mappings)
