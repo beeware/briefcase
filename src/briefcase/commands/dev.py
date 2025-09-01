@@ -247,13 +247,12 @@ class DevCommand(RunAppMixin, BaseCommand):
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
 
+        venv_path = self.base_path / ".briefcase" / app.app_name / "venv"
         with virtual_environment(
             tools=self.tools,
             console=self.console,
-            base_path=self.base_path,
-            app=app,
-            update_requirements=update_requirements,
-            isolation=False,
+            venv_path=venv_path,
+            isolated=False,
         ) as venv:
             if update_requirements or not dist_info_path.exists():
                 self.console.info("Installing requirements...", prefix=app.app_name)

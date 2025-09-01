@@ -506,12 +506,11 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         self.verify_app(app)
 
+        venv_path = self.base_path / ".briefcase" / app.app_name / "venv"
         with virtual_environment(
             tools=self.tools,
             console=self.console,
-            base_path=self.base_path,
-            app=app,
-            update_requirements=update_requirements,
+            venv_path=venv_path,
             isolated=options.get("isolated", True),
         ) as venv:
             with self.tools.console.wait_bar("Installing arrr"):
