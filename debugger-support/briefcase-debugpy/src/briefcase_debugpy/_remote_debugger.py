@@ -94,6 +94,11 @@ def start_debugpy(config_str: str, verbose: bool):
     print(f"Starting debugpy in server mode at {host}:{port}...")
     debugpy.listen((host, port), in_process_debug_adapter=True)
 
+    if verbose:
+        import pydevd
+
+        pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 3
+
     if len(path_mappings) > 0:
         if verbose:
             print("Adding path mappings...")
