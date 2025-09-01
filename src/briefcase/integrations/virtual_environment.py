@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess as stdlib_subprocess
 import sys
 from pathlib import Path
 
@@ -129,7 +130,7 @@ class VenvContext:
         kwargs["env"] = self.full_env(user_env)
         return self.tools.subprocess.run(args, **kwargs)
 
-    def Popen(self, args: SubprocessArgsT, **kwargs) -> subprocess.Popen:
+    def Popen(self, args: SubprocessArgsT, **kwargs) -> stdlib_subprocess.Popen:
         """Run a command in the virtual environment using Popen.
 
         :param args: Command and arguments to run.
