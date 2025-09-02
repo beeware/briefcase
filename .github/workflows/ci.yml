@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ci-test
   workflow_call:
     inputs:
       attest-package:
@@ -46,55 +47,15 @@ jobs:
     with:
       attest: ${{ inputs.attest-package }}
 
-  package-debugpy:
-    name: Package Briefcase Debugpy
-    runs-on: ubuntu-latest
+  package-debugger:
+    name: Package Debugger
     permissions:
       id-token: write
       contents: read
       attestations: write
-  # This does not work. It gerates a CI Error: Error: The artifact name is not valid: Packages-briefcase-debugger-support/briefcase-debugpy. Contains the following character:  Forward slash /
-  #   uses: beeware/.github/.github/workflows/python-package-create.yml@main
-  #   with:
-  #     build-subdirectory: "debugger-support/briefcase-debugpy"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hynek/build-and-inspect-python-package@v2
-        id: package
-        with:
-          path: "debugger-support/briefcase-debugpy"
-          upload-name-suffix: "-briefcase-debugpy"
-          attest-build-provenance-github: ${{ inputs.attest-package }}
-      - name: Set artifact-name output
-        run: echo "artifact-name=${{ steps.package.outputs.artifact-name }}" >> $GITHUB_OUTPUT
-        id: set-artifact-name
-    outputs:
-      artifact-name: ${{ steps.set-artifact-name.outputs.artifact-name }}
-
-  package-pdb:
-    name: Package Briefcase PDB
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-  # This does not work. It gerates a CI Error: Error: The artifact name is not valid: Packages-briefcase-debugger-support/briefcase-pdb. Contains the following character:  Forward slash /
-  #   uses: beeware/.github/.github/workflows/python-package-create.yml@main
-  #   with:
-  #     build-subdirectory: "debugger-support/briefcase-pdb"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hynek/build-and-inspect-python-package@v2
-        id: package
-        with:
-          path: "debugger-support/briefcase-pdb"
-          upload-name-suffix: "-briefcase-pdb"
-          attest-build-provenance-github: ${{ inputs.attest-package }}
-      - name: Set artifact-name output
-        run: echo "artifact-name=${{ steps.package.outputs.artifact-name }}" >> $GITHUB_OUTPUT
-        id: set-artifact-name
-    outputs:
-      artifact-name: ${{ steps.set-artifact-name.outputs.artifact-name }}
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    with:
+      build-subdirectory: "debugger-support"
 
   package-automation:
     name: Package Automation
@@ -108,7 +69,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: [ pre-commit, towncrier, package ]
+    needs: [ pre-commit, towncrier, package, package-debugger ]
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental || false }}
     strategy:
@@ -174,103 +135,15 @@ jobs:
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
 
-  unit-tests-debugpy:
-    name: Unit tests (Debugpy)
-    needs: [ pre-commit, towncrier, package-debugpy ]
-    runs-on: ${{ matrix.platform }}
-    continue-on-error: ${{ matrix.experimental || false }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
-        python-version: [ "3.9", "3.13" ]
-        include:
-          # Ensure the Python versions between min and max are tested
-          - platform: "ubuntu-24.04"
-            python-version: "3.10"
-          - platform: "ubuntu-24.04"
-            python-version: "3.11"
-          - platform: "ubuntu-24.04"
-            python-version: "3.12"
-          # # Allow dev Python to fail without failing entire job
-          # - python-version: "3.14"
-          #   experimental: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
-
-    - name: Get Packages
+    - name: Get Debugger Package
       uses: actions/download-artifact@v4.3.0
       with:
-        name: ${{ needs.package-debugpy.outputs.artifact-name }}
+        name: ${{ needs.package-debugger.outputs.artifact-name }}
         path: dist
 
-    - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
-
-    - name: Test Briefcase Debugpy
+    - name: Test Debugger
       run: |
-          tox -e py-debugpy --installpkg dist/briefcase_debugpy-*.whl
-
-  unit-tests-pdb:
-    name: Unit tests (Pdb)
-    needs: [ pre-commit, towncrier, package-pdb ]
-    runs-on: ${{ matrix.platform }}
-    continue-on-error: ${{ matrix.experimental || false }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
-        python-version: [ "3.9", "3.13" ]
-        include:
-          # Ensure the Python versions between min and max are tested
-          - platform: "ubuntu-24.04"
-            python-version: "3.10"
-          - platform: "ubuntu-24.04"
-            python-version: "3.11"
-          - platform: "ubuntu-24.04"
-            python-version: "3.12"
-          # # Allow dev Python to fail without failing entire job
-          # - python-version: "3.14"
-          #   experimental: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
-
-    - name: Get Packages
-      uses: actions/download-artifact@v4.3.0
-      with:
-        name: ${{ needs.package-pdb.outputs.artifact-name }}
-        path: dist
-
-    - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
-
-    - name: Test Briefcase Pdb
-      run: |
-          tox -e py-pdb --installpkg dist/briefcase_pdb-*.whl
+          tox -e py-debugger --installpkg dist/briefcase_debugger-*.whl
 
   coverage:
     name: Project coverage

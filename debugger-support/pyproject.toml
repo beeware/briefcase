@@ -21,7 +21,8 @@ root = "../"
 
 [project.optional-dependencies]
 dev = [
-    "pytest == 8.4.1"
+    "pytest == 8.4.1",
+    "coverage[toml] == 7.10.2",
 ]
 pdb = [
     "remote-pdb>=2.1.0,<3.0.0"
@@ -29,3 +30,21 @@ pdb = [
 debugpy = [
     "debugpy>=1.8.14,<2.0.0"
 ]
+
+[tool.coverage.run]
+parallel = true
+branch = true
+relative_files = true
+source_pkgs = ["briefcase_debugger"]
+
+[tool.coverage.paths]
+source = [
+    "src",
+    "**/site-packages",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+skip_empty = true
+precision = 1
