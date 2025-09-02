@@ -53,6 +53,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
     os_environ["BRIEFCASE_DEBUGGER"] = json.dumps(
         {
+            "debugger": "debugpy",
             "host": "somehost",
             "port": 9999,
             "app_path_mappings": {
@@ -78,6 +79,8 @@ def test_with_debugger(monkeypatch, capsys, verbose):
 
     # pydevd is dynamically loaded and only available when a real debugger is attached. So
     # we fake the whole module, as otherwise the import in start_remote_debugger would fail
+    fake_pydevd = MagicMock()
+    monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
     fake_pydevd_file_utils = MagicMock()
     fake_pydevd_file_utils.setup_client_server_paths.return_value = None
     monkeypatch.setitem(sys.modules, "pydevd_file_utils", fake_pydevd_file_utils)
@@ -103,6 +106,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
 
     if verbose:
         assert "Extracted path mappings:\n[0] host =   src/helloworld" in captured.out
+        assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == 3
 
 
 @pytest.mark.parametrize("verbose", [True, False])
@@ -112,6 +116,7 @@ def test_os_file_bugfix(monkeypatch, capsys, verbose):
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
     os_environ["BRIEFCASE_DEBUGGER"] = json.dumps(
         {
+            "debugger": "debugpy",
             "host": "somehost",
             "port": 9999,
         }
@@ -126,6 +131,11 @@ def test_os_file_bugfix(monkeypatch, capsys, verbose):
 
     fake_debugpy_wait_for_client = MagicMock()
     monkeypatch.setattr(debugpy, "wait_for_client", fake_debugpy_wait_for_client)
+
+    # pydevd is dynamically loaded and only available when a real debugger is attached. So
+    # we fake the whole module, as otherwise the import in start_remote_debugger would fail
+    fake_pydevd = MagicMock()
+    monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
 
     # start test function
     briefcase_debugger.start_remote_debugger()
@@ -144,3 +154,4 @@ def test_os_file_bugfix(monkeypatch, capsys, verbose):
 
     if verbose:
         assert "'os.__file__' not available. Patching it..." in captured.out
+        assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == 3

@@ -41,7 +41,7 @@ def start_remote_debugger():
     elif config["debugger"] == "pdb":
         from briefcase_debugger.pdb import start_pdb
 
-        start_pdb(config_str, verbose)
+        start_pdb(config, verbose)
 
 
 # only start remote debugger on the first import

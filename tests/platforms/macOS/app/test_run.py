@@ -356,6 +356,7 @@ def test_run_gui_app_debugger(
         env={
             "BRIEFCASE_DEBUGGER": json.dumps(
                 {
+                    "debugger": "dummy",
                     "host": "somehost",
                     "port": 9999,
                     "app_path_mappings": {

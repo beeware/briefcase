@@ -1,30 +1,30 @@
 import sys
 from pathlib import Path, PosixPath, PurePosixPath, PureWindowsPath, WindowsPath
 
-import briefcase_debugpy._remote_debugger
-from briefcase_debugpy._remote_debugger import (
+import briefcase_debugger.debugpy
+from briefcase_debugger.config import (
     AppPackagesPathMappings,
     AppPathMappings,
     DebuggerConfig,
-    load_path_mappings,
 )
 
 
 def test_mappings_not_existing():
     """Test an complete empty config."""
-    path_mappings = load_path_mappings({}, False)
+    path_mappings = briefcase_debugger.debugpy.load_path_mappings({}, False)
     assert path_mappings == []
 
 
 def test_mappings_none(monkeypatch):
     """Test an config with no mappings set."""
     config = DebuggerConfig(
+        debugger="debugpy",
         host="",
         port=0,
         app_path_mappings=None,
         app_packages_path_mappings=None,
     )
-    path_mappings = load_path_mappings(config, False)
+    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
     assert path_mappings == []
 
 
@@ -32,9 +32,10 @@ def test_mappings_windows(monkeypatch):
     """Test path mappings on an Windows system."""
     # When running tests on Linux/macOS, we have to switch to WindowsPath.
     if isinstance(Path(), PosixPath):
-        monkeypatch.setattr(briefcase_debugpy._remote_debugger, "Path", PureWindowsPath)
+        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
 
     config = DebuggerConfig(
+        debugger="debugpy",
         host="",
         port=0,
         app_path_mappings=AppPathMappings(
@@ -53,7 +54,7 @@ def test_mappings_windows(monkeypatch):
     ]
     monkeypatch.setattr(sys, "path", sys_path)
 
-    path_mappings = load_path_mappings(config, False)
+    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
 
     assert path_mappings == [
         # (host_path, device_path)
@@ -65,9 +66,10 @@ def test_mappings_macos(monkeypatch):
     """Test path mappings on an macOS system."""
     # When running tests on windows, we have to switch to PosixPath.
     if isinstance(Path(), WindowsPath):
-        monkeypatch.setattr(briefcase_debugpy._remote_debugger, "Path", PurePosixPath)
+        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
 
     config = DebuggerConfig(
+        debugger="debugpy",
         host="",
         port=0,
         app_path_mappings=AppPathMappings(
@@ -87,7 +89,7 @@ def test_mappings_macos(monkeypatch):
     ]
     monkeypatch.setattr(sys, "path", sys_path)
 
-    path_mappings = load_path_mappings(config, False)
+    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
 
     assert path_mappings == [
         # (host_path, device_path)
@@ -102,9 +104,10 @@ def test_mappings_ios(monkeypatch):
     """Test path mappings on an iOS system."""
     # When running tests on windows, we have to switch to PosixPath.
     if isinstance(Path(), WindowsPath):
-        monkeypatch.setattr(briefcase_debugpy._remote_debugger, "Path", PurePosixPath)
+        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
 
     config = DebuggerConfig(
+        debugger="debugpy",
         host="",
         port=0,
         app_path_mappings=AppPathMappings(
@@ -127,7 +130,7 @@ def test_mappings_ios(monkeypatch):
     ]
     monkeypatch.setattr(sys, "path", sys_path)
 
-    path_mappings = load_path_mappings(config, False)
+    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
 
     assert path_mappings == [
         # (host_path, device_path)
@@ -146,9 +149,10 @@ def test_mappings_android(monkeypatch):
     """Test path mappings on an Android system."""
     # When running tests on windows, we have to switch to PosixPath.
     if isinstance(Path(), WindowsPath):
-        monkeypatch.setattr(briefcase_debugpy._remote_debugger, "Path", PurePosixPath)
+        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
 
     config = DebuggerConfig(
+        debugger="debugpy",
         host="",
         port=0,
         app_path_mappings=AppPathMappings(
@@ -172,7 +176,7 @@ def test_mappings_android(monkeypatch):
     ]
     monkeypatch.setattr(sys, "path", sys_path)
 
-    path_mappings = load_path_mappings(config, False)
+    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
 
     assert path_mappings == [
         # (host_path, device_path)

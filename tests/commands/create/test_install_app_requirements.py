@@ -1090,6 +1090,10 @@ def test_app_packages_only_test_requires_test_mode(
 
 class DummyDebugger(BaseDebugger):
     @property
+    def name(self) -> str:
+        return "dummy"
+
+    @property
     def connection_mode(self) -> DebuggerConnectionMode:
         raise NotImplementedError
 

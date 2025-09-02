@@ -59,6 +59,10 @@ def underscore_app_config(first_app_config):
 
 class DummyDebugger(BaseDebugger):
     @property
+    def name(self) -> str:
+        return "dummy"
+
+    @property
     def connection_mode(self) -> DebuggerConnectionMode:
         raise NotImplementedError
 
