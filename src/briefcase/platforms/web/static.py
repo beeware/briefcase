@@ -249,14 +249,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             insert, target = parts[-1].split(".", 1)
 
                             self.console.info(
-                                f"    {source}: Adding {insert} insert for {target}"
+                                f"    {filename}: Adding {insert} insert for {target}"
                             )
 
                             try:
                                 text = wheel.read(filename).decode("utf-8")
                             except UnicodeDecodeError as e:
                                 raise BriefcaseCommandError(
-                                    f"{source}: insert must be UTF-8 encoded"
+                                    f"{filename}: insert must be UTF-8 encoded"
                                 ) from e
 
                             # Store raw contribution text per package
