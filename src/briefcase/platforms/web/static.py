@@ -269,13 +269,13 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 f"    {source}: missing ':<insert>'; skipping insert."
                             )
 
-                # Handle static files under deploy/static
-                elif parts[:2] == ("deploy", "static"):
-                    rel = Path(*parts[2:])
-                    outfilename = pkg_static_root / rel
-                    outfilename.parent.mkdir(parents=True, exist_ok=True)
-                    with outfilename.open("wb") as f:
-                        f.write(wheel.read(filename))
+                    # Handle static files under deploy/static
+                    elif parts[:2] == ("deploy", "static"):
+                        rel = Path(*parts[2:])
+                        outfilename = pkg_static_root / rel
+                        outfilename.parent.mkdir(parents=True, exist_ok=True)
+                        with outfilename.open("wb") as f:
+                            f.write(wheel.read(filename))
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
