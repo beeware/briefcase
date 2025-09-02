@@ -244,30 +244,30 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
                         try:
                             target, insert = source.split(":", 1)
+
+                            self.console.info(
+                                f"    {source}: Adding {insert} insert for {target}"
+                            )
+
+                            try:
+                                text = wheel.read(filename).decode("utf-8")
+                            except UnicodeDecodeError as e:
+                                raise BriefcaseCommandError(
+                                    f"{source}: insert must be UTF-8 encoded"
+                                ) from e
+
+                            # Store raw contribution text per package
+                            pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                            # Append if the same package contributes multiple files for the same slot
+                            if package_key in pkg_map and pkg_map[package_key]:
+                                pkg_map[package_key] += "\n" + text
+                            else:
+                                pkg_map[package_key] = text
+
                         except ValueError:
                             self.console.warning(
                                 f"    {source}: missing ':<insert>'; skipping insert."
                             )
-                            continue
-
-                        self.console.info(
-                            f"    {source}: Adding {insert} insert for {target}"
-                        )
-
-                        try:
-                            text = wheel.read(filename).decode("utf-8")
-                        except UnicodeDecodeError as e:
-                            raise BriefcaseCommandError(
-                                f"{source}: insert must be UTF-8 encoded"
-                            ) from e
-
-                        # Store raw contribution text per package
-                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                        # Append if the same package contributes multiple files for the same slot
-                        if package_key in pkg_map and pkg_map[package_key]:
-                            pkg_map[package_key] += "\n" + text
-                        else:
-                            pkg_map[package_key] = text
 
                 # Handle static files under deploy/static
                 elif parts[:2] == ("deploy", "static"):
