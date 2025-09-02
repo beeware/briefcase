@@ -89,8 +89,6 @@ class VenvContext:
         if os.path.normcase(head) == os.path.normcase(sys.executable):
             return [self.executable, *args[1:]]
 
-        if os.path.normcase(head) == os.path.normcase(sys.executable):
-            return [self.executable, *args[1:]]
         return list(args)
 
     def full_env(self, overrides: dict[str, str | None] | None) -> dict[str, str]:
