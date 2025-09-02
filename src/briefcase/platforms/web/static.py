@@ -239,11 +239,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 parts = path.parts
                 if len(parts) >= 3 and not (filename.endswith("/")):
                     # Handle inserts under deploy/inserts
-                    if parts[:2] == ("deploy", "inserts"):
+                    if (
+                        parts[1] == "deploy"
+                        and parts[2] == "inserts"
+                    ):
                         source = str(Path(*parts[2:]))
+                        self.console.info(f"    Found {filename}")
 
                         try:
-                            target, insert = source.split(":", 1)
+                            insert, target = parts[-1].split(".", 1)
 
                             self.console.info(
                                 f"    {source}: Adding {insert} insert for {target}"
@@ -270,7 +274,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             )
 
                     # Handle static files under deploy/static
-                    elif parts[:2] == ("deploy", "static"):
+                    elif (
+                        parts[1] == "deploy"
+                        and parts[2] == "static"
+                    ):
+                        self.console.info(f"    Found {filename}")
                         rel = Path(*parts[2:])
                         outfilename = pkg_static_root / rel
                         outfilename.parent.mkdir(parents=True, exist_ok=True)
