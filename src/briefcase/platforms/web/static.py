@@ -243,7 +243,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         parts[1] == "deploy"
                         and parts[2] == "inserts"
                     ):
-                        source = str(Path(*parts[2:]))
                         self.console.info(f"    Found {filename}")
 
                         try:
