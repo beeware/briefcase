@@ -73,7 +73,7 @@ class VenvContext:
             self.run([self.executable, "-m", "pip", "install", "-U", "pip"], check=True)
         except Exception as e:
             raise BriefcaseCommandError(
-                f"Failed to bootstrap pip tooling at {self.venv_path}"
+                f"Failed to update core tooling for {self.venv_path}"
             ) from e
 
     def _rewrite_head(self, args: SubprocessArgsT) -> SubprocessArgsT:
@@ -100,10 +100,10 @@ class VenvContext:
         :return: environment mapping for the venv with overrides applied.
         """
 
-        env = {}
-
         if overrides:
-            env.update({k: v for k, v in overrides.items() if v is not None})
+            env = overrides.copy()
+        else:
+            env = {}
 
         old_path = env.get("PATH") or os.environ.get("PATH", "")
         env["PATH"] = os.fspath(self.bin_dir) + (
