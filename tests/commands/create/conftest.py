@@ -12,7 +12,7 @@ from briefcase.config import AppConfig
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 @pytest.fixture
@@ -35,8 +35,11 @@ class DefaultCreateCommand(CreateCommand):
 
 
 @pytest.fixture
-def default_create_command(tmp_path):
-    return DefaultCreateCommand(base_path=tmp_path, console=DummyConsole())
+def default_create_command(dummy_console, tmp_path):
+    return DefaultCreateCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
 
 class DummyCreateCommand(CreateCommand):
@@ -51,7 +54,6 @@ class DummyCreateCommand(CreateCommand):
     hidden_app_properties = {"permission", "request"}
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, **kwargs)
 
         # Override the host properties
@@ -199,8 +201,9 @@ class TrackingCreateCommand(DummyCreateCommand):
 
 
 @pytest.fixture
-def create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
+def create_command(dummy_console, tmp_path, mock_git, monkeypatch_tool_host_os):
     return DummyCreateCommand(
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "data",
         git=mock_git,
@@ -209,8 +212,14 @@ def create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
 
 
 @pytest.fixture
-def tracking_create_command(tmp_path, mock_git, monkeypatch_tool_host_os):
+def tracking_create_command(
+    dummy_console,
+    tmp_path,
+    mock_git,
+    monkeypatch_tool_host_os,
+):
     return TrackingCreateCommand(
+        console=dummy_console,
         git=mock_git,
         base_path=tmp_path / "base_path",
         apps={

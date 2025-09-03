@@ -4,15 +4,16 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeUpdateCommand
 
+from ....utils import create_file
+
 
 @pytest.fixture
-def update_command(tmp_path):
+def update_command(dummy_console, tmp_path):
     return iOSXcodeUpdateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -48,6 +49,23 @@ def test_extra_pip_args(
         shutil.rmtree(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
         )
+        # Create the old-style VERSIONS file with a deliberately weird min iOS version
+        create_file(
+            tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
+            "\n".join(
+                [
+                    "Python version: 3.10.15",
+                    "Build: b11",
+                    "Min iOS version: 12.0",
+                    "---------------------",
+                    "BZip2: 1.0.8-1",
+                    "libFFI: 3.4.6-1",
+                    "OpenSSL: 3.0.15-1",
+                    "XZ: 5.6.2-1",
+                    "",
+                ]
+            ),
+        )
 
     # Hard code the current architecture for testing. We only install simulator
     # requirements for the current platform.
@@ -79,7 +97,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_13_0_arm64_iphoneos",
+                "--platform=ios_12_0_arm64_iphoneos",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
@@ -110,7 +128,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_13_0_wonky_iphonesimulator",
+                "--platform=ios_12_0_wonky_iphonesimulator",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],

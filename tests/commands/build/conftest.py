@@ -4,7 +4,7 @@ from briefcase.commands import BuildCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DummyBuildCommand(BuildCommand):
@@ -19,7 +19,6 @@ class DummyBuildCommand(BuildCommand):
     description = "Dummy build command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -105,8 +104,11 @@ class DummyBuildCommand(BuildCommand):
 
 
 @pytest.fixture
-def build_command(tmp_path):
-    return DummyBuildCommand(base_path=tmp_path / "base_path")
+def build_command(dummy_console, tmp_path):
+    return DummyBuildCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+    )
 
 
 @pytest.fixture

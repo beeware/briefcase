@@ -4,7 +4,7 @@ from briefcase.commands import RunCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
-from ...utils import DummyConsole, create_file
+from ...utils import create_file
 
 
 class DummyRunCommand(RunCommand):
@@ -19,7 +19,6 @@ class DummyRunCommand(RunCommand):
     description = "Dummy run command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -109,8 +108,11 @@ class DummyRunCommand(RunCommand):
 
 
 @pytest.fixture
-def run_command(tmp_path):
-    return DummyRunCommand(base_path=tmp_path / "base_path")
+def run_command(dummy_console, tmp_path):
+    return DummyRunCommand(
+        console=dummy_console,
+        base_path=tmp_path / "base_path",
+    )
 
 
 @pytest.fixture

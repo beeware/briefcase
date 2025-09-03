@@ -76,21 +76,21 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
-        python-version: [ "3.9", "3.13" ]
+        python-version: [ "3.10", "3.14" ]
         include:
           # Ensure the Python versions between min and max are tested
-          - platform: "ubuntu-24.04"
-            python-version: "3.10"
           - platform: "ubuntu-24.04"
             python-version: "3.11"
           - platform: "ubuntu-24.04"
             python-version: "3.12"
+          - platform: "ubuntu-24.04"
+            python-version: "3.13"
           # # Allow dev Python to fail without failing entire job
-          # - python-version: "3.14"
+          # - python-version: "3.15"
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v5.0.0
       with:
         fetch-depth: 0
 
@@ -152,7 +152,7 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v5.0.0
       with:
         fetch-depth: 0
 
@@ -161,7 +161,7 @@ jobs:
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
-        python-version: "3.9"
+        python-version: "3.10"
 
     - name: Install Tox
       uses: beeware/.github/.github/actions/install-requirement@main
@@ -215,8 +215,20 @@ jobs:
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
+      xcode-version: ${{ matrix.xcode-version }}
+      ios-simulator: ${{ matrix.ios-simulator }}
     strategy:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        runner-os: [ "macos-13", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        include:
+          - framework: "toga"
+            runner-os: "macos-15"
+            xcode-version: "16.4"
+            ios-simulator: "iPhone 16e::iOS 18.5"
+
+          # Default xcode handling works for macOS-13
+          - framework: "toga"
+            runner-os: "macos-13"
+            ios-simulator: "iPhone SE (3rd generation)"

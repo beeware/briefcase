@@ -3,15 +3,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.android.gradle import GradleCreateCommand
 
 
 @pytest.fixture
-def create_command(tmp_path, first_app_config):
+def create_command(dummy_console, tmp_path, first_app_config):
     command = GradleCreateCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

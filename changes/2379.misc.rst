@@ -1,1 +1,0 @@
-The ``pre-commit`` hook was updated to include the ``--fix`` argument for the ruff-check command.

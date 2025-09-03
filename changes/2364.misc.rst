@@ -1,1 +1,0 @@
-Add link to the ``briefcase package iOS`` warning message to the iOS deployment documentation.

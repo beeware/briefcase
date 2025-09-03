@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioPackageCommand
@@ -14,9 +13,9 @@ from ....integrations.wix.conftest import WIX_EXE_PATH, WIX_UI_PATH
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def package_command(dummy_console, tmp_path):
     command = WindowsVisualStudioPackageCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

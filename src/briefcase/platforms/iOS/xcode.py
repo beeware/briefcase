@@ -322,27 +322,47 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         app_packages_path: Path,
         **kwargs,
     ):
-        # Determine the min iOS version from the VERSIONS file in the support package.
-        versions = dict(
-            [part.strip() for part in line.split(": ", 1)]
-            for line in (
-                (self.support_path(app) / "VERSIONS")
-                .read_text(encoding="UTF-8")
-                .split("\n")
+        try:
+            # Determine the min iOS version from the framework metadata
+            # of the ios-arm64 slice of the XCframework
+            plist_file = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64/Python.framework/Info.plist"
             )
-            if ": " in line
-        )
-        support_min_version = Version(versions.get("Min iOS version", "13.0"))
+            with plist_file.open("rb") as f:
+                info_plist = plistlib.load(f)
 
-        # Check that the app's definition is compatible with the support package
-        ios_min_version = Version(getattr(app, "min_os_version", "13.0"))
-        if ios_min_version < support_min_version:
+            support_min_version = info_plist["MinimumOSVersion"]
+        except KeyError:
+            raise BriefcaseCommandError(
+                "Your iOS XCframework doesn't specify a minimum iOS version."
+            )
+        except FileNotFoundError:
+            # If a plist file couldn't be found, it's an old-style support package;
+            # Determine the min iOS version from the VERSIONS file in the support package.
+            versions = dict(
+                [part.strip() for part in line.split(": ", 1)]
+                for line in (
+                    (self.support_path(app) / "VERSIONS")
+                    .read_text(encoding="UTF-8")
+                    .split("\n")
+                )
+                if ": " in line
+            )
+            support_min_version = versions.get("Min iOS version", "13.0")
+
+        # Check that the app's definition is compatible with the support package.
+        # If the app doesn't specify a minimum version, use the support package
+        # minimum version as a default.
+        ios_min_version = getattr(app, "min_os_version", support_min_version)
+
+        if Version(ios_min_version) < Version(support_min_version):
             raise BriefcaseCommandError(
                 f"Your iOS app specifies a minimum iOS version of {ios_min_version}, "
                 f"but the support package only supports {support_min_version}"
             )
 
-        ios_min_tag = str(ios_min_version).replace(".", "_")
+        ios_min_tag = ios_min_version.replace(".", "_")
 
         # Feb 2025: The platform-site was moved into the xcframework as
         # `platform-config`. Look for the new location; fall back to the old location.

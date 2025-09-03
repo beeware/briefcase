@@ -4,7 +4,6 @@ import pytest
 
 from briefcase.commands import NewCommand
 from briefcase.commands.base import full_options
-from tests.utils import DummyConsole
 
 
 class DummyNewCommand(NewCommand):
@@ -16,7 +15,6 @@ class DummyNewCommand(NewCommand):
     description = "Dummy new command"
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("console", DummyConsole())
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
@@ -43,7 +41,10 @@ class DummyNewCommand(NewCommand):
 
 
 @pytest.fixture
-def new_command(tmp_path):
-    command = DummyNewCommand(base_path=tmp_path)
+def new_command(dummy_console, tmp_path):
+    command = DummyNewCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
     command.get_git_config_value = MagicMock(return_value=None)
     return command
