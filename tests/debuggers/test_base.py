@@ -51,7 +51,9 @@ def test_get_debuggers():
     debuggers = get_debuggers()
     assert isinstance(debuggers, dict)
     assert debuggers["pdb"] is PdbDebugger
+    assert debuggers["pdb"]().name == "pdb"
     assert debuggers["debugpy"] is DebugpyDebugger
+    assert debuggers["debugpy"]().name == "debugpy"
 
 
 def test_get_debugger():
