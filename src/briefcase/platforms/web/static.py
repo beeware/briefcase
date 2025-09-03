@@ -204,6 +204,38 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
 
+    def write_pyscript_version(self, app: AppConfig, filename: Path, pyscript_version: str):
+        """Write pyscript version into an existing html file.
+
+        This function looks for markers in the named file and replaces the 
+        markers with the pyscript version.
+        
+        The markers are in pyscript declartions within the html.
+
+        * Marker: ``<!--@@ pyscript_version @@-->``
+        * Example: ``<link rel="stylesheet" href="https://pyscript.net/releases/<!--@@ pyscript_version @@-->/core.css">``
+
+        Pyscript versions are processed in sorted order to ensure deterministic builds.
+
+        :param app: The application being written.
+        :param filename: The html file whose pyscript version is to be written.
+        :param pyscript_version: The pyscript version number to be inserted.
+        """
+        # Load file content, skip if file not found
+        target_path = self.project_path(app) / filename
+        try:
+            file_text = target_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            raise BriefcaseConfigError(f"{filename} not found; pyscript version could not be inserted.")
+        
+        marker = "<!--@@ pyscript_version @@-->"
+        if marker in file_text:
+            file_text = file_text.replace(marker, pyscript_version)
+        else:
+            raise BriefcaseConfigError(f"No pyscript markers found in {filename}; pyscript may not be configured correctly.")
+        
+        target_path.write_text(file_text, encoding="utf-8")
+
     def _process_wheel(
         self, wheelfile, inserts: dict[str, dict[str, dict[str, str]]], static_path
     ):
@@ -293,6 +325,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         config_package = None
         config_package_list = []
         config_filename = None
+        pyscript_version = "2024.11.1"
         pyscript_config = None
 
         # Find packages containing a config.toml file.
@@ -335,6 +368,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             raise BriefcaseConfigError(
                                 "Only 'pyscript' backend is currently supported for web static builds."
                             )
+                        
+                        # Get pyscript version from config.toml. Use default if not present.
+
+                        if "version" in config_data:
+                            pyscript_version = config_data.get("version")
 
                         pyscript_path = config_filename.replace(
                             "config.toml", "pyscript.toml"
@@ -353,7 +391,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             "No backend was provided in config.toml file."
                         )
 
-        return pyscript_config
+        return pyscript_config, pyscript_version
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build the static web deployment for the application.
@@ -419,7 +457,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with self.console.wait_bar("Writing Pyscript configuration file..."):
             # Load any pre-existing pyscript.toml provided by the template. If the file
             # doesn't exist, assume an empty pyscript.toml as a starting point.
-            config = self.extract_backend_config(self.wheel_path(app).glob("*.whl"))
+            config, pyscript_version = self.extract_backend_config(self.wheel_path(app).glob("*.whl"))
 
             # Add the packages declaration to the existing pyscript.toml.
             # Ensure that we're using Unix path separators, as the content
@@ -447,6 +485,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         self.console.info("Compile static web content from wheels")
         with self.console.wait_bar("Compiling static web content from wheels..."):
+
+            # Add pyscript_version to index.html
+            self.write_pyscript_version(app, Path("index.html"), pyscript_version)
+
             # Trim previously compiled content out of briefcase.css
             briefcase_css_path = self.project_path(app) / "static/css/briefcase.css"
             self._trim_file(
