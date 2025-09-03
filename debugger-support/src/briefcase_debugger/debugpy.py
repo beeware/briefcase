@@ -28,6 +28,7 @@ def load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str,
         for app_subfolder_device, app_subfolder_host in zip(
             app_path_mappings["device_subfolders"],
             app_path_mappings["host_folders"],
+            strict=False,
         ):
             mappings_list.append(
                 (

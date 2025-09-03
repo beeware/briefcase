@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 
 class AppPathMappings(TypedDict):
@@ -16,5 +16,5 @@ class DebuggerConfig(TypedDict):
     debugger: str
     host: str
     port: int
-    app_path_mappings: Optional[AppPathMappings]
-    app_packages_path_mappings: Optional[AppPackagesPathMappings]
+    app_path_mappings: AppPathMappings | None
+    app_packages_path_mappings: AppPackagesPathMappings | None
