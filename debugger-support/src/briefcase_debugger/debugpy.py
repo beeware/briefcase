@@ -9,7 +9,7 @@ from briefcase_debugger.config import DebuggerConfig
 
 
 def find_first_matching_path(regex: str) -> str:
-    """Gibt das erste Element aus paths zurück, das auf regex matcht, sonst None."""
+    """Returns the first element of sys.paths that matches regex, otherwise None."""
     for p in sys.path:
         if re.search(regex, p):
             return p
