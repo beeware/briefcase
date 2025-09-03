@@ -2,19 +2,18 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 
 import debugpy
 
 from briefcase_debugger.config import DebuggerConfig
 
 
-def find_first_matching_path(regex: str) -> Optional[str]:
+def find_first_matching_path(regex: str) -> str:
     """Gibt das erste Element aus paths zurück, das auf regex matcht, sonst None."""
     for p in sys.path:
         if re.search(regex, p):
             return p
-    return None
+    raise ValueError(f"No sys.path entry matches regex '{regex}'")
 
 
 def load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str, str]]:
@@ -26,28 +25,26 @@ def load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str,
         device_app_folder = find_first_matching_path(
             app_path_mappings["device_sys_path_regex"]
         )
-        if device_app_folder:
-            for app_subfolder_device, app_subfolder_host in zip(
-                app_path_mappings["device_subfolders"],
-                app_path_mappings["host_folders"],
-            ):
-                mappings_list.append(
-                    (
-                        app_subfolder_host,
-                        str(Path(device_app_folder) / app_subfolder_device),
-                    )
+        for app_subfolder_device, app_subfolder_host in zip(
+            app_path_mappings["device_subfolders"],
+            app_path_mappings["host_folders"],
+        ):
+            mappings_list.append(
+                (
+                    app_subfolder_host,
+                    str(Path(device_app_folder) / app_subfolder_device),
                 )
+            )
     if app_packages_path_mappings:
         device_app_packages_folder = find_first_matching_path(
             app_packages_path_mappings["sys_path_regex"]
         )
-        if device_app_packages_folder:
-            mappings_list.append(
-                (
-                    app_packages_path_mappings["host_folder"],
-                    str(Path(device_app_packages_folder)),
-                )
+        mappings_list.append(
+            (
+                app_packages_path_mappings["host_folder"],
+                str(Path(device_app_packages_folder)),
             )
+        )
 
     if verbose:
         print("Extracted path mappings:")

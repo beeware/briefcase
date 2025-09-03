@@ -2,6 +2,7 @@ import sys
 from pathlib import Path, PosixPath, PurePosixPath, PureWindowsPath, WindowsPath
 
 import briefcase_debugger.debugpy
+import pytest
 from briefcase_debugger.config import (
     AppPackagesPathMappings,
     AppPathMappings,
@@ -189,3 +190,28 @@ def test_mappings_android(monkeypatch):
             "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
         ),
     ]
+
+
+def test_mappings_windows_wrong_sys_path(monkeypatch):
+    """Test path mappings on an Windows system with a wrong sys path set."""
+    # When running tests on Linux/macOS, we have to switch to WindowsPath.
+    if isinstance(Path(), PosixPath):
+        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
+
+    config = DebuggerConfig(
+        debugger="debugpy",
+        host="",
+        port=0,
+        app_path_mappings=AppPathMappings(
+            device_sys_path_regex="app$",
+            device_subfolders=["helloworld"],
+            host_folders=["src/helloworld"],
+        ),
+        app_packages_path_mappings=None,
+    )
+
+    sys_path = []
+    monkeypatch.setattr(sys, "path", sys_path)
+
+    with pytest.raises(ValueError):
+        briefcase_debugger.debugpy.load_path_mappings(config, False)

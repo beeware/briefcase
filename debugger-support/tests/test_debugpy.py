@@ -45,9 +45,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     """Test a normal debug session."""
     # When running tests on Linux/macOS, we have to switch to WindowsPath.
     if isinstance(Path(), PosixPath):
-        monkeypatch.setattr(
-            briefcase_debugger._remote_debugger, "Path", PureWindowsPath
-        )
+        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
 
     os_environ = {}
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"

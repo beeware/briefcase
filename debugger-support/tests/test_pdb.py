@@ -4,8 +4,6 @@ from unittest.mock import MagicMock
 
 import briefcase_debugger
 import briefcase_debugger.pdb
-
-# import remote_pdb
 import pytest
 
 
