@@ -56,7 +56,7 @@ class VenvContext:
                 check=True,
             )
             self.update_core_tools()
-        except subprocess.CalledProcessError as e:
+        except stdlib_subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Failed to create virtual environment at {self.venv_path}"
             ) from e
