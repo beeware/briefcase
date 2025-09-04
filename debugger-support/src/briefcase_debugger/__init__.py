@@ -42,6 +42,3 @@ def start_remote_debugger():
         # Show exception and stop the whole application when an error occurs
         print(traceback.format_exc())
         sys.exit(-1)
-
-
-start_remote_debugger()

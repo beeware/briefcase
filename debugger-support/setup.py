@@ -19,7 +19,9 @@ class install_with_pth(install):
     """
 
     _pth_name = "briefcase_debugger"
-    _pth_contents = "import briefcase_debugger"
+    _pth_contents = (
+        "import briefcase_debugger; briefcase_debugger.start_remote_debugger()"
+    )
 
     def initialize_options(self):
         install.initialize_options(self)

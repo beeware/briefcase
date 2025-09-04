@@ -2,26 +2,17 @@ import importlib
 import json
 import os
 import sys
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import briefcase_debugger
 
 
-def test_auto_startup(monkeypatch, capsys):
-    """Debugger startup code is executed on import."""
-    fake_environ = MagicMock()
-    monkeypatch.setattr(os, "environ", fake_environ)
-
-    fake_environ.get.return_value = None
-
-    # reload the module to trigger the auto startup code
+def test_import_for_code_coverage(monkeypatch, capsys):
+    """Get 100% code coverage."""
+    # The module `briefcase_debugger` is already imported through the .pth
+    # file. Code executed during .pth files are not covered by coverage.py.
+    # So we need to reload the module to get a 100% code coverage.
     importlib.reload(importlib.import_module("briefcase_debugger"))
-
-    # check if the autostart was executed
-    assert fake_environ.get.mock_calls == [
-        call("BRIEFCASE_DEBUG", "0"),
-        call("BRIEFCASE_DEBUGGER", None),
-    ]
 
 
 def test_unknown_debugger(monkeypatch, capsys):
