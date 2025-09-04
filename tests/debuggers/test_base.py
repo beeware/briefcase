@@ -34,11 +34,14 @@ class DummyDist:
     ],
 )
 def test_is_editable_pep610(monkeypatch, direct_url, is_editable):
+    """Detection of editable installs via PEP 610 direct_url.json works."""
     monkeypatch.setattr(metadata, "distribution", lambda name: DummyDist(direct_url))
     assert _is_editable_pep610("briefcase") is is_editable
 
 
 def test_is_editable_pep610_package_not_found(monkeypatch):
+    """Detection of editable install throws an Error if package is not found."""
+
     def raise_not_found(name):
         raise metadata.PackageNotFoundError
 
@@ -48,6 +51,7 @@ def test_is_editable_pep610_package_not_found(monkeypatch):
 
 
 def test_get_debuggers():
+    """Builtin debuggers are available."""
     debuggers = get_debuggers()
     assert isinstance(debuggers, dict)
     assert debuggers["pdb"] is PdbDebugger
@@ -57,6 +61,7 @@ def test_get_debuggers():
 
 
 def test_get_debugger():
+    """Debugger can be retrieved by name."""
     assert isinstance(get_debugger("pdb"), PdbDebugger)
     assert isinstance(get_debugger("debugpy"), DebugpyDebugger)
 
@@ -83,6 +88,7 @@ def test_get_debugger():
     ],
 )
 def test_debugger(debugger_name, expected_class, connection_mode, monkeypatch):
+    """Debugger uses correct connection mode and support package."""
     monkeypatch.setattr("briefcase.debuggers.base.IS_EDITABLE", False)
 
     debugger = get_debugger(debugger_name)
@@ -96,6 +102,7 @@ def test_debugger(debugger_name, expected_class, connection_mode, monkeypatch):
     ["pdb", "debugpy"],
 )
 def test_debugger_editable(debugger_name, monkeypatch):
+    """Debugger support package is local path in editable briefcase install."""
     with TemporaryDirectory() as tmp_path:
         tmp_path = Path(tmp_path)
         (tmp_path / "debugger-support" / f"briefcase-{debugger_name}").mkdir(
@@ -116,6 +123,7 @@ def test_debugger_editable(debugger_name, monkeypatch):
     ["pdb", "debugpy"],
 )
 def test_debugger_editable_path_not_found(debugger_name, monkeypatch):
+    """Debugger support package is not the local path when path is not available."""
     with TemporaryDirectory() as tmp_path:
         tmp_path = Path(tmp_path)
         monkeypatch.setattr("briefcase.debuggers.base.IS_EDITABLE", True)

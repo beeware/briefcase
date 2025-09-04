@@ -46,7 +46,10 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
     )
 
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.
@@ -170,7 +173,10 @@ def test_run_app_test_mode(
     )
 
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.

@@ -32,7 +32,10 @@ def test_run_gui_app(run_command, first_app_config, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # The process was started
@@ -99,7 +102,10 @@ def test_run_gui_app_failed(run_command, first_app_config, tmp_path):
 
     with pytest.raises(OSError):
         run_command.run_app(
-            first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+            first_app_config,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
         )
 
     # Popen was still invoked, though
@@ -126,7 +132,10 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # The process was started
@@ -182,7 +191,10 @@ def test_run_console_app_failed(run_command, first_app_config, tmp_path):
 
     with pytest.raises(OSError):
         run_command.run_app(
-            first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+            first_app_config,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
         )
 
     # Popen was still invoked, though
@@ -211,7 +223,10 @@ def test_run_app_test_mode(run_command, first_app_config, is_console_app, tmp_pa
 
     # Run the app
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # The process was started

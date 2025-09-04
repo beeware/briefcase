@@ -8,7 +8,7 @@ import briefcase_debugger
 
 
 def test_auto_startup(monkeypatch, capsys):
-    """Test that the debugger startup code is executed on import."""
+    """Debugger startup code is executed on import."""
     fake_environ = MagicMock()
     monkeypatch.setattr(os, "environ", fake_environ)
 
@@ -25,7 +25,7 @@ def test_auto_startup(monkeypatch, capsys):
 
 
 def test_unknown_debugger(monkeypatch, capsys):
-    """Test that an unknown debugger raises an error and stops the application."""
+    """An unknown debugger raises an error and stops the application."""
     os_environ = {}
     os_environ["BRIEFCASE_DEBUGGER"] = json.dumps(
         {

@@ -8,9 +8,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "briefcase-debugger"
-description = "Add-on for briefcase to add remote debugging."
+description = "A Briefcase plugin adding remote debugging support for PDB and Visual Studio Code."
 readme = "README.md"
 license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 dependencies = [
     # see "pdb" or "debugpy" optional dependencies below
 ]

@@ -261,7 +261,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         )
 
     def _debugger_app_packages_path_mapping(
-        self, app: AppConfig
+        self,
+        app: AppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 

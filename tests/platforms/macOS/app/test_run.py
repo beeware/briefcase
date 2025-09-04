@@ -46,7 +46,10 @@ def test_run_gui_app(run_command, first_app_config, sleep_zero, tmp_path, monkey
     )
 
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.
@@ -163,7 +166,10 @@ def test_run_gui_app_failed(run_command, first_app_config, sleep_zero, tmp_path)
 
     with pytest.raises(BriefcaseCommandError):
         run_command.run_app(
-            first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+            first_app_config,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
         )
 
     # Calls were made to start the app and to start a log stream.
@@ -212,7 +218,10 @@ def test_run_gui_app_find_pid_failed(
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
         run_command.run_app(
-            first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+            first_app_config,
+            debugger_host=None,
+            debugger_port=None,
+            passthrough=[],
         )
 
     # Calls were made to start the app and to start a log stream.
@@ -267,7 +276,10 @@ def test_run_gui_app_test_mode(
     )
 
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.
@@ -310,7 +322,12 @@ def test_run_gui_app_test_mode(
 
 
 def test_run_gui_app_debugger(
-    run_command, first_app_config, sleep_zero, tmp_path, monkeypatch, dummy_debugger
+    run_command,
+    first_app_config,
+    sleep_zero,
+    tmp_path,
+    monkeypatch,
+    dummy_debugger,
 ):
     """A macOS GUI app can be started in debug mode."""
     # Mock a popen object that represents the log stream
@@ -390,7 +407,10 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
     first_app_config.console_app = True
 
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.
@@ -449,7 +469,10 @@ def test_run_console_app_test_mode(run_command, first_app_config, sleep_zero, tm
     run_command.tools.subprocess.Popen.return_value = app_process
 
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.
@@ -526,7 +549,10 @@ def test_run_console_app_failed(run_command, first_app_config, sleep_zero, tmp_p
     # Although the command raises an error, this could be because the script itself
     # raised an error.
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Calls were made to start the app and to start a log stream.

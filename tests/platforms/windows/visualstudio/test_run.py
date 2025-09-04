@@ -35,7 +35,10 @@ def test_run_app(run_command, first_app_config, tmp_path):
 
     # Run the app
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Popen was called
@@ -107,7 +110,10 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
 
     # Run the app in test mode
     run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+        first_app_config,
+        debugger_host=None,
+        debugger_port=None,
+        passthrough=[],
     )
 
     # Popen was called

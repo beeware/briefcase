@@ -10,9 +10,9 @@ from briefcase_debugger.config import DebuggerConfig
 
 def find_first_matching_path(regex: str) -> str:
     """Returns the first element of sys.paths that matches regex, otherwise None."""
-    for p in sys.path:
-        if re.search(regex, p):
-            return p
+    for path in sys.path:
+        if re.search(regex, path):
+            return path
     raise ValueError(f"No sys.path entry matches regex '{regex}'")
 
 
@@ -49,9 +49,9 @@ def load_path_mappings(config: DebuggerConfig, verbose: bool) -> list[tuple[str,
 
     if verbose:
         print("Extracted path mappings:")
-        for idx, p in enumerate(mappings_list):
-            print(f"[{idx}] host =   {p[0]}")
-            print(f"[{idx}] device = {p[1]}")
+        for idx, mapping in enumerate(mappings_list):
+            print(f"[{idx}] host =   {mapping[0]}")
+            print(f"[{idx}] device = {mapping[1]}")
 
     return mappings_list
 

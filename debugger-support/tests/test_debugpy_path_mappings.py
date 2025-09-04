@@ -11,13 +11,13 @@ from briefcase_debugger.config import (
 
 
 def test_mappings_not_existing():
-    """Test an complete empty config."""
+    """Complete empty config."""
     path_mappings = briefcase_debugger.debugpy.load_path_mappings({}, False)
     assert path_mappings == []
 
 
 def test_mappings_none(monkeypatch):
-    """Test an config with no mappings set."""
+    """Config with no mappings set."""
     config = DebuggerConfig(
         debugger="debugpy",
         host="",
@@ -30,7 +30,7 @@ def test_mappings_none(monkeypatch):
 
 
 def test_mappings_windows(monkeypatch):
-    """Test path mappings on an Windows system."""
+    """Path mappings on an Windows system."""
     # When running tests on Linux/macOS, we have to switch to WindowsPath.
     if isinstance(Path(), PosixPath):
         monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
@@ -64,7 +64,7 @@ def test_mappings_windows(monkeypatch):
 
 
 def test_mappings_macos(monkeypatch):
-    """Test path mappings on an macOS system."""
+    """Path mappings on an macOS system."""
     # When running tests on windows, we have to switch to PosixPath.
     if isinstance(Path(), WindowsPath):
         monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
@@ -102,7 +102,7 @@ def test_mappings_macos(monkeypatch):
 
 
 def test_mappings_ios(monkeypatch):
-    """Test path mappings on an iOS system."""
+    """Path mappings on an iOS system."""
     # When running tests on windows, we have to switch to PosixPath.
     if isinstance(Path(), WindowsPath):
         monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
@@ -147,7 +147,7 @@ def test_mappings_ios(monkeypatch):
 
 
 def test_mappings_android(monkeypatch):
-    """Test path mappings on an Android system."""
+    """Path mappings on an Android system."""
     # When running tests on windows, we have to switch to PosixPath.
     if isinstance(Path(), WindowsPath):
         monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
@@ -193,7 +193,7 @@ def test_mappings_android(monkeypatch):
 
 
 def test_mappings_windows_wrong_sys_path(monkeypatch):
-    """Test path mappings on an Windows system with a wrong sys path set."""
+    """Path mappings on an Windows system with a wrong sys path set."""
     # When running tests on Linux/macOS, we have to switch to WindowsPath.
     if isinstance(Path(), PosixPath):
         monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
