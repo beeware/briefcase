@@ -17,21 +17,14 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[tool.setuptools_scm]
-root = "../"
+[project.optional-dependencies]
+pdb = ["remote-pdb>=2.1.0,<3.0.0"]
+debugpy = ["debugpy>=1.8.14,<2.0.0"]
 
 [dependency-groups]
 dev = [
     "pytest == 8.4.1",
     "coverage[toml] == 7.10.2",
-]
-
-[project.optional-dependencies]
-pdb = [
-    "remote-pdb>=2.1.0,<3.0.0"
-]
-debugpy = [
-    "debugpy>=1.8.14,<2.0.0"
 ]
 
 [tool.coverage.run]
@@ -51,3 +44,6 @@ show_missing = true
 skip_covered = true
 skip_empty = true
 precision = 1
+
+[tool.setuptools_scm]
+root = "../"
