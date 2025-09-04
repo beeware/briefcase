@@ -43,6 +43,11 @@ def get_debugger_requirement(package_name: str, extras: str = ""):
     the development of the debugger support packages. On normal installs the local
     version is not available, so the package from pypi is used, that corresponds to the
     version of briefcase.
+
+    :param package_name: The name of the debugger support package.
+    :param extras: Optional extras to add to the package requirement. Including square
+        brackets. E.g. "[debugpy]".
+    :return: The package requirement.
     """
     if IS_EDITABLE and REPO_ROOT is not None:
         local_path = REPO_ROOT / "debugger-support"
