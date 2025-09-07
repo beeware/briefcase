@@ -182,12 +182,10 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         param app: The config object for the app
         """
-        src_root = self.app_module_path(app).parent
 
         env = {
             "PYTHONPATH": os.pathsep.join(
-                [os.fspath(src_root)]
-                + [os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()]
+                [os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()]
             )
         }
 

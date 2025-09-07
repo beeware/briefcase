@@ -16,7 +16,7 @@ def dev_command(dummy_console, tmp_path):
     )
 
 
-def test_web_dev_creates_venv_and_raises(
+def test_web_dev_creates_venv_single_app_directory(
     monkeypatch, tmp_path, dev_command, first_app_built
 ):
     """StaticWebDevCommand creates a venv, then raises UnsupportedCommandError."""
@@ -32,35 +32,36 @@ def test_web_dev_creates_venv_and_raises(
         (venv_path / "pyvenv.cfg").touch()
         (venv_path / ("Scripts" if os.name == "nt" else "bin")).mkdir(exist_ok=True)
 
-    monkeypatch.setattr(ve.VenvRunner, "run", fake_run, raising=True)
+    monkeypatch.setattr(ve.VenvContext, "run", fake_run, raising=True)
 
     dev_command.apps = {"first-app": first_app_built}
 
     with pytest.raises(UnsupportedCommandError):
-        dev_command(
-            appname="first-app",
-            run_app=True,
-            update_requirements=False,
-            no_isolation=False,
-        )
+        dev_command(app=first_app_built, run_app=True, update_requirements=False)
 
     assert run_log.get("called") is True
     assert (venv_path / "pyvenv.cfg").exists()
 
 
-def test_staticweb_named_app_does_not_exist_direct(dev_command, first_app):
-    class DummyApp:
+def test_staticweb_app_does_not_exist_directory(dev_command, first_app):
+    """Raise error if the app doesn't exist in the project directory with multiple
+    apps."""
+
+    class DummyApp1:
+        app_name = "non_existent_app"
+
+    class DummyApp2:
         app_name = "second"
 
     dev_command.apps = {
         "first": first_app,
-        "second": DummyApp(),
+        "second": DummyApp2(),
     }
 
     with pytest.raises(BriefcaseCommandError) as exc:
-        dev_command(appname="nonexistent")
+        dev_command(app=DummyApp1(), run_app=True, update_requirements=False)
 
-    assert "doesn't define an application named 'nonexistent'" in str(exc.value)
+    assert "doesn't define an application named 'non_existent_app'" in str(exc.value)
 
 
 def test_staticweb_multiple_apps_no_app_given_triggers_else(dev_command, first_app):
@@ -75,7 +76,9 @@ def test_staticweb_multiple_apps_no_app_given_triggers_else(dev_command, first_a
     }
 
     with pytest.raises(BriefcaseCommandError) as exc:
-        dev_command()  # <- No appname provided!
+        dev_command(
+            None, run_app=True, update_requirements=False
+        )  # <- No appname provided!
 
     assert "specifies more than one application" in str(exc.value)
 
@@ -86,7 +89,7 @@ def test_staticweb_raises_unsupported_error(dev_command, first_app):
 
     with pytest.raises(UnsupportedCommandError):
         dev_command(
-            appname="first",
+            app=first_app,
             run_app=True,
             update_requirements=False,
             no_isolation=False,

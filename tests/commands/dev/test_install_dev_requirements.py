@@ -1,3 +1,4 @@
+import sys
 from subprocess import CalledProcessError
 from unittest.mock import MagicMock
 
@@ -20,7 +21,7 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
 
     mock_venv.run.assert_called_once_with(
         [
-            "python",
+            sys.executable,
             "-u",
             "-X",
             "utf8",
@@ -55,7 +56,7 @@ def test_install_requirements_error(dev_command, first_app):
 
     mock_venv.run.assert_called_once_with(
         [
-            "python",
+            sys.executable,
             "-u",
             "-X",
             "utf8",
@@ -104,7 +105,7 @@ def test_install_requirements_test_mode(dev_command, first_app):
 
     mock_venv.run.assert_called_once_with(
         [
-            "python",
+            sys.executable,
             "-u",
             "-X",
             "utf8",
@@ -133,7 +134,7 @@ def test_only_test_requirements(dev_command, first_app):
 
     mock_venv.run.assert_called_once_with(
         [
-            "python",
+            sys.executable,
             "-u",
             "-X",
             "utf8",
@@ -159,7 +160,7 @@ def test_requirement_installer_args(dev_command, first_app):
 
     mock_venv.run.assert_called_once_with(
         [
-            "python",
+            sys.executable,
             "-u",
             "-X",
             "utf8",

@@ -488,12 +488,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
-        elif app.name:
+        elif app.app_name:
             try:
-                app = self.apps[app.name]
+                app = self.apps[app.app_name]
             except KeyError as e:
                 raise BriefcaseCommandError(
-                    f"Project doesn't define an application named '{app.name}'"
+                    f"Project doesn't define an application named '{app.app_name}'"
                 ) from e
 
         else:
