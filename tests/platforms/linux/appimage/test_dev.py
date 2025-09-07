@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VenvContext
 from briefcase.platforms.linux.appimage import LinuxAppImageDevCommand
 
 
@@ -21,14 +22,26 @@ def dev_command(dummy_console, tmp_path):
     return command
 
 
-def test_appimage_dev_starts(dev_command, first_app_config, tmp_path):
+@pytest.fixture
+def noop_venv() -> VenvContext:
+    """Create a no-op venv mock for tests that require a venv parameter."""
+    mock_venv = mock.MagicMock(spec=VenvContext)
+    mock_venv.run.return_value = mock.MagicMock()
+    mock_venv.check_output.return_value = ""
+    mock_venv.Popen.return_value = mock.MagicMock()
+    mock_venv.executable = "/mock/venv/bin/python"
+    return mock_venv
+
+
+def test_appimage_dev_starts(dev_command, first_app_config, tmp_path, noop_venv):
     """A Linux AppImage app can be started in development mode."""
     log_popen = mock.MagicMock()
+    noop_venv.Popen.return_value = log_popen
     dev_command.tools.subprocess.Popen.return_value = log_popen
 
-    dev_command.run_dev_app(first_app_config, env={}, passthrough=[])
+    dev_command.run_dev_app(first_app_config, venv=noop_venv, env={}, passthrough=[])
 
-    popen_args, popen_kwargs = dev_command.tools.subprocess.Popen.call_args
+    popen_args, popen_kwargs = noop_venv.Popen.call_args
     assert popen_args[0][0] == sys.executable
     assert "run_module" in popen_args[0][2]
     assert first_app_config.module_name in popen_args[0][2]
