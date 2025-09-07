@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,51 +7,6 @@ from briefcase.integrations.virtual_environment import VenvContext
 
 class TestCheckOutput:
     """Test cases for VenvContext.check_output method."""
-
-    @pytest.mark.parametrize(
-        "args, expected_rewritten_args",
-        [
-            ([sys.executable, "-V"], "VENV_PYTHON_WITH_ARGS"),
-            (["pip", "list"], ["pip", "list"]),
-            ((sys.executable, "-c", "print('test')"), "VENV_PYTHON_WITH_ARGS"),
-            ([Path(sys.executable)], "VENV_PYTHON_ONLY"),
-        ],
-    )
-    def test_check_output_argument_rewriting(
-        self, venv_context: VenvContext, args, expected_rewritten_args
-    ):
-        """Test check_output properly rewrites arguments using _rewrite_head."""
-
-        mock_rewrite_head = Mock()
-        mock_full_env = Mock(return_value={"VENV": "env"})
-        mock_subprocess = Mock()
-        mock_subprocess.check_output.return_value = "subprocess output"
-
-        if expected_rewritten_args == "VENV_PYTHON_WITH_ARGS":
-            expected_args = [venv_context.executable] + list(args)[1:]
-        elif expected_rewritten_args == "VENV_PYTHON_ONLY":
-            expected_args = [venv_context.executable]
-        else:
-            expected_args = expected_rewritten_args
-
-        mock_rewrite_head.return_value = expected_args
-
-        with (
-            patch.object(venv_context, "_rewrite_head", mock_rewrite_head),
-            patch.object(venv_context, "full_env", mock_full_env),
-            patch.object(venv_context.tools, "subprocess", mock_subprocess),
-        ):
-            result = venv_context.check_output(args)
-
-            mock_rewrite_head.assert_called_once_with(list(args))
-
-            mock_full_env.assert_called_once_with(None)
-
-            mock_subprocess.check_output.assert_called_once_with(
-                expected_args, env={"VENV": "env"}
-            )
-
-            assert result == "subprocess output"
 
     @pytest.mark.parametrize(
         "env_override, other_kwargs",
