@@ -250,7 +250,7 @@ def test_dev_command(
 @pytest.mark.parametrize(
     "cmdline, expected_output_format, expected_options, expected_overrides",
     [
-        ("dev web --no-isolation", "static", {"no_isolation": True}, {}),
+        ("dev web --isolated", "static", {"isolated": True}, {}),
     ],
 )
 def test_web_dev_command(
@@ -278,7 +278,7 @@ def test_web_dev_command(
         "run_app": True,
         "test_mode": False,
         "passthrough": [],
-        "no_isolation": True,
+        "isolated": True,
         **expected_options,
     }
     assert overrides == expected_overrides
