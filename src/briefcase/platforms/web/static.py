@@ -245,6 +245,23 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     def _process_wheel(
         self, wheelfile, inserts: dict[str, dict[str, dict[str, str]]], static_path
     ):
+        """Process a wheel to collect insert and style content for the final project.
+
+        Scans the wheel for:
+        * Legacy CSS – `.css` files under ``static/`` are appended to the
+        ``briefcase.css`` insert slot with a deprecation warning.
+        * HTML inserts – HTML header files under ``deploy/inserts/<insert>.<target>``
+        are added to the corresponding insert slot for the target file.
+        * CSS inserts – Any `.css` under ``deploy/inserts/`` is appended to
+        the ``briefcase.css`` insert slot.
+
+        Inserts are grouped by ``<package_name> <version>`` for ordering and
+        provenance. All content must be UTF-8 encoded.
+
+        :param wheelfile: Path to the wheel file.
+        :param inserts: Nested dict of inserts keyed by target - insert - package.
+        :param static_path: Path for static content.
+        """
         name_parts = wheelfile.name.split("-")
         package_key = f"{name_parts[0]} {name_parts[1]}"
 
@@ -258,13 +275,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 parts = path.parts
 
                 if not (filename.endswith("/") or len(parts) < 2):
+                    # Legacy CSS handling
                     if (
                         len(parts) > 1
                         and parts[1] == "static"
-                        and path.suffix == ".css"
+                        and path.suffix.lower == ".css"
                     ):
                         self.console.info(f"    Found {filename}")
 
+                        # Show deprecation warning once per wheel
                         if not legacy_css_warning:
                             self.console.warning(
                                 f"    {wheelfile.name}: legacy '/static' CSS detected; "
@@ -279,7 +298,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 f"{filename}: CSS content must be UTF-8 encoded"
                             ) from e
 
-                        # legacy banner text/format
+                        # Wrap CSS with a source banner showing package and file
                         rel_inside = "/".join(path.parts[2:])
                         css_payload = (
                             "\n/*******************************************************\n"
@@ -287,7 +306,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             " *******************************************************/\n\n"
                         ) + css_text
 
-                        # Funnel into CSS insert slot
+                        # Add CSS content to briefcase.css insert slot
                         target = "static/css/briefcase.css"
                         insert = "CSS"
                         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
@@ -305,9 +324,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         self.console.info(f"    Found {filename}")
                         basename = parts[-1]
 
-                        # HTML inserts first
+                        # HTML/other inserts
                         if not basename.endswith(".css"):
                             try:
+                                # Split filename into <insert> slot and <target>
                                 insert, target = basename.split(".", 1)
                                 self.console.info(
                                     f"    {filename}: Adding {insert} insert for {target}"
@@ -319,9 +339,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                         f"{filename}: insert must be UTF-8 encoded"
                                     ) from e
 
+                                # Store insert under the correct target and slot
                                 pkg_map = inserts.setdefault(target, {}).setdefault(
                                     insert, {}
                                 )
+                                # Append if package already contributed to this slot
                                 if package_key in pkg_map and pkg_map[package_key]:
                                     pkg_map[package_key] += "\n" + text
                                 else:
@@ -341,6 +363,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                     f"{filename}: insert must be UTF-8 encoded"
                                 ) from e
 
+                            # Wrap CSS with a source banner showing package and file
                             rel_inside = "/".join(parts[3:]) or basename
                             css_payload = (
                                 "\n/*******************************************************\n"
@@ -348,11 +371,13 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                 " *******************************************************/\n\n"
                             ) + css_text
 
+                            # Add CSS content to briefcase.css insert slot
                             target = "static/css/briefcase.css"
                             insert = "CSS"
                             pkg_map = inserts.setdefault(target, {}).setdefault(
                                 insert, {}
                             )
+                            # Append if package already has content for this slot
                             if package_key in pkg_map and pkg_map[package_key]:
                                 pkg_map[package_key] += "\n" + css_payload
                             else:
