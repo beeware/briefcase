@@ -54,7 +54,7 @@ jobs:
       attestations: write
     uses: beeware/.github/.github/workflows/python-package-create.yml@main
     with:
-      build-subdirectory: "debugger-support"
+      build-subdirectory: "debugger"
 
   package-automation:
     name: Package Automation

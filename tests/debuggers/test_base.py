@@ -105,15 +105,13 @@ def test_debugger_editable(debugger_name, monkeypatch):
     """Debugger support package is local path in editable briefcase install."""
     with TemporaryDirectory() as tmp_path:
         tmp_path = Path(tmp_path)
-        (tmp_path / "debugger-support" / f"briefcase-{debugger_name}").mkdir(
-            parents=True, exist_ok=True
-        )
+        (tmp_path / "debugger").mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr("briefcase.debuggers.base.IS_EDITABLE", True)
         monkeypatch.setattr("briefcase.debuggers.base.REPO_ROOT", tmp_path)
 
         debugger = get_debugger(debugger_name)
         assert (
-            str(tmp_path / f"debugger-support[{debugger_name}]")
+            str(tmp_path / f"debugger[{debugger_name}]")
             == debugger.debugger_support_pkg
         )
 

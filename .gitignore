@@ -5,7 +5,7 @@
 /dist
 /build
 automation/build
-debugger-support/build
+debugger/build
 docs/_build/
 distribute-*
 .DS_Store

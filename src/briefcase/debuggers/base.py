@@ -50,7 +50,7 @@ def get_debugger_requirement(package_name: str, extras: str = ""):
     :return: The package requirement.
     """
     if IS_EDITABLE and REPO_ROOT is not None:
-        local_path = REPO_ROOT / "debugger-support"
+        local_path = REPO_ROOT / "debugger"
         if local_path.exists() and local_path.is_dir():
             return f"{local_path}{extras}"
     return f"{package_name}{extras}=={briefcase.__version__}"
