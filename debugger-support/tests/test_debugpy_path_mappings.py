@@ -226,7 +226,6 @@ def test_mappings(
     )
 
     monkeypatch.setattr(sys, "path", sys_path)
-    monkeypatch.setattr(os, "name", "nt")
 
     path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
 
