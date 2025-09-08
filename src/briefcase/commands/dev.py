@@ -185,7 +185,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         env = {
             "PYTHONPATH": os.pathsep.join(
-                [os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()]
+                os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()
             )
         }
 

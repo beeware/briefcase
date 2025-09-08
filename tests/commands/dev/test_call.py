@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from briefcase.commands import DevCommand
@@ -21,9 +23,6 @@ class DummyDevCommand(DevCommand):
 
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
-
-    def _app_dev_env(self, app, venv):
-        return self.env
 
     def verify_host(self):
         super().verify_host()
@@ -53,8 +52,16 @@ class DummyDevCommand(DevCommand):
     def get_environment(self, app):
         return self.env
 
-    def run_dev_app(self, app, env, **kwargs):
-        self.actions.append(("run_dev", app.app_name, app.test_mode, kwargs, env))
+    def run_dev_app(self, app, env, venv, passthrough, **kwargs):
+        self.actions.append(
+            (
+                "run_dev",
+                app.app_name,
+                app.test_mode,
+                {"venv": venv, "passthrough": passthrough, **kwargs},
+                env,
+            )
+        )
         return full_options({"run_dev_state": app.app_name, "env": env}, kwargs)
 
 
@@ -94,7 +101,7 @@ def test_no_args_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -147,7 +154,7 @@ def test_with_arg_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -182,7 +189,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
             "run_dev",
             "second",
             False,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -244,7 +251,7 @@ def test_update_requirements(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -286,7 +293,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
             "run_dev",
             "first",
             False,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -329,7 +336,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
             "run_dev",
             "first",
             False,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -396,7 +403,7 @@ def test_run_test(dev_command, first_app):
             "run_dev",
             "first",
             True,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
@@ -432,30 +439,7 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
             "run_dev",
             "first",
             True,
-            {"passthrough": []},
+            {"venv": mock.ANY, "passthrough": []},
             dev_command.env,
         ),
     ]
-
-
-def test_web_platform_dev_with_env_called(monkeypatch, tmp_path, first_app):
-    """Ensure that _dev_with_env is called for web platform with a venv."""
-    log = {}
-
-    class WebDevCommand(DummyDevCommand):
-        platform = "web"
-
-        def _dev_with_env(
-            self, app, run_app, update_requirements, passthrough, **options
-        ):
-            log["called"] = True
-            return "success"
-
-    cmd = WebDevCommand(base_path=tmp_path)
-    cmd.apps = {"first": first_app}
-
-    options, _ = cmd.parse_options([])
-    result = cmd(**options)
-
-    assert result == "success"
-    assert log["called"] is True

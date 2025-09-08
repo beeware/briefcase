@@ -475,7 +475,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def __call__(
         self,
-        appname: AppConfig = None,
+        appname: str | None = None,
         run_app: bool | None = True,
         update_requirements: bool | None = False,
         test_mode: bool | None = False,
@@ -506,7 +506,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         self.verify_app(app)
 
-        venv_path = self.base_path / ".briefcase" / appname / "venv"
+        venv_path = self.base_path / ".briefcase" / app.app_name / "venv"
         with virtual_environment(
             tools=self.tools,
             console=self.console,

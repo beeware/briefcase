@@ -37,7 +37,7 @@ def test_web_dev_creates_venv_single_app_directory(
     dev_command.apps = {"first-app": first_app_built}
 
     with pytest.raises(UnsupportedCommandError):
-        dev_command(app=first_app_built, run_app=True, update_requirements=False)
+        dev_command(appname="first-app", run_app=True, update_requirements=False)
 
     assert run_log.get("called") is True
     assert (venv_path / "pyvenv.cfg").exists()
@@ -47,19 +47,16 @@ def test_staticweb_app_does_not_exist_directory(dev_command, first_app):
     """Raise error if the app doesn't exist in the project directory with multiple
     apps."""
 
-    class DummyApp1:
-        app_name = "non_existent_app"
-
-    class DummyApp2:
+    class DummyApp:
         app_name = "second"
 
     dev_command.apps = {
         "first": first_app,
-        "second": DummyApp2(),
+        "second": DummyApp(),
     }
 
     with pytest.raises(BriefcaseCommandError) as exc:
-        dev_command(app=DummyApp1(), run_app=True, update_requirements=False)
+        dev_command(appname="non_existent_app", run_app=True, update_requirements=False)
 
     assert "doesn't define an application named 'non_existent_app'" in str(exc.value)
 
