@@ -204,13 +204,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
 
-    def write_pyscript_version(self, app: AppConfig, filename: Path, pyscript_version: str):
+    def write_pyscript_version(
+        self, app: AppConfig, filename: Path, pyscript_version: str
+    ):
         """Write pyscript version into an existing html file.
 
-        This function looks for markers in the named file and replaces the 
+        This function looks for markers in the named file and replaces the
         markers with the pyscript version.
-        
-        The markers are in pyscript declartions within the html.
+
+        The markers are in pyscript declarations within the html.
 
         * Marker: ``<!--@@ pyscript_version @@-->``
         * Example: ``<link rel="stylesheet" href="https://pyscript.net/releases/<!--@@ pyscript_version @@-->/core.css">``
@@ -226,95 +228,135 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         try:
             file_text = target_path.read_text(encoding="utf-8")
         except FileNotFoundError:
-            raise BriefcaseConfigError(f"{filename} not found; pyscript version could not be inserted.")
-        
+            raise BriefcaseConfigError(
+                f"{filename} not found; pyscript version could not be inserted."
+            )
+
         marker = "<!--@@ pyscript_version @@-->"
         if marker in file_text:
             file_text = file_text.replace(marker, pyscript_version)
         else:
-            raise BriefcaseConfigError(f"No pyscript markers found in {filename}; pyscript may not be configured correctly.")
-        
+            raise BriefcaseConfigError(
+                f"No pyscript markers found in {filename}; pyscript may not be configured correctly."
+            )
+
         target_path.write_text(file_text, encoding="utf-8")
 
     def _process_wheel(
         self, wheelfile, inserts: dict[str, dict[str, dict[str, str]]], static_path
     ):
-        """Process a wheel, extracting any content that needs to be compiled into the
-        final project.
+        name_parts = wheelfile.name.split("-")
+        package_key = f"{name_parts[0]} {name_parts[1]}"
 
-        Extracted content comes in two forms:
-        * inserts - pieces of content that will be inserted into existing files
-        * static - content that will be copied wholesale. Any content in a ``static``
-          folder inside the wheel will be copied as-is to the static folder,
-          namespaced by the package name of the wheel.
-
-        Any pre-existing static content for the wheel will be deleted.
-
-        :param wheelfile: The path to the wheel file to be processed.
-        :param inserts: The inserts collection for the app
-        :param static_path: The location where static content should be unpacked
-        """
-        parts = wheelfile.name.split("-")
-        package_name = parts[0]
-        package_version = parts[1]
-        package_key = f"{package_name} {package_version}"
-
-        # Purge any old static files for this wheel
-        pkg_static_root = static_path / package_name
-        if pkg_static_root.exists():
-            self.tools.shutil.rmtree(pkg_static_root)
+        # Warning flag for legacy CSS
+        legacy_css_warning = False
 
         with ZipFile(wheelfile) as wheel:
-            for filename in wheel.namelist():
+            for filename in sorted(wheel.namelist()):
                 # Skip directories and shallow paths
                 path = Path(filename)
                 parts = path.parts
-                if len(parts) >= 3 and not (filename.endswith("/")):
-                    # Handle inserts under deploy/inserts
+
+                if not (filename.endswith("/") or len(parts) < 2):
                     if (
-                        parts[1] == "deploy"
-                        and parts[2] == "inserts"
+                        len(parts) > 1
+                        and parts[1] == "static"
+                        and path.suffix == ".css"
                     ):
                         self.console.info(f"    Found {filename}")
 
-                        try:
-                            insert, target = parts[-1].split(".", 1)
-
-                            self.console.info(
-                                f"    {filename}: Adding {insert} insert for {target}"
+                        if not legacy_css_warning:
+                            self.console.warning(
+                                f"    {wheelfile.name}: legacy '/static' CSS detected; "
+                                "treating as insert into briefcase.css; this legacy handling will be removed in the future."
                             )
+                            legacy_css_warning = True
 
+                        try:
+                            css_text = wheel.read(filename).decode("utf-8")
+                        except UnicodeDecodeError as e:
+                            raise BriefcaseCommandError(
+                                f"{filename}: CSS content must be UTF-8 encoded"
+                            ) from e
+
+                        # legacy banner text/format
+                        rel_inside = "/".join(path.parts[2:])
+                        css_payload = (
+                            "\n/*******************************************************\n"
+                            f" * {package_key}::{rel_inside}\n"
+                            " *******************************************************/\n\n"
+                        ) + css_text
+
+                        # Funnel into CSS insert slot
+                        target = "static/css/briefcase.css"
+                        insert = "CSS"
+                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                        if package_key in pkg_map and pkg_map[package_key]:
+                            pkg_map[package_key] += "\n" + css_payload
+                        else:
+                            pkg_map[package_key] = css_payload
+
+                    # New deploy/inserts handling
+                    elif (
+                        len(parts) >= 3
+                        and parts[1] == "deploy"
+                        and parts[2] == "inserts"
+                    ):
+                        self.console.info(f"    Found {filename}")
+                        basename = parts[-1]
+
+                        # HTML inserts first
+                        if not basename.endswith(".css"):
                             try:
-                                text = wheel.read(filename).decode("utf-8")
+                                insert, target = basename.split(".", 1)
+                                self.console.info(
+                                    f"    {filename}: Adding {insert} insert for {target}"
+                                )
+                                try:
+                                    text = wheel.read(filename).decode("utf-8")
+                                except UnicodeDecodeError as e:
+                                    raise BriefcaseCommandError(
+                                        f"{filename}: insert must be UTF-8 encoded"
+                                    ) from e
+
+                                pkg_map = inserts.setdefault(target, {}).setdefault(
+                                    insert, {}
+                                )
+                                if package_key in pkg_map and pkg_map[package_key]:
+                                    pkg_map[package_key] += "\n" + text
+                                else:
+                                    pkg_map[package_key] = text
+
+                            except ValueError:
+                                self.console.debug(
+                                    f"    {filename}: not an <insert>.<target> name; skipping generic insert handling."
+                                )
+
+                        # CSS inserts
+                        if basename.endswith(".css"):
+                            try:
+                                css_text = wheel.read(filename).decode("utf-8")
                             except UnicodeDecodeError as e:
                                 raise BriefcaseCommandError(
                                     f"{filename}: insert must be UTF-8 encoded"
                                 ) from e
 
-                            # Store raw contribution text per package
-                            pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                            # Append if the same package contributes multiple files for the same slot
-                            if package_key in pkg_map and pkg_map[package_key]:
-                                pkg_map[package_key] += "\n" + text
-                            else:
-                                pkg_map[package_key] = text
+                            rel_inside = "/".join(parts[3:]) or basename
+                            css_payload = (
+                                "\n/*******************************************************\n"
+                                f" * {package_key}::{rel_inside}\n"
+                                " *******************************************************/\n\n"
+                            ) + css_text
 
-                        except ValueError:
-                            self.console.warning(
-                                f"    {source}: missing ':<insert>'; skipping insert."
+                            target = "static/css/briefcase.css"
+                            insert = "CSS"
+                            pkg_map = inserts.setdefault(target, {}).setdefault(
+                                insert, {}
                             )
-
-                    # Handle static files under deploy/static
-                    elif (
-                        parts[1] == "deploy"
-                        and parts[2] == "static"
-                    ):
-                        self.console.info(f"    Found {filename}")
-                        rel = Path(*parts[2:])
-                        outfilename = pkg_static_root / rel
-                        outfilename.parent.mkdir(parents=True, exist_ok=True)
-                        with outfilename.open("wb") as f:
-                            f.write(wheel.read(filename))
+                            if package_key in pkg_map and pkg_map[package_key]:
+                                pkg_map[package_key] += "\n" + css_payload
+                            else:
+                                pkg_map[package_key] = css_payload
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
@@ -368,7 +410,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             raise BriefcaseConfigError(
                                 "Only 'pyscript' backend is currently supported for web static builds."
                             )
-                        
+
                         # Get pyscript version from config.toml. Use default if not present.
 
                         if "version" in config_data:
@@ -457,7 +499,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with self.console.wait_bar("Writing Pyscript configuration file..."):
             # Load any pre-existing pyscript.toml provided by the template. If the file
             # doesn't exist, assume an empty pyscript.toml as a starting point.
-            config, pyscript_version = self.extract_backend_config(self.wheel_path(app).glob("*.whl"))
+            config, pyscript_version = self.extract_backend_config(
+                self.wheel_path(app).glob("*.whl")
+            )
 
             # Add the packages declaration to the existing pyscript.toml.
             # Ensure that we're using Unix path separators, as the content
@@ -485,7 +529,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         self.console.info("Compile static web content from wheels")
         with self.console.wait_bar("Compiling static web content from wheels..."):
-
             # Add pyscript_version to index.html
             self.write_pyscript_version(app, Path("index.html"), pyscript_version)
 
