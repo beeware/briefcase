@@ -1,5 +1,5 @@
+import os
 import sys
-from pathlib import Path, PosixPath, PurePosixPath, PureWindowsPath, WindowsPath
 
 import briefcase_debugger.debugpy
 import pytest
@@ -29,184 +29,249 @@ def test_mappings_none(monkeypatch):
     assert path_mappings == []
 
 
-def test_mappings_windows(monkeypatch):
-    """Path mappings on an Windows system."""
-    # When running tests on Linux/macOS, we have to switch to WindowsPath.
-    if isinstance(Path(), PosixPath):
-        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
+@pytest.mark.parametrize(
+    "os_name,app_path_mappings,app_packages_path_mappings,sys_path,expected_path_mappings",
+    [
+        # Windows
+        pytest.param(
+            "nt",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["C:\\PROJECT_ROOT\\src\\helloworld"],
+            ),
+            None,
+            [
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\python313.zip",
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src",
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app",
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app_packages",
+            ],
+            [
+                (
+                    "C:\\PROJECT_ROOT\\src\\helloworld",
+                    "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app\\helloworld",
+                ),
+            ],
+            id="windows",
+        ),
+        # Windows with `app_packages_path_mappings` (currently not used by briefcase, but principally possible)
+        pytest.param(
+            "nt",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["C:\\PROJECT_ROOT\\src\\helloworld"],
+            ),
+            AppPackagesPathMappings(
+                sys_path_regex="app_packages$",
+                host_folder="C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app_packages",
+            ),
+            [
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\python313.zip",
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src",
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app",
+                "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app_packages",
+            ],
+            [
+                (
+                    "C:\\PROJECT_ROOT\\src\\helloworld",
+                    "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app\\helloworld",
+                ),
+                (
+                    "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app_packages",
+                    "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app_packages",
+                ),
+            ],
+            id="windows-with-app-packages",
+        ),
+        # macOS
+        pytest.param(
+            "posix",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["/PROJECT_ROOT/src/helloworld"],
+            ),
+            None,
+            [
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13/lib-dynload",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app_packages",
+            ],
+            [
+                (
+                    "/PROJECT_ROOT/src/helloworld",
+                    "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app/helloworld",
+                )
+            ],
+            id="macos",
+        ),
+        # iOS
+        pytest.param(
+            "posix",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["/PROJECT_ROOT/src/helloworld"],
+            ),
+            AppPackagesPathMappings(
+                sys_path_regex="app_packages$",
+                host_folder="/APP_PACKAGES_PATH/app_packages.iphonesimulator",
+            ),
+            [
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13/lib-dynload",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13/site-packages",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app_packages",
+            ],
+            [
+                (
+                    "/PROJECT_ROOT/src/helloworld",
+                    "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app/helloworld",
+                ),
+                (
+                    "/APP_PACKAGES_PATH/app_packages.iphonesimulator",
+                    "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app_packages",
+                ),
+            ],
+            id="ios",
+        ),
+        # Android (with VSCode running on Windows)
+        pytest.param(
+            "posix",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["C:\\PROJECT_ROOT\\src\\helloworld"],
+            ),
+            AppPackagesPathMappings(
+                sys_path_regex="requirements$",
+                host_folder="C:\\BUNDLE_PATH\\app\\build\\python\\pip\\debug\\common",
+            ),
+            [
+                "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/app",
+                "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
+                "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/stdlib-x86_64",
+                "/data/user/0/com.example.helloworld/files/chaquopy/stdlib-common.imy",
+                "/data/user/0/com.example.helloworld/files/chaquopy/bootstrap.imy",
+                "/data/user/0/com.example.helloworld/files/chaquopy/bootstrap-native/x86_64",
+            ],
+            [
+                (
+                    "C:\\PROJECT_ROOT\\src\\helloworld",
+                    "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/app/helloworld",
+                ),
+                (
+                    "C:\\BUNDLE_PATH\\app\\build\\python\\pip\\debug\\common",
+                    "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
+                ),
+            ],
+            id="android-on-windows-host",
+        ),
+        # Android (with VSCode running on POSIX system)
+        pytest.param(
+            "posix",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["/PROJECT_ROOT/src/helloworld"],
+            ),
+            AppPackagesPathMappings(
+                sys_path_regex="requirements$",
+                host_folder="/BUNDLE_PATH/app/build/python/pip/debug/common",
+            ),
+            [
+                "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/app",
+                "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
+                "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/stdlib-x86_64",
+                "/data/user/0/com.example.helloworld/files/chaquopy/stdlib-common.imy",
+                "/data/user/0/com.example.helloworld/files/chaquopy/bootstrap.imy",
+                "/data/user/0/com.example.helloworld/files/chaquopy/bootstrap-native/x86_64",
+            ],
+            [
+                (
+                    "/PROJECT_ROOT/src/helloworld",
+                    "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/app/helloworld",
+                ),
+                (
+                    "/BUNDLE_PATH/app/build/python/pip/debug/common",
+                    "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
+                ),
+            ],
+            id="android-on-posix-host",
+        ),
+    ],
+)
+def test_mappings(
+    os_name: str,
+    app_path_mappings: AppPathMappings,
+    app_packages_path_mappings: AppPackagesPathMappings | None,
+    sys_path: list[str],
+    expected_path_mappings: tuple[str, str],
+    monkeypatch,
+):
+    if os.name != os_name:
+        pytest.skip(f"Test only runs on {os_name} systems")
 
     config = DebuggerConfig(
         debugger="debugpy",
         host="",
         port=0,
-        app_path_mappings=AppPathMappings(
-            device_sys_path_regex="app$",
-            device_subfolders=["helloworld"],
-            host_folders=["src/helloworld"],
-        ),
-        app_packages_path_mappings=None,
+        app_path_mappings=app_path_mappings,
+        app_packages_path_mappings=app_packages_path_mappings,
     )
 
-    sys_path = [
-        "build\\helloworld\\windows\\app\\src\\python313.zip",
-        "build\\helloworld\\windows\\app\\src",
-        "build\\helloworld\\windows\\app\\src\\app",
-        "build\\helloworld\\windows\\app\\src\\app_packages",
-    ]
     monkeypatch.setattr(sys, "path", sys_path)
+    monkeypatch.setattr(os, "name", "nt")
 
     path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
 
-    assert path_mappings == [
-        # (host_path, device_path)
-        ("src/helloworld", "build\\helloworld\\windows\\app\\src\\app\\helloworld"),
-    ]
+    assert path_mappings == expected_path_mappings
 
 
-def test_mappings_macos(monkeypatch):
-    """Path mappings on an macOS system."""
-    # When running tests on windows, we have to switch to PosixPath.
-    if isinstance(Path(), WindowsPath):
-        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
+@pytest.mark.parametrize(
+    "os_name,app_path_mappings",
+    [
+        # Windows
+        pytest.param(
+            "nt",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["C:\\PROJECT_ROOT\\src\\helloworld"],
+            ),
+            id="windows",
+        ),
+        # POSIX (macOS/iOS/Android)
+        pytest.param(
+            "posix",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["/PROJECT_ROOT/src/helloworld"],
+            ),
+            id="posix",
+        ),
+    ],
+)
+def test_mappings_wrong_sys_path(
+    os_name: str,
+    app_path_mappings: AppPathMappings,
+    monkeypatch,
+):
+    """Path mappings with a wrong sys path set."""
+    if os.name != os_name:
+        pytest.skip(f"Test only runs on {os_name} systems")
 
     config = DebuggerConfig(
         debugger="debugpy",
         host="",
         port=0,
-        app_path_mappings=AppPathMappings(
-            device_sys_path_regex="app$",
-            device_subfolders=["helloworld"],
-            host_folders=["src/helloworld"],
-        ),
-        app_packages_path_mappings=None,
-    )
-
-    sys_path = [
-        "build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13",
-        "build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13/lib-dynload",
-        "build/helloworld/macos/app/Hello World.app/Contents/Resources/app",
-        "build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages",
-        "build/helloworld/macos/app/Hello World.app/Contents/Resources/app_packages",
-    ]
-    monkeypatch.setattr(sys, "path", sys_path)
-
-    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
-
-    assert path_mappings == [
-        # (host_path, device_path)
-        (
-            "src/helloworld",
-            "build/helloworld/macos/app/Hello World.app/Contents/Resources/app/helloworld",
-        ),
-    ]
-
-
-def test_mappings_ios(monkeypatch):
-    """Path mappings on an iOS system."""
-    # When running tests on windows, we have to switch to PosixPath.
-    if isinstance(Path(), WindowsPath):
-        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
-
-    config = DebuggerConfig(
-        debugger="debugpy",
-        host="",
-        port=0,
-        app_path_mappings=AppPathMappings(
-            device_sys_path_regex="app$",
-            device_subfolders=["helloworld"],
-            host_folders=["src/helloworld"],
-        ),
-        app_packages_path_mappings=AppPackagesPathMappings(
-            sys_path_regex="app_packages$",
-            host_folder="APP_PACKAGES_PATH/app_packages.iphonesimulator",
-        ),
-    )
-
-    sys_path = [
-        "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13",
-        "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13/lib-dynload",
-        "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app",
-        "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13/site-packages",
-        "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app_packages",
-    ]
-    monkeypatch.setattr(sys, "path", sys_path)
-
-    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
-
-    assert path_mappings == [
-        # (host_path, device_path)
-        (
-            "src/helloworld",
-            "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app/helloworld",
-        ),
-        (
-            "APP_PACKAGES_PATH/app_packages.iphonesimulator",
-            "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app_packages",
-        ),
-    ]
-
-
-def test_mappings_android(monkeypatch):
-    """Path mappings on an Android system."""
-    # When running tests on windows, we have to switch to PosixPath.
-    if isinstance(Path(), WindowsPath):
-        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PurePosixPath)
-
-    config = DebuggerConfig(
-        debugger="debugpy",
-        host="",
-        port=0,
-        app_path_mappings=AppPathMappings(
-            device_sys_path_regex="app$",
-            device_subfolders=["helloworld"],
-            host_folders=["src/helloworld"],
-        ),
-        app_packages_path_mappings=AppPackagesPathMappings(
-            sys_path_regex="requirements$",
-            host_folder="/BUNDLE_PATH/app/build/python/pip/debug/common",
-        ),
-    )
-
-    sys_path = [
-        "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/app",
-        "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
-        "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/stdlib-x86_64",
-        "/data/user/0/com.example.helloworld/files/chaquopy/stdlib-common.imy",
-        "/data/user/0/com.example.helloworld/files/chaquopy/bootstrap.imy",
-        "/data/user/0/com.example.helloworld/files/chaquopy/bootstrap-native/x86_64",
-    ]
-    monkeypatch.setattr(sys, "path", sys_path)
-
-    path_mappings = briefcase_debugger.debugpy.load_path_mappings(config, False)
-
-    assert path_mappings == [
-        # (host_path, device_path)
-        (
-            "src/helloworld",
-            "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/app/helloworld",
-        ),
-        (
-            "/BUNDLE_PATH/app/build/python/pip/debug/common",
-            "/data/data/com.example.helloworld/files/chaquopy/AssetFinder/requirements",
-        ),
-    ]
-
-
-def test_mappings_windows_wrong_sys_path(monkeypatch):
-    """Path mappings on an Windows system with a wrong sys path set."""
-    # When running tests on Linux/macOS, we have to switch to WindowsPath.
-    if isinstance(Path(), PosixPath):
-        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
-
-    config = DebuggerConfig(
-        debugger="debugpy",
-        host="",
-        port=0,
-        app_path_mappings=AppPathMappings(
-            device_sys_path_regex="app$",
-            device_subfolders=["helloworld"],
-            host_folders=["src/helloworld"],
-        ),
+        app_path_mappings=app_path_mappings,
         app_packages_path_mappings=None,
     )
 
