@@ -39,8 +39,16 @@ def test_no_debugger_verbose(monkeypatch, capsys):
     assert captured.err == ""
 
 
-@pytest.mark.parametrize("verbose", [True, False])
-def test_with_debugger(monkeypatch, capsys, verbose):
+@pytest.mark.parametrize(
+    "verbose,some_verbose_output,pydevd_trace_level",
+    [
+        (True, "Extracted path mappings:\n[0] host =   src/helloworld", 3),
+        (False, "", 0),
+    ],
+)
+def test_with_debugger(
+    verbose, some_verbose_output, pydevd_trace_level, monkeypatch, capsys
+):
     """Normal debug session."""
     # When running tests on Linux/macOS, we have to switch to WindowsPath.
     if isinstance(Path(), PosixPath):
@@ -78,6 +86,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     # we fake the whole module, as otherwise the import in start_remote_debugger would fail
     fake_pydevd = MagicMock()
     monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
+    fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 0
     fake_pydevd_file_utils = MagicMock()
     fake_pydevd_file_utils.setup_client_server_paths.return_value = None
     monkeypatch.setitem(sys.modules, "pydevd_file_utils", fake_pydevd_file_utils)
@@ -101,13 +110,20 @@ def test_with_debugger(monkeypatch, capsys, verbose):
     assert "Waiting for debugger to attach..." in captured.out
     assert captured.err == ""
 
-    if verbose:
-        assert "Extracted path mappings:\n[0] host =   src/helloworld" in captured.out
-        assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == 3
+    assert some_verbose_output in captured.out
+    assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == pydevd_trace_level
 
 
-@pytest.mark.parametrize("verbose", [True, False])
-def test_os_file_bugfix(monkeypatch, capsys, verbose):
+@pytest.mark.parametrize(
+    "verbose,some_verbose_output,pydevd_trace_level",
+    [
+        (True, "'os.__file__' not available. Patching it...", 3),
+        (False, "", 0),
+    ],
+)
+def test_os_file_bugfix(
+    verbose, some_verbose_output, pydevd_trace_level, monkeypatch, capsys
+):
     """The os.__file__ bugfix has to be applied (see https://github.com/microsoft/debugpy/issues/1943)."""
     os_environ = {}
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
@@ -133,6 +149,7 @@ def test_os_file_bugfix(monkeypatch, capsys, verbose):
     # we fake the whole module, as otherwise the import in start_remote_debugger would fail
     fake_pydevd = MagicMock()
     monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
+    fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 0
 
     # start test function
     briefcase_debugger.start_remote_debugger()
@@ -149,6 +166,5 @@ def test_os_file_bugfix(monkeypatch, capsys, verbose):
     assert "Waiting for debugger to attach..." in captured.out
     assert captured.err == ""
 
-    if verbose:
-        assert "'os.__file__' not available. Patching it..." in captured.out
-        assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == 3
+    assert some_verbose_output in captured.out
+    assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == pydevd_trace_level
