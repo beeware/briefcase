@@ -475,9 +475,9 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
     def __call__(
         self,
-        app: AppConfig,
-        run_app: bool,
-        update_requirements: bool,
+        appname: AppConfig = None,
+        run_app: bool | None = True,
+        update_requirements: bool | None = False,
         test_mode: bool | None = False,
         passthrough: list[str] | None = None,
         **options,
@@ -488,12 +488,12 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         if len(self.apps) == 1:
             app = list(self.apps.values())[0]
-        elif app.app_name:
+        elif appname:
             try:
-                app = self.apps[app.app_name]
+                app = self.apps[appname]
             except KeyError as e:
                 raise BriefcaseCommandError(
-                    f"Project doesn't define an application named '{app.app_name}'"
+                    f"Project doesn't define an application named '{appname}'"
                 ) from e
 
         else:
@@ -506,7 +506,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         self.verify_app(app)
 
-        venv_path = self.base_path / ".briefcase" / app.app_name / "venv"
+        venv_path = self.base_path / ".briefcase" / appname / "venv"
         with virtual_environment(
             tools=self.tools,
             console=self.console,
