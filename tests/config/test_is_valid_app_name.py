@@ -15,6 +15,8 @@ from briefcase.config import is_valid_app_name
         "a",  # single letter
         "abc123",  # alphanumeric
         "none",  # daft but legal ;-)
+        "helloworld_",  # ends with underscore (valid Python identifier)
+        "helloworld-",  # ends with hyphen (converts to valid identifier)
     ],
 )
 def test_is_valid_app_name(name):
@@ -44,8 +46,6 @@ def test_is_valid_app_name(name):
         "my$app",  # dollar sign
         "app@domain",  # at symbol
         "app.name",  # period
-        "helloworld_",  # ends with underscore
-        "helloworld-",  # ends with hyphen
         "2app",  # starts with number
         "42app",  # starts with number
         "_",  # single underscore

@@ -45,16 +45,27 @@ def is_valid_app_name(app_name):
 
     Checks the following:
         - It is not a reserved keyword.
-        - It is a valid PEP508 name.
+        - It is a valid Python identifier when hyphens are replaced with underscores.
+        - It does not start with an underscore (reserved for internal use).
+        - It does not contain problematic Unicode characters that have edge-case behaviors.
 
     :param app_name: The app name to validate.
     :returns: True if the app name is valid; False otherwise.
     """
+    module_name = app_name.lower().replace("-", "_")
+
+    # ı, İ and K (i.e. 0x212a) are valid ASCII when made lowercase and as such are
+    # accepted by the official PEP 508 regex... but they are rejected here to ensure
+    # compliance with the regex that is used in practice.
+    problematic_unicode = {"\u0131", "\u0130", "\u212a"}  # ı, İ, K
+    if any(char in app_name for char in problematic_unicode):
+        return False
+
     return all(
         [
-            is_valid_pep508_name(app_name),
             not is_reserved_keyword(app_name),
-            app_name.lower().replace("-", "_").isidentifier(),
+            module_name.isidentifier(),
+            not module_name.startswith("_"),
         ]
     )
 
@@ -421,9 +432,8 @@ class AppConfig(BaseConfig):
                 f"{self.app_name!r} is not a valid app name.\n\n"
                 "App names must:\n"
                 "- Not be reserved keywords (like 'and', 'for', 'while', 'main', 'test', etc.)\n"
-                "- Only letters, numbers, hyphens, and underscores only\n"
+                "- Only contain letters, numbers, hyphens, and underscores\n"
                 "- Start with a letter (not a number, hyphen, or underscore)\n"
-                "- Not end with a hyphen or underscore\n"
                 "- Be valid Python identifiers when hyphens are replaced with underscores"
             )
 
