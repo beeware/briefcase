@@ -243,7 +243,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         target_path.write_text(file_text, encoding="utf-8")
 
     def _process_wheel(
-        self, wheelfile, inserts: dict[str, dict[str, dict[str, str]]], static_path
+        self,
+        wheelfile,
+        inserts: dict[str, dict[str, dict[str, str]]],
+        static_path,
     ):
         """Process a wheel to collect insert and style content for the final project.
 
