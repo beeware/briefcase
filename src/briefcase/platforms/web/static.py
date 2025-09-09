@@ -101,7 +101,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write(line)
 
     def write_inserts(
-        self, app: AppConfig, filename: Path, inserts: dict[str, dict[str, str]]
+        self, 
+        app: AppConfig, 
+        filename: Path, 
+        inserts: dict[str, dict[str, str]]
     ):
         """Write inserts into an existing file.
 
@@ -205,7 +208,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         target_path.write_text(file_text, encoding="utf-8")
 
     def write_pyscript_version(
-        self, app: AppConfig, filename: Path, pyscript_version: str
+        self, 
+        app: AppConfig, 
+        filename: Path, 
+        pyscript_version: str
     ):
         """Write pyscript version into an existing html file.
 
