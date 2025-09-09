@@ -1,4 +1,5 @@
 import errno
+import re
 import subprocess
 import sys
 import webbrowser
@@ -45,8 +46,11 @@ class StaticWebMixin:
     def binary_path(self, app):
         return self.bundle_path(app) / "www/index.html"
 
+    def static_path(self, app):
+        return self.project_path(app) / "static"
+
     def wheel_path(self, app):
-        return self.project_path(app) / "static/wheels"
+        return self.static_path(app) / "wheels"
 
     def distribution_path(self, app):
         return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
@@ -96,33 +100,374 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             for line in content:
                 f.write(line)
 
-    def _process_wheel(self, wheelfile, css_file):
-        """Process a wheel, extracting any content that needs to be compiled into the
-        final project.
+    def write_inserts(
+        self, 
+        app: AppConfig, 
+        filename: Path, 
+        inserts: dict[str, dict[str, str]]
+    ):
+        """Write inserts into an existing file.
 
-        :param wheelfile: The path to the wheel file to be processed.
-        :param css_file: A file handle, opened for write/append, to which any extracted
-            CSS content will be appended.
+        This function looks for start and end markers in the named file and
+        replaces the content inside the markers with the inserted content.
+
+        Multiple formats of insert marker are inspected to accommodate HTML
+        and CSS/JS comment conventions:
+        * HTML: ``<!--@@ insert:start @@-->`` and ``<!--@@ insert:end @@-->``
+        * CSS/JS: ``/*@@ insert:start @@*/`` and ``/*@@ insert:end @@*/``
+
+        Inserts and package contributions are processed in sorted order to ensure deterministic builds.
+
+        :param app: The application whose ``pyscript.toml`` is being written.
+        :param filename: The file whose insert is to be written.
+        :param inserts: The inserts for the file. A 2 level dictionary, keyed by
+            the name of the insert to add, and then package that contributed the
+            insert.
         """
-        package = " ".join(wheelfile.name.split("-")[:2])
+        # Load file content, skip if file not found
+        target_path = self.project_path(app) / filename
+        try:
+            file_text = target_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            self.console.warning(f"  Target {filename} not found; skipping inserts.")
+            return
+
+        # Each insert slot and its package contributions are processed in sorted order
+        for insert, pkg_contribs in sorted(inserts.items()):
+            html_banner = (
+                "<!--------------------------------------------------\n"
+                " * {package}\n"
+                " -------------------------------------------------->\n"
+                "{content}"
+            )
+            css_banner = (
+                "/**************************************************\n"
+                " * {package}\n"
+                " *************************************************/\n"
+                "{content}"
+            )
+
+            # Build bodies from the same contributions
+            html_body = "\n".join(
+                html_banner.format(package=pkg, content=text)
+                for pkg, text in sorted(pkg_contribs.items())
+                if text
+            )
+            css_body = "\n".join(
+                css_banner.format(package=pkg, content=text)
+                for pkg, text in sorted(pkg_contribs.items())
+                if text
+            )
+            body_map = {"html": html_body, "css": css_body}
+
+            # Marker patterns for HTML and CSS/JS
+            marker_styles = [
+                # HTML
+                (
+                    r"<!--@@ {insert}:start @@-->.*?<!--@@ {insert}:end @@-->",
+                    r"<!--@@ {insert}:start @@-->\n{content}<!--@@ {insert}:end @@-->",
+                    "html",
+                ),
+                # CSS/JS
+                (
+                    r"/\*@@ {insert}:start @@\*/.*?/\*@@ {insert}:end @@\*/",
+                    r"/*@@ {insert}:start @@*/\n{content}/*@@ {insert}:end @@*/",
+                    "css",
+                ),
+            ]
+
+            # Pre-compile patterns once per insert
+            compiled_markers = [
+                (
+                    re.compile(
+                        pattern_tmpl.format(insert=insert),
+                        flags=re.MULTILINE | re.DOTALL,
+                    ),
+                    repl_tmpl,
+                    kind,
+                )
+                for (pattern_tmpl, repl_tmpl, kind) in marker_styles
+            ]
+
+            # Apply all matching marker styles
+            any_match = False
+            for pattern, repl_tmpl, kind in compiled_markers:
+                if pattern.search(file_text):
+                    file_text = pattern.sub(
+                        repl_tmpl.format(insert=insert, content=body_map.get(kind, "")),
+                        file_text,
+                    )
+                    any_match = True
+
+            if not any_match:
+                self.console.warning(
+                    f"  Slot '{insert}' markers not found in {filename}; skipping."
+                )
+
+        # Save modified content
+        target_path.write_text(file_text, encoding="utf-8")
+
+    def write_pyscript_version(
+        self, 
+        app: AppConfig, 
+        filename: Path, 
+        pyscript_version: str
+    ):
+        """Write pyscript version into an existing html file.
+
+        This function looks for markers in the named file and replaces the
+        markers with the pyscript version.
+
+        The markers are in pyscript declarations within the html.
+
+        * Marker: ``<!--@@ pyscript_version @@-->``
+        * Example: ``<link rel="stylesheet" href="https://pyscript.net/releases/<!--@@ pyscript_version @@-->/core.css">``
+
+        Pyscript versions are processed in sorted order to ensure deterministic builds.
+
+        :param app: The application being written.
+        :param filename: The html file whose pyscript version is to be written.
+        :param pyscript_version: The pyscript version number to be inserted.
+        """
+        # Load file content, skip if file not found
+        target_path = self.project_path(app) / filename
+        try:
+            file_text = target_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            raise BriefcaseConfigError(
+                f"{filename} not found; pyscript version could not be inserted."
+            )
+
+        marker = "<!--@@ pyscript_version @@-->"
+        if marker in file_text:
+            file_text = file_text.replace(marker, pyscript_version)
+        else:
+            raise BriefcaseConfigError(
+                f"No pyscript markers found in {filename}; pyscript may not be configured correctly."
+            )
+
+        target_path.write_text(file_text, encoding="utf-8")
+
+    def _process_wheel(
+        self,
+        wheelfile,
+        inserts: dict[str, dict[str, dict[str, str]]],
+        static_path,
+    ):
+        """Process a wheel to collect insert and style content for the final project.
+
+        Scans the wheel for:
+        * Legacy CSS – `.css` files under ``static/`` are appended to the
+        ``briefcase.css`` insert slot with a deprecation warning.
+        * HTML inserts – HTML header files under ``deploy/inserts/<insert>.<target>``
+        are added to the corresponding insert slot for the target file.
+        * CSS inserts – Any `.css` under ``deploy/inserts/`` is appended to
+        the ``briefcase.css`` insert slot.
+
+        Inserts are grouped by ``<package_name> <version>`` for ordering and
+        provenance. All content must be UTF-8 encoded.
+
+        :param wheelfile: Path to the wheel file.
+        :param inserts: Nested dict of inserts keyed by target - insert - package.
+        :param static_path: Path for static content.
+        """
+        name_parts = wheelfile.name.split("-")
+        package_key = f"{name_parts[0]} {name_parts[1]}"
+
+        # Warning flag for legacy CSS
+        legacy_css_warning = False
+
         with ZipFile(wheelfile) as wheel:
-            for filename in wheel.namelist():
+            for filename in sorted(wheel.namelist()):
+                # Skip directories and shallow paths
                 path = Path(filename)
-                # Any CSS file in a `static` folder is appended
-                if (
-                    len(path.parts) > 1
-                    and path.parts[1] == "static"
-                    and path.suffix == ".css"
-                ):
-                    self.console.info(f"    Found {filename}")
-                    css_file.write(
-                        "\n/*******************************************************\n"
-                    )
-                    css_file.write(f" * {package}::{'/'.join(path.parts[2:])}\n")
-                    css_file.write(
-                        " *******************************************************/\n\n"
-                    )
-                    css_file.write(wheel.read(filename).decode("utf-8"))
+                parts = path.parts
+
+                if not (filename.endswith("/") or len(parts) < 2):
+                    # Legacy CSS handling
+                    if (
+                        len(parts) > 1
+                        and parts[1] == "static"
+                        and path.suffix.lower == ".css"
+                    ):
+                        self.console.info(f"    Found {filename}")
+
+                        # Show deprecation warning once per wheel
+                        if not legacy_css_warning:
+                            self.console.warning(
+                                f"    {wheelfile.name}: legacy '/static' CSS detected; "
+                                "treating as insert into briefcase.css; this legacy handling will be removed in the future."
+                            )
+                            legacy_css_warning = True
+
+                        try:
+                            css_text = wheel.read(filename).decode("utf-8")
+                        except UnicodeDecodeError as e:
+                            raise BriefcaseCommandError(
+                                f"{filename}: CSS content must be UTF-8 encoded"
+                            ) from e
+
+                        # Wrap CSS with a source banner showing package and file
+                        rel_inside = "/".join(path.parts[2:])
+                        css_payload = (
+                            "\n/*******************************************************\n"
+                            f" * {package_key}::{rel_inside}\n"
+                            " *******************************************************/\n\n"
+                        ) + css_text
+
+                        # Add CSS content to briefcase.css insert slot
+                        target = "static/css/briefcase.css"
+                        insert = "CSS"
+                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                        if package_key in pkg_map and pkg_map[package_key]:
+                            pkg_map[package_key] += "\n" + css_payload
+                        else:
+                            pkg_map[package_key] = css_payload
+
+                    # New deploy/inserts handling
+                    elif (
+                        len(parts) >= 3
+                        and parts[1] == "deploy"
+                        and parts[2] == "inserts"
+                    ):
+                        self.console.info(f"    Found {filename}")
+                        basename = parts[-1]
+
+                        # HTML/other inserts
+                        if not basename.endswith(".css"):
+                            try:
+                                # Split filename into <insert> slot and <target>
+                                insert, target = basename.split(".", 1)
+                                self.console.info(
+                                    f"    {filename}: Adding {insert} insert for {target}"
+                                )
+                                try:
+                                    text = wheel.read(filename).decode("utf-8")
+                                except UnicodeDecodeError as e:
+                                    raise BriefcaseCommandError(
+                                        f"{filename}: insert must be UTF-8 encoded"
+                                    ) from e
+
+                                # Store insert under the correct target and slot
+                                pkg_map = inserts.setdefault(target, {}).setdefault(
+                                    insert, {}
+                                )
+                                # Append if package already contributed to this slot
+                                if package_key in pkg_map and pkg_map[package_key]:
+                                    pkg_map[package_key] += "\n" + text
+                                else:
+                                    pkg_map[package_key] = text
+
+                            except ValueError:
+                                self.console.debug(
+                                    f"    {filename}: not an <insert>.<target> name; skipping generic insert handling."
+                                )
+
+                        # CSS inserts
+                        if basename.endswith(".css"):
+                            try:
+                                css_text = wheel.read(filename).decode("utf-8")
+                            except UnicodeDecodeError as e:
+                                raise BriefcaseCommandError(
+                                    f"{filename}: insert must be UTF-8 encoded"
+                                ) from e
+
+                            # Wrap CSS with a source banner showing package and file
+                            rel_inside = "/".join(parts[3:]) or basename
+                            css_payload = (
+                                "\n/*******************************************************\n"
+                                f" * {package_key}::{rel_inside}\n"
+                                " *******************************************************/\n\n"
+                            ) + css_text
+
+                            # Add CSS content to briefcase.css insert slot
+                            target = "static/css/briefcase.css"
+                            insert = "CSS"
+                            pkg_map = inserts.setdefault(target, {}).setdefault(
+                                insert, {}
+                            )
+                            # Append if package already has content for this slot
+                            if package_key in pkg_map and pkg_map[package_key]:
+                                pkg_map[package_key] += "\n" + css_payload
+                            else:
+                                pkg_map[package_key] = css_payload
+
+    def extract_backend_config(self, wheels):
+        """Processes multiple wheels to gather a config.toml and a base pyscript.toml
+        file.
+
+        :param wheels: A list of wheel files to be scanned.
+        """
+        config_package = None
+        config_package_list = []
+        config_filename = None
+        pyscript_version = "2024.11.1"
+        pyscript_config = None
+
+        # Find packages containing a config.toml file.
+        for wheelfile in wheels:
+            with ZipFile(wheelfile) as wheel:
+                for filename in wheel.namelist():
+                    path = Path(filename)
+                    if (
+                        len(path.parts) == 3
+                        and path.parts[1] == "deploy"
+                        and path.name == "config.toml"
+                    ):
+                        self.console.info(f"    Found {filename}")
+                        config_package_list.append(wheelfile)
+                        config_filename = filename
+
+        # Return a blank pyscript config if no configuration file is found.
+        if len(config_package_list) == 0:
+            pyscript_config = {}
+        # Raise an error if more than one configuration file is supplied.
+        elif len(config_package_list) > 1:
+            raise BriefcaseConfigError(
+                f"""Only 1 backend configuration file can be supplied.
+                Initial config.toml found in package: {config_package}
+                Duplicate config.toml found in package: {wheel.filename}"""
+            )
+        # Gather a backend configuration file from the package.
+        # For now, is a pyscript.toml as no other backend is currently supported.
+        else:
+            with ZipFile(config_package_list[0]) as wheel:
+                # Check which backend type is used.
+                with wheel.open(config_filename) as config_file:
+                    config_data = tomllib.load(config_file)
+
+                    if "backend" in config_data:
+                        backend = config_data.get("backend")
+
+                        # Currently, only pyscript is supported, will raise an error if another backend is found.
+                        if backend != "pyscript":
+                            raise BriefcaseConfigError(
+                                "Only 'pyscript' backend is currently supported for web static builds."
+                            )
+
+                        # Get pyscript version from config.toml. Use default if not present.
+
+                        if "version" in config_data:
+                            pyscript_version = config_data.get("version")
+
+                        pyscript_path = config_filename.replace(
+                            "config.toml", "pyscript.toml"
+                        )
+                        try:
+                            with wheel.open(pyscript_path) as pyscript_file:
+                                pyscript_config = tomllib.load(pyscript_file)
+                        except KeyError:
+                            raise BriefcaseConfigError(
+                                f"Pyscript configuration file not found in package: {config_package_list[0]}"
+                            )
+
+                    # Raise error if no backend is present in config.toml
+                    else:
+                        raise BriefcaseConfigError(
+                            "No backend was provided in config.toml file."
+                        )
+
+        return pyscript_config, pyscript_version
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build the static web deployment for the application.
@@ -188,15 +533,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with self.console.wait_bar("Writing Pyscript configuration file..."):
             # Load any pre-existing pyscript.toml provided by the template. If the file
             # doesn't exist, assume an empty pyscript.toml as a starting point.
-            try:
-                with (self.project_path(app) / "pyscript.toml").open("rb") as f:
-                    config = tomllib.load(f)
-            except tomllib.TOMLDecodeError as e:
-                raise BriefcaseConfigError(
-                    f"pyscript.toml content isn't valid TOML: {e}"
-                ) from e
-            except FileNotFoundError:
-                config = {}
+            config, pyscript_version = self.extract_backend_config(
+                self.wheel_path(app).glob("*.whl")
+            )
 
             # Add the packages declaration to the existing pyscript.toml.
             # Ensure that we're using Unix path separators, as the content
@@ -218,12 +557,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             except AttributeError:
                 pass
 
-            # Write the final configuration.
+            # Write the final configuration
             with (self.project_path(app) / "pyscript.toml").open("wb") as f:
                 tomli_w.dump(config, f)
 
         self.console.info("Compile static web content from wheels")
         with self.console.wait_bar("Compiling static web content from wheels..."):
+            # Add pyscript_version to index.html
+            self.write_pyscript_version(app, Path("index.html"), pyscript_version)
+
             # Trim previously compiled content out of briefcase.css
             briefcase_css_path = self.project_path(app) / "static/css/briefcase.css"
             self._trim_file(
@@ -231,11 +573,20 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 sentinel=" ******************* Wheel contributed styles **********************/",
             )
 
-            # Extract static resources from packaged wheels
+            inserts: dict[str, dict[str, dict[str, str]]] = {}
+            static_root = self.static_path(app)
+
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
                 self.console.info(f"  Processing {wheelfile.name}...")
-                with briefcase_css_path.open("a", encoding="utf-8") as css_file:
-                    self._process_wheel(wheelfile, css_file=css_file)
+                self._process_wheel(
+                    wheelfile=wheelfile,
+                    inserts=inserts,
+                    static_path=static_root,
+                )
+
+            # Write inserts per target
+            for target, target_inserts in sorted(inserts.items()):
+                self.write_inserts(app, Path(target), target_inserts)
 
         return {}
 
