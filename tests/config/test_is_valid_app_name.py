@@ -14,7 +14,7 @@ from briefcase.config import is_valid_app_name
         "helloworld42",
         "a",  # single letter
         "abc123",  # alphanumeric
-        "none",  # daft but legal ;-)
+        "none",  # `None` is illegal, but when lower case, it isn't a reserved word
         "helloworld_",  # ends with underscore (valid Python identifier)
         "helloworld-",  # ends with hyphen (converts to valid identifier)
     ],
