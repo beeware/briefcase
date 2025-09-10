@@ -22,7 +22,7 @@ class VenvContext:
 
     @property
     def bin_dir(self) -> Path:
-        r"""Return the path to the virtual environment's binary directory.
+        """Return the path to the virtual environment's binary directory.
 
         :return: <venv>/bin (or <venv>\Scripts on Windows)
         """
@@ -211,13 +211,14 @@ def virtual_environment(
     """Return a environment context for the requested isolation settings. Creates either
     a virtual environment context or a no-op context.
 
+    If an isolated environment is requested, a `venv_path` *must* be provided.
+    
     :param tools: The tools instance
     :param console: The console instance
     :param venv_path: Complete path for the virtual environment
     :param isolated: If False, return NoOpEnvironment. Default True.
     :param recreate: Whether to recreate existing venv. Default False.
-    :raises BriefcaseCommandError: if isolated=True but venv_path is None.
-    :returns: VenvEnvironment or NoOpEnvironment
+    :returns: A context manager for an environment where code can be executed.
     """
     if not isolated:
         return NoOpEnvironment(tools=tools, console=console)
