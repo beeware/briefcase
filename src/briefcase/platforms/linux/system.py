@@ -352,7 +352,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(
                     "Unable to determine glibc dependency version."
-                )
+                ) from None
 
         else:
             target_glibc = super().target_glibc_version(app)

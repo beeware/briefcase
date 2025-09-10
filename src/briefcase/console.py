@@ -718,7 +718,7 @@ class Console:
             # Use underlying Rich input() to read from user
             input_value = self._console_impl.input(escaped_prompt, markup=True)
         except EOFError:
-            raise KeyboardInterrupt
+            raise KeyboardInterrupt from None
 
         self.to_log(prompt)
         self.to_log(f"User input: {input_value}")
@@ -950,7 +950,7 @@ class Console:
             try:
                 default = str([option[0] for option in ordered].index(default) + 1)
             except ValueError:
-                raise ValueError(f"{default!r} is not a valid default value")
+                raise ValueError(f"{default!r} is not a valid default value") from None
 
         for i, (_, value) in enumerate(ordered, start=1):
             self.prompt(f"  {i}) {value}")
@@ -996,7 +996,9 @@ class Console:
             try:
                 return parse_boolean(override_value)
             except ValueError as e:
-                raise ValueError(f"Invalid override value for {description}: {e}")
+                raise ValueError(
+                    f"Invalid override value for {description}: {e}"
+                ) from None
 
         self.prompt()
         self.prompt(self.textwrap(intro))
