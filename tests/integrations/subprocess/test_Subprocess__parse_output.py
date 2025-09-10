@@ -16,7 +16,7 @@ def second_line_parser(data):
     try:
         return data.splitlines()[1]
     except IndexError:
-        raise ParseError("Input does not contain 2 lines")
+        raise ParseError("Input does not contain 2 lines") from None
 
 
 def third_line_parser(data):
@@ -24,7 +24,7 @@ def third_line_parser(data):
     try:
         return data.splitlines()[2]
     except IndexError:
-        raise ParseError("Input does not contain 3 lines")
+        raise ParseError("Input does not contain 3 lines") from None
 
 
 def test_call(mock_sub, capsys, sub_check_output_kw):
