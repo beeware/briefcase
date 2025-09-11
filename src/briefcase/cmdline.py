@@ -147,7 +147,7 @@ def parse_cmdline(args, console: Console | None = None):
         if extra and not extra[0].startswith("-"):
             name = extra.pop(0)
             # Normalize the platform name to the registered capitalization
-            platform = {n.lower(): n for n in platforms.keys()}.get(name.lower(), name)
+            platform = {n.lower(): n for n in platforms}.get(name.lower(), name)
         else:
             platform = {
                 "darwin": "macOS",

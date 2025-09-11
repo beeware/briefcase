@@ -243,7 +243,7 @@ extend-select = [
     # The SIM rules are *very* opinionated, and don't necessarily make for better code.
     # They may be worth occasionally turning on just to see if something could actually
     # use improvement.
-    # "SIM",    # flake8-simplify
+    "SIM",    # flake8-simplify
 ]
 
 # Below is a list of ignored rules.  Many (if not all) of these have been disabled
