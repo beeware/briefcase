@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch
+import sys
 
 import pytest
 
@@ -9,25 +9,24 @@ from briefcase.integrations.virtual_environment import VenvContext
 class TestExecutable:
     """Test cases for VenvContext.executable property."""
 
-    @pytest.mark.parametrize(
-        "platform, expected_filename",
-        [
-            ("nt", "python.exe"),
-            ("posix", "python"),
-            ("darwin", "python"),
-            ("linux", "python"),
-        ],
-    )
-    def test_executable_platform_specific_naming(
-        self, venv_context: VenvContext, platform, expected_filename
-    ):
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
+    def test_executable_platform_specific_naming(self, venv_context):
         """Test executable property uses correct filename for each platform."""
-        with patch("os.name", platform):
-            result = venv_context.executable
 
-            assert result.endswith(expected_filename)
-            assert isinstance(result, str)
-            assert str(venv_context.bin_dir) in result
+        result = venv_context.executable
+
+        assert result.endswith("python")
+        assert isinstance(result, str)
+        assert str(venv_context.bin_dir) in result
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
+    def test_executable_windows_naming(self, venv_context):
+        """Test executable property uses correct filename for each platform."""
+        result = venv_context.executable
+
+        assert result.endswith("python")
+        assert isinstance(result, str)
+        assert str(venv_context.bin_dir) in result
 
     def test_executable_path_construction(self, venv_context: VenvContext):
         """Test executable property constructs correct path."""

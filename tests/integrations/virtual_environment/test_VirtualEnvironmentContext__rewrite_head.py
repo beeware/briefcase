@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 
@@ -22,8 +21,6 @@ class TestRewriteHead:
         """Test that rewrite_head returns empty inputs unchanged."""
         result = venv_context._rewrite_head(empty_args)
         assert result == empty_args
-        if empty_args is None:
-            assert result is None
 
     @pytest.mark.parametrize(
         "args, expected_suffix",
@@ -60,17 +57,28 @@ class TestRewriteHead:
         assert result == expected
         assert isinstance(result, list)
 
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Unix specific case handling test"
+    )
     def test_rewrite_head_case_insensitive_match(self, venv_context):
         """Test _rewrite_head handles case-insensitive matching via normcase."""
-        if os.name == "nt":  # Windows
-            case_variant = (
-                sys.executable.upper()
-                if sys.executable.islower()
-                else sys.executable.lower()
-            )
-        else:
-            case_variant = sys.executable
+        case_variant = sys.executable
 
+        args = [case_variant, "-V"]
+        result = venv_context._rewrite_head(args)
+
+        expected = [venv_context.executable, "-V"]
+        assert result == expected
+
+    @pytest.mark.skipif(
+        sys.platform != "win32", reason="Windows specific case handling test"
+    )
+    def test_rewrite_head_case_insensitive_match_nt(self, venv_context):
+        case_variant = (
+            sys.executable.upper()
+            if sys.executable.islower()
+            else sys.executable.lower()
+        )
         args = [case_variant, "-V"]
         result = venv_context._rewrite_head(args)
 

@@ -22,7 +22,7 @@ class VenvContext:
 
     @property
     def bin_dir(self) -> Path:
-        """Return the path to the virtual environment's binary directory.
+        r"""Return the path to the virtual environment's binary directory.
 
         :return: <venv>/bin (or <venv>\Scripts on Windows)
         """
@@ -212,7 +212,7 @@ def virtual_environment(
     a virtual environment context or a no-op context.
 
     If an isolated environment is requested, a `venv_path` *must* be provided.
-    
+
     :param tools: The tools instance
     :param console: The console instance
     :param venv_path: Complete path for the virtual environment

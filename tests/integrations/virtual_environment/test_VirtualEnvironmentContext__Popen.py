@@ -2,8 +2,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from briefcase.integrations.virtual_environment import VenvContext
-
 
 class TestPopen:
     """Test cases for VenvContext.Popen method."""
@@ -20,9 +18,7 @@ class TestPopen:
             ),
         ],
     )
-    def test_popen_environment_handling(
-        self, venv_context: VenvContext, env_override, other_kwargs
-    ):
+    def test_popen_environment_handling(self, venv_context, env_override, other_kwargs):
         """Test Popen properly handles environment and kwargs."""
 
         mock_rewrite_head = Mock(return_value=["rewritten", "args"])
@@ -53,7 +49,7 @@ class TestPopen:
 
             assert result is mock_popen_instance
 
-    def test_popen_kwargs_env_extraction(self, venv_context: VenvContext):
+    def test_popen_kwargs_env_extraction(self, venv_context):
         """Test Popen properly extracts env from kwargs without mutation."""
         mock_rewrite_head = Mock(return_value=["args"])
         mock_full_env = Mock(return_value={"MERGED": "env"})
