@@ -1,4 +1,5 @@
 import os
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -80,6 +81,22 @@ def test_full_env_windows_pythonhome_removal(venv_context: VenvContext):
     overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
 
     with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
+        result = venv_context.full_env(overrides)
+
+        assert "PYTHONHOME" not in result
+        assert result["CUSTOM"] == "value"
+        assert result["PATH"].endswith("test_venv/Scripts:/system/bin")
+        assert result["VIRTUAL_ENV"].endswith("test_venv")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
+def test_full_env_windows_pythonhome_removal_from_system_env(venv_context: VenvContext):
+    """Test full_env removes PYTHONHOME from system environment on Windows."""
+    overrides = {"CUSTOM": "value"}
+
+    with patch.dict(
+        os.environ, {"PATH": "/system/bin", "PYTHONHOME": "/system/python"}, clear=False
+    ):
         result = venv_context.full_env(overrides)
 
         assert "PYTHONHOME" not in result
