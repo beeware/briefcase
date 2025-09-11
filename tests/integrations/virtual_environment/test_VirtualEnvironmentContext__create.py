@@ -10,7 +10,7 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-def test_create(self, dummy_tools, venv_path):
+def test_create(dummy_tools, venv_path):
     """Tests create creates a venv at the specified path."""
     context = VenvContext(dummy_tools, venv_path)
 
@@ -31,7 +31,7 @@ def test_create(self, dummy_tools, venv_path):
     context.update_core_tools.assert_called_once()
 
 
-def test_create_subprocess_fails(self, dummy_tools, venv_path):
+def test_create_subprocess_fails(dummy_tools, venv_path):
     """Tests create raises BriefcaseCommandError if subprocess fails."""
     context = VenvContext(dummy_tools, venv_path)
 

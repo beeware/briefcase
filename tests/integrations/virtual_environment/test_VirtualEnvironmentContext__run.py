@@ -15,7 +15,7 @@ from briefcase.integrations.virtual_environment import VenvContext
     ],
 )
 def test_run_environment_handling(
-    self, venv_context: VenvContext, env_override, other_kwargs
+    venv_context: VenvContext, env_override, other_kwargs
 ):
     """Test run properly handles environment and kwargs."""
 
@@ -48,7 +48,7 @@ def test_run_environment_handling(
         assert result is mock_completed_process
 
 
-def test_run_kwargs_env_extraction(self, venv_context: VenvContext):
+def test_run_kwargs_env_extraction(venv_context: VenvContext):
     """Test run properly extracts env from kwargs without mutation."""
     mock_rewrite_head = Mock(return_value=["args"])
     mock_full_env = Mock(return_value={"MERGED": "env"})

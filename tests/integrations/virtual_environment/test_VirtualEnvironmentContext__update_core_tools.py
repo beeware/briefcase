@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-def test_update_core_tools_success(self, dummy_tools, venv_path):
+def test_update_core_tools_success(dummy_tools, venv_path):
     """Test update_core_tools succeeds."""
     context = VenvContext(dummy_tools, venv_path)
     context.run = MagicMock()
@@ -18,7 +18,7 @@ def test_update_core_tools_success(self, dummy_tools, venv_path):
     )
 
 
-def test_update_core_tools_failure(self, dummy_tools, venv_path):
+def test_update_core_tools_failure(dummy_tools, venv_path):
     """Tests update core tools raise BriefcaseCommandError if subprocess fails."""
     context = VenvContext(dummy_tools, venv_path)
     test_exception = RuntimeError("pip install failed")

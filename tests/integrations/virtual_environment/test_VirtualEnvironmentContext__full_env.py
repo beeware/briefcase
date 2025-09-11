@@ -7,7 +7,7 @@ from briefcase.integrations.virtual_environment import VenvContext
 
 
 @pytest.mark.parametrize("overrides", [None, {}, {"VALUE": "value"}])
-def test_full_env_basic_creation(self, venv_context: VenvContext, overrides):
+def test_full_env_basic_creation(venv_context: VenvContext, overrides):
     """Test that full_env creates an environment with expected defaults."""
     with patch.dict(os.environ, {"PATH": "/system/bin:/usr/bin"}, clear=False):
         result = venv_context.full_env(overrides)
@@ -19,9 +19,7 @@ def test_full_env_basic_creation(self, venv_context: VenvContext, overrides):
             assert result["VALUE"] == "value"
 
 
-def test_full_env_path_override_custom_path_with_system(
-    self, venv_context: VenvContext
-):
+def test_full_env_path_override_custom_path_with_system(venv_context: VenvContext):
     """Test full_env with custom PATH override and system PATH."""
     overrides = {"PATH": "/custom/path"}
 
@@ -32,7 +30,7 @@ def test_full_env_path_override_custom_path_with_system(
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_none_with_system(self, venv_context: VenvContext):
+def test_full_env_path_override_none_with_system(venv_context: VenvContext):
     """Test full_env with None PATH override and system PATH."""
     overrides = {"PATH": None}
 
@@ -43,7 +41,7 @@ def test_full_env_path_override_none_with_system(self, venv_context: VenvContext
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_empty_with_system(self, venv_context: VenvContext):
+def test_full_env_path_override_empty_with_system(venv_context: VenvContext):
     """Test full_env with empty PATH override and system PATH."""
     overrides = {"PATH": ""}
 
@@ -54,9 +52,7 @@ def test_full_env_path_override_empty_with_system(self, venv_context: VenvContex
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_custom_with_empty_system(
-    self, venv_context: VenvContext
-):
+def test_full_env_path_override_custom_with_empty_system(venv_context: VenvContext):
     """Test full_env with custom PATH override and empty system PATH."""
     overrides = {"PATH": "/custom/path"}
 
@@ -67,7 +63,7 @@ def test_full_env_path_override_custom_with_empty_system(
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_none_with_empty_system(self, venv_context: VenvContext):
+def test_full_env_path_override_none_with_empty_system(venv_context: VenvContext):
     """Test full_env with None PATH override and empty system PATH."""
     overrides = {"PATH": None}
 
@@ -79,7 +75,7 @@ def test_full_env_path_override_none_with_empty_system(self, venv_context: VenvC
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows-specific test")
-def test_full_env_windows_pythonhome_removal(self, venv_context: VenvContext):
+def test_full_env_windows_pythonhome_removal(venv_context: VenvContext):
     """Test full_env removes PYTHONHOME on Windows."""
     overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
 
@@ -93,7 +89,7 @@ def test_full_env_windows_pythonhome_removal(self, venv_context: VenvContext):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Unix-specific test")
-def test_full_env_unix_no_pythonhome_handling(self, venv_context: VenvContext):
+def test_full_env_unix_no_pythonhome_handling(venv_context: VenvContext):
     """Test full_env preserves PYTHONHOME on Unix systems."""
     overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
 
@@ -106,7 +102,7 @@ def test_full_env_unix_no_pythonhome_handling(self, venv_context: VenvContext):
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_no_overrides(self, venv_context: VenvContext):
+def test_full_env_no_overrides(venv_context: VenvContext):
     """Test full_env with no overrides parameter."""
     with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
         result = venv_context.full_env(None)
@@ -115,7 +111,7 @@ def test_full_env_no_overrides(self, venv_context: VenvContext):
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_no_system_path(self, venv_context: VenvContext):
+def test_full_env_no_system_path(venv_context: VenvContext):
     """Test full_env when system has no PATH."""
     with patch.dict(os.environ, {}, clear=True):
         result = venv_context.full_env(None)

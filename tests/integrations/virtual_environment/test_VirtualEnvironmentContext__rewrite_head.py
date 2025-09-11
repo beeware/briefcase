@@ -14,7 +14,7 @@ from briefcase.integrations.virtual_environment import VenvContext
         None,
     ],
 )
-def test_rewrite_head_empty(self, venv_context: VenvContext, empty_args):
+def test_rewrite_head_empty(venv_context: VenvContext, empty_args):
     """Test that rewrite_head returns empty inputs unchanged."""
     result = venv_context._rewrite_head(empty_args)
     assert result == empty_args
@@ -32,7 +32,7 @@ def test_rewrite_head_empty(self, venv_context: VenvContext, empty_args):
     ],
 )
 def test_rewrite_head_system_python_replacement(
-    self, venv_context: VenvContext, args, expected_suffix
+    venv_context: VenvContext, args, expected_suffix
 ):
     """Test _rewrite_head replaces sys.executable with venv executable."""
     result = venv_context._rewrite_head(args)
@@ -49,7 +49,7 @@ def test_rewrite_head_system_python_replacement(
         ("python", "-c", "import sys"),
     ],
 )
-def test_rewrite_head_no_replacement(self, venv_context: VenvContext, args):
+def test_rewrite_head_no_replacement(venv_context: VenvContext, args):
     """Test _rewrite_head preserves non-matching commands and converts to list."""
     result = venv_context._rewrite_head(args)
     expected = list(args)
@@ -58,7 +58,7 @@ def test_rewrite_head_no_replacement(self, venv_context: VenvContext, args):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific case handling test")
-def test_rewrite_head_case_insensitive_match(self, venv_context):
+def test_rewrite_head_case_insensitive_match(venv_context):
     """Test _rewrite_head handles case-insensitive matching via normcase."""
     case_variant = sys.executable
 
@@ -72,7 +72,7 @@ def test_rewrite_head_case_insensitive_match(self, venv_context):
 @pytest.mark.skipif(
     sys.platform != "win32", reason="Windows specific case handling test"
 )
-def test_rewrite_head_case_insensitive_match_nt(self, venv_context):
+def test_rewrite_head_case_insensitive_match_nt(venv_context):
     case_variant = (
         sys.executable.upper() if sys.executable.islower() else sys.executable.lower()
     )

@@ -7,7 +7,7 @@ from briefcase.integrations.virtual_environment import VenvContext
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
-def test_executable_platform_specific_naming(self, venv_context):
+def test_executable_platform_specific_naming(venv_context):
     """Test executable property uses correct filename for each platform."""
 
     result = venv_context.executable
@@ -18,7 +18,7 @@ def test_executable_platform_specific_naming(self, venv_context):
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
-def test_executable_windows_naming(self, venv_context):
+def test_executable_windows_naming(venv_context):
     """Test executable property uses correct filename for each platform."""
     result = venv_context.executable
 
@@ -27,7 +27,7 @@ def test_executable_windows_naming(self, venv_context):
     assert str(venv_context.bin_dir) in result
 
 
-def test_executable_path_construction(self, venv_context: VenvContext):
+def test_executable_path_construction(venv_context: VenvContext):
     """Test executable property constructs correct path."""
     result = venv_context.executable
 
@@ -39,7 +39,7 @@ def test_executable_path_construction(self, venv_context: VenvContext):
     assert str(venv_context.bin_dir) in result
 
 
-def test_executable_uses_bin_dir(self, venv_context: VenvContext):
+def test_executable_uses_bin_dir(venv_context: VenvContext):
     """Test executable property correctly uses bin_dir."""
 
     expected_filename = "python.exe" if os.name == "nt" else "python"
