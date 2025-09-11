@@ -6,12 +6,7 @@ import pytest
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-
-"""Tests for VenvContext.bin_dir property."""
-
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Unix specific bin directory test"
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific bin directory test")
 def test_bin_dir_unix(self, dummy_tools, tmp_path):
     """Test bin_dir returns 'bin' directory on Unix systems."""
     venv_path = tmp_path / "test_venv"
@@ -22,6 +17,7 @@ def test_bin_dir_unix(self, dummy_tools, tmp_path):
     expected = venv_path / "bin"
     assert result == expected
     assert isinstance(result, Path)
+
 
 @pytest.mark.skipif(
     sys.platform != "win32", reason="Windows specific bin directory test"
@@ -35,6 +31,7 @@ def test_bin_dir_windows(self, dummy_tools, tmp_path):
     expected = venv_path / "Scripts"
     assert result == expected
     assert isinstance(result, Path)
+
 
 @pytest.mark.parametrize(
     "venv_path",
@@ -50,6 +47,7 @@ def test_bin_dir_different_venv_paths(self, dummy_tools, venv_path):
     context = VenvContext(dummy_tools, venv_path)
     windows_result = context.bin_dir
     assert windows_result == venv_path / "Scripts"
+
 
 @pytest.mark.parametrize(
     "venv_path",

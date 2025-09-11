@@ -8,9 +8,6 @@ from briefcase.integrations.virtual_environment import (
 )
 
 
-
-"""Tests for the virtual_environment factory function."""
-
 def test_isolated_true_returns_venv_environment(
     self, dummy_tools, dummy_console, venv_path
 ):
@@ -19,6 +16,7 @@ def test_isolated_true_returns_venv_environment(
     assert isinstance(env, VenvEnvironment)
     assert env.venv_path == venv_path
 
+
 def test_isolated_false_returns_noop_environment(
     self, dummy_tools, dummy_console, venv_path
 ):
@@ -26,10 +24,12 @@ def test_isolated_false_returns_noop_environment(
     env = virtual_environment(dummy_tools, dummy_console, venv_path, isolated=False)
     assert isinstance(env, NoOpEnvironment)
 
+
 def test_isolated_default_true(self, dummy_tools, dummy_console, venv_path):
     """Factory defaults to isolated=True."""
     env = virtual_environment(dummy_tools, dummy_console, venv_path)
     assert isinstance(env, VenvEnvironment)
+
 
 def test_recreate_default_false(self, dummy_tools, dummy_console, venv_path):
     """Factory defaults to recreate=False."""
@@ -37,9 +37,8 @@ def test_recreate_default_false(self, dummy_tools, dummy_console, venv_path):
     assert isinstance(env, VenvEnvironment)
     assert env.recreate is False
 
-def test_isolated_true_none_venv_path_raises_error(
-    self, dummy_tools, dummy_console
-):
+
+def test_isolated_true_none_venv_path_raises_error(self, dummy_tools, dummy_console):
     """Factory raises error when isolated=True but venv_path is None."""
     with pytest.raises(
         BriefcaseCommandError, match="A virtual environment path must be provided"

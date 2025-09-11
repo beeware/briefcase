@@ -7,9 +7,6 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-
-"""Tests for the VenvContext.update_core_tools method."""
-
 def test_update_core_tools_success(self, dummy_tools, venv_path):
     """Test update_core_tools succeeds."""
     context = VenvContext(dummy_tools, venv_path)
@@ -19,6 +16,7 @@ def test_update_core_tools_success(self, dummy_tools, venv_path):
         [context.executable, "-m", "pip", "install", "-U", "pip"],
         check=True,
     )
+
 
 def test_update_core_tools_failure(self, dummy_tools, venv_path):
     """Tests update core tools raise BriefcaseCommandError if subprocess fails."""

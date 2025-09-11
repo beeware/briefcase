@@ -5,9 +5,6 @@ import pytest
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-
-"""Test cases for VenvContext.run method."""
-
 @pytest.mark.parametrize(
     "env_override, other_kwargs",
     [
@@ -50,6 +47,7 @@ def test_run_environment_handling(
 
         assert result is mock_completed_process
 
+
 def test_run_kwargs_env_extraction(self, venv_context: VenvContext):
     """Test run properly extracts env from kwargs without mutation."""
     mock_rewrite_head = Mock(return_value=["args"])
@@ -83,8 +81,6 @@ def test_run_kwargs_env_extraction(self, venv_context: VenvContext):
             "capture_output": False,
             "env": {"MERGED": "env"},
         }
-        mock_subprocess.run.assert_called_once_with(
-            ["args"], **expected_call_kwargs
-        )
+        mock_subprocess.run.assert_called_once_with(["args"], **expected_call_kwargs)
 
         assert result is mock_completed_process

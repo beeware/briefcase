@@ -5,9 +5,6 @@ import pytest
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-
-"""Test cases for VenvContext.check_output method."""
-
 @pytest.mark.parametrize(
     "env_override, other_kwargs",
     [
@@ -48,6 +45,7 @@ def test_check_output_environment_handling(
         )
 
         assert result == "output"
+
 
 def test_check_output_kwargs_env_extraction(self, venv_context: VenvContext):
     """Test check_output properly extracts env from kwargs."""

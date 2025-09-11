@@ -6,9 +6,6 @@ import pytest
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-
-"""Test cases for the VenvContext.rewrite_head method."""
-
 @pytest.mark.parametrize(
     "empty_args",
     [
@@ -21,6 +18,7 @@ def test_rewrite_head_empty(self, venv_context: VenvContext, empty_args):
     """Test that rewrite_head returns empty inputs unchanged."""
     result = venv_context._rewrite_head(empty_args)
     assert result == empty_args
+
 
 @pytest.mark.parametrize(
     "args, expected_suffix",
@@ -42,6 +40,7 @@ def test_rewrite_head_system_python_replacement(
     expected = [venv_context.executable] + expected_suffix
     assert result == expected
 
+
 @pytest.mark.parametrize(
     "args",
     [
@@ -57,9 +56,8 @@ def test_rewrite_head_no_replacement(self, venv_context: VenvContext, args):
     assert result == expected
     assert isinstance(result, list)
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Unix specific case handling test"
-)
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific case handling test")
 def test_rewrite_head_case_insensitive_match(self, venv_context):
     """Test _rewrite_head handles case-insensitive matching via normcase."""
     case_variant = sys.executable
@@ -70,14 +68,13 @@ def test_rewrite_head_case_insensitive_match(self, venv_context):
     expected = [venv_context.executable, "-V"]
     assert result == expected
 
+
 @pytest.mark.skipif(
     sys.platform != "win32", reason="Windows specific case handling test"
 )
 def test_rewrite_head_case_insensitive_match_nt(self, venv_context):
     case_variant = (
-        sys.executable.upper()
-        if sys.executable.islower()
-        else sys.executable.lower()
+        sys.executable.upper() if sys.executable.islower() else sys.executable.lower()
     )
     args = [case_variant, "-V"]
     result = venv_context._rewrite_head(args)
