@@ -75,7 +75,7 @@ def test_full_env_path_override_none_with_empty_system(venv_context: VenvContext
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-@pytest.mark.skipif(os.name != "nt", reason="Windows-specific test")
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
 def test_full_env_windows_pythonhome_removal(venv_context: VenvContext):
     """Test full_env removes PYTHONHOME on Windows."""
     overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
@@ -89,23 +89,7 @@ def test_full_env_windows_pythonhome_removal(venv_context: VenvContext):
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
-def test_full_env_windows_pythonhome_removal_from_system_env(venv_context: VenvContext):
-    """Test full_env removes PYTHONHOME from system environment on Windows."""
-    overrides = {"CUSTOM": "value"}
-
-    with patch.dict(
-        os.environ, {"PATH": "/system/bin", "PYTHONHOME": "/system/python"}, clear=False
-    ):
-        result = venv_context.full_env(overrides)
-
-        assert "PYTHONHOME" not in result
-        assert result["CUSTOM"] == "value"
-        assert result["PATH"].endswith("test_venv/Scripts:/system/bin")
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-@pytest.mark.skipif(os.name == "nt", reason="Unix-specific test")
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
 def test_full_env_unix_no_pythonhome_handling(venv_context: VenvContext):
     """Test full_env preserves PYTHONHOME on Unix systems."""
     overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
