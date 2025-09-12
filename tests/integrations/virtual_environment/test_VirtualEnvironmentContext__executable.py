@@ -22,7 +22,7 @@ def test_executable_windows_naming(venv_context):
     """Test executable property uses correct filename for each platform."""
     result = venv_context.executable
 
-    assert result.endswith("python")
+    assert result.endswith("python.exe")
     assert isinstance(result, str)
     assert str(venv_context.bin_dir) in result
 

@@ -4,118 +4,238 @@ from unittest.mock import patch
 
 import pytest
 
-from briefcase.integrations.virtual_environment import VenvContext
+
+@pytest.fixture
+def platform_paths():
+    """Platform-appropriate mock paths for testing."""
+    if sys.platform == "win32":
+        return {
+            "system": "C:\\Windows\\system32;C:\\Windows",
+            "user": "C:\\custom\\path",
+            "complex": "C:\\system\\bin;C:\\usr\\bin",
+            "empty": "",
+        }
+    return {
+        "system": "/system/bin",
+        "user": "/custom/path",
+        "complex": "/system/bin:/usr/bin",
+        "empty": "",
+    }
+
+
+@pytest.fixture
+def venv_bin_dir():
+    """Platform-appropriate virtual environment binary directory."""
+    return "Scripts" if sys.platform == "win32" else "bin"
+
+
+@pytest.fixture
+def path_separator():
+    """Platform-appropriate PATH separator."""
+    return os.pathsep
 
 
 @pytest.mark.parametrize("overrides", [None, {}, {"VALUE": "value"}])
-def test_full_env_basic_creation(venv_context: VenvContext, overrides):
+def test_full_env_basic_creation(
+    venv_context, platform_paths, venv_bin_dir, path_separator, overrides
+):
     """Test that full_env creates an environment with expected defaults."""
-    with patch.dict(os.environ, {"PATH": "/system/bin:/usr/bin"}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["complex"]}, clear=False):
         result = venv_context.full_env(overrides)
 
-        assert result["PATH"].endswith("test_venv/bin:/system/bin:/usr/bin")
+        expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['complex']}"
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
         if overrides and "VALUE" in overrides:
             assert result["VALUE"] == "value"
 
 
-def test_full_env_path_override_custom_path_with_system(venv_context: VenvContext):
+def test_full_env_path_override_custom_path_with_system(
+    venv_context, platform_paths, venv_bin_dir, path_separator
+):
     """Test full_env with custom PATH override and system PATH."""
-    overrides = {"PATH": "/custom/path"}
+    overrides = {"PATH": platform_paths["user"]}
 
-    with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
         result = venv_context.full_env(overrides)
 
-        assert result["PATH"].endswith("test_venv/bin:/custom/path")
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['user']}"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_none_with_system(venv_context: VenvContext):
+def test_full_env_path_override_none_with_system(
+    venv_context, platform_paths, venv_bin_dir, path_separator
+):
     """Test full_env with None PATH override and system PATH."""
     overrides = {"PATH": None}
 
-    with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
         result = venv_context.full_env(overrides)
 
-        assert result["PATH"].endswith("test_venv/bin:/system/bin")
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['system']}"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_empty_with_system(venv_context: VenvContext):
+def test_full_env_path_override_empty_with_system(
+    venv_context, platform_paths, venv_bin_dir, path_separator
+):
     """Test full_env with empty PATH override and system PATH."""
-    overrides = {"PATH": ""}
+    overrides = {"PATH": platform_paths["empty"]}
 
-    with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
         result = venv_context.full_env(overrides)
 
-        assert result["PATH"].endswith("test_venv/bin:/system/bin")
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['system']}"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_custom_with_empty_system(venv_context: VenvContext):
+def test_full_env_path_override_custom_with_empty_system(
+    venv_context, platform_paths, venv_bin_dir, path_separator
+):
     """Test full_env with custom PATH override and empty system PATH."""
-    overrides = {"PATH": "/custom/path"}
+    overrides = {"PATH": platform_paths["user"]}
 
-    with patch.dict(os.environ, {"PATH": ""}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["empty"]}, clear=False):
         result = venv_context.full_env(overrides)
 
-        assert result["PATH"].endswith("test_venv/bin:/custom/path")
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['user']}"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_path_override_none_with_empty_system(venv_context: VenvContext):
+def test_full_env_path_override_none_with_empty_system(
+    venv_context, platform_paths, venv_bin_dir
+):
     """Test full_env with None PATH override and empty system PATH."""
     overrides = {"PATH": None}
 
-    with patch.dict(os.environ, {"PATH": ""}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["empty"]}, clear=False):
         result = venv_context.full_env(overrides)
 
-        assert result["PATH"].endswith("test_venv/bin")
+        expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}"
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
-def test_full_env_windows_pythonhome_removal(venv_context: VenvContext):
-    """Test full_env removes PYTHONHOME on Windows."""
-    overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
-
-    with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
-        result = venv_context.full_env(overrides)
-
-        assert "PYTHONHOME" not in result
-        assert result["CUSTOM"] == "value"
-        assert result["PATH"].endswith("test_venv/Scripts:/system/bin")
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
-def test_full_env_unix_no_pythonhome_handling(venv_context: VenvContext):
-    """Test full_env preserves PYTHONHOME on Unix systems."""
-    overrides = {"PYTHONHOME": "/old/python", "CUSTOM": "value"}
-
-    with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
-        result = venv_context.full_env(overrides)
-
-        assert result["PYTHONHOME"] == "/old/python"
-        assert result["CUSTOM"] == "value"
-        assert result["PATH"].endswith("test_venv/bin:/system/bin")
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-def test_full_env_no_overrides(venv_context: VenvContext):
+def test_full_env_no_overrides(
+    venv_context, platform_paths, venv_bin_dir, path_separator
+):
     """Test full_env with no overrides parameter."""
-    with patch.dict(os.environ, {"PATH": "/system/bin"}, clear=False):
+    with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
         result = venv_context.full_env(None)
 
-        assert result["PATH"].endswith("test_venv/bin:/system/bin")
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['system']}"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-def test_full_env_no_system_path(venv_context: VenvContext):
+def test_full_env_no_system_path(venv_context, venv_bin_dir):
     """Test full_env when system has no PATH."""
     with patch.dict(os.environ, {}, clear=True):
         result = venv_context.full_env(None)
 
-        assert result["PATH"].endswith("test_venv/bin")
+        expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}"
+        assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
+def test_full_env_windows_pythonhome_removal_mocked(
+    venv_context, venv_bin_dir, path_separator
+):
+    """Test full_env removes PYTHONHOME on Windows."""
+    overrides = {
+        "PYTHONHOME": "C:\\some\\python",
+        "CUSTOM": "keep_me",
+    }
+
+    with patch.dict(os.environ, {"PATH": "C:\\Windows\\system32"}, clear=False):
+        result = venv_context.full_env(overrides)
+
+        assert "PYTHONHOME" not in result
+        assert result["CUSTOM"] == "keep_me"
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}C:\\Windows\\system32"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
+        assert result["VIRTUAL_ENV"].endswith("test_venv")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
+def test_full_env_windows_pythonhome_removal_no_overrides(
+    venv_context, venv_bin_dir, path_separator
+):
+    """Test full_env removes PYTHONHOME on Windows with no overrides."""
+    with patch.dict(
+        os.environ,
+        {"PATH": "C:\\Windows\\system32", "PYTHONHOME": "C:\\old\\python"},
+        clear=False,
+    ):
+        result = venv_context.full_env(None)
+
+        assert "PYTHONHOME" not in result
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}C:\\Windows\\system32"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
+        assert result["VIRTUAL_ENV"].endswith("test_venv")
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
+def test_full_env_non_windows_pythonhome_preserved(
+    venv_context, venv_bin_dir, path_separator
+):
+    """Test full_env preserves PYTHONHOME on non-Windows."""
+    overrides = {
+        "PYTHONHOME": "/some/python",
+        "CUSTOM": "keep_me",
+    }
+
+    with patch.dict(os.environ, {"PATH": "/usr/bin"}, clear=False):
+        result = venv_context.full_env(overrides)
+
+        assert result["PYTHONHOME"] == "/some/python"
+        assert result["CUSTOM"] == "keep_me"
+        expected_path_ending = (
+            f"test_venv{os.sep}{venv_bin_dir}{path_separator}/usr/bin"
+        )
+        assert result["PATH"].endswith(expected_path_ending)
+        assert result["VIRTUAL_ENV"].endswith("test_venv")
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
+def test_full_env_non_windows_pythonhome_preserved_mocked_for_coverage(
+    venv_context, venv_bin_dir, path_separator, monkeypatch
+):
+    """Test full_env preserves PYTHONHOME on non-Windows (mocked for coverage)."""
+    monkeypatch.setattr(
+        "briefcase.integrations.virtual_environment.sys.platform", "linux"
+    )
+
+    overrides = {
+        "PYTHONHOME": "/some/python",
+        "CUSTOM": "keep_me",
+    }
+
+    with patch.dict(os.environ, {"PATH": "/usr/bin"}, clear=False):
+        result = venv_context.full_env(overrides)
+
+    assert result["PYTHONHOME"] == "/some/python"
+    assert result["CUSTOM"] == "keep_me"
+    expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}{path_separator}/usr/bin"
+    assert result["PATH"].endswith(expected_path_ending)
+    assert result["VIRTUAL_ENV"].endswith("test_venv")

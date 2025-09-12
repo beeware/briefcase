@@ -111,7 +111,7 @@ class VenvContext:
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
 
-        if os.name == "nt":
+        if sys.platform == "win32":
             env.pop("PYTHONHOME", None)
 
         return env
