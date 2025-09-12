@@ -163,7 +163,7 @@ def parse_cmdline(args, console: Console | None = None):
 
         # If the output format wasn't explicitly specified, check to see
         # Otherwise, extract and use the default output_format for the platform.
-        if extra and not extra[0].startswith("-") and not extra[0] == "--":
+        if extra and not extra[0].startswith("-") and extra[0] != "--":
             output_format = extra.pop(0)
         else:
             output_format = platform_module.DEFAULT_OUTPUT_FORMAT
