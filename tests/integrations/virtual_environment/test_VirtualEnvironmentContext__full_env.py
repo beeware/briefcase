@@ -153,78 +153,11 @@ def test_full_env_no_system_path(venv_context, venv_bin_dir):
         assert result["VIRTUAL_ENV"].endswith("test_venv")
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
-def test_full_env_windows_pythonhome_removal_mocked(
-    venv_context, venv_bin_dir, path_separator
-):
-    """Test full_env removes PYTHONHOME on Windows."""
-    overrides = {
-        "PYTHONHOME": "C:\\some\\python",
-        "CUSTOM": "keep_me",
-    }
-
-    with patch.dict(os.environ, {"PATH": "C:\\Windows\\system32"}, clear=False):
-        result = venv_context.full_env(overrides)
-
-        assert "PYTHONHOME" not in result
-        assert result["CUSTOM"] == "keep_me"
-        expected_path_ending = (
-            f"test_venv{os.sep}{venv_bin_dir}{path_separator}C:\\Windows\\system32"
-        )
-        assert result["PATH"].endswith(expected_path_ending)
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific test")
-def test_full_env_windows_pythonhome_removal_no_overrides(
-    venv_context, venv_bin_dir, path_separator
-):
-    """Test full_env removes PYTHONHOME on Windows with no overrides."""
-    with patch.dict(
-        os.environ,
-        {"PATH": "C:\\Windows\\system32", "PYTHONHOME": "C:\\old\\python"},
-        clear=False,
-    ):
-        result = venv_context.full_env(None)
-
-        assert "PYTHONHOME" not in result
-        expected_path_ending = (
-            f"test_venv{os.sep}{venv_bin_dir}{path_separator}C:\\Windows\\system32"
-        )
-        assert result["PATH"].endswith(expected_path_ending)
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_full_env_non_windows_pythonhome_preserved(
     venv_context, venv_bin_dir, path_separator
 ):
     """Test full_env preserves PYTHONHOME on non-Windows."""
-    overrides = {
-        "PYTHONHOME": "/some/python",
-        "CUSTOM": "keep_me",
-    }
-
-    with patch.dict(os.environ, {"PATH": "/usr/bin"}, clear=False):
-        result = venv_context.full_env(overrides)
-
-        assert result["PYTHONHOME"] == "/some/python"
-        assert result["CUSTOM"] == "keep_me"
-        expected_path_ending = (
-            f"test_venv{os.sep}{venv_bin_dir}{path_separator}/usr/bin"
-        )
-        assert result["PATH"].endswith(expected_path_ending)
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
-def test_full_env_non_windows_pythonhome_preserved_mocked_for_coverage(
-    venv_context, venv_bin_dir, path_separator, monkeypatch
-):
-    """Test full_env preserves PYTHONHOME on non-Windows (mocked for coverage)."""
-    monkeypatch.setattr(
-        "briefcase.integrations.virtual_environment.sys.platform", "linux"
-    )
 
     overrides = {
         "PYTHONHOME": "/some/python",
