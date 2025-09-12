@@ -1501,20 +1501,22 @@ with your app's licensing terms.
 
         components_plist_path = self.bundle_path(app) / "installer/components.plist"
 
-        with self.console.wait_bar("Writing component manifest..."):
-            with components_plist_path.open("wb") as components_plist:
-                plistlib.dump(
-                    [
-                        {
-                            "BundleHasStrictIdentifier": True,
-                            "BundleIsRelocatable": False,
-                            "BundleIsVersionChecked": True,
-                            "BundleOverwriteAction": "upgrade",
-                            "RootRelativeBundlePath": self.package_path(app).name,
-                        }
-                    ],
-                    components_plist,
-                )
+        with (
+            self.console.wait_bar("Writing component manifest..."),
+            components_plist_path.open("wb") as components_plist,
+        ):
+            plistlib.dump(
+                [
+                    {
+                        "BundleHasStrictIdentifier": True,
+                        "BundleIsRelocatable": False,
+                        "BundleIsVersionChecked": True,
+                        "BundleOverwriteAction": "upgrade",
+                        "RootRelativeBundlePath": self.package_path(app).name,
+                    }
+                ],
+                components_plist,
+            )
 
         # Console apps are installed in /Library/Formal Name, and include the
         # post-install scripts. Normal apps are installed in /Applications, and don't
