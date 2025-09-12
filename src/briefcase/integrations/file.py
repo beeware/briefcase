@@ -288,14 +288,13 @@ class File(Tool):
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         """
-        temp_file = tempfile.NamedTemporaryFile(
+        with tempfile.NamedTemporaryFile(
             dir=filename.parent,
             prefix=f"{filename.name}.",
             suffix=".download",
             delete=False,
-        )
-        try:
-            with temp_file:
+        ) as temp_file:
+            try:
                 total = response.headers.get("content-length")
                 if total is None:
                     response.read()
@@ -308,26 +307,26 @@ class File(Tool):
                             temp_file.write(data)
                             progress_bar.update(task_id, advance=len(data))
 
-            # This file move short circuits to a file rename when the source and
-            # destination are on the same filesystem; therefore, it should complete
-            # quite quickly even for large files.
-            self.tools.shutil.move(temp_file.name, filename)
-            # Temporary files are created with only read/write permissions for the
-            # file's owner (i.e. 600); to match the behavior of file creation using
-            # ``open(..., "w")``, the downloaded file's permissions are updated for
-            # the group and world to have read/write permissions as well. Finally,
-            # (as with ``open()``) the system's umask is respected. The current
-            # umask is only available as the return value to updating the umask...
-            # Updating the umask affects the current process, including all threads.
-            # A umask value represents permissions that should be denied; so, 022
-            # denies write permissions to the group and world. A 022 umask is a
-            # common default among supporting systems.
-            os.umask(current_umask := os.umask(0o022))
-            # The umask is applied by inverting it and bitwise ANDing the default
-            # permissions...thus masking out permissions that should be denied.
-            self.tools.os.chmod(filename, 0o666 & ~current_umask)
-        finally:
-            # Ensure the temporary file is deleted; this file may still
-            # exist if the download fails or the user sends CTRL+C.
-            with suppress(FileNotFoundError):
-                self.tools.os.remove(temp_file.name)
+                # This file move short circuits to a file rename when the source and
+                # destination are on the same filesystem; therefore, it should complete
+                # quite quickly even for large files.
+                self.tools.shutil.move(temp_file.name, filename)
+                # Temporary files are created with only read/write permissions for the
+                # file's owner (i.e. 600); to match the behavior of file creation using
+                # ``open(..., "w")``, the downloaded file's permissions are updated for
+                # the group and world to have read/write permissions as well. Finally,
+                # (as with ``open()``) the system's umask is respected. The current
+                # umask is only available as the return value to updating the umask...
+                # Updating the umask affects the current process, including all threads.
+                # A umask value represents permissions that should be denied; so, 022
+                # denies write permissions to the group and world. A 022 umask is a
+                # common default among supporting systems.
+                os.umask(current_umask := os.umask(0o022))
+                # The umask is applied by inverting it and bitwise ANDing the default
+                # permissions...thus masking out permissions that should be denied.
+                self.tools.os.chmod(filename, 0o666 & ~current_umask)
+            finally:
+                # Ensure the temporary file is deleted; this file may still
+                # exist if the download fails or the user sends CTRL+C.
+                with suppress(FileNotFoundError):
+                    self.tools.os.remove(temp_file.name)
