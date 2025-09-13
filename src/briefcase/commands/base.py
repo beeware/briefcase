@@ -263,7 +263,7 @@ You can set the environment variable BRIEFCASE_HOME to specify
 a custom location for Briefcase's tools.
 
 """
-                )
+                ) from None
 
         return Path(data_path)
 

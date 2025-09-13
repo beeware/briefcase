@@ -330,7 +330,7 @@ administrator privileges on this computer.
 
 You need to accept the Xcode license before Briefcase can package your app.
 """
-                        )
+                        ) from None
                     elif e.returncode == 69:
                         raise BriefcaseCommandError(
                             """\
@@ -338,7 +338,7 @@ Xcode license has not been accepted. Briefcase cannot continue.
 
 You need to accept the Xcode license before Briefcase can package your app.
 """
-                        )
+                        ) from None
                     else:
                         tools.console.warning(
                             """

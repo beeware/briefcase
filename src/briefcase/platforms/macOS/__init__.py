@@ -58,7 +58,7 @@ class SigningIdentity:
         except TypeError:
             raise BriefcaseCommandError(
                 f"Couldn't extract Team ID from signing identity {name!r}"
-            )
+            ) from None
 
     @property
     def is_adhoc(self):
@@ -564,7 +564,9 @@ class macOSRunMixin:
                 log_stream=True,
             )
         except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+            raise BriefcaseCommandError(
+                f"Unable to start app {app.app_name}."
+            ) from None
         finally:
             # Ensure the App also terminates when exiting. The ordering here is a little
             # odd; the if could/should be outside the context manager, but coverage has
@@ -739,7 +741,7 @@ or
                 return
             else:
                 self.tools.subprocess.output_error(e)
-                raise BriefcaseCommandError(f"Unable to code sign {path}.")
+                raise BriefcaseCommandError(f"Unable to code sign {path}.") from None
 
     def sign_app(
         self,
@@ -1182,12 +1184,12 @@ password:
             except IndexError:
                 raise BriefcaseCommandError(
                     f"{submission_id} is not a known submission ID for this identity."
-                )
+                ) from None
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(
                     "Unable to invoke notarytool to determine validity of submission ID.\n"
                     "Are you sure this is the identity that was used to notarize the app?"
-                )
+                ) from None
 
     def finalize_notarization(
         self,
@@ -1256,7 +1258,7 @@ password:
                             ) from e
 
         except KeyboardInterrupt:
-            raise NotarizationInterrupted("Notarization interrupted by user.")
+            raise NotarizationInterrupted("Notarization interrupted by user.") from None
         else:
             filename = self.notarization_path(app)
             try:
@@ -1271,7 +1273,7 @@ password:
             except subprocess.CalledProcessError:
                 raise BriefcaseCommandError(
                     f"Unable to staple notarization onto {filename.relative_to(self.base_path)}"
-                )
+                ) from None
 
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.

@@ -336,7 +336,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         except KeyError:
             raise BriefcaseCommandError(
                 "Your iOS XCframework doesn't specify a minimum iOS version."
-            )
+            ) from None
         except FileNotFoundError:
             # If a plist file couldn't be found, it's an old-style support package;
             # Determine the min iOS version from the VERSIONS file in the support package.
