@@ -111,7 +111,7 @@ class VenvContext:
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
 
-        env.pop("PYTHONHOME", None)
+        
 
         return env
 
