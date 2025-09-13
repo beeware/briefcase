@@ -151,32 +151,3 @@ def test_full_env_no_system_path(venv_context, venv_bin_dir):
         expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}"
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-def test_full_env_removes_pythonhome_from_overrides(
-    venv_context, platform_paths, venv_bin_dir, path_separator
-):
-    """Test that PYTHONHOME is removed from overrides on all platforms."""
-    overrides = {"PYTHONHOME": "/some/python", "CUSTOM_VAR": "custom_value"}
-
-    with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
-        result = venv_context.full_env(overrides)
-
-        assert "PYTHONHOME" not in result
-        assert result["CUSTOM_VAR"] == "custom_value"
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-
-
-def test_full_env_removes_pythonhome_with_none_overrides(
-    venv_context, platform_paths, venv_bin_dir, path_separator
-):
-    """Test that PYTHONHOME removal works when no overrides are provided."""
-    with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
-        result = venv_context.full_env(None)
-
-        assert "PYTHONHOME" not in result
-        assert result["VIRTUAL_ENV"].endswith("test_venv")
-        expected_path_ending = (
-            f"test_venv{os.sep}{venv_bin_dir}{path_separator}{platform_paths['system']}"
-        )
-        assert result["PATH"].endswith(expected_path_ending)

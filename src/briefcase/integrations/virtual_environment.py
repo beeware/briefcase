@@ -111,8 +111,6 @@ class VenvContext:
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
 
-        
-
         return env
 
     def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
