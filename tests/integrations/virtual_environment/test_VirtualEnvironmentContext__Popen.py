@@ -37,7 +37,10 @@ def mock_subprocess_setup(venv_context, monkeypatch):
     ],
 )
 def test_popen_environment_handling(
-    venv_context, mock_subprocess_setup, env_override, other_kwargs
+    venv_context,
+    mock_subprocess_setup,
+    env_override,
+    other_kwargs,
 ):
     """Test Popen properly handles environment and kwargs without mutating input."""
     mocks = mock_subprocess_setup

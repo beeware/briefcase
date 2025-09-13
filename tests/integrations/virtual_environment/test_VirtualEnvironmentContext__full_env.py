@@ -37,7 +37,11 @@ def path_separator():
 
 @pytest.mark.parametrize("overrides", [None, {}, {"VALUE": "value"}])
 def test_full_env_basic_creation(
-    venv_context, platform_paths, venv_bin_dir, path_separator, overrides
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
+    overrides,
 ):
     """Test that full_env creates an environment with expected defaults."""
     with patch.dict(os.environ, {"PATH": platform_paths["complex"]}, clear=False):
@@ -52,7 +56,10 @@ def test_full_env_basic_creation(
 
 
 def test_full_env_path_override_custom_path_with_system(
-    venv_context, platform_paths, venv_bin_dir, path_separator
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
 ):
     """Test full_env with custom PATH override and system PATH."""
     overrides = {"PATH": platform_paths["user"]}
@@ -68,7 +75,10 @@ def test_full_env_path_override_custom_path_with_system(
 
 
 def test_full_env_path_override_none_with_system(
-    venv_context, platform_paths, venv_bin_dir, path_separator
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
 ):
     """Test full_env with None PATH override and system PATH."""
     overrides = {"PATH": None}
@@ -84,7 +94,10 @@ def test_full_env_path_override_none_with_system(
 
 
 def test_full_env_path_override_empty_with_system(
-    venv_context, platform_paths, venv_bin_dir, path_separator
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
 ):
     """Test full_env with empty PATH override and system PATH."""
     overrides = {"PATH": platform_paths["empty"]}
@@ -100,7 +113,10 @@ def test_full_env_path_override_empty_with_system(
 
 
 def test_full_env_path_override_custom_with_empty_system(
-    venv_context, platform_paths, venv_bin_dir, path_separator
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
 ):
     """Test full_env with custom PATH override and empty system PATH."""
     overrides = {"PATH": platform_paths["user"]}
@@ -116,7 +132,9 @@ def test_full_env_path_override_custom_with_empty_system(
 
 
 def test_full_env_path_override_none_with_empty_system(
-    venv_context, platform_paths, venv_bin_dir
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
 ):
     """Test full_env with None PATH override and empty system PATH."""
     overrides = {"PATH": None}
@@ -130,7 +148,10 @@ def test_full_env_path_override_none_with_empty_system(
 
 
 def test_full_env_no_overrides(
-    venv_context, platform_paths, venv_bin_dir, path_separator
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
 ):
     """Test full_env with no overrides parameter."""
     with patch.dict(os.environ, {"PATH": platform_paths["system"]}, clear=False):
@@ -155,7 +176,9 @@ def test_full_env_no_system_path(venv_context, venv_bin_dir):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_full_env_non_windows_pythonhome_preserved(
-    venv_context, venv_bin_dir, path_separator
+    venv_context,
+    venv_bin_dir,
+    path_separator,
 ):
     """Test full_env preserves PYTHONHOME on non-Windows."""
 
