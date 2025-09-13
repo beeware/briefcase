@@ -328,7 +328,7 @@ Delete this file and run Briefcase again.
             ) from e
 
         # If the file is not owned by `root`, then Docker is mapping usernames
-        is_user_mapped = 0 != self.tools.os.stat(host_write_test_path).st_uid
+        is_user_mapped = self.tools.os.stat(host_write_test_path).st_uid != 0
 
         # Delete the file inside the container since it may be owned by root on the host
         try:
@@ -718,7 +718,7 @@ Briefcase will proceed, but if access to the display is rejected, this may be wh
             sock.settimeout(3)
             try:
                 # returns 0 only if the connection is successful
-                return 0 == sock.connect_ex(("localhost", 6000 + display_num))
+                return sock.connect_ex(("localhost", 6000 + display_num)) == 0
             except OSError:
                 return False
 
