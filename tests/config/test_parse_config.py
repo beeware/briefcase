@@ -3,6 +3,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
+import briefcase.config
 from briefcase.config import parse_config
 from briefcase.exceptions import BriefcaseConfigError
 
@@ -1032,7 +1033,7 @@ license-files = 'MY-LICENSE'
 
 
 def test_platform_specific_license(dir_with_license):
-    """An error is raised if the license-files field is something other than a list."""
+    """The platform specific license works with PEP621 and PEP639."""
     config_toml = b"""
 [project]
 license = { text = 'SOME_TEXT' }
@@ -1065,3 +1066,24 @@ license = { text = 'OTHER_TEXT' }
     assert global_options_linux == {"license": {"text": "SOME_TEXT"}}
     assert apps_macos["my_app"]["license"] == {"file": "MY-LICENSE"}
     assert apps_linux["my_app"]["license"] == {"text": "OTHER_TEXT"}
+
+
+def test_without_cwd(dir_with_license, monkeypatch):
+    """The current working directory is used if cwd is not specified."""
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = ['MY-LICENSE']
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+    mock_path_constructor = Mock(return_value=dir_with_license)
+    monkeypatch.setattr(briefcase.config, "Path", mock_path_constructor)
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=Mock(),
+    )
+    mock_path_constructor.assert_called_once()
