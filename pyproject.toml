@@ -113,7 +113,7 @@ docs = [
     # dependencies, but RTD doesn't support them yet. In addition to these dependencies,
     # you should also run `pip install -r ../requirements-docs.txt`
     "furo == 2025.7.19",
-    "pyenchant == 3.2.2",
+    "pyenchant == 3.3.0",
     "sphinx == 8.2.3",
     "sphinx_tabs == 3.4.7",
     "sphinx-autobuild == 2024.10.3",
