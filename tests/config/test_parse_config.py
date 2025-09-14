@@ -870,14 +870,12 @@ def test_pep639_license_in_app_config(dir_with_license):
     )
     assert global_options == {
         "value": 0,
-        "license-files": ["MY-LICENSE"],
         "license": {"file": "MY-LICENSE"},
     }
     assert apps["my_app"] == {
         "app_name": "my_app",
         "value": 0,
         "appvalue": "the app",
-        "license-files": ["MY-LICENSE"],
         "license": {"file": "MY-LICENSE"},
     }
 
@@ -1018,7 +1016,6 @@ def test_non_list_licence_files(dir_with_license):
         b"""
 [project]
 license-files = 'MY-LICENSE'
-license = { text = 'SOME_TEXT' }
 [tool.briefcase]
 [tool.briefcase.app.my_app]
 """
@@ -1032,3 +1029,39 @@ license = { text = 'SOME_TEXT' }
             console=Mock(),
             cwd=dir_with_license,
         )
+
+
+def test_platform_specific_license(dir_with_license):
+    """An error is raised if the license-files field is something other than a list"""
+    config_toml = b"""
+[project]
+license = { text = 'SOME_TEXT' }
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+[tool.briefcase.app.my_app.macOS]
+license-files = ['MY-LICENSE']
+
+[tool.briefcase.app.my_app.linux]
+license = { text = 'OTHER_TEXT' }
+"""
+
+    global_options_macos, apps_macos = parse_config(
+        BytesIO(config_toml),
+        platform="macOS",
+        output_format="app",
+        console=Mock(),
+        cwd=dir_with_license,
+    )
+
+    global_options_linux, apps_linux = parse_config(
+        BytesIO(config_toml),
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+        cwd=dir_with_license,
+    )
+
+    assert global_options_macos == {'license': {'text': 'SOME_TEXT'}}
+    assert global_options_linux == {'license': {'text': 'SOME_TEXT'}}
+    assert apps_macos["my_app"]["license"] == {'file': 'MY-LICENSE'}
+    assert apps_linux["my_app"]["license"] == {'text': 'OTHER_TEXT'}
