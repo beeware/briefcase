@@ -1,1 +1,0 @@
-Add ``--forward-port`` and ``--reverse-port`` via ADB when running an Android app

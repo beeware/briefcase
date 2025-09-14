@@ -14,6 +14,8 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
 
+from ....utils import create_file, create_plist_file
+
 
 @pytest.fixture
 def create_command(dummy_console, tmp_path):
@@ -36,36 +38,123 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
-@pytest.mark.parametrize(
-    "old_config, device_config_path, sim_config_path",
-    [
-        (
-            False,
-            "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
-            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/wonky-iphonesimulator",
+def test_extra_pip_args(create_command, first_app_generated, tmp_path):
+    """Extra iOS-specific args are included in calls to pip during update."""
+    # Hard code the current architecture for testing. We only install simulator
+    # requirements for the current platform.
+    create_command.tools.host_arch = "wonky"
+
+    first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+
+    create_command.tools[first_app_generated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+
+    create_command.install_app_requirements(first_app_generated)
+
+    bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
+    assert create_command.tools[first_app_generated].app_context.run.mock_calls == [
+        call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.iphoneos'}",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+                "--platform=ios_12_0_arm64_iphoneos",
+                "something==1.2.3",
+                "other>=2.3.4",
+            ],
+            check=True,
+            encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path/build/first-app/ios/xcode/Support"
+                    / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
+            },
         ),
-        (
-            True,
-            "platform-site/iphoneos.arm64",
-            "platform-site/iphonesimulator.wonky",
+        call(
+            [
+                sys.executable,
+                "-u",
+                "-X",
+                "utf8",
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+                "--upgrade",
+                "--no-user",
+                f"--target={bundle_path / 'app_packages.iphonesimulator'}",
+                "--only-binary=:all:",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+                "--platform=ios_12_0_wonky_iphonesimulator",
+                "something==1.2.3",
+                "other>=2.3.4",
+            ],
+            check=True,
+            encoding="UTF-8",
+            env={
+                "PYTHONPATH": str(
+                    tmp_path
+                    / "base_path/build/first-app/ios/xcode/Support"
+                    / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/wonky-iphonesimulator"
+                ),
+                "PIP_REQUIRE_VIRTUALENV": None,
+            },
         ),
-    ],
-)
-def test_extra_pip_args(
+    ]
+
+
+@pytest.mark.parametrize("include_version", [True, False])
+def test_legacy_support_format(
     create_command,
     first_app_generated,
-    old_config,
-    device_config_path,
-    sim_config_path,
+    include_version,
     tmp_path,
 ):
-    """Extra iOS-specific args are included in calls to pip during update."""
+    """A support package is in the legacy format is still supported."""
+    # Remove the version tag from the framework if the test requires
+    if include_version:
+        version_tag = "12_0"
+    else:
+        version_tag = "13_0"
+
     # If we're testing an old config, delete the xcframework. This deletes the platform
     # config folders, forcing a fallback to the older locations.
-    if old_config:
-        shutil.rmtree(
-            tmp_path / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
-        )
+    shutil.rmtree(
+        tmp_path / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
+    )
+    # Create the old-style VERSIONS file.
+    create_file(
+        tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
+        "\n".join(
+            [
+                "Python version: 3.10.15",
+                "Build: b11",
+                ("Min iOS version: 12.0" if include_version else ""),
+                "---------------------",
+                "BZip2: 1.0.8-1",
+                "libFFI: 3.4.6-1",
+                "OpenSSL: 3.0.15-1",
+                "XZ: 5.6.2-1",
+                "",
+            ]
+        ),
+    )
 
     # Hard code the current architecture for testing. We only install simulator
     # requirements for the current platform.
@@ -97,7 +186,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_13_0_arm64_iphoneos",
+                f"--platform=ios_{version_tag}_arm64_iphoneos",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
@@ -107,7 +196,7 @@ def test_extra_pip_args(
                 "PYTHONPATH": str(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
-                    / device_config_path
+                    / "platform-site/iphoneos.arm64"
                 ),
                 "PIP_REQUIRE_VIRTUALENV": None,
             },
@@ -128,7 +217,7 @@ def test_extra_pip_args(
                 "--only-binary=:all:",
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_13_0_wonky_iphonesimulator",
+                f"--platform=ios_{version_tag}_wonky_iphonesimulator",
                 "something==1.2.3",
                 "other>=2.3.4",
             ],
@@ -138,7 +227,7 @@ def test_extra_pip_args(
                 "PYTHONPATH": str(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
-                    / sim_config_path
+                    / "platform-site/iphonesimulator.wonky"
                 ),
                 "PIP_REQUIRE_VIRTUALENV": None,
             },
@@ -231,6 +320,43 @@ def test_min_os_version(create_command, first_app_generated, tmp_path):
             },
         ),
     ]
+
+
+def test_framework_missing_min_version(create_command, first_app_generated, tmp_path):
+    """If the iOS framework is missing a minimum version definition, raise an error."""
+    # Replace the XCframework Info.plist file with a version that doesn't specify
+    # a minimum iOS version.
+    plist_file = (
+        tmp_path
+        / "base_path/build/first-app/ios/xcode/Support/Python.xcframework"
+        / "ios-arm64/Python.framework/Info.plist"
+    )
+    plist_file.unlink()
+    create_plist_file(
+        plist_file,
+        {
+            "CFBundleSupportedPlatforms": "iPhoneOS",
+            "CFBundleVersion": "3.10.15",
+        },
+    )
+
+    # Hard code the current architecture for testing. We only install simulator
+    # requirements for the current platform.
+    create_command.tools.host_arch = "wonky"
+
+    first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+
+    create_command.tools[first_app_generated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Your iOS XCframework doesn't specify a minimum iOS version",
+    ):
+        create_command.install_app_requirements(first_app_generated)
+
+    create_command.tools[first_app_generated].app_context.run.assert_not_called()
 
 
 def test_incompatible_min_os_version(create_command, first_app_generated, tmp_path):

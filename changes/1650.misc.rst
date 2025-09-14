@@ -1,1 +1,0 @@
-Improve warning message for unmergeable files in non-universal wheels to clarify fallback behavior and link to documentation.

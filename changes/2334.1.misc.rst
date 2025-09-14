@@ -1,1 +1,0 @@
-Development mode behaviours can now be platform-specific

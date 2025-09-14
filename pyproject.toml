@@ -95,14 +95,14 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.10.4",
+    "coverage[toml] == 7.10.6",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.0",
+    "httpx-retries == 0.4.2",
     "pre-commit == 4.3.0",
-    "pytest == 8.4.1",
+    "pytest == 8.4.2",
     "pytest-xdist == 3.8.0",
-    "setuptools_scm == 8.3.1",
-    "tox == 4.28.4",
+    "setuptools_scm == 9.2.0",
+    "tox == 4.30.2",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.

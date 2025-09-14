@@ -1,1 +1,0 @@
-macOS verification environments were modified to explicitly add Xcode and iOS simulator versions.
