@@ -915,7 +915,7 @@ def test_pep639_license_in_app_config(dir_with_license):
 def test_first_specified_license_file_pep639(
     config_file_content, license, global_config, dir_with_license
 ):
-    """The first file in license-files is used if no license in briefcase_config"""
+    """The first file in license-files is used if no license in briefcase_config."""
     supposed_license = "MY-LICENSE"
     briefcase_config = (
         f"[tool.briefcase]\n{global_config}\n[tool.briefcase.app.my_app]\n"
@@ -936,7 +936,7 @@ def test_first_specified_license_file_pep639(
 
 
 def test_specified_license_file_doesnt_exist_pep639_fails(dir_with_license):
-    """An exception is raised if no license file match the 'license-files' glob"""
+    """An exception is raised if no license file match the 'license-files' glob."""
     briefcase_config = "[tool.briefcase]\n[tool.briefcase.app.my_app]\n"
     config_file = BytesIO(
         f"[project]\nlicense-files=['NON_EXISTING']\n{briefcase_config}".encode()
@@ -952,7 +952,7 @@ def test_specified_license_file_doesnt_exist_pep639_fails(dir_with_license):
 
 
 def test_more_than_one_license_file_pep639_warns(dir_with_license):
-    """A warning is shown if multiple license files match the 'license-files' glob"""
+    """A warning is shown if multiple license files match the 'license-files' glob."""
     config_file = BytesIO(
         b"""
 [project]
@@ -985,10 +985,10 @@ license-files = ['MY-LICENSE', 'AUTHORS']
 
 
 def test_both_license_file_and_license_dict(dir_with_license):
-    """An error is raised if the license-files field is set and license is a dict
+    """An error is raised if the license-files field is set and license is a dict.
 
-    PEP639 specifies that an exception MUST be raised if the license-files attribute
-    is set while the license field is a dict.
+    PEP639 specifies that an exception MUST be raised if the license-files attribute is
+    set while the license field is a dict.
     """
     config_file = BytesIO(
         b"""
@@ -1011,7 +1011,7 @@ license = { text = 'SOME_TEXT' }
 
 
 def test_non_list_licence_files(dir_with_license):
-    """An error is raised if the license-files field is something other than a list"""
+    """An error is raised if the license-files field is something other than a list."""
     config_file = BytesIO(
         b"""
 [project]
@@ -1032,7 +1032,7 @@ license-files = 'MY-LICENSE'
 
 
 def test_platform_specific_license(dir_with_license):
-    """An error is raised if the license-files field is something other than a list"""
+    """An error is raised if the license-files field is something other than a list."""
     config_toml = b"""
 [project]
 license = { text = 'SOME_TEXT' }
@@ -1061,7 +1061,7 @@ license = { text = 'OTHER_TEXT' }
         cwd=dir_with_license,
     )
 
-    assert global_options_macos == {'license': {'text': 'SOME_TEXT'}}
-    assert global_options_linux == {'license': {'text': 'SOME_TEXT'}}
-    assert apps_macos["my_app"]["license"] == {'file': 'MY-LICENSE'}
-    assert apps_linux["my_app"]["license"] == {'text': 'OTHER_TEXT'}
+    assert global_options_macos == {"license": {"text": "SOME_TEXT"}}
+    assert global_options_linux == {"license": {"text": "SOME_TEXT"}}
+    assert apps_macos["my_app"]["license"] == {"file": "MY-LICENSE"}
+    assert apps_linux["my_app"]["license"] == {"text": "OTHER_TEXT"}

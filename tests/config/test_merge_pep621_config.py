@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 from briefcase.config import merge_pep621_config
 
 

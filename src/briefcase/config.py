@@ -703,6 +703,7 @@ def resolve_license_info(config, name, console, *, cwd=None):
         warn_about_license_format(name, console)
         config["license"] = {"file": "LICENSE"}
 
+
 def parse_config(config_file, platform, output_format, console, *, cwd=None):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
