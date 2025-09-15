@@ -101,9 +101,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write(line)
 
     def write_inserts(
-        self, 
-        app: AppConfig, 
-        filename: Path, 
+        self,
+        app: AppConfig,
+        filename: Path,
         inserts: dict[str, dict[str, str]]
     ):
         """Write inserts into an existing file.
@@ -208,9 +208,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         target_path.write_text(file_text, encoding="utf-8")
 
     def write_pyscript_version(
-        self, 
-        app: AppConfig, 
-        filename: Path, 
+        self,
+        app: AppConfig,
+        filename: Path,
         pyscript_version: str
     ):
         """Write pyscript version into an existing html file.
@@ -238,9 +238,22 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f"{filename} not found; pyscript version could not be inserted."
             )
 
-        marker = "<!--@@ pyscript_version @@-->"
-        if marker in file_text:
-            file_text = file_text.replace(marker, pyscript_version)
+        marker = r"<!--@@ PyScript:start @@-->.*<!--@@ PyScript:end @@-->"
+        insertion = f"""<!--@@ PyScript:start @@-->
+        <script type="module">
+            // Hide the splash screen when the page is ready.
+            import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
+            hooks.main.onReady.add(() => {{
+                document.getElementById("briefcase-splash").classList.add("hidden");
+            }});
+        </script>
+
+        <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
+        <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
+        <!--@@ PyScript:end @@-->"""
+        insertion = insertion.replace("pyscript_version", pyscript_version)
+        if re.search(marker, file_text, flags=re.DOTALL):
+            file_text = re.sub(marker, insertion, file_text, flags=re.DOTALL)
         else:
             raise BriefcaseConfigError(
                 f"No pyscript markers found in {filename}; pyscript may not be configured correctly."
