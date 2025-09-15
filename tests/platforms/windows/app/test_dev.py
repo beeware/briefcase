@@ -24,8 +24,8 @@ def dev_command(dummy_console, tmp_path):
 
 
 @pytest.fixture
-def noop_venv() -> VenvContext:
-    """Create a no-op venv mock for tests that require a venv parameter."""
+def default_env() -> VenvContext:
+    """Create a venv mock for tests that require a venv parameter."""
     mock_venv = mock.MagicMock(spec=VenvContext)
     mock_venv.run.return_value = mock.MagicMock()
     mock_venv.check_output.return_value = ""
@@ -34,16 +34,16 @@ def noop_venv() -> VenvContext:
     return mock_venv
 
 
-def test_dev_app_starts(dev_command, first_app_config, tmp_path, noop_venv):
+def test_dev_app_starts(dev_command, first_app_config, tmp_path, default_env):
     """A Windows app can be started in development mode using Python."""
     log_popen = mock.MagicMock()
-    noop_venv.Popen.return_value = log_popen
+    default_env.Popen.return_value = log_popen
 
     # Run the app
-    dev_command.run_dev_app(first_app_config, env={}, venv=noop_venv, passthrough=[])
+    dev_command.run_dev_app(first_app_config, env={}, venv=default_env, passthrough=[])
 
     # Extract the actual Popen call arguments
-    popen_args, popen_kwargs = noop_venv.Popen.call_args
+    popen_args, popen_kwargs = default_env.Popen.call_args
 
     # Check that the command uses the Python executable
     assert popen_args[0][0] == sys.executable

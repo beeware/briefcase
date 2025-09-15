@@ -41,10 +41,6 @@ def test_install_requirements_error(dev_command, first_app):
     """Ensure RequirementsInstallError exception is raised for install errors."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
-    dev_command.tools.subprocess.run.side_effect = CalledProcessError(
-        returncode=-1, cmd="pip"
-    )
-
     mock_venv = MagicMock()
     mock_venv.run.side_effect = CalledProcessError(returncode=-1, cmd="pip")
 

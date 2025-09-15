@@ -45,7 +45,7 @@ class DummyDevCommand(DevCommand):
             (
                 "dev_requirements",
                 app.app_name,
-                {"has_run": hasattr(venv, "run")},
+                venv,
             )
         )
 
@@ -58,7 +58,8 @@ class DummyDevCommand(DevCommand):
                 "run_dev",
                 app.app_name,
                 app.test_mode,
-                {"venv": venv, "passthrough": passthrough, **kwargs},
+                venv,
+                passthrough,
                 env,
             )
         )
@@ -101,7 +102,8 @@ def test_no_args_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -154,7 +156,8 @@ def test_with_arg_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -189,7 +192,8 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
             "run_dev",
             "second",
             False,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -242,16 +246,15 @@ def test_update_requirements(dev_command, first_app):
         (
             "dev_requirements",
             "first",
-            {
-                "has_run": True,
-            },
+            mock.ANY,
         ),
         # Then, it will be started
         (
             "run_dev",
             "first",
             False,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -284,16 +287,15 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         (
             "dev_requirements",
             "first",
-            {
-                "has_run": True,
-            },
+            mock.ANY,
         ),
         # Then, it will be started
         (
             "run_dev",
             "first",
             False,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -327,16 +329,15 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         (
             "dev_requirements",
             "first",
-            {
-                "has_run": True,
-            },
+            mock.ANY,
         ),
         # Then, it will be started
         (
             "run_dev",
             "first",
             False,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -368,9 +369,7 @@ def test_no_run(dev_command, first_app_uninstalled):
         (
             "dev_requirements",
             "first",
-            {
-                "has_run": True,
-            },
+            mock.ANY,
         ),
     ]
 
@@ -403,7 +402,8 @@ def test_run_test(dev_command, first_app):
             "run_dev",
             "first",
             True,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]
@@ -433,13 +433,14 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Development requirements will be installed
-        ("dev_requirements", "first", {"has_run": True}),
+        ("dev_requirements", "first", mock.ANY),
         # Then, it will be started
         (
             "run_dev",
             "first",
             True,
-            {"venv": mock.ANY, "passthrough": []},
+            mock.ANY,
+            [],
             dev_command.env,
         ),
     ]

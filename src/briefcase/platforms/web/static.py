@@ -513,7 +513,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             venv_path=venv_path,
             isolated=options.get("isolated", True),
         ) as venv:
-            with self.tools.console.wait_bar("Installing arrr"):
+            with self.tools.console.wait_bar("Installing requirements..."):
                 venv.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
 
             raise UnsupportedCommandError(
