@@ -312,22 +312,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             f"{filename}: CSS content must be UTF-8 encoded"
                         ) from e
 
-                    # Wrap CSS with a source banner showing package and file
                     rel_inside = "/".join(path.parts[2:])
-                    css_payload = (
-                        "\n/*******************************************************\n"
-                        f" * {package_key}::{rel_inside}\n"
-                        " *******************************************************/\n\n"
-                    ) + css_text
+                    contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
 
                     # Add CSS content to briefcase.css insert slot
                     target = "static/css/briefcase.css"
                     insert = "CSS"
                     pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                    if package_key in pkg_map and pkg_map[package_key]:
-                        pkg_map[package_key] += "\n" + css_payload
-                    else:
-                        pkg_map[package_key] = css_payload
+                    pkg_map[contrib_key] = css_text
 
                 # New deploy/inserts handling
                 elif len(parts) >= 3 and parts[1] == "deploy" and parts[2] == "inserts":
@@ -375,21 +367,13 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
                         # Wrap CSS with a source banner showing package and file
                         rel_inside = "/".join(parts[3:]) or basename
-                        css_payload = (
-                            "\n/*******************************************************\n"
-                            f" * {package_key}::{rel_inside}\n"
-                            " *******************************************************/\n\n"
-                        ) + css_text
+                        contrib_key = f"{package_key} (deploy CSS: {rel_inside})"
 
                         # Add CSS content to briefcase.css insert slot
                         target = "static/css/briefcase.css"
                         insert = "CSS"
                         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                        # Append if package already has content for this slot
-                        if package_key in pkg_map and pkg_map[package_key]:
-                            pkg_map[package_key] += "\n" + css_payload
-                        else:
-                            pkg_map[package_key] = css_payload
+                        pkg_map[contrib_key] = css_text
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
