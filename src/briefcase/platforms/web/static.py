@@ -11,11 +11,8 @@ from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
-    UnsupportedCommandError,
 )
-from briefcase.integrations.virtual_environment import (
-    virtual_environment,
-)
+from briefcase.integrations.virtual_environment import virtual_environment
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -455,9 +452,6 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     default_publication_channel = "s3"
 
 
-POC_PACKAGE = "arrr"  # random package for proof of code
-
-
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
     description = (
         "Run a static web project in development mode. (POC: venv + single install)"
@@ -473,54 +467,14 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             help="Run without creating an isolated environment (not supported for web).",
         )
 
-    def __call__(
-        self,
-        appname: str | None = None,
-        run_app: bool | None = True,
-        update_requirements: bool | None = False,
-        test_mode: bool | None = False,
-        passthrough: list[str] | None = None,
-        **options,
-    ):
-        # Which web app should we run? If there's only one defined
-        # in pyproject.toml, then we can use it as a default;
-        # otherwise look for a -a/--app option.
-
-        if len(self.apps) == 1:
-            app = list(self.apps.values())[0]
-        elif appname:
-            try:
-                app = self.apps[appname]
-            except KeyError as e:
-                raise BriefcaseCommandError(
-                    f"Project doesn't define an application named '{appname}'"
-                ) from e
-
-        else:
-            raise BriefcaseCommandError(
-                "Project specifies more than one application; use --app to specify which one to start."
-            )
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app, test_mode)
-
-        self.verify_app(app)
-
-        venv_path = self.base_path / ".briefcase" / app.app_name / "venv"
-        with virtual_environment(
+    def get_venv_context(self, appname, isolated):
+        """Create and return a virtual environment context for the web app."""
+        return virtual_environment(
             tools=self.tools,
             console=self.console,
-            venv_path=venv_path,
-            isolated=options.get("isolated", True),
-        ) as venv:
-            with self.tools.console.wait_bar("Installing requirements..."):
-                venv.run(["python", "-m", "pip", "install", POC_PACKAGE], check=True)
-
-            raise UnsupportedCommandError(
-                platform="web",
-                output_format="static",
-                command="dev",
-            )
+            venv_path=self.base_path / ".briefcase" / appname / "venv",
+            isolated=True,  # Always isolated for web
+        )
 
 
 # Declare the briefcase command bindings

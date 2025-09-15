@@ -201,6 +201,15 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         return env
 
+    def get_venv_context(self, appname, isolated):
+        """Create and return a virtual environment context for the app."""
+        return virtual_environment(
+            tools=self.tools,
+            console=self.console,
+            venv_path=self.base_path / ".briefcase" / appname / "venv",
+            isolated=isolated,
+        )
+
     def __call__(
         self,
         appname: str | None = None,
@@ -245,12 +254,9 @@ class DevCommand(RunAppMixin, BaseCommand):
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
 
-        venv_path = self.base_path / ".briefcase" / app.app_name / "venv"
-        with virtual_environment(
-            tools=self.tools,
-            console=self.console,
-            venv_path=venv_path,
-            isolated=False,
+        with self.get_venv_context(
+            appname=appname,
+            isolated=options.get("isolated", False),
         ) as venv:
             if update_requirements or not dist_info_path.exists():
                 self.console.info("Installing requirements...", prefix=app.app_name)
