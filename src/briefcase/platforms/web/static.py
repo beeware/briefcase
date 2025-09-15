@@ -101,10 +101,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 f.write(line)
 
     def write_inserts(
-        self,
-        app: AppConfig,
-        filename: Path,
-        inserts: dict[str, dict[str, str]]
+        self, app: AppConfig, filename: Path, inserts: dict[str, dict[str, str]]
     ):
         """Write inserts into an existing file.
 
@@ -208,10 +205,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         target_path.write_text(file_text, encoding="utf-8")
 
     def write_pyscript_version(
-        self,
-        app: AppConfig,
-        filename: Path,
-        pyscript_version: str
+        self, app: AppConfig, filename: Path, pyscript_version: str
     ):
         """Write pyscript version into an existing html file.
 
@@ -265,7 +259,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         self,
         wheelfile,
         inserts: dict[str, dict[str, dict[str, str]]],
-        static_path,
     ):
         """Process a wheel to collect insert and style content for the final project.
 
@@ -296,32 +289,92 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 path = Path(filename)
                 parts = path.parts
 
-                if not (filename.endswith("/") or len(parts) < 2):
-                    # Legacy CSS handling
-                    if (
-                        len(parts) > 1
-                        and parts[1] == "static"
-                        and path.suffix.lower == ".css"
-                    ):
-                        self.console.info(f"    Found {filename}")
+                # Legacy CSS handling
+                if (
+                    len(parts) > 1
+                    and parts[1] == "static"
+                    and path.suffix.lower() == ".css"
+                ):
+                    self.console.info(f"    Found {filename}")
 
-                        # Show deprecation warning once per wheel
-                        if not legacy_css_warning:
-                            self.console.warning(
-                                f"    {wheelfile.name}: legacy '/static' CSS detected; "
-                                "treating as insert into briefcase.css; this legacy handling will be removed in the future."
+                    # Show deprecation warning once per wheel
+                    if not legacy_css_warning:
+                        self.console.warning(
+                            f"    {wheelfile.name}: legacy '/static' CSS detected; "
+                            "treating as insert into briefcase.css; this legacy handling will be removed in the future."
+                        )
+                        legacy_css_warning = True
+
+                    try:
+                        css_text = wheel.read(filename).decode("utf-8")
+                    except UnicodeDecodeError as e:
+                        raise BriefcaseCommandError(
+                            f"{filename}: CSS content must be UTF-8 encoded"
+                        ) from e
+
+                    # Wrap CSS with a source banner showing package and file
+                    rel_inside = "/".join(path.parts[2:])
+                    css_payload = (
+                        "\n/*******************************************************\n"
+                        f" * {package_key}::{rel_inside}\n"
+                        " *******************************************************/\n\n"
+                    ) + css_text
+
+                    # Add CSS content to briefcase.css insert slot
+                    target = "static/css/briefcase.css"
+                    insert = "CSS"
+                    pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                    if package_key in pkg_map and pkg_map[package_key]:
+                        pkg_map[package_key] += "\n" + css_payload
+                    else:
+                        pkg_map[package_key] = css_payload
+
+                # New deploy/inserts handling
+                elif len(parts) >= 3 and parts[1] == "deploy" and parts[2] == "inserts":
+                    self.console.info(f"    Found {filename}")
+                    basename = parts[-1]
+
+                    # HTML/other inserts
+                    if not basename.endswith(".css"):
+                        try:
+                            # Split filename into <insert> slot and <target>
+                            insert, target = basename.split(".", 1)
+                            self.console.info(
+                                f"    {filename}: Adding {insert} insert for {target}"
                             )
-                            legacy_css_warning = True
+                            try:
+                                text = wheel.read(filename).decode("utf-8")
+                            except UnicodeDecodeError as e:
+                                raise BriefcaseCommandError(
+                                    f"{filename}: insert must be UTF-8 encoded"
+                                ) from e
 
+                            # Store insert under the correct target and slot
+                            pkg_map = inserts.setdefault(target, {}).setdefault(
+                                insert, {}
+                            )
+                            # Append if package already contributed to this slot
+                            if package_key in pkg_map and pkg_map[package_key]:
+                                pkg_map[package_key] += "\n" + text
+                            else:
+                                pkg_map[package_key] = text
+
+                        except ValueError:
+                            self.console.debug(
+                                f"    {filename}: not an <insert>.<target> name; skipping generic insert handling."
+                            )
+
+                    # CSS inserts
+                    if basename.endswith(".css"):
                         try:
                             css_text = wheel.read(filename).decode("utf-8")
                         except UnicodeDecodeError as e:
                             raise BriefcaseCommandError(
-                                f"{filename}: CSS content must be UTF-8 encoded"
+                                f"{filename}: insert must be UTF-8 encoded"
                             ) from e
 
                         # Wrap CSS with a source banner showing package and file
-                        rel_inside = "/".join(path.parts[2:])
+                        rel_inside = "/".join(parts[3:]) or basename
                         css_payload = (
                             "\n/*******************************************************\n"
                             f" * {package_key}::{rel_inside}\n"
@@ -332,78 +385,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         target = "static/css/briefcase.css"
                         insert = "CSS"
                         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                        # Append if package already has content for this slot
                         if package_key in pkg_map and pkg_map[package_key]:
                             pkg_map[package_key] += "\n" + css_payload
                         else:
                             pkg_map[package_key] = css_payload
-
-                    # New deploy/inserts handling
-                    elif (
-                        len(parts) >= 3
-                        and parts[1] == "deploy"
-                        and parts[2] == "inserts"
-                    ):
-                        self.console.info(f"    Found {filename}")
-                        basename = parts[-1]
-
-                        # HTML/other inserts
-                        if not basename.endswith(".css"):
-                            try:
-                                # Split filename into <insert> slot and <target>
-                                insert, target = basename.split(".", 1)
-                                self.console.info(
-                                    f"    {filename}: Adding {insert} insert for {target}"
-                                )
-                                try:
-                                    text = wheel.read(filename).decode("utf-8")
-                                except UnicodeDecodeError as e:
-                                    raise BriefcaseCommandError(
-                                        f"{filename}: insert must be UTF-8 encoded"
-                                    ) from e
-
-                                # Store insert under the correct target and slot
-                                pkg_map = inserts.setdefault(target, {}).setdefault(
-                                    insert, {}
-                                )
-                                # Append if package already contributed to this slot
-                                if package_key in pkg_map and pkg_map[package_key]:
-                                    pkg_map[package_key] += "\n" + text
-                                else:
-                                    pkg_map[package_key] = text
-
-                            except ValueError:
-                                self.console.debug(
-                                    f"    {filename}: not an <insert>.<target> name; skipping generic insert handling."
-                                )
-
-                        # CSS inserts
-                        if basename.endswith(".css"):
-                            try:
-                                css_text = wheel.read(filename).decode("utf-8")
-                            except UnicodeDecodeError as e:
-                                raise BriefcaseCommandError(
-                                    f"{filename}: insert must be UTF-8 encoded"
-                                ) from e
-
-                            # Wrap CSS with a source banner showing package and file
-                            rel_inside = "/".join(parts[3:]) or basename
-                            css_payload = (
-                                "\n/*******************************************************\n"
-                                f" * {package_key}::{rel_inside}\n"
-                                " *******************************************************/\n\n"
-                            ) + css_text
-
-                            # Add CSS content to briefcase.css insert slot
-                            target = "static/css/briefcase.css"
-                            insert = "CSS"
-                            pkg_map = inserts.setdefault(target, {}).setdefault(
-                                insert, {}
-                            )
-                            # Append if package already has content for this slot
-                            if package_key in pkg_map and pkg_map[package_key]:
-                                pkg_map[package_key] += "\n" + css_payload
-                            else:
-                                pkg_map[package_key] = css_payload
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
