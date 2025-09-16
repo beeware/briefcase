@@ -209,30 +209,29 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     ):
         """Write pyscript version into an existing html file.
 
-        This function looks for markers in the named file and replaces the
-        markers with the pyscript version.
+        This function looks for markers in the named file and appends
+        pyscript definitions between the markers.
 
-        The markers are in pyscript declarations within the html.
-
-        * Marker: ``<!--@@ pyscript_version @@-->``
-        * Example: ``<link rel="stylesheet" href="https://pyscript.net/releases/<!--@@ pyscript_version @@-->/core.css">``
-
-        Pyscript versions are processed in sorted order to ensure deterministic builds.
+        * Start: <!--@@ PyScript:start @@-->
+        * End:   <!--@@ PyScript:end @@-->
 
         :param app: The application being written.
         :param filename: The html file whose pyscript version is to be written.
         :param pyscript_version: The pyscript version number to be inserted.
         """
-        # Load file content, skip if file not found
+        # Load file content. Raise a warning if the file is not found
         target_path = self.project_path(app) / filename
         try:
             file_text = target_path.read_text(encoding="utf-8")
         except FileNotFoundError:
-            raise BriefcaseConfigError(
-                f"{filename} not found; pyscript version could not be inserted."
+            self.console.warning(
+                f"Target {filename} not found in {target_path}; skipping pyscript insertion."
+                "This project may not work correctly."
             )
 
         marker = r"<!--@@ PyScript:start @@-->.*<!--@@ PyScript:end @@-->"
+
+        # PyScript definitions for insertion:
         insertion = f"""<!--@@ PyScript:start @@-->
         <script type="module">
             // Hide the splash screen when the page is ready.
@@ -245,12 +244,16 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
         <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
         <!--@@ PyScript:end @@-->"""
-        insertion = insertion.replace("pyscript_version", pyscript_version)
+
+        # Replace content between markers with PyScript definition insertions.
         if re.search(marker, file_text, flags=re.DOTALL):
             file_text = re.sub(marker, insertion, file_text, flags=re.DOTALL)
+        # Warning if no markers were found.
+        # NOTE: this is likely due to using an older version of the Web Template.
         else:
-            raise BriefcaseConfigError(
-                f"No pyscript markers found in {filename}; pyscript may not be configured correctly."
+            self.console.warning(
+                f"No pyscript markers found in {filename}; PyScript may not be configured correctly."
+                "Please ensure you are using the latest version of Briefcase Static Web Template"
             )
 
         target_path.write_text(file_text, encoding="utf-8")
