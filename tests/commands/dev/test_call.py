@@ -5,6 +5,7 @@ import pytest
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.virtual_environment import VenvContext
 
 
 class DummyDevCommand(DevCommand):
@@ -23,6 +24,7 @@ class DummyDevCommand(DevCommand):
 
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
+        self.mock_venv_context = mock.MagicMock(spec=VenvContext)
 
     def verify_host(self):
         super().verify_host()
@@ -74,6 +76,28 @@ def dev_command(dummy_console, tmp_path):
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_virtual_environment(dev_command):
+    """Mock virtual_environment to return our predictable VenvContext regardless of
+    isolated parameter."""
+
+    def mock_venv_factory(tools, console, venv_path, *, isolated=True, recreate=False):
+        """Mock factory that always returns a context manager yielding our VenvContext.
+
+        This handles both isolated=True and isolated=False cases to always return our
+        predictable mock instead of NoOpEnvironment returning tools.subprocess.
+        """
+        mock_context = mock.MagicMock()
+        mock_context.__enter__.return_value = dev_command.mock_venv_context
+        mock_context.__exit__.return_value = False
+        return mock_context
+
+    with mock.patch(
+        "briefcase.commands.dev.virtual_environment", side_effect=mock_venv_factory
+    ):
+        yield
+
+
 def test_no_args_one_app(dev_command, first_app):
     """If there is one app, dev starts that app by default."""
     # Add a single app
@@ -102,7 +126,7 @@ def test_no_args_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -156,7 +180,7 @@ def test_with_arg_one_app(dev_command, first_app):
             "run_dev",
             "first",
             False,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -192,7 +216,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
             "run_dev",
             "second",
             False,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -246,14 +270,14 @@ def test_update_requirements(dev_command, first_app):
         (
             "dev_requirements",
             "first",
-            mock.ANY,
+            dev_command.mock_venv_context,
         ),
         # Then, it will be started
         (
             "run_dev",
             "first",
             False,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -287,14 +311,14 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         (
             "dev_requirements",
             "first",
-            mock.ANY,
+            dev_command.mock_venv_context,
         ),
         # Then, it will be started
         (
             "run_dev",
             "first",
             False,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -329,14 +353,14 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         (
             "dev_requirements",
             "first",
-            mock.ANY,
+            dev_command.mock_venv_context,
         ),
         # Then, it will be started
         (
             "run_dev",
             "first",
             False,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -369,7 +393,7 @@ def test_no_run(dev_command, first_app_uninstalled):
         (
             "dev_requirements",
             "first",
-            mock.ANY,
+            dev_command.mock_venv_context,
         ),
     ]
 
@@ -402,7 +426,7 @@ def test_run_test(dev_command, first_app):
             "run_dev",
             "first",
             True,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),
@@ -433,13 +457,13 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Development requirements will be installed
-        ("dev_requirements", "first", mock.ANY),
+        ("dev_requirements", "first", dev_command.mock_venv_context),
         # Then, it will be started
         (
             "run_dev",
             "first",
             True,
-            mock.ANY,
+            dev_command.mock_venv_context,
             [],
             dev_command.env,
         ),

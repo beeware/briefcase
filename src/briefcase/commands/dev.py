@@ -255,7 +255,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             update_requirements = True
 
         with self.get_venv_context(
-            appname=appname,
+            appname=app.app_name,
             isolated=options.get("isolated", False),
         ) as venv:
             if update_requirements or not dist_info_path.exists():
