@@ -284,7 +284,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         :param wheelfile: Path to the wheel file.
         :param inserts: Nested dict of inserts keyed by target - insert - package.
-        :param static_path: Path for static content.
         """
         name_parts = wheelfile.name.split("-")
         package_key = f"{name_parts[0]} {name_parts[1]}"
@@ -436,7 +435,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             "No backend was provided in config.toml file."
                         )
                     # Currently, only pyscript is supported. Warn if another backend is found.
-                    elif backend is not "pyscript":
+                    elif backend != "pyscript":
                         self.console.warning(
                             "Only 'pyscript' backend is currently supported for web static builds."
                             "This project may not work correctly."
@@ -569,7 +568,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 self._process_wheel(
                     wheelfile=wheelfile,
                     inserts=inserts,
-                    static_path=static_root,
                 )
 
             # Write inserts per target
