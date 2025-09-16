@@ -226,21 +226,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         self._add_test_options(parser, context_label="Run")
 
         if self.supports_debugger:
-            self._add_debug_options(parser, context_label="Run")
-            parser.add_argument(
-                "--debugger-host",
-                default="localhost",
-                help="The host on which to run the debug server (default: localhost)",
-                required=False,
-            )
-            parser.add_argument(
-                "-dp",
-                "--debugger-port",
-                default=5678,
-                type=int,
-                help="The port on which to run the debug server (default: 5678)",
-                required=False,
-            )
+            self._add_debug_options(parser, context_label="Run", run_cmd=True)
 
     def _debugger_app_path_mappings(self, app: AppConfig) -> AppPathMappings:
         """Get the path mappings for the app code.

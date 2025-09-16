@@ -1009,7 +1009,7 @@ any compatibility problems, and then add the compatibility declaration.
             help=f"{context_label} the app in test mode",
         )
 
-    def _add_debug_options(self, parser, context_label):
+    def _add_debug_options(self, parser, context_label, run_cmd: bool = False):
         """Internal utility method for adding common debug-related options.
 
         :param parser: The parser to which options should be added.
@@ -1030,6 +1030,22 @@ any compatibility problems, and then add the compatibility declaration.
             metavar="DEBUGGER",
             help=f"{context_label} the app with the specified debugger. One of {', '.join(choices_help)} (default: pdb)",
         )
+
+        if run_cmd:
+            parser.add_argument(
+                "--debugger-host",
+                default="localhost",
+                help="The host on which to run the debug server (default: localhost)",
+                required=False,
+            )
+            parser.add_argument(
+                "-dp",
+                "--debugger-port",
+                default=5678,
+                type=int,
+                help="The port on which to run the debug server (default: 5678)",
+                required=False,
+            )
 
     def add_options(self, parser):
         """Add any options that this command needs to parse from the command line.
