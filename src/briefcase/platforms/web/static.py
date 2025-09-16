@@ -521,7 +521,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ) from e
 
         with self.console.wait_bar("Writing Pyscript configuration file..."):
-            # Load any pre-existing pyscript.toml provided by the template. If the file
+            # Load any pre-existing pyscript.toml provided by a GUI Toolkit. If the file
             # doesn't exist, assume an empty pyscript.toml as a starting point.
             config, pyscript_version = self.extract_backend_config(
                 self.wheel_path(app).glob("*.whl")
@@ -551,7 +551,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             with (self.project_path(app) / "pyscript.toml").open("wb") as f:
                 tomli_w.dump(config, f)
 
-        self.console.info("Compile static web content from wheels")
         with self.console.wait_bar("Compiling static web content from wheels..."):
             # Add pyscript_version to index.html
             self.write_pyscript_version(app, Path("index.html"), pyscript_version)
