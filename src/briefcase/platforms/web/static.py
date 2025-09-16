@@ -412,43 +412,41 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 Duplicate config.toml found in package: {wheel.filename}"""
             )
         # Gather a backend configuration file from the package.
-        # For now, is a pyscript.toml as no other backend is currently supported.
+        # For now, this is a pyscript.toml as no other backend is currently supported.
         else:
             with ZipFile(config_package_list[0]) as wheel:
                 # Check which backend type is used.
                 with wheel.open(config_filename) as config_file:
                     config_data = tomllib.load(config_file)
 
-                    if "backend" in config_data:
-                        backend = config_data.get("backend")
-
-                        # Currently, only pyscript is supported, will raise an error if another backend is found.
-                        if backend != "pyscript":
-                            raise BriefcaseConfigError(
-                                "Only 'pyscript' backend is currently supported for web static builds."
-                            )
-
-                        # Get pyscript version from config.toml. Use default if not present.
-
-                        if "version" in config_data:
-                            pyscript_version = config_data.get("version")
-
-                        pyscript_path = config_filename.replace(
-                            "config.toml", "pyscript.toml"
-                        )
-                        try:
-                            with wheel.open(pyscript_path) as pyscript_file:
-                                pyscript_config = tomllib.load(pyscript_file)
-                        except KeyError:
-                            raise BriefcaseConfigError(
-                                f"Pyscript configuration file not found in package: {config_package_list[0]}"
-                            )
-
-                    # Raise error if no backend is present in config.toml
-                    else:
+                    # Fail if no backend is present in config.toml
+                    if "backend" not in config_data:
                         raise BriefcaseConfigError(
                             "No backend was provided in config.toml file."
                         )
+
+                    backend = config_data.get("backend")
+
+                    # Currently, only pyscript is supported. Warn if another backend is found.
+                    if backend is not "pyscript":
+                        self.console.warning(
+                            "Only 'pyscript' backend is currently supported for web static builds."
+                            "This project may not work correctly."
+                        )
+
+                    # Get pyscript version from config.toml. Use default if not present.
+                    pyscript_version = config_data.get("version", pyscript_version)
+
+                    # Extract pyscript.toml
+                    pyscript_path = config_filename.replace("config.toml", "pyscript.toml")
+                    try:
+                        with wheel.open(pyscript_path) as pyscript_file:
+                            pyscript_config = tomllib.load(pyscript_file)
+                    except KeyError:
+                        raise BriefcaseConfigError(
+                            f"Pyscript configuration file not found in package: {config_package_list[0]}"
+                        )
+
 
         return pyscript_config, pyscript_version
 
