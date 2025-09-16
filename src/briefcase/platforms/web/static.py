@@ -424,20 +424,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # For now, this is a pyscript.toml as no other backend is currently supported.
         else:
             with ZipFile(config_package_list[0]) as wheel:
-                # Check which backend type is used.
                 with wheel.open(config_filename) as config_file:
                     config_data = tomllib.load(config_file)
 
+                    # Gather backend type from config.toml
+                    backend = config_data.get("backend", None)
+
                     # Fail if no backend is present in config.toml
-                    if "backend" not in config_data:
+                    if backend is None:
                         raise BriefcaseConfigError(
                             "No backend was provided in config.toml file."
                         )
-
-                    backend = config_data.get("backend")
-
                     # Currently, only pyscript is supported. Warn if another backend is found.
-                    if backend is not "pyscript":
+                    elif backend is not "pyscript":
                         self.console.warning(
                             "Only 'pyscript' backend is currently supported for web static builds."
                             "This project may not work correctly."
