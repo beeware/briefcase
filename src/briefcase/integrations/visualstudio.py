@@ -95,7 +95,7 @@ or unset the environment variable; then re-run Briefcase.
 """
                     )
 
-            except KeyError:
+            except KeyError as e:
                 # No %MSBUILD% environment variable. Look for vswhere.exe
                 vswhere_path = None
                 if program_files := tools.os.environ.get("ProgramFiles(x86)"):
@@ -122,7 +122,7 @@ variable that points at the MSBuild.exe provided by your Visual Studio
 installation.
 
 """
-                    ) from None
+                    ) from e
 
                 # Retrieve metadata for Visual Studio install
                 try:
@@ -180,10 +180,10 @@ Then restart Briefcase.
             # Try to invoke MSBuild at the established location
             try:
                 tools.subprocess.check_output([msbuild_path, "--version"])
-            except (subprocess.CalledProcessError, OSError):
+            except (subprocess.CalledProcessError, OSError) as e:
                 raise BriefcaseCommandError(
                     "MSBuild appears to exist, but Briefcase can't start it."
-                ) from None
+                ) from e
 
             visualstudio = VisualStudio(
                 tools=tools,

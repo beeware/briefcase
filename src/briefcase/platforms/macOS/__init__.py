@@ -55,10 +55,10 @@ class SigningIdentity:
     def team_id_from_name(cls, name):
         try:
             return re.match(r".*\(([\dA-Z]*)\)", name)[1]
-        except TypeError:
+        except TypeError as e:
             raise BriefcaseCommandError(
                 f"Couldn't extract Team ID from signing identity {name!r}"
-            ) from None
+            ) from e
 
     @property
     def is_adhoc(self):
@@ -563,10 +563,8 @@ class macOSRunMixin:
                 stop_func=lambda: is_process_dead(app_pid),
                 log_stream=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(
-                f"Unable to start app {app.app_name}."
-            ) from None
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
         finally:
             # Ensure the App also terminates when exiting. The ordering here is a little
             # odd; the if could/should be outside the context manager, but coverage has
@@ -741,7 +739,7 @@ or
                 return
             else:
                 self.tools.subprocess.output_error(e)
-                raise BriefcaseCommandError(f"Unable to code sign {path}.") from None
+                raise BriefcaseCommandError(f"Unable to code sign {path}.") from e
 
     def sign_app(
         self,
@@ -1181,15 +1179,15 @@ password:
                         f"{submission_id} is not a submission ID for this project. "
                         f"It notarizes a file named {expected_filename}"
                     )
-            except IndexError:
+            except IndexError as e:
                 raise BriefcaseCommandError(
                     f"{submission_id} is not a known submission ID for this identity."
-                ) from None
-            except subprocess.CalledProcessError:
+                ) from e
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     "Unable to invoke notarytool to determine validity of submission ID.\n"
                     "Are you sure this is the identity that was used to notarize the app?"
-                ) from None
+                ) from e
 
     def finalize_notarization(
         self,
@@ -1257,8 +1255,8 @@ password:
                                 "Unknown problem retrieving notarization status."
                             ) from e
 
-        except KeyboardInterrupt:
-            raise NotarizationInterrupted("Notarization interrupted by user.") from None
+        except KeyboardInterrupt as e:
+            raise NotarizationInterrupted("Notarization interrupted by user.") from e
         else:
             filename = self.notarization_path(app)
             try:
@@ -1270,10 +1268,10 @@ password:
                     ["xcrun", "stapler", "staple", filename],
                     check=True,
                 )
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to staple notarization onto {filename.relative_to(self.base_path)}"
-                ) from None
+                ) from e
 
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.

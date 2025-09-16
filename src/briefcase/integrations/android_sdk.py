@@ -167,11 +167,11 @@ class AndroidSDK(ManagedTool):
                     "AMD64": "x86_64",
                 },
             }[self.tools.host_os][self.tools.host_arch]
-        except KeyError:
+        except KeyError as e:
             raise BriefcaseCommandError(
                 "The Android emulator does not currently support "
                 f"{self.tools.host_os} {self.tools.host_arch} hardware."
-            ) from None
+            ) from e
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
@@ -936,13 +936,13 @@ connection.
                 raise BriefcaseCommandError(
                     f"Unable to create emulator with definition {device_or_avd!r}"
                 ) from e
-            except KeyError:
-                raise BriefcaseCommandError("No AVD provided for new device.") from None
+            except KeyError as e:
+                raise BriefcaseCommandError("No AVD provided for new device.") from e
             except TypeError as e:
                 property = str(e).split(" ")[-1]
                 raise BriefcaseCommandError(
                     f"Unknown device property {property}."
-                ) from None
+                ) from e
 
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()
