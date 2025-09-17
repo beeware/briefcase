@@ -7,18 +7,29 @@ from pathlib import Path
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations import subprocess
+from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 
 
-class VenvContext:
+class VenvContext(Tool):
     """Context for running commands in a virtual environment.
 
     Wraps subprocess functions to ensure commands are run in the venv.
     """
 
+    name = "venv_context"
+    full_name = "Virtual Environment Context"
+
     def __init__(self, tools, venv_path: Path):
-        self.tools = tools
+        super().__init__(tools=tools)
         self.venv_path = venv_path
+
+    @classmethod
+    def verify_install(
+        cls, tools: ToolCache, venv_path: Path, **kwargs
+    ) -> "VenvContext":
+        """Return a VenvContext for the specified path."""
+        return cls(tools=tools, venv_path=venv_path)
 
     @property
     def bin_dir(self) -> Path:
@@ -168,7 +179,9 @@ class VenvEnvironment:
         self.console = console
         self.venv_path = path
         self.recreate = recreate
-        self.venv_context = VenvContext(self.tools, self.venv_path)
+        self.venv_context = VenvContext.verify_install(
+            tools=self.tools, venv_path=self.venv_path
+        )
 
     def __enter__(self):
         if self.recreate:
