@@ -7,6 +7,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
+from textwrap import indent
 
 from briefcase.console import Console
 from briefcase.exceptions import (
@@ -113,12 +114,12 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         Multiple formats of insert marker are inspected to accommodate HTML
         and CSS/JS comment conventions:
-        * HTML: `<!--@@ insert:start @@--> and <!--@@ insert:end @@-->
-        * CSS/JS: `/*@@ insert:start @@*/ and /*@@ insert:end @@*/
+        * HTML: `<!--@@ insert:start @@--> and <!--@@ insert:end @@-->`
+        * CSS/JS: `/*@@ insert:start @@*/ and /*@@ insert:end @@*/`
 
         Inserts and package contributions are processed in sorted order to ensure deterministic builds.
 
-        :param app: The application whose `pyscript.toml is being written.
+        :param app: The application whose `pyscript.toml` is being written.
         :param filename: The file whose insert is to be written.
         :param inserts: The inserts for the file. A 2 level dictionary, keyed by
             the name of the insert to add, and then package that contributed the
@@ -166,18 +167,18 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             compiled_markers = [
                 (
                     re.compile(
-                        rf"<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
+                        rf"(^\s*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
                         flags=re.MULTILINE | re.DOTALL,
                     ),
-                    r"<!--@@ {insert}:start @@-->\n{content}<!--@@ {insert}:end @@-->",
+                    r"{indent}<!--@@ {insert}:start @@-->\n{content}{indent}<!--@@ {insert}:end @@-->",
                     "html",
                 ),
                 (
                     re.compile(
-                        rf"/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
+                        rf"(^\s*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
                         flags=re.MULTILINE | re.DOTALL,
                     ),
-                    r"/*@@ {insert}:start @@*/\n{content}/*@@ {insert}:end @@*/",
+                    r"{indent}/*@@ {insert}:start @@*/\n{content}{indent}/*@@ {insert}:end @@*/",
                     "css",
                 ),
             ]
@@ -185,9 +186,13 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             # Apply all matching marker styles
             any_match = False
             for pattern, repl_tmpl, kind in compiled_markers:
-                if pattern.search(file_text):
+                # Search for pattern within file.
+                pattern_found = pattern.search(file_text)
+                if pattern_found:
+                    # Indent content to align with markers.
+                    indented_content = indent(body_map.get(kind, ""), pattern_found.group(1))
                     file_text = pattern.sub(
-                        repl_tmpl.format(insert=insert, content=body_map.get(kind, "")),
+                        repl_tmpl.format(indent=pattern_found.group(1), insert=insert, content=indented_content),
                         file_text,
                     )
                     any_match = True
