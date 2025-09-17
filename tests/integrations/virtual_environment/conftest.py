@@ -52,9 +52,9 @@ def mock_subprocess_setup(venv_context, monkeypatch):
     monkeypatch.setattr(venv_context.tools, "subprocess", mock_subprocess)
 
     return {
-        "mock_rewrite_head": mock_rewrite_head,
-        "mock_full_env": mock_full_env,
-        "mock_subprocess": mock_subprocess,
-        "mock_popen_instance": mock_popen_instance,
-        "mock_completed_process": mock_completed_process,
+        "rewrite_head": mock_rewrite_head,
+        "full_env": mock_full_env,
+        "subprocess": mock_subprocess,
+        "popen_instance": mock_popen_instance,
+        "completed_process": mock_completed_process,
     }

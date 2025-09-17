@@ -16,13 +16,3 @@ def assert_environment_handling(
     expected_kwargs["env"] = {"FULL": "env"}
 
     mock_method.assert_called_once_with(method_args, **expected_kwargs)
-
-
-def assert_no_kwargs_mutation(original_kwargs, kwargs_after_call):
-    """Assert that original kwargs were not mutated during the call."""
-    assert original_kwargs == kwargs_after_call
-
-
-def assert_rewrite_head_called(mock_rewrite_head, expected_args):
-    """Assert _rewrite_head was called with expected arguments."""
-    mock_rewrite_head.assert_called_once_with(expected_args)
