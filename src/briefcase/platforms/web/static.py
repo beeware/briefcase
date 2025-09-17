@@ -7,7 +7,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
-from textwrap import indent
+from textwrap import indent, dedent
 
 from briefcase.console import Console
 from briefcase.exceptions import (
@@ -167,7 +167,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             compiled_markers = [
                 (
                     re.compile(
-                        rf"(^\s*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
+                        rf"(^[ \t]*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
                         flags=re.MULTILINE | re.DOTALL,
                     ),
                     r"{indent}<!--@@ {insert}:start @@-->\n{content}{indent}<!--@@ {insert}:end @@-->",
@@ -175,7 +175,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 ),
                 (
                     re.compile(
-                        rf"(^\s*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
+                        rf"(^[ \t]*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
                         flags=re.MULTILINE | re.DOTALL,
                     ),
                     r"{indent}/*@@ {insert}:start @@*/\n{content}{indent}/*@@ {insert}:end @@*/",
@@ -230,28 +230,36 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         except FileNotFoundError:
             self.console.warning(
                 f"Target {filename} not found in {target_path}; skipping pyscript insertion."
-                "This project may not work correctly."
+                "PyScript may not be configured correctly. This project may not work correctly."
             )
 
-        marker = r"<!--@@ PyScript:start @@-->.*<!--@@ PyScript:end @@-->"
-
         # PyScript definitions for insertion:
-        insertion = f"""<!--@@ PyScript:start @@-->
-        <script type="module">
-            // Hide the splash screen when the page is ready.
-            import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
-            hooks.main.onReady.add(() => {{
-                document.getElementById("briefcase-splash").classList.add("hidden");
-            }});
-        </script>
+        content = (f"""\
+            <!--@@ PyScript:start @@-->
+            <script type="module">
+                // Hide the splash screen when the page is ready.
+                import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
+                hooks.main.onReady.add(() => {{
+                    document.getElementById("briefcase-splash").classList.add("hidden");
+                }});
+            </script>
 
-        <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
-        <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
-        <!--@@ PyScript:end @@-->"""
+            <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
+            <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
+            <!--@@ PyScript:end @@-->
+            """
+        )
 
         # Replace content between markers with PyScript definition insertions.
-        if re.search(marker, file_text, flags=re.DOTALL):
-            file_text = re.sub(marker, insertion, file_text, flags=re.DOTALL)
+        marker = r"(^[ \t]*)<!--@@ PyScript:start @@-->.*<!--@@ PyScript:end @@-->"
+        marker_found = re.search(marker, file_text, flags=re.DOTALL | re.MULTILINE)
+
+        if marker_found:
+            indented_content = indent(
+                dedent(content),
+                marker_found.group(1),
+            )
+            file_text = re.sub(marker, indented_content, file_text, flags=re.DOTALL | re.MULTILINE)
         # Warning if no markers were found.
         # NOTE: this is likely due to using an older version of the Web Template.
         else:
