@@ -11,6 +11,7 @@ from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    UnsupportedCommandError,
 )
 from briefcase.integrations.virtual_environment import virtual_environment
 
@@ -473,7 +474,14 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             tools=self.tools,
             console=self.console,
             venv_path=self.base_path / ".briefcase" / appname / "venv",
-            isolated=True,  # Always isolated for web
+            isolated=isolated,
+        )
+
+    def run_dev_app(self, app: AppConfig, **options):
+        raise UnsupportedCommandError(
+            platform="web",
+            output_format="static",
+            command="dev",
         )
 
 

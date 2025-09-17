@@ -50,6 +50,8 @@ def test_full_env_basic_creation(
         if overrides and "VALUE" in overrides:
             assert result["VALUE"] == "value"
 
+        assert "PYTHONHOME" not in result
+
 
 def test_full_env_path_override_custom_path_with_system(
     venv_context, platform_paths, venv_bin_dir, path_separator
@@ -65,6 +67,7 @@ def test_full_env_path_override_custom_path_with_system(
         )
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result
 
 
 def test_full_env_path_override_none_with_system(
@@ -81,6 +84,7 @@ def test_full_env_path_override_none_with_system(
         )
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result
 
 
 def test_full_env_path_override_empty_with_system(
@@ -97,6 +101,7 @@ def test_full_env_path_override_empty_with_system(
         )
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result
 
 
 def test_full_env_path_override_custom_with_empty_system(
@@ -113,6 +118,7 @@ def test_full_env_path_override_custom_with_empty_system(
         )
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result
 
 
 def test_full_env_path_override_none_with_empty_system(
@@ -127,6 +133,7 @@ def test_full_env_path_override_none_with_empty_system(
         expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}"
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result
 
 
 def test_full_env_no_overrides(
@@ -141,6 +148,7 @@ def test_full_env_no_overrides(
         )
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result
 
 
 def test_full_env_no_system_path(venv_context, venv_bin_dir):
@@ -151,3 +159,4 @@ def test_full_env_no_system_path(venv_context, venv_bin_dir):
         expected_path_ending = f"test_venv{os.sep}{venv_bin_dir}"
         assert result["PATH"].endswith(expected_path_ending)
         assert result["VIRTUAL_ENV"].endswith("test_venv")
+        assert "PYTHONHOME" not in result

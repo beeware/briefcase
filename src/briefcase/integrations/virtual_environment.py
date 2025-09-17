@@ -111,6 +111,9 @@ class VenvContext:
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
 
+        # Remove PYTHONHOME to avoid conflicts with the venv.
+        env.pop("PYTHONHOME", None)
+
         return env
 
     def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
