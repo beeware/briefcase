@@ -113,12 +113,12 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         Multiple formats of insert marker are inspected to accommodate HTML
         and CSS/JS comment conventions:
-        * HTML: ``<!--@@ insert:start @@-->`` and ``<!--@@ insert:end @@-->``
-        * CSS/JS: ``/*@@ insert:start @@*/`` and ``/*@@ insert:end @@*/``
+        * HTML: `<!--@@ insert:start @@--> and <!--@@ insert:end @@-->
+        * CSS/JS: `/*@@ insert:start @@*/ and /*@@ insert:end @@*/
 
         Inserts and package contributions are processed in sorted order to ensure deterministic builds.
 
-        :param app: The application whose ``pyscript.toml`` is being written.
+        :param app: The application whose `pyscript.toml is being written.
         :param filename: The file whose insert is to be written.
         :param inserts: The inserts for the file. A 2 level dictionary, keyed by
             the name of the insert to add, and then package that contributed the
@@ -160,33 +160,26 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
             body_map = {"html": html_body, "css": css_body}
 
-            # Marker patterns for HTML and CSS/JS
-            marker_styles = [
-                # HTML
-                (
-                    r"<!--@@ {insert}:start @@-->.*?<!--@@ {insert}:end @@-->",
-                    r"<!--@@ {insert}:start @@-->\n{content}<!--@@ {insert}:end @@-->",
-                    "html",
-                ),
-                # CSS/JS
-                (
-                    r"/\*@@ {insert}:start @@\*/.*?/\*@@ {insert}:end @@\*/",
-                    r"/*@@ {insert}:start @@*/\n{content}/*@@ {insert}:end @@*/",
-                    "css",
-                ),
-            ]
+            slot = re.escape(insert)
 
-            # Pre-compile patterns once per insert
+            # Build the compiled patterns directly once per slot
             compiled_markers = [
                 (
                     re.compile(
-                        pattern_tmpl.format(insert=insert),
+                        rf"<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
                         flags=re.MULTILINE | re.DOTALL,
                     ),
-                    repl_tmpl,
-                    kind,
-                )
-                for (pattern_tmpl, repl_tmpl, kind) in marker_styles
+                    r"<!--@@ {insert}:start @@-->\n{content}<!--@@ {insert}:end @@-->",
+                    "html",
+                ),
+                (
+                    re.compile(
+                        rf"/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
+                        flags=re.MULTILINE | re.DOTALL,
+                    ),
+                    r"/*@@ {insert}:start @@*/\n{content}/*@@ {insert}:end @@*/",
+                    "css",
+                ),
             ]
 
             # Apply all matching marker styles
@@ -272,15 +265,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """Process a wheel to collect insert and style content for the final project.
 
         Scans the wheel for:
-        * Legacy CSS – `.css` files under ``static/`` are appended to the
-        ``briefcase.css`` insert slot with a deprecation warning.
-        * HTML inserts – HTML header files under ``deploy/inserts/<insert>.<target>``
-        are added to the corresponding insert slot for the target file.
-        * CSS inserts – Any `.css` under ``deploy/inserts/`` is appended to
-        the ``briefcase.css`` insert slot.
-
-        Inserts are grouped by ``<package_name> <version>`` for ordering and
-        provenance. All content must be UTF-8 encoded.
+        * Legacy CSS – .css files under `static/ are appended to the
+        `briefcase.css insert slot with a deprecation warning.
+        * Deploy inserts – Any files under `deploy/inserts/<insert>.<target>
+        (HTML, CSS, JS, etc.) are added to the corresponding insert slot for
+        the target file.
 
         :param wheelfile: Path to the wheel file.
         :param inserts: Nested dict of inserts keyed by target - insert - package.
@@ -327,18 +316,30 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     target = "static/css/briefcase.css"
                     insert = "CSS"
                     pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                    pkg_map[contrib_key] = css_text
+                    if contrib_key in pkg_map and pkg_map[contrib_key]:
+                        pkg_map[contrib_key] += "\n" + css_text
+                    else:
+                        pkg_map[contrib_key] = css_text
 
                 # New deploy/inserts handling
                 elif len(parts) >= 3 and parts[1] == "deploy" and parts[2] == "inserts":
                     self.console.info(f"    Found {filename}")
-                    basename = parts[-1]
+                    rel_inside = "/".join(parts[3:])
 
-                    # HTML/other inserts
-                    if not basename.endswith(".css"):
+                    if not rel_inside or rel_inside.endswith("/"):
+                        self.console.debug(
+                            f"    {filename}: skipping, not a valid insert file."
+                        )
+                    else:
                         try:
-                            # Split filename into <insert> slot and <target>
-                            insert, target = basename.split(".", 1)
+                            dot_idx = rel_inside.index(".")
+                            insert = rel_inside[:dot_idx]
+                            target = rel_inside[dot_idx + 1 :]
+                        except ValueError:
+                            self.console.debug(
+                                f"    {filename}: skipping, filename must match '<insert>.<target>'."
+                            )
+                        else:
                             self.console.info(
                                 f"    {filename}: Adding {insert} insert for {target}"
                             )
@@ -349,39 +350,20 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                                     f"{filename}: insert must be UTF-8 encoded"
                                 ) from e
 
-                            # Store insert under the correct target and slot
+                            contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
+
                             pkg_map = inserts.setdefault(target, {}).setdefault(
                                 insert, {}
                             )
-                            # Append if package already contributed to this slot
                             if package_key in pkg_map and pkg_map[package_key]:
                                 pkg_map[package_key] += "\n" + text
                             else:
                                 pkg_map[package_key] = text
 
-                        except ValueError:
-                            self.console.debug(
-                                f"    {filename}: not an <insert>.<target> name; skipping generic insert handling."
-                            )
-
-                    # CSS inserts
-                    if basename.endswith(".css"):
-                        try:
-                            css_text = wheel.read(filename).decode("utf-8")
-                        except UnicodeDecodeError as e:
-                            raise BriefcaseCommandError(
-                                f"{filename}: insert must be UTF-8 encoded"
-                            ) from e
-
-                        # Wrap CSS with a source banner showing package and file
-                        rel_inside = "/".join(parts[3:]) or basename
-                        contrib_key = f"{package_key} (deploy CSS: {rel_inside})"
-
-                        # Add CSS content to briefcase.css insert slot
-                        target = "static/css/briefcase.css"
-                        insert = "CSS"
-                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                        pkg_map[contrib_key] = css_text
+                else:
+                    self.console.debug(
+                        f"    {filename}: skipping, not a supported insert."
+                    )
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
@@ -445,7 +427,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     pyscript_version = config_data.get("version", pyscript_version)
 
                     # Extract pyscript.toml
-                    pyscript_path = config_filename.replace("config.toml", "pyscript.toml")
+                    pyscript_path = config_filename.replace(
+                        "config.toml", "pyscript.toml"
+                    )
                     try:
                         with wheel.open(pyscript_path) as pyscript_file:
                             pyscript_config = tomllib.load(pyscript_file)
@@ -453,7 +437,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         raise BriefcaseConfigError(
                             f"Pyscript configuration file not found in package: {config_package_list[0]}"
                         )
-
 
         return pyscript_config, pyscript_version
 
@@ -561,7 +544,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
 
             inserts: dict[str, dict[str, dict[str, str]]] = {}
-            static_root = self.static_path(app)
 
             for wheelfile in sorted(self.wheel_path(app).glob("*.whl")):
                 self.console.info(f"  Processing {wheelfile.name}...")
