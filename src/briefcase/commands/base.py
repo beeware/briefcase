@@ -693,7 +693,7 @@ a custom location for Briefcase's tools.
         test_mode: bool = False,
         debugger: str | None = None,
         debugger_host: str | None = None,
-        debugger_port: str | None = None,
+        debugger_port: int | None = None,
     ):
         """Finalize Briefcase configuration.
 

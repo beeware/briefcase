@@ -400,7 +400,7 @@ class AppConfig(BaseConfig):
 
         self.debugger: BaseDebugger | None = None
         self.debugger_host: str | None = None  # only for run command
-        self.debugger_port: str | None = None  # only for run command
+        self.debugger_port: int | None = None  # only for run command
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
