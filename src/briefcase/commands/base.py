@@ -28,7 +28,13 @@ else:  # pragma: no-cover-if-gte-py311
 
 import briefcase
 from briefcase import __version__
-from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.config import (
+    AppConfig,
+    GlobalConfig,
+    deep_merge,
+    load_user_config_files,
+    parse_config,
+)
 from briefcase.console import MAX_TEXT_WIDTH, Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -1007,15 +1013,29 @@ any compatibility problems, and then add the compatibility declaration.
                     console=self.console,
                 )
 
+                # Merge user-level config (global and per-project) before CLI overrides
+                project_root = Path(filename).resolve().parent
+                global_user_cfg, project_user_cfg = load_user_config_files(project_root)
+
+                # precedence within user-level config: global < project
+                user_merged = deep_merge(global_user_cfg, project_user_cfg)
+
+                # apply to global and each app (user config < pyproject)
+                merged_global = deep_merge(user_merged.copy(), global_config)
+                merged_app_configs = {
+                    name: deep_merge(user_merged.copy(), cfg)
+                    for name, cfg in app_configs.items()
+                }
+
                 # Create the global config
-                global_config.update(overrides)
+                merged_global.update(overrides)
                 self.global_config = create_config(
                     klass=GlobalConfig,
-                    config=global_config,
+                    config=merged_global,
                     msg="Global configuration",
                 )
 
-                for app_name, app_config in app_configs.items():
+                for app_name, app_config in merged_app_configs.items():
                     # Construct an AppConfig object with the final set of
                     # configuration options for the app.
                     app_config.update(overrides)
