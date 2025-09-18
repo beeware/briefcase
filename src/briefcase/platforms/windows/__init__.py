@@ -141,8 +141,6 @@ class WindowsRunCommand(RunCommand):
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -152,11 +150,7 @@ class WindowsRunCommand(RunCommand):
         :param passthrough: The list of arguments to pass to the app
         """
         # Set up the log stream
-        kwargs = self._prepare_app_kwargs(
-            app=app,
-            debugger_host=debugger_host,
-            debugger_port=debugger_port,
-        )
+        kwargs = self._prepare_app_kwargs(app=app)
 
         # Console apps must operate in non-streaming mode so that console input can
         # be handled correctly. However, if we're in test mode, we *must* stream so

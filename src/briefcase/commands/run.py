@@ -259,12 +259,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         # mapping is required. The paths are automatically found.
         return None
 
-    def debugger_config(
-        self,
-        app: AppConfig,
-        debugger_host: str,
-        debugger_port: int,
-    ) -> str:
+    def debugger_config(self, app: AppConfig) -> str:
         """Create the remote debugger configuration that should be saved as environment
         variable for this run.
 
@@ -275,8 +270,8 @@ class RunCommand(RunAppMixin, BaseCommand):
         app_packages_path_mappings = self._debugger_app_packages_path_mapping(app)
         config = DebuggerConfig(
             debugger=app.debugger.name,
-            host=debugger_host,
-            port=debugger_port,
+            host=app.debugger_host,
+            port=app.debugger_port,
             app_path_mappings=app_path_mappings,
             app_packages_path_mappings=app_packages_path_mappings,
         )
@@ -285,8 +280,6 @@ class RunCommand(RunAppMixin, BaseCommand):
     def _prepare_app_kwargs(
         self,
         app: AppConfig,
-        debugger_host: str | None = None,
-        debugger_port: int | None = None,
     ):
         """Prepare the kwargs for running an app as a log stream.
 
@@ -294,8 +287,6 @@ class RunCommand(RunAppMixin, BaseCommand):
         it's been factored out.
 
         :param app: The app to be launched
-        :param debugger_host: The host on which to run the debug server
-        :param debugger_port: The port on which to run the debug server
         :returns: A dictionary of additional arguments to pass to the Popen
         """
         args = {}
@@ -306,10 +297,8 @@ class RunCommand(RunAppMixin, BaseCommand):
             env["BRIEFCASE_DEBUG"] = "1"
 
         # If we're in remote debug mode, save the remote debugger config
-        if app.debugger and debugger_host and debugger_port:
-            env["BRIEFCASE_DEBUGGER"] = self.debugger_config(
-                app, debugger_host, debugger_port
-            )
+        if app.debugger:
+            env["BRIEFCASE_DEBUGGER"] = self.debugger_config(app)
 
         if app.test_mode:
             # In test mode, set a BRIEFCASE_MAIN_MODULE environment variable
@@ -330,16 +319,12 @@ class RunCommand(RunAppMixin, BaseCommand):
         self,
         app: AppConfig,
         *,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **options,
     ) -> dict | None:
         """Start an application.
 
         :param app: The application to start
-        :param debugger_host: The host on which to run the debug server
-        :param debugger_port: The port on which to run the debug server
         :param passthrough: Any passthrough arguments
         """
 
@@ -378,7 +363,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, test_mode, debugger)
+        self.finalize(app, test_mode, debugger, debugger_host, debugger_port)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
@@ -417,8 +402,6 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         state = self.run_app(
             app,
-            debugger_host=debugger_host,
-            debugger_port=debugger_port,
             passthrough=[] if passthrough is None else passthrough,
             **full_options(state, options),
         )

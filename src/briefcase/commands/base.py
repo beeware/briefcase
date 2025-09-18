@@ -692,6 +692,8 @@ a custom location for Briefcase's tools.
         app: AppConfig | None = None,
         test_mode: bool = False,
         debugger: str | None = None,
+        debugger_host: str | None = None,
+        debugger_port: str | None = None,
     ):
         """Finalize Briefcase configuration.
 
@@ -700,11 +702,16 @@ a custom location for Briefcase's tools.
         1. Ensure that the host has been verified
         2. Ensure that the platform tools have been verified
         3. Ensure that app configurations have been finalized.
+        4. Ensure that the debugger is configured.
 
         App finalization will only occur once per invocation.
 
         :param app: If provided, the specific app configuration
             to finalize. By default, all apps will be finalized.
+        :param test_mode: Specify if the app is running in test mode
+        :param debugger: The debugger that should be used
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         """
         self.verify_host()
         self.verify_tools()
@@ -712,7 +719,11 @@ a custom location for Briefcase's tools.
         apps = self.apps.values() if app is None else [app]
         for app in apps:
             if hasattr(app, "__draft__"):
-                self.finalize_debugger(app, debugger)
+                if debugger and debugger != "":
+                    app.debugger = get_debugger(debugger)
+                    app.debugger_host = debugger_host
+                    app.debugger_port = debugger_port
+
                 app.test_mode = test_mode
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
@@ -737,18 +748,6 @@ a custom location for Briefcase's tools.
                         raise BriefcaseConfigError(
                             f"{app.app_name!r} defines 'external_package_executable_path', but not 'external_package_path'."
                         )
-
-    def finalize_debugger(self, app: AppConfig, debugger_name: str | None = None):
-        """Finalize the debugger configuration.
-
-        This will ensure that the debugger is available and that the app configuration
-        is valid.
-
-        :param app: The app configuration to finalize.
-        """
-        if debugger_name and debugger_name != "":
-            debugger = get_debugger(debugger_name)
-            app.debugger = debugger
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.

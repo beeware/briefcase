@@ -45,12 +45,7 @@ def test_run_gui_app(run_command, first_app_config, sleep_zero, tmp_path, monkey
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -112,8 +107,6 @@ def test_run_gui_app_with_passthrough(
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -165,12 +158,7 @@ def test_run_gui_app_failed(run_command, first_app_config, sleep_zero, tmp_path)
     )
 
     with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(
-            first_app_config,
-            debugger_host=None,
-            debugger_port=None,
-            passthrough=[],
-        )
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -217,12 +205,7 @@ def test_run_gui_app_find_pid_failed(
     )
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
-        run_command.run_app(
-            first_app_config,
-            debugger_host=None,
-            debugger_port=None,
-            passthrough=[],
-        )
+        run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -275,12 +258,7 @@ def test_run_gui_app_test_mode(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -335,18 +313,15 @@ def test_run_gui_app_debugger(
     run_command.tools.subprocess.Popen.return_value = log_stream_process
 
     first_app_config.debugger = dummy_debugger
+    first_app_config.debugger_host = "somehost"
+    first_app_config.debugger_port = 9999
 
     # Monkeypatch the tools get the process ID
     monkeypatch.setattr(
         "briefcase.platforms.macOS.get_process_id_by_command", lambda *a, **kw: 100
     )
 
-    run_command.run_app(
-        first_app_config,
-        debugger_host="somehost",
-        debugger_port=9999,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -406,12 +381,7 @@ def test_run_console_app(run_command, first_app_config, tmp_path):
     # Set the app to be a console app
     first_app_config.console_app = True
 
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -440,8 +410,6 @@ def test_run_console_app_with_passthrough(
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -468,12 +436,7 @@ def test_run_console_app_test_mode(run_command, first_app_config, sleep_zero, tm
     app_process = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.return_value = app_process
 
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)
@@ -512,8 +475,6 @@ def test_run_console_app_test_mode_with_passthrough(
 
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -548,12 +509,7 @@ def test_run_console_app_failed(run_command, first_app_config, sleep_zero, tmp_p
 
     # Although the command raises an error, this could be because the script itself
     # raised an error.
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Calls were made to start the app and to start a log stream.
     bin_path = run_command.binary_path(first_app_config)

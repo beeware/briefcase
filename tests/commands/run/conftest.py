@@ -57,6 +57,7 @@ class DummyRunCommand(RunCommand):
                 app.app_name,
                 app.test_mode,
                 app.debugger is not None,
+                (app.debugger_host, app.debugger_port),
                 kwargs.copy(),
             )
         )

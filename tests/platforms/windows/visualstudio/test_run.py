@@ -34,12 +34,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Popen was called
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -72,8 +67,6 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -109,12 +102,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app in test mode
-    run_command.run_app(
-        first_app_config,
-        debugger_host=None,
-        debugger_port=None,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Popen was called
     run_command.tools.subprocess.Popen.assert_called_with(
@@ -149,8 +137,6 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     # Run the app with args
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -181,18 +167,15 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
 def test_run_app_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
     """A windows Visual Studio project app can be started in debug mode."""
     first_app_config.debugger = dummy_debugger
+    first_app_config.debugger_host = "somehost"
+    first_app_config.debugger_port = 9999
 
     # Set up the log streamer to return a known stream with a good returncode
     log_popen = mock.MagicMock()
     run_command.tools.subprocess.Popen.return_value = log_popen
 
     # Run the app in test mode
-    run_command.run_app(
-        first_app_config,
-        debugger_host="somehost",
-        debugger_port=9999,
-        passthrough=[],
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # Popen was called
     run_command.tools.subprocess.Popen.assert_called_with(

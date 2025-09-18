@@ -410,16 +410,12 @@ class macOSRunMixin:
     def run_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
         """Start the application.
 
         :param app: The config object for the app
-        :param debugger_host: The host to use for the debugger
-        :param debugger_port: The port to use for the debugger
         :param passthrough: The list of arguments to pass to the app
         """
         # Console apps must operate in non-streaming mode so that console input can
@@ -428,16 +424,12 @@ class macOSRunMixin:
         if app.console_app:
             self.run_console_app(
                 app,
-                debugger_host=debugger_host,
-                debugger_port=debugger_port,
                 passthrough=passthrough,
                 **kwargs,
             )
         else:
             self.run_gui_app(
                 app,
-                debugger_host=debugger_host,
-                debugger_port=debugger_port,
                 passthrough=passthrough,
                 **kwargs,
             )
@@ -445,8 +437,6 @@ class macOSRunMixin:
     def run_console_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -455,11 +445,7 @@ class macOSRunMixin:
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
         """
-        sub_kwargs = self._prepare_app_kwargs(
-            app=app,
-            debugger_host=debugger_host,
-            debugger_port=debugger_port,
-        )
+        sub_kwargs = self._prepare_app_kwargs(app=app)
         cmdline = [self.binary_path(app) / f"Contents/MacOS/{app.formal_name}"]
         cmdline.extend(passthrough)
 
@@ -498,8 +484,6 @@ class macOSRunMixin:
     def run_gui_app(
         self,
         app: AppConfig,
-        debugger_host: str | None,
-        debugger_port: int | None,
         passthrough: list[str],
         **kwargs,
     ):
@@ -547,11 +531,7 @@ class macOSRunMixin:
         app_pid = None
         try:
             # Set up the log stream
-            sub_kwargs = self._prepare_app_kwargs(
-                app=app,
-                debugger_host=debugger_host,
-                debugger_port=debugger_port,
-            )
+            sub_kwargs = self._prepare_app_kwargs(app=app)
 
             # Start the app in a way that lets us stream the logs
             self.tools.subprocess.run(
