@@ -132,10 +132,11 @@ A string, identifying the version of the Flatpak runtime that should be used.
 .. attribute:: flatpak_base
 
 An optional string, identifying the `base
-<https://docs.flatpak.org/en/latest/flatpak-builder-command-reference.html#flatpak-manifest#:~:text=Start%20with%20the%20files%20from%20the%20specified%20application.%20This%20can%20be%20used%20to%20create%20applications%20that%20extend%20another%20application.>`__
-to use as an additional base for the Flatpak app, on top of the runtime. Per the
-Flatpak documentation, "this can be used to create applications that extend
-another application".
+<https://docs.flatpak.org/en/latest/flatpak-builder-command-reference.html#flatpak-manifest>`__
+to use as a base for the Flatpak app. A base is a set of extensions layered on top of a
+runtime image, providing additional functionality for the packaged application. Some GUI
+frameworks (e.g., PyQt) provide a base image to ensure common required resources are
+available at runtime.
 
 .. attribute:: flatpak_base_version
 
