@@ -83,7 +83,7 @@ that can have additional sub-attributes; each sub-attribute maps to a single pro
 that will be added to the app's manifest. For example, to add ``--allow=bluetooth`` as a
 finish argument, you would specify::
 
-    finish_arg."allow=bluetooth" = True
+    finish_arg."allow=bluetooth" = true
 
 Briefcase adds the following finish arguments by default:
 
