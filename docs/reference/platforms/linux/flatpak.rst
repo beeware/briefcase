@@ -129,6 +129,20 @@ corresponding :attr:`flatpak_sdk` must be defined.
 
 A string, identifying the version of the Flatpak runtime that should be used.
 
+.. attribute:: flatpak_base
+
+An optional string, identifying the `base
+<https://docs.flatpak.org/en/latest/flatpak-builder-command-reference.html#flatpak-manifest>`__
+to use as a base for the Flatpak app. A base is a set of extensions layered on top of a
+runtime image, providing additional functionality for the packaged application. Some GUI
+frameworks (e.g., PyQt) provide a base image to ensure common required resources are
+available at runtime.
+
+.. attribute:: flatpak_base_version
+
+An optional string (required if :attr:`flatpak_base` is defined), identifying
+the version of the Flatpak base that should be used.
+
 .. attribute:: flatpak_sdk
 
 A string, identifying the SDK associated with the platform that will be used to
