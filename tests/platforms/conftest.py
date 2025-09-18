@@ -1,7 +1,10 @@
 import pytest
 
 from briefcase.config import AppConfig
-from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
+from briefcase.debuggers.base import (
+    BaseDebugger,
+    DebuggerConnectionMode,
+)
 
 
 @pytest.fixture

@@ -5,9 +5,14 @@ import json
 from abc import ABC, abstractmethod
 from importlib import metadata
 from pathlib import Path
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import briefcase
+
+if TYPE_CHECKING:
+    # avoid circular imports
+    from briefcase.commands.run import RunCommand
+    from briefcase.config import AppConfig
 
 
 def _is_editable_pep610(dist_name: str) -> bool:
@@ -97,3 +102,23 @@ class BaseDebugger(ABC):
     @abstractmethod
     def debugger_support_pkg(self) -> str:
         """Get the name of the debugger support package."""
+
+    def get_env_config(
+        self,
+        cmd: RunCommand,
+        app: AppConfig,
+    ) -> str:
+        """Get the environment config to start the debugger.
+
+        :param cmd: The command that starts the debugger
+        :param app: The app to be debugged
+        :returns: The remote debugger configuration
+        """
+        config = DebuggerConfig(
+            debugger=app.debugger.name,
+            host=app.debugger_host,
+            port=app.debugger_port,
+            app_path_mappings=cmd.debugger_app_path_mappings(app),
+            app_packages_path_mappings=cmd.debugger_app_packages_path_mapping(app),
+        )
+        return json.dumps(config)
