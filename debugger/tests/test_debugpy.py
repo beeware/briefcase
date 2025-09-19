@@ -67,10 +67,12 @@ def test_no_debugger_verbose(monkeypatch, capsys):
             [
                 "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app"
             ],
-            (
-                "/PROJECT_ROOT/src/helloworld",
-                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app/helloworld",
-            ),
+            [
+                (
+                    "/PROJECT_ROOT/src/helloworld",
+                    "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app/helloworld",
+                )
+            ],
         ),
     ],
 )
