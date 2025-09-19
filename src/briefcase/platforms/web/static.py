@@ -280,7 +280,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         Scans the wheel for:
         * Legacy CSS – .css files under `static/ are appended to the
         `briefcase.css insert slot with a deprecation warning.
-        * Deploy inserts – Any files under `deploy/inserts/<insert>.<target>
+        * Deploy inserts – Any files under `deploy/inserts/<target>~<insert>
         (HTML, CSS, JS, etc.) are added to the corresponding insert slot for
         the target file.
 
@@ -345,12 +345,12 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         )
                     else:
                         try:
-                            dot_idx = rel_inside.index(".")
-                            insert = rel_inside[:dot_idx]
-                            target = rel_inside[dot_idx + 1 :]
+                            dot_idx = rel_inside.index("~")
+                            target = rel_inside[:dot_idx]
+                            insert = rel_inside[dot_idx + 1 :]
                         except ValueError:
                             self.console.debug(
-                                f"    {filename}: skipping, filename must match '<insert>.<target>'."
+                                f"    {filename}: skipping, filename must match '<target>~<insert>'."
                             )
                         else:
                             self.console.info(
