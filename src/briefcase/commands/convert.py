@@ -107,9 +107,8 @@ class ConvertCommand(NewCommand):
         """
         intro = (
             "We need a name that can serve as a machine-readable Python package name for "
-            "your application. This name must be PEP508-compliant - that means the name "
-            "may only contain letters, numbers, hyphens and underscores; it can't contain "
-            "spaces or punctuation, and it can't start with a hyphen, underscore or a number."
+            "your application. The name may only contain letters, numbers, hyphens and underscores; "
+            "it can't contain spaces or punctuation, and it can't start with a hyphen, underscore or a number."
         )
 
         default = "hello-world"
