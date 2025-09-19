@@ -18,13 +18,6 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .constants import RESERVED_WORDS
 from .exceptions import BriefcaseConfigError
 
-# PEP 508 restricts the naming of modules. The PEP defines a regex that uses
-# re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
-# case, which has very slightly different semantics with non-ASCII characters. This
-# definition is the one from
-# https://github.com/pypa/packaging/blob/24.0/src/packaging/_tokenizer.py#L80
-PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$")
-
 
 def is_reserved_keyword(app_name):
     """Determine if the name is a reserved keyword."""
@@ -48,13 +41,6 @@ def is_valid_app_name(app_name):
     :returns: True if the app name is valid; False otherwise.
     """
     module_name = app_name.lower().replace("-", "_")
-
-    # ı, İ and K (i.e. 0x212a) are valid ASCII when made lowercase and as such are
-    # accepted by the official PEP 508 regex... but they are rejected here to ensure
-    # compliance with the regex that is used in practice.
-    problematic_unicode = {"\u0131", "\u0130", "\u212a"}  # ı, İ, K
-    if any(char in app_name for char in problematic_unicode):
-        return False
 
     return all(
         [

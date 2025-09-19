@@ -10,7 +10,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from briefcase.config import PEP508_NAME_RE
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -22,12 +21,17 @@ from briefcase.integrations.base import ManagedTool, ToolCache
 from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
+ANDROID_EMULATOR_NAME_RE = re.compile(
+    r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$"
+)
+
+
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
 
 
 def create_avd_validator(emulators):
     def _validate_avd_name(avd):
-        if not PEP508_NAME_RE.match(avd):
+        if not ANDROID_EMULATOR_NAME_RE.match(avd):
             raise ValueError(
                 "An emulator name may only contain letters, numbers, hyphens and underscores."
             )
