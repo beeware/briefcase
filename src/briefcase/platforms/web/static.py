@@ -13,7 +13,6 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
-from briefcase.integrations.virtual_environment import virtual_environment
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -466,15 +465,6 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             action="store_true",
             default=False,
             help="Run without creating an isolated environment (not supported for web).",
-        )
-
-    def get_venv_context(self, appname, isolated):
-        """Create and return a virtual environment context for the web app."""
-        return virtual_environment(
-            tools=self.tools,
-            console=self.console,
-            venv_path=self.base_path / ".briefcase" / appname / "venv",
-            isolated=isolated,
         )
 
     def run_dev_app(self, app: AppConfig, **options):
