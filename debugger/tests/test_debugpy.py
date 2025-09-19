@@ -61,6 +61,7 @@ def test_with_debugger(
             "debugger": "debugpy",
             "host": "somehost",
             "port": 9999,
+            "host_os": "SomeOS",
             "app_path_mappings": {
                 "device_sys_path_regex": "app$",
                 "device_subfolders": ["helloworld"],
@@ -132,6 +133,7 @@ def test_os_file_bugfix(
             "debugger": "debugpy",
             "host": "somehost",
             "port": 9999,
+            "host_os": "SomeOS",
         }
     )
     monkeypatch.setattr(os, "environ", os_environ)

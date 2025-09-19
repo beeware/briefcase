@@ -38,7 +38,16 @@ def test_no_debugger_verbose(monkeypatch, capsys):
 
 
 @pytest.mark.parametrize("verbose", [True, False])
-def test_with_debugger(monkeypatch, capsys, verbose):
+@pytest.mark.parametrize(
+    "host_os,expected_host_cmds",
+    [
+        ("Windows", ["telnet somehost 9999"]),
+        ("Darwin", ["nc somehost 9999"]),
+        ("Linux", ["nc somehost 9999"]),
+        ("UnknownOS", ["nc somehost 9999", "telnet somehost 9999"]),
+    ],
+)
+def test_with_debugger(monkeypatch, host_os, expected_host_cmds, capsys, verbose):
     """Normal debug session."""
     os_environ = {}
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
@@ -47,6 +56,7 @@ def test_with_debugger(monkeypatch, capsys, verbose):
             "debugger": "pdb",
             "host": "somehost",
             "port": 9999,
+            "host_os": host_os,
         }
     )
     monkeypatch.setattr(os, "environ", os_environ)
@@ -65,4 +75,6 @@ def test_with_debugger(monkeypatch, capsys, verbose):
 
     captured = capsys.readouterr()
     assert "Waiting for debugger to attach..." in captured.out
+    for cmd in expected_host_cmds:
+        assert cmd in captured.out
     assert captured.err == ""

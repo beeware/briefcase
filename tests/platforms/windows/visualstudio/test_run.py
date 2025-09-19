@@ -2,6 +2,7 @@
 # implementation. Do a surface-level verification here, but the app
 # tests provide the actual test coverage.
 import json
+import platform
 import subprocess
 from unittest import mock
 
@@ -194,6 +195,7 @@ def test_run_app_debugger(run_command, first_app_config, tmp_path, dummy_debugge
                     "debugger": "dummy",
                     "host": "somehost",
                     "port": 9999,
+                    "host_os": platform.system(),
                     "app_path_mappings": {
                         "device_sys_path_regex": "app$",
                         "device_subfolders": ["first_app"],

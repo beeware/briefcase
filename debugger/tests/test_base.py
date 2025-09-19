@@ -23,6 +23,7 @@ def test_unknown_debugger(monkeypatch, capsys):
             "debugger": "unknown",
             "host": "somehost",
             "port": 9999,
+            "host_os": "Windows",
         }
     )
     monkeypatch.setattr(os, "environ", os_environ)

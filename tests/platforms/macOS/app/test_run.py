@@ -1,4 +1,5 @@
 import json
+import platform
 import subprocess
 from signal import SIGTERM
 from unittest import mock
@@ -351,6 +352,7 @@ def test_run_gui_app_debugger(
                     "debugger": "dummy",
                     "host": "somehost",
                     "port": 9999,
+                    "host_os": platform.system(),
                     "app_path_mappings": {
                         "device_sys_path_regex": "app$",
                         "device_subfolders": ["first_app"],
