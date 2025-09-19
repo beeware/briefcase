@@ -148,7 +148,7 @@ class ConvertCommand(NewCommand):
             intro += (
                 "\n\n"
                 f"Based on your directory name, we suggest an "
-                f"app name of '{default}', but you can use another name if you want."
+                f"app name of '{default}', but you can use another name if you want. "
             )
         # Case 3: Project name isn't valid, even after canonicalization - fall back to default
 
