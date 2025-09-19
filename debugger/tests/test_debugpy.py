@@ -1,12 +1,12 @@
 import json
 import os
 import sys
-from pathlib import Path, PosixPath, PureWindowsPath
 from unittest.mock import MagicMock
 
 import briefcase_debugger
 import debugpy
 import pytest
+from briefcase_debugger.config import AppPathMappings
 
 
 def test_no_env_vars(monkeypatch, capsys):
@@ -40,19 +40,61 @@ def test_no_debugger_verbose(monkeypatch, capsys):
 
 
 @pytest.mark.parametrize(
+    "os_name,app_path_mappings,sys_path,expected_path_mappings",
+    [
+        (
+            "nt",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["C:\\PROJECT_ROOT\\src\\helloworld"],
+            ),
+            ["C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app"],
+            [
+                (
+                    "C:\\PROJECT_ROOT\\src\\helloworld",
+                    "C:\\PROJECT_ROOT\\build\\helloworld\\windows\\app\\src\\app\\helloworld",
+                )
+            ],
+        ),
+        (
+            "posix",
+            AppPathMappings(
+                device_sys_path_regex="app$",
+                device_subfolders=["helloworld"],
+                host_folders=["/PROJECT_ROOT/src/helloworld"],
+            ),
+            [
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app"
+            ],
+            (
+                "/PROJECT_ROOT/src/helloworld",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app/helloworld",
+            ),
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "verbose,some_verbose_output,pydevd_trace_level",
     [
-        (True, "Extracted path mappings:\n[0] host =   src/helloworld", 3),
+        (True, "Extracted path mappings:\n[0] host =   ", 3),
         (False, "", 0),
     ],
 )
 def test_with_debugger(
-    verbose, some_verbose_output, pydevd_trace_level, monkeypatch, capsys
+    os_name: str,
+    app_path_mappings: AppPathMappings,
+    sys_path: list[str],
+    expected_path_mappings: list[tuple[str, str]],
+    verbose: bool,
+    some_verbose_output: str,
+    pydevd_trace_level: int,
+    monkeypatch,
+    capsys,
 ):
     """Normal debug session."""
-    # When running tests on Linux/macOS, we have to switch to WindowsPath.
-    if isinstance(Path(), PosixPath):
-        monkeypatch.setattr(briefcase_debugger.debugpy, "Path", PureWindowsPath)
+    if os.name != os_name:
+        pytest.skip(f"Test only runs on {os_name} systems")
 
     os_environ = {}
     os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
@@ -62,19 +104,12 @@ def test_with_debugger(
             "host": "somehost",
             "port": 9999,
             "host_os": "SomeOS",
-            "app_path_mappings": {
-                "device_sys_path_regex": "app$",
-                "device_subfolders": ["helloworld"],
-                "host_folders": ["src/helloworld"],
-            },
+            "app_path_mappings": app_path_mappings,
             "app_packages_path_mappings": None,
         }
     )
     monkeypatch.setattr(os, "environ", os_environ)
 
-    sys_path = [
-        "build\\helloworld\\windows\\app\\src\\app",
-    ]
     monkeypatch.setattr(sys, "path", sys_path)
 
     fake_debugpy_listen = MagicMock()
@@ -102,9 +137,7 @@ def test_with_debugger(
 
     fake_debugpy_wait_for_client.assert_called_once()
     fake_pydevd_file_utils.setup_client_server_paths.assert_called_once_with(
-        [
-            ("src/helloworld", "build\\helloworld\\windows\\app\\src\\app\\helloworld"),
-        ]
+        expected_path_mappings
     )
 
     captured = capsys.readouterr()

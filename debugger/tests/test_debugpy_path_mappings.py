@@ -211,7 +211,7 @@ def test_mappings(
     app_path_mappings: AppPathMappings,
     app_packages_path_mappings: AppPackagesPathMappings | None,
     sys_path: list[str],
-    expected_path_mappings: tuple[str, str],
+    expected_path_mappings: list[tuple[str, str]],
     monkeypatch,
 ):
     if os.name != os_name:
