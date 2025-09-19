@@ -11,17 +11,26 @@ def start_pdb(config: DebuggerConfig, verbose: bool):
     host = config["host"]
     port = config["port"]
 
-    print(
-        f"""
+    # Print help message
+    host_os = config["host_os"]
+    if host_os == "Windows":
+        cmds_hint = f"    telnet {host} {port}"
+    elif host_os in ("Linux", "Darwin"):
+        cmds_hint = f"    nc {host} {port}"
+    else:
+        cmds_hint = f"""\
+ - telnet {host} {port}
+ - nc {host} {port}
+"""
+    print(f"""
 Remote PDB server opened at {host}:{port}.
 Waiting for debugger to attach...
-To connect to remote PDB use eg.:
-    - telnet {host} {port} (Windows)
-    - rlwrap socat - tcp:{host}:{port} (Linux, macOS)
+You are using '{host_os}' as host OS. To connect to remote PDB use for example:
+
+{cmds_hint}
 
 For more information see: https://briefcase.readthedocs.io/en/stable/how-to/debugging/console.html#bundled-app
-"""
-    )
+""")
 
     # Create a RemotePdb instance
     remote_pdb = RemotePdb(host, port, quiet=True)

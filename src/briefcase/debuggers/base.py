@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import json
+import platform
 from abc import ABC, abstractmethod
 from importlib import metadata
 from pathlib import Path
@@ -76,6 +77,7 @@ class DebuggerConfig(TypedDict):
     debugger: str
     host: str
     port: int
+    host_os: str
     app_path_mappings: AppPathMappings | None
     app_packages_path_mappings: AppPackagesPathMappings | None
 
@@ -118,6 +120,7 @@ class BaseDebugger(ABC):
             debugger=app.debugger.name,
             host=app.debugger_host,
             port=app.debugger_port,
+            host_os=platform.system(),
             app_path_mappings=cmd.debugger_app_path_mappings(app),
             app_packages_path_mappings=cmd.debugger_app_packages_path_mapping(app),
         )

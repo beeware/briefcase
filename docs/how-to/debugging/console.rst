@@ -61,31 +61,16 @@ to your bundled app.
       $ telnet localhost 5678
 
   .. group-tab:: Linux
-    If not already done install ``rlwrap`` and ``socat``
 
     .. code-block:: console
 
-      $ sudo apt install rlwrap socat
-
-    Then you can start the connection via
-
-    .. code-block:: console
-
-      $ rlwrap socat - tcp:localhost:5678
+      $ nc localhost 5678
 
   .. group-tab:: macOS
 
-    If not already done install ``rlwrap`` and ``socat`` using `Homebrew <https://brew.sh>`__
-
     .. code-block:: console
 
-      $ brew install rlwrap socat
-
-    Then you can start the connection via
-
-    .. code-block:: console
-
-      $ rlwrap socat - tcp:localhost:5678
+      $ nc localhost 5678
 
 
 The app will start after the connection is established.
