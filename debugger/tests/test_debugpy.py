@@ -115,31 +115,21 @@ def test_with_debugger(
     assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == pydevd_trace_level
 
 
-@pytest.mark.parametrize(
-    "verbose,some_verbose_output,pydevd_trace_level",
-    [
-        (True, "'os.__file__' not available. Patching it...", 3),
-        (False, "", 0),
-    ],
-)
-def test_os_file_bugfix(
-    verbose, some_verbose_output, pydevd_trace_level, monkeypatch, capsys
-):
-    """The os.__file__ bugfix has to be applied (see https://github.com/microsoft/debugpy/issues/1943)."""
+def test_with_debugger_without_path_mappings(monkeypatch, capsys):
+    """Debug session without path mappings."""
     os_environ = {}
-    os_environ["BRIEFCASE_DEBUG"] = "1" if verbose else "0"
+    os_environ["BRIEFCASE_DEBUG"] = "0"
     os_environ["BRIEFCASE_DEBUGGER"] = json.dumps(
         {
             "debugger": "debugpy",
             "host": "somehost",
             "port": 9999,
             "host_os": "SomeOS",
+            "app_path_mappings": None,
+            "app_packages_path_mappings": None,
         }
     )
     monkeypatch.setattr(os, "environ", os_environ)
-
-    # Fake an environment in that "os.__file__" is not available
-    monkeypatch.delattr(os, "__file__", raising=False)
 
     fake_debugpy_listen = MagicMock()
     monkeypatch.setattr(debugpy, "listen", fake_debugpy_listen)
@@ -152,6 +142,9 @@ def test_os_file_bugfix(
     fake_pydevd = MagicMock()
     monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
     fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 0
+    fake_pydevd_file_utils = MagicMock()
+    fake_pydevd_file_utils.setup_client_server_paths.return_value = None
+    monkeypatch.setitem(sys.modules, "pydevd_file_utils", fake_pydevd_file_utils)
 
     # start test function
     briefcase_debugger.start_remote_debugger()
@@ -161,12 +154,9 @@ def test_os_file_bugfix(
         in_process_debug_adapter=True,
     )
 
-    assert hasattr(os, "__file__")
-    assert os.__file__ == ""
+    fake_debugpy_wait_for_client.assert_called_once()
+    fake_pydevd_file_utils.setup_client_server_paths.assert_not_called()
 
     captured = capsys.readouterr()
     assert "Waiting for debugger to attach..." in captured.out
     assert captured.err == ""
-
-    assert some_verbose_output in captured.out
-    assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == pydevd_trace_level

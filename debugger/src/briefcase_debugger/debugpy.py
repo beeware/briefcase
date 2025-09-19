@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 from pathlib import Path
@@ -60,13 +59,6 @@ def start_debugpy(config: DebuggerConfig, verbose: bool):
     host = config["host"]
     port = config["port"]
     path_mappings = load_path_mappings(config, verbose)
-
-    # There is a bug in debugpy that has to be handled until there is a new
-    # debugpy release, see https://github.com/microsoft/debugpy/issues/1943
-    if not hasattr(os, "__file__"):
-        if verbose:
-            print("'os.__file__' not available. Patching it...")
-        os.__file__ = ""
 
     # Starting remote debugger...
     print(f"Starting debugpy in server mode at {host}:{port}...")

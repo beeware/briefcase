@@ -19,7 +19,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 pdb = ["remote-pdb>=2.1.0,<3.0.0"]
-debugpy = ["debugpy>=1.8.14,<2.0.0"]
+debugpy = ["debugpy>=1.8.17,<2.0.0"]
 
 [dependency-groups]
 dev = [
