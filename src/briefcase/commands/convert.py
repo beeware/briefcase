@@ -122,7 +122,6 @@ class ConvertCommand(NewCommand):
             return app_name
 
         canonicalized_name = canonicalize_name(self.base_path.name)
-
         # Case 1: Project name is usable as-is (e.g., "foobar", "foo-bar")
         if (
             is_valid_app_name(self.base_path.name)
@@ -138,6 +137,11 @@ class ConvertCommand(NewCommand):
                 return self.base_path.name
             # If override_value is provided, fall through to prompt with it
             default = self.base_path.name
+            intro += (
+                "\n\n"
+                f"Based on your PEP508 formatted directory name, we suggest an "
+                f"app name of '{default}', but you can use another name if you want."
+            )
         # Case 2: Project name could be valid after canonicalization (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
         elif is_valid_app_name(canonicalized_name):
             default = canonicalized_name
