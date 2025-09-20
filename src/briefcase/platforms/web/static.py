@@ -5,9 +5,9 @@ import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from textwrap import dedent, indent
 from typing import Any
 from zipfile import ZipFile
-from textwrap import indent, dedent
 
 from briefcase.console import Console
 from briefcase.exceptions import (
@@ -190,9 +190,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 pattern_found = pattern.search(file_text)
                 if pattern_found:
                     # Indent content to align with markers.
-                    indented_content = indent(body_map.get(kind, ""), pattern_found.group(1))
+                    indented_content = indent(
+                        body_map.get(kind, ""), pattern_found.group(1)
+                    )
                     file_text = pattern.sub(
-                        repl_tmpl.format(indent=pattern_found.group(1), insert=insert, content=indented_content),
+                        repl_tmpl.format(
+                            indent=pattern_found.group(1),
+                            insert=insert,
+                            content=indented_content,
+                        ),
                         file_text,
                     )
                     any_match = True
@@ -234,7 +240,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
 
         # PyScript definitions for insertion:
-        content = (f"""\
+        content = f"""\
             <!--@@ PyScript:start @@-->
             <script type="module">
                 // Hide the splash screen when the page is ready.
@@ -248,7 +254,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
             <!--@@ PyScript:end @@-->
             """
-        )
 
         # Replace content between markers with PyScript definition insertions.
         marker = r"(^[ \t]*)<!--@@ PyScript:start @@-->.*<!--@@ PyScript:end @@-->"
@@ -259,7 +264,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 dedent(content),
                 marker_found.group(1),
             )
-            file_text = re.sub(marker, indented_content, file_text, flags=re.DOTALL | re.MULTILINE)
+            file_text = re.sub(
+                marker, indented_content, file_text, flags=re.DOTALL | re.MULTILINE
+            )
         # Warning if no markers were found.
         # NOTE: this is likely due to using an older version of the Web Template.
         else:
@@ -283,6 +290,10 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         * Deploy inserts – Any files under `deploy/inserts/<target>~<insert>
         (HTML, CSS, JS, etc.) are added to the corresponding insert slot for
         the target file.
+
+        Insert content is grouped by ``<package_name> <version>`` (with an
+        extra suffix for legacy CSS) to preserve ordering and provenance.
+        All content must be UTF-8 encoded, non-UTF-8 files raise an error.
 
         :param wheelfile: Path to the wheel file.
         :param inserts: Nested dict of inserts keyed by target - insert - package.
