@@ -245,9 +245,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
             """)
 
-        pkg_map = inserts.setdefault(target, {}).setdefault(
-                            insert, {}
-                        )
+        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
         pkg_map[package_key] = content
 
     def _process_wheel(
@@ -328,34 +326,37 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                             f"    {filename}: skipping, not a valid insert file."
                         )
                     else:
-                        try:
-                            dot_idx = rel_inside.index("~")
-                            target = rel_inside[:dot_idx]
-                            insert = rel_inside[dot_idx + 1 :]
-                        except ValueError:
+                        if "~" not in rel_inside:
                             self.console.debug(
                                 f"    {filename}: skipping, filename must match '<target>~<insert>'."
                             )
                         else:
-                            self.console.info(
-                                f"    {filename}: Adding {insert} insert for {target}"
-                            )
                             try:
-                                text = wheel.read(filename).decode("utf-8")
-                            except UnicodeDecodeError as e:
-                                raise BriefcaseCommandError(
-                                    f"{filename}: insert must be UTF-8 encoded"
-                                ) from e
-
-                            contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
-
-                            pkg_map = inserts.setdefault(target, {}).setdefault(
-                                insert, {}
-                            )
-                            if package_key in pkg_map and pkg_map[package_key]:
-                                pkg_map[package_key] += "\n" + text
+                                target, insert = rel_inside.split("~")
+                            except ValueError:
+                                self.console.debug(
+                                    f"    {filename}: skipping, filename must match '<target>~<insert>'."
+                                )
                             else:
-                                pkg_map[package_key] = text
+                                self.console.info(
+                                    f"    {filename}: Adding {insert} insert for {target}"
+                                )
+                                try:
+                                    text = wheel.read(filename).decode("utf-8")
+                                except UnicodeDecodeError as e:
+                                    raise BriefcaseCommandError(
+                                        f"{filename}: insert must be UTF-8 encoded"
+                                    ) from e
+
+                                contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
+
+                                pkg_map = inserts.setdefault(target, {}).setdefault(
+                                    insert, {}
+                                )
+                                if package_key in pkg_map and pkg_map[package_key]:
+                                    pkg_map[package_key] += "\n" + text
+                                else:
+                                    pkg_map[package_key] = text
 
                 else:
                     self.console.debug(
@@ -530,7 +531,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 tomli_w.dump(config, f)
 
         with self.console.wait_bar("Compiling static web content from wheels..."):
-
             # Trim previously compiled content out of briefcase.css
             briefcase_css_path = self.project_path(app) / "static/css/briefcase.css"
             self._trim_file(
