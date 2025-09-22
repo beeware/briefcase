@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import keyword
 import re
 import sys
 import unicodedata
+from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import urlparse
 
@@ -549,12 +551,70 @@ def merge_config(config, data):
     config.update(data)
 
 
+def get_pep639_license_info(config, console, *, cwd=None):
+    license_files = config.pop("license-files", None)
+    if license_files is None:
+        return
+
+    has_pep621_license_dict = isinstance(config.get("license"), dict)
+    if has_pep621_license_dict:
+        raise BriefcaseConfigError(
+            "Invalid `pyproject.toml` file: a `pyproject.toml` file cannot contain both "
+            "a dictionary for the `project.license` attribute and a "
+            "`project.license-files` list. For more information, see the "
+            "'Add `license-files` key' section of PEP 639: "
+            "https://peps.python.org/pep-0639/#add-license-files-key"
+        )
+    if cwd is None:
+        cwd = Path()
+    if not isinstance(license_files, list):
+        raise BriefcaseConfigError(
+            f"""
+Found license-files in pyproject.toml, but it is a string, while it should be a list.
+Did you mean
+
+license-files = ['{license_files}']
+
+instead?
+"""
+        )
+
+    all_globs = (cwd.glob(pattern) for pattern in license_files)
+    all_licenses = (
+        p.relative_to(cwd) for p in itertools.chain.from_iterable(all_globs)
+    )
+    license_file = next(all_licenses, None)
+    if license_file is None:
+        raise BriefcaseConfigError(
+            "No license matching the glob patterns in `project.license-files`"
+        )
+
+    if next(all_licenses, None) is not None:
+        console.warning(
+            f"""
+*************************************************************************
+** WARNING: More than one license file found                           **
+*************************************************************************
+
+    More than one license matches the glob patterns specified in
+    `project.license-files`. The first of these files ({license_file})
+    will be used, and the rest will be ignored. Consider merging all
+    files in to one combined file if you need to include all licenses.
+
+*************************************************************************
+"""
+        )
+    return {"file": str(license_file)}
+
+
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
-
     if requires_python := pep621_config.get("requires-python"):
         global_config["requires_python"] = requires_python
 
+    # Then: we add all PEP621-based metadata fields.
+    # We do it in this order, since then we will ignore the license field here
+    # if it was set above.
     def maybe_update(field, *project_fields):
         # If there's an existing key in the Briefcase config, it takes priority.
         if field in global_config:
@@ -574,6 +634,7 @@ def merge_pep621_config(global_config, pep621_config):
     # Keys that map directly
     maybe_update("description", "description")
     maybe_update("license", "license")
+    maybe_update("license-files", "license-files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
@@ -606,7 +667,44 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
-def parse_config(config_file, platform, output_format, console):
+def warn_about_license_format(name, console):
+    console.warning(
+        f"""
+*************************************************************************
+** {f"WARNING: No license file specified for {name}":67} **
+*************************************************************************
+
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier. See
+    the official documentation for more information:
+
+    https://packaging.python.org/en/latest/specifications/license-expression/
+
+
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
+
+        license-files = ["LICENSE"]  # or some other path
+
+*************************************************************************
+"""
+    )
+
+
+def resolve_license_info(config, name, console, *, cwd=None):
+    if pep639_info := get_pep639_license_info(config, console, cwd=cwd):
+        config["license"] = pep639_info
+
+    if isinstance(config.get("license"), str):
+        warn_about_license_format(name, console)
+        config["license"] = {"file": "LICENSE"}
+
+
+def parse_config(config_file, platform, output_format, console, *, cwd=None):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
@@ -646,10 +744,9 @@ def parse_config(config_file, platform, output_format, console):
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
     # Merge the PEP621 configuration (if it exists)
-    try:
-        merge_pep621_config(global_config, pyproject["project"])
-    except KeyError:
-        pass
+    project_config = pyproject.get("project", {})
+    resolve_license_info(project_config, "the Project", console, cwd=cwd)
+    merge_pep621_config(global_config, project_config)
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
@@ -660,36 +757,8 @@ def parse_config(config_file, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
-    for name, config in [("project", global_config)] + list(all_apps.items()):
-        if isinstance(config.get("license"), str):
-            section_name = "the Project" if name == "project" else f"{name!r}"
-            console.warning(
-                f"""
-*************************************************************************
-** {f"WARNING: License Definition for {section_name} is Deprecated":67} **
-*************************************************************************
-
-    Briefcase now uses PEP 621 format for license definitions.
-
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
-
-    The current configuration for {section_name} has a 'license' field
-    that is specified as a string:
-
-        license = "{config["license"]}"
-
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for {section_name}:
-
-        license.file = "LICENSE"
-
-*************************************************************************
-"""
-            )
-            config["license"] = {"file": "LICENSE"}
+    # We start by resolving license information for the global config
+    resolve_license_info(global_config, "the Project", console, cwd=cwd)
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format
@@ -700,6 +769,12 @@ def parse_config(config_file, platform, output_format, console):
         # and remove these platform configurations. Keep a copy of the platform
         # configuration if it matches the requested platform, and merge it
         # into the app's configuration
+
+        # The first thing we do is checking if the license info is on the right format. We could
+        # do this after merging in the platform data, but by resolving before we merge, we make it
+        # easier to see where the mistake is.
+        resolve_license_info(app_data, repr(app_name), console, cwd=cwd)
+
         platform_data = None
         for p in all_platforms:
             try:
@@ -757,6 +832,10 @@ def parse_config(config_file, platform, output_format, console):
         # then overwrite the platform-specific values.
         # This will already include any format-specific configuration.
         if platform_data:
+            # The first thing we have to do is checking if the license info is on the right format
+            # We do this before we merge in the platform information to provide a better error message
+            resolve_license_info(platform_data, repr(platform), console, cwd=cwd)
+
             merge_config(config, platform_data)
 
         # Construct a configuration object, and add it to the list
