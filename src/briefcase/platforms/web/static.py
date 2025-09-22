@@ -35,6 +35,21 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 
+# Module level banner templates (Constants used in write_inserts)
+HTML_BANNER = (
+    "<!--------------------------------------------------\n"
+    " * {package}\n"
+    " -------------------------------------------------->\n"
+    "{content}"
+)
+
+CSS_BANNER = (
+    "/**************************************************\n"
+    " * {package}\n"
+    " *************************************************/\n"
+    "{content}"
+)
+
 
 class StaticWebMixin:
     output_format = "static"
@@ -135,27 +150,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         # Each insert slot and its package contributions are processed in sorted order
         for insert, pkg_contribs in sorted(inserts.items()):
-            html_banner = (
-                "<!--------------------------------------------------\n"
-                " * {package}\n"
-                " -------------------------------------------------->\n"
-                "{content}"
-            )
-            css_banner = (
-                "/**************************************************\n"
-                " * {package}\n"
-                " *************************************************/\n"
-                "{content}"
-            )
-
             # Build bodies from the same contributions
             html_body = "\n".join(
-                html_banner.format(package=pkg, content=text)
+                HTML_BANNER.format(package=pkg, content=text)
                 for pkg, text in sorted(pkg_contribs.items())
                 if text
             )
             css_body = "\n".join(
-                css_banner.format(package=pkg, content=text)
+                CSS_BANNER.format(package=pkg, content=text)
                 for pkg, text in sorted(pkg_contribs.items())
                 if text
             )
