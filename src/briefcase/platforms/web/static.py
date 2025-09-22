@@ -211,37 +211,26 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
 
-    def write_pyscript_version(
+    def _write_pyscript_insert(
         self,
-        app: AppConfig,
         filename: Path,
         pyscript_version: str,
+        inserts: dict[str, dict[str, dict[str, str]]],
     ):
         """Write pyscript version into an existing html file.
 
-        This function looks for markers in the named file and appends
-        pyscript definitions between the markers.
+        This function creates an insert for PyScript.
 
-        * Start: <!--@@ PyScript:start @@-->
-        * End:   <!--@@ PyScript:end @@-->
-
-        :param app: The application being written.
         :param filename: The html file whose pyscript version is to be written.
         :param pyscript_version: The pyscript version number to be inserted.
+        :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
-        # Load file content. Raise a warning if the file is not found
-        target_path = self.project_path(app) / filename
-        try:
-            file_text = target_path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            self.console.warning(
-                f"Target {filename} not found in {target_path}; skipping pyscript insertion."
-                "PyScript may not be configured correctly. This project may not work correctly."
-            )
+        package_key = "briefcase"
+        target = filename
+        insert = "Python"
 
         # PyScript definitions for insertion:
-        content = f"""\
-            <!--@@ PyScript:start @@-->
+        content = dedent(f"""\
             <script type="module">
                 // Hide the splash screen when the page is ready.
                 import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
@@ -252,30 +241,12 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
-            <!--@@ PyScript:end @@-->
-            """
+            """)
 
-        # Replace content between markers with PyScript definition insertions.
-        marker = r"(^[ \t]*)<!--@@ PyScript:start @@-->.*<!--@@ PyScript:end @@-->"
-        marker_found = re.search(marker, file_text, flags=re.DOTALL | re.MULTILINE)
-
-        if marker_found:
-            indented_content = indent(
-                dedent(content),
-                marker_found.group(1),
-            )
-            file_text = re.sub(
-                marker, indented_content, file_text, flags=re.DOTALL | re.MULTILINE
-            )
-        # Warning if no markers were found.
-        # NOTE: this is likely due to using an older version of the Web Template.
-        else:
-            self.console.warning(
-                f"No pyscript markers found in {filename}; PyScript may not be configured correctly."
-                "Please ensure you are using the latest version of Briefcase Static Web Template"
-            )
-
-        target_path.write_text(file_text, encoding="utf-8")
+        pkg_map = inserts.setdefault(target, {}).setdefault(
+                            insert, {}
+                        )
+        pkg_map[package_key] = content
 
     def _process_wheel(
         self,
@@ -557,8 +528,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 tomli_w.dump(config, f)
 
         with self.console.wait_bar("Compiling static web content from wheels..."):
-            # Add pyscript_version to index.html
-            self.write_pyscript_version(app, Path("index.html"), pyscript_version)
 
             # Trim previously compiled content out of briefcase.css
             briefcase_css_path = self.project_path(app) / "static/css/briefcase.css"
@@ -575,6 +544,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     wheelfile=wheelfile,
                     inserts=inserts,
                 )
+
+            # Add pyscript insertion to inserts.
+            self._write_pyscript_insert("index.html", pyscript_version, inserts)
 
             # Write inserts per target
             for target, target_inserts in sorted(inserts.items()):
