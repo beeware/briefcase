@@ -51,7 +51,16 @@ class DummyRunCommand(RunCommand):
         self.actions.append(("verify-app-tools", app.app_name))
 
     def run_app(self, app, **kwargs):
-        self.actions.append(("run", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "run",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                (app.debugger_host, app.debugger_port),
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to run_app()
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
@@ -80,7 +89,15 @@ class DummyRunCommand(RunCommand):
         return full_options({"update_state": app.app_name}, kwargs)
 
     def build_command(self, app, **kwargs):
-        self.actions.append(("build", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "build",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to build_app()
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)

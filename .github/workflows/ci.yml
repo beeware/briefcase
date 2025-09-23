@@ -46,6 +46,16 @@ jobs:
     with:
       attest: ${{ inputs.attest-package }}
 
+  package-debugger:
+    name: Package Debugger
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    with:
+      build-subdirectory: "debugger"
+
   package-automation:
     name: Package Automation
     permissions:
@@ -58,7 +68,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: [ pre-commit, towncrier, package ]
+    needs: [ pre-commit, towncrier, package, package-debugger ]
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental || false }}
     strategy:
@@ -101,7 +111,7 @@ jobs:
         requirements: tox
         extra: dev
 
-    - name: Test
+    - name: Test Briefcase
       id: test
       run: |
         RUNNER_OS=$(cut -d- -f1 <<< ${{ matrix.platform }})
@@ -123,6 +133,16 @@ jobs:
       if: always() && contains('success,failure', steps.test.outcome)
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
+
+    - name: Get Debugger Package
+      uses: actions/download-artifact@v4.3.0
+      with:
+        name: ${{ needs.package-debugger.outputs.artifact-name }}
+        path: dist
+
+    - name: Test Debugger
+      run: |
+          tox -e py-debugger --installpkg dist/briefcase_debugger-*.whl
 
   coverage:
     name: Project coverage
