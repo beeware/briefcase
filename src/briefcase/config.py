@@ -397,6 +397,14 @@ class AppConfig(BaseConfig):
 
         self.test_mode: bool = False
 
+        if len(self.description) > 80:
+            raise BriefcaseConfigError(
+                f"The app description is {len(self.description)} characters long.\n\n"
+                "Descriptions should be short.\n"
+                "Longer descriptions should use the 'long_description' field.\n"
+                "On some platforms, descriptions may be truncated to fit platform limitations.",
+            )
+
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
                 f"{self.app_name!r} is not a valid app name.\n\n"

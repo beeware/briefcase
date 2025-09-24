@@ -1,0 +1,1 @@
+Fix truncated icon link when packaging on Windows
