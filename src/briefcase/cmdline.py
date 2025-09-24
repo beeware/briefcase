@@ -7,6 +7,7 @@ from argparse import RawDescriptionHelpFormatter
 from briefcase import __version__
 from briefcase.commands import (
     BuildCommand,
+    ConfigCommand,
     ConvertCommand,
     CreateCommand,
     DevCommand,
@@ -32,6 +33,7 @@ from .exceptions import (
 COMMANDS = [
     NewCommand,
     DevCommand,
+    ConfigCommand,
     ConvertCommand,
     CreateCommand,
     OpenCommand,

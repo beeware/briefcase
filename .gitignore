@@ -37,3 +37,4 @@ coverage.xml
 
 tests/apps/verify-*/
 logs/
+config.toml
