@@ -118,6 +118,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
+        # Allow "?" to force interactive selection, even if a value was provided
+        if isinstance(udid_or_device, str) and udid_or_device.strip() == "?":
+            udid_or_device = None
+
         simulators = self.get_simulators(self.tools, "iOS")
         try:
             # Try to convert to a UDID. If this succeeds, then the argument

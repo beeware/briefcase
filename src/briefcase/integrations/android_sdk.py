@@ -919,6 +919,11 @@ connection.
             be provided if an emulator with that AVD is not currently running.
             If ``device`` is None, a new emulator should be created.
         """
+
+        # Allow "?" to force interactive selection, even if a value was provided
+        if isinstance(device_or_avd, str) and device_or_avd.strip() == "?":
+            device_or_avd = None
+
         # If the device_or_avd starts with "{", it's a definition for a new
         # emulator to be created.
         if device_or_avd and device_or_avd.startswith("{"):
