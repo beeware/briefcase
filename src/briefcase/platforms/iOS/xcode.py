@@ -530,6 +530,15 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         :param udid: The device UDID to target. If ``None``, the user will
             be asked to select a device at runtime.
         """
+        if udid is None:
+            ios_section = getattr(app, "iOS", {})
+            if isinstance(ios_section, dict):
+                configured = ios_section.get("device")
+            else:
+                configured = getattr(app, "device", None)
+            if configured:
+                udid = configured.strip() or None
+
         try:
             udid, iOS_version, device = self.select_target_device(udid)
         except InputDisabled as e:
