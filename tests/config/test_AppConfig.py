@@ -222,6 +222,53 @@ def test_invalid_app_name(name):
 
 
 @pytest.mark.parametrize(
+    "description",
+    [
+        "A simple app",
+        "A short valid description",
+        "A description with spaces and punctuation!",
+        "a mid size description with-hyphens and_underscores",
+        "a" * 80,  # Exactly 80 chars
+    ],
+)
+def test_valid_description(description):
+    """Test that valid descriptions are accepted."""
+    try:
+        AppConfig(
+            app_name="myapp",
+            version="1.2.3",
+            bundle="org.beeware",
+            description=description,
+            sources=["src/myapp"],
+            license={"file": "LICENSE"},
+        )
+    except BriefcaseConfigError:
+        pytest.fail(f"'{description}' should be a valid description")
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "A long app name that will go over the 80 character limit set by the validation logic",
+        "a" * 81,
+    ],
+)
+def test_invalid_description_too_long(description):
+    """Test that descriptions longer than 80 characters are rejected."""
+    with pytest.raises(
+        BriefcaseConfigError, match=r"The app description is too long\."
+    ):
+        AppConfig(
+            app_name="myapp",
+            version="1.2.3",
+            bundle="org.beeware",
+            description=description,
+            sources=["src/myapp"],
+            license={"file": "LICENSE"},
+        )
+
+
+@pytest.mark.parametrize(
     "bundle",
     [
         "com.example",
