@@ -172,11 +172,11 @@ def test_document_type_macOS_config_with_mimetype_single(valid_document):
     """
     valid_document["mime_type"] = "application/pdf"
     validate_document_type_config("ext", valid_document)
-    assert "LSItemContentTypes" in valid_document["macOS"].keys()
+    assert "LSItemContentTypes" in valid_document["macOS"]
     assert valid_document["macOS"]["LSItemContentTypes"] == ["com.adobe.pdf"]
     assert valid_document["macOS"]["is_core_type"] is True
     assert valid_document["macOS"]["LSHandlerRank"] == "Alternate"
-    assert "UTTypeConformsTo" not in valid_document["macOS"].keys()
+    assert "UTTypeConformsTo" not in valid_document["macOS"]
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -189,11 +189,11 @@ def test_document_type_macOS_config_with_mimetype_list(valid_document):
     """
     valid_document["mime_type"] = "text/vcard"
     validate_document_type_config("ext", valid_document)
-    assert "LSItemContentTypes" in valid_document["macOS"].keys()
+    assert "LSItemContentTypes" in valid_document["macOS"]
     assert valid_document["macOS"]["LSItemContentTypes"] == ["public.vcard"]
     assert valid_document["macOS"]["is_core_type"] is True
     assert valid_document["macOS"]["LSHandlerRank"] == "Alternate"
-    assert "UTTypeConformsTo" not in valid_document["macOS"].keys()
+    assert "UTTypeConformsTo" not in valid_document["macOS"]
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -205,7 +205,7 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     """
     valid_document["mime_type"] = "custom/mytype"
     validate_document_type_config("ext", valid_document)
-    assert "LSItemContentTypes" not in valid_document["macOS"].keys()
+    assert "LSItemContentTypes" not in valid_document["macOS"]
     assert valid_document["macOS"]["is_core_type"] is False
     assert valid_document["macOS"]["LSHandlerRank"] == "Owner"
     # default to a 'normal' document type
@@ -249,4 +249,4 @@ def test_document_type_macOS_config_with_list_of_single_content_type(
     assert valid_document["macOS"]["LSItemContentTypes"] == ["com.adobe.pdf"]
     assert valid_document["macOS"]["is_core_type"] is True
     assert valid_document["macOS"]["LSHandlerRank"] == "Alternate"
-    assert "UTTypeConformsTo" not in valid_document["macOS"].keys()
+    assert "UTTypeConformsTo" not in valid_document["macOS"]

@@ -203,22 +203,24 @@ class AppPackagesMergeMixin:
             progress_bar = self.console.progress_bar()
             self.console.info(f"Thinning libraries in {app_packages.name}...")
             task_id = progress_bar.add_task("Create fat libraries", total=len(dylibs))
-            with progress_bar:
-                with concurrent.futures.ThreadPoolExecutor(
+            with (
+                progress_bar,
+                concurrent.futures.ThreadPoolExecutor(
                     max_workers=1 if self.console.is_deep_debug else None
-                ) as executor:
-                    futures = []
-                    for path in dylibs:
-                        future = executor.submit(
-                            self.ensure_thin_binary,
-                            path=path,
-                            arch=arch,
-                        )
-                        futures.append(future)
-                    for future in concurrent.futures.as_completed(futures):
-                        progress_bar.update(task_id, advance=1)
-                        if future.exception():
-                            raise future.exception()
+                ) as executor,
+            ):
+                futures = []
+                for path in dylibs:
+                    future = executor.submit(
+                        self.ensure_thin_binary,
+                        path=path,
+                        arch=arch,
+                    )
+                    futures.append(future)
+                for future in concurrent.futures.as_completed(futures):
+                    progress_bar.update(task_id, advance=1)
+                    if future.exception():
+                        raise future.exception()
         else:
             self.console.info("No libraries require thinning.")
 
@@ -284,23 +286,25 @@ class AppPackagesMergeMixin:
             progress_bar = self.console.progress_bar()
             self.console.info("Merging libraries...")
             task_id = progress_bar.add_task("Create fat libraries", total=len(dylibs))
-            with progress_bar:
-                with concurrent.futures.ThreadPoolExecutor(
+            with (
+                progress_bar,
+                concurrent.futures.ThreadPoolExecutor(
                     max_workers=1 if self.console.is_deep_debug else None
-                ) as executor:
-                    futures = []
-                    for relative_path in dylibs:
-                        future = executor.submit(
-                            self.lipo_dylib,
-                            target_path=target_app_packages,
-                            relative_path=relative_path,
-                            sources=sources,
-                        )
-                        futures.append(future)
-                    for future in concurrent.futures.as_completed(futures):
-                        progress_bar.update(task_id, advance=1)
-                        if future.exception():
-                            raise future.exception()
+                ) as executor,
+            ):
+                futures = []
+                for relative_path in dylibs:
+                    future = executor.submit(
+                        self.lipo_dylib,
+                        target_path=target_app_packages,
+                        relative_path=relative_path,
+                        sources=sources,
+                    )
+                    futures.append(future)
+                for future in concurrent.futures.as_completed(futures):
+                    progress_bar.update(task_id, advance=1)
+                    if future.exception():
+                        raise future.exception()
         else:
             self.console.info("No libraries require merging.")
 

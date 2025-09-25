@@ -474,12 +474,14 @@ def test_x11_passthrough_missing_DISPLAY(mock_tools, DISPLAY):
     # Mock DISPLAY environment variable
     mock_tools.os.getenv.return_value = DISPLAY
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="The DISPLAY environment variable must be set to run an app in Docker",
+    with (
+        pytest.raises(
+            BriefcaseCommandError,
+            match="The DISPLAY environment variable must be set to run an app in Docker",
+        ),
+        mock_tools.docker.x11_passthrough({}),
     ):
-        with mock_tools.docker.x11_passthrough({}):
-            pass
+        pass
 
 
 @pytest.mark.skipif(
@@ -505,9 +507,11 @@ def test_x11_passthrough_fails(mock_tools):
         side_effect=OSError("write failed")
     )
 
-    with pytest.raises(OSError, match="write failed"):
-        with mock_tools.docker.x11_passthrough({}):
-            pass
+    with (
+        pytest.raises(OSError, match="write failed"),
+        mock_tools.docker.x11_passthrough({}),
+    ):
+        pass
 
     # Proxy cleanup ran
     mock_tools.subprocess.cleanup.assert_called_once_with(
