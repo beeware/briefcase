@@ -18,21 +18,29 @@ from briefcase.exceptions import BriefcaseConfigError
 
 def scope_path(project_root: Path, is_global: bool) -> Path:
     if is_global:
-        dir = PlatformDirs("org.beeware.briefcase", "BeeWare")
-        return Path(dir.user_config_dir) / "config.toml"
+        dirs = PlatformDirs("org.beeware.briefcase", "BeeWare")
+        return Path(dirs.user_config_dir) / "config.toml"
     else:
+        assert project_root is not None
         return project_root / ".briefcase" / "config.toml"
 
 
 def find_project_root(start: Path | None = None) -> Path:
-    """Resolve the Briefcase project root by walking up from cwd."""
+    """Resolve the Briefcase project root by TOML-parsing pyproject.toml and checking
+    for [tool.briefcase]."""
     cur = (start or Path.cwd()).resolve()
     for parent in [cur, *cur.parents]:
         py = parent / "pyproject.toml"
-        if py.exists():
-            content = py.read_text(encoding="utf-8", errors="ignore")
-            if "[tool.briefcase]" in content:
-                return parent
+        if not py.exists():
+            continue
+        try:
+            with py.open("rb") as f:
+                data = tomllib.load(f)
+        except Exception:
+            continue
+        briefcase_tbl = data.get("tool", {}).get("briefcase")
+        if isinstance(briefcase_tbl, dict):
+            return parent
     raise BriefcaseConfigError(
         "Not a Briefcase project: no pyproject.toml with [tool.briefcase] found "
         f"starting from {cur}"
@@ -59,9 +67,12 @@ def normalize_briefcase_root(data: dict) -> dict:
 
 
 def write_toml(path: Path, data: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("wb") as f:
-        tomli_w.dump(data or {}, f)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("wb") as f:
+            tomli_w.dump(data or {}, f)
+    except OSError as e:
+        raise BriefcaseConfigError(f"Unable to write config file {path}: {e}") from e
 
 
 def get_config(d: dict, dotted: str):
@@ -96,6 +107,13 @@ def unset_config(d: dict, dotted: str) -> bool:
 
 
 class ConfigCommand(BaseCommand):
+    """Command to modify Briefcase configuration settings.
+
+    Allows setting of individual configuration keys within either a project-level or
+    global configuration file. Useful for scripting or user-driven configuration outside
+    of interactive prompts.
+    """
+
     command = "config"
     platform = None
     output_format = None
@@ -133,6 +151,7 @@ class ConfigCommand(BaseCommand):
     def __call__(self, app=None, **options):
         is_global = bool(options.get("global_scope", False))
 
+        # Resolve the config path
         if is_global:
             project_root = None
             path = scope_path(project_root, is_global=True)
@@ -182,10 +201,11 @@ class ConfigCommand(BaseCommand):
         # LIST
         if do_list:
             if not data:
-                self.console.info(f"(empty)  [{[path]}]")
+                self.console.info(f"(empty)  [{path}]")
             else:
                 self.console.print(tomli_w.dumps(data).rstrip())
                 self.console.print(f"# file: {path}")
+            return
 
         # SET
         if key and value is not None:
@@ -200,3 +220,19 @@ class ConfigCommand(BaseCommand):
             return
 
         raise BriefcaseConfigError("Invalid arguments for config command")
+
+    def bundle_path(self, app):
+        """A placeholder; Config command doesn't have a bundle path."""
+        raise NotImplementedError()
+
+    def binary_path(self, app):
+        """A placeholder; Config command doesn't have a binary path."""
+        raise NotImplementedError()
+
+    def distribution_path(self, app):
+        """A placeholder; Config command doesn't have a distribution path."""
+        raise NotImplementedError()
+
+    def binary_executable_path(self, app):
+        """A placeholder; Config command doesn't have a binary executable path."""
+        raise NotImplementedError()
