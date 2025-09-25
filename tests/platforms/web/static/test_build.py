@@ -47,6 +47,22 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
                 "first_app",
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    (
+                        "dependency/deploy/config.toml",
+                        """
+backend = "pyscript"
+
+[pyscript]
+version = "2024.11.1"
+"""
+                    ),
+                    (
+                        "dependency/deploy/pyscript.toml",
+                        """
+existing-key-1 = "value-1"
+existing-key-2 = 2
+"""
+                    ),
                 ],
             )
         elif args[0][5] == "pip":
@@ -195,6 +211,12 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
         bundle_path / "www/static/wheels"
     )
 
+    # Mock extracting pyscript.toml from a wheel.
+    build_command.extract_backend_config = lambda _: (
+        {"existing-key-1": "value-1", "existing-key-2": 2},
+        "2024.11.1"
+    )
+
     # Build the web app.
     build_command.build_app(first_app_generated)
 
@@ -210,56 +232,6 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
                 {"src": "https://example.com/pyodide.js"},
             ],
         }
-
-
-def test_build_app_no_template_pyscript_toml(
-    build_command, first_app_generated, tmp_path
-):
-    """An app whose template doesn't provide pyscript.toml gets a basic config."""
-    # Remove the templated pyscript.toml
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
-    (bundle_path / "www/pyscript.toml").unlink()
-
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
-
-    # Build the web app.
-    build_command.build_app(first_app_generated)
-
-    # Pyscript.toml has been written with only the packages content
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "packages": [],
-        }
-
-
-def test_build_app_invalid_template_pyscript_toml(
-    build_command, first_app_generated, tmp_path
-):
-    """An app with an invalid pyscript.toml raises an error."""
-    # Re-write an invalid templated pyscript.toml
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
-    (bundle_path / "www/pyscript.toml").unlink()
-    create_file(
-        bundle_path / "www/pyscript.toml",
-        """
-This is not valid toml.
-""",
-    )
-
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
-
-    # Building the web app raises an error
-    with pytest.raises(
-        BriefcaseConfigError,
-        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
-    ):
-        build_command.build_app(first_app_generated)
 
 
 def test_build_app_invalid_extra_pyscript_toml_content(
@@ -368,6 +340,12 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
     # Mock the side effect of invoking shutil
     build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
         bundle_path / "www/static/wheels"
+    )
+
+    # Mock extracting pyscript.toml from a wheel.
+    build_command.extract_backend_config = lambda _: (
+        {"existing-key-1": "value-1", "existing-key-2": 2},
+        "2024.11.1"
     )
 
     # Build the web app.
