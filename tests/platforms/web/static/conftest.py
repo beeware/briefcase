@@ -16,13 +16,34 @@ app_requirements_path="requirements.txt"
 """,
     )
 
-    # Create index.html
-    create_file(bundle_path / "www/index.html", "<html></html>")
+    # Create index.html with insert markers
+    create_file(
+        bundle_path / "www/index.html",
+        """<!doctype html>
+<html>
+  <head>
+    <!--@@ head:start @@-->
+    <!--@@ head:end @@-->
+    <!--@@ Python:start @@-->
+    <!--@@ Python:end @@-->
+  </head>
+  <body>
+    <div id="briefcase-splash"></div>
 
-    # Create the initial briefcase.css
+    <!--@@ body-end:start @@-->
+    <!--@@ body-end:end @@-->
+  </body>
+</html>
+""",
+    )
+
+    # Create the initial briefcase.css with CSS insert markers
     create_file(
         bundle_path / "www/static/css/briefcase.css",
         """
+/*@@ CSS:start @@*/
+/*@@ CSS:end @@*/
+
 #pyconsole {
   display: None;
 }
