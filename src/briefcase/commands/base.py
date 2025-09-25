@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib
 import importlib.metadata
 import inspect
@@ -1021,9 +1022,9 @@ any compatibility problems, and then add the compatibility declaration.
                 user_merged = deep_merge(global_user_cfg, project_user_cfg)
 
                 # apply to global and each app (user config < pyproject)
-                merged_global = deep_merge(user_merged.copy(), global_config)
+                merged_global = deep_merge(copy.deepcopy(user_merged), global_config)
                 merged_app_configs = {
-                    name: deep_merge(user_merged.copy(), cfg)
+                    name: deep_merge(copy.deepcopy(user_merged), cfg)
                     for name, cfg in app_configs.items()
                 }
 
