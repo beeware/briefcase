@@ -15,12 +15,13 @@ def platform_paths():
             "complex": "C:\\system\\bin;C:\\usr\\bin",
             "empty": "",
         }
-    return {
-        "system": "/system/bin",
-        "user": "/custom/path",
-        "complex": "/system/bin:/usr/bin",
-        "empty": "",
-    }
+    else:
+        return {
+            "system": "/system/bin",
+            "user": "/custom/path",
+            "complex": "/system/bin:/usr/bin",
+            "empty": "",
+        }
 
 
 @pytest.fixture
@@ -29,15 +30,13 @@ def venv_bin_dir():
     return "Scripts" if sys.platform == "win32" else "bin"
 
 
-@pytest.fixture
-def path_separator():
-    """Platform-appropriate PATH separator."""
-    return os.pathsep
-
-
 @pytest.mark.parametrize("overrides", [None, {}, {"VALUE": "value"}])
 def test_full_env_basic_creation(
-    venv_context, platform_paths, venv_bin_dir, path_separator, overrides
+    venv_context,
+    platform_paths,
+    venv_bin_dir,
+    path_separator,
+    overrides,
 ):
     """Test that full_env creates an environment with expected defaults."""
     with patch.dict(os.environ, {"PATH": platform_paths["complex"]}, clear=False):

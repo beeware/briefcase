@@ -7,7 +7,11 @@ ENVIRONMENT_TEST_PARAMS = [
 
 
 def assert_environment_handling(
-    mock_full_env, env_override, mock_method, method_args, other_kwargs
+    mock_full_env,
+    env_override,
+    mock_method,
+    method_args,
+    other_kwargs,
 ):
     """Assert proper environment handling in subprocess calls."""
     mock_full_env.assert_called_once_with(env_override)
