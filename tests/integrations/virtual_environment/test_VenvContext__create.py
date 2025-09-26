@@ -1,4 +1,3 @@
-import os
 import re
 import subprocess
 import sys
@@ -10,20 +9,20 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-def test_create(dummy_tools, venv_path):
+def test_create(mock_tools, venv_path):
     """Tests create creates a venv at the specified path."""
-    context = VenvContext(dummy_tools, venv_path)
+    context = VenvContext(mock_tools, venv_path)
 
     # Mock the methods that create() calls
     context.update_core_tools = MagicMock()
-    dummy_tools.subprocess.run = MagicMock()
+    mock_tools.subprocess.run = MagicMock()
 
     # Call create
     context.create()
 
     # Verify subprocess.run was called with correct arguments
-    dummy_tools.subprocess.run.assert_called_once_with(
-        [sys.executable, "-m", "venv", os.fspath(venv_path)],
+    mock_tools.subprocess.run.assert_called_once_with(
+        [sys.executable, "-m", "venv", venv_path],
         check=True,
     )
 
@@ -31,13 +30,13 @@ def test_create(dummy_tools, venv_path):
     context.update_core_tools.assert_called_once()
 
 
-def test_create_subprocess_fails(dummy_tools, venv_path):
+def test_create_subprocess_fails(mock_tools, venv_path):
     """Tests create raises BriefcaseCommandError if subprocess fails."""
-    context = VenvContext(dummy_tools, venv_path)
+    context = VenvContext(mock_tools, venv_path)
 
     context.update_core_tools = MagicMock()
 
-    dummy_tools.subprocess.run = MagicMock(
+    mock_tools.subprocess.run = MagicMock(
         side_effect=subprocess.CalledProcessError(returncode=1, cmd="venv")
     )
 
@@ -51,8 +50,8 @@ def test_create_subprocess_fails(dummy_tools, venv_path):
     ):
         context.create()
 
-    dummy_tools.subprocess.run.assert_called_once_with(
-        [sys.executable, "-m", "venv", os.fspath(venv_path)],
+    mock_tools.subprocess.run.assert_called_once_with(
+        [sys.executable, "-m", "venv", venv_path],
         check=True,
     )
 

@@ -453,18 +453,16 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 
 
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
-    description = (
-        "Run a static web project in development mode. (POC: venv + single install)"
-    )
+    description = "Run a static web project in development mode.(Work in progress...)"
 
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
-            "--isolated",
+            "--no-isolation",
             dest="isolated",
-            action="store_true",
-            default=False,
-            help="Run without creating an isolated environment (not supported for web).",
+            action="store_false",
+            default=True,
+            help="Run without creating an isolated environment (not recommended for web).",
         )
 
     def run_dev_app(self, app: AppConfig, **options):

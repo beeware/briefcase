@@ -201,8 +201,14 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         return env
 
-    def get_venv_context(self, appname, isolated):
-        """Create and return a virtual environment context for the app."""
+    def virtual_environment(self, appname: str, isolated: bool) -> virtual_environment:
+        """Create and return a virtual environment context for the app.
+
+        :param appname: The name of the app to create a venv context for
+        :param isolated: Whether to create an isolated virtual environment
+        :returns: A virtual environment context manager either VenvEnvironment or
+            NoOpEnvironment based on isolation setting
+        """
         return virtual_environment(
             tools=self.tools,
             console=self.console,

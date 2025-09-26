@@ -37,3 +37,5 @@ coverage.xml
 
 tests/apps/verify-*/
 logs/
+
+!tests/**/test_*Venv*.py

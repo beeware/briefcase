@@ -250,7 +250,7 @@ def test_dev_command(
 @pytest.mark.parametrize(
     "cmdline, expected_output_format, expected_options, expected_overrides",
     [
-        ("dev web --isolated", "static", {"isolated": True}, {}),
+        ("dev web --no-isolation", "static", {"isolated": False}, {}),
     ],
 )
 def test_web_dev_command(

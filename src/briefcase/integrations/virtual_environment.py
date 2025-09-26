@@ -46,7 +46,7 @@ class VenvContext(Tool):
         :return: Absolute filesystem path to the venv's Python executable.
         """
         python = self.bin_dir / ("python.exe" if os.name == "nt" else "python")
-        return os.fspath(python)
+        return python
 
     def exists(self) -> bool:
         """Check whether the virtual environment exists.
@@ -63,7 +63,7 @@ class VenvContext(Tool):
         try:
             self.venv_path.parent.mkdir(parents=True, exist_ok=True)
             self.tools.subprocess.run(
-                [sys.executable, "-m", "venv", os.fspath(self.venv_path)],
+                [sys.executable, "-m", "venv", self.venv_path],
                 check=True,
             )
             self.update_core_tools()

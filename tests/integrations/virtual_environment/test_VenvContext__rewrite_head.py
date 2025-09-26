@@ -32,7 +32,9 @@ def test_rewrite_head_empty(venv_context: VenvContext, empty_args):
     ],
 )
 def test_rewrite_head_system_python_replacement(
-    venv_context: VenvContext, args, expected_suffix
+    venv_context: VenvContext,
+    args,
+    expected_suffix,
 ):
     """Test _rewrite_head replaces sys.executable with venv executable."""
     result = venv_context._rewrite_head(args)

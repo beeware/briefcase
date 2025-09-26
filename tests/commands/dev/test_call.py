@@ -83,28 +83,6 @@ def dev_command(dummy_console, tmp_path):
     )
 
 
-@pytest.fixture(autouse=True)
-def mock_virtual_environment(dev_command):
-    """Mock virtual_environment to return our predictable VenvContext regardless of
-    isolated parameter."""
-
-    def mock_venv_factory(tools, console, venv_path, *, isolated=False, recreate=False):
-        """Mock factory that always returns a context manager yielding our VenvContext.
-
-        This handles both isolated=True and isolated=False cases to always return our
-        predictable mock instead of NoOpEnvironment returning tools.subprocess.
-        """
-        mock_context = mock.MagicMock()
-        mock_context.__enter__.return_value = dev_command.mock_venv_context
-        mock_context.__exit__.return_value = False
-        return mock_context
-
-    with mock.patch(
-        "briefcase.commands.dev.virtual_environment", side_effect=mock_venv_factory
-    ):
-        yield
-
-
 def test_no_args_one_app(dev_command, first_app):
     """If there is one app, dev starts that app by default."""
     # Add a single app
@@ -493,45 +471,3 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
             dev_command.env,
         ),
     ]
-
-
-def test_get_venv_context_isolated(dummy_console, tmp_path):
-    """The base DevCommand.get_venv_context() method works with isolated=True."""
-    mock_dev_command = mock.MagicMock(spec=DevCommand)
-    mock_dev_command.tools = mock.MagicMock()
-    mock_dev_command.console = dummy_console
-    mock_dev_command.base_path = tmp_path / "base_path"
-
-    with mock.patch("briefcase.commands.dev.virtual_environment") as mock_venv:
-        result = DevCommand.get_venv_context(
-            mock_dev_command, "test-app", isolated=True
-        )
-
-        expected_venv_path = tmp_path / "base_path" / ".briefcase" / "test-app" / "venv"
-        mock_venv.assert_called_once_with(
-            tools=mock_dev_command.tools,
-            console=mock_dev_command.console,
-            venv_path=expected_venv_path,
-            isolated=True,
-        )
-        assert result == mock_venv.return_value
-
-
-def test_get_venv_context_not_isolated(dummy_console, tmp_path):
-    """The base DevCommand.get_venv_context() method works with isolated=False."""
-    mock_dev_command = mock.MagicMock(spec=DevCommand)
-    mock_dev_command.tools = mock.MagicMock()
-    mock_dev_command.console = dummy_console
-    mock_dev_command.base_path = tmp_path / "base_path"
-
-    with mock.patch("briefcase.commands.dev.virtual_environment") as mock_venv:
-        result = DevCommand.get_venv_context(mock_dev_command, "my-app", isolated=False)
-
-        expected_venv_path = tmp_path / "base_path" / ".briefcase" / "my-app" / "venv"
-        mock_venv.assert_called_once_with(
-            tools=mock_dev_command.tools,
-            console=mock_dev_command.console,
-            venv_path=expected_venv_path,
-            isolated=False,
-        )
-        assert result == mock_venv.return_value
