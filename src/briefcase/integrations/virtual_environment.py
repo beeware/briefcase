@@ -35,7 +35,7 @@ class VenvContext(Tool):
     def bin_dir(self) -> Path:
         r"""Return the path to the virtual environment's binary directory.
 
-        :return: <venv>/bin (or <venv>\Scripts on Windows)
+        :return: The ``/bin`` (``\Scripts`` on Windows) directory of the venv.
         """
         return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
 

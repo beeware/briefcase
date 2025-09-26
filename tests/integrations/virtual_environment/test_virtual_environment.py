@@ -37,6 +37,7 @@ def test_recreate_default_false(dummy_tools, dummy_console, venv_path):
 def test_isolated_true_none_venv_path_raises_error(dummy_tools, dummy_console):
     """Factory raises error when isolated=True but venv_path is None."""
     with pytest.raises(
-        BriefcaseCommandError, match="A virtual environment path must be provided"
+        BriefcaseCommandError,
+        match="A virtual environment path must be provided",
     ):
         virtual_environment(dummy_tools, dummy_console, None, isolated=True)
