@@ -18,26 +18,37 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .constants import RESERVED_WORDS
 from .exceptions import BriefcaseConfigError
 
-# PEP 508 restricts the naming of modules. The PEP defines a regex that uses
-# re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
-# case, which has very slightly different semantics with non-ASCII characters. This
-# definition is the one from
-# https://github.com/pypa/packaging/blob/24.0/src/packaging/_tokenizer.py#L80
-PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$")
-
-
-def is_valid_pep508_name(app_name):
-    """Determine if the name is valid by PEP508 rules."""
-    return PEP508_NAME_RE.match(app_name)
-
 
 def is_reserved_keyword(app_name):
     """Determine if the name is a reserved keyword."""
-    return keyword.iskeyword(app_name.lower()) or app_name.lower() in RESERVED_WORDS
+    return (
+        keyword.iskeyword(app_name.lower())
+        or app_name.lower() in RESERVED_WORDS
+        or keyword.iskeyword(app_name)
+    )
 
 
 def is_valid_app_name(app_name):
-    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
+    """Determine if the app name is valid.
+
+    Checks the following:
+        - It is not a reserved keyword.
+        - It is a valid Python identifier when hyphens are replaced with underscores.
+        - It does not start with an underscore (reserved for internal use).
+        - It does not contain problematic Unicode characters that have edge-case behaviors.
+
+    :param app_name: The app name to validate.
+    :returns: True if the app name is valid; False otherwise.
+    """
+    module_name = app_name.lower().replace("-", "_")
+
+    return all(
+        [
+            not is_reserved_keyword(app_name),
+            module_name.isidentifier(),
+            not module_name.startswith("_"),
+        ]
+    )
 
 
 def make_class_name(formal_name):
@@ -400,9 +411,11 @@ class AppConfig(BaseConfig):
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
                 f"{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
-                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
-                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+                "App names must:\n"
+                "- Not be reserved keywords (like 'and', 'for', 'while', 'main', 'test', etc.)\n"
+                "- Only contain letters, numbers, hyphens, and underscores\n"
+                "- Start with a letter (not a number, hyphen, or underscore)\n"
+                "- Be valid Python identifiers when hyphens are replaced with underscores"
             )
 
         if not is_valid_bundle_identifier(self.bundle):
