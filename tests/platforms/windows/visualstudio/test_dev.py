@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VenvContext
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioDevCommand
 
 
@@ -21,16 +22,29 @@ def dev_command(dummy_console, tmp_path):
     return command
 
 
-def test_dev_visualstudio_app_starts(dev_command, first_app_config, tmp_path):
+@pytest.fixture
+def default_env() -> VenvContext:
+    """Create a venv mock for tests that require a venv parameter."""
+    mock_venv = mock.MagicMock(spec=VenvContext)
+    mock_venv.run.return_value = mock.MagicMock()
+    mock_venv.check_output.return_value = ""
+    mock_venv.Popen.return_value = mock.MagicMock()
+    mock_venv.executable = "/mock/venv/Scripts/python.exe"
+    return mock_venv
+
+
+def test_dev_visualstudio_app_starts(
+    dev_command, first_app_config, tmp_path, default_env
+):
     """A Windows Visual Studio app can be started in development mode using Python."""
     log_popen = mock.MagicMock()
-    dev_command.tools.subprocess.Popen.return_value = log_popen
+    default_env.Popen.return_value = log_popen
 
     # Run the dev command
-    dev_command.run_dev_app(first_app_config, env={}, passthrough=[])
+    dev_command.run_dev_app(first_app_config, env={}, venv=default_env, passthrough=[])
 
     # Extract the actual Popen call arguments
-    popen_args, popen_kwargs = dev_command.tools.subprocess.Popen.call_args
+    popen_args, popen_kwargs = default_env.Popen.call_args
 
     # Verify that Python is used
     assert popen_args[0][0] == sys.executable

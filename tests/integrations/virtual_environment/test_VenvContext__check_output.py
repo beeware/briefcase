@@ -1,0 +1,77 @@
+import pytest
+
+from tests.integrations.virtual_environment.utils import (
+    ENVIRONMENT_TEST_PARAMS,
+    assert_environment_handling,
+)
+
+
+@pytest.mark.parametrize("env_override, other_kwargs", ENVIRONMENT_TEST_PARAMS)
+def test_check_output_environment_handling(
+    venv_context,
+    mock_subprocess_setup,
+    env_override,
+    other_kwargs,
+):
+    """Test that check_output merges venv environment with provided overrides and passes
+    all kwargs to subprocess.
+
+    The venv's full_env should be called with any provided env override, and the
+    resulting environment should be passed to subprocess.check_output along with other
+    kwargs unchanged.
+    """
+    mocks = mock_subprocess_setup
+
+    kwargs = other_kwargs.copy()
+    if env_override is not None:
+        kwargs["env"] = env_override
+
+    result = venv_context.check_output(["test"], **kwargs)
+
+    assert_environment_handling(
+        mock_full_env=mocks["full_env"],
+        env_override=env_override,
+        mock_method=mocks["subprocess"].check_output,
+        method_args=["rewritten", "args"],
+        other_kwargs=other_kwargs,
+    )
+
+    assert result == "output"
+
+
+def test_check_output_kwargs_env_extraction(venv_context, mock_subprocess_setup):
+    """Test that check_output extracts env from kwargs without modifying the original
+    kwargs dict.
+
+    The original kwargs dict should remain unchanged, while the env value is passed to
+    full_env() and the resulting merged environment replaces the original env in the
+    subprocess call.
+    """
+
+    mocks = mock_subprocess_setup
+
+    original_kwargs = {
+        "env": {"CUSTOM": "value"},
+        "cwd": "/tmp",
+        "timeout": 30,
+        "shell": False,
+    }
+    kwargs_copy = original_kwargs.copy()
+
+    result = venv_context.check_output(["test"], **original_kwargs)
+
+    assert original_kwargs == kwargs_copy
+
+    mocks["full_env"].assert_called_once_with({"CUSTOM": "value"})
+
+    expected_call_kwargs = {
+        "cwd": "/tmp",
+        "timeout": 30,
+        "shell": False,
+        "env": {"FULL": "env"},
+    }
+    mocks["subprocess"].check_output.assert_called_once_with(
+        ["rewritten", "args"], **expected_call_kwargs
+    )
+
+    assert result == "output"
