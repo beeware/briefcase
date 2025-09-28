@@ -41,14 +41,14 @@ app_requirements_path="requirements.txt"
     create_file(
         bundle_path / "www/static/css/briefcase.css",
         """
-/*@@ CSS:start @@*/
-/*@@ CSS:end @@*/
-
 #pyconsole {
   display: None;
 }
 /*******************************************************************
- ******************** Wheel contributed styles ********************/
+******************** Wheel contributed styles ********************/
+/*@@ CSS:start @@*/
+/*@@ CSS:end @@*/
+
 """,
     )
 
