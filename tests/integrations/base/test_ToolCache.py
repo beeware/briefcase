@@ -37,7 +37,6 @@ def test_toolcache_typing():
         "LinuxDeployGtkPlugin",
         "LinuxDeployURLPlugin",
         "LinuxDeployLocalFilePlugin",
-        "VenvContext",
     }
 
     # Ensure all modules containing Tools are exported in ``briefcase.integrations``.

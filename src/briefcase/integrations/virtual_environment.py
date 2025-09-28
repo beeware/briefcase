@@ -17,7 +17,7 @@ class VenvContext(Tool):
     Wraps subprocess functions to ensure commands are run in the venv.
     """
 
-    name = "venv_context"
+    name = "virtual_environment"
     full_name = "Virtual Environment Context"
 
     def __init__(self, tools, venv_path: Path):
