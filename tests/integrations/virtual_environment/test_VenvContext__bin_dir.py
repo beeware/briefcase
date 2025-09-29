@@ -6,7 +6,7 @@ import pytest
 from briefcase.integrations.virtual_environment import VenvContext
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific bin directory test")
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_bin_dir_unix(mock_tools, tmp_path):
     """Test bin_dir returns 'bin' directory on Unix systems."""
     venv_path = tmp_path / "test_venv"
@@ -20,7 +20,7 @@ def test_bin_dir_unix(mock_tools, tmp_path):
 
 
 @pytest.mark.skipif(
-    sys.platform != "win32", reason="Windows specific bin directory test"
+    sys.platform != "win32", reason="Windows specific test"
 )
 def test_bin_dir_windows(mock_tools, tmp_path):
     """Test bin_dir returns 'Scripts' directory on Windows."""

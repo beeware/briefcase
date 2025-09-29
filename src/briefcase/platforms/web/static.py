@@ -453,7 +453,7 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 
 
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
-    description = "Run a static web project in development mode.(Work in progress...)"
+    description = "Run a static web project in development mode. (Work in progress)"
 
     def add_options(self, parser):
         super().add_options(parser)

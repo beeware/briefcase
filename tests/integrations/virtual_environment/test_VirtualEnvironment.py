@@ -4,7 +4,7 @@ from briefcase.integrations.virtual_environment import VenvEnvironment
 
 
 def test_recreate_true(mock_tools, dummy_console, tmp_path):
-    """Test context manager recreates environment when recreate=True."""
+    """Context manager recreates environment when recreate=True."""
     venv_path = tmp_path / "test_venv"
     env = VenvEnvironment(
         mock_tools,
