@@ -16,10 +16,15 @@ from platformdirs import PlatformDirs
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseConfigError
 
-_PROMPT_OK = {
+_ALLOWED_KEYS = {
+    "author.name",
+    "author.email",
     "android.device",
     "iOS.device",
+    "macOS.identity",
+    "macOS.xcode.identity",
 }
+
 _AVD_RE = re.compile(r"^@[\w.-]+$")
 _EMULATOR_ID_RE = re.compile(r"^emulator-\d+$")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -31,15 +36,16 @@ def validate_key(key: str, value: str) -> None:
     if not v:
         raise BriefcaseConfigError(f"Value for {key} cannot be empty.")
 
-    top = key.split(".", 1)[0]
-    if top not in {"iOS", "android", "author"}:
-        raise BriefcaseConfigError(f"Unknown configuration key: {top}.")
+    if key not in _ALLOWED_KEYS:
+        raise BriefcaseConfigError(
+            f"Unknown configuration key: {key}. Allowed keys: {', '.join(sorted(_ALLOWED_KEYS))}"
+        )
 
     if v == "?":
-        if key in _PROMPT_OK:
+        if key in _ALLOWED_KEYS:
             return
         raise BriefcaseConfigError(
-            f"The '?' sentinel is only allowed for: {', '.join(sorted(_PROMPT_OK))}"
+            f"The '?' sentinel is only allowed for: {', '.join(sorted(_ALLOWED_KEYS))}"
         )
 
     if key == "android.device":
