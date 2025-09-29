@@ -16,7 +16,7 @@ from platformdirs import PlatformDirs
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseConfigError
 
-_ALLOWED_KEYS = {
+_CANONICAL_KEYS = {
     "author.name",
     "author.email",
     "android.device",
@@ -25,27 +25,44 @@ _ALLOWED_KEYS = {
     "macOS.xcode.identity",
 }
 
+_KEY_ALIASES = {
+    "iOS.device": "ios.device",
+    "macOS.identity": "macos.identity",
+    "macOS.xcode.identity": "macos.xcode.identity",
+}
+
 _AVD_RE = re.compile(r"^@[\w.-]+$")
 _EMULATOR_ID_RE = re.compile(r"^emulator-\d+$")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
+def normalize_key(key: str) -> str:
+    key = (key or "").strip()
+    return _KEY_ALIASES.get(key, key.lower())
+
+
 def validate_key(key: str, value: str) -> None:
-    key = key.strip()
+    key = normalize_key(key)
     v = (value or "").strip()
     if not v:
         raise BriefcaseConfigError(f"Value for {key} cannot be empty.")
 
-    if key not in _ALLOWED_KEYS:
+    if key not in _CANONICAL_KEYS:
         raise BriefcaseConfigError(
-            f"Unknown configuration key: {key}. Allowed keys: {', '.join(sorted(_ALLOWED_KEYS))}"
+            f"Unknown configuration key: {key}. Allowed keys: {', '.join(sorted(_CANONICAL_KEYS))}"
         )
 
+    # '?' sentinel is only allowed for device/identity keys
     if v == "?":
-        if key in _ALLOWED_KEYS:
+        if key in {
+            "android.device",
+            "iOS.device",
+            "macOS.identity",
+            "macOS.xcode.identity",
+        }:
             return
         raise BriefcaseConfigError(
-            f"The '?' sentinel is only allowed for: {', '.join(sorted(_ALLOWED_KEYS))}"
+            "The '?' sentinel is only allowed for device/identity keys"
         )
 
     if key == "android.device":
@@ -133,7 +150,7 @@ def write_toml(path: Path, data: dict) -> None:
 
 def get_config(d: dict, dotted: str):
     cur = d
-    for part in dotted.split("."):
+    for part in normalize_key(dotted).split("."):
         if not isinstance(cur, dict) or part not in cur:
             return None
         cur = cur[part]
@@ -142,7 +159,7 @@ def get_config(d: dict, dotted: str):
 
 def set_config(d: dict, dotted: str, value):
     cur = d
-    parts = dotted.split(".")
+    parts = normalize_key(dotted).split(".")
     for p in parts[:-1]:
         nxt = cur.setdefault(p, {})
         if not isinstance(nxt, dict):
@@ -154,7 +171,7 @@ def set_config(d: dict, dotted: str, value):
 
 def unset_config(d: dict, dotted: str) -> bool:
     cur = d
-    parts = dotted.split(".")
+    parts = normalize_key(dotted).split(".")
     for p in parts[:-1]:
         if p not in cur or not isinstance(cur[p], dict):
             return False
@@ -265,7 +282,7 @@ class ConfigCommand(BaseCommand):
 
         # SET
         if key and value is not None:
-            key = key.strip()
+            key = normalize_key(key).strip()
             value = value.strip()
 
             parts = key.split(".")
