@@ -1,3 +1,4 @@
+import sys
 from unittest import mock
 
 import pytest
@@ -55,13 +56,20 @@ def test_install_dev_requirements(dev_command, first_app_config, default_venv):
 
     dev_command.install_dev_requirements(first_app_config, default_venv)
 
-    # Should call venv.run with pip install command
-    default_venv.run.assert_called_once()
-    call_args = default_venv.run.call_args[0][0]
-
-    # Check that it's calling pip install with the right packages
-    assert "pip" in call_args
-    assert "install" in call_args
-    assert "requests" in call_args
-    assert "flask" in call_args
-    assert "pytest" in call_args
+    default_venv.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "requests",
+            "flask",
+            "pytest",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
