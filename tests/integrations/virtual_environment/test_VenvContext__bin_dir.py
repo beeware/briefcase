@@ -19,9 +19,7 @@ def test_bin_dir_unix(mock_tools, tmp_path):
     assert isinstance(result, Path)
 
 
-@pytest.mark.skipif(
-    sys.platform != "win32", reason="Windows specific test"
-)
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
 def test_bin_dir_windows(mock_tools, tmp_path):
     """Test bin_dir returns 'Scripts' directory on Windows."""
     venv_path = tmp_path / "test_venv"
