@@ -349,7 +349,7 @@ def test_build_app_config_no_backend(build_command, first_app_generated, tmp_pat
 
     bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
-    # Mock some wheels without a config.toml
+    # Mock some wheels with a single config.toml containing no backend value.
     def mock_run(*args, **kwargs):
         if args[0][5] == "wheel":
             create_wheel(
@@ -391,6 +391,69 @@ def test_build_app_config_no_backend(build_command, first_app_generated, tmp_pat
         match=r"No backend was provided in config.toml file.",
     ):
         build_command.build_app(first_app_generated)
+
+
+def test_build_app_no_wheel_pyscript_toml(build_command, first_app_generated, tmp_path):
+    """An app with no pyscript.toml supplied by a wheel gets a basic config."""
+
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+
+    # Mock some wheels without a pyscript.toml
+    def mock_run(*args, **kwargs):
+        if args[0][5] == "wheel":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    (
+                        "dependency/deploy/config.toml",
+                        """
+backend = "pyscript"
+
+[pyscript]
+version = "2024.11.1"
+"""
+                    ),
+                ],
+            )
+        elif args[0][5] == "pip":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
+            )
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "other",
+                extra_content=[
+                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                ],
+            )
+        else:
+            raise ValueError("Unknown command")
+
+    build_command.tools.subprocess.run.side_effect = mock_run
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www/static/wheels"
+    )
+
+    # Build the web app.
+    build_command.build_app(first_app_generated)
+
+    # Pyscript.toml has been written with only the packages content
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "packages": [
+                "/static/wheels/dependency-1.2.3-py3-none-any.whl",
+                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+                "/static/wheels/other-1.2.3-py3-none-any.whl",
+            ],
+        }
 
 
 def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_path):

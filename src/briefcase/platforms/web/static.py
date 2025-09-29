@@ -432,9 +432,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         with wheel.open(pyscript_path) as pyscript_file:
                             pyscript_config = tomllib.load(pyscript_file)
                     except KeyError:
-                        raise BriefcaseConfigError(
-                            f"Pyscript configuration file not found in package: {config_package_list[0]}"
+                        self.console.info(
+                            f"Pyscript configuration file not found in package: {config_package_list[0]}\n"
+                            "Using default configuration."
                         )
+                        pyscript_config = {}
 
         return pyscript_config, pyscript_version
 
