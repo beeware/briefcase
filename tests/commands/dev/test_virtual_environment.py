@@ -63,9 +63,7 @@ def test_virtual_environment_uses_venv_path(dummy_console, tmp_path):
     mock_dev_command.venv_path.return_value = tmp_path / "custom" / "path"
 
     with mock.patch("briefcase.commands.dev.virtual_environment") as mock_venv:
-        DevCommand.virtual_environment(
-            mock_dev_command, "test-app", isolated=True
-        )
+        DevCommand.virtual_environment(mock_dev_command, "test-app", isolated=True)
 
         mock_dev_command.venv_path.assert_called_once_with("test-app")
 
