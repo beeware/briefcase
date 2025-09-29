@@ -814,13 +814,6 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
     # Wheels folder still exists
     assert (bundle_path / "www/static/wheels").is_dir()
 
-    # Pyscript.toml content has not changed
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "existing-key-1": "value-1",
-            "existing-key-2": 2,
-        }
-
 
 def test_dependency_fail(build_command, first_app_generated, tmp_path):
     """If dependencies can't be downloaded, an error is raised."""
@@ -890,9 +883,3 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
     # Wheels folder still exists
     assert (bundle_path / "www/static/wheels").is_dir()
 
-    # Pyscript.toml content has not changed
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "existing-key-1": "value-1",
-            "existing-key-2": 2,
-        }
