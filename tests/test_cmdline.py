@@ -5,7 +5,13 @@ from unittest import mock
 import pytest
 
 from briefcase import __version__, cmdline
-from briefcase.commands import ConvertCommand, DevCommand, NewCommand, UpgradeCommand
+from briefcase.commands import (
+    ConfigCommand,
+    ConvertCommand,
+    DevCommand,
+    NewCommand,
+    UpgradeCommand,
+)
 from briefcase.console import Console, LogLevel
 from briefcase.exceptions import (
     InvalidFormatError,
@@ -350,6 +356,47 @@ def test_bare_command(monkeypatch, console):
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == {}
+    assert overrides == {}
+
+
+@pytest.mark.parametrize(
+    "cmdline, expected_options",
+    [
+        (
+            "config --list --global",
+            {
+                "global_scope": True,
+                "get": None,
+                "unset": None,
+                "list": True,
+                "key": None,
+                "value": None,
+            },
+        ),
+        (
+            "config author.email user@example.com",
+            {
+                "global_scope": False,
+                "get": None,
+                "unset": None,
+                "list": False,
+                "key": "author.email",
+                "value": "user@example.com",
+            },
+        ),
+    ],
+)
+def test_config_command(console, cmdline, expected_options):
+    """``briefcase config`` dispatches to ConfigCommand and parses its options."""
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
+
+    assert isinstance(cmd, ConfigCommand)
+    assert cmd.platform == "all"
+    assert cmd.output_format == ""
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
+    assert options == expected_options
+    # Config doesn't accept -C overrides; should always be empty
     assert overrides == {}
 
 

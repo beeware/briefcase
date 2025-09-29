@@ -16,7 +16,7 @@ from platformdirs import PlatformDirs
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseConfigError
 
-_CANONICAL_KEYS = {
+_ALLOWED_KEYS = {
     "author.name",
     "author.email",
     "android.device",
@@ -25,31 +25,27 @@ _CANONICAL_KEYS = {
     "macOS.xcode.identity",
 }
 
-_KEY_ALIASES = {
-    "iOS.device": "ios.device",
-    "macOS.identity": "macos.identity",
-    "macOS.xcode.identity": "macos.xcode.identity",
-}
-
 _AVD_RE = re.compile(r"^@[\w.-]+$")
 _EMULATOR_ID_RE = re.compile(r"^emulator-\d+$")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_IOS_UDID_LIKE_RE = re.compile(r"^[0-9A-Fa-f-]{17,}$")
+_IOS_NAME_VER_RE = re.compile(r"^.+::iOS \d+\.\d+$")
 
 
 def normalize_key(key: str) -> str:
-    key = (key or "").strip()
-    return _KEY_ALIASES.get(key, key.lower())
+    """Keep external keys case-sensitive; only trim whitespace."""
+    return (key or "").strip()
 
 
 def validate_key(key: str, value: str) -> None:
-    key = normalize_key(key)
+    key = (key or "").strip()
     v = (value or "").strip()
     if not v:
         raise BriefcaseConfigError(f"Value for {key} cannot be empty.")
 
-    if key not in _CANONICAL_KEYS:
+    if key not in _ALLOWED_KEYS:
         raise BriefcaseConfigError(
-            f"Unknown configuration key: {key}. Allowed keys: {', '.join(sorted(_CANONICAL_KEYS))}"
+            f"Unknown configuration key: {key}. Allowed keys: {', '.join(sorted(_ALLOWED_KEYS))}"
         )
 
     # '?' sentinel is only allowed for device/identity keys
@@ -75,8 +71,19 @@ def validate_key(key: str, value: str) -> None:
         if _EMULATOR_ID_RE.match(v):
             return
         raise BriefcaseConfigError(
-            "Invalid android.device. Must be an AVD name (starting with '@') or an emulator ID (e.g., 'emulator-5554')"
+            "Invalid android.device AVD name. Use '@NAME' with letters/digits/underscore only (no spaces), e.g. '@Pixel_5'."
         )
+
+    if key == "iOS.device":
+        # Accept UDID-like or "DeviceName::iOS X.Y"
+        if _IOS_UDID_LIKE_RE.match(v) or _IOS_NAME_VER_RE.match(v):
+            return
+        raise BriefcaseConfigError(
+            "Invalid iOS.device. Must be a device UDID or 'DeviceName::iOS X.Y'."
+        )
+
+    if key in {"macOS.identity", "macOS.xcode.identity"}:
+        return
 
     if key == "author.name":
         return
@@ -150,7 +157,7 @@ def write_toml(path: Path, data: dict) -> None:
 
 def get_config(d: dict, dotted: str):
     cur = d
-    for part in normalize_key(dotted).split("."):
+    for part in dotted.split("."):
         if not isinstance(cur, dict) or part not in cur:
             return None
         cur = cur[part]
@@ -159,7 +166,7 @@ def get_config(d: dict, dotted: str):
 
 def set_config(d: dict, dotted: str, value):
     cur = d
-    parts = normalize_key(dotted).split(".")
+    parts = dotted.split(".")
     for p in parts[:-1]:
         nxt = cur.setdefault(p, {})
         if not isinstance(nxt, dict):
@@ -171,7 +178,7 @@ def set_config(d: dict, dotted: str, value):
 
 def unset_config(d: dict, dotted: str) -> bool:
     cur = d
-    parts = normalize_key(dotted).split(".")
+    parts = dotted.split(".")
     for p in parts[:-1]:
         if p not in cur or not isinstance(cur[p], dict):
             return False
@@ -282,8 +289,8 @@ class ConfigCommand(BaseCommand):
 
         # SET
         if key and value is not None:
-            key = normalize_key(key).strip()
-            value = value.strip()
+            key = (key or "").strip()
+            value = (value or "").strip()
 
             parts = key.split(".")
             if any(not p.strip() for p in parts):
