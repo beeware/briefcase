@@ -55,21 +55,13 @@ def test_virtual_environment_not_isolated(dummy_console, tmp_path):
         assert result == mock_venv.return_value
 
 
-def test_virtual_environment_uses_venv_path(dummy_console, tmp_path):
-    """The virtual_environment method uses venv_path to determine the path."""
+def test_venv_path_construction(tmp_path):
+    """The venv_path method constructs the correct path."""
     mock_dev_command = mock.MagicMock(spec=DevCommand)
-    mock_dev_command.tools = mock.MagicMock()
-    mock_dev_command.console = dummy_console
-    mock_dev_command.venv_path.return_value = tmp_path / "custom" / "path"
+    mock_dev_command.base_path = tmp_path / "base_path"
 
-    with mock.patch("briefcase.commands.dev.virtual_environment") as mock_venv:
-        DevCommand.virtual_environment(mock_dev_command, "test-app", isolated=True)
+    # Call the real method, not a mock
+    result = DevCommand.venv_path(mock_dev_command, "test-app")
 
-        mock_dev_command.venv_path.assert_called_once_with("test-app")
-
-        mock_venv.assert_called_once_with(
-            tools=mock_dev_command.tools,
-            console=mock_dev_command.console,
-            venv_path=tmp_path / "custom" / "path",
-            isolated=True,
-        )
+    expected = tmp_path / "base_path" / ".briefcase" / "test-app" / "venv"
+    assert result == expected
