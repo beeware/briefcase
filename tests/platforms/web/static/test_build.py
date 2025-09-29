@@ -148,6 +148,46 @@ existing-key-2 = 2
             ],
         }
 
+    # index.html has insertions
+    with (bundle_path / "www/index.html").open(encoding="utf-8") as f:
+        assert (
+            f.read()
+            == "\n".join(
+                [
+                    "<!doctype html>",
+                    "<html>",
+                    "  <head>",
+                    "    <!--@@ head:start @@-->",
+                    "    <!--@@ head:end @@-->",
+                    "    <!--@@ Python:start @@-->",
+                    "    <!--------------------------------------------------",
+                    "     * briefcase",
+                    "     -------------------------------------------------->",
+                    "    <script type=\"module\">",
+                    "        // Hide the splash screen when the page is ready.",
+                    "        import { hooks } from \"https://pyscript.net/releases/2024.11.1/core.js\";",
+                    "        hooks.main.onReady.add(() => {",
+                    "            document.getElementById(\"briefcase-splash\").classList.add(\"hidden\");",
+                    "        });",
+                    "    </script>",
+                    "",
+                    "    <link rel=\"stylesheet\" href=\"https://pyscript.net/releases/2024.11.1/core.css\">",
+                    "    <script type=\"module\" src=\"https://pyscript.net/releases/2024.11.1/core.js\"></script>",
+                    "    <!--@@ Python:end @@-->",
+                    "  </head>",
+                    "  <body>",
+                    "    <div id=\"briefcase-splash\"></div>",
+                    "",
+                    "    <!--@@ body-end:start @@-->",
+                    "    <!--@@ body-end:end @@-->",
+                    "  </body>",
+                    "</html>",
+                ]
+            )
+            + "\n"
+        )
+
+
     # briefcase.css has been appended
     with (bundle_path / "www/static/css/briefcase.css").open(encoding="utf-8") as f:
         assert (
