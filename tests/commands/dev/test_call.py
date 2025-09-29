@@ -42,8 +42,8 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def get_venv_context(self, appname, isolated=False):
-        self.actions.append(("get-venv-context", appname, isolated))
+    def virtual_environment(self, appname, isolated=False):
+        self.actions.append(("virtual-environment", appname, isolated))
         mock_context = mock.MagicMock()
         mock_context.__enter__.return_value = self.mock_venv_context
         mock_context.__exit__.return_value = False
@@ -107,7 +107,7 @@ def test_no_args_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # Run the first app devly
         (
             "run_dev",
@@ -163,7 +163,7 @@ def test_with_arg_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # Run the first app devly
         (
             "run_dev",
@@ -201,7 +201,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Virtual environment context is acquired
-        ("get-venv-context", "second", False),
+        ("virtual-environment", "second", False),
         # Run the second app devly
         (
             "run_dev",
@@ -258,7 +258,7 @@ def test_update_requirements(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # An update was requested
         (
             "dev_requirements",
@@ -301,7 +301,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # The app will be installed
         (
             "dev_requirements",
@@ -345,7 +345,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # An update was requested
         (
             "dev_requirements",
@@ -387,7 +387,7 @@ def test_no_run(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # An update was requested
         (
             "dev_requirements",
@@ -421,7 +421,7 @@ def test_run_test(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # Then, it will be started
         (
             "run_dev",
@@ -458,7 +458,7 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("get-venv-context", "first", False),
+        ("virtual-environment", "first", False),
         # Development requirements will be installed
         ("dev_requirements", "first", dev_command.mock_venv_context),
         # Then, it will be started

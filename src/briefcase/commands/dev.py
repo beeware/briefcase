@@ -260,7 +260,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
 
-        with self.get_venv_context(
+        with self.virtual_environment(
             appname=app.app_name,
             isolated=options.get("isolated", False),
         ) as venv:
