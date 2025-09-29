@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -14,6 +15,55 @@ from platformdirs import PlatformDirs
 
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseConfigError
+
+_PROMPT_OK = {
+    "android.device",
+    "iOS.device",
+}
+_AVD_RE = re.compile(r"^@[\w.-]+$")
+_EMULATOR_ID_RE = re.compile(r"^emulator-\d+$")
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def validate_key(key: str, value: str) -> None:
+    key = key.strip()
+    v = (value or "").strip()
+    if not v:
+        raise BriefcaseConfigError(f"Value for {key} cannot be empty.")
+
+    top = key.split(".", 1)[0]
+    if top not in {"iOS", "android", "author"}:
+        raise BriefcaseConfigError(f"Unknown configuration key: {top}.")
+
+    if v == "?":
+        if key in _PROMPT_OK:
+            return
+        raise BriefcaseConfigError(
+            f"The '?' sentinel is only allowed for: {', '.join(sorted(_PROMPT_OK))}"
+        )
+
+    if key == "android.device":
+        if v.startswith("@"):
+            if _AVD_RE.match(v):
+                return
+            raise BriefcaseConfigError(
+                "android.device AVD name must start with '@' e.g '@Pixel_5' "
+            )
+        if _EMULATOR_ID_RE.match(v):
+            return
+        raise BriefcaseConfigError(
+            "Invalid android.device. Must be an AVD name (starting with '@') or an emulator ID (e.g., 'emulator-5554')"
+        )
+
+    if key == "author.name":
+        return
+
+    if key == "author.email":
+        if not _EMAIL_RE.match(v):
+            raise BriefcaseConfigError("author.email must be a valid email address.")
+        return
+
+    return
 
 
 def scope_path(project_root: Path, is_global: bool) -> Path:
@@ -209,9 +259,15 @@ class ConfigCommand(BaseCommand):
 
         # SET
         if key and value is not None:
+            key = key.strip()
+            value = value.strip()
+
             parts = key.split(".")
             if any(not p.strip() for p in parts):
                 raise BriefcaseConfigError(f"Invalid configuration key: {key}")
+
+            validate_key(key, value)
+
             set_config(data, key, value)
             write_toml(path, data)
             self.console.info(
