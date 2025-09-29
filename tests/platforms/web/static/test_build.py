@@ -277,6 +277,7 @@ def test_build_app_no_config(build_command, first_app_generated, tmp_path):
             ],
         }
 
+
 def test_build_app_multiple_config(build_command, first_app_generated, tmp_path):
     """An app with multiple config.toml supplied by wheels fails to build."""
 
@@ -341,6 +342,56 @@ version = "2024.10.1"
         match=r"Only 1 backend configuration file can be supplied.",
     ):
         build_command.build_app(first_app_generated)
+
+
+def test_build_app_config_no_backend(build_command, first_app_generated, tmp_path):
+    """An app cannot be built with a config.toml containing no "backend" value."""
+
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+
+    # Mock some wheels without a config.toml
+    def mock_run(*args, **kwargs):
+        if args[0][5] == "wheel":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    ("dependency/deploy/config.toml", ""),
+                ],
+            )
+        elif args[0][5] == "pip":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
+            )
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "other",
+                extra_content=[
+                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                ],
+            )
+        else:
+            raise ValueError("Unknown command")
+
+    build_command.tools.subprocess.run.side_effect = mock_run
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www/static/wheels"
+    )
+
+    # Build the web app.
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"No backend was provided in config.toml file.",
+    ):
+        build_command.build_app(first_app_generated)
+
 
 def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_path):
     """An app with extra pyscript.toml content can be written."""
