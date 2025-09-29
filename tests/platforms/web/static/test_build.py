@@ -456,6 +456,71 @@ version = "2024.11.1"
         }
 
 
+def test_build_app_invalid_wheel_pyscript_toml(
+    build_command, first_app_generated, tmp_path
+):
+    """An app with an invalid pyscript.toml raises an error."""
+
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+
+    # Invoking build will create wheels as a side effect.
+    def mock_run(*args, **kwargs):
+        if args[0][5] == "wheel":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    (
+                        "dependency/deploy/config.toml",
+                        """
+backend = "pyscript"
+
+[pyscript]
+version = "2024.11.1"
+"""
+                    ),
+                    (
+                        "dependency/deploy/pyscript.toml",
+                        """
+This is not valid toml.
+"""
+                    ),
+                ],
+            )
+        elif args[0][5] == "pip":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
+            )
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "other",
+                extra_content=[
+                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                ],
+            )
+        else:
+            raise ValueError("Unknown command")
+
+    build_command.tools.subprocess.run.side_effect = mock_run
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www/static/wheels"
+    )
+
+    # Building the web app raises an error
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
+    ):
+        build_command.build_app(first_app_generated)
+
+
 def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_path):
     """An app with extra pyscript.toml content can be written."""
     bundle_path = tmp_path / "base_path/build/first-app/web/static"
