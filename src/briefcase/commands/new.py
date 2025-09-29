@@ -8,8 +8,6 @@ from email.utils import parseaddr
 from importlib.metadata import entry_points
 from pathlib import Path
 
-from platformdirs import PlatformDirs
-
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     is_valid_app_name,
@@ -17,15 +15,15 @@ from briefcase.config import (
     make_class_name,
     validate_url,
 )
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.git import Git
 
 from .base import BaseCommand
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
+    pass
 else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
+    pass
 
 LICENSE_OPTIONS = {
     "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
@@ -74,35 +72,33 @@ def parse_project_overrides(project_overrides: list[str]) -> dict[str, str]:
     return overrides
 
 
-def _ensure_gitignore_briefcase(project_root: Path):
+def _ensure_gitignore_briefcase(app_path: Path) -> None:
     """Ensure that .briefcase is in the .gitignore file in the project root.
 
     If there is no .gitignore file, create one. If there is a .gitignore file, but it
     doesn't include .briefcase, add it to the end of the file.
     """
-    gitignore_path = project_root / ".gitignore"
-    want = ".briefcase/\n"
+    app_path.mkdir(parents=True, exist_ok=True)
 
-    if gitignore_path.exists():
-        txt = gitignore_path.read_text(encoding="utf-8", errors="ignore")
-        lines = txt.splitlines()
-        # if already ignored do nothing
-        if any(line.strip().rstrip("/") == ".briefcase" for line in lines):
-            return
-        # If only config.toml is ignored, append .briefcase
-        if any(line.strip().rstrip("/") == ".briefcase/config.toml" for line in lines):
-            with gitignore_path.open("a", encoding="utf-8") as f:
-                if txt and not txt.endswith("\n"):
-                    f.write("\n")
-                f.write(want)
-            return
-        # Otherwise, append a new entry
-        with gitignore_path.open("a", encoding="utf-8") as f:
-            if txt and not txt.endswith("\n"):
-                f.write("\n")
-            f.write(want)
-    else:
-        gitignore_path.write_text(want, encoding="utf-8")
+    gitignore_path = app_path / ".gitignore"
+    want = ".briefcase/"
+
+    try:
+        if gitignore_path.exists():
+            # Keep existing content; append .briefcase/ only if missing
+            lines = [
+                ln.rstrip("\n")
+                for ln in gitignore_path.read_text(encoding="utf-8").splitlines()
+            ]
+            if want not in [ln.strip() for ln in lines]:
+                lines.append(want)
+                # Ensure trailing newline at end of file
+                gitignore_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        else:
+            # Create a fresh .gitignore with a trailing newline
+            gitignore_path.write_text(want + "\n", encoding="utf-8")
+    except OSError as e:
+        raise BriefcaseConfigError(f"Unable to update {gitignore_path}: {e}") from e
 
 
 class NewCommand(BaseCommand):
@@ -400,40 +396,14 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("description", None),
         )
 
-        # Load user defaults from --global config.toml for the wizard (author name/email), if any.
-        # Project-user level overrides global-user level
-        def _read_global_user_config() -> dict:
-            cfg_path = (
-                Path(PlatformDirs("org.beeware.briefcase", "BeeWare").user_config_dir)
-                / "config.toml"
-            )
-            if not cfg_path.exists():
-                return {}
-            with cfg_path.open("rb") as f:
-                data = tomllib.load(f)
-            if isinstance(data, dict):
-                tb = data.get("tool", {}).get("briefcase")
-                if isinstance(tb, dict):
-                    return tb
-            return data or {}
-
-        user_defaults = _read_global_user_config()
-        author_section = (
-            user_defaults.get("author", {})
-            if isinstance(user_defaults.get("author", {}), dict)
-            else {}
-        )
-        user_author_name = (author_section.get("name") or "").strip()
-        user_author_email = (author_section.get("email") or "").strip()
-
         author_intro = (
             "Who do you want to be credited as the author of this application?\n"
             "\n"
             "This could be your own name, or the name of your company you work for."
         )
-        default_author = user_author_name or "Jane Developer"
+        default_author = "Jane Developer"
         git_username = self.get_git_config_value("user", "name")
-        if git_username is not None and not user_author_name:
+        if git_username is not None:
             default_author = git_username
             author_intro = (
                 f"{author_intro}\n\n"
@@ -453,18 +423,15 @@ class NewCommand(BaseCommand):
             "This might be your own email address, or a generic contact address "
             "you set up specifically for this application."
         )
-        if user_author_email:
-            default_author_email = user_author_email
+        git_email = self.get_git_config_value("user", "email")
+        if git_email is None:
+            default_author_email = self.make_author_email(author, bundle)
         else:
-            git_email = self.get_git_config_value("user", "email")
-            if git_email is None:
-                default_author_email = self.make_author_email(author, bundle)
-            else:
-                default_author_email = git_email
-                author_email_intro = (
-                    f"{author_email_intro}\n\n"
-                    f"Based on your git configuration, we believe it could be '{git_email}'."
-                )
+            default_author_email = git_email
+            author_email_intro = (
+                f"{author_email_intro}\n\n"
+                f"Based on your git configuration, we believe it could be '{git_email}'."
+            )
         author_email = self.console.text_question(
             intro=author_email_intro,
             description="Author's Email",
