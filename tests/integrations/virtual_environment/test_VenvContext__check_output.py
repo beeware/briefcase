@@ -13,8 +13,8 @@ def test_check_output_environment_handling(
     env_override,
     other_kwargs,
 ):
-    """Test that check_output merges venv environment with provided overrides and passes
-    all kwargs to subprocess.
+    """check_output merges venv environment with provided overrides and passes all
+    kwargs to subprocess.
 
     The venv's full_env should be called with any provided env override, and the
     resulting environment should be passed to subprocess.check_output along with other
@@ -40,8 +40,7 @@ def test_check_output_environment_handling(
 
 
 def test_check_output_kwargs_env_extraction(venv_context, mock_subprocess_setup):
-    """Test that check_output extracts env from kwargs without modifying the original
-    kwargs dict.
+    """check_output extracts env from kwargs without modifying the original kwargs dict.
 
     The original kwargs dict should remain unchanged, while the env value is passed to
     full_env() and the resulting merged environment replaces the original env in the

@@ -10,7 +10,7 @@ from briefcase.integrations.virtual_environment import VenvContext
 
 
 def test_create(mock_tools, venv_path):
-    """Tests create creates a venv at the specified path."""
+    """Create creates a venv at the specified path."""
     context = VenvContext(mock_tools, venv_path)
 
     # Mock the methods that create() calls
@@ -31,7 +31,7 @@ def test_create(mock_tools, venv_path):
 
 
 def test_create_subprocess_fails(mock_tools, venv_path):
-    """Tests create raises BriefcaseCommandError if subprocess fails."""
+    """Create raises BriefcaseCommandError if subprocess fails."""
     context = VenvContext(mock_tools, venv_path)
 
     context.update_core_tools = MagicMock()

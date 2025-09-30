@@ -7,7 +7,7 @@ import pytest
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_executable_unix(venv_context):
-    """Test executable property returns correct path on Unix systems."""
+    """Executable property returns correct path on Unix systems."""
     result = venv_context.executable
 
     # Should be absolute path
@@ -24,7 +24,7 @@ def test_executable_unix(venv_context):
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
 def test_executable_windows(venv_context):
-    """Test executable property returns correct path on Windows systems."""
+    """Executable property returns correct path on Windows systems."""
     result = venv_context.executable
 
     # Should be absolute path

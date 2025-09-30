@@ -13,7 +13,7 @@ def test_run_environment_handling(
     env_override,
     other_kwargs,
 ):
-    """Test run properly handles environment and kwargs."""
+    """Run properly handles environment and kwargs."""
     mocks = mock_subprocess_setup
 
     kwargs = other_kwargs.copy()
@@ -34,7 +34,7 @@ def test_run_environment_handling(
 
 
 def test_run_kwargs_env_extraction(venv_context, mock_subprocess_setup):
-    """Test run properly extracts env from kwargs without mutation."""
+    """Run properly extracts env from kwargs without mutation."""
     mocks = mock_subprocess_setup
 
     original_kwargs = {

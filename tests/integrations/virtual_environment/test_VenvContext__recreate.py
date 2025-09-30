@@ -4,7 +4,7 @@ from briefcase.integrations.virtual_environment import VenvContext
 
 
 def test_recreate_when_venv_exists(mock_tools, venv_path):
-    """Test recreate removes existing venv and creates new one."""
+    """Recreate removes existing venv and creates new one."""
 
     context = VenvContext(mock_tools, venv_path)
     context.exists = MagicMock(return_value=True)
@@ -23,7 +23,7 @@ def test_recreate_when_venv_exists(mock_tools, venv_path):
 
 
 def test_recreate_when_venv_missing(mock_tools, venv_path):
-    """Test recreate skips removal and creates new venv."""
+    """Recreate skips removal and creates new venv."""
 
     context = VenvContext(mock_tools, venv_path)
     context.exists = MagicMock(return_value=False)

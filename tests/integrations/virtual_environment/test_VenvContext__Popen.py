@@ -13,7 +13,7 @@ def test_popen_environment_handling(
     env_override,
     other_kwargs,
 ):
-    """Test Popen properly handles environment and kwargs without mutating input."""
+    """Popen properly handles environment and kwargs without mutating input."""
     mocks = mock_subprocess_setup
 
     kwargs = other_kwargs.copy()
@@ -39,7 +39,7 @@ def test_popen_environment_handling(
 
 
 def test_popen_no_args(venv_context, mock_subprocess_setup):
-    """Test Popen handles empty args list."""
+    """Popen handles empty args list."""
     mocks = mock_subprocess_setup
     mocks["rewrite_head"].return_value = []
 
@@ -53,7 +53,7 @@ def test_popen_no_args(venv_context, mock_subprocess_setup):
 
 
 def test_popen_complex_args_rewriting(venv_context, mock_subprocess_setup):
-    """Test Popen handles complex argument rewriting."""
+    """Popen handles complex argument rewriting."""
     mocks = mock_subprocess_setup
     mocks["rewrite_head"].return_value = [
         "/venv/bin/python",

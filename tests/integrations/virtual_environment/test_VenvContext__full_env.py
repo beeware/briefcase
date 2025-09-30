@@ -50,7 +50,7 @@ def test_full_env_basic_creation(
     overrides,
     monkeypatch,
 ):
-    """Test that full_env creates an environment with expected defaults."""
+    """full_env creates an environment with expected defaults."""
     monkeypatch.setenv("PATH", complex_path)
 
     result = venv_context.full_env(overrides)
@@ -171,7 +171,7 @@ def test_full_env_no_overrides(
     venv_bin_dir,
     monkeypatch,
 ):
-    """Test full_env with no overrides parameter uses system PATH."""
+    """full_env with no overrides parameter uses system PATH."""
     monkeypatch.setenv("PATH", system_path)
 
     result = venv_context.full_env(None)

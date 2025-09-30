@@ -201,13 +201,22 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         return env
 
+    @property
+    def venv_name(self) -> str:
+        """Returns the name of the virtual environment directory.
+
+        :returns: Name for virtual environment directory
+        """
+
+        return "dev"
+
     def venv_path(self, appname: str) -> Path:
         """Return the path for the app's virtual environment.
 
         :param app: The app config
         :returns: Path where the venv should be located
         """
-        return self.base_path / ".briefcase" / appname / "venv"
+        return self.base_path / ".briefcase" / appname / self.venv_name
 
     def virtual_environment(self, appname: str, isolated: bool) -> virtual_environment:
         """Create and return a virtual environment context for the app.

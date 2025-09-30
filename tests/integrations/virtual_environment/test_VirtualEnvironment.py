@@ -21,7 +21,7 @@ def test_recreate_true(mock_tools, dummy_console, tmp_path):
 
 
 def test_recreate_true_exists(mock_tools, dummy_console, tmp_path):
-    """Test context manager recreates environment when recreate=True, even when venv
+    """Context manager recreates environment when recreate=True, even when venv
     exists."""
     venv_path = tmp_path / "test_venv"
     env = VenvEnvironment(
@@ -42,7 +42,7 @@ def test_recreate_true_exists(mock_tools, dummy_console, tmp_path):
 
 
 def test_venv_nonexistent(mock_tools, dummy_console, tmp_path):
-    """Test context manager creates environment when it doesn't exist."""
+    """Context manager creates environment when it doesn't exist."""
     venv_path = tmp_path / "test_venv"
     env = VenvEnvironment(
         mock_tools,
@@ -61,7 +61,7 @@ def test_venv_nonexistent(mock_tools, dummy_console, tmp_path):
 
 
 def test_venv_exists(mock_tools, dummy_console, tmp_path):
-    """Test context manager does nothing when environment exists and recreate=False."""
+    """Context manager does nothing when environment exists and recreate=False."""
     venv_path = tmp_path / "test_venv"
     env = VenvEnvironment(
         mock_tools,
@@ -81,7 +81,7 @@ def test_venv_exists(mock_tools, dummy_console, tmp_path):
 
 
 def test_exception_handling(mock_tools, dummy_console, tmp_path):
-    """Test context manager handles exceptions properly."""
+    """Context manager handles exceptions properly."""
     venv_path = tmp_path / "test_venv"
     env = VenvEnvironment(
         mock_tools,

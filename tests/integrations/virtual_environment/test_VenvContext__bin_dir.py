@@ -8,7 +8,7 @@ from briefcase.integrations.virtual_environment import VenvContext
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_bin_dir_unix(mock_tools, tmp_path):
-    """Test bin_dir returns 'bin' directory on Unix systems."""
+    """bin_dir returns 'bin' directory on Unix systems."""
     venv_path = tmp_path / "test_venv"
     context = VenvContext(mock_tools, venv_path)
 
@@ -21,7 +21,7 @@ def test_bin_dir_unix(mock_tools, tmp_path):
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
 def test_bin_dir_windows(mock_tools, tmp_path):
-    """Test bin_dir returns 'Scripts' directory on Windows."""
+    """bin_dir returns 'Scripts' directory on Windows."""
     venv_path = tmp_path / "test_venv"
     context = VenvContext(mock_tools, venv_path)
 
@@ -41,7 +41,7 @@ def test_bin_dir_windows(mock_tools, tmp_path):
 )
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
 def test_bin_dir_different_venv_paths(mock_tools, venv_path):
-    """Test bin_dir works with different venv path structures."""
+    """bin_dir works with different venv path structures."""
     context = VenvContext(mock_tools, venv_path)
     windows_result = context.bin_dir
     assert windows_result == venv_path / "Scripts"
@@ -57,7 +57,7 @@ def test_bin_dir_different_venv_paths(mock_tools, venv_path):
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_bin_dir_different_venv_paths_unix(mock_tools, venv_path):
-    """Test bin_dir works with different venv path structures."""
+    """bin_dir works with different venv path structures."""
     context = VenvContext(mock_tools, venv_path)
     unix_result = context.bin_dir
     assert unix_result == venv_path / "bin"
