@@ -65,3 +65,13 @@ def test_venv_path_construction(tmp_path):
 
     expected = tmp_path / "base_path" / ".briefcase" / "test-app" / "dev"
     assert result == expected
+
+
+def test_venv_name_default(tmp_path):
+    """The default venv_name is 'dev'."""
+    dev_command = DevCommand(
+        console=mock.MagicMock(),
+        base_path=tmp_path,
+    )
+
+    assert dev_command.venv_name == "dev"
