@@ -296,7 +296,9 @@ class ConfigCommand(BaseCommand):
             )
             return
 
-        raise BriefcaseConfigError("Invalid arguments for config command")
+        raise BriefcaseConfigError(
+            "Invalid arguments for config command"
+        )  # pragma: no cover
 
     def bundle_path(self, app):
         """A placeholder; Config command doesn't have a bundle path."""
