@@ -13,7 +13,7 @@ def test_popen_environment_handling(
     env_override,
     other_kwargs,
 ):
-    """Popen properly handles environment and kwargs without mutating input."""
+    """Popen merges venv with overrides and passes all kwargs to subprocess."""
     mocks = mock_subprocess_setup
 
     kwargs = other_kwargs.copy()
@@ -27,6 +27,9 @@ def test_popen_environment_handling(
     assert kwargs == original_kwargs
     mocks["rewrite_head"].assert_called_once_with(["test"])
 
+    # The venv's full_env should be called with any provided env override, and the
+    # resulting environment should be passed to subprocess.check_output along with other
+    # kwargs unchanged.
     assert_environment_handling(
         mock_full_env=mocks["full_env"],
         env_override=env_override,

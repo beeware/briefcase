@@ -23,12 +23,18 @@ def test_rewrite_head_empty(venv_context: VenvContext, empty_args):
 @pytest.mark.parametrize(
     "args, expected_suffix",
     [
-        ([sys.executable], []),
+        (
+            [sys.executable],
+            [],
+        ),
         (
             [sys.executable, "-m", "pip", "install", "package"],
             ["-m", "pip", "install", "package"],
         ),
-        ([Path(sys.executable), "-c", "print('hello')"], ["-c", "print('hello')"]),
+        (
+            [Path(sys.executable), "-c", "print('hello')"],
+            ["-c", "print('hello')"],
+        ),
     ],
 )
 def test_rewrite_head_system_python_replacement(
@@ -59,7 +65,7 @@ def test_rewrite_head_no_replacement(venv_context: VenvContext, args):
     assert isinstance(result, list)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific case handling test")
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
 def test_rewrite_head_case_insensitive_match(venv_context):
     """rewrite_head handles case-insensitive matching via normcase."""
     case_variant = sys.executable
@@ -71,9 +77,7 @@ def test_rewrite_head_case_insensitive_match(venv_context):
     assert result == expected
 
 
-@pytest.mark.skipif(
-    sys.platform != "win32", reason="Windows specific case handling test"
-)
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
 def test_rewrite_head_case_insensitive_match_nt(venv_context):
     """rewrite_head handles case-insensitive matching."""
     case_variant = (

@@ -20,7 +20,7 @@ class VenvContext(Tool):
     name = "virtual_environment"
     full_name = "Virtual Environment Context"
 
-    def __init__(self, tools, venv_path: Path):
+    def __init__(self, tools: ToolCache, venv_path: Path):
         super().__init__(tools=tools)
         self.venv_path = venv_path
 
@@ -35,7 +35,7 @@ class VenvContext(Tool):
     def bin_dir(self) -> Path:
         """Return the path to the virtual environment's binary directory.
 
-        :return: The ``/bin`` (``\\Scripts`` on Windows) directory of the venv.
+        :returns: The ``/bin`` (``\\Scripts`` on Windows) directory of the venv.
         """
 
         return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
@@ -44,7 +44,7 @@ class VenvContext(Tool):
     def executable(self) -> str:
         """Path to the Python executable in the virtual environment.
 
-        :return: Absolute filesystem path to the venv's Python executable.
+        :returns: Absolute filesystem path to the venv's Python executable.
         """
         python = self.bin_dir / ("python.exe" if os.name == "nt" else "python")
         return python
@@ -52,14 +52,14 @@ class VenvContext(Tool):
     def exists(self) -> bool:
         """Check whether the virtual environment exists.
 
-        :return True if venv exists and contains a pyvenv.cfg file. else False
+        :returns: True if venv exists and contains a pyvenv.cfg file.
         """
         return self.venv_path.exists() and (self.venv_path / "pyvenv.cfg").exists()
 
     def create(self) -> None:
         """Create the virtual environment.
 
-        :raises BriefcaseCommandError if creation fails.
+        :raises: BriefcaseCommandError if venv creation fails.
         """
         try:
             self.venv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -92,8 +92,8 @@ class VenvContext(Tool):
         """Rewrite the first argument to ensure it points to the venv's Python
         executable.
 
-        param args: Original subprocess arguments.
-        :return: Updated subprocess arguments.
+        :param args: Original subprocess arguments.
+        :returns: Updated subprocess arguments.
         """
         if not args:
             return args
@@ -106,10 +106,10 @@ class VenvContext(Tool):
     def full_env(self, overrides: dict[str, str | None] | None) -> dict[str, str]:
         """Generate the full environment for the venv.
 
-        :param overrides: Environment variables to override or unset. Can be None if
-            there are no explicit environment changes. Use None values to unset
+        :param overrides: Environment variables to override or unset. Can be ``None`` if
+            there are no explicit environment changes. Use ``None`` as a values to unset
             environment variables
-        :return: environment mapping for the venv with overrides applied.
+        :returns: environment mapping for the venv with overrides applied.
         """
 
         if overrides:
@@ -170,7 +170,7 @@ class VenvEnvironment:
 
     def __init__(
         self,
-        tools,
+        tools: ToolCache,
         console: Console,
         *,
         path: Path,
@@ -185,12 +185,15 @@ class VenvEnvironment:
         )
 
     def __enter__(self):
+        rel_venv_path = self.venv_path.relative_to(Path.cwd())
         if self.recreate:
-            with self.console.wait_bar("Recreating virtual environment..."):
+            with self.console.wait_bar(
+                f"Recreating virtual environment at {rel_venv_path}..."
+            ):
                 self.venv_context.recreate()
         elif not self.venv_context.exists():
             with self.console.wait_bar(
-                f"Creating virtual environment at {self.venv_path}..."
+                f"Creating virtual environment at {rel_venv_path}..."
             ):
                 self.venv_context.create()
 
@@ -203,7 +206,7 @@ class VenvEnvironment:
 class NoOpEnvironment:
     """A no-op environment that returns a native runner."""
 
-    def __init__(self, tools, console: Console):
+    def __init__(self, tools: ToolCache, console: Console):
         self.tools = tools
         self.console = console
 
@@ -215,7 +218,7 @@ class NoOpEnvironment:
 
 
 def virtual_environment(
-    tools,
+    tools: ToolCache,
     console: Console,
     venv_path: Path,
     *,

@@ -13,21 +13,23 @@ def test_check_output_environment_handling(
     env_override,
     other_kwargs,
 ):
-    """check_output merges venv environment with provided overrides and passes all
-    kwargs to subprocess.
-
-    The venv's full_env should be called with any provided env override, and the
-    resulting environment should be passed to subprocess.check_output along with other
-    kwargs unchanged.
-    """
+    """check_output merges venv with overrides and passes all kwargs to subprocess."""
     mocks = mock_subprocess_setup
 
     kwargs = other_kwargs.copy()
     if env_override is not None:
         kwargs["env"] = env_override
 
+    original_kwargs = kwargs.copy()
+
     result = venv_context.check_output(["test"], **kwargs)
 
+    assert kwargs == original_kwargs
+    mocks["rewrite_head"].assert_called_once_with(["test"])
+
+    # The venv's full_env should be called with any provided env override, and the
+    # resulting environment should be passed to subprocess.check_output along with other
+    # kwargs unchanged.
     assert_environment_handling(
         mock_full_env=mocks["full_env"],
         env_override=env_override,
@@ -40,12 +42,7 @@ def test_check_output_environment_handling(
 
 
 def test_check_output_kwargs_env_extraction(venv_context, mock_subprocess_setup):
-    """check_output extracts env from kwargs without modifying the original kwargs dict.
-
-    The original kwargs dict should remain unchanged, while the env value is passed to
-    full_env() and the resulting merged environment replaces the original env in the
-    subprocess call.
-    """
+    """check_output extracts env from kwargs without modifying the original kwargs."""
 
     mocks = mock_subprocess_setup
 
@@ -59,10 +56,13 @@ def test_check_output_kwargs_env_extraction(venv_context, mock_subprocess_setup)
 
     result = venv_context.check_output(["test"], **original_kwargs)
 
+    # The original kwargs dict should remain unchanged
     assert original_kwargs == kwargs_copy
 
+    # The env value is passed to full_env()
     mocks["full_env"].assert_called_once_with({"CUSTOM": "value"})
 
+    # The resulting merged environment replaces the original env in the subprocess call.
     expected_call_kwargs = {
         "cwd": "/tmp",
         "timeout": 30,
