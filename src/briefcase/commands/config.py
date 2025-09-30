@@ -21,8 +21,6 @@ _ALLOWED_KEYS = {
     "author.email",
     "android.device",
     "iOS.device",
-    "macOS.identity",
-    "macOS.xcode.identity",
 }
 
 _AVD_RE = re.compile(r"^@[\w.-]+$")
@@ -53,13 +51,9 @@ def validate_key(key: str, value: str) -> None:
         if key in {
             "android.device",
             "iOS.device",
-            "macOS.identity",
-            "macOS.xcode.identity",
         }:
             return
-        raise BriefcaseConfigError(
-            "The '?' sentinel is only allowed for device/identity keys"
-        )
+        raise BriefcaseConfigError("The '?' sentinel is only allowed for device keys")
 
     if key == "android.device":
         if v.startswith("@"):
@@ -81,9 +75,6 @@ def validate_key(key: str, value: str) -> None:
         raise BriefcaseConfigError(
             "Invalid iOS.device. Must be a device UDID or 'DeviceName::iOS X.Y'."
         )
-
-    if key in {"macOS.identity", "macOS.xcode.identity"}:
-        return
 
     if key == "author.name":
         return
@@ -224,7 +215,7 @@ class ConfigCommand(BaseCommand):
         parser.add_argument(
             "key",
             nargs="?",
-            help="Key to set (dotted path, e.g., macOS.xcode.identity)",
+            help="Key to set (dotted path, e.g., android.device)",
         )
         parser.add_argument("value", nargs="?", help="Value to set (string)")
 

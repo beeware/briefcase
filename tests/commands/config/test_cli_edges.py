@@ -74,11 +74,9 @@ def test_set_empty_value_rejected(tmp_path, monkeypatch):
         cmd(key="author.email", value="   ", global_scope=True)
 
 
-@pytest.mark.parametrize(
-    "key", ["android.device", "iOS.device", "macOS.identity", "macOS.xcode.identity"]
-)
+@pytest.mark.parametrize("key", ["android.device", "iOS.device"])
 def test_question_sentinel_allowed_for_device_identity(tmp_path, monkeypatch, key):
-    """'?' sentinel is accepted for device/identity keys."""
+    """'?' sentinel is accepted for device keys."""
     cmd = make_cmd()
     patch_scope_for_global(monkeypatch, tmp_path)
 
@@ -92,7 +90,7 @@ def test_question_sentinel_allowed_for_device_identity(tmp_path, monkeypatch, ke
 
 
 def test_question_sentinel_rejected_elsewhere(tmp_path, monkeypatch):
-    """'?' sentinel is rejected for non-device/identity keys."""
+    """'?' sentinel is rejected for non-device keys."""
     cmd = make_cmd()
     patch_scope_for_global(monkeypatch, tmp_path)
     with pytest.raises(BriefcaseConfigError):

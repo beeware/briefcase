@@ -116,45 +116,11 @@ def test_ios_device_invalid(value):
         validate_key("iOS.device", value)
 
 
-# -----------------------------------------------------------------------------
-# macOS.identity (and alias macOS.xcode.identity)
-#   Valid: non-empty string; SHA-1-like strings are also acceptable
-# -----------------------------------------------------------------------------
-@pytest.mark.parametrize(
-    "key,value",
-    [
-        ("macOS.identity", "Apple Development: Nikos (ABCDE12345)"),
-        ("macOS.identity", "ABCDEF0123456789ABCDEF0123456789ABCDEF01"),  # 40-hex
-        ("macOS.xcode.identity", "Developer ID Application: Example, Inc. (TEAMID)"),
-    ],
-)
-def test_macos_identity_valid(key, value):
-    """Non-empty macOS identities (including common forms) pass."""
-    validate_key(key, value)
-
-
-@pytest.mark.parametrize(
-    "key,value",
-    [
-        ("macOS.identity", ""),
-        ("macOS.identity", "   "),
-        ("macOS.xcode.identity", ""),
-        ("macOS.xcode.identity", "   "),
-    ],
-)
-def test_macos_identity_invalid_empty(key, value):
-    """Empty/whitespace macOS identities are rejected."""
-    with pytest.raises(BriefcaseConfigError):
-        validate_key(key, value)
-
-
 @pytest.mark.parametrize(
     "key",
     [
         "android.device",
         "iOS.device",
-        "macOS.identity",
-        "macOS.xcode.identity",
     ],
 )
 def test_question_sentinel_allowed_for_devices_and_identity(key):
@@ -181,8 +147,7 @@ def test_question_sentinel_rejected_for_other_keys(key):
         (
             "ios.device",
             "00008020-001C111E0A88002E",
-        ),  # lowercase variant is *not* allowed
-        ("macos.identity", "ABCDEF0123456789ABCDEF0123456789ABCDEF01"),
+        ),
         ("foo.bar", "baz"),
     ],
 )
@@ -195,6 +160,5 @@ def test_unknown_keys_rejected(key, value):
 def test_normalize_key_trims_only():
     # preserves case; trims whitespace
     assert normalize_key("  iOS.device  ") == "iOS.device"
-    assert normalize_key("macOS.identity") == "macOS.identity"
     assert normalize_key("") == ""
     assert normalize_key(None) == ""

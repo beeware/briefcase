@@ -608,9 +608,6 @@ class macOSSigningMixin:
         :param allow_adhoc: Should the adhoc identities be allowed?
         :returns: The final identity to use
         """
-        # Allow "?" to force interactive selection, even if a value was provided
-        if isinstance(identity, str) and identity.strip() == "?":
-            identity = None
 
         # If the adhoc identity is allowed, add it first so it appears first in the list
         # of options.

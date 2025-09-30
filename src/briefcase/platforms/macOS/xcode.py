@@ -44,38 +44,6 @@ class macOSXcodeMixin(macOSMixin):
     def binary_path(self, app):
         return self.bundle_path(app) / "build/Release" / f"{app.formal_name}.app"
 
-    def resolve_identity_from_config(self, app, identity: str | None) -> str | None:
-        """Resolve the code signing identity from the app config.
-
-        CLI identity wins; else use macOS.xcode.identity, then macOS.identity.
-
-        :param app: The application to inspect
-        :param identity: The identity string from the config
-        :returns: The resolved identity, or None if no identity is configured.
-        """
-        if isinstance(identity, str) and identity.strip():
-            return identity.strip()
-
-        configured = None
-        mac = getattr(app, "macOS", None)
-
-        if isinstance(mac, dict):
-            xcode = mac.get("xcode")
-            if isinstance(xcode, dict):
-                configured = xcode.get("identity")
-            if not configured:
-                configured = mac.get("identity")
-        else:
-            xcode = getattr(mac, "xcode", None)
-            configured = getattr(xcode, "identity", None) or getattr(
-                mac, "identity", None
-            )
-
-        if isinstance(configured, str):
-            configured = configured.strip()
-            return configured or None
-        return None
-
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, macOSCreateMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."
@@ -135,25 +103,6 @@ class macOSXcodeDevCommand(macOSXcodeMixin, DevCommand):
 
 class macOSXcodePackageCommand(macOSPackageMixin, macOSXcodeMixin, PackageCommand):
     description = "Package a macOS app for distribution."
-
-    def package_app(self, app: BaseConfig, **kwargs):
-        # Read CLI-provided ideintity (if any)
-        identity = kwargs.get("identity")
-
-        # Resolve identity from config if not provided on CLI
-        identity = self.resolve_identity_from_config(app, identity)
-
-        # Honor "?" meaning force interactive selection
-        if identity == "?":
-            identity = None
-
-        kwargs["identity"] = identity
-
-        self.console.info(
-            f"[debug] resolved macOS identity: {identity}", prefix=app.app_name
-        )
-
-        return super().package_app(app, **kwargs)
 
 
 class macOSXcodePublishCommand(macOSXcodeMixin, PublishCommand):
