@@ -18,9 +18,7 @@ def test_class_attributes_are_defined():
     assert cmd.command == "config"
     assert isinstance(cmd.description, str) and cmd.description
 
-
-def test_placeholder_methods_raise_not_implemented():
-    cmd = ConfigCommand(console=DummyConsole())
+    # NotImplemented stubs at the end of the class
     with pytest.raises(NotImplementedError):
         cmd.bundle_path(None)
     with pytest.raises(NotImplementedError):

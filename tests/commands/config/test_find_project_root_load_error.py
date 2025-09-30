@@ -25,7 +25,8 @@ def test_find_project_root_skips_on_load_error_and_uses_parent(tmp_path, monkeyp
     real_load = cfg_mod.tomllib.load
 
     def boom(fp):
-        if fp.name == str(bad):
+        # trip only for the child pyproject
+        if getattr(fp, "name", "") == str(bad):
             raise RuntimeError("boom")
         return real_load(fp)
 

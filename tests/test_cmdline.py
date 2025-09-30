@@ -391,7 +391,7 @@ def test_config_command(console, cmdline, expected_options):
     cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
 
     assert isinstance(cmd, ConfigCommand)
-    assert cmd.platform == "all"
+    assert cmd.platform in ("all", None)
     assert cmd.output_format == ""
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO

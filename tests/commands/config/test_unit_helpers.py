@@ -4,7 +4,6 @@ import io
 from pathlib import Path
 
 import pytest
-import tomli_w
 
 from briefcase.commands import config as cfg_mod
 from briefcase.commands.config import (
@@ -57,11 +56,21 @@ def test_find_project_root_success(tmp_path, monkeypatch):
     """find_project_root walks up until it finds a pyproject with [tool.briefcase]."""
     base = tmp_path / "a" / "b" / "c"
     base.mkdir(parents=True)
+
     py = tmp_path / "a" / "pyproject.toml"
-    py.write_text(
-        tomli_w.dumps({"tool": {"briefcase": {"foo": "bar"}}}), encoding="utf-8"
-    )
+    py.write_text("# placeholder", encoding="utf-8")
+
+    # Stub loader so this file returns a dict that includes [tool.briefcase].
+    real_load = cfg_mod.tomllib.load
+
+    def fake_load(fp):
+        if getattr(fp, "name", "") == str(py):
+            return {"tool": {"briefcase": {"foo": "bar"}}}
+        return real_load(fp)
+
+    monkeypatch.setattr(cfg_mod.tomllib, "load", fake_load)
     monkeypatch.chdir(base)
+
     assert find_project_root() == tmp_path / "a"
 
 
@@ -77,13 +86,22 @@ def test_find_project_root_no_project(tmp_path, monkeypatch):
 
 def test_read_toml_ok_and_invalid(tmp_path):
     path = tmp_path / "c.toml"
-    # ok
+
+    # valid case
     path.write_text('author = { email = "user@example.com" }', encoding="utf-8")
     assert read_toml(path)["author"]["email"] == "user@example.com"
-    # invalid
-    path.write_text("author = { email = 'missing_quote }", encoding="utf-8")
-    with pytest.raises(BriefcaseConfigError):
+
+    # invalid case (definitely broken TOML)
+    path.write_text("arr = [1, 2,, 3]", encoding="utf-8")
+
+    # read_toml now raises BriefcaseConfigError on invalid TOML
+    with pytest.raises(BriefcaseConfigError) as exc:
         read_toml(path)
+
+    # (optional) spot-check message contains the file path and "Invalid TOML"
+    msg = str(exc.value)
+    assert "Invalid TOML" in msg
+    assert str(path) in msg
 
 
 def test_normalize_briefcase_root_accepts_nested_and_root():

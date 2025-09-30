@@ -10,6 +10,9 @@ def test_stdlib_tomllib_branch_is_exercised(monkeypatch, tmp_path):
     Py<=3.10, by injecting a fake 'tomllib' then reloading the module."""
     import briefcase.commands.config as cfg_mod
 
+    # Pretend we're on Python 3.11+
+    monkeypatch.setattr(sys, "version_info", (3, 11, 0))
+
     # Provide a minimal tomllib shim so the try-import succeeds.
     fake = types.SimpleNamespace()
 
@@ -31,4 +34,3 @@ def test_stdlib_tomllib_branch_is_exercised(monkeypatch, tmp_path):
 
     # Restore normal state for later tests.
     monkeypatch.delitem(sys.modules, "tomllib", raising=False)
-    importlib.reload(cfg_mod)
