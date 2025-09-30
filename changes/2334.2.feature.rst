@@ -1,1 +1,1 @@
-Briefcase dev command now manages a separate venv for each app
+Briefcase now has the ability to manage virtual environments as part of a development environment. This feature is only used as part of the in-progress dev command for the web environment, but opens up opportunities for better environment isolation in future.
