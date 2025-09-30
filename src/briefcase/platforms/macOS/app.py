@@ -90,6 +90,7 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
     description = "Update an existing macOS app."
+    supports_debugger = True
 
 
 class macOSAppOpenCommand(macOSAppMixin, OpenCommand):
@@ -103,6 +104,7 @@ class macOSAppBuildCommand(
     BuildCommand,
 ):
     description = "Build a macOS app."
+    supports_debugger = True
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build the macOS app.
@@ -144,6 +146,7 @@ class macOSAppBuildCommand(
 
 class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
     description = "Run a macOS app."
+    supports_debugger = True
 
 
 class macOSAppDevCommand(macOSAppMixin, DevCommand):

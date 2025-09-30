@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import subprocess
 import uuid
@@ -134,6 +136,8 @@ class WindowsCreateCommand(CreateCommand):
 
 
 class WindowsRunCommand(RunCommand):
+    supports_debugger = True
+
     def run_app(
         self,
         app: AppConfig,
