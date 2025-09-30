@@ -186,7 +186,7 @@ class ConfigCommand(BaseCommand):
     """
 
     command = "config"
-    platform = "all"
+    platform = None
     output_format = ""
     description = "Configure per-project or global user configurations"
     help = "Configure per-project or global settings"
