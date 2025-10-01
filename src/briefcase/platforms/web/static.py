@@ -229,7 +229,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """
         package_key = "briefcase"
         target = filename
-        insert = "Python"
+        insert = "python"
 
         # PyScript definitions for insertion:
         content = dedent(f"""\

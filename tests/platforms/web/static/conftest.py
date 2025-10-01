@@ -24,8 +24,8 @@ app_requirements_path="requirements.txt"
   <head>
     <!--@@ head:start @@-->
     <!--@@ head:end @@-->
-    <!--@@ Python:start @@-->
-    <!--@@ Python:end @@-->
+    <!--@@ python:start @@-->
+    <!--@@ python:end @@-->
   </head>
   <body>
     <div id="briefcase-splash"></div>
@@ -46,8 +46,8 @@ app_requirements_path="requirements.txt"
 }
 /*******************************************************************
 ******************** Wheel contributed styles ********************/
-/*@@ CSS:start @@*/
-/*@@ CSS:end @@*/
+/*@@ css:start @@*/
+/*@@ css:end @@*/
 
 """,
     )
