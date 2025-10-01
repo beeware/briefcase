@@ -35,7 +35,7 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 
-# Module level banner templates (Constants used in write_inserts)
+# Banner templates (Constants used in write_inserts)
 HTML_BANNER = (
     "<!--------------------------------------------------\n"
     " * {package}\n"
@@ -248,23 +248,104 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
         pkg_map[package_key] = content
 
+    def _handle_legacy_css(
+        self,
+        wheel: ZipFile,
+        path: Path,
+        filename: str,
+        package_key: str,
+        inserts: dict[str, dict[str, dict[str, str]]],
+        legacy_css_warning: bool,
+    ) -> bool:
+        """Handle legacy CSS under /static/*.css and add to briefcase.css.
+
+        :param wheel: Open wheel ZipFile being processed.
+        :param path: Path object of the file inside the wheel.
+        :param filename: Filename string inside the wheel.
+        :param package_key: Provenance label (e.g. "name version").
+        :param inserts: Nested dict of inserts keyed by target - insert - package.
+        :param legacy_css_warning: Whether the warning has already been shown.
+        :return: Updated legacy_css_warning flag.
+        """
+        self.console.info(f"    Found {filename}")
+
+        # Show deprecation warning once per wheel
+        if not legacy_css_warning:
+            self.console.warning(
+                f"    {Path(wheel.filename).name}: legacy '/static' CSS detected, "
+                "treating as insert into briefcase.css, this legacy handling will be removed in the future."
+            )
+            legacy_css_warning = True
+
+        css_text = wheel.read(filename).decode("utf-8")
+
+        rel_inside = "/".join(path.parts[2:])
+        contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
+
+        # Add CSS content to briefcase.css insert slot
+        target = "static/css/briefcase.css"
+        insert = "css"
+        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+        if contrib_key in pkg_map and pkg_map[contrib_key]:
+            pkg_map[contrib_key] += "\n" + css_text
+        else:
+            pkg_map[contrib_key] = css_text
+
+        return legacy_css_warning
+
+    def _handle_insert(
+        self,
+        wheel: ZipFile,
+        parts: tuple[str, ...],
+        filename: str,
+        package_key: str,
+        inserts: dict[str, dict[str, dict[str, str]]],
+    ) -> None:
+        """Handle deploy/inserts/<target>~<insert> files and register inserts.
+
+        :param wheel: Open wheel ZipFile being processed.
+        :param parts: Path parts of the filename inside the wheel.
+        :param filename: Filename string inside the wheel.
+        :param package_key: Provenance label (e.g. "name version").
+        :param inserts: Nested dict of inserts keyed by target - insert - package.
+        """
+        self.console.info(f"    Found {filename}")
+
+        rel_inside = "/".join(parts[3:])
+
+        if not rel_inside or rel_inside.endswith("/"):
+            self.console.debug(f"    {filename}: skipping, not a valid insert file.")
+            return
+
+        if "~" not in rel_inside:
+            self.console.debug(
+                f"    {filename}: skipping, filename must match '<target>~<insert>'."
+            )
+            return
+
+        # Preserve any '~' that might exist in the target path by splitting from the right
+        target, insert = rel_inside.rsplit("~", 1)
+        self.console.info(f"    {filename}: Adding {insert} insert for {target}")
+
+        text = wheel.read(filename).decode("utf-8")
+
+        contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
+        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+        if contrib_key in pkg_map and pkg_map[contrib_key]:
+            pkg_map[contrib_key] += "\n" + text
+        else:
+            pkg_map[contrib_key] = text
+
     def _process_wheel(
         self,
         wheelfile,
         inserts: dict[str, dict[str, dict[str, str]]],
-    ):
-        """Process a wheel to collect insert and style content for the final project.
+    ) -> None:
+        """Process a wheel to collect insert and style content.
 
         Scans the wheel for:
-        * Legacy CSS – .css files under `static/ are appended to the
-        `briefcase.css insert slot with a deprecation warning.
-        * Deploy inserts – Any files under `deploy/inserts/<target>~<insert>
-        (HTML, CSS, JS, etc.) are added to the corresponding insert slot for
-        the target file.
-
-        Insert content is grouped by ``<package_name> <version>`` (with an
-        extra suffix for legacy CSS) to preserve ordering and provenance.
-        All content must be UTF-8 encoded, non-UTF-8 files raise an error.
+        * Legacy CSS - .css files under /static/ added to briefcase.css.
+        * Deploy inserts - files under /deploy/inserts/<target>~<insert>.
 
         :param wheelfile: Path to the wheel file.
         :param inserts: Nested dict of inserts keyed by target - insert - package.
@@ -287,63 +368,18 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     and parts[1] == "static"
                     and path.suffix.lower() == ".css"
                 ):
-                    self.console.info(f"    Found {filename}")
-
-                    # Show deprecation warning once per wheel
-                    if not legacy_css_warning:
-                        self.console.warning(
-                            f"    {wheelfile.name}: legacy '/static' CSS detected; "
-                            "treating as insert into briefcase.css; this legacy handling will be removed in the future."
-                        )
-                        legacy_css_warning = True
-
-                    css_text = wheel.read(filename).decode("utf-8")
-
-                    rel_inside = "/".join(path.parts[2:])
-                    contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
-
-                    # Add CSS content to briefcase.css insert slot
-                    target = "static/css/briefcase.css"
-                    insert = "css"
-                    pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                    if contrib_key in pkg_map and pkg_map[contrib_key]:
-                        pkg_map[contrib_key] += "\n" + css_text
-                    else:
-                        pkg_map[contrib_key] = css_text
+                    legacy_css_warning = self._handle_legacy_css(
+                        wheel, path, filename, package_key, inserts, legacy_css_warning
+                    )
 
                 # New deploy/inserts handling
                 elif len(parts) >= 3 and parts[1] == "deploy" and parts[2] == "inserts":
-                    self.console.info(f"    Found {filename}")
-                    rel_inside = "/".join(parts[3:])
+                    self._handle_insert(wheel, parts, filename, package_key, inserts)
 
-                if not rel_inside or rel_inside.endswith("/"):
-                    self.console.debug(
-                        f"    {filename}: skipping, not a valid insert file."
-                    )
                 else:
-                    if "~" in rel_inside:
-                        # Preserve any '~' that might exist in the target path by splitting from the right
-                        target, insert = rel_inside.rsplit("~", 1)
-                        self.console.info(
-                            f"    {filename}: Adding {insert} insert for {target}"
-                        )
-
-                        text = wheel.read(filename).decode("utf-8")
-
-                        contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
-
-                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-                        if package_key in pkg_map and pkg_map[package_key]:
-                            pkg_map[package_key] += "\n" + text
-                        else:
-                            pkg_map[package_key] = text
-                    else:
-                        self.console.debug(
-                            f"    {filename}: skipping, filename must match '<target>~<insert>'."
-                        )
-
-            else:
-                self.console.debug(f"    {filename}: skipping, not a supported insert.")
+                    self.console.debug(
+                        f"    {filename}: skipping, not a supported insert."
+                    )
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
