@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==8.3.1",
+    "setuptools_scm==9.2.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -11,7 +11,7 @@ dynamic = ["version"]
 name = "briefcase"
 description = "Tools to support converting a Python project into a standalone native application."
 readme = "README.md"
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 license = "BSD-3-Clause"
 license-files = [
     "LICENSE",
@@ -50,11 +50,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
     "Topic :: Utilities",
@@ -66,16 +66,12 @@ dependencies = [
     # Any dependency that is part of the "core python toolchain" (e.g. pip, wheel)
     # specify a minimum version, but no maximum, because we always want the most
     # recent version.
-    #
-    # limited to <=3.9 for the `group` argument for `entry_points()`
-    "importlib_metadata >= 4.4; python_version <= '3.9'",
     "packaging >= 24.2",
     "pip >= 24.3",
     "setuptools >= 60",
     "wheel >= 0.37",
     "build >= 0.10",
-    # truststore is only available on 3.10+
-    "truststore >= 0.10.1; python_version >= '3.10'",
+    "truststore >= 0.10.1",
     #
     # For the remaining packages: We set the lower version limit to the lowest possible
     # version that satisfies our API needs. If the package uses semver, we set a limit
@@ -99,13 +95,14 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.10.1",
+    "coverage[toml] == 7.10.7",
     "coverage-conditional-plugin == 0.9.0",
-    "pre-commit == 4.2.0",
-    "pytest == 8.4.1",
+    "httpx-retries == 0.4.2",
+    "pre-commit == 4.3.0",
+    "pytest == 8.4.2",
     "pytest-xdist == 3.8.0",
-    "setuptools_scm == 8.3.1",
-    "tox == 4.28.4",
+    "setuptools_scm == 9.2.0",
+    "tox == 4.30.2",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
@@ -115,8 +112,8 @@ docs = [
     # independent of the docs extra. Ideally, we'd use dependency groups for docs
     # dependencies, but RTD doesn't support them yet. In addition to these dependencies,
     # you should also run `pip install -r ../requirements-docs.txt`
-    "furo == 2025.7.19",
-    "pyenchant == 3.2.2",
+    "furo == 2025.9.25",
+    "pyenchant == 3.3.0",
     "sphinx == 8.2.3",
     "sphinx_tabs == 3.4.7",
     "sphinx-autobuild == 2024.10.3",
@@ -216,14 +213,11 @@ no-cover-if-is-macos = "'darwin' == os_environ.get('COVERAGE_PLATFORM', sys_plat
 no-cover-if-not-macos = "'darwin' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
 no-cover-if-is-windows = "'win32' == os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
 no-cover-if-not-windows = "'win32' != os_environ.get('COVERAGE_PLATFORM', sys_platform) and os_environ.get('COVERAGE_EXCLUDE_PLATFORM') != 'disable'"
-no-cover-if-gte-py312 = "sys_version_info > (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py312 = "sys_version_info >= (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-is-py312 = "python_version == '3.12' and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py312 = "sys_version_info < (3, 12) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 no-cover-if-lt-py311 = "sys_version_info < (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
-no-cover-if-gte-py311 = "sys_version_info > (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
-no-cover-if-is-py310 = "python_version == '3.10' and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
-no-cover-if-lt-py310 = "sys_version_info < (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
-no-cover-if-gte-py310 = "sys_version_info > (3, 10) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
+no-cover-if-gte-py311 = "sys_version_info >= (3, 11) and os_environ.get('COVERAGE_EXCLUDE_PYTHON_VERSION') != 'disable'"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

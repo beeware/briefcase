@@ -3,16 +3,15 @@ from unittest import mock
 import pytest
 
 import briefcase.integrations.xcode
-from briefcase.console import Console
 from briefcase.platforms.macOS.xcode import macOSXcodePackageCommand
 
 # skip most tests since packaging uses the same code as app command
 
 
 @pytest.fixture
-def package_command(tmp_path):
+def package_command(dummy_console, tmp_path):
     command = macOSXcodePackageCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )

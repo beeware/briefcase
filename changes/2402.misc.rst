@@ -1,1 +1,0 @@
-Removed the Pack object import from the stub application.

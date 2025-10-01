@@ -4,16 +4,16 @@ from unittest import mock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VenvContext
 from briefcase.platforms.windows.app import WindowsAppDevCommand
 
 
 @pytest.fixture
-def dev_command(tmp_path):
+def dev_command(dummy_console, tmp_path):
     """Fixture for a WindowsAppDevCommand instance."""
     command = WindowsAppDevCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
@@ -23,16 +23,27 @@ def dev_command(tmp_path):
     return command
 
 
-def test_dev_app_starts(dev_command, first_app_config, tmp_path):
+@pytest.fixture
+def default_env() -> VenvContext:
+    """Create a venv mock for tests that require a venv parameter."""
+    mock_venv = mock.MagicMock(spec=VenvContext)
+    mock_venv.run.return_value = mock.MagicMock()
+    mock_venv.check_output.return_value = ""
+    mock_venv.Popen.return_value = mock.MagicMock()
+    mock_venv.executable = "/mock/venv/Scripts/python.exe"
+    return mock_venv
+
+
+def test_dev_app_starts(dev_command, first_app_config, tmp_path, default_env):
     """A Windows app can be started in development mode using Python."""
     log_popen = mock.MagicMock()
-    dev_command.tools.subprocess.Popen.return_value = log_popen
+    default_env.Popen.return_value = log_popen
 
     # Run the app
-    dev_command.run_dev_app(first_app_config, env={}, passthrough=[])
+    dev_command.run_dev_app(first_app_config, env={}, venv=default_env, passthrough=[])
 
     # Extract the actual Popen call arguments
-    popen_args, popen_kwargs = dev_command.tools.subprocess.Popen.call_args
+    popen_args, popen_kwargs = default_env.Popen.call_args
 
     # Check that the command uses the Python executable
     assert popen_args[0][0] == sys.executable

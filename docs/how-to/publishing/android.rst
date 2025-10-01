@@ -81,7 +81,7 @@ name.
 
     .. code-block:: console
 
-      $ ~/Library/Caches/org.beeware.briefcase/tools/java/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "dist/Hello World-1.0.0.aab" upload-key -storepass android
+      $ ~/Library/Caches/org.beeware.briefcase/tools/java17/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "dist/Hello World-1.0.0.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA
@@ -106,7 +106,7 @@ name.
 
     .. code-block:: console
 
-      $ ~/.cache/briefcase/tools/java/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "dist/Hello World-1.0.0.aab" upload-key -storepass android
+      $ ~/.cache/briefcase/tools/java17/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "dist/Hello World-1.0.0.aab" upload-key -storepass android
          adding: META-INF/MANIFEST.MF
          adding: META-INF/UPLOAD-K.SF
          adding: META-INF/UPLOAD-K.RSA

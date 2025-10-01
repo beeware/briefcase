@@ -31,8 +31,9 @@ def second_app():
 
 
 @pytest.fixture
-def base_command(tmp_path, first_app, second_app):
+def base_command(dummy_console, tmp_path, first_app, second_app):
     return DummyCommand(
+        console=dummy_console,
         base_path=tmp_path,
         apps={
             "first": first_app,

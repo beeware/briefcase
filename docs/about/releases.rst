@@ -4,6 +4,41 @@ Release History
 
 .. towncrier release notes start
 
+0.3.25 (2025-08-26)
+===================
+
+Features
+--------
+
+* Android apps can now pass ``--forward-port`` and ``--reverse-port`` to connect ports in the emulated device to the host environment (`#2369 <https://github.com/beeware/briefcase/issues/2369>`__)
+* Android applications now target Android SDK 35 by default. (`#2393 <https://github.com/beeware/briefcase/issues/2393>`__)
+* Support for Python 3.14 has been added. (`#2431 <https://github.com/beeware/briefcase/issues/2431>`__)
+* Windows apps and Visual Studio projects can now reference pre-release Python versions as a support revision. (`#2432 <https://github.com/beeware/briefcase/issues/2432>`__)
+* If an iOS or macOS app doesn't specify a minimum OS version, the minimum OS version is now derived from the support package, rather than being hard coded. (`#2443 <https://github.com/beeware/briefcase/issues/2443>`__)
+
+Bugfixes
+--------
+
+* Apps that contain file paths longer than 260 characters can now be included in MSI installers. (`#948 <https://github.com/beeware/briefcase/issues/948>`__)
+* Windows builds now have improved hints when a virus checker interrupts a build. (`#1530 <https://github.com/beeware/briefcase/issues/1530>`__)
+* Wheels that contain Linux ``.so`` files are now usable on macOS. (`#2429 <https://github.com/beeware/briefcase/issues/2429>`__)
+* iOS and macOS apps now read the minimum supported OS version from the Python framework's metadata, rather than requiring a ``VERSIONS`` file as part of the support package. (`#2443 <https://github.com/beeware/briefcase/issues/2443>`__)
+
+Backward Incompatible Changes
+-----------------------------
+
+* Support for Python 3.9 has been dropped. (`#2431 <https://github.com/beeware/briefcase/issues/2431>`__)
+
+Documentation
+-------------
+
+* Details on usage of iOS and Android third-party wheels have been updated to reflect recent changes in the Python packaging ecosystem. (`#2423 <https://github.com/beeware/briefcase/issues/2423>`__)
+
+Misc
+----
+
+* `#2334 <https://github.com/beeware/briefcase/issues/2334>`__, `#1650 <https://github.com/beeware/briefcase/issues/1650>`__, `#2364 <https://github.com/beeware/briefcase/issues/2364>`__, `#2378 <https://github.com/beeware/briefcase/issues/2378>`__, `#2379 <https://github.com/beeware/briefcase/issues/2379>`__, `#2381 <https://github.com/beeware/briefcase/issues/2381>`__, `#2389 <https://github.com/beeware/briefcase/issues/2389>`__, `#2394 <https://github.com/beeware/briefcase/issues/2394>`__, `#2402 <https://github.com/beeware/briefcase/issues/2402>`__, `#2406 <https://github.com/beeware/briefcase/issues/2406>`__, `#2407 <https://github.com/beeware/briefcase/issues/2407>`__, `#2408 <https://github.com/beeware/briefcase/issues/2408>`__, `#2411 <https://github.com/beeware/briefcase/issues/2411>`__, `#2413 <https://github.com/beeware/briefcase/issues/2413>`__, `#2415 <https://github.com/beeware/briefcase/issues/2415>`__, `#2416 <https://github.com/beeware/briefcase/issues/2416>`__, `#2417 <https://github.com/beeware/briefcase/issues/2417>`__, `#2422 <https://github.com/beeware/briefcase/issues/2422>`__, `#2425 <https://github.com/beeware/briefcase/issues/2425>`__, `#2427 <https://github.com/beeware/briefcase/issues/2427>`__, `#2434 <https://github.com/beeware/briefcase/issues/2434>`__, `#2436 <https://github.com/beeware/briefcase/issues/2436>`__, `#2438 <https://github.com/beeware/briefcase/issues/2438>`__, `#2439 <https://github.com/beeware/briefcase/issues/2439>`__, `#2440 <https://github.com/beeware/briefcase/issues/2440>`__, `#2441 <https://github.com/beeware/briefcase/issues/2441>`__, `#2445 <https://github.com/beeware/briefcase/issues/2445>`__, `#2446 <https://github.com/beeware/briefcase/issues/2446>`__, `#2447 <https://github.com/beeware/briefcase/issues/2447>`__, `#2448 <https://github.com/beeware/briefcase/issues/2448>`__, `#2449 <https://github.com/beeware/briefcase/issues/2449>`__, `#2452 <https://github.com/beeware/briefcase/issues/2452>`__, `#2453 <https://github.com/beeware/briefcase/issues/2453>`__, `#2454 <https://github.com/beeware/briefcase/issues/2454>`__, `#2455 <https://github.com/beeware/briefcase/issues/2455>`__
+
 0.3.24 (2025-07-10)
 ===================
 

@@ -10,13 +10,12 @@ from briefcase.config import AppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
-from tests.utils import DummyConsole
 
 
 @pytest.fixture
-def mock_tools(tmp_path) -> ToolCache:
+def mock_tools(dummy_console, tmp_path) -> ToolCache:
     mock_tools = ToolCache(
-        console=DummyConsole(),
+        console=dummy_console,
         base_path=tmp_path / "tools",
         home_path=tmp_path / "home",
     )

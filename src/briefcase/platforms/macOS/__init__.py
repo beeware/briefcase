@@ -21,7 +21,7 @@ from briefcase.integrations.subprocess import (
 )
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
-from briefcase.platforms.macOS.utils import AppPackagesMergeMixin
+from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_binary
 
 try:
     import dmgbuild
@@ -80,7 +80,7 @@ class macOSMixin:
     supported_host_os = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
-    platform_target_version = "0.3.20"
+    platform_target_version: str | None = "0.3.20"
 
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
@@ -182,28 +182,46 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app: AppConfig,
         requires: list[str],
         app_packages_path: Path,
+        **kwargs,
     ):
-        # Determine the min macOS version from the VERSIONS file in the support package.
-        versions = dict(
-            [part.strip() for part in line.split(": ", 1)]
-            for line in (
-                (self.support_path(app) / "VERSIONS")
-                .read_text(encoding="UTF-8")
-                .split("\n")
+        try:
+            # Determine the min macOS version from the framework metadata
+            # of the macos-arm64_x86_64 slice of the XCframework
+            plist_file = (
+                self.support_path(app)
+                / "Python.xcframework/macos-arm64_x86_64"
+                / "Python.framework/Resources/Info.plist"
             )
-            if ": " in line
-        )
-        support_min_version = Version(versions.get("Min macOS version", "11.0"))
+            with plist_file.open("rb") as f:
+                info_plist = plistlib.load(f)
+
+            support_min_version = info_plist.get("MinimumOSVersion", "11.0")
+        except FileNotFoundError:
+            # If a plist file couldn't be found, it's an old-style support package;
+            # Determine the min macOS version from the VERSIONS file in the support package.
+            versions = dict(
+                [part.strip() for part in line.split(": ", 1)]
+                for line in (
+                    (self.support_path(app) / "VERSIONS")
+                    .read_text(encoding="UTF-8")
+                    .split("\n")
+                )
+                if ": " in line
+            )
+            support_min_version = versions.get("Min macOS version", "11.0")
 
         # Check that the app's definition is compatible with the support package
-        macOS_min_version = Version(getattr(app, "min_os_version", "11.0"))
-        if macOS_min_version < support_min_version:
+        # If the app doesn't specify a minimum version, use the support package
+        # minimum version as a default.
+        macOS_min_version = getattr(app, "min_os_version", support_min_version)
+
+        if Version(macOS_min_version) < Version(support_min_version):
             raise BriefcaseCommandError(
                 f"Your macOS app specifies a minimum macOS version of {macOS_min_version}, "
                 f"but the support package only supports {support_min_version}"
             )
 
-        macOS_min_tag = str(macOS_min_version).replace(".", "_")
+        macOS_min_tag = macOS_min_version.replace(".", "_")
 
         if getattr(app, "universal_build", True):
             # Perform the initial install targeting the current platform
@@ -548,34 +566,12 @@ class macOSRunMixin:
         except subprocess.CalledProcessError:
             raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
         finally:
-            # Ensure the App also terminates when exiting
-            if app_pid:  # pragma: no-cover-if-is-py310
-                with suppress(ProcessLookupError):
+            # Ensure the App also terminates when exiting. The ordering here is a little
+            # odd; the if could/should be outside the context manager, but coverage has
+            # issues with that arrangement on some Python versions (3.10, 3.14)
+            with suppress(ProcessLookupError):
+                if app_pid:
                     self.tools.os.kill(app_pid, SIGTERM)
-
-
-def is_mach_o_binary(path):  # pragma: no-cover-if-is-windows
-    """Determine if the file at the given path is a Mach-O binary.
-
-    :param path: The path to check
-    :returns: True if the file at the given location is a Mach-O binary.
-    """
-    # A binary is any file that is executable, or has a suffix from a known list
-    if os.access(path, os.X_OK) or path.suffix.lower() in {".dylib", ".o", ".so", ""}:
-        # File is a binary; read the file magic to determine if it's Mach-O.
-        with path.open("rb") as f:
-            magic = f.read(4)
-            return magic in (
-                b"\xca\xfe\xba\xbe",
-                b"\xcf\xfa\xed\xfe",
-                b"\xce\xfa\xed\xfe",
-                b"\xbe\xba\xfe\xca",
-                b"\xfe\xed\xfa\xcf",
-                b"\xfe\xed\xfa\xce",
-            )
-    else:
-        # Not a binary
-        return False
 
 
 class macOSSigningMixin:

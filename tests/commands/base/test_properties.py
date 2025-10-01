@@ -4,7 +4,7 @@ from .conftest import DummyCommand
 
 
 def test_briefcase_required_python_version(base_command):
-    assert base_command.briefcase_required_python_version == (3, 9)
+    assert base_command.briefcase_required_python_version == (3, 10)
 
 
 def test_bundle_path(base_command, my_app, tmp_path):
@@ -85,9 +85,9 @@ def test_publish_command(base_command):
     assert base_command.publish_command.description == "Test Publish"
 
 
-def test_command_state_transferred(tmp_path):
+def test_command_state_transferred(dummy_console, tmp_path):
     """Command state is transferred to created subcommands."""
-    command = DummyCommand(base_path=tmp_path)
+    command = DummyCommand(console=dummy_console, base_path=tmp_path)
     command.tools.console.input_enabled = False
 
     # Check the enabled state of subcommands

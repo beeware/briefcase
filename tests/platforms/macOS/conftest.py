@@ -3,10 +3,9 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.console import Console
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS.app import macOSAppMixin, macOSCreateMixin
-from tests.utils import DummyConsole, create_file, create_plist_file
+from tests.utils import create_file, create_plist_file
 
 
 class DummyInstallCommand(macOSAppMixin, macOSCreateMixin, BaseCommand):
@@ -15,14 +14,15 @@ class DummyInstallCommand(macOSAppMixin, macOSCreateMixin, BaseCommand):
     command = "install"
 
     def __init__(self, base_path, **kwargs):
-        kwargs.setdefault("console", Console())
         super().__init__(base_path=base_path / "base_path", **kwargs)
-        self.tools.console = DummyConsole()
 
 
 @pytest.fixture
-def dummy_command(tmp_path):
-    cmd = DummyInstallCommand(base_path=tmp_path)
+def dummy_command(dummy_console, tmp_path):
+    cmd = DummyInstallCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
     cmd.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
@@ -76,18 +76,17 @@ entitlements_path="Entitlements.plist"
         """<?xml?>\n<installer-script></installer-script>""",
     )
 
-    # Create the support package VERSIONS file
-    # with a deliberately weird min macOS version
-    create_file(
-        tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-        "\n".join(
-            [
-                "Python version: 3.10.15",
-                "Build: b11",
-                "Min macOS version: 10.12",
-                "",
-            ]
+    # Create the XCframework Info.plist file, with a deliberately weird min macOS version
+    create_plist_file(
+        (
+            tmp_path
+            / "base_path/build/first-app/macos/app/support/Python.xcframework"
+            / "macos-arm64_x86_64/Python.framework/Resources/Info.plist"
         ),
+        {
+            "CFBundleVersion": "3.10.15",
+            "MinimumOSVersion": "10.12",
+        },
     )
 
     # Select dmg packaging by default

@@ -1,1 +1,0 @@
-Windows builds now have improved hints when a virus checker interrupts a build.

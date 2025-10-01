@@ -6,12 +6,11 @@ from unittest import mock
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.console import Console, LogLevel
+from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.macOS import SigningIdentity, macOSSigningMixin
 from briefcase.platforms.macOS.app import macOSAppMixin
-from tests.utils import DummyConsole
 
 
 class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
@@ -20,14 +19,15 @@ class DummySigningCommand(macOSAppMixin, macOSSigningMixin, BaseCommand):
     command = "sign"
 
     def __init__(self, base_path, **kwargs):
-        kwargs.setdefault("console", Console())
         super().__init__(base_path=base_path / "base_path", **kwargs)
-        self.tools.console = DummyConsole()
 
 
 @pytest.fixture
-def dummy_command(tmp_path):
-    cmd = DummySigningCommand(base_path=tmp_path)
+def dummy_command(dummy_console, tmp_path):
+    cmd = DummySigningCommand(
+        console=dummy_console,
+        base_path=tmp_path,
+    )
 
     # Mock the options object
     cmd.options = mock.MagicMock()

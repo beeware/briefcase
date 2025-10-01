@@ -1,12 +1,11 @@
 import pytest
 
 from briefcase.exceptions import InputDisabled
-from tests.utils import DummyConsole
 
 
-def test_unvalidated_input():
+def test_unvalidated_input(console):
     """If the user enters text and there's no validation, the text is returned."""
-    console = DummyConsole("hello")
+    console.values = ["hello"]
 
     value = console.text_question(
         intro="Some introduction",
@@ -18,10 +17,10 @@ def test_unvalidated_input():
     assert value == "hello"
 
 
-def test_unvalidated_input_with_override():
+def test_unvalidated_input_with_override(console):
     """If an override is provided and there's no validation, the override is
     returned."""
-    console = DummyConsole("hello")
+    console.values = ["hello"]
 
     value = console.text_question(
         intro="Some introduction",
@@ -34,10 +33,10 @@ def test_unvalidated_input_with_override():
     assert value == "override"
 
 
-def test_validated_input():
+def test_validated_input(console):
     """If the user enters text and there's validation, the user is prompted until valid
     text is entered."""
-    console = DummyConsole("bad", "hello")
+    console.values = ["bad", "hello"]
 
     def validator(text):
         if text == "bad":
@@ -58,10 +57,9 @@ def test_validated_input():
     assert value == "hello"
 
 
-def test_validated_input_with_override():
+def test_validated_input_with_override(console):
     """If an override is provided and there's validation, the override is validated and
     returned."""
-    console = DummyConsole()
 
     def validator(text):
         if text == "bad":
@@ -80,10 +78,10 @@ def test_validated_input_with_override():
     assert value == "override"
 
 
-def test_validated_input_with_invalid_override():
+def test_validated_input_with_invalid_override(console):
     """If an invalid override is provided and there's validation, the override is
     rejected and the user is prompted until valid text is entered."""
-    console = DummyConsole("bad", "hello")
+    console.values = ["bad", "hello"]
 
     def validator(text):
         if text in {"bad", "bad-override"}:
@@ -105,9 +103,9 @@ def test_validated_input_with_invalid_override():
     assert value == "hello"
 
 
-def test_input_with_default():
+def test_input_with_default(console):
     """If the user enters text and there's no validation, the text is returned."""
-    console = DummyConsole("")
+    console.values = [""]
 
     value = console.text_question(
         intro="Some introduction", description="My variable", default="goodbye"
@@ -117,64 +115,58 @@ def test_input_with_default():
     assert value == "goodbye"
 
 
-def test_input_disabled():
+def test_input_disabled(disabled_console):
     """If input is disabled, the default is returned."""
-    console = DummyConsole(input_enabled=False)
 
-    value = console.text_question(
+    value = disabled_console.text_question(
         intro="Some introduction",
         description="My variable",
         default="goodbye",
     )
 
-    assert console.prompts == []
+    assert disabled_console.prompts == []
     assert value == "goodbye"
 
 
-def test_input_disabled_with_override():
+def test_input_disabled_with_override(disabled_console):
     """If input is disabled, the override is returned."""
-    console = DummyConsole(input_enabled=False)
-
-    value = console.text_question(
+    value = disabled_console.text_question(
         intro="Some introduction",
         description="My variable",
         default="goodbye",
         override_value="override",
     )
 
-    assert console.prompts == []
+    assert disabled_console.prompts == []
     assert value == "override"
 
 
-def test_input_disabled_validation_failure():
+def test_input_disabled_validation_failure(disabled_console):
     """If input is disabled, and validation fails, an error is raised."""
-    console = DummyConsole(input_enabled=False)
 
     with pytest.raises(InputDisabled, match=r"Well that won't work..."):
 
         def not_valid(text):
             raise ValueError("Well that won't work...")
 
-        console.text_question(
+        disabled_console.text_question(
             intro="Some introduction",
             description="My variable",
             default="goodbye",
             validator=not_valid,
         )
 
-    assert console.prompts == []
+    assert disabled_console.prompts == []
 
 
-def test_input_disabled_validation_failure_with_override():
+def test_input_disabled_validation_failure_with_override(disabled_console):
     """If input is disabled, and validation fails for override, an error is raised."""
-    console = DummyConsole(input_enabled=False)
-
     with pytest.raises(InputDisabled, match=r"Well that won't work..."):
 
         def not_valid(text):
             raise ValueError("Well that won't work...")
 
-        console.text_question(
+        disabled_console.text_question(
             intro="Some introduction",
             description="My variable",
             default="goodbye",
@@ -182,4 +174,4 @@ def test_input_disabled_validation_failure_with_override():
             override_value="override",
         )
 
-    assert console.prompts == []
+    assert disabled_console.prompts == []

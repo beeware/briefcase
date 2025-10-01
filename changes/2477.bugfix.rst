@@ -1,0 +1,1 @@
+The docs checks in tox now work if there are spaces in the path.

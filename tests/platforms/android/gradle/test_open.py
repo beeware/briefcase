@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.file import File
@@ -30,9 +29,9 @@ def create_sdk_manager(tmp_path, extension=""):
 
 
 @pytest.fixture
-def open_command(tmp_path, first_app_config):
+def open_command(dummy_console, tmp_path, first_app_config):
     command = GradleOpenCommand(
-        console=Console(),
+        console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
