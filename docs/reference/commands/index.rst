@@ -15,6 +15,7 @@ Command reference
    package
    publish
    upgrade
+   config
 
 Common options
 ==============

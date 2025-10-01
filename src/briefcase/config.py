@@ -13,6 +13,10 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+from pathlib import Path
+
+from platformdirs import PlatformDirs
+
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
@@ -604,6 +608,57 @@ def merge_pep621_config(global_config, pep621_config):
         global_config["test_requires"] = pep621_test_dependencies + test_requires
     except KeyError:
         pass
+
+
+def read_toml_file(path: Path) -> dict:
+    """Read a TOML file if it exists; return {} if missing.
+
+    Rais BriefcaseConfigError on parse errors
+    """
+    if not path.exists():
+        return {}
+    try:
+        with path.open("rb") as f:
+            return tomllib.load(f)
+    except tomllib.TOMLDecodeError as e:
+        raise BriefcaseConfigError(f"Invalid {path}: {e}") from e
+
+
+def unwrap_tool_briefcase(d: dict) -> dict:
+    """Accept either a dict whose root keys mirror [tool.briefcase], or a dict that
+    wraps values under ['tool']['briefcase'].
+
+    Return the briefcase dict.
+    """
+    try:
+        return d["tool"]["briefcase"]
+    except Exception:
+        return d or {}
+
+
+def deep_merge(base: dict, override: dict) -> dict:
+    for key, value in (override or {}).items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            deep_merge(base[key], value)
+        else:
+            base[key] = copy.deepcopy(value)
+    return base
+
+
+def load_user_config_files(project_root: Path) -> tuple[dict, dict]:
+    """Load global and per-project user config as dicts.
+
+    :param project_root: Directory that contains pyproject.toml
+    :returns: (global_usr_cfg, project_user_cfg) in [tool.briefcase] form
+    """
+    dirs = PlatformDirs("org.beeware.briefcase", "BeeWare")
+    global_path = Path(dirs.user_config_dir) / "config.toml"
+    project_user_path = Path(project_root) / ".briefcase" / "config.toml"
+
+    global_cfg = unwrap_tool_briefcase(read_toml_file(global_path))
+    project_user_cfg = unwrap_tool_briefcase(read_toml_file(project_user_path))
+
+    return dict(global_cfg or {}), dict(project_user_cfg or {})
 
 
 def parse_config(config_file, platform, output_format, console):

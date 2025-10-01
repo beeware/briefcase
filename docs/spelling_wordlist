@@ -5,6 +5,7 @@ appimage
 artefact
 artefacts
 autodetect
+AVD
 backend
 backends
 backported
@@ -17,6 +18,7 @@ Chaquopy
 checkmarks
 cibuildwheel
 codebase
+config
 Cookiecutter
 cryptographic
 customizations
@@ -63,6 +65,7 @@ OSX
 passthrough
 Passthrough
 phablet
+PlatformDirs
 pre
 precompiled
 proxied
@@ -72,6 +75,7 @@ px
 pygame
 Pygame
 Pyodide
+pyproject.toml
 PyScript
 PySide
 pytest
@@ -102,6 +106,7 @@ triaged
 Triaging
 TTY
 tvOS
+UDID
 unallocated
 untrusted
 vendored
