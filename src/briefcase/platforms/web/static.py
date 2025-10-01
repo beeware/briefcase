@@ -395,7 +395,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Raise an error if more than one configuration file is supplied.
         elif len(config_package_list) > 1:
             raise BriefcaseConfigError(
-                f"""Only 1 backend configuration file can be supplied.
+                f"""Only one backend configuration file can be supplied.
                 Initial config.toml found in package: {config_package}
                 Duplicate config.toml found in package: {wheel.filename}"""
             )
