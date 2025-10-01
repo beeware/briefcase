@@ -213,7 +213,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Save modified content
         target_path.write_text(file_text, encoding="utf-8")
 
-    def _write_pyscript_insert(
+    def _append_pyscript_insert(
         self,
         filename: Path,
         pyscript_version: str,
