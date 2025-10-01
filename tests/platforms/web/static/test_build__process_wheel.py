@@ -1,5 +1,3 @@
-from io import StringIO
-
 import pytest
 
 from briefcase.console import Console
@@ -39,44 +37,26 @@ def test_process_wheel(build_command, tmp_path):
         ],
     )
 
-    # Create a dummy css file
-    css_file = StringIO()
+    # Collect into inserts dict
+    inserts = {}
+    build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
 
-    build_command._process_wheel(wheel_filename, css_file=css_file)
-
-    assert (
-        css_file.getvalue()
-        == "\n".join(
-            [
-                "",
-                "/*******************************************************",
-                " * dummy 1.2.3::first.css",
-                " *******************************************************/",
-                "",
-                "span {",
-                "  font-color: red;",
-                "  font-size: larger",
-                "}",
-                "",
-                "/*******************************************************",
-                " * dummy 1.2.3::second.css",
-                " *******************************************************/",
-                "",
-                "div {",
-                "  padding: 10px",
-                "}",
-                "",
-                "/*******************************************************",
-                " * dummy 1.2.3::deep/third.css",
-                " *******************************************************/",
-                "",
-                "p {",
-                "  color: red",
-                "}",
-            ]
-        )
-        + "\n"
-    )
+    # Legacy CSS should be collected into the briefcase.css "CSS" insert slot
+    assert inserts == {
+        "static/css/briefcase.css": {
+            "CSS": {
+                "dummy 1.2.3 (legacy static CSS: first.css)": (
+                    "span {\n  font-color: red;\n  font-size: larger\n}\n"
+                ),
+                "dummy 1.2.3 (legacy static CSS: second.css)": (
+                    "div {\n  padding: 10px\n}\n"
+                ),
+                "dummy 1.2.3 (legacy static CSS: deep/third.css)": (
+                    "p {\n  color: red\n}\n"
+                ),
+            }
+        }
+    }
 
 
 def test_process_wheel_no_content(build_command, tmp_path):
@@ -94,9 +74,7 @@ def test_process_wheel_no_content(build_command, tmp_path):
         ],
     )
 
-    # Create a dummy css file
-    css_file = StringIO()
+    inserts = {}
+    build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
 
-    build_command._process_wheel(wheel_filename, css_file=css_file)
-
-    assert css_file.getvalue() == ""
+    assert inserts == {}
