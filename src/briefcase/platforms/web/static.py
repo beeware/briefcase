@@ -297,12 +297,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         )
                         legacy_css_warning = True
 
-                    try:
-                        css_text = wheel.read(filename).decode("utf-8")
-                    except UnicodeDecodeError as e:
-                        raise BriefcaseCommandError(
-                            f"{filename}: CSS content must be UTF-8 encoded"
-                        ) from e
+                    css_text = wheel.read(filename).decode("utf-8")
 
                     rel_inside = "/".join(path.parts[2:])
                     contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
@@ -321,47 +316,34 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     self.console.info(f"    Found {filename}")
                     rel_inside = "/".join(parts[3:])
 
-                    if not rel_inside or rel_inside.endswith("/"):
-                        self.console.debug(
-                            f"    {filename}: skipping, not a valid insert file."
-                        )
-                    else:
-                        if "~" not in rel_inside:
-                            self.console.debug(
-                                f"    {filename}: skipping, filename must match '<target>~<insert>'."
-                            )
-                        else:
-                            try:
-                                target, insert = rel_inside.split("~")
-                            except ValueError:
-                                self.console.debug(
-                                    f"    {filename}: skipping, filename must match '<target>~<insert>'."
-                                )
-                            else:
-                                self.console.info(
-                                    f"    {filename}: Adding {insert} insert for {target}"
-                                )
-                                try:
-                                    text = wheel.read(filename).decode("utf-8")
-                                except UnicodeDecodeError as e:
-                                    raise BriefcaseCommandError(
-                                        f"{filename}: insert must be UTF-8 encoded"
-                                    ) from e
-
-                                contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
-
-                                pkg_map = inserts.setdefault(target, {}).setdefault(
-                                    insert, {}
-                                )
-                                if package_key in pkg_map and pkg_map[package_key]:
-                                    pkg_map[package_key] += "\n" + text
-                                else:
-                                    pkg_map[package_key] = text
-
-                else:
+                if not rel_inside or rel_inside.endswith("/"):
                     self.console.debug(
-                        f"    {filename}: skipping, not a supported insert."
+                        f"    {filename}: skipping, not a valid insert file."
                     )
+                else:
+                    if "~" in rel_inside:
+                        # Preserve any '~' that might exist in the target path by splitting from the right
+                        target, insert = rel_inside.rsplit("~", 1)
+                        self.console.info(
+                            f"    {filename}: Adding {insert} insert for {target}"
+                        )
+
+                        text = wheel.read(filename).decode("utf-8")
+
+                        contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
+
+                        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
+                        if package_key in pkg_map and pkg_map[package_key]:
+                            pkg_map[package_key] += "\n" + text
+                        else:
+                            pkg_map[package_key] = text
+                    else:
+                        self.console.debug(
+                            f"    {filename}: skipping, filename must match '<target>~<insert>'."
+                        )
+
+            else:
+                self.console.debug(f"    {filename}: skipping, not a supported insert.")
 
     def extract_backend_config(self, wheels):
         """Processes multiple wheels to gather a config.toml and a base pyscript.toml
