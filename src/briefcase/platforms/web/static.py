@@ -571,8 +571,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     inserts=inserts,
                 )
 
-            # Add pyscript insertion to inserts.
-            self._write_pyscript_insert("index.html", pyscript_version, inserts)
+            # Add pyscript insertion to inserts
+            self._append_pyscript_insert("index.html", pyscript_version, inserts)
 
             # Write inserts per target
             for target, target_inserts in sorted(inserts.items()):
