@@ -78,3 +78,80 @@ def test_process_wheel_no_content(build_command, tmp_path):
     build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
 
     assert inserts == {}
+
+
+def test_process_wheel_deploy_inserts(build_command, tmp_path):
+    """Deploy inserts are collected into the correct insert slot."""
+    wheel_filename = create_wheel(
+        tmp_path,
+        extra_content=[
+            ("dummy/deploy/inserts/index.html~header", "<script>alert('hi')</script>"),
+            (
+                "dummy/deploy/inserts/static/css/briefcase.css~CSS",
+                "body { margin: 0; }",
+            ),
+        ],
+    )
+
+    inserts = {}
+    build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
+
+    # The index.html header insert exists
+    assert "index.html" in inserts
+    assert "header" in inserts["index.html"]
+    contribs = inserts["index.html"]["header"]
+    assert any("<script>" in v for v in contribs.values())
+
+    # The CSS insert exists
+    assert "static/css/briefcase.css" in inserts
+    assert "CSS" in inserts["static/css/briefcase.css"]
+    css_contribs = inserts["static/css/briefcase.css"]["CSS"]
+    assert any("body { margin: 0; }" in v for v in css_contribs.values())
+
+
+def test_process_wheel_invalid_insert_skipped(build_command, tmp_path, monkeypatch):
+    """Files without '~' in their name under deploy/inserts are skipped."""
+    wheel_filename = create_wheel(
+        tmp_path,
+        extra_content=[
+            ("dummy/deploy/inserts/index.html", "<div>oops</div>"),
+        ],
+    )
+
+    # Check on console.debug to confirm a skip message was emitted
+    seen = {"debugs": []}
+    monkeypatch.setattr(
+        build_command.console, "debug", lambda msg: seen["debugs"].append(msg)
+    )
+
+    inserts = {}
+    build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
+
+    assert inserts == {}
+    assert any(
+        "skipping" in msg and "must match '<target>~<insert>'" in msg
+        for msg in seen["debugs"]
+    )
+
+
+def test_process_wheel_legacy_css_warning_once(build_command, tmp_path, monkeypatch):
+    """Legacy CSS files trigger a single deprecation warning."""
+    wheel_filename = create_wheel(
+        tmp_path,
+        extra_content=[
+            ("dummy/static/one.css", "h1 { color: blue; }"),
+            ("dummy/static/two.css", "h2 { color: green; }"),
+        ],
+    )
+
+    # Check on console.warning to count legacy warnings
+    warnings = []
+    monkeypatch.setattr(
+        build_command.console, "warning", lambda msg: warnings.append(msg)
+    )
+
+    inserts = {}
+    build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
+
+    legacy_msgs = [m for m in warnings if "legacy '/static' CSS detected" in m]
+    assert len(legacy_msgs) == 1
