@@ -94,6 +94,24 @@ def test_verify_with_windows_sdk(build_command, windows_sdk, monkeypatch):
     assert isinstance(build_command.tools.windows_sdk, WindowsSDK)
 
 
+def test_long_description_warning(build_command, first_app_templated, capsys):
+    """A warning is displayed if an app has a description longer than 80 chars."""
+    first_app_templated.description = "This is a very long description that exceeds the 80 character limit and it should trigger a warning."
+    build_command.finalize_app_config(first_app_templated)
+    output = capsys.readouterr().out
+    assert "your app has a description that is longer than 80 characters." in output
+
+
+def test_short_description_no_warning(build_command, first_app_templated, capsys):
+    """No warning displayed if the app description is 80 chars or less."""
+    first_app_templated.description = (
+        "This is a short description that will not trigger any warnings."
+    )
+    build_command.finalize_app_config(first_app_templated)
+    output = capsys.readouterr().out
+    assert "your app has a description that is longer than 80 characters." not in output
+
+
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 @pytest.mark.parametrize("pre_existing", [True, False])
 @pytest.mark.parametrize("console_app", [True, False])

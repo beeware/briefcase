@@ -45,6 +45,24 @@ def test_verify(build_command, monkeypatch):
     assert isinstance(build_command.tools.visualstudio, VisualStudio)
 
 
+def test_long_description_warning(build_command, first_app_config, capsys):
+    """A warning is displayed if an app has a description longer than 80 chars."""
+    first_app_config.description = "This is a very long description that exceeds the 80 character limit. It will trigger a warning message in the Windows Visual Studio build process. This description is definitely too long."
+    build_command.finalize_app_config(first_app_config)
+    output = capsys.readouterr().out
+    assert "your app has a description that is longer than 80 characters" in output
+
+
+def test_short_description_no_warning(build_command, first_app_config, capsys):
+    """No warning is displayed if the app description is 80 chars or less."""
+    first_app_config.description = (
+        "This is a short description that will not trigger any warnings."
+    )
+    build_command.finalize_app_config(first_app_config)
+    output = capsys.readouterr().out
+    assert "WARNING: Long App description!" not in output
+
+
 @pytest.mark.parametrize("tool_debug_mode", (True, False))
 def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
     """The solution will be compiled when the project is built."""

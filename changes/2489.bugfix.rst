@@ -1,0 +1,1 @@
+Fixed issue with app icon when building for Windows.

@@ -46,6 +46,23 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
         super().verify_tools()
         VisualStudio.verify(tools=self.tools)
 
+    def finalize_app_config(self, app: BaseConfig):
+        """If an app has a long description, issue a warning."""
+        if len(app.description) > 80:
+            self.console.warning(
+                """\
+*************************************************************************
+** WARNING: Long App description!                                      **
+*************************************************************************
+
+    your app has a description that is longer than 80 characters.
+    While this is supported, longer descriptions may be truncated
+    when displayed in some parts of the Windows UI.
+
+*************************************************************************
+"""
+            )
+
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the Visual Studio project.
 
