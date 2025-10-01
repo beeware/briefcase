@@ -309,7 +309,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
                     # Add CSS content to briefcase.css insert slot
                     target = "static/css/briefcase.css"
-                    insert = "CSS"
+                    insert = "css"
                     pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
                     if contrib_key in pkg_map and pkg_map[contrib_key]:
                         pkg_map[contrib_key] += "\n" + css_text
