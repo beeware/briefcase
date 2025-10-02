@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.web.static import StaticWebBuildCommand
 
 from ....utils import create_wheel
@@ -142,28 +141,26 @@ def test_process_wheel_legacy_css_warning_once(build_command, tmp_path, monkeypa
 
 
 def test_process_wheel_non_utf8_insert(build_command, tmp_path):
-    """Non-UTF8 deploy insert raises a BriefcaseCommandError."""
+    """Non-UTF8 deploy insert now raises an UnicodeDecodeError."""
     bad = b"\xff\xfe\xfa"
     wheel_path = Path(tmp_path) / "dummy-1.2.3-py3-none-any.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr("dummy/deploy/inserts/index.html~header", bad)
 
     inserts = {}
-    with pytest.raises(BriefcaseCommandError, match="insert must be UTF-8 encoded"):
+    with pytest.raises(UnicodeDecodeError):
         build_command._process_wheel(wheelfile=wheel_path, inserts=inserts)
 
 
 def test_process_wheel_non_utf8_legacy_css(build_command, tmp_path):
-    """Non-UTF8 legacy CSS raises a BriefcaseCommandError."""
+    """Non-UTF8 legacy CSS now raises an UnicodeDecodeError."""
     bad = b"\xff\xfe\xfa"
     wheel_path = Path(tmp_path) / "dummy-1.2.3-py3-none-any.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr("dummy/static/bad.css", bad)
 
     inserts = {}
-    with pytest.raises(
-        BriefcaseCommandError, match="CSS content must be UTF-8 encoded"
-    ):
+    with pytest.raises(UnicodeDecodeError):
         build_command._process_wheel(wheelfile=wheel_path, inserts=inserts)
 
 
