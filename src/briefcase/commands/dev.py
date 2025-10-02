@@ -11,7 +11,6 @@ from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.virtual_environment import VenvContext, virtual_environment
 
 from .base import BaseCommand
-from .create import write_dist_info
 
 
 class DevCommand(RunAppMixin, BaseCommand):
@@ -207,8 +206,8 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         :returns: Name for virtual environment directory
         """
-
-        return "dev"
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        return f"dev--{python_version}"
 
     def venv_path(self, appname: str) -> Path:
         """Return the path for the app's virtual environment.
@@ -218,7 +217,9 @@ class DevCommand(RunAppMixin, BaseCommand):
         """
         return self.base_path / ".briefcase" / appname / self.venv_name
 
-    def virtual_environment(self, appname: str, isolated: bool) -> virtual_environment:
+    def virtual_environment(
+        self, appname: str, isolated: bool, recreate: bool
+    ) -> virtual_environment:
         """Create and return a virtual environment context for the app.
 
         :param appname: The name of the app to create a venv context for
@@ -231,6 +232,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             console=self.console,
             venv_path=self.venv_path(appname),
             isolated=isolated,
+            recreate=recreate,
         )
 
     def __call__(
@@ -270,21 +272,19 @@ class DevCommand(RunAppMixin, BaseCommand):
         # If one exists, assume that the requirements have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
+
         if not run_app:
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
-
-        with self.virtual_environment(
+        env = self.virtual_environment(
             appname=app.app_name,
             isolated=options.get("isolated", False),
-        ) as venv:
-            if update_requirements or not dist_info_path.exists():
+            recreate=update_requirements,
+        )
+        with env as venv:
+            if env.created or update_requirements:
                 self.console.info("Installing requirements...", prefix=app.app_name)
                 self.install_dev_requirements(app, venv, **options)
-                write_dist_info(app, dist_info_path)
 
             if run_app:
                 if app.test_mode:

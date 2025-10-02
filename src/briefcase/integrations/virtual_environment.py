@@ -23,6 +23,7 @@ class VenvContext(Tool):
     def __init__(self, tools: ToolCache, venv_path: Path):
         super().__init__(tools=tools)
         self.venv_path = venv_path
+        self.created = False
 
     @classmethod
     def verify_install(
@@ -68,6 +69,7 @@ class VenvContext(Tool):
                 check=True,
             )
             self.update_core_tools()
+            self.created = True
         except stdlib_subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Failed to create virtual environment at {self.venv_path}"
@@ -184,6 +186,11 @@ class VenvEnvironment:
             tools=self.tools, venv_path=self.venv_path
         )
 
+    @property
+    def created(self) -> bool:
+        """Exposes the created status of the venv context."""
+        return self.venv_context.created
+
     def __enter__(self):
         rel_venv_path = self.venv_path.relative_to(Path.cwd())
         if self.recreate:
@@ -206,11 +213,34 @@ class VenvEnvironment:
 class NoOpEnvironment:
     """A no-op environment that returns a native runner."""
 
-    def __init__(self, tools: ToolCache, console: Console):
+    def __init__(self, tools: ToolCache, console: Console, marker_path: Path):
         self.tools = tools
         self.console = console
+        self.marker_path = marker_path
+        self.created = False
+
+    def check_and_update_marker(self) -> bool:
+        """Check marker file and update if needed.
+
+        :returns: True if this is a new environment of Python executable changed.
+        """
+
+        if not self.marker_path.exists():
+            self.marker_path.parent.mkdir(parents=True, exist_ok=True)
+            self.marker_path.write_text(sys.executable, encoding="utf-8")
+            return True
+        try:
+            existing_executable = self.marker_path.read_text(encoding="utf-8").strip()
+            if existing_executable != sys.executable:
+                self.marker_path.write_text(sys.executable, encoding="utf-8")
+                return True
+        except (OSError, UnicodeDecodeError):
+            self.marker_path.write_text(sys.executable, encoding="utf-8")
+            return True
+        return False
 
     def __enter__(self):
+        self.created = self.check_and_update_marker()
         return self.tools.subprocess
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -238,7 +268,8 @@ def virtual_environment(
     :returns: A context manager for an environment where code can be executed.
     """
     if not isolated:
-        return NoOpEnvironment(tools=tools, console=console)
+        marker_path = venv_path / ".venv-marker"
+        return NoOpEnvironment(tools=tools, console=console, marker_path=marker_path)
 
     if venv_path is None:
         raise BriefcaseCommandError("A virtual environment path must be provided")
