@@ -141,7 +141,7 @@ def test_process_wheel_legacy_css_warning_once(build_command, tmp_path, monkeypa
 
 
 def test_process_wheel_non_utf8_insert(build_command, tmp_path):
-    """Non-UTF8 deploy insert now raises an UnicodeDecodeError."""
+    """Non-UTF8 deploy insert raises an UnicodeDecodeError."""
     bad = b"\xff\xfe\xfa"
     wheel_path = Path(tmp_path) / "dummy-1.2.3-py3-none-any.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
@@ -153,7 +153,7 @@ def test_process_wheel_non_utf8_insert(build_command, tmp_path):
 
 
 def test_process_wheel_non_utf8_legacy_css(build_command, tmp_path):
-    """Non-UTF8 legacy CSS now raises an UnicodeDecodeError."""
+    """Non-UTF8 legacy CSS raises an UnicodeDecodeError."""
     bad = b"\xff\xfe\xfa"
     wheel_path = Path(tmp_path) / "dummy-1.2.3-py3-none-any.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
