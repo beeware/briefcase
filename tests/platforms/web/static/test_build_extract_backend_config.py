@@ -43,6 +43,7 @@ def _mock_wheel(tmp_path, wheel_name, files):
 
 def test_extract_backend_config(build_command, tmp_path):
     """Test function works correctly with both config.toml and pyscript.toml."""
+    # Mock a wheel with files
     files = {
         "dependancy/deploy/config.toml": """
 backend = "pyscript"
@@ -58,66 +59,31 @@ existing-key-2 = 2
 
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependancy", files=files)
 
+    # Run the function.
     pyscript_config, pyscript_version = build_command.extract_backend_config([wheel_path])
 
+    # Check returns are correct and files were found.
     assert pyscript_config == {
         "existing-key-1": "value-1",
         "existing-key-2": 2,
     }
     assert pyscript_version == "2024.10.1"
 
-def test_build_app_no_config(build_command, first_app_generated, tmp_path):
-    """An app with no config.toml supplied by a wheel gets a basic config."""
+def test_extract_backend_config_no_config(build_command, tmp_path):
+    """If no config.toml supplied by wheels, functions returns a basic config."""
+    # Mock a wheel without the needed files
+    files = {
+        "dependancy/deploy/not-the-files-you-are-looking-for.toml": ""
+    }
 
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+    wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependancy", files=files)
 
-    # Mock some wheels without a config.toml
-    def mock_run(*args, **kwargs):
-        if args[0][5] == "wheel":
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "first_app",
-                extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
-                ],
-            )
-        elif args[0][5] == "pip":
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "dependency",
-                extra_content=[
-                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
-                ],
-            )
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "other",
-                extra_content=[
-                    ("other/static/style.css", "div { padding: 10px; }\n"),
-                ],
-            )
-        else:
-            raise ValueError("Unknown command")
+    # Run the function.
+    pyscript_config, pyscript_version = build_command.extract_backend_config([wheel_path])
 
-    build_command.tools.subprocess.run.side_effect = mock_run
-
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
-
-    # Build the web app.
-    build_command.build_app(first_app_generated)
-
-    # Pyscript.toml has been written with only the packages content
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "packages": [
-                "/static/wheels/dependency-1.2.3-py3-none-any.whl",
-                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
-                "/static/wheels/other-1.2.3-py3-none-any.whl",
-            ],
-        }
+    # Check pyscript_config is empty and pyscript_version is the default.
+    assert pyscript_config == {}
+    assert pyscript_version == "2024.11.1"
 
 
 def test_build_app_multiple_config(build_command, first_app_generated, tmp_path):
