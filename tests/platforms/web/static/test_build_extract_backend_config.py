@@ -41,6 +41,7 @@ def _mock_wheel(tmp_path, wheel_name, files):
             wheel.writestr(filename, content)
     return wheel_path
 
+
 def test_extract_backend_config(build_command, tmp_path):
     """Test function works correctly with both config.toml and pyscript.toml."""
     # Mock a wheel with files
@@ -69,6 +70,7 @@ existing-key-2 = 2
     }
     assert pyscript_version == "2024.10.1"
 
+
 def test_extract_backend_config_no_config(build_command, tmp_path):
     """If no config.toml supplied by wheels, functions returns a basic config."""
     # Mock a wheel without the needed files
@@ -86,70 +88,37 @@ def test_extract_backend_config_no_config(build_command, tmp_path):
     assert pyscript_version == "2024.11.1"
 
 
-def test_build_app_multiple_config(build_command, first_app_generated, tmp_path):
-    """An app with multiple config.toml supplied by wheels fails to build."""
+def test_extract_backend_config_multiple_config(build_command, first_app_generated, tmp_path):
+    """Multiple config.toml supplied by wheels fails."""
 
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
-
-    # Mock some wheels without a config.toml
-    def mock_run(*args, **kwargs):
-        if args[0][5] == "wheel":
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "first_app",
-                extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
-                    (
-                        "dependency/deploy/config.toml",
-                        """
-backend = "pyscript"
-
-[pyscript]
-version = "2024.11.1"
-""",
-                    ),
-                ],
-            )
-        elif args[0][5] == "pip":
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "dependency",
-                extra_content=[
-                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
-                    (
-                        "dependency/deploy/config.toml",
-                        """
+    # Mock wheels that both contain config.toml
+    file_set_1 = {
+        "dependancy/deploy/config.toml": """
 backend = "pyscript"
 
 [pyscript]
 version = "2024.10.1"
 """,
-                    ),
-                ],
-            )
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "other",
-                extra_content=[
-                    ("other/static/style.css", "div { padding: 10px; }\n"),
-                ],
-            )
-        else:
-            raise ValueError("Unknown command")
+    }
 
-    build_command.tools.subprocess.run.side_effect = mock_run
+    file_set_2 = {
+        "dependancy/deploy/config.toml": """
+backend = "pyscript"
 
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
+[pyscript]
+version = "2024.10.1"
+""",
+    }
 
-    # Build the web app.
+    wheel_path_1 = _mock_wheel(tmp_path=tmp_path, wheel_name="dependancy", files=file_set_1)
+    wheel_path_2 = _mock_wheel(tmp_path=tmp_path, wheel_name="dependancy", files=file_set_2)
+
+    # Run the function.
     with pytest.raises(
         BriefcaseConfigError,
         match=r"Only one backend configuration file can be supplied.",
     ):
-        build_command.build_app(first_app_generated)
+        build_command.extract_backend_config([wheel_path_1, wheel_path_2])
 
 
 def test_build_app_config_no_backend(build_command, first_app_generated, tmp_path):
