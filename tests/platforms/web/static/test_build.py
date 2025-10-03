@@ -203,20 +203,19 @@ existing-key-2 = 2
                     "/**************************************************",
                     " * dependency 1.2.3 (legacy static CSS: style.css)",
                     " *************************************************/",
-                    "",
                     "div { margin: 10px; }",
                     "",
                     "/**************************************************",
-                    " * first_app 1.2.3::style.css",
+                    " * first_app 1.2.3 (legacy static CSS: style.css)",
                     " *************************************************/",
-                    "",
                     "span { margin: 10px; }",
                     "",
                     "/**************************************************",
                     " * other 1.2.3 (legacy static CSS: style.css)",
                     " *************************************************/",
                     "div { padding: 10px; }",
-                    "/*@@ css:end @@*/"
+                    "/*@@ css:end @@*/",
+                    ""
                 ]
             )
             + "\n"
@@ -338,7 +337,7 @@ version = "2024.10.1"
     # Build the web app.
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Only 1 backend configuration file can be supplied.",
+        match=r"Only one backend configuration file can be supplied.",
     ):
         build_command.build_app(first_app_generated)
 
@@ -391,6 +390,69 @@ def test_build_app_config_no_backend(build_command, first_app_generated, tmp_pat
     ):
         build_command.build_app(first_app_generated)
 
+def test_build_app_config_backend_warning(build_command, first_app_generated, tmp_path, capsys):
+    """Briefcase raises a warning if "backend" value is not pyscript."""
+
+    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+
+    # Mock some wheels with a single config.toml containing no backend value.
+    def mock_run(*args, **kwargs):
+        if args[0][5] == "wheel":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "first_app",
+                extra_content=[
+                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    (
+                        "dependency/deploy/config.toml",
+                        """
+backend = "something-else"
+""",
+                    ),
+                ],
+            )
+        elif args[0][5] == "pip":
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "dependency",
+                extra_content=[
+                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
+                ],
+            )
+            create_wheel(
+                bundle_path / "www/static/wheels",
+                "other",
+                extra_content=[
+                    ("other/static/style.css", "div { padding: 10px; }\n"),
+                ],
+            )
+        else:
+            raise ValueError("Unknown command")
+
+    build_command.tools.subprocess.run.side_effect = mock_run
+
+    # Mock the side effect of invoking shutil
+    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
+        bundle_path / "www/static/wheels"
+    )
+
+    build_command.build_app(first_app_generated)
+
+    # Capture output and assert warning present.
+    captured = capsys.readouterr()
+    assert (
+        "Only 'pyscript' backend is currently supported for web static builds." in captured.out
+    )
+
+    # Check pyscript.toml was created and has correct packages.
+    with (bundle_path / "www/pyscript.toml").open("rb") as f:
+        assert tomllib.load(f) == {
+            "packages": [
+                "/static/wheels/dependency-1.2.3-py3-none-any.whl",
+                "/static/wheels/first_app-1.2.3-py3-none-any.whl",
+                "/static/wheels/other-1.2.3-py3-none-any.whl",
+            ],
+        }
 
 def test_build_app_no_wheel_pyscript_toml(build_command, first_app_generated, tmp_path):
     """An app with no pyscript.toml supplied by a wheel gets a basic config."""
@@ -757,6 +819,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     " *************************************************/",
                     "span { margin: 10px; }",
                     "/*@@ css:end @@*/",
+                    ""
                 ]
             )
             + "\n"

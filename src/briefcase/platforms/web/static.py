@@ -435,7 +435,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     # Currently, only pyscript is supported. Warn if another backend is found.
                     elif backend != "pyscript":
                         self.console.warning(
-                            "Only 'pyscript' backend is currently supported for web static builds."
+                            "Only 'pyscript' backend is currently supported for web static builds. "
                             "This project may not work correctly."
                         )
 
