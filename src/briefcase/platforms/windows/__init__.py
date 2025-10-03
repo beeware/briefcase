@@ -92,6 +92,22 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
+    def install_scripts_path(self, app: AppConfig) -> Path:
+        """Obtain the path into which install scripts should be installed.
+
+        :param app: The config object for the app
+        :return: The full path where install scripts should be installed.
+        """
+        return self.bundle_path(app) / self.path_index(app, "install_scripts_path")
+
+    def license_path(self, app: AppConfig) -> Path:
+        """Obtain the path into which the license file should be written.
+
+        :param app: The config object for the app
+        :return: The full path where the license should be written.
+        """
+        return self.bundle_path(app) / self.path_index(app, "license_path")
+
     def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
 
@@ -159,14 +175,6 @@ class WindowsCreateCommand(CreateCommand):
 """
         )
 
-    def install_scripts_path(self, app: AppConfig) -> Path:
-        """Obtain the path into which install scripts should be installed.
-
-        :param app: The config object for the app
-        :return: The full path where install scripts should be installed.
-        """
-        return self.bundle_path(app) / self.path_index(app, "install_scripts_path")
-
     def install_app_resources(self, app: AppConfig):
         """Install Windows-specific app resources.
 
@@ -176,24 +184,47 @@ class WindowsCreateCommand(CreateCommand):
         :param app: The config object for the app
         """
         if post_install := getattr(app, "post_install_script", None):
-            with self.console.wait_bar("Installing post install script..."):
+            post_install_script = self.base_path / post_install
+            if post_install_script.suffix != ".bat":
+                raise BriefcaseCommandError(
+                    "Windows post-install scripts must be batch files."
+                )
+            elif not post_install_script.is_file():
+                raise BriefcaseCommandError(
+                    f"Couldn't find post-install script {post_install}."
+                )
+
+            with self.console.wait_bar("Installing post-install script..."):
                 self.install_scripts_path(app).mkdir(exist_ok=True, parents=True)
                 self.tools.shutil.copyfile(
-                    self.base_path / post_install,
+                    post_install_script,
                     self.install_scripts_path(app) / "post_install.bat",
                 )
 
-        if pre_uninstall := getattr(app, "post_install_script", None):
-            with self.console.wait_bar("Installing post install script..."):
+        if pre_uninstall := getattr(app, "pre_uninstall_script", None):
+            pre_uninstall_script = self.base_path / pre_uninstall
+            if pre_uninstall_script.suffix != ".bat":
+                raise BriefcaseCommandError(
+                    "Windows pre-uninstall scripts must be batch files."
+                )
+            elif not pre_uninstall_script.is_file():
+                raise BriefcaseCommandError(
+                    f"Couldn't find pre-uninstall script {pre_uninstall}."
+                )
+
+            with self.console.wait_bar("Installing pre-uninstall script..."):
                 self.install_scripts_path(app).mkdir(exist_ok=True, parents=True)
                 self.tools.shutil.copyfile(
-                    self.base_path / pre_uninstall,
+                    pre_uninstall_script,
                     self.install_scripts_path(app) / "pre_uninstall.bat",
                 )
 
+        # Convert the license to RTF, then output it into the project.
+        # This assumes the license is pure text; which for now, we can guarantee.
+        # When PEP639 support is added, we will need to adapt.
         license_content = (self.base_path / "LICENSE").read_text()
         with self.console.wait_bar("Writing LICENSE.rtf..."):
-            with (self.support_path(app) / "LICENSE.rtf").open("w") as f:
+            with self.license_path(app).open("w") as f:
                 f.write(txt_to_rtf(license_content))
 
 

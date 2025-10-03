@@ -191,6 +191,57 @@ a single value should be provided.
         pass
 
 
+def validate_install_options_config(install_options):
+    """Validate that a install options are valid and complete."""
+    known_options = set()
+    for option, config in install_options.items():
+        # Options must be valid Python identifiers
+        if not option.isidentifier():
+            raise BriefcaseConfigError(
+                f"{option!r} cannot be used as an option name, "
+                "as it is not a valid Python identifier."
+            )
+
+        # Option names may be coerced into upper case; and there are
+        # a small number of reserved identifiers.
+        if option.upper() in {"ALLUSERS"}:
+            raise BriefcaseConfigError(f"{option!r} is a reserved option identifier.")
+
+        known_options.add(option.upper())
+
+        try:
+            # Annotate a type onto the option configuration based on the default value.
+            # For now, boolean is the only valid type, but this could change in future.
+            config["type"] = type(config["default"]).__name__
+            if config["type"] not in {"bool"}:
+                raise BriefcaseConfigError(
+                    f"Default value for {option!r} is not a boolean."
+                )
+        except KeyError:
+            raise BriefcaseConfigError(
+                f"Install option {option!r} does not provide a default."
+            )
+
+        try:
+            # Options must have a string description.
+            if not isinstance(config["description"], str):
+                raise BriefcaseConfigError(
+                    f"Default value for {option!r} is not a boolean."
+                )
+        except KeyError:
+            raise BriefcaseConfigError(
+                f"Install option {option!r} does not provide a description."
+            )
+
+    # By the logic so far, `foo` and `FOO` and `Foo` are all valid identifiers. However,
+    # they can't co-exist in the same config.
+    if len(known_options) != len(install_options):
+        raise BriefcaseConfigError(
+            "Install option keys are not unique. The identifiers used for "
+            "install options must be unique after conversion to upper case."
+        )
+
+
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
@@ -418,6 +469,8 @@ class AppConfig(BaseConfig):
 
         for document_type_id, document_type in self.document_types.items():
             validate_document_type_config(document_type_id, document_type)
+
+        validate_install_options_config(self.install_options)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
