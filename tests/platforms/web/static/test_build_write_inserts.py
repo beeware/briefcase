@@ -47,7 +47,7 @@ def test_write_insert_warn_if_slot_missing(build_command, app_config, monkeypatc
 
     # Ensure warning was raised and file is unchanged
     assert any("markers not found" in w for w in warnings)
-    assert target.read_text() == file_text
+    assert target.read_text(encoding="utf-8") == file_text
 
 
 def test_write_insert_warn_if_file_missing(build_command, app_config, monkeypatch):
@@ -83,11 +83,11 @@ def test_write_insert_is_idempotent(build_command, app_config):
     # Apply insert once
     inserts = {"header": {"pkg": "<p>Hello</p>"}}
     build_command.write_inserts(app_config, Path("index.html"), inserts)
-    once = target.read_text()
+    once = target.read_text(encoding="utf-8")
 
     # Apply insert again
     build_command.write_inserts(app_config, Path("index.html"), inserts)
-    twice = target.read_text()
+    twice = target.read_text(encoding="utf-8")
 
     # Ensure result did not change
     assert once == twice
@@ -113,7 +113,7 @@ def test_write_insert_slot_name_regex_escaped(build_command, app_config):
     build_command.write_inserts(app_config, Path("index.html"), inserts)
 
     # Ensure content was inserted correctly
-    out = target.read_text()
+    out = target.read_text(encoding="utf-8")
     assert "works" in out
 
 
@@ -128,7 +128,7 @@ def test_write_insert_css_packages_sorted(build_command, app_config):
     inserts = {"css": {"b": "b{}", "a": "a{}"}}
     build_command.write_inserts(app_config, Path("static/css/briefcase.css"), inserts)
 
-    out = target.read_text()
+    out = target.read_text(encoding="utf-8")
     a_block = CSS_BANNER.format(package="a", content="a{}")
     b_block = CSS_BANNER.format(package="b", content="b{}")
 
@@ -151,7 +151,7 @@ def test_write_insert_replaces_all_matches(build_command, app_config):
     inserts = {"h": {"pkg": "Z"}}
     build_command.write_inserts(app_config, Path("index.html"), inserts)
 
-    out = target.read_text()
+    out = target.read_text(encoding="utf-8")
 
     # Both occurrences replaced
     assert "X" not in out and "Y" not in out
@@ -180,7 +180,7 @@ def test_write_insert_handles_html_and_css_markers(build_command, app_config):
     inserts = {"assets": {"pkgA": "<link/>", "pkgB": "h1{}"}}
     build_command.write_inserts(app_config, Path("index.html"), inserts)
 
-    out = target.read_text()
+    out = target.read_text(encoding="utf-8")
 
     # Ensure both banners appear, new content is inserted, and old content removed
     assert "<!--------------------------------------------------" in out
@@ -201,7 +201,7 @@ def test_write_insert_preserves_multiline_indent(build_command, app_config):
     inserts = {"header": {"pkg": "L1\nL2"}}
     build_command.write_inserts(app_config, Path("index.html"), inserts)
 
-    out = target.read_text()
+    out = target.read_text(encoding="utf-8")
 
     # Ensure inserted lines are indented properly
     assert "\n    L1\n    L2\n" in out
@@ -218,7 +218,7 @@ def test_write_insert_ignores_empty_contributions(build_command, app_config):
     inserts = {"css": {"pkg": ""}}
     build_command.write_inserts(app_config, Path("static/css/briefcase.css"), inserts)
 
-    out = target.read_text()
+    out = target.read_text(encoding="utf-8")
 
     # Ensure no banner for empty contribution
     assert " * pkg" not in out
