@@ -9,6 +9,9 @@ else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 import pytest
+from zipfile import ZipFile
+import tomllib
+import io
 
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
@@ -30,6 +33,38 @@ def build_command(dummy_console, tmp_path):
 
     return command
 
+def _mock_wheel(tmp_path, wheel_name, files):
+    """Function to mock wheel files in tests."""
+    wheel_path = tmp_path / wheel_name
+    with ZipFile(wheel_path, "w") as wheel:
+        for filename, content in files.items():
+            wheel.writestr(filename, content)
+    return wheel_path
+
+def test_extract_backend_config(build_command, tmp_path):
+    """Test function works correctly with both config.toml and pyscript.toml."""
+    files = {
+        "dependancy/deploy/config.toml": """
+backend = "pyscript"
+
+[pyscript]
+version = "2024.10.1"
+""",
+        "dependancy/deploy/pyscript.toml": """
+existing-key-1 = "value-1"
+existing-key-2 = 2
+""",
+    }
+
+    wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependancy", files=files)
+
+    pyscript_config, pyscript_version = build_command.extract_backend_config([wheel_path])
+
+    assert pyscript_config == {
+        "existing-key-1": "value-1",
+        "existing-key-2": 2,
+    }
+    assert pyscript_version == "2024.10.1"
 
 def test_build_app_no_config(build_command, first_app_generated, tmp_path):
     """An app with no config.toml supplied by a wheel gets a basic config."""

@@ -440,7 +440,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         )
 
                     # Get pyscript version from config.toml. Use default if not present.
-                    pyscript_version = config_data.get("version", pyscript_version)
+                    pyscript_version = config_data.get("pyscript", {}).get("version", pyscript_version)
 
                     # Extract pyscript.toml
                     pyscript_path = config_filename.replace(
