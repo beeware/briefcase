@@ -180,6 +180,8 @@ def test_extra_attrs():
         "my_app",  # contains underscore
         "myapp2",  # ends with digit
         "my2app",  # contains digit
+        "myApp-",  # ends with hyphen (converts to valid identifier)
+        "myApp_",  # ends with underscore (valid Python identifier)
     ],
 )
 def test_valid_app_name(name):
@@ -204,9 +206,7 @@ def test_valid_app_name(name):
         "myapp!",  # end punctuation
         "my$app",  # other punctuation
         "-myApp",  # initial hyphen
-        "myApp-",  # end hyphen
         "_myApp",  # initial underscore
-        "myApp_",  # end underscore
     ],
 )
 def test_invalid_app_name(name):

@@ -12,21 +12,20 @@ def test_override_is_used(convert_command):
 
 
 def test_no_pep621_data(convert_command, monkeypatch):
-    """The app directory is used if there is no PEP621-name."""
-    mock_text_question = MagicMock()
-    monkeypatch.setattr(convert_command.console, "text_question", mock_text_question)
+    """The app directory is used directly if there is no PEP621-name and the directory name is already valid."""
+    mock_divider = MagicMock()
+    mock_prompt = MagicMock()
+    monkeypatch.setattr(convert_command.console, "divider", mock_divider)
+    monkeypatch.setattr(convert_command.console, "prompt", mock_prompt)
     convert_command.base_path /= "test-app-name"
-    convert_command.input_app_name(None)
 
-    mock_text_question.assert_called_once_with(
-        intro=PartialMatchString(
-            "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
-        ),
-        description="App Name",
-        default="test-app-name",
-        validator=convert_command.validate_app_name,
-        override_value=None,
-    )
+    result = convert_command.input_app_name(None)
+
+    assert result == "test-app-name"
+    mock_divider.assert_called_once_with(title="App name")
+    assert mock_prompt.call_count == 2
+    mock_prompt.assert_any_call()
+    mock_prompt.assert_any_call("Using directory name as app name: 'test-app-name'")
 
 
 def test_valid_pep621_app_name(convert_command):
@@ -72,7 +71,7 @@ def test_hint_is_canonicalized(convert_command, monkeypatch):
 
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString(
-            "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
+            "Based on your directory name, we suggest an app name of 'test-app-name'"
         ),
         description="App Name",
         default="test-app-name",
