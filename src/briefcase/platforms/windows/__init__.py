@@ -13,6 +13,33 @@ from briefcase.integrations.wix import WiX
 DEFAULT_OUTPUT_FORMAT = "app"
 
 
+def txt_to_rtf(txt):
+    """A very simple TXT to RTF converter.
+
+    The entire document is rendered in Courier. Any blank line is interpreted as a
+    paragraph marker; any line starting with a * is rendered as a bullet. Everything
+    else is rendered verbatim in the RTF document.
+
+    :param text: The original text.
+    :returns: The text in RTF format.
+    """
+    rtf = ["{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\n"]
+    for line in txt.split("\n"):
+        if line.lstrip().startswith("*"):
+            rtf.append(f"\\bullet {line[line.index('*') + 1 :]}")
+        elif line:
+            # Add a space at the end to ensure multi-line paragraphs
+            # have a word break. Strip whitespace to ensure that
+            # indented bullet paragraphs don't have extra space.
+            rtf.append(line.strip() + " ")
+        else:
+            # A blank line is a paragraph+line break.
+            rtf.append("\\par\\line")
+    rtf.append("}")
+
+    return "\n".join(rtf)
+
+
 class WindowsMixin:
     platform = "windows"
     supported_host_os = {"Windows"}
@@ -131,6 +158,43 @@ class WindowsCreateCommand(CreateCommand):
 *************************************************************************
 """
         )
+
+    def install_scripts_path(self, app: AppConfig) -> Path:
+        """Obtain the path into which install scripts should be installed.
+
+        :param app: The config object for the app
+        :return: The full path where install scripts should be installed.
+        """
+        return self.bundle_path(app) / self.path_index(app, "install_scripts_path")
+
+    def install_app_resources(self, app: AppConfig):
+        """Install Windows-specific app resources.
+
+        This includes any post-install or pre-uninstall scripts, plus converting the
+        LICENSE file into an RTF file.
+
+        :param app: The config object for the app
+        """
+        if post_install := getattr(app, "post_install_script", None):
+            with self.console.wait_bar("Installing post install script..."):
+                self.install_scripts_path(app).mkdir(exist_ok=True, parents=True)
+                self.tools.shutil.copyfile(
+                    self.base_path / post_install,
+                    self.install_scripts_path(app) / "post_install.bat",
+                )
+
+        if pre_uninstall := getattr(app, "post_install_script", None):
+            with self.console.wait_bar("Installing post install script..."):
+                self.install_scripts_path(app).mkdir(exist_ok=True, parents=True)
+                self.tools.shutil.copyfile(
+                    self.base_path / pre_uninstall,
+                    self.install_scripts_path(app) / "pre_uninstall.bat",
+                )
+
+        license_content = (self.base_path / "LICENSE").read_text()
+        with self.console.wait_bar("Writing LICENSE.rtf..."):
+            with (self.support_path(app) / "LICENSE.rtf").open("w") as f:
+                f.write(txt_to_rtf(license_content))
 
 
 class WindowsRunCommand(RunCommand):
@@ -395,6 +459,8 @@ class WindowsPackageCommand(PackageCommand):
                         "unicode.wxl",
                         "-o",
                         self.distribution_path(app),
+                        "-pdbtype",
+                        "none",
                     ],
                     check=True,
                     cwd=self.bundle_path(app),

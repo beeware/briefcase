@@ -349,6 +349,7 @@ class AppConfig(BaseConfig):
         requires=None,
         icon=None,
         document_type=None,
+        install_option=None,
         permission=None,
         template=None,
         template_branch=None,
@@ -380,6 +381,7 @@ class AppConfig(BaseConfig):
         self.requires = requires
         self.icon = icon
         self.document_types = {} if document_type is None else document_type
+        self.install_options = {} if install_option is None else install_option
         self.permission = {} if permission is None else permission
         self.template = template
         self.template_branch = template_branch
