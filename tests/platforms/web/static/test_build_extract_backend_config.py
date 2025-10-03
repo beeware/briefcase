@@ -88,7 +88,7 @@ def test_extract_backend_config_no_config(build_command, tmp_path):
     assert pyscript_version == "2024.11.1"
 
 
-def test_extract_backend_config_multiple_config(build_command, first_app_generated, tmp_path):
+def test_extract_backend_config_multiple_config(build_command, tmp_path):
     """Multiple config.toml supplied by wheels fails."""
 
     # Mock wheels that both contain config.toml
@@ -121,53 +121,22 @@ version = "2024.10.1"
         build_command.extract_backend_config([wheel_path_1, wheel_path_2])
 
 
-def test_build_app_config_no_backend(build_command, first_app_generated, tmp_path):
+def test_extract_backend_config_no_backend(build_command, tmp_path):
     """An app cannot be built with a config.toml containing no "backend" value."""
 
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
+    # Mock a wheel with the needed files
+    files = {
+        "dependancy/deploy/config.toml": ""
+    }
 
-    # Mock some wheels with a single config.toml containing no backend value.
-    def mock_run(*args, **kwargs):
-        if args[0][5] == "wheel":
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "first_app",
-                extra_content=[
-                    ("dependency/static/style.css", "span { margin: 10px; }\n"),
-                    ("dependency/deploy/config.toml", ""),
-                ],
-            )
-        elif args[0][5] == "pip":
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "dependency",
-                extra_content=[
-                    ("dependency/static/style.css", "div { margin: 10px; }\n"),
-                ],
-            )
-            create_wheel(
-                bundle_path / "www/static/wheels",
-                "other",
-                extra_content=[
-                    ("other/static/style.css", "div { padding: 10px; }\n"),
-                ],
-            )
-        else:
-            raise ValueError("Unknown command")
-
-    build_command.tools.subprocess.run.side_effect = mock_run
-
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
+    wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependancy", files=files)
 
     # Build the web app.
     with pytest.raises(
         BriefcaseConfigError,
         match=r"No backend was provided in config.toml file.",
     ):
-        build_command.build_app(first_app_generated)
+        build_command.extract_backend_config([wheel_path])
 
 
 def test_build_app_config_backend_warning(build_command, first_app_generated, tmp_path, capsys):
