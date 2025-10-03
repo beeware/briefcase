@@ -25,9 +25,11 @@ def test_wait_bar_done_message_non_interactive(non_interactive_console, capsys):
 
 def test_wait_bar_done_message_nested_interactive(console, capsys):
     """Custom done_message is printed when wait bar normally exits."""
-    with console.wait_bar("Wait message 1...", done_message="finished"):
-        with console.wait_bar("Wait message 2...", done_message="finished"):
-            pass
+    with (
+        console.wait_bar("Wait message 1...", done_message="finished"),
+        console.wait_bar("Wait message 2...", done_message="finished"),
+    ):
+        pass
 
     expected = "Wait message 2... finished\nWait message 1... finished\n\n"
     assert capsys.readouterr().out == expected
@@ -35,11 +37,11 @@ def test_wait_bar_done_message_nested_interactive(console, capsys):
 
 def test_wait_bar_done_message_nested_non_interactive(non_interactive_console, capsys):
     """Custom done_message is printed when wait bar normally exits."""
-    with non_interactive_console.wait_bar("Wait message 1...", done_message="finished"):
-        with non_interactive_console.wait_bar(
-            "Wait message 2...", done_message="finished"
-        ):
-            pass
+    with (
+        non_interactive_console.wait_bar("Wait message 1...", done_message="finished"),
+        non_interactive_console.wait_bar("Wait message 2...", done_message="finished"),
+    ):
+        pass
 
     expected = (
         "Wait message 1... started\n"
@@ -113,9 +115,11 @@ def test_wait_bar_transient_nested_interactive(
     capsys,
 ):
     """Output is present or absent based on presence of message and transient value."""
-    with console.wait_bar(message_one, transient=transient):
-        with console.wait_bar(message_two, transient=transient):
-            pass
+    with (
+        console.wait_bar(message_one, transient=transient),
+        console.wait_bar(message_two, transient=transient),
+    ):
+        pass
 
     assert capsys.readouterr().out == output
 
@@ -158,9 +162,11 @@ def test_wait_bar_transient_nested_non_interactive(
     capsys,
 ):
     """Output is present or absent based on presence of message and transient value."""
-    with non_interactive_console.wait_bar(message_one, transient=transient):
-        with non_interactive_console.wait_bar(message_two, transient=transient):
-            pass
+    with (
+        non_interactive_console.wait_bar(message_one, transient=transient),
+        non_interactive_console.wait_bar(message_two, transient=transient),
+    ):
+        pass
 
     assert capsys.readouterr().out == output
 
@@ -183,9 +189,11 @@ def test_wait_bar_keyboard_interrupt_interactive(
 ):
     """If the wait bar is interrupted, output is present or absent based on presence of
     message and transient value."""
-    with pytest.raises(KeyboardInterrupt):
-        with console.wait_bar(message, transient=transient):
-            raise KeyboardInterrupt
+    with (
+        pytest.raises(KeyboardInterrupt),
+        console.wait_bar(message, transient=transient),
+    ):
+        raise KeyboardInterrupt
 
     assert capsys.readouterr().out == output
 
@@ -216,9 +224,11 @@ def test_wait_bar_keyboard_interrupt_non_interactive(
 ):
     """If the wait bar is interrupted, output is present or absent based on presence of
     message and transient value."""
-    with pytest.raises(KeyboardInterrupt):
-        with non_interactive_console.wait_bar(message, transient=transient):
-            raise KeyboardInterrupt
+    with (
+        pytest.raises(KeyboardInterrupt),
+        non_interactive_console.wait_bar(message, transient=transient),
+    ):
+        raise KeyboardInterrupt
 
     assert capsys.readouterr().out == output
 
@@ -247,10 +257,12 @@ def test_wait_bar_keyboard_interrupt_nested_interactive(
 ):
     """If the wait bar is interrupted, output is present or absent based on presence of
     message and transient value."""
-    with pytest.raises(KeyboardInterrupt):
-        with console.wait_bar(message_one, transient=transient):
-            with console.wait_bar(message_two, transient=transient):
-                raise KeyboardInterrupt
+    with (
+        pytest.raises(KeyboardInterrupt),
+        console.wait_bar(message_one, transient=transient),
+        console.wait_bar(message_two, transient=transient),
+    ):
+        raise KeyboardInterrupt
 
     assert capsys.readouterr().out == output
 
@@ -294,10 +306,12 @@ def test_wait_bar_keyboard_interrupt_nested_non_interactive(
 ):
     """If the wait bar is interrupted, output is present or absent based on presence of
     message and transient value."""
-    with pytest.raises(KeyboardInterrupt):
-        with non_interactive_console.wait_bar(message_one, transient=transient):
-            with non_interactive_console.wait_bar(message_two, transient=transient):
-                raise KeyboardInterrupt
+    with (
+        pytest.raises(KeyboardInterrupt),
+        non_interactive_console.wait_bar(message_one, transient=transient),
+        non_interactive_console.wait_bar(message_two, transient=transient),
+    ):
+        raise KeyboardInterrupt
 
     assert capsys.readouterr().out == output
 

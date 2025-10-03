@@ -219,13 +219,15 @@ def test_calledprocesserror(mock_sub, streaming_process, sleep_zero, capsys):
     stderr_output = "stderr output\nline 2"
     streaming_process.stderr.read.return_value = stderr_output
 
-    with pytest.raises(subprocess.CalledProcessError) as exc:
-        with mock_sub.tools.console.wait_bar():
-            mock_sub.run(
-                ["hello", "world"],
-                check=True,
-                stderr=subprocess.PIPE,
-            )
+    with (
+        pytest.raises(subprocess.CalledProcessError) as exc,
+        mock_sub.tools.console.wait_bar(),
+    ):
+        mock_sub.run(
+            ["hello", "world"],
+            check=True,
+            stderr=subprocess.PIPE,
+        )
 
     # fmt: off
     expected_output = (
@@ -243,14 +245,12 @@ def test_calledprocesserror(mock_sub, streaming_process, sleep_zero, capsys):
 
 def test_invalid_invocations(mock_sub):
     """Ensure run cannot be used in a Wait Bar with invalid arguments."""
-    with pytest.raises(AssertionError):
-        with mock_sub.tools.console.wait_bar():
-            mock_sub.run(
-                ["hello", "world"],
-                stdout=subprocess.PIPE,
-            )
+    with pytest.raises(AssertionError), mock_sub.tools.console.wait_bar():
+        mock_sub.run(
+            ["hello", "world"],
+            stdout=subprocess.PIPE,
+        )
 
     for invalid_arg in ("timeout", "input"):
-        with pytest.raises(AssertionError):
-            with mock_sub.tools.console.wait_bar():
-                mock_sub.run(["hello", "world"], **{invalid_arg: "value"})
+        with pytest.raises(AssertionError), mock_sub.tools.console.wait_bar():
+            mock_sub.run(["hello", "world"], **{invalid_arg: "value"})
