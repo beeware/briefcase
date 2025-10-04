@@ -183,9 +183,7 @@ backend = "pyscript"
     )
     # Capture output and assert console info is present.
     captured = capsys.readouterr()
-    assert (
-         "Pyscript configuration file not found in package:" in captured.out
-    )
+    assert "Pyscript configuration file not found in package:" in captured.out
 
     # Check pyscript_config is empty and pyscript_version is the default.
     assert pyscript_config == {}
