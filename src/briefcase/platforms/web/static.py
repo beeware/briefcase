@@ -462,7 +462,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         :returns: Name for virtual environment directory
         """
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-        return f"dev-web--{python_version}"
+        return f"dev-web-{python_version}"
 
     def add_options(self, parser):
         super().add_options(parser)

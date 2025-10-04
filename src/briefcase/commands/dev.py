@@ -8,7 +8,12 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import VenvContext, virtual_environment
+from briefcase.integrations.virtual_environment import (
+    NoOpEnvironment,
+    VenvContext,
+    VenvEnvironment,
+    virtual_environment,
+)
 
 from .base import BaseCommand
 
@@ -207,7 +212,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         :returns: Name for virtual environment directory
         """
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-        return f"dev--{python_version}"
+        return f"dev-{python_version}"
 
     def venv_path(self, appname: str) -> Path:
         """Return the path for the app's virtual environment.
@@ -219,7 +224,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
     def virtual_environment(
         self, appname: str, isolated: bool, recreate: bool
-    ) -> virtual_environment:
+    ) -> VenvEnvironment | NoOpEnvironment:
         """Create and return a virtual environment context for the app.
 
         :param appname: The name of the app to create a venv context for
