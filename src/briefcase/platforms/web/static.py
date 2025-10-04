@@ -193,7 +193,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 if pattern_found:
                     # Indent content to align with markers.
                     indented_content = indent(
-                        body_map.get(kind, ""), pattern_found.group(1)
+                        body_map.get(kind, "").strip("\n") + "\n", pattern_found.group(1)
                     )
                     file_text = pattern.sub(
                         repl_tmpl.format(
