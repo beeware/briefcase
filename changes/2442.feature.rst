@@ -1,0 +1,1 @@
+Update Briefcase’s build system to support GUI toolkit-owned pyscript/backend configuration and insertion content.
