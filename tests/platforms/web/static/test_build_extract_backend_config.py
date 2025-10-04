@@ -166,7 +166,7 @@ backend = "something-else"
     assert pyscript_version == "2024.11.1"
 
 
-def test_extract_backend_config_no_pyscript_toml(build_command, tmp_path):
+def test_extract_backend_config_no_pyscript_toml(build_command, tmp_path, capsys):
     """If no pyscript.toml is supplied by a wheel, function returns a basic config."""
 
     # Create wheel with no pyscript.toml
@@ -180,6 +180,11 @@ backend = "pyscript"
 
     pyscript_config, pyscript_version = build_command.extract_backend_config(
         [wheel_path]
+    )
+    # Capture output and assert console info is present.
+    captured = capsys.readouterr()
+    assert (
+         "Pyscript configuration file not found in package:" in captured.out
     )
 
     # Check pyscript_config is empty and pyscript_version is the default.
