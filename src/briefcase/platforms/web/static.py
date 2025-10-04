@@ -456,7 +456,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         raise BriefcaseConfigError(
                             f"pyscript.toml content isn't valid TOML: {e}"
                         ) from e
-                    except KeyError:
+                    except (KeyError, FileNotFoundError):
                         self.console.info(
                             f"Pyscript configuration file not found in package: {config_package_list[0]}\n"
                             "Using default configuration."
