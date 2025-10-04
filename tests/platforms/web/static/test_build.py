@@ -215,7 +215,7 @@ existing-key-2 = 2
                     " *************************************************/",
                     "div { padding: 10px; }",
                     "/*@@ css:end @@*/",
-                    ""
+                    "",
                 ]
             )
             + "\n"
@@ -459,7 +459,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     " *************************************************/",
                     "span { margin: 10px; }",
                     "/*@@ css:end @@*/",
-                    ""
+                    "",
                 ]
             )
             + "\n"

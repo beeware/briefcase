@@ -235,11 +235,13 @@ def test_handle_insert_register_valid_file(build_command, tmp_path):
 @pytest.mark.parametrize(
     "entry, expected_skip",
     [
-        ("dummy/deploy/inserts/", True),          # Top-level directory entry
+        ("dummy/deploy/inserts/", True),  # Top-level directory entry
         ("dummy/deploy/inserts/assets/", False),  # Nested directory entry
     ],
 )
-def test_handle_insert_skip_dir_entries(build_command, tmp_path, monkeypatch, entry, expected_skip):
+def test_handle_insert_skip_dir_entries(
+    build_command, tmp_path, monkeypatch, entry, expected_skip
+):
     """Deploy/inserts directory entries are skipped with a debug log.
 
     Parametrized: runs once for top-level dir and once for nested dir.

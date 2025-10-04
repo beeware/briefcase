@@ -193,7 +193,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 if pattern_found:
                     # Indent content to align with markers.
                     indented_content = indent(
-                        body_map.get(kind, "").strip("\n") + "\n", pattern_found.group(1)
+                        body_map.get(kind, "").strip("\n") + "\n",
+                        pattern_found.group(1),
                     )
                     file_text = pattern.sub(
                         repl_tmpl.format(
@@ -440,7 +441,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                         )
 
                     # Get pyscript version from config.toml. Use default if not present.
-                    pyscript_version = config_data.get("pyscript", {}).get("version", pyscript_version)
+                    pyscript_version = config_data.get("pyscript", {}).get(
+                        "version", pyscript_version
+                    )
 
                     # Extract pyscript.toml
                     pyscript_path = config_filename.replace(
