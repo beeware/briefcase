@@ -11,8 +11,10 @@ from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    RequirementsInstallError,
     UnsupportedCommandError,
 )
+from briefcase.integrations.virtual_environment import VenvContext
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -473,6 +475,114 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             default=True,
             help="Run without creating an isolated environment (not recommended for web).",
         )
+
+    def _is_local_dependency(self, req):
+        """Checks if a dependency is local in order to install it as editable."""
+        is_local = False
+
+        clean_req = req.strip()
+
+        # Unix path
+        if (
+            clean_req.startswith("./")
+            or clean_req.startswith("../")
+            or clean_req.startswith("/")
+            or
+            # Windows path
+            clean_req.startswith(".\\")
+            or clean_req.startswith("..\\")
+            or clean_req.startswith("\\")
+            or
+            # Windows absolute C:\ or similar
+            (len(clean_req) > 1 and clean_req[1] == ":")
+        ):
+            if Path(clean_req).exists():
+                is_local = True
+        return is_local
+
+    def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
+        """Install the requirements for the web app dev. Local dependencies are editable
+        installed.
+
+        This will always include test requirements, if specified.
+
+        :param app: The config object for the app
+        :param venv: The context object used to run commands inside the virtual
+            environment.
+        """
+
+        # Install src code as editable
+        venv.run(
+            [sys.executable, "-m", "pip", "install", "-e", str(self.app_path(app))],
+            check=True,
+        )
+
+        requires = app.requires if app.requires else []
+        if app.test_requires:
+            requires.extend(app.test_requires)
+        if not requires:
+            self.console.info("No application requirements")
+            return
+
+        local_requires = []
+        remote_requires = []
+        for req in requires:
+            if self._is_local_dependency(req):
+                local_requires.append(req)
+            else:
+                remote_requires.append(req)
+
+        if remote_requires:
+            with self.console.wait_bar("Installing remote dev requirements..."):
+                try:
+                    venv.run(
+                        [
+                            sys.executable,
+                            "-u",
+                            "-X",
+                            "utf8",
+                            "-m",
+                            "pip",
+                            "install",
+                            "--upgrade",
+                            *(["-vv"] if self.console.is_deep_debug else []),
+                            *remote_requires,
+                            *app.requirement_installer_args,
+                        ],
+                        check=True,
+                        encoding="UTF-8",
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise RequirementsInstallError() from e
+
+        if local_requires:
+            with self.console.wait_bar(
+                "Installing local dev requirements as editable..."
+            ):
+                for req in local_requires:
+                    clean_req = req.strip()
+                    try:
+                        venv.run(
+                            [
+                                sys.executable,
+                                "-u",
+                                "-X",
+                                "utf8",
+                                "-m",
+                                "pip",
+                                "install",
+                                "-e",
+                                clean_req,
+                                *(["-vv"] if self.console.is_deep_debug else []),
+                                *app.requirement_installer_args,
+                            ],
+                            check=True,
+                            encoding="UTF-8",
+                        )
+                    except subprocess.CalledProcessError as e:
+                        raise RequirementsInstallError() from e
+
+        return
 
     def run_dev_app(self, app: AppConfig, **options):
         raise UnsupportedCommandError(
