@@ -243,8 +243,6 @@ class CreateCommand(BaseCommand):
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
-                # The base path where the bundle is being generated
-                "bundle_path": str(self.bundle_path(app)),
                 # Transformations of explicit properties into useful forms
                 "class_name": app.class_name,
                 "module_name": app.module_name,
