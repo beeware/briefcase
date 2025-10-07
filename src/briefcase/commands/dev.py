@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from briefcase.commands.create import _is_local_path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
@@ -75,8 +76,23 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
+    def install_app_code(
+        self, app: AppConfig, venv: VenvContext, dist_info_path: str, **options
+    ):
+        """This method creates dist-info metadata so Python recognizes the app as an
+        installed package without requiring pip install. For desktop platforms, source
+        code is accessible via PYTHONPATH at runtime.
+
+        :param app: The config object for the app
+        :param venv: The context object used to run commands inside the virtual
+            environment.
+        :param dist_info_path: The path to the .dist-info directory for the app
+        """
+        write_dist_info(app, dist_info_path)
+
     def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
-        """Install the requirements for the app dev.
+        """Install the requirements for the app dev. Local dependencies are editable
+        installed.
 
         This will always include test requirements, if specified.
 
@@ -92,27 +108,65 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("No application requirements")
             return
 
-        with self.console.wait_bar("Installing dev requirements..."):
-            try:
-                venv.run(
-                    [
-                        sys.executable,
-                        "-u",
-                        "-X",
-                        "utf8",
-                        "-m",
-                        "pip",
-                        "install",
-                        "--upgrade",
-                        *(["-vv"] if self.console.is_deep_debug else []),
-                        *requires,
-                        *app.requirement_installer_args,
-                    ],
-                    check=True,
-                    encoding="UTF-8",
-                )
-            except subprocess.CalledProcessError as e:
-                raise RequirementsInstallError() from e
+        local_requires = []
+        remote_requires = []
+        for req in requires:
+            if _is_local_path(req):
+                local_requires.append(req)
+            else:
+                remote_requires.append(req)
+
+        if remote_requires:
+            with self.console.wait_bar("Installing remote dev requirements..."):
+                try:
+                    venv.run(
+                        [
+                            sys.executable,
+                            "-u",
+                            "-X",
+                            "utf8",
+                            "-m",
+                            "pip",
+                            "install",
+                            "--upgrade",
+                            *(["-vv"] if self.console.is_deep_debug else []),
+                            *remote_requires,
+                            *app.requirement_installer_args,
+                        ],
+                        check=True,
+                        encoding="UTF-8",
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise RequirementsInstallError() from e
+
+        if local_requires:
+            with self.console.wait_bar(
+                "Installing local dev requirements as editable..."
+            ):
+                for req in local_requires:
+                    clean_req = req.strip()
+                    try:
+                        venv.run(
+                            [
+                                sys.executable,
+                                "-u",
+                                "-X",
+                                "utf8",
+                                "-m",
+                                "pip",
+                                "install",
+                                "-e",
+                                clean_req,
+                                *(["-vv"] if self.console.is_deep_debug else []),
+                                *app.requirement_installer_args,
+                            ],
+                            check=True,
+                            encoding="UTF-8",
+                        )
+                    except subprocess.CalledProcessError as e:
+                        raise RequirementsInstallError() from e
+
+        return
 
     def run_dev_app(
         self,
@@ -283,8 +337,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         ) as venv:
             if update_requirements or not dist_info_path.exists():
                 self.console.info("Installing requirements...", prefix=app.app_name)
+                self.install_app_code(app, venv, dist_info_path, **options)
                 self.install_dev_requirements(app, venv, **options)
-                write_dist_info(app, dist_info_path)
 
             if run_app:
                 if app.test_mode:
