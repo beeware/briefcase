@@ -287,7 +287,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             recreate=update_requirements,
         )
         with env as venv:
-            if env.created or update_requirements:
+            if venv.created or update_requirements:
                 self.console.info("Installing requirements...", prefix=app.app_name)
                 self.install_dev_requirements(app, venv, **options)
 

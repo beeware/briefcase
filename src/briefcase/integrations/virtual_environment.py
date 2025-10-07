@@ -186,11 +186,6 @@ class VenvEnvironment:
             tools=self.tools, venv_path=self.venv_path
         )
 
-    @property
-    def created(self) -> bool:
-        """Exposes the created status of the venv context."""
-        return self.venv_context.created
-
     def __enter__(self):
         rel_venv_path = self.venv_path.relative_to(Path.cwd())
         if self.recreate:
@@ -220,41 +215,22 @@ class NoOpVenvContext(Tool):
     name = "no_op_environment"
     full_name = "No-Op Environment"
 
-    def __init__(self, tools, **kwargs):
+    def __init__(self, tools, marker_path: Path, **kwargs):
         super().__init__(tools, **kwargs)
         self.created = False
         self.venv_path = None
+        self.marker_path = marker_path
+
+    @classmethod
+    def verify_install(
+        cls, tools: ToolCache, marker_path: Path, **kwargs
+    ) -> "NoOpVenvContext":
+        """Return a NoOpVenvContext for the specified path."""
+        return cls(tools=tools, marker_path=marker_path)
 
     def exists(self) -> bool:
         """A no-op env always exists."""
         return True
-
-    def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
-        """Run command through native subprocess."""
-        return self.tools.subprocess.run(args, **kwargs)
-
-    def Popen(self, args: SubprocessArgsT, **kwargs) -> stdlib_subprocess.Popen:
-        """Run command through native subprocess.Popen."""
-        return self.tools.subprocess.Popen(args, **kwargs)
-
-    def check_output(self, args: SubprocessArgsT, **kwargs) -> str:
-        """Run command through native subprocess.check_output."""
-        return self.tools.subprocess.check_output(args, **kwargs)
-
-
-class NoOpEnvironment:
-    """A no-op environment that returns a native runner."""
-
-    def __init__(self, tools: ToolCache, console: Console, marker_path: Path):
-        self.tools = tools
-        self.console = console
-        self.marker_path = marker_path
-        self.noop_context = NoOpVenvContext(tools=tools)
-
-    @property
-    def created(self) -> bool:
-        """Exposes the created stat of the noop context."""
-        return self.noop_context.created
 
     def check_and_update_marker(self) -> bool:
         """Check marker file and update if needed.
@@ -276,8 +252,29 @@ class NoOpEnvironment:
             return True
         return False
 
+    def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
+        """Run command through native subprocess."""
+        return self.tools.subprocess.run(args, **kwargs)
+
+    def Popen(self, args: SubprocessArgsT, **kwargs) -> stdlib_subprocess.Popen:
+        """Run command through native subprocess.Popen."""
+        return self.tools.subprocess.Popen(args, **kwargs)
+
+    def check_output(self, args: SubprocessArgsT, **kwargs) -> str:
+        """Run command through native subprocess.check_output."""
+        return self.tools.subprocess.check_output(args, **kwargs)
+
+
+class NoOpEnvironment:
+    """A no-op environment that returns a native runner."""
+
+    def __init__(self, tools: ToolCache, console: Console, marker_path: Path):
+        self.tools = tools
+        self.console = console
+        self.noop_context = NoOpVenvContext(tools=tools, marker_path=marker_path)
+
     def __enter__(self):
-        self.noop_context.created = self.check_and_update_marker()
+        self.noop_context.check_and_update_marker()
         return self.noop_context
 
     def __exit__(self, exc_type, exc_val, exc_tb):
