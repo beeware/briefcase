@@ -13,7 +13,6 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedCommandError,
 )
-from briefcase.integrations.virtual_environment import VenvContext
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -473,21 +472,6 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             action="store_false",
             default=True,
             help="Run without creating an isolated environment (not recommended for web).",
-        )
-
-    def install_app_code(
-        self, app: AppConfig, venv: VenvContext, dist_info_path: str, **options
-    ):
-        """Install the app code into the dev virtual environment as an editable package.
-
-        :param app: The config object for the app
-        :param venv: The context object used to run commands inside the virtual
-            environment.
-        :param dist_info_path: The path to the .dist-info directory for the app
-        """
-        venv.run(
-            [sys.executable, "-m", "pip", "install", "-e", str(self.app_path(app))],
-            check=True,
         )
 
     def run_dev_app(self, app: AppConfig, **options):

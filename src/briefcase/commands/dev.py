@@ -76,20 +76,6 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_app_code(
-        self, app: AppConfig, venv: VenvContext, dist_info_path: str, **options
-    ):
-        """This method creates dist-info metadata so Python recognizes the app as an
-        installed package without requiring pip install. For desktop platforms, source
-        code is accessible via PYTHONPATH at runtime.
-
-        :param app: The config object for the app
-        :param venv: The context object used to run commands inside the virtual
-            environment.
-        :param dist_info_path: The path to the .dist-info directory for the app
-        """
-        write_dist_info(app, dist_info_path)
-
     def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
         """Install the requirements for the app dev. Local dependencies are editable
         installed.
@@ -108,16 +94,15 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("No application requirements")
             return
 
-        local_requires = []
-        remote_requires = []
+        sorted_requires = []
         for req in requires:
             if _is_local_path(req):
-                local_requires.append(req)
+                sorted_requires.extend(["-e", req.strip()])
             else:
-                remote_requires.append(req)
+                sorted_requires.append(req)
 
-        if remote_requires:
-            with self.console.wait_bar("Installing remote dev requirements..."):
+        if sorted_requires:
+            with self.console.wait_bar("Installing dev requirements..."):
                 try:
                     venv.run(
                         [
@@ -130,7 +115,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                             "install",
                             "--upgrade",
                             *(["-vv"] if self.console.is_deep_debug else []),
-                            *remote_requires,
+                            *sorted_requires,
                             *app.requirement_installer_args,
                         ],
                         check=True,
@@ -138,34 +123,6 @@ class DevCommand(RunAppMixin, BaseCommand):
                     )
                 except subprocess.CalledProcessError as e:
                     raise RequirementsInstallError() from e
-
-        if local_requires:
-            with self.console.wait_bar(
-                "Installing local dev requirements as editable..."
-            ):
-                for req in local_requires:
-                    clean_req = req.strip()
-                    try:
-                        venv.run(
-                            [
-                                sys.executable,
-                                "-u",
-                                "-X",
-                                "utf8",
-                                "-m",
-                                "pip",
-                                "install",
-                                "-e",
-                                clean_req,
-                                *(["-vv"] if self.console.is_deep_debug else []),
-                                *app.requirement_installer_args,
-                            ],
-                            check=True,
-                            encoding="UTF-8",
-                        )
-                    except subprocess.CalledProcessError as e:
-                        raise RequirementsInstallError() from e
-
         return
 
     def run_dev_app(
@@ -324,9 +281,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # If one exists, assume that the requirements have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
+        dist_info_path = self.app_module_path(app).parent / app.dist_info_name
         if not run_app:
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
@@ -337,8 +292,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         ) as venv:
             if update_requirements or not dist_info_path.exists():
                 self.console.info("Installing requirements...", prefix=app.app_name)
-                self.install_app_code(app, venv, dist_info_path, **options)
                 self.install_dev_requirements(app, venv, **options)
+                write_dist_info(app, dist_info_path)
 
             if run_app:
                 if app.test_mode:
