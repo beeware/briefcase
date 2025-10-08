@@ -191,6 +191,75 @@ a single value should be provided.
         pass
 
 
+def validate_install_options_config(config):
+    """Validate that a install options are valid and complete, and convert into ."""
+    install_options = {}
+    if config:
+        for i, config_item in enumerate(config):
+            try:
+                name = config_item["name"]
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {i} does not define a `name`."
+                )
+
+            # Options must be valid Python identifiers
+            if not name.isidentifier():
+                raise BriefcaseConfigError(
+                    f"{name!r} cannot be used as an install option name, "
+                    "as it is not a valid Python identifier."
+                )
+
+            # Option names may be coerced into upper case; and there are
+            # a small number of reserved identifiers.
+            if name.upper() in {"ALLUSERS"}:
+                raise BriefcaseConfigError(
+                    f"{name!r} is a reserved install option identifier."
+                )
+
+            option = {}
+            if name in install_options:
+                raise BriefcaseConfigError(
+                    f"Install option names must be unique. The name {name!r}, "
+                    f"used by install option {i}, has already been defined."
+                )
+            else:
+                install_options[name] = option
+
+            try:
+                # Options must have a string title.
+                option["title"] = str(config_item["title"])
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {name!r} does not provide a title."
+                )
+
+            try:
+                # Options must have a string title.
+                option["description"] = str(config_item["description"])
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {name!r} does not provide a description."
+                )
+
+            try:
+                # Annotate a type onto the option configuration based on the
+                # default value. For now, boolean is the only valid type, but
+                # this could change in future.
+                option["default"] = config_item["default"]
+                option["type"] = type(option["default"]).__name__
+                if option["type"] not in {"bool"}:
+                    raise BriefcaseConfigError(
+                        f"Default value for install option {name!r} is not a boolean."
+                    )
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {name!r} does not provide a default."
+                )
+
+    return install_options
+
+
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
@@ -349,6 +418,7 @@ class AppConfig(BaseConfig):
         requires=None,
         icon=None,
         document_type=None,
+        install_option=None,
         permission=None,
         template=None,
         template_branch=None,
@@ -416,6 +486,8 @@ class AppConfig(BaseConfig):
 
         for document_type_id, document_type in self.document_types.items():
             validate_document_type_config(document_type_id, document_type)
+
+        self.install_options = validate_install_options_config(install_option)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
