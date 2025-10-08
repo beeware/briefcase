@@ -1,4 +1,5 @@
-# Testing Linux Apps with Docker
+git ============================== Testing Linux Apps with Docker
+==============================
 
 Briefcase can use Docker to build apps for Linux distributions other
 than the distribution you're currently using. Docker can also be used to
@@ -6,7 +7,7 @@ than the distribution you're currently using. Docker can also be used to
 aspects of the app to your local display. This document describes how to
 configure your system to do this.
 
-## X Window System Background
+# X Window System Background
 
 Linux distributions use either the [X Window System](https://www.x.org/)
 (sometimes called X or X11) or
@@ -20,7 +21,7 @@ The X11 protocol operates in a client/server framework; any application
 that wishes to display a window or receive user input will send and
 receive commands with an X server.
 
-### X Configuration
+## X Configuration
 
 The location of the X server is declared by the `DISPLAY` environment
 variable, normally in the form `HOSTNAME:DISPLAYNUMBER.SCREENNUMBER`. If
@@ -60,7 +61,7 @@ access control enabled, only authorized clients can connect
 SI:localuser:brutus
 ```
 
-### X Operation
+## X Operation
 
 While authentication is normally enabled for X access, security is
 mostly bolstered by the allowed methods for clients to connect. Most
@@ -86,7 +87,7 @@ X11 standard reserves port numbers starting at port 6000 for X displays.
 Therefore, Display 0 is available at port 6000 while Display 99 would be
 available at port 6099 and so on.
 
-## Docker
+# Docker
 
 From the design of X11, it is clear that a Docker container needs access
 to the socket for the display and the `xauth` database for the user.
@@ -113,7 +114,7 @@ While this strategy works in many environments, the generalized solution
 is more complicated to accommodate variations in Docker implementations
 as well as whether the current display is actually being proxied.
 
-### Docker Desktop
+## Docker Desktop
 
 The original implementation of Docker is referred to as Docker Engine
 and leverages many advanced features of Linux to run processes in highly
@@ -146,7 +147,7 @@ Therefore, since it is not possible to expose a socket for an X display
 to a container running in Docker Desktop, the X display will need to be
 exposed over the network shared by the host and container.
 
-### Docker Networking
+## Docker Networking
 
 In Docker Engine, networking is relatively straightforward. On the host,
 a network interface bridge called `docker0` is installed. This bridge
@@ -184,7 +185,7 @@ In conclusion, we can add `--add-host host.docker.internal:host-gateway`
 to the options to start a container and the host network interface will
 be reachable at `host.docker.internal`.
 
-## Exposing an X Display to a Container
+# Exposing an X Display to a Container
 
 Given the knowledge of the operation of the Docker implementations, we
 finally have the pieces to expose an X display to a container. Since it
@@ -192,7 +193,7 @@ is not possible to expose the display's socket directly to a container,
 a TCP proxy is configured to pass X messages on the network from the
 container to the socket on the host machine for the display.
 
-### TCP Proxy
+## TCP Proxy
 
 The [socat](http://www.dest-unreach.org/socat/) tool is a widely
 available program to relay bi-directional data transfer between
@@ -214,7 +215,7 @@ for X11 forwarding over SSH, as discussed below. In most cases, though,
 the socket will be the UNIX socket for the display in the
 `/tmp/.X11-unix/` directory.
 
-### X Authentication for the Proxied X Display
+## X Authentication for the Proxied X Display
 
 Authentication for X displays is managed in `xauth` database files. The
 `xauth` program allows for reading and writing the database. The
@@ -250,7 +251,7 @@ manually update the hostname of the entry to a wildcard value such that
 queries for the display number will return the authentication regardless
 of the hostname of the query.
 
-## X11 Forwarding over SSH
+# X11 Forwarding over SSH
 
 A common practice is to forward X11 communication from a remote machine
 to the local machine when using SSH. Therefore, when someone establishes

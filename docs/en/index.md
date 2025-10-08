@@ -8,7 +8,7 @@ native application. It supports producing binaries for:
 - Linux, as a native system package
 - iOS, as an Xcode project
 - Android, as a Gradle project
-- the Web, as a static website using PyScript for client-side Python
+- the Web, as a static web site using PyScript for client-side Python
 
 It is also extensible, allowing for additional platforms and
 installation formats to be produced.
@@ -44,4 +44,9 @@ talk to the community through:
 
 - [@beeware@fosstodon.org on Mastodon](https://fosstodon.org/@beeware)
 - [Discord](https://beeware.org/bee/chat/)
-- The Briefcase [GitHub Discussions forum](https://github.com/beeware/briefcase/discussions)
+- The Briefcase [GitHub Discussions
+  forum](https://github.com/beeware/briefcase/discussions)
+
+::: {.toctree maxdepth="2" hidden="" titlesonly=""}
+tutorial/index how-to/index topics/index reference/index about/index
+:::

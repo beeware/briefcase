@@ -97,7 +97,7 @@ from running altogether. See more information about code signing in the
 
 ## Workflow File Contents
 
-```YAML
+``` YAML
 name: CI
 on:
   pull_request:
