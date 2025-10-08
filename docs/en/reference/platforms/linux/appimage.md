@@ -1,6 +1,6 @@
 # AppImage
 
-<table style="width:88%;">
+<table class="host-platform-support-table">
 <colgroup>
 <col style="width: 11%" />
 <col style="width: 10%" />
@@ -16,8 +16,7 @@
 </colgroup>
 <thead>
 <tr>
-<th colspan="11">Host Platform Support (<code class="interpreted-text"
-role="ref">platform-support-key</code>)</th>
+<th colspan="11"><a href="/reference/platforms/#platform-support-key">Host Platform Support</a></th>
 </tr>
 <tr>
 <th colspan="2">macOS</th>
@@ -38,15 +37,15 @@ role="ref">platform-support-key</code>)</th>
 </thead>
 <tbody>
 <tr>
-<td><a href="##SUBST##|v|">|v|</a></td>
-<td><a href="##SUBST##|v|">|v|</a></td>
+<td>{{ not_tested }}</td>
+<td>{{ not_tested }}</td>
 <td></td>
 <td colspan="2"></td>
 <td colspan="2"></td>
-<td><a href="##SUBST##|v|">|v|</a></td>
-<td><a href="##SUBST##|v|">|v|</a></td>
-<td><a href="##SUBST##|v|">|v|</a></td>
-<td><a href="##SUBST##|v|">|v|</a></td>
+<td>{{ not_tested }}</td>
+<td>{{ not_tested }}</td>
+<td>{{ not_tested }}</td>
+<td>{{ not_tested }}</td>
 </tr>
 </tbody>
 </table>

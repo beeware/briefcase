@@ -1,10 +1,6 @@
 # Windows
 
-::: {.toctree hidden=""}
-app visualstudio
-:::
-
-<table style="width:88%;">
+<table class="host-platform-support-table">
 <colgroup>
 <col style="width: 11%" />
 <col style="width: 10%" />
@@ -20,8 +16,7 @@ app visualstudio
 </colgroup>
 <thead>
 <tr>
-<th colspan="11">Host Platform Support (<code class="interpreted-text"
-role="ref">platform-support-key</code>)</th>
+<th colspan="11"><a href="/reference/platforms/#platform-support-key">Host Platform Support</a></th>
 </tr>
 <tr>
 <th colspan="2">macOS</th>
@@ -45,7 +40,7 @@ role="ref">platform-support-key</code>)</th>
 <td></td>
 <td></td>
 <td></td>
-<td colspan="2"><a href="##SUBST##|f|">|f|</a></td>
+<td colspan="2">{{ ci_tested }}</td>
 <td colspan="2"></td>
 <td></td>
 <td></td>

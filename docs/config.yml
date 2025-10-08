@@ -22,6 +22,12 @@ extra:
     - icon: fontawesome/brands/discord
       link: https://beeware.org/bee/chat/
       name: BeeWare on Discord
+  "ci_tested": ●
+  "maintainer_tested": ○
+  "not_tested": △
+
+extra_css:
+  - stylesheets/briefcase.css
 
 theme:
   name: material
@@ -82,7 +88,5 @@ plugins:
   macros:
     j2_block_start_string: '[[%'
     j2_block_end_string: '%]]'
-    j2_variable_start_string: '[['
-    j2_variable_end_string: ']]'
     j2_comment_start_string: '[#'
     j2_comment_end_string: '#]'
