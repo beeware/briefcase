@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 copyright: © Russell Keith-Magee
 
-not_in_nav: |
-  /index.md
+# not_in_nav: |
+#  /index.md
 
 validation:
   omitted_files: warn
@@ -11,7 +11,7 @@ validation:
   unrecognized_links: warn
 
 extra:
-  project_name: beeware-tutorial
+  project_name: briefcase
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/beeware
@@ -77,6 +77,12 @@ markdown_extensions:
 plugins:
   search: {}
   autorefs: {}
-  literate-nav:
-    nav_file: SUMMARY.md
-  macros: {}
+  # literate-nav:
+  #  nav_file: SUMMARY.md
+  macros:
+    j2_block_start_string: '[[%'
+    j2_block_end_string: '%]]'
+    j2_variable_start_string: '[['
+    j2_variable_end_string: ']]'
+    j2_comment_start_string: '[#'
+    j2_comment_end_string: '#]'
