@@ -10,31 +10,32 @@ This will produce an installable artefact.
 To build an installer of the default output format for the current
 platform:
 
-``` console
+```console
 $ briefcase package
 ```
 
 To build an installer for a different platform:
 
-``` console
+```console
 $ briefcase package <platform>
 ```
 
 To build an installer for a specific output format:
 
-``` console
+```console
 $ briefcase package <platform> <output format>
 ```
 
-::: {.admonition}
-Packaging tool requirements
+/// admonition | Packaging tool requirements
 
 Building installers for some platforms depends on the build tools for
 the platform you're targeting being available on the platform you're
 using. For example, you will only be able to create iOS applications on
 macOS. Briefcase will check for any required tools, and will report an
 error if the platform you're targeting is not supported.
-:::
+
+
+///
 
 ## Options
 
@@ -52,7 +53,7 @@ app.
 Update and recompile the application's code before running. Equivalent
 to running:
 
-``` console
+```console
 $ briefcase update
 $ briefcase package
 ```
@@ -74,5 +75,4 @@ signed app to others.
 ### `-i <identity>` / `--identity <identity>` {#i-identity---identity-identity}
 
 The
-`code signing identity </how-to/code-signing/index>`{.interpreted-text
-role="doc"} to use when signing the app.
+[code signing identity](how-to/code-signing) to use when signing the app.

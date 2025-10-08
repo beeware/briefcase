@@ -1,7 +1,7 @@
 # Web
 
 Briefcase supports packaging web apps as
-`static web deployments <./static>`{.interpreted-text role="doc"}.
+[static web deployments](./static).
 
 ::: {.toctree maxdepth="1"}
 static

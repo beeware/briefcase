@@ -2041,50 +2041,50 @@
 - Converted Briefcase to be a PEP518 tool, rather than a setuptools
   extension. (#266)
 
-## 0.2.10 {#section-26}
+## 0.2.10  { id="section-26" }
 
 - Improved pre-detection of Xcode and related tools
 - Improved error handling when starting external tools
 - Fixed iOS simulator integration
 
-## 0.2.9 {#section-27}
+## 0.2.9  { id="section-27" }
 
 - Updated mechanism for starting the iOS simulator
 - Added support for environment markers in `install_requires`
 - Improved error handling when WiX isn't found
 
-## 0.2.8 {#section-28}
+## 0.2.8  { id="section-28" }
 
 - Corrects packaging problem with `urllib3`, caused by inconsistency
   between `requests` and `boto3`.
 - Corrected problems with Start menu targets being created on Windows.
 
-## 0.2.7 {#section-29}
+## 0.2.7  { id="section-29" }
 
 - Added support for launch images for iPhone X, Xs, Xr, Xs Max and Xr
   Max
 - Completed removal of internal pip API dependencies.
 
-## 0.2.6 {#section-30}
+## 0.2.6  { id="section-30" }
 
 - Added support for registering OS-level document type handlers.
 - Removed dependency on an internal pip API.
 - Corrected invocation of gradlew on Windows
 - Addressed support for support builds greater than b9.
 
-## 0.2.5 {#section-31}
+## 0.2.5  { id="section-31" }
 
 - Restored download progress bars when downloading support packages.
 
-## 0.2.4 {#section-32}
+## 0.2.4  { id="section-32" }
 
 - Corrected a bug in the iOS backend that prevented iOS builds.
 
-## 0.2.3 {#section-33}
+## 0.2.3  { id="section-33" }
 
 - Bugfix release, correcting the fix for pip 10 support.
 
-## 0.2.2 {#section-34}
+## 0.2.2  { id="section-34" }
 
 - Added compatibility with pip 10.
 - Improved Windows packaging to allow for multiple executables
@@ -2092,24 +2092,24 @@
   code.
 - Improved error handling for bad builds
 
-## 0.2.1 {#section-35}
+## 0.2.1  { id="section-35" }
 
 - Improved error reporting when a support package isn't available.
 
-## 0.2.0 {#section-36}
+## 0.2.0  { id="section-36" }
 
 - Added `-s` option to launch projects
 - Switch to using AWS S3 resources rather than GitHub Files.
 
-## 0.1.9 {#section-37}
+## 0.1.9  { id="section-37" }
 
 - Added a full Windows installer backend
 
-## 0.1.8 {#section-38}
+## 0.1.8  { id="section-38" }
 
 - Modified template roll out process to avoid API limits on GitHub.
 
-## 0.1.7 {#section-39}
+## 0.1.7  { id="section-39" }
 
 - Added check for existing directories, with the option to replace
   existing content.
@@ -2117,36 +2117,36 @@
 - Added a Windows backend.
 - Added a splash screen for Android
 
-## 0.1.6 {#section-40}
+## 0.1.6  { id="section-40" }
 
 - Added a Django backend (`@glasnt`)
 
-## 0.1.5 {#section-41}
+## 0.1.5  { id="section-41" }
 
 - Added initial Android template
 - Force versions of pip (\>= 8.1) and setuptools (\>=27.0)
 - Drop support for Python 2
 
-## 0.1.4 {#section-42}
+## 0.1.4  { id="section-42" }
 
 - Added support for tvOS projects
 - Moved to using branches in the project template repositories.
 
-## 0.1.3 {#section-43}
+## 0.1.3  { id="section-43" }
 
 - Added support for Android projects using VOC.
 
-## 0.1.2 {#section-44}
+## 0.1.2  { id="section-44" }
 
 - Added support for having multi-target support projects. This clears
   the way for Briefcase to be used for watchOS and tvOS projects, and
   potentially for Python-OSX-support and Python-iOS-support to be merged
   into a single Python-Apple-support.
 
-## 0.1.1 {#section-45}
+## 0.1.1  { id="section-45" }
 
 - Added support for app icons and splash screens.
 
-## 0.1.0 {#section-46}
+## 0.1.0  { id="section-46" }
 
 - Initial public release.

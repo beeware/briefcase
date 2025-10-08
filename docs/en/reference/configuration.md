@@ -30,13 +30,13 @@ the directory that contains the `pyproject.toml` file.
 Changes to these options will not take effect until you run the
 appropriate `briefcase` command:
 
-- For `sources`{.interpreted-text role="attr"}, run `briefcase update`,
+- For [sources][], run `briefcase update`,
   or pass the `-u` option to `briefcase build` or `briefcase run`.
-- For `requires`{.interpreted-text role="attr"}, run
+- For [requires][], run
   `briefcase update -r`, or pass the `-r` option to `briefcase build` or
   `briefcase run`.
-- For `icon`{.interpreted-text role="attr"} (including an
-  `document_type_id.icon`{.interpreted-text role="attr"} definition in a
+- For [icon][] (including an
+  [document_type_id.icon][] definition in a
   document type), run `briefcase update --update-resources`, or pass the
   `--update-resources` option to `briefcase build` or `briefcase run`.
 - For any other options, you'll need to re-run `briefcase create`.
@@ -104,9 +104,7 @@ the documentation for each backend for more details.
 
 ### Required values
 
-::: {.attribute}
-bundle
-:::
+::: bundle
 
 A reverse-domain name that can be used to identify resources for the
 application e.g., `com.example`. The bundle identifier will be combined
@@ -122,9 +120,7 @@ The project is the collection of all applications that are described by
 the briefcase configuration. For projects with a single app, this may be
 the same as the formal name of the solitary packaged app.
 
-::: {.attribute}
-version
-:::
+::: version
 
 A [PEP440](https://peps.python.org/pep-0440/) compliant version string.
 
@@ -140,9 +136,7 @@ Examples of valid version strings:
 
 ### Optional values
 
-::: {.attribute}
-author
-:::
+::: author
 
 The person or organization responsible for the project.
 
@@ -153,9 +147,7 @@ author_email
 The contact email address for the person or organization responsible for
 the project.
 
-::: {.attribute}
-url
-:::
+::: url
 
 A URL where more details about the project can be found.
 
@@ -163,15 +155,11 @@ A URL where more details about the project can be found.
 
 ### Required
 
-::: {.attribute}
-description
-:::
+::: description
 
 A short, one-line description of the purpose of the application.
 
-::: {.attribute}
-sources
-:::
+::: sources
 
 A list of paths, relative to the `pyproject.toml` file, where source
 code for the application can be found. The contents of any named files
@@ -182,15 +170,14 @@ be copied into the application bundle; the `src` directory will not be
 reproduced.
 
 Unlike most other keys in a configuration file,
-`sources`{.interpreted-text role="attr"} is a *cumulative* setting. If
+[sources][] is a *cumulative* setting. If
 an application defines sources at the global level, application level,
 *and* platform level, the final set of sources will be the
 *concatenation* of sources from all levels, starting from least to most
 specific.
 
 The only time `sources` is *not* required is if you are is
-`packaging an external
-application </how-to/external-apps>`{.interpreted-text role="doc"}. If
+[packaging an external application](how-to/external-apps). If
 you are packaging an external application, `external_package_path` must
 be defined, and `sources` *must not* be defined.
 
@@ -205,9 +192,7 @@ color to be used throughout an application to call attention to key
 elements. This setting is only used if the platform allows color
 modification, otherwise it is ignored.
 
-::: {.attribute}
-build
-:::
+::: build
 
 A build identifier. An integer, used in addition to the version
 specifier, to identify a specific compiled version of an application.
@@ -234,8 +219,7 @@ Paths are treated as format strings prior to glob expansion. You can use
 Python string formatting to include references to configuration
 properties of the app (e.g., `app.formal_name`, `app.version`, etc).
 
-For example, the following `cleanup_paths`{.interpreted-text
-role="attr"} specification:
+For example, the following [cleanup_paths][] specification:
 
     cleanup_paths = [
         "path/to/unneeded_file.txt",
@@ -284,15 +268,15 @@ compiled with the `re.MULTILINE` flag enabled.
 external_package_path
 :::
 
-::: {.admonition}
-Only for external apps
+/// admonition | Only for external apps
 
 This setting is only required if you're using Briefcase to
-`package an external
-application </how-to/external-apps>`{.interpreted-text role="doc"}. It
+[package an external application](how-to/external-apps). It
 is not required if you are using Briefcase for the entire app creation
 process.
-:::
+
+
+///
 
 The value of `external_package_path` defines the path to the root of a
 folder that will be packaged as an application. The contents of
@@ -305,18 +289,17 @@ If `external_package_path` is defined, `sources` must *not* be defined.
 external_package_executable_path
 :::
 
-::: {.admonition}
-Only for external apps
+/// admonition | Only for external apps
 
 This setting is only allowed if you're using Briefcase to
-`package an external
-application </how-to/external-apps>`{.interpreted-text role="doc"}. It
+[package an external application](how-to/external-apps). It
 is not allowed if you are using Briefcase for the entire app creation
 process.
-:::
 
-The path, relative to `external_package_path`{.interpreted-text
-role="attr"}, to the binary that will be executed as part of the
+
+///
+
+The path, relative to [external_package_path][], to the binary that will be executed as part of the
 installed app. This is used to establish the path to the shortcut that
 should be installed.
 
@@ -328,11 +311,9 @@ formal_name
 
 The application name as it should be displayed to humans. This name may
 contain capitalization and punctuation. If it is not specified, the
-`name`{.interpreted-text role="attr"} will be used.
+[name][] will be used.
 
-::: {.attribute}
-icon
-:::
+::: icon
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image to use as the icon for the application. The path
@@ -354,7 +335,7 @@ installer_icon
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image to use as the icon for the installer. As with
-`icon`{.interpreted-text role="attr"}, the path should *exclude* the
+[icon][], the path should *exclude* the
 extension, and a platform-appropriate extension will be appended when
 the application is built.
 
@@ -373,9 +354,9 @@ long_description
 
 A longer description of the purpose of the application. This description
 can be multiple paragraphs, if necessary. The long description *must
-not* be a copy of the `description`{.interpreted-text role="attr"}, or
-include the `description`{.interpreted-text role="attr"} as the first
-line of the `long_description`{.interpreted-text role="attr"}
+not* be a copy of the [description][], or
+include the [description][] as the first
+line of the [long_description][]
 
 A string describing the minimum OS version that the generated app will
 support. This value is only used on platforms that have a clear
@@ -408,7 +389,7 @@ The following examples will have the relative path transformed to an
 absolute one when Briefcase runs the requirement installation command if
 the path `wheels` exists relative to the configuration file:
 
-``` TOML
+```TOML
 requirement_installer_args = ["--find-links", "./wheels"]
 
 requirement_installer_args = ["-f", "../wheels"]
@@ -418,7 +399,7 @@ On the other hand, the next two examples avoid it because the string
 starts with `-`, does not start with a relative path indication (`./` or
 `../`), or do not resolve to an existing path:
 
-``` TOML
+```TOML
 requirement_installer_args = ["-f./wheels"]
 
 requirement_installer_args = ["--find-links=./wheels"]
@@ -428,11 +409,10 @@ requirement_installer_args = ["-f", "wheels"]
 requirement_installer_args = ["-f", "./this/path/does/not/exist"]
 ```
 
-::: {.admonition}
-Supported arguments
+/// admonition | Supported arguments
 
 The arguments supported in
-`requirement_installer_args`{.interpreted-text role="attr"} depend on
+[requirement_installer_args][] depend on
 the requirement installer backend.
 
 The only currently supported requirement installer is `pip`. As such,
@@ -442,7 +422,9 @@ command.
 Briefcase does not validate the inputs to this configuration, and will
 only report errors directly indicated by the requirement installer
 backend.
-:::
+
+
+///
 
 ::: {.attribute}
 primary_color
@@ -461,15 +443,13 @@ primary color. This setting is only used if the platform allows color
 modification, otherwise it is ignored.
 
 :::: {#configuration-requires-key}
-::: {.attribute}
-requires
-:::
+::: requires
 ::::
 
 A list of packages that must be packaged with this application.
 
 Unlike most other keys in a configuration file,
-`requires`{.interpreted-text role="attr"} is a *cumulative* setting. If
+[requires][] is a *cumulative* setting. If
 an application defines requirements at the global level, application
 level, *and* platform level, the final set of requirements will be the
 *concatenation* of requirements from all levels, starting from least to
@@ -504,9 +484,7 @@ Any PEP 508 version specifier is legal. For example:
 
       requires=["fullpath/wheelfile.whl"]
 
-::: {.attribute}
-revision
-:::
+::: revision
 
 An identifier used to differentiate specific builds of the same version
 of an app. Defaults to `1` if not provided.
@@ -542,7 +520,7 @@ application template. If you specify a stub binary revision, that will
 override the revision nominated by the application template.
 
 If you specify an explicit stub binary (using the
-`stub_binary`{.interpreted-text role="attr"} setting), this argument is
+[stub_binary][] setting), this argument is
 ignored.
 
 ::: {.attribute}
@@ -568,21 +546,17 @@ override the revision nominated by the application template.
 If you specify an explicit support package (either as a URL or a file
 path), this argument is ignored.
 
-::: {.attribute}
-supported
-:::
+::: supported
 
 Indicates that the platform is not supported. For example, if you know
 that the app cannot be deployed to Android for some reason, you can
 explicitly prevent deployment by setting `supported=False` in the
 Android section of the app configuration file.
 
-If `supported`{.interpreted-text role="attr"} is set to `false`, the
+If [supported][] is set to `false`, the
 create command will fail, advising the user of the limitation.
 
-::: {.attribute}
-template
-:::
+::: template
 
 A file path or URL pointing at a
 [cookiecutter](https://github.com/cookiecutter/cookiecutter) template
@@ -610,14 +584,13 @@ test_requires
 A list of packages that are required for the test suite to run.
 
 Unlike most other keys in a configuration file,
-`test_requires`{.interpreted-text role="attr"} is a *cumulative*
+[test_requires][] is a *cumulative*
 setting. If an application defines requirements at the global level,
 application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting
 from least to most specific.
 
-See `requires <configuration-requires-key>`{.interpreted-text
-role="ref"} for examples.
+See [requires][configuration-requires-key] for examples.
 
 ::: {.attribute}
 test_sources
@@ -631,8 +604,8 @@ in any named path will not be included. For example, if you specify
 copied into the application bundle; the `src` directory will not be
 reproduced.
 
-As with `sources`{.interpreted-text role="attr"},
-`test_sources`{.interpreted-text role="attr"} is a *cumulative* setting.
+As with [sources][],
+[test_sources][] is a *cumulative* setting.
 If an application defines sources at the global level, application
 level, *and* platform level, the final set of sources will be the
 *concatenation* of test sources from all levels, starting from least to
@@ -651,15 +624,11 @@ taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
-::: {.attribute}
-permission.camera
-:::
+::: permission.camera
 
 Permission to access the camera to take photos or video.
 
-::: {.attribute}
-permission.microphone
-:::
+::: permission.microphone
 
 Permission to access the microphone.
 
@@ -726,21 +695,15 @@ The `document type id` is an identifier, in alphanumeric format.
 
 The document type declaration requires the following settings:
 
-::: {.attribute}
-description
-:::
+::: description
 
 A short, one-line description of the document format.
 
-::: {.attribute}
-extension
-:::
+::: extension
 
 The file extension to register, without a leading dot.
 
-::: {.attribute}
-icon
-:::
+::: icon
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image for an icon to register for use with documents of
@@ -797,9 +760,7 @@ use the `x-` prefix, or [formally apply to
 IANA](https://www.iana.org/form/media-types) for a new registered MIME
 type.
 
-::: {.attribute}
-url
-:::
+::: url
 
 A URL for help related to the document format.
 
@@ -810,7 +771,7 @@ relevant to that platform. In particular, Apple platforms (macOS, iOS)
 have a more elaborate system for document types, and require additional
 configuration to use document types. If you want to support document
 types on these platforms, you will need to read the macOS
-`macOS-document-types`{.interpreted-text role="ref"} section for more
+[macOS-document-types][] section for more
 information.
 
 ## PEP621 compatibility
@@ -827,21 +788,21 @@ they are available:
 
 - `version` maps to the same key in Briefcase.
 - `authors` The `email` and `name` keys of the first value in the
-  `authors` setting map to `author`{.interpreted-text role="attr"} and
-  `author_email`{.interpreted-text role="attr"}.
+  `authors` setting map to [author][] and
+  [author_email][].
 - `dependencies` maps to the Briefcase `requires`{.interpreted-text
   role="attr"} setting. This is a cumulative setting; any packages
-  defined in the `requires`{.interpreted-text role="attr"} setting at
+  defined in the [requires][] setting at
   the `[tool.briefcase]` level will be appended to the packages defined
   with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to
-  `test_requires`{.interpreted-text role="attr"}., As with
-  `dependencies`/`requires`{.interpreted-text role="attr"}, this is a
+  [test_requires][]., As with
+  `dependencies`/[requires][], this is a
   cumulative setting.
 - `text` in a `[project.license]` section will be mapped to
-  `license`{.interpreted-text role="attr"}.
+  [license][].
 - `homepage` in a `[project.urls]` section will be mapped to
-  `url`{.interpreted-text role="attr"}.
+  [url][].
 - `requires-python` will be used to validate the running Python
   interpreter's version against the requirement.

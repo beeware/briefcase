@@ -7,24 +7,24 @@ Run the application in developer mode.
 To run your application in development mode on the current platform's
 default output format:
 
-``` console
+```console
 $ briefcase dev
 ```
 
 To run your application for a different platform:
 
-``` console
+```console
 $ briefcase dev <platform>
 ```
 
 To run your application using a specific output format:
 
-``` console
+```console
 $ briefcase dev <platform> <output format>
 ```
 
 The first time the application runs in developer mode, any requirements
-listed in a `requires`{.interpreted-text role="attr"} configuration item
+listed in a [requires][] configuration item
 in `pyproject.toml` will be installed into the current environment.
 
 ## Options
@@ -56,7 +56,7 @@ If you want to pass any arguments to your app's command line, you can
 specify them using the `--` marker to separate Briefcase's arguments
 from your app's arguments. For example:
 
-``` console
+```console
 $ briefcase dev -- --wiggle --test
 ```
 

@@ -64,8 +64,7 @@ can also be compressed to reduce their size for distribution.
 All macOS apps, regardless of output format, use the same icon formats,
 have the same set of configuration and runtime options, have the same
 permissions, and have the same platform quirks. See
-`the documentation on macOS apps <./index>`{.interpreted-text
-role="doc"} for more details.
+[the documentation on macOS apps](.) for more details.
 
 ## Application configuration
 

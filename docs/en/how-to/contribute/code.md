@@ -1,4 +1,4 @@
-# Contributing code to Briefcase {#contribute}
+# Contributing code to Briefcase  { id="contribute" }
 
 If you experience problems with Briefcase, [log them on
 GitHub](https://github.com/beeware/briefcase/issues). If you want to
@@ -6,43 +6,36 @@ contribute code, please [fork the
 code](https://github.com/beeware/briefcase/fork) and [submit a pull
 request](https://github.com/beeware/briefcase/pulls).
 
-## Prerequisites {#dev-environment-prereqs}
+## Prerequisites  { id="dev-environment-prereqs" }
 
 You'll need to install the following prerequisites.
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-View the `macOS prerequisites <macos-prerequisites>`{.interpreted-text
-role="ref"}.
-:::
+View the [macOS prerequisites][macos-prerequisites].
 
-::: {.group-tab}
-Linux
+///
 
-View the `Linux prerequisites <linux-prerequisites>`{.interpreted-text
-role="ref"}.
-:::
+/// tab | Linux
 
-::: {.group-tab}
-Windows
+View the [Linux prerequisites][linux-prerequisites].
+
+///
+
+/// tab | Windows
 
 View the
-`Windows prerequisites <windows-prerequisites>`{.interpreted-text
-role="ref"}.
-:::
-::::::
+[Windows prerequisites][windows-prerequisites].
+
+///
 
 ## `tl;dr`{.interpreted-text role="spelling:ignore"} - Dev Quick-Setup {#dev-environment-tldr}
 
 Set up the dev environment by running:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 $ git clone https://github.com/beeware/briefcase.git
 $ cd briefcase
 $ python3 -m venv .venv
@@ -50,12 +43,12 @@ $ . .venv/bin/activate
 (.venv) $ python -m pip install -Ue ".[dev]"
 (.venv) $ pre-commit install
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 $ git clone https://github.com/beeware/briefcase.git
 $ cd briefcase
 $ python3 -m venv .venv
@@ -63,12 +56,12 @@ $ . .venv/bin/activate
 (.venv) $ python -m pip install -Ue ".[dev]"
 (.venv) $ pre-commit install
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 C:\...>git clone https://github.com/beeware/briefcase.git
 C:\...>cd briefcase
 C:\...>py -m venv .venv
@@ -76,38 +69,36 @@ C:\...>.venv\Scripts\activate
 (.venv) C:\...>python -m pip install -Ue .[dev]
 (.venv) C:\...>pre-commit install
 ```
-:::
-::::::
+
+///
 
 Invoke checks and tests by running:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox p
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox p
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox p
 ```
-:::
-::::::
 
-## Set up your development environment {#setup-dev-environment}
+///
+
+## Set up your development environment  { id="setup-dev-environment" }
 
 The recommended way of setting up your development environment for
 Briefcase is to use a [virtual
@@ -116,34 +107,32 @@ install the development version of Briefcase and its dependencies.
 
 First, ensure that you have Python 3 and pip installed. To do this, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 $ python --version
 $ python -m pip --version
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 $ python --version
 $ python -m pip --version
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 C:\...>python --version
 C:\...>python -m pip --version
 ```
-:::
-::::::
+
+///
 
 ### Clone the Briefcase repository
 
@@ -157,79 +146,75 @@ select "Open with GitHub Desktop"; otherwise, copy the HTTPS URL
 provided, and use it to clone the repository to your computer using the
 command line:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
 Fork the Briefcase repository, and then:
 
-``` console
+```console
 $ git clone https://github.com/<your username>/briefcase.git
 ```
 
 (substituting your GitHub username)
-:::
 
-::: {.group-tab}
-Linux
+///
+
+/// tab | Linux
 
 Fork the Briefcase repository, and then:
 
-``` console
+```console
 $ git clone https://github.com/<your username>/briefcase.git
 ```
 
 (substituting your GitHub username)
-:::
 
-::: {.group-tab}
-Windows
+///
+
+/// tab | Windows
 
 Fork the Briefcase repository, and then:
 
-``` doscon
+```doscon
 C:\...>git clone https://github.com/<your username>/briefcase.git
 ```
 
 (substituting your GitHub username)
-:::
-::::::
+
+///
 
 ### Create a virtual environment
 
 To set up a virtual environment, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 $ cd briefcase
 $ python3 -m venv .venv
 $ source .venv/bin/activate
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 $ cd briefcase
 $ python3 -m venv .venv
 $ source .venv/bin/activate
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 C:\...>cd briefcase
 C:\...>python -m venv .venv
 C:\...>.venv\Scripts\activate
 ```
-:::
-::::::
+
+///
 
 Your prompt should now have a `(.venv)` prefix in front of it.
 
@@ -240,31 +225,29 @@ install](https://setuptools.pypa.io/en/latest/userguide/development_mode.html)
 of Briefcase into your development environment. Run the following
 command:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ python -m pip install -e ".[dev]"
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ python -m pip install -e ".[dev]"
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>python -m pip install -e .[dev]
 ```
-:::
-::::::
+
+///
 
 ### Enable pre-commit
 
@@ -273,34 +256,32 @@ identify simple issues and standardize code formatting. It does this by
 installing a git hook that automatically runs a series of code linters
 prior to finalizing any git commit. To enable pre-commit, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ pre-commit install
 pre-commit installed at .git/hooks/pre-commit
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ pre-commit install
 pre-commit installed at .git/hooks/pre-commit
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>pre-commit install
 pre-commit installed at .git/hooks/pre-commit
 ```
-:::
-::::::
+
+///
 
 Now you are ready to start hacking on Briefcase!
 
@@ -347,8 +328,7 @@ If you can reproduce the problem - try to fix it! Work out what
 combination of code is implementing the feature, and see if you can work
 out what isn't working correctly.
 
-If you're able to fix the problem, you'll need to `add tests
-<run-test-suite>`{.interpreted-text role="ref"} to verify that the
+If you're able to fix the problem, you'll need to [add tests][run-test-suite] to verify that the
 problem has been fixed (and to prevent the issue from occurring again in
 future).
 
@@ -361,8 +341,7 @@ problem) can be a huge help.
 
 ### Contribute improvements to documentation
 
-We've got a `separate contribution guide <./docs>`{.interpreted-text
-role="doc"} for documentation contributions. This covers how to set up
+We've got a [separate contribution guide](./docs) for documentation contributions. This covers how to set up
 your development environment to build Briefcase's documentation, and
 separate ideas for what to work on.
 
@@ -388,7 +367,7 @@ Ubuntu's packaging format, or support for Apple's
 [watchOS](https://github.com/beeware/briefcase/issues/5), and
 [visionOS](https://github.com/beeware/briefcase/issues/2253) platforms.
 
-## Running tests and coverage {#run-test-suite}
+## Running tests and coverage  { id="run-test-suite" }
 
 Briefcase uses [tox](https://tox.wiki/en/latest/) to manage the testing
 process and [`pytest`](https://docs.pytest.org/en/latest) for its own
@@ -406,31 +385,29 @@ This is essentially what is run by CI when you submit a pull request.
 
 To run the full test suite, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox
 ```
-:::
-::::::
+
+///
 
 The full test suite can take a while to run. You can speed it up
 considerably by running tox in parallel, by running `tox p` (or
@@ -447,7 +424,7 @@ either way, let us know!
 
 As with the full test suite, and the core, this should report
 `100% test coverage
-<code-coverage>`{.interpreted-text role="ref"}.
+<code-coverage>`{.interpreted-text role="ref"} - TODO: Manually fix this.
 
 ## Running test variations
 
@@ -466,33 +443,31 @@ then tox should be able to find and use it.
 If you're rapidly iterating on a new feature, you don't need to run the
 full test suite; you can run *just* the unit tests. To do this, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox -e py
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox -e py
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox -e py
 ```
-:::
-::::::
 
-### Run a subset of tests {#test-subset}
+///
+
+### Run a subset of tests  { id="test-subset" }
 
 By default, tox will run all tests in the unit test suite. When you're
 developing your new test, it may be helpful to run *just* that one test.
@@ -501,37 +476,35 @@ specifier](https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-
 as an argument to tox. These test paths are relative to the `briefcase`
 directory. For example, to run only the tests in a single file, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox -e py -- tests/path_to_test_file/test_some_test.py
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox -e py -- tests/path_to_test_file/test_some_test.py
 ```
-:::
-::::::
+
+///
 
 You'll still get a coverage report when running a part of the test suite
 -but the coverage results will only report the lines of code that were
 executed by the specific tests you ran.
 
-### Run the test suite for a specific Python version {#test-py-version}
+### Run the test suite for a specific Python version  { id="test-py-version" }
 
 By default `tox -e py` will run using whatever interpreter resolves as
 `python` on your machine. If you have multiple Python versions
@@ -539,33 +512,31 @@ installed, and want to test a specific Python version from the versions
 you have installed, you can specify a specific Python version to use.
 For example, to run the test suite on Python 3.10, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox -e py310
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox -e py310
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox -e py310
 ```
-:::
-::::::
 
-A `subset of tests <test-subset>`{.interpreted-text role="ref"} can be
+///
+
+A [subset of tests][test-subset] can be
 run by adding `--` and a test specification to the command line.
 
 ### Run the test suite without coverage (fast)
@@ -576,36 +547,33 @@ in parallel. This mode does not produce coverage files due to
 complexities in capturing coverage within spawned processes. To run a
 single python version in "fast" mode, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox -e py-fast
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox -e py-fast
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox -e py-fast
 ```
-:::
-::::::
 
-A `subset of tests <test-subset>`{.interpreted-text role="ref"} can be
+///
+
+A [subset of tests][test-subset] can be
 run by adding `--` and a test specification to the command line; a
-`specific Python version
-<test-py-version>`{.interpreted-text role="ref"} can be used by adding
+[specific Python version][test-py-version] can be used by adding
 the version to the test target (e.g., `py310-fast` to run fast on Python
 3.10).
 
@@ -637,7 +605,7 @@ files.
 At the end of the coverage test output there should be a report of the
 coverage data that was gathered:
 
-``` console
+```console
 Name    Stmts   Miss Branch BrPart   Cover   Missing
 ----------------------------------------------------
 TOTAL    7540      0   1040      0  100.0%
@@ -654,7 +622,7 @@ you which lines aren't being executed. For example, lets say we made a
 change to `briefcase/integrations/file.py`, adding some new logic. The
 coverage report might look something like:
 
-``` console
+```console
 Name                                 Stmts   Miss Branch BrPart  Cover   Missing
 --------------------------------------------------------------------------------
 src/briefcase/integrations/file.py     111      1     26      0  98.1%   170, 302-307
@@ -672,95 +640,89 @@ You can generate a coverage report for your platform and version of
 Python. For example, to run the test suite and generate a coverage
 report on Python 3.11, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox -m test311
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox -m test311
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox -m test311
 ```
-:::
-::::::
+
+///
 
 ### Coverage report for host platform
 
 If all supported versions of Python are available to tox, then coverage
 for the host platform can be reported by running:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox p -m test-platform
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox p -m test-platform
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox p -m test-platform
 ```
-:::
-::::::
+
+///
 
 ### Coverage reporting in HTML
 
 A HTML coverage report can be generated by appending `-html` to any of
 the coverage tox environment names, for instance:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ tox -e coverage-platform-html
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ tox -e coverage-platform-html
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>tox -e coverage-platform-html
 ```
-:::
-::::::
 
-## Submitting a pull request {#pr-housekeeping}
+///
+
+## Submitting a pull request  { id="pr-housekeeping" }
 
 Before you submit a pull request, there's a few bits of housekeeping to
 do.
@@ -788,31 +750,29 @@ reference that issue number in the branch name (e.g., `fix-1234`).
 
 To create a `fix-windows-signing` feature branch, run:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ git switch -c fix-windows-signing
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ git switch -c fix-windows-signing
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>git switch -c fix-windows-signing
 ```
-:::
-::::::
+
+///
 
 Commit your changes to this branch, then push to GitHub and create a
 pull request.
@@ -824,11 +784,9 @@ are any issues found with the commit, this will cause your commit to
 fail. Where possible, pre-commit will make the changes needed to correct
 the problems it has found:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ git add some/interesting_file.py
 (.venv) $ git commit -m "Minor change"
 check toml...............................................................Passed
@@ -846,12 +804,12 @@ ruff format..............................................................Failed
 ruff check...............................................................Passed
 codespell................................................................Passed
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ git add some/interesting_file.py
 (.venv) $ git commit -m "Minor change"
 check toml...............................................................Passed
@@ -869,12 +827,12 @@ ruff format..............................................................Failed
 ruff check...............................................................Passed
 codespell................................................................Passed
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>git add some/interesting_file.py
 (.venv) C:\...>git commit -m "Minor change"
 check toml...............................................................Passed
@@ -892,17 +850,15 @@ ruff format..............................................................Failed
 ruff check...............................................................Passed
 codespell................................................................Passed
 ```
-:::
-::::::
+
+///
 
 You can then re-add any files that were modified as a result of the
 pre-commit checks, and re-commit the change.
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (.venv) $ git add some/interesting_file.py
 (.venv) $ git commit -m "Minor change"
 check toml...............................................................Passed
@@ -917,12 +873,12 @@ codespell................................................................Passed
 [bugfix e3e0f73] Minor change
 1 file changed, 4 insertions(+), 2 deletions(-)
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (.venv) $ git add some/interesting_file.py
 (.venv) $ git commit -m "Minor change"
 check toml...............................................................Passed
@@ -937,12 +893,12 @@ codespell................................................................Passed
 [bugfix e3e0f73] Minor change
 1 file changed, 4 insertions(+), 2 deletions(-)
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (.venv) C:\...>git add some\interesting_file.py
 (.venv) C:\...>git commit -m "Minor change"
 check toml...............................................................Passed
@@ -955,8 +911,8 @@ ruff format..............................................................Passed
 ruff check...............................................................Passed
 codespell................................................................Passed
 ```
-:::
-::::::
+
+///
 
 Once everything passes, you're ready for the next steps.
 
@@ -1024,7 +980,7 @@ You can also see existing examples of news fragments in the `changes`
 directory of the Briefcase repository. If this folder is empty, it's
 likely because Briefcase has recently published a new release; change
 note files are deleted and combined to update the
-`release notes </about/releases>`{.interpreted-text role="doc"} with
+[release notes](about/releases) with
 each release. You can look at that file to see the style of comment that
 is required; you can look at [recently merged
 PRs](https://github.com/beeware/briefcase/pulls?q=is%3Apr+is%3Amerged)

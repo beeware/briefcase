@@ -119,12 +119,11 @@ The `round` and `square` icons should include their background color in
 the image. The `adaptive` icons should have a transparent background;
 the icon image should be centered in the overall image, and should not
 exceed the drawable area. The background color of the adaptive icon will
-be the value specified with `splash_background_color`{.interpreted-text
-role="attr"}.
+be the value specified with [splash_background_color][].
 
 The icon will also be used to populate the splash screen. You can
 specify a background color for the splash screen using the
-`splash_background_color`{.interpreted-text role="attr"} configuration
+[splash_background_color][] configuration
 setting.
 
 Android projects do not support installer images.
@@ -133,16 +132,16 @@ Android projects do not support installer images.
 
 Android allows for some customization of the colors used by your app:
 
-- `base_theme`{.interpreted-text role="attr"} is used to set the base
+- [base_theme][] is used to set the base
   Android theme.
-- `accent_color`{.interpreted-text role="attr"} is used as a subtle
+- [accent_color][] is used as a subtle
   highlight throughout your app to call attention to key elements. It's
   used on things like form labels and inputs.
-- `primary_color`{.interpreted-text role="attr"} is the main branding
+- [primary_color][] is the main branding
   color of the app and is used to color the app bar in the main window.
-- `primary_color_dark`{.interpreted-text role="attr"} is used alongside
+- [primary_color_dark][] is used alongside
   the primary color to color the status bar at the top of the screen.
-- `splash_background_color`{.interpreted-text role="attr"} is the color
+- [splash_background_color][] is the color
   of the splash background that displays while an app is loading.
 
 ## Additional options
@@ -164,7 +163,7 @@ The device or emulator to target. Can be specified as:
 - a JSON dictionary specifying the properties of a device that will be
   created. This dictionary must have, at a minimum, an AVD name:
 
-  ``` console
+  ```console
   $ briefcase run -d '{"avd":"new-device"}'
   ```
 
@@ -219,9 +218,7 @@ a single port.
 
 ## Application configuration
 
-::: {.currentmodule}
-android
-:::
+::: android
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.android` section of your `pyproject.toml`
@@ -296,9 +293,7 @@ A string providing additional Gradle settings to use when building your
 app. This will be added verbatim to the end of your `app/build.gradle`
 file.
 
-::: {.attribute}
-feature
-:::
+::: feature
 
 A property whose sub-properties define the features that will be marked
 as required by the final app. Each entry will be converted into a
@@ -315,8 +310,7 @@ will result in an `AndroidManifest.xml` declaration of:
 
 The use of some cross-platform permissions will imply the addition of
 features; see
-`the discussion on Android permissions <android-permissions>`{.interpreted-text
-role="ref"} for more details.
+[the discussion on Android permissions][android-permissions] for more details.
 
 ::: {.attribute no-index=""}
 min_os_version
@@ -328,9 +322,7 @@ the underlying API level. For example, Android 9 uses an API level of
 28; if you wanted to specify Android 9 as your minimum supported
 version, you would define `min_os_version = "28"`.
 
-::: {.attribute}
-permission
-:::
+::: permission
 
 A property whose sub-properties define the platform-specific permissions
 that will be marked as required by the final app. Each entry will be
@@ -385,31 +377,31 @@ If you want to manually specify a version code by defining
 `version_code` in your application configuration. If provided, this
 value will override any auto-generated value.
 
-## Permissions {#android-permissions}
+## Permissions  { id="android-permissions" }
 
 Briefcase cross platform permissions map to `<uses-permission>`
 declarations in the app's `AppManifest.xml`:
 
-- `permission.camera`{.interpreted-text role="attr"}:
+- [permission.camera][]:
   `android.permission.CAMERA`
-- `permission.microphone`{.interpreted-text role="attr"}:
+- [permission.microphone][]:
   `android.permission.RECORD_AUDIO`
-- `permission.coarse_location`{.interpreted-text role="attr"}:
+- [permission.coarse_location][]:
   `android.permission.ACCESS_COARSE_LOCATION`
-- `permission.fine_location`{.interpreted-text role="attr"}:
+- [permission.fine_location][]:
   `android.permission.ACCESS_FINE_LOCATION`
-- `permission.background_location`{.interpreted-text role="attr"}:
+- [permission.background_location][]:
   `android.permission.ACCESS_BACKGROUND_LOCATION`
-- `permission.photo_library`{.interpreted-text role="attr"}:
+- [permission.photo_library][]:
   `android.permission.READ_MEDIA_VISUAL_USER_SELECTED`
 
 Every application will be automatically granted the
 `android.permission.INTERNET` and `android.permission.NETWORK_STATE`
 permissions.
 
-Specifying a `permission.camera`{.interpreted-text role="attr"}
+Specifying a [permission.camera][]
 permission will result in the following non-required
-`feature`{.interpreted-text role="attr"} definitions being implicitly
+[feature][] definitions being implicitly
 added to your app:
 
 - `android.hardware.camera`,
@@ -418,11 +410,10 @@ added to your app:
 - `android.hardware.camera.external` and
 - `android.hardware.camera.autofocus`.
 
-Specifying the `permission.coarse_location`{.interpreted-text
-role="attr"}, `permission.fine_location`{.interpreted-text role="attr"}
-or `permission.background_location`{.interpreted-text role="attr"}
+Specifying the [permission.coarse_location][], [permission.fine_location][]
+or [permission.background_location][]
 permissions will result in the following non-required
-`feature`{.interpreted-text role="attr"} declarations being implicitly
+[feature][] declarations being implicitly
 added to your app:
 
 - `android.hardware.location.network`
@@ -438,12 +429,11 @@ the Android section of your `pyproject.toml`:
 
 ## Platform quirks
 
-### Availability of third-party packages {#android-third-party-packages}
+### Availability of third-party packages  { id="android-third-party-packages" }
 
 Briefcase is able to use third-party packages in Android apps. As long
 as the package is available on PyPI, or you can provide a wheel file for
-the package, it can be added to the `requires`{.interpreted-text
-role="attr"} declaration in your `pyproject.toml` file and used by your
+the package, it can be added to the [requires][] declaration in your `pyproject.toml` file and used by your
 app at runtime.
 
 If the package is pure Python (i.e., it does not contain a binary
@@ -503,7 +493,7 @@ would like a project to officially support Android, you should open a
 feature request with that project requesting Android support, and
 consider providing a PR to contribute that support.
 
-### Signing of `briefcase package` artefacts
+### Signing of  { id="package" }` artefacts
 
 While it is possible to use <span class="title-ref">briefcase package
 android</span> to produce an APK or AAB file for distribution, the file

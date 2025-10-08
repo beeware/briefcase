@@ -74,7 +74,7 @@ system-wide app repository.
 Briefcase currently supports creating `.flatpak` single file bundles;
 end users can install the app bundle by running:
 
-``` console
+```console
 $ flatpak install --user App_Name-1.2.3-x86_64.flatpak
 ```
 
@@ -83,7 +83,7 @@ option can be omitted if the user wants to install the app system-wide.
 
 The app can then be run with:
 
-``` console
+```console
 $ flatpak run com.example.appname
 ```
 
@@ -108,9 +108,7 @@ Flatpaks do not support splash screens or installer images.
 
 ## Application configuration
 
-::: {.currentmodule}
-linux.flatpak
-:::
+::: linux.flatpak
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.flatpak` section of your
@@ -173,8 +171,8 @@ A string, identifying the
 use as a base for the Flatpak app.
 
 The Flatpak runtime and SDK are paired; so, both a
-`flatpak_runtime`{.interpreted-text role="attr"} and a corresponding
-`flatpak_sdk`{.interpreted-text role="attr"} must be defined.
+[flatpak_runtime][] and a corresponding
+[flatpak_sdk][] must be defined.
 
 ::: {.attribute}
 flatpak_runtime_version
@@ -198,8 +196,7 @@ base image to ensure common required resources are available at runtime.
 flatpak_base_version
 :::
 
-An optional string (required if `flatpak_base`{.interpreted-text
-role="attr"} is defined), identifying the version of the Flatpak base
+An optional string (required if [flatpak_base][] is defined), identifying the version of the Flatpak base
 that should be used.
 
 ::: {.attribute}
@@ -210,8 +207,8 @@ A string, identifying the SDK associated with the platform that will be
 used to build the Flatpak app.
 
 The Flatpak runtime and SDK are paired; so, both a
-`flatpak_runtime`{.interpreted-text role="attr"} and a corresponding
-`flatpak_sdk`{.interpreted-text role="attr"} must be defined.
+[flatpak_runtime][] and a corresponding
+[flatpak_sdk][] must be defined.
 
 ::: {.attribute}
 modules_extra_content

@@ -23,9 +23,8 @@ in a Python module named `myapp`, test mode will attempt to launch
 discover and start the test suite.
 
 The code for your test suite can specified using the
-`test_sources`{.interpreted-text role="attr"} setting; test-specific
-requirements can be specified with `test_requires`{.interpreted-text
-role="attr"}. Test sources and requirements will only be included in
+[test_sources][] setting; test-specific
+requirements can be specified with [test_requires][]. Test sources and requirements will only be included in
 your app when running in test mode.
 
 Briefcase will monitor the log output of the test suite, looking for the
@@ -33,26 +32,26 @@ output corresponding to test suite completion. Briefcase has built-in
 support for [pytest](https://docs.pytest.org/en/latest) and
 [unittest](https://docs.python.org/3/library/unittest.html) test suites;
 support for other test frameworks can be added using the
-`test_success_regex`{.interpreted-text role="attr"} and
-`test_failure_regex`{.interpreted-text role="attr"} settings.
+[test_success_regex][] and
+[test_failure_regex][] settings.
 
 ### Usage
 
 To run your application on the current platform's default output format:
 
-``` console
+```console
 $ briefcase run
 ```
 
 To run your application for a different platform:
 
-``` console
+```console
 $ briefcase run <platform>
 ```
 
 To run your application using a specific output format:
 
-``` console
+```console
 $ briefcase run <platform> <output format>
 ```
 
@@ -72,7 +71,7 @@ app.
 Update the application's source code before running. Equivalent to
 running:
 
-``` console
+```console
 $ briefcase update
 $ briefcase build
 $ briefcase run
@@ -82,7 +81,7 @@ $ briefcase run
 
 Update application requirements before running. Equivalent to running:
 
-``` console
+```console
 $ briefcase update -r
 $ briefcase build
 $ briefcase run
@@ -93,7 +92,7 @@ $ briefcase run
 Update application resources such as icons before running. Equivalent to
 running:
 
-``` console
+```console
 $ briefcase update --update-resources
 $ briefcase build
 $ briefcase run
@@ -104,7 +103,7 @@ $ briefcase run
 Update application support package before running. Equivalent to
 running:
 
-``` console
+```console
 $ briefcase update --update-support
 $ briefcase build
 $ briefcase run
@@ -114,7 +113,7 @@ $ briefcase run
 
 Update stub binary before running. Equivalent to running:
 
-``` console
+```console
 $ briefcase update --update-stub
 $ briefcase build
 $ briefcase run
@@ -138,7 +137,7 @@ If you want to pass any arguments to your app's command line, you can
 specify them using the `--` marker to separate Briefcase's arguments
 from your app's arguments. For example:
 
-``` console
+```console
 briefcase run -- --wiggle --test
 ```
 

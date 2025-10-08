@@ -10,8 +10,7 @@ to the Apple App Store.
 > know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
 
 To distribute an app on the macOS App Store, you'll need to
-`enroll in the Apple
-Developer Program <apple-dev-enroll>`{.interpreted-text role="ref"}. You
+[enroll in the Apple Developer Program][apple-dev-enroll]. You
 don't need to generate any of the certificates described on that page -
 you just need an Apple ID registered in the developer program.
 
@@ -19,12 +18,11 @@ Once you've signed up for an Apple ID account, open the Xcode Settings
 dialog, and add your account under the "Accounts" tab.
 
 Apps are submitted to the macOS App Store using Xcode. This requires
-that you use Briefcase's `macOS Xcode project packaging format
-</reference/platforms/macOS/xcode>`{.interpreted-text role="doc"} to
+that you use Briefcase's [macOS Xcode project packaging format](/reference/platforms/macOS/xcode) to
 build your app. To specify this format, add `macOS Xcode` to any
 Briefcase app command you want to invoke - for example:
 
-``` console
+```console
 (venv) $ briefcase create macOS Xcode
 (venv) $ briefcase run macOS Xcode
 ```
@@ -34,7 +32,7 @@ Briefcase app command you want to invoke - for example:
 To submit your app to the App Store, use Briefcase to open the Xcode
 project associated with your project.
 
-``` console
+```console
 (venv) $ briefcase open macOS Xcode
 ```
 

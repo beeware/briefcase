@@ -15,19 +15,19 @@ selected.
 To publish the application artefacts for the current platform's default
 output format to the default publication channel:
 
-``` console
+```console
 $ briefcase publish
 ```
 
 To publish the application artefacts for a different platform:
 
-``` console
+```console
 $ briefcase publish <platform>
 ```
 
 To publish the application artefacts for a specific output format:
 
-``` console
+```console
 $ briefcase publish <platform> <output format>
 ```
 

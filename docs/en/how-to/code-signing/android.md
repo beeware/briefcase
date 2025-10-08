@@ -38,43 +38,41 @@ If you choose not to use app signing by Google Play, it is absolutely
 essential that you not lose this key. For this reason, we recommend
 using App Signing by Google Play.
 
-::::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 $ mkdir -p ~/.android
 $ ~/Library/Caches/org.beeware.briefcase/tools/java17/Contents/Home/bin/keytool -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore ~/.android/upload-key-helloworld.jks -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 $ mkdir -p ~/.android
 $ ~/.cache/briefcase/tools/java17/bin/keytool -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore ~/.android/upload-key-helloworld.jks -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 ```
-:::
 
-::: {.group-tab}
-Windows (cmd)
+///
 
-``` doscon
+/// tab | Windows (cmd)
+
+```doscon
 C:\...>IF not exist %HOMEPATH%\.android mkdir %HOMEPATH%\.android
 C:\...>%LOCALAPPDATA%\BeeWare\briefcase\Cache\tools\java\bin\keytool.exe -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore %HOMEPATH%\.android\upload-key-helloworld.jks -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 ```
-:::
 
-::: {.group-tab}
-Windows (PowerShell)
+///
 
-``` pwsh-session
+/// tab | Windows (PowerShell)
+
+```pwsh-session
 PS C:\...> If (-Not (Test-Path "$env:HOMEPATH/.android")) { New-Item -Path "$env:HOMEPATH\.android" -ItemType Directory }
 PS C:\...> & "$env:LOCALAPPDATA\BeeWare\briefcase\Cache\tools\java\bin\keytool.exe" -keyalg RSA -deststoretype pkcs12 -genkey -v -storepass android -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" -keysize 2048 -dname "cn=Upload Key" -alias upload-key -validity 10000
 ```
-:::
-:::::::
+
+///
 
 This creates a 2048-bit key and stores it in a Java keystore located in
 the `.android` folder within your home folder. Since the key's purpose
@@ -88,6 +86,5 @@ You should change the password. It is most critical to limit who has
 access to the keystore file, but changing the password is also
 important.
 
-See `Publishing your app <../publishing/android/>`{.interpreted-text
-role="doc"} for instructions on using this key to upload an app to the
+See [Publishing your app](../publishing/android/) for instructions on using this key to upload an app to the
 Google Play store.

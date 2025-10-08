@@ -10,8 +10,7 @@ Apple App Store.
 > know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
 
 To distribute an app on the iOS App Store, you'll need to
-`enroll in the Apple
-Developer Program <apple-dev-enroll>`{.interpreted-text role="ref"}. You
+[enroll in the Apple Developer Program][apple-dev-enroll]. You
 don't need to generate any of the certificates described on that page -
 you just need an Apple ID registered in the developer program.
 
@@ -22,7 +21,7 @@ dialog, and add your account under the "Accounts" tab.
 
 Use Briefcase to open the Xcode project associated with your project.
 
-``` console
+```console
 (venv) $ briefcase open iOS
 ```
 

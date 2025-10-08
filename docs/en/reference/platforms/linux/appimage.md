@@ -50,8 +50,7 @@
 </tbody>
 </table>
 
-::: {.admonition}
-Best effort support
+/// admonition | Best effort support
 
 AppImage has a number of significant issues building images for GUI
 apps. It is incompatible with the use of binary wheels, and the use of
@@ -70,10 +69,12 @@ support, but the core team does not consider addressing AppImage bugs a
 priority.
 
 If you need to distribute a Linux app,
-`System packages <./system>`{.interpreted-text role="doc"} or
-`Flatpaks <./flatpak>`{.interpreted-text role="doc"} are much more
+[System packages](./system) or
+[Flatpaks](./flatpak) are much more
 reliable options.
-:::
+
+
+///
 
 [AppImage](https://appimage.org) provides a way for developers to
 provide "native" binaries for Linux users. It allow packaging
@@ -100,10 +101,7 @@ specified, it falls back to an Ubuntu 18.04 base image. While it is
 that you do not, as the resulting AppImages will not be as portable as
 they could otherwise be.
 
-:::: {.note}
-::: {.title}
-Note
-:::
+/// note | Note
 
 AppImage works by attempting to autodetect all the libraries that an
 application requires, copying those libraries into a distribution, and
@@ -116,7 +114,8 @@ Briefcase makes a best-effort attempt to use the AppImage tools to build
 a binary, but sometimes, the problem lies with AppImage itself. If you
 have problems with AppImage binaries, you should first check whether the
 problem is a limitation with AppImage.
-::::
+
+///
 
 ## Icon format
 
@@ -155,17 +154,13 @@ a single argument to pass to Docker, in the order they are specified.
 
 ## Application configuration
 
-::: {.currentmodule}
-linux.appimage
-:::
+::: linux.appimage
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.appimage` section of your
 `pyproject.toml` file.
 
-::: {.attribute}
-manylinux
-:::
+::: manylinux
 
 The [manylinux](https://github.com/pypa/manylinux) tag to use as a base
 image when building the AppImage. Should be one of:
@@ -177,7 +172,7 @@ image when building the AppImage. Should be one of:
 - `manylinux2_28`
 
 New projects will default to `manylinux2014`. If an application doesn't
-specify a `manylinux`{.interpreted-text role="attr"} value,
+specify a [manylinux][] value,
 `ubuntu:18.04` will be used as the base image.
 
 ::: {.attribute}
@@ -224,7 +219,7 @@ cannot be automatically discovered by Linuxdeploy. GTK and Qt both have
 complex runtime resource requirements that can be difficult for
 Linuxdeploy to identify automatically.
 
-The `linuxdeploy_plugins`{.interpreted-text role="attr"} declaration is
+The [linuxdeploy_plugins][] declaration is
 a list of strings. Briefcase can take plugin definitions in three
 formats:
 
@@ -274,7 +269,7 @@ back to the `brutus` user - e.g.:
 
 ## Platform quirks
 
-### Use caution with `--update-support`
+### Use caution with  { id="--update-support" }`
 
 Care should be taken when using the `--update-support` option to the
 `update`, `build` or `run` commands. Support packages in Linux AppImages
@@ -304,7 +299,7 @@ Packaging on Linux is a difficult problem - especially when it comes to
 binary libraries. The following are some common problems you may see,
 and ways that they can be mitigated.
 
-### Failure to load `libpango-1.0-so.0` {#failure-to-load-libpango-1.0-so.0}
+### Failure to load  { id="-1.0-so.0" }` {#failure-to-load-libpango-1.0-so.0}
 
 Older Linux distributions (e.g., Ubuntu 18.04) may not be compatible
 with AppImages of Toga apps produced by Briefcase, complaining about
@@ -359,7 +354,7 @@ AppImage has become corrupted as a result of double processing.
 
 The solution is to ask Briefcase to install the affected library from
 source. This can be done by adding a `"--no-binary"` entry to the
-`requires`{.interpreted-text role="attr"} declaration for your app. For
+[requires][] declaration for your app. For
 example, if your app includes Pillow as a requirement:
 
     requires = ["pillow==9.1.0"]
@@ -421,11 +416,11 @@ add a single `:all` declaration:
     ]
 
 The `--no-binary` declaration doesn't need to be added to the same
-`requires`{.interpreted-text role="attr"} declaration that defines the
+[requires][] declaration that defines the
 requirement. For example, if you have a library that is used on all
 platforms, the declaration will probably be in the top-level
-`requires`{.interpreted-text role="attr"}, not the platform-specific
-`requires`{.interpreted-text role="attr"}. If you add `--no-binary` in
+[requires][], not the platform-specific
+[requires][]. If you add `--no-binary` in
 the top-level requires, the use of a binary wheel would be prevented on
 *all* platforms. To avoid this, you can add the requirement in the
 top-level requires, but add the `--no-binary` declaration to the

@@ -1,4 +1,4 @@
-# Upgrading from Briefcase v0.2 {#upgrading-from-briefcase-v0.2}
+# Upgrading from Briefcase v0.2  { id="upgrading-from-briefcase-v0.2" }
 
 Briefcase v0.2 was built as a setuptools extension. The configuration
 for your project was contained in a `setup.py` or `setup.cfg` file, and
@@ -119,8 +119,7 @@ In Briefcase v0.2, there was only one entry point:
 artefact; and, if you provided the `-s` argument, would also start the
 app.
 
-Briefcase v0.3 uses its own `briefcase` entry point, with `subcommands
-</reference/commands/index>`{.interpreted-text role="doc"} to perform
+Briefcase v0.3 uses its own `briefcase` entry point, with [subcommands](reference/commands) to perform
 specific functions:
 
 > - `briefcase new` - Bootstrap a new project (generating a
@@ -168,7 +167,7 @@ To use a different output format, add the format as an extra argument to
 each command after the platform. For example, to create a `app` file for
 macOS, you would run:
 
-``` console
+```console
 $ briefcase create macOS app
 $ briefcase build macOS app
 $ briefcase run macOS app

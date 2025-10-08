@@ -7,7 +7,7 @@ new application, and creates a stub project using the details provided.
 
 To start a new application, run:
 
-``` console
+```console
 $ briefcase new
 ```
 
@@ -52,7 +52,7 @@ Briefcase includes bootstraps for [Toga](https://toga.readthedocs.io)
 GUI toolkit) and [Pygame](https://www.pygame.org/news) (a common Python
 game development toolkit), as well as an "empty" bootstrap that doesn't
 include any GUI code. However, Briefcase provides a
-`plug-in interface <bootstrap-interface>`{.interpreted-text role="ref"}
+[plug-in interface][bootstrap-interface]
 that allows GUI toolkits to provide a their own bootstrap
 implementation.
 

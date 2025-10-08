@@ -52,19 +52,18 @@
 
 Briefcase supports two output formats for Windows apps:
 
-- A `./app`{.interpreted-text role="doc"} with a pre-compiled binary;
+- A [.][app] with a pre-compiled binary;
   and
-- A `./visualstudio`{.interpreted-text role="doc"} which can be used to
+- A [.][visualstudio] which can be used to
   build an app with a customized binary.
 
-The default output format for Windows is a `./app`{.interpreted-text
-role="doc"}.
+The default output format for Windows is a [.][app].
 
-Configuration options between the `./app`{.interpreted-text role="doc"}
-and `./visualstudio`{.interpreted-text role="doc"} formats are
+Configuration options between the [.][app]
+and [.][visualstudio] formats are
 identical.
 
-## Prerequisites {#windows-prerequisites}
+## Prerequisites  { id="windows-prerequisites" }
 
 Briefcase requires installing Python 3.9+.
 
@@ -138,9 +137,7 @@ the timestamp for code signing. Defaults to `sha256`.
 
 ## Application configuration
 
-::: {.currentmodule}
-windows
-:::
+::: windows
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml`
@@ -178,13 +175,12 @@ version_triple
 
 Python and Briefcase allow any valid [PEP440 version
 number](https://peps.python.org/pep-0440/) as a
-`version`{.interpreted-text role="attr"} specifier. However, MSI
+[version][] specifier. However, MSI
 installers require a strict integer triple version number. Many
 PEP440-compliant version numbers, such as "1.2", "1.2.3b3", and
 "1.2.3.4", are invalid for MSI installers.
 
-Briefcase will attempt to convert your `version`{.interpreted-text
-role="attr"} into a valid MSI value by extracting the first three parts
+Briefcase will attempt to convert your [version][] into a valid MSI value by extracting the first three parts
 of the main series version number (excluding pre, post and dev version
 indicators), padding with zeros if necessary:
 
@@ -194,13 +190,13 @@ indicators), padding with zeros if necessary:
 > - `1.2.3.4` becomes `1.2.3`.
 
 However, if you need to override this default value, you can define
-`version_triple`{.interpreted-text role="attr"} in your app settings. If
+[version_triple][] in your app settings. If
 provided, this value will be used in the MSI configuration file instead
 of the auto-generated value.
 
 ## Platform quirks
 
-### Use caution with `--update-support`
+### Use caution with  { id="--update-support" }`
 
 Care should be taken when using the `--update-support` option to the
 `update`, `build` or `run` commands. Support packages in Windows apps
@@ -212,7 +208,7 @@ existing support package content. This *should* work; however, ensure a
 reproducible release artefacts, it is advisable to perform a clean app
 build before release.
 
-### Packaging with `--adhoc-sign`
+### Packaging with  { id="--adhoc-sign" }`
 
 Using the `--adhoc-sign` option on Windows results in no signing being
 performed on the packaged app. This will result in your application

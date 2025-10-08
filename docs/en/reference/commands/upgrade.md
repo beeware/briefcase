@@ -20,19 +20,19 @@ variable), you must manage any upgrades on your own.
 
 To see what tools are currently being managed by Briefcase:
 
-``` console
+```console
 $ briefcase upgrade --list
 ```
 
 To upgrade all the tools that are currently being managed by Briefcase:
 
-``` console
+```console
 $ briefcase upgrade
 ```
 
 To upgrade a specific tool:
 
-``` console
+```console
 $ briefcase upgrade <tool_name>
 ```
 

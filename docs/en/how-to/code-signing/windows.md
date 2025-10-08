@@ -47,19 +47,17 @@ certificates in to one of its certificate stores.
 For instance, this will a import PFX file in to the `Personal`
 certificate store of `Current User`:
 
-::::: {.tabs}
-::: {.group-tab}
-CMD
+/// tab | CMD
 
-``` doscon
+```doscon
 C:\...>certutil.exe -user -importpfx -p MySecretPassword My .\cert.pfx
 ```
-:::
 
-::: {.group-tab}
-PowerShell
+///
 
-``` pwsh-session
+/// tab | PowerShell
+
+```pwsh-session
 PS C:\...> Import-PfxCertificate -FilePath .\cert.pfx -CertStoreLocation Cert:\CurrentUser\My -Password MySecretPassword
 ```
 :::
@@ -71,8 +69,7 @@ instructions.
 ## Certificate's SHA-1 Thumbprint
 
 On Windows,
-`briefcase package </reference/commands/package>`{.interpreted-text
-role="doc"} cannot retrieve the list of installed code signing
+[briefcase package](reference/commands/package) cannot retrieve the list of installed code signing
 certificates automatically. You need to retrieve the identity manually,
 and provide the certificates identity as a command line argument.
 
@@ -89,6 +86,6 @@ the bottom of the list on the Details tab, you'll find the `Thumbprint`
 field with the 40 character SHA-1 hash to use as the `identity` in the
 Briefcase package command.
 
-``` doscon
+```doscon
 (venv) C:\...>briefcase package --identity <certificate thumbprint>
 ```

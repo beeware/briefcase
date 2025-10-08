@@ -58,7 +58,7 @@ You can specify the use of the Windows Visual Studio project backend by
 using `briefcase <command> windows visualstudio`.
 
 Most apps will have no need to use the Visual Studio project format -
-the `./app`{.interpreted-text role="doc"} format provides everything
+the [.][app] format provides everything
 that is required to run most Windows apps. The Visual Studio project
 format is useful if you need to customize the stub binary that is used
 to start your app.
@@ -66,8 +66,7 @@ to start your app.
 All Windows apps, regardless of output format, use the same icon
 formats, have the same set of configuration and runtime options, have
 the same permissions, and have the same platform quirks. See
-`the documentation on Windows apps <./index>`{.interpreted-text
-role="doc"} for more details.
+[the documentation on Windows apps](.) for more details.
 
 ## Pre-requisites
 

@@ -58,15 +58,14 @@ You can specify the use of the macOS Xcode project backend by using
 `briefcase <command> macOS Xcode`.
 
 Most apps will have no need to use the Xcode format - the
-`./app`{.interpreted-text role="doc"} format provides everything that is
+[.][app] format provides everything that is
 required to run most macOS apps. The Xcode project format is useful if
 you need to customize the stub binary that is used to start your app.
 
 All macOS apps, regardless of output format, use the same icon formats,
 have the same set of configuration and runtime options, have the same
 permissions, and have the same platform quirks. See
-`the documentation on macOS apps <./index>`{.interpreted-text
-role="doc"} for more details.
+[the documentation on macOS apps](.) for more details.
 
 ## Application configuration
 

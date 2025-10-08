@@ -56,22 +56,21 @@ app xcode
 
 Briefcase supports two output formats for macOS apps:
 
-- An `./app`{.interpreted-text role="doc"} with a pre-compiled binary;
+- An [.][app] with a pre-compiled binary;
   and
-- An `./xcode`{.interpreted-text role="doc"} which can be used to build
+- An [.][xcode] which can be used to build
   an app with a customized binary.
 
-The default output format for macOS is an `./app`{.interpreted-text
-role="doc"}.
+The default output format for macOS is an [.][app].
 
 Both output formats support packaging as a macOS DMG, PKG or as a
 standalone signed app bundle. By default, apps will be both signed and
 notarized when they are packaged.
 
-Configuration options between the `./app`{.interpreted-text role="doc"}
-and `./xcode`{.interpreted-text role="doc"} formats are identical.
+Configuration options between the [.][app]
+and [.][xcode] formats are identical.
 
-## Prerequisites {#macos-prerequisites}
+## Prerequisites  { id="macos-prerequisites" }
 
 Briefcase requires installing Python 3.9+.
 
@@ -104,7 +103,7 @@ This option is only used when creating a `.pkg` installer.
 
 The
 `code signing identity </how-to/code-signing/macOS>`{.interpreted-text
-role="doc"} to use when signing the installer package. This is a
+role="doc"} - TODO: Manually fix this to use when signing the installer package. This is a
 *different* signing identity to the one used to sign the app, but it
 must be from the same team as the app signing identity.
 
@@ -134,17 +133,13 @@ option to resume the notarization process for an app.
 
 ## Application configuration
 
-::: {.currentmodule}
-macOS
-:::
+::: macOS
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.macOS` section of your `pyproject.toml`
 file.
 
-::: {.attribute}
-entitlement
-:::
+::: entitlement
 
 A property whose sub-attributes define keys that will be added to the
 app's `Entitlements.plist` file. Each entry will be converted into a key
@@ -171,9 +166,7 @@ to your `pyproject.toml`:
 
     entitlement."com.apple.security.cs.disable-library-validation" = false
 
-::: {.attribute}
-info
-:::
+::: info
 
 A property whose sub-attributes define keys that will be added to the
 app's `Info.plist` file. Each entry will be converted into a key in the
@@ -205,7 +198,7 @@ which it was built - i.e., if you build on an x86_64 machine, you will
 produce an x86_65 binary; if you build on an ARM64 machine, you will
 produce an ARM64 binary.
 
-## Document types {#macOS-document-types}
+## Document types  { id="mac" }OS-document-types}
 
 ::: {.currentmodule}
 document_type_id
@@ -234,9 +227,7 @@ document types are presented on macOS.
 The following macOS-specific configuration keys can be used in a
 document type declaration:
 
-::: {.attribute}
-macOS.CFBundleTypeRole
-:::
+::: macOS.CFBundleTypeRole
 
 [CFBundleTypeRole](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/cfbundletyperole)
 declares the role the application plays with respect to the document
@@ -245,9 +236,7 @@ type. Valid values are `Editor`, `Viewer`, `Shell`, `QLGenerator`, and
 
 Briefcase will default to a role of `Viewer` for all document types.
 
-::: {.attribute}
-macOS.LSHandlerRank
-:::
+::: macOS.LSHandlerRank
 
 [LSHandlerRank](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/lshandlerrank)
 defines the relative priority of this application when it comes to
@@ -257,9 +246,7 @@ are `Owner`, `Alternate`, `Default` and `None`.
 Briefcase will default to a role of `Alternate` for any known MIME type,
 and `Owner` for any custom MIME type.
 
-::: {.attribute}
-macOS.LSItemContentTypes
-:::
+::: macOS.LSItemContentTypes
 
 [LSItemContentTypes](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/lsitemcontenttypes)
 define the UTI content types that the app can handle.
@@ -271,12 +258,9 @@ It will construct a UTI of the form
 
 Although macOS technically allows an application to support multiple
 UTIs per document types, Briefcase can only assign a single content
-type. The value of `macOS.LSItemContentTypes`{.interpreted-text
-role="attr"} must be a string, or a list containing a single value.
+type. The value of [macOS.LSItemContentTypes][] must be a string, or a list containing a single value.
 
-::: {.attribute}
-macOS.UTTypeConformsTo
-:::
+::: macOS.UTTypeConformsTo
 
 [UTTypeConformsTo](https://developer.apple.com/documentation/BundleResources/Information-Property-List/UTExportedTypeDeclarations/UTTypeConformsTo)
 defines the list of UTIs that the document type conforms to. Each entry
@@ -305,8 +289,7 @@ document is structured as a directory on disk, but presents to the user
 as a single icon. An `.app` bundle is an example of a package document
 type.
 
-To define a package type, set `macOS.UTTypeConformsTo`{.interpreted-text
-role="attr"} to `["com.apple.package", "public.content"]`. If other UTI
+To define a package type, set [macOS.UTTypeConformsTo][] to `["com.apple.package", "public.content"]`. If other UTI
 types apply, they can also be added to this list.
 
 ### Further customization
@@ -324,43 +307,41 @@ helpful in determining how to expose content types for your application:
 
 ## Permissions
 
-::: {.currentmodule}
-macOS
-:::
+::: macOS
 
 Briefcase cross platform permissions map to a combination of
-`info`{.interpreted-text role="attr"} and
-`entitlement`{.interpreted-text role="attr"} keys:
+[info][] and
+[entitlement][] keys:
 
-- `permission.microphone`{.interpreted-text role="attr"}: an
-  `info`{.interpreted-text role="attr"} entry for
+- [permission.microphone][]: an
+  [info][] entry for
   `NSMicrophoneUsageDescription`; and an `entitlement`{.interpreted-text
   role="attr"} of `com.apple.security.device.audio-input`
-- `permission.camera`{.interpreted-text role="attr"}: an
-  `info`{.interpreted-text role="attr"} entry for
+- [permission.camera][]: an
+  [info][] entry for
   `NSCameraUsageDescription`; and an `entitlement`{.interpreted-text
   role="attr"} of `com.apple.security.device.camera`
-- `permission.coarse_location`{.interpreted-text role="attr"}: an
-  `info`{.interpreted-text role="attr"} entry for
+- [permission.coarse_location][]: an
+  [info][] entry for
   `NSLocationUsageDescription` (ignored if
-  `permission.background_location`{.interpreted-text role="attr"} or
-  `permission.fine_location`{.interpreted-text role="attr"} is defined);
+  [permission.background_location][] or
+  [permission.fine_location][] is defined);
   plus an entitlement of
   `com.apple.security.personal-information.location`
-- `permission.fine_location`{.interpreted-text role="attr"}: an
-  `info`{.interpreted-text role="attr"} entry for
+- [permission.fine_location][]: an
+  [info][] entry for
   `NSLocationUsageDescription`(ignored if
-  `permission.background_location`{.interpreted-text role="attr"} is
-  defined); plus an `entitlement`{.interpreted-text role="attr"} of
+  [permission.background_location][] is
+  defined); plus an [entitlement][] of
   `com.apple.security.personal-information.location`
-- `permission.background_location`{.interpreted-text role="attr"}: an
-  `info`{.interpreted-text role="attr"} entry for
+- [permission.background_location][]: an
+  [info][] entry for
   `NSLocationUsageDescription`; plus an `entitlement`{.interpreted-text
   role="attr"} of `com.apple.security.personal-information.location`
-- `permission.photo_library`{.interpreted-text role="attr"}: an
-  `info`{.interpreted-text role="attr"} entry for
+- [permission.photo_library][]: an
+  [info][] entry for
   `NSPhotoLibraryUsageDescription`; plus an
-  `entitlement`{.interpreted-text role="attr"} of
+  [entitlement][] of
   `com.apple.security.personal-information.photos-library`
 
 ## Platform quirks
@@ -377,7 +358,7 @@ This most commonly affects the <span class="title-ref">Documents</span>
 and <span class="title-ref">Desktop</span> folders (and subfolders), but
 can affect other locations if they are synchronized with iCloud.
 
-### Packaging with `--adhoc-sign`
+### Packaging with  { id="--adhoc-sign" }`
 
 Using the `--adhoc-sign` option on macOS produces an app that will be
 able to run on your own machine, but won't run on any other computer. In
@@ -441,10 +422,10 @@ component, you will need to consult the documentation of the package to
 determine how to compile a wheel.
 
 You can then directly add the wheel file to the
-`requires`{.interpreted-text role="attr"} definition for your app, or
+[requires][] definition for your app, or
 put the wheel in a folder and add:
 
-``` TOML
+```TOML
 requirement_installer_args = ["--find-links", "<path-to-wheel-folder>"]
 ```
 

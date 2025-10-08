@@ -20,7 +20,7 @@ To add a new targeted platform, add the name of the target to
 entry to `strategy.matrix.target` named `Flatpak` and a configuration to
 build a Flatpak under `strategy.matrix.include`, for example:
 
-``` YAML
+```YAML
 strategy:
   matrix:
     target: [ "Windows", "macOS", "iOS", "Android", "Flatpak" ]

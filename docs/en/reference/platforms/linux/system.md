@@ -61,15 +61,16 @@ packages that are integrated into their overall operating system:
 The Briefcase `system` backend provides a way to build your app in these
 system package formats.
 
-::: {.admonition}
-Not all Linux distributions are supported!
+/// admonition | Not all Linux distributions are supported!
 
 Briefcase cannot reliably identify *every* Linux vendor. If your Linux
 distribution isn't being identified (or isn't being identified
 correctly), please [open a
 ticket](https://github.com/beeware/briefcase/issues) with the contents
 of your `/etc/os-release` file.
-:::
+
+
+///
 
 The packaged app includes a stub binary, so that the app will appear in
 process lists using your app's name. It also includes a FreeDesktop
@@ -125,8 +126,8 @@ ensure these files are complete and correct before publishing your app.
 
 The Linux system app template also includes an initial draft manfile for
 your app. This manfile will be populated with the
-`description`{.interpreted-text role="attr"} and
-`long_description`{.interpreted-text role="attr"} of your app. You may
+[description][] and
+[long_description][] of your app. You may
 wish to add more details on app usage.
 
 ## Additional options
@@ -173,9 +174,7 @@ a single argument to pass to Docker, in the order they are specified.
 
 ## Application configuration
 
-::: {.currentmodule}
-linux.system
-:::
+::: linux.system
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.system` section of your
@@ -239,27 +238,26 @@ If you see errors during `briefcase build` of the form:
     Could not find dependency: libSomething.so.1
 
 but the app works under `briefcase dev`, the problem may be an
-incomplete `system_requires`{.interpreted-text role="attr"} definition.
+incomplete [system_requires][] definition.
 The `briefcase build` process generates a new environment that is
 completely isolated from your development environment, so if your app
 has any operating system dependencies, they *must* be listed in your
-`system_requires`{.interpreted-text role="attr"} definition.
+[system_requires][] definition.
 
-`system_requires`{.interpreted-text role="attr"} are the packages
+[system_requires][] are the packages
 required at *build* time. To specify *runtime* system requirements, use
-the `system_runtime_requires`{.interpreted-text role="attr"} setting.
+the [system_runtime_requires][] setting.
 
 ::: {.attribute}
 system_runtime_requires
 :::
 
 A list of system packages that your app requires at *runtime*. These
-will be closely related to the `system_requires`{.interpreted-text
-role="attr"} setting, but will likely be different; most notably, you
+will be closely related to the [system_requires][] setting, but will likely be different; most notably, you
 will probably need `-dev` packages at build time, but non `-dev`
 packages at runtime.
 
-`system_runtime_requires`{.interpreted-text role="attr"} should be
+[system_runtime_requires][] should be
 specified as system package requirements; they can optionally include
 version pins. Briefcase will automatically include the dependencies
 needed for Python. For example:
@@ -270,8 +268,7 @@ will specify that your app needs Python 3, a version of
 `libgtk >= 3.14`, and any version of `libwebkit2gtk`.
 
 Any problems with installing or running your system package likely
-indicate an issue with your `system_runtime_requires`{.interpreted-text
-role="attr"} definition.
+indicate an issue with your [system_runtime_requires][] definition.
 
 ::: {.attribute}
 system_section
@@ -281,8 +278,8 @@ When an application is published as a `.deb` file, Debian requires that
 you specify a "section", describing a classification of the application
 area. The template will provide a default section of `utils`; if you
 want to override that default, you can specify a value for
-`system_section`{.interpreted-text role="attr"}. For details on the
-allowed values for `system_section`{.interpreted-text role="attr"},
+[system_section][]. For details on the
+allowed values for [system_section][],
 refer to the [Debian Policy
 Manual](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section).
 
@@ -293,12 +290,12 @@ dockerfile_extra_content
 Any additional Docker instructions that are required to configure the
 container used to build your Python app. For example, any dependencies
 that cannot be configured with `apt-get` could be installed.
-`dockerfile_extra_content`{.interpreted-text role="attr"} is string
+[dockerfile_extra_content][] is string
 literal that will be added verbatim to the end of the project
 Dockerfile.
 
 Any Dockerfile instructions added by
-`dockerfile_extra_content`{.interpreted-text role="attr"} will be
+[dockerfile_extra_content][] will be
 executed as the `brutus` user, rather than the `root` user. If you need
 to perform container setup operations as `root`, switch the container's
 user to `root`, perform whatever operations are required, then switch
@@ -318,8 +315,8 @@ back to the `brutus` user - e.g.:
 ### Local path references and Docker builds
 
 Docker builds are not able to reference local paths in the
-`requires`{.interpreted-text role="attr"} and
-`requirement_installer_args`{.interpreted-text role="attr"}
+[requires][] and
+[requirement_installer_args][]
 configurations. This is because the Docker container only has access to
 specific file paths on the host system. See [issue
 \#2018](https://github.com/beeware/briefcase/issues/2081) for more

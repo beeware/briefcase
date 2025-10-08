@@ -1,4 +1,4 @@
-# Accessing Briefcase packaging metadata at runtime {#access-packaging-metadata}
+# Accessing Briefcase packaging metadata at runtime  { id="access-packaging-metadata" }
 
 When Briefcase installs your app, it adds a
 [PEP566](https://peps.python.org/pep-0566/) metadata file containing
@@ -39,19 +39,19 @@ that contains the following identifying keys:
 It will also have the following keys, derived from your application's
 `pyproject.toml` configuration:
 
-> - **Name** - `app_name`{.interpreted-text role="attr"}
-> - **Formal-Name** - `formal_name`{.interpreted-text role="attr"}
-> - **App-ID** - `bundle`{.interpreted-text role="attr"} and
->   `app_name`{.interpreted-text role="attr"}, joined with a `.`
-> - **Version** - `version`{.interpreted-text role="attr"}
-> - **Summary** - `description`{.interpreted-text role="attr"}
+> - **Name** - [app_name][]
+> - **Formal-Name** - [formal_name][]
+> - **App-ID** - [bundle][] and
+>   [app_name][], joined with a `.`
+> - **Version** - [version][]
+> - **Summary** - [description][]
 
 The metadata may also contain the following keys, if they have been
 defined in your app's `pyproject.toml` configuration:
 
-> - **Home-page** - `url`{.interpreted-text role="attr"}
-> - **Author** - `author`{.interpreted-text role="attr"}
-> - **Author-email** - `author_email`{.interpreted-text role="attr"}
+> - **Home-page** - [url][]
+> - **Author** - [author][]
+> - **Author-email** - [author_email][]
 
 For example, the metadata for the app constructed by the [BeeWare
 Tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-1.html)

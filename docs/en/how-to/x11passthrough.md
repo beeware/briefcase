@@ -41,7 +41,7 @@ authentication.
 
 An `xauth` database authorizing a host named `jupiter` might look like:
 
-``` console
+```console
 $ xauth list
 jupiter/unix:  MIT-MAGIC-COOKIE-1  9e9a67185b1fdc0c46e00dc400559873
 #ffff#6a757069746572#:  MIT-MAGIC-COOKIE-1  9e9a67185b1fdc0c46e00dc400559873
@@ -55,7 +55,7 @@ to the display. This is configured by `xhost`.
 An `xhost` configuration authorizing a user named `brutus` might look
 like:
 
-``` console
+```console
 $ xhost
 access control enabled, only authorized clients can connect
 SI:localuser:brutus
@@ -94,7 +94,7 @@ to the socket for the display and the `xauth` database for the user.
 
 An example of a well-published method to accomplish this:
 
-``` console
+```console
 $ docker run --rm -it --net host --env DISPLAY ubuntu xeyes
 ```
 

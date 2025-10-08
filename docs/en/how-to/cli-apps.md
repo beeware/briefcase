@@ -10,7 +10,7 @@ the [BeeWare Tutorial](https://docs.beeware.org/en/latest/).
 We'll cover:
 
 1.  How selecting "Console" changes your project configuration
-2.  The `console_app`{.interpreted-text role="attr"} flag in
+2.  The [console_app][] flag in
     `pyproject.toml`
 3.  How Briefcase handles command-line arguments
 4.  Operational differences in how console apps run and display output
@@ -23,7 +23,7 @@ Start by generating a new Briefcase project with `briefcase new`. When
 prompted to select a GUI framework, choose the option corresponding to
 **Console**.:
 
-``` console
+```console
 $ briefcase new
 ...
 -- GUI Framework -------------------------------------------------------------
@@ -48,7 +48,7 @@ configuration for the new project.
 
 The most important change is that your `pyproject.toml` will include:
 
-``` toml
+```toml
 console_app = true
 ```
 
@@ -62,7 +62,7 @@ Your generated project will have a layout similar to the following,
 assuming your app's formal name is `Hello CLI` and its app name is
 `hello-cli`:
 
-``` text
+```text
 hello-cli/
 ├── pyproject.toml
 ├── src/
@@ -78,9 +78,9 @@ statement by default.
 ## Handling Command-line Arguments
 
 You can use any standard Python tool to parse CLI arguments. Here's a
-simple example using `argparse`{.interpreted-text role="any"}:
+simple example using [argparse][]:
 
-``` python
+```python
 import argparse
 
 def main():
@@ -103,7 +103,7 @@ followed by your arguments.
 For example, if your app uses the example `argparse` code shown above,
 running in dev mode:
 
-``` console
+```console
 $ briefcase dev -- John
 ===========================================================================
 Hello, John!
@@ -111,7 +111,7 @@ Hello, John!
 
 And when you run the built app:
 
-``` console
+```console
 $ briefcase run -- John
 ===========================================================================
 Hello, John!
@@ -124,7 +124,7 @@ without passing arguments and display a graphical window.
 
 Once you've tested your app, you can package it for distribution using:
 
-``` console
+```console
 $ briefcase create
 $ briefcase build
 $ briefcase package
@@ -136,21 +136,19 @@ macOS, you'll get a `.pkg` installer. Command-line apps can't be
 generated for Android, iOS or web, as those platforms don't have a
 console that is accessible by the user.
 
-:::: {.note}
-::: {.title}
-Note
-:::
+/// note | Note
 
 On macOS, console apps *must* be packaged as `.pkg` files, rather than
 the `.app` or `.dmg` bundles used for GUI apps. A `.pkg` installer is
 required because a post-processing step must be used to ensure the
 binary is available on the user's path, allowing the app to be executed
 from the command line.
-::::
+
+///
 
 When the package is installed by the user, it can run from the terminal:
 
-``` console
+```console
 $ hello-cli John
 Hello, John!
 ```

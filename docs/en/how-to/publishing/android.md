@@ -16,65 +16,61 @@ To build the app, you must start from the directory containing the
 <span class="title-ref">pyproject.toml</span> file. Use Briefcase to
 build a release bundle for your application:
 
-:::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 (venv) $ briefcase package android
 [hello-world] Building Android App Bundle and APK in release mode...
 ...
 [hello-world] Packaged dist/Hello World-1.0.0.aab
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 (venv) $ briefcase package android
 [hello-world] Building Android App Bundle and APK in release mode...
 ...
 [hello-world] Packaged dist/Hello World-1.0.0.aab
 ```
-:::
 
-::: {.group-tab}
-Windows
+///
 
-``` doscon
+/// tab | Windows
+
+```doscon
 (venv) C:\...>briefcase package android
 [hello-world] Building Android App Bundle and APK in release mode...
 ...
 [hello-world] Packaged dist\Hello World-1.0.0.aab
 ```
-:::
-::::::
+
+///
 
 This will result in an Android App Bundle file being generated. An
 [Android App Bundle](https://developer.android.com/guide/app-bundle) is
 a publishing format that includes all your app’s compiled code and
 resources.
 
-::: {.admonition}
-AAB and APK
+/// admonition | AAB and APK
 
 APK (Android Package) files can be directly installed on a device. AAB
 is a newer format that simplifies the process of uploading your app to
 the Play Store, allows Google to manage the signing process, and allows
 the APK that is installed on your end-user's device to be smaller.
-:::
+
+
+///
 
 ## Sign the Android App Bundle
 
-:::: {.note}
-::: {.title}
-Note
-:::
+/// note | Note
 
-Before you sign the APK files, you need to `create a code signing
-identity. <../code-signing/android>`{.interpreted-text role="doc"}
-::::
+Before you sign the APK files, you need to [create a code signing identity.](../code-signing/android)
+
+///
 
 The Google Play Store requires that the Android App Bundle is signed
 before it is uploaded, using the Java jarsigner tool.
@@ -84,11 +80,9 @@ In this example below, we assume your code signing identity is stored in
 We also assume that the app's formal name is Hello World. You will need
 to change the path to the AAB file based on your app's formal name.
 
-::::::: {.tabs}
-::: {.group-tab}
-macOS
+/// tab | macOS
 
-``` console
+```console
 $ ~/Library/Caches/org.beeware.briefcase/tools/java17/Contents/Home/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "dist/Hello World-1.0.0.aab" upload-key -storepass android
    adding: META-INF/MANIFEST.MF
    adding: META-INF/UPLOAD-K.SF
@@ -110,12 +104,12 @@ jar signed.
 Warning:
 The signer's certificate is self-signed.
 ```
-:::
 
-::: {.group-tab}
-Linux
+///
 
-``` console
+/// tab | Linux
+
+```console
 $ ~/.cache/briefcase/tools/java17/bin/jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ~/.android/upload-key-helloworld.jks "dist/Hello World-1.0.0.aab" upload-key -storepass android
    adding: META-INF/MANIFEST.MF
    adding: META-INF/UPLOAD-K.SF
@@ -137,12 +131,12 @@ jar signed.
 Warning:
 The signer's certificate is self-signed.
 ```
-:::
 
-::: {.group-tab}
-Windows (cmd)
+///
 
-``` doscon
+/// tab | Windows (cmd)
+
+```doscon
 C:\...>%LOCALAPPDATA%\BeeWare\briefcase\Cache\tools\java\bin\jarsigner.exe -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore %HOMEPATH%\.android\upload-key-helloworld.jks "dist\Hello World-1.0.0.aab" upload-key -storepass android
    adding: META-INF/MANIFEST.MF
    adding: META-INF/UPLOAD-K.SF
@@ -164,12 +158,12 @@ jar signed.
 Warning:
 The signer's certificate is self-signed.
 ```
-:::
 
-::: {.group-tab}
-Windows (PowerShell)
+///
 
-``` pwsh-session
+/// tab | Windows (PowerShell)
+
+```pwsh-session
 PS C:\...> & "$env:LOCALAPPDATA\BeeWare\briefcase\Cache\tools\java\bin\jarsigner.exe" -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore "$env:HOMEPATH\.android\upload-key-helloworld.jks" "android\gradle\Hello World\app\build\outputs\bundle\release\app-release.aab" upload-key -storepass android
    adding: META-INF/MANIFEST.MF
    adding: META-INF/UPLOAD-K.SF
@@ -191,8 +185,8 @@ jar signed.
 Warning:
 The signer's certificate is self-signed.
 ```
-:::
-:::::::
+
+///
 
 You can safely ignore the warning about the signer's certificate being
 self-signed. Google will manage the process of signing the app with a
@@ -283,14 +277,15 @@ In the left navigation bar, select **Production** (in the "Release"
 grouping), Then select **Create Release.** If prompted to enable App
 Signing by Google Play, click **Continue**.
 
-::: {.admonition}
-Non-production releases
+/// admonition | Non-production releases
 
 The Play Store also supports releasing your app for internal, alpha and
 beta testing. Google's documentation [contains more details about
 creating test
 releases](https://support.google.com/googleplay/android-developer/answer/9845334).
-:::
+
+
+///
 
 In an earlier section of this tutorial, we used `briefcase publish` and
 `jarsigner` to create a signed Android App Bundle file. It is stored in

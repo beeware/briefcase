@@ -84,7 +84,7 @@ iOS projects do not support installer images.
 
 iOS allows for some customization of the colors used by your app:
 
-- `splash_background_color`{.interpreted-text role="attr"} is the color
+- [splash_background_color][] is the color
   of the splash background that displays while an app is loading.
 
 ## Additional options
@@ -102,17 +102,13 @@ The device simulator to target. Can be either a UDID, a device name
 
 ## Application configuration
 
-::: {.currentmodule}
-iOS
-:::
+::: iOS
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.iOS.app` section of your `pyproject.toml`
 file.
 
-::: {.attribute}
-info
-:::
+::: info
 
 A property whose sub-attributes define keys that will be added to the
 app's `Info.plist` file. Each entry will be converted into a key in the
@@ -136,36 +132,35 @@ value of `IPHONEOS_DEPLOYMENT_TARGET` used when building the app.
 ## Permissions
 
 Briefcase cross platform permissions map to the following
-`info`{.interpreted-text role="attr"} keys:
+[info][] keys:
 
-- `permission.camera`{.interpreted-text role="attr"}:
+- [permission.camera][]:
   `NSCameraUsageDescription`
-- `permission.microphone`{.interpreted-text role="attr"}:
+- [permission.microphone][]:
   `NSMicrophoneUsageDescription`
-- `permission.coarse_location`{.interpreted-text role="attr"}:
+- [permission.coarse_location][]:
   - `NSLocationDefaultAccuracyReduced=True`
   - `NSLocationWhenInUseUsageDescription` if `fine_location` is not
     defined
-- `permission.fine_location`{.interpreted-text role="attr"}:
+- [permission.fine_location][]:
   - `NSLocationDefaultAccuracyReduced=False`
   - `NSLocationWhenInUseUsageDescription`
-- `permission.background_location`{.interpreted-text role="attr"}:
+- [permission.background_location][]:
   - `NSLocationAlwaysAndWhenInUseUsageDescription`
   - `NSLocationWhenInUseUsageDescription` if neither
-    `permission.fine_location`{.interpreted-text role="attr"} or
-    `permission.coarse_location`{.interpreted-text role="attr"} is set
+    [permission.fine_location][] or
+    [permission.coarse_location][] is set
   - `UIBackgroundModes` will include `location` and `processing`
-- `permission.photo_library`{.interpreted-text role="attr"}:
+- [permission.photo_library][]:
   `NSPhotoLibraryAddUsageDescription`
 
 ## Platform quirks
 
-### Availability of third-party packages {#ios-third-party-packages}
+### Availability of third-party packages  { id="ios-third-party-packages" }
 
 Briefcase is able to use third-party packages in iOS apps. As long as
 the package is available on PyPI, or you can provide a wheel file for
-the package, it can be added to the `requires`{.interpreted-text
-role="attr"} declaration in your `pyproject.toml` file and used by your
+the package, it can be added to the [requires][] declaration in your `pyproject.toml` file and used by your
 app at runtime.
 
 If the package is pure Python (i.e., it does not contain a binary
@@ -239,10 +234,10 @@ component, you'll need to use
 other similar tooling to compile compatible wheels.
 
 You can then directly add the wheel file to the
-`requires`{.interpreted-text role="attr"} definition for your app, or
+[requires][] definition for your app, or
 put the wheel in a folder and add:
 
-``` TOML
+```TOML
 requirement_installer_args = ["--find-links", "<path-to-wheel-folder>"]
 ```
 
@@ -281,7 +276,7 @@ option:
 This will find and purge all `.a` content in your app's dependencies.
 You can add additional patterns to remove other problematic content.
 
-### Deployment to Simulated and Physical iOS Devices {#ios-deploy}
+### Deployment to Simulated and Physical iOS Devices  { id="ios-deploy" }
 
 Briefcase provides support for deployment to simulated iOS devices
 through the command line.

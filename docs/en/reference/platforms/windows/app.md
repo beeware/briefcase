@@ -61,8 +61,7 @@ App folder backend by using `briefcase <command> windows app`.
 All Windows apps, regardless of output format, use the same icon
 formats, have the same set of configuration and runtime options, have
 the same permissions, and have the same platform quirks. See
-`the documentation on Windows apps <./index>`{.interpreted-text
-role="doc"} for more details.
+[the documentation on Windows apps](.) for more details.
 
 ## Application configuration
 

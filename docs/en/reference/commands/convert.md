@@ -12,7 +12,7 @@ project, and updates the `pyproject.toml` file to include the
 To convert your application, run the following command in the
 application root directory (where the `pyproject.toml` file is located):
 
-``` console
+```console
 $ briefcase convert
 ```
 

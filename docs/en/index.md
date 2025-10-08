@@ -15,24 +15,24 @@ installation formats to be produced.
 
 ## Table of contents
 
-### `Tutorial <tutorial>`{.interpreted-text role="ref"}
+###Tutorial
 
 Get started with a hands-on introduction for beginners.
 
-### `How-to guides <how-to>`{.interpreted-text role="ref"}
+###[How-to guides] { id="how-to" }
 
 Guides and recipes for common problems and tasks, including how to
 contribute.
 
-### `Topic guides <topics>`{.interpreted-text role="ref"}
+###[Topic guides] { id="topics" }
 
 Deeper explorations of concepts and issues related to Briefcase usage.
 
-### `Reference <reference>`{.interpreted-text role="ref"}
+###Reference
 
 Technical reference - commands, modules, classes, methods.
 
-### `About Briefcase <about>`{.interpreted-text role="ref"}
+###[About Briefcase] { id="about" }
 
 Frequently Asked Questions, success stories, and other details about
 Briefcase as a project.

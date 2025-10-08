@@ -25,7 +25,7 @@ you will be guided through in this tutorial:
 4.  Accessing the details of the Certificate on your Terminal
 5.  Anticipating potential issues with the identity in the future
 
-### Enrolling in the Apple Developer program {#apple-dev-enroll}
+### Enrolling in the Apple Developer program  { id="apple-dev-enroll" }
 
 You can enroll in the Apple Developer program either as an individual,
 or as an organization. In both cases, you'll have to follow the
@@ -47,14 +47,15 @@ account, extracting your personal credentials later can also be painful.
 As part of the registration procedure, you'll have to pay a **\$99
 fee**, which will be charged on an annual basis.
 
-::: {.admonition}
-Fee waivers
+/// admonition | Fee waivers
 
 If you're registering as a non-profit organization, an educational
 institution or a government entity, you may be eligible for a fee
 waiver, which you can read more about
 [here](https://developer.apple.com/help/account/membership/fee-waivers/).
-:::
+
+
+///
 
 ### Generating a certificate request on Keychain Access
 
@@ -113,10 +114,7 @@ choose a different type of a certificate on this page.
 
 ![image](images/Choose_developerID_application.png){width="500px"}
 
-:::: {.note}
-::: {.title}
-Note
-:::
+/// note | Note
 
 If you've been registered as an organization, there's a chance that the
 option to choose the Developer ID Application certificate is
@@ -125,7 +123,8 @@ unavailable. This may happen if you're not assigned the role of the
 Holder](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
 You can access and change these roles using [App Store
 Connect](https://appstoreconnect.apple.com/login).
-::::
+
+///
 
 Select "Developer ID Application" and click "Continue". In the next
 window, click "Choose file" and upload the Certificate Signing Request
@@ -151,21 +150,18 @@ Click on the certificate and make sure you see a note that reads
 
 ![image](images/Valid_certificate.png){width="500px"}
 
-:::: {.note}
-::: {.title}
-Note
-:::
+/// note | Note
 
 In this screenshot, the certificate details have been redacted. Your
 certificate should show expiration details, trust chains, and other
 details about you, the certificate issuer (Apple), and the certificate.
-::::
+
+///
 
 Congratulations! You've just successfully installed the Developer ID
 Application certificate.
 
-::: {.admonition}
-Keep this certificate safe!
+/// admonition | Keep this certificate safe!
 
 The *specific type* of the certificate you have just created is quite
 precious, and you should make sure to keep it safe. A single Developer
@@ -178,7 +174,9 @@ backup copy, which will require you to export the certificate together
 with the associated private key from the Keychain. The procedure for
 doing so is [documented by
 Apple](https://support.apple.com/guide/keychain-access/import-and-export-keychain-items-kyca35961/mac).
-:::
+
+
+///
 
 ## Other types of Code Signing identities
 
@@ -211,12 +209,10 @@ certificate for a different team.
 
 Now you can use the certificate to sign and notarize your application
 with the
-`briefcase package </reference/commands/package>`{.interpreted-text
-role="doc"} command.
+[briefcase package](reference/commands/package) command.
 
 When you invoke
-`briefcase package </reference/commands/package>`{.interpreted-text
-role="doc"}, you will be prompted to select the code signing certificate
+[briefcase package](reference/commands/package), you will be prompted to select the code signing certificate
 you want to use from the certificates that are installed. Once you
 select a certificate, Briefcase will output the command line invocation
 to select that certificate for unattended installation.

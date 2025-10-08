@@ -8,19 +8,19 @@ current platform's default output format.
 To create a scaffold for the default output format for the current
 platform:
 
-``` console
+```console
 $ briefcase create
 ```
 
 To create a scaffold for a different platform:
 
-``` console
+```console
 $ briefcase create <platform>
 ```
 
 To create a scaffold for a specific output format:
 
-``` console
+```console
 $ briefcase create <platform> <output format>
 ```
 

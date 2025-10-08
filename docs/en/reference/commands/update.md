@@ -13,19 +13,19 @@ specifically requested.
 To repackage your application's code for the current platform's default
 output format:
 
-``` console
+```console
 $ briefcase update
 ```
 
 To repackage your application's code for a different platform:
 
-``` console
+```console
 $ briefcase update <platform>
 ```
 
 To repackage your application's code for a specific output format:
 
-``` console
+```console
 $ briefcase update <platform> <output format>
 ```
 

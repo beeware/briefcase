@@ -26,8 +26,7 @@ contribute the backend to Briefcase itself.
 Briefcase adds a [PEP566](https://peps.python.org/pep-0566/) metadata
 file when it installs your app's code. The metadata can be retrieved at
 runtime as described in the
-`Accessing Briefcase packaging metadata at runtime
-<access-packaging-metadata>`{.interpreted-text role="ref"} how-to. You
+[Accessing Briefcase packaging metadata at runtime][access-packaging-metadata] how-to. You
 can determine if your app was packaged with Briefcase by testing for the
 existence of the `Briefcase-Version` tag:
 
@@ -38,7 +37,7 @@ existence of the `Briefcase-Version` tag:
 Yes! Briefcase uses `pip` to install third-party packages into your app
 bundle. As long as the package is available on PyPI, or you can provide
 a wheel file for the package, it can be added to the
-`requires`{.interpreted-text role="attr"} declaration in your
+[requires][] declaration in your
 `pyproject.toml` file and used by your app at runtime.
 
 If the package is pure-Python (i.e., it does not contain a binary
@@ -49,11 +48,10 @@ binary wheel is available for the platform you're targeting:
 
 - **macOS, Linux, Windows**: Binary wheels are hosted on
   [PyPI](https://pypi.org).
-- **Android**: See the `Android platform documentation
-  <android-third-party-packages>`{.interpreted-text role="ref"}.
+- **Android**: See the [Android platform documentation][android-third-party-packages].
 - **iOS**: See the
   `iOS platform documentation <ios-third-party-packages>`{.interpreted-text
-  role="ref"}.
+  role="ref"} - TODO: Manually fix this.
 - **Web**: Binary wheel support is currently limited to [those provided
   by the Pyodide
   project](https://pyodide.org/en/stable/usage/packages-in-pyodide.html).
