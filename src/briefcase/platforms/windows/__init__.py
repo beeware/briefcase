@@ -171,6 +171,65 @@ class WindowsCreateCommand(CreateCommand):
 """
         )
 
+    def install_license(self, app: AppConfig):
+        """Install the license for the project as RTF content.
+
+        Currently assumes PEP621 format for `license`:
+        * If `license.file` is an RTF file, it is used verbatim
+        * If `license.file` is any other file, it is converted to RTF
+          using a simple text->RTF conversion.
+        * If `license.text` is provided, that text is converted to
+          RTF; with a warning for the case where `license.text` is
+          a one-line license name/description.
+
+        If no `license` field is defined, or it points at a file that
+        doesn't exist an error is raised.
+
+        When PEP639 support is added, we will need to adapt this method.
+
+        :param app: The config object for the app
+        """
+        installed_license = self.bundle_path(app) / "LICENSE.rtf"
+
+        if license_file := app.license.get("file"):
+            license_file = self.base_path / license_file
+            if license_file.is_file():
+                if license_file.suffix == ".rtf":
+                    self.tools.shutil.copy(license_file, installed_license)
+                    license_text = None
+                else:
+                    license_text = license_file.read_text()
+                    installed_license.write_text(txt_to_rtf(license_text))
+            else:
+                raise BriefcaseCommandError(
+                    f"""\
+Your `pyproject.toml` specifies a license file of {str(license_file.relative_to(self.base_path))!r}.
+However, this file does not exist.
+
+Ensure you have correctly spelled the filename in your `license.file` setting.
+"""
+                )
+        elif license_text := app.license.get("text"):
+            if len(license_text.splitlines()) <= 1:
+                self.console.warning(
+                    """
+Your app specifies a license using `license.text`, but the value doesn't appear
+to be a full license. Briefcase will generate a `LICENSE.rtf` file for your
+project; you should ensure that the contents of this file is adequate.
+"""
+                )
+            installed_license.write_text(txt_to_rtf(license_text))
+        else:
+            raise BriefcaseCommandError(
+                """\
+Your project does not contain a `license` definition.
+
+Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+with your app's licensing terms, and set `license.file = 'LICENSE'` in your
+app's configuration.
+"""
+            )
+
     def install_app_resources(self, app: AppConfig):
         """Install Windows-specific app resources.
 
@@ -179,6 +238,8 @@ class WindowsCreateCommand(CreateCommand):
 
         :param app: The config object for the app
         """
+        super().install_app_resources(app)
+
         installer_path = getattr(app, "installer_path", "_installer")
         install_scripts_path = self.extras_path(app) / installer_path
 
@@ -218,13 +279,8 @@ class WindowsCreateCommand(CreateCommand):
                     install_scripts_path / "pre_uninstall.bat",
                 )
 
-        # Convert the license to RTF, then output it into the project.
-        # This assumes the license is pure text; which for now, we can guarantee.
-        # When PEP639 support is added, we will need to adapt.
-        license_content = (self.base_path / "LICENSE").read_text()
-        with self.console.wait_bar("Writing LICENSE.rtf..."):
-            with (self.bundle_path(app) / "LICENSE.rtf").open("w") as f:
-                f.write(txt_to_rtf(license_content))
+        with self.console.wait_bar("Installing license..."):
+            self.install_license(app)
 
 
 class WindowsRunCommand(RunCommand):
