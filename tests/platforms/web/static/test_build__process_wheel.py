@@ -117,7 +117,7 @@ def test_process_wheel_deploy_inserts(build_command, tmp_path):
     assert any("body { margin: 0; }" in v for v in css_contribs.values())
 
 
-def test_process_wheel_legacy_css_warning_once(build_command, tmp_path, monkeypatch):
+def test_process_wheel_legacy_css_warning_once(build_command, tmp_path, capsys):
     """Legacy CSS files trigger a single deprecation warning."""
     wheel_filename = create_wheel(
         tmp_path,
@@ -127,17 +127,18 @@ def test_process_wheel_legacy_css_warning_once(build_command, tmp_path, monkeypa
         ],
     )
 
-    # Check on console.warning to count legacy warnings
-    warnings = []
-    monkeypatch.setattr(
-        build_command.console, "warning", lambda msg: warnings.append(msg)
-    )
-
     inserts = {}
     build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
 
-    legacy_msgs = [m for m in warnings if "legacy '/static' CSS detected" in m]
-    assert len(legacy_msgs) == 1
+    output = capsys.readouterr().out
+    assert (
+        "dummy-1.2.3-py3-none-any.whl: legacy '/static' CSS file dummy/static/one.css detected."
+        in output
+    )
+    assert (
+        "dummy-1.2.3-py3-none-any.whl: legacy '/static' CSS file dummy/static/two.css detected."
+        in output
+    )
 
 
 def test_process_wheel_non_utf8_insert(build_command, tmp_path):
@@ -164,28 +165,20 @@ def test_process_wheel_non_utf8_legacy_css(build_command, tmp_path):
         build_command._process_wheel(wheelfile=wheel_path, inserts=inserts)
 
 
-def test_handle_legacy_css_warning_once_and_append(
-    build_command, tmp_path, monkeypatch
-):
+def test_handle_legacy_css_warning_once_and_append(build_command, tmp_path, capsys):
     """Legacy CSS warns once and appends to existing contrib key."""
     wheel_path = Path(tmp_path) / "dummy-1.2.3.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr("dummy/static/one.css", "h1 { x:1; }")
 
-    # Count warnings
-    warnings = []
-    monkeypatch.setattr(build_command.console, "warning", warnings.append)
-
     inserts = {}
     with zipfile.ZipFile(wheel_path) as zf:
         # First call - warn
-        warned = build_command._handle_legacy_css(
+        build_command._handle_legacy_css(
             wheel=zf,
             path=Path("dummy/static/one.css"),
-            filename="dummy/static/one.css",
             package_key="pkg 1.0",
             inserts=inserts,
-            legacy_css_warning=False,
         )
         # Pre-seed same contrib key to force append on second call
         target_map = inserts.setdefault("static/css/briefcase.css", {}).setdefault(
@@ -194,18 +187,19 @@ def test_handle_legacy_css_warning_once_and_append(
         key = "pkg 1.0 (legacy static CSS: one.css)"
         target_map[key] = target_map[key] + "\n/*extra*/"
         # Second call - no additional warning, content appended
-        warned = build_command._handle_legacy_css(
+        build_command._handle_legacy_css(
             wheel=zf,
             path=Path("dummy/static/one.css"),
-            filename="dummy/static/one.css",
             package_key="pkg 1.0",
             inserts=inserts,
-            legacy_css_warning=warned,
         )
 
-    # One warning only
-    legacy_msgs = [m for m in warnings if "legacy '/static' CSS detected" in m]
-    assert len(legacy_msgs) == 1
+    # One warning for each file
+    output = capsys.readouterr().out
+    assert (
+        "dummy-1.2.3.whl: legacy '/static' CSS file dummy/static/one.css detected."
+        in output
+    )
 
     # Content appended
     out = inserts["static/css/briefcase.css"]["css"][key]
@@ -240,7 +234,11 @@ def test_handle_insert_register_valid_file(build_command, tmp_path):
     ],
 )
 def test_handle_insert_skip_dir_entries(
-    build_command, tmp_path, monkeypatch, entry, expected_skip
+    build_command,
+    tmp_path,
+    monkeypatch,
+    entry,
+    expected_skip,
 ):
     """Deploy/inserts directory entries are skipped with a debug log.
 
@@ -277,7 +275,10 @@ def test_handle_insert_skip_dir_entries(
 
 @pytest.mark.parametrize("mode", ["integration", "unit"])
 def missing_tilde_under_deploy_inserts_skipped(
-    build_command, tmp_path, monkeypatch, mode
+    build_command,
+    tmp_path,
+    monkeypatch,
+    mode,
 ):
     """Files under deploy/inserts without '~' are skipped with a debug log.
 

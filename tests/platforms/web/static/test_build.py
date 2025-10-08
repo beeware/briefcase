@@ -50,7 +50,7 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
                     (
                         "dependency/deploy/config.toml",
                         """
-backend = "pyscript"
+implementation = "pyscript"
 
 [pyscript]
 version = "2024.11.1"
@@ -250,7 +250,7 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
     )
 
     # Mock extracting pyscript.toml from a wheel.
-    build_command.extract_backend_config = lambda _: (
+    build_command.extract_pyscript_config = lambda _: (
         {"existing-key-1": "value-1", "existing-key-2": 2},
         "2024.11.1",
     )
@@ -381,7 +381,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
     )
 
     # Mock extracting pyscript.toml from a wheel.
-    build_command.extract_backend_config = lambda _: (
+    build_command.extract_pyscript_config = lambda _: (
         {"existing-key-1": "value-1", "existing-key-2": 2},
         "2024.11.1",
     )

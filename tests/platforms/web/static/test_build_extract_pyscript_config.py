@@ -38,12 +38,12 @@ def _mock_wheel(tmp_path, wheel_name, files):
     return wheel_path
 
 
-def test_extract_backend_config(build_command, tmp_path):
+def test_extract_pyscript_config(build_command, tmp_path):
     """Test function works correctly with both config.toml and pyscript.toml."""
     # Mock a wheel with files
     files = {
         "dependency/deploy/config.toml": """
-backend = "pyscript"
+implementation = "pyscript"
 
 [pyscript]
 version = "2024.10.1"
@@ -57,7 +57,7 @@ existing-key-2 = 2
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependency", files=files)
 
     # Run the function.
-    pyscript_config, pyscript_version = build_command.extract_backend_config(
+    pyscript_config, pyscript_version = build_command.extract_pyscript_config(
         [wheel_path]
     )
 
@@ -69,7 +69,7 @@ existing-key-2 = 2
     assert pyscript_version == "2024.10.1"
 
 
-def test_extract_backend_config_no_config(build_command, tmp_path):
+def test_extract_pyscript_config_no_config(build_command, tmp_path):
     """If no config.toml supplied by wheels, functions returns a basic config."""
     # Mock a wheel without the needed files
     files = {"dependency/deploy/not-the-files-you-are-looking-for.toml": ""}
@@ -77,7 +77,7 @@ def test_extract_backend_config_no_config(build_command, tmp_path):
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependency", files=files)
 
     # Run the function.
-    pyscript_config, pyscript_version = build_command.extract_backend_config(
+    pyscript_config, pyscript_version = build_command.extract_pyscript_config(
         [wheel_path]
     )
 
@@ -86,13 +86,13 @@ def test_extract_backend_config_no_config(build_command, tmp_path):
     assert pyscript_version == "2024.11.1"
 
 
-def test_extract_backend_config_multiple_config(build_command, tmp_path):
+def test_extract_pyscript_config_multiple_config(build_command, tmp_path):
     """Multiple config.toml supplied by wheels fails."""
 
     # Mock wheels that both contain config.toml
     file_set_1 = {
         "dependency/deploy/config.toml": """
-backend = "pyscript"
+implementation = "pyscript"
 
 [pyscript]
 version = "2024.10.1"
@@ -101,7 +101,7 @@ version = "2024.10.1"
 
     file_set_2 = {
         "dependency/deploy/config.toml": """
-backend = "pyscript"
+implementation = "pyscript"
 
 [pyscript]
 version = "2024.10.1"
@@ -118,46 +118,55 @@ version = "2024.10.1"
     # Run the function.
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Only one backend configuration file can be supplied.",
+        match=r"Only one deployment configuration file can be supplied.",
     ):
-        build_command.extract_backend_config([wheel_path_1, wheel_path_2])
+        build_command.extract_pyscript_config([wheel_path_1, wheel_path_2])
 
 
-def test_extract_backend_config_no_backend(build_command, tmp_path):
-    """An app cannot be built with a config.toml containing no "backend" value."""
+def test_extract_pyscript_config_no_implementation(build_command, tmp_path, capsys):
+    """An app with no "implementation" value defaults to pyscript with a warning."""
 
     # Mock a wheel with the needed files
     files = {"dependency/deploy/config.toml": ""}
 
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependency", files=files)
 
-    # Build the web app.
-    with pytest.raises(
-        BriefcaseConfigError,
-        match=r"No backend was provided in config.toml file.",
-    ):
-        build_command.extract_backend_config([wheel_path])
+    pyscript_config, pyscript_version = build_command.extract_pyscript_config(
+        [wheel_path]
+    )
+
+    # Capture output and assert warning present.
+    captured = capsys.readouterr()
+    assert "No web implementation specified. Defaulting to 'pyscript'." in captured.out
+
+    # Check pyscript_config is empty and pyscript_version is the default.
+    assert pyscript_config == {}
+    assert pyscript_version == "2024.11.1"
 
 
-def test_extract_backend_config_backend_warning(build_command, tmp_path, capsys):
-    """Briefcase raises a warning if "backend" value is not pyscript."""
+def test_extract_pyscript_config_implementation_warning(
+    build_command,
+    tmp_path,
+    capsys,
+):
+    """Briefcase raises a warning if "implementation" value is not pyscript."""
 
     files = {
         "dependency/deploy/config.toml": """
-backend = "something-else"
+implementation = "something-else"
 """,
     }
 
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependency", files=files)
 
-    pyscript_config, pyscript_version = build_command.extract_backend_config(
+    pyscript_config, pyscript_version = build_command.extract_pyscript_config(
         [wheel_path]
     )
 
     # Capture output and assert warning present.
     captured = capsys.readouterr()
     assert (
-        "Only 'pyscript' backend is currently supported for web static builds."
+        "At present, 'pyscript' is the only supported web implementation."
         in captured.out
     )
 
@@ -166,37 +175,37 @@ backend = "something-else"
     assert pyscript_version == "2024.11.1"
 
 
-def test_extract_backend_config_no_pyscript_toml(build_command, tmp_path, capsys):
+def test_extract_pyscript_config_no_pyscript_toml(build_command, tmp_path, capsys):
     """If no pyscript.toml is supplied by a wheel, function returns a basic config."""
 
     # Create wheel with no pyscript.toml
     files = {
         "dependency/deploy/config.toml": """
-backend = "pyscript"
+implementation = "pyscript"
 """,
     }
 
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependency", files=files)
 
-    pyscript_config, pyscript_version = build_command.extract_backend_config(
+    pyscript_config, pyscript_version = build_command.extract_pyscript_config(
         [wheel_path]
     )
     # Capture output and assert console info is present.
     captured = capsys.readouterr()
-    assert "Pyscript configuration file not found in package:" in captured.out
+    assert "Pyscript configuration file not found in" in captured.out
 
     # Check pyscript_config is empty and pyscript_version is the default.
     assert pyscript_config == {}
     assert pyscript_version == "2024.11.1"
 
 
-def test_extract_backend_config_invalid_wheel_pyscript_toml(build_command, tmp_path):
+def test_extract_pyscript_config_invalid_wheel_pyscript_toml(build_command, tmp_path):
     """A wheel with an invalid pyscript.toml raises an error."""
 
     # Mock a wheel with files
     files = {
         "dependency/deploy/config.toml": """
-backend = "pyscript"
+implementation = "pyscript"
 
 [pyscript]
 version = "2024.10.1"
@@ -213,4 +222,4 @@ This is not valid toml.
         BriefcaseConfigError,
         match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
     ):
-        build_command.extract_backend_config([wheel_path])
+        build_command.extract_pyscript_config([wheel_path])
