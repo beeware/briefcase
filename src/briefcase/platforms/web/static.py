@@ -194,6 +194,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
     def _append_pyscript_insert(
         self,
+        app,
         filename: Path,
         pyscript_version: str,
         inserts: dict[str, dict[str, dict[str, str]]],
@@ -202,16 +203,18 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         This function creates an insert for PyScript.
 
+        :param app: The application whose html file is being written.
         :param filename: The html file whose pyscript version is to be written.
         :param pyscript_version: The pyscript version number to be inserted.
         :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
         package_key = "briefcase"
         target = filename
-        insert = "python"
+        head_insert = "head-python"
+        body_insert = "body-python"
 
         # PyScript definitions for insertion:
-        content = dedent(
+        head_content = dedent(
             f"""\
             <script type="module">
                 // Hide the splash screen when the page is ready.
@@ -225,9 +228,23 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
             """
         )
+        body_content = dedent(
+            f"""\
+            <script type="py" async="false" config="pyscript.toml">
+                import runpy
+                result = runpy.run_module(
+                    "{app.app_name}", run_name="__main__", alter_sys=True
+                )
+            </script>
+            """
+        )
 
-        pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-        pkg_map[package_key] = content
+        pkg_map_head = inserts.setdefault(target, {}).setdefault(head_insert, {})
+        pkg_map_head[package_key] = head_content
+
+        pkg_map_body = inserts.setdefault(target, {}).setdefault(body_insert, {})
+        pkg_map_body[package_key] = body_content
+
 
     def _handle_legacy_css(
         self,

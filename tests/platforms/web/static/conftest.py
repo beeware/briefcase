@@ -24,11 +24,17 @@ app_requirements_path="requirements.txt"
   <head>
     <!--@@ head:start @@-->
     <!--@@ head:end @@-->
-    <!--@@ python:start @@-->
-    <!--@@ python:end @@-->
+    <!--@@ head-python:start @@-->
+    <!--@@ head-python:end @@-->
   </head>
   <body>
     <div id="briefcase-splash"></div>
+
+    <!--@@ body-start:start @@-->
+    <!--@@ body-start:end @@-->
+
+    <!--@@ body-python:start @@-->
+    <!--@@ body-python:end @@-->
 
     <!--@@ body-end:start @@-->
     <!--@@ body-end:end @@-->
