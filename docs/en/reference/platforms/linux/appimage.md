@@ -154,13 +154,13 @@ a single argument to pass to Docker, in the order they are specified.
 
 ## Application configuration
 
-::: linux.appimage
+### `linux.appimage`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.appimage` section of your
 `pyproject.toml` file.
 
-::: manylinux
+### `manylinux`
 
 The [manylinux](https://github.com/pypa/manylinux) tag to use as a base
 image when building the AppImage. Should be one of:
@@ -175,15 +175,11 @@ New projects will default to `manylinux2014`. If an application doesn't
 specify a [manylinux][] value,
 `ubuntu:18.04` will be used as the base image.
 
-::: {.attribute}
-manylinux_image_tag
-:::
+### `manylinux_image_tag`
 
 The specific tag of the `manylinux` image to use. Defaults to `latest`.
 
-::: {.attribute}
-system_requires
-:::
+### `system_requires`
 
 A list of operating system packages that must be installed for the
 AppImage build to succeed. If a Docker build is requested, this list
@@ -207,9 +203,7 @@ development environment, so if your app has any operating system
 dependencies, they *must* be listed in your `system_requires`
 definition.
 
-::: {.attribute}
-linuxdeploy_plugins
-:::
+### `linuxdeploy_plugins`
 
 A list of [linuxdeploy
 plugins](https://docs.appimage.org/packaging-guide/from-source/linuxdeploy-user-guide.html#plugin-system)
@@ -242,9 +236,7 @@ Or, if you were using a plugin stored as a local file:
 
     linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 path/to/plugins/linuxdeploy-gtk-plugin.sh"]
 
-::: {.attribute}
-dockerfile_extra_content
-:::
+### `dockerfile_extra_content`
 
 Any additional Docker instructions that are required to configure the
 container used to build your Python app. For example, any dependencies
@@ -269,7 +261,7 @@ back to the `brutus` user - e.g.:
 
 ## Platform quirks
 
-### Use caution with  { id="--update-support" }`
+### Use caution with  { #--update-support }`
 
 Care should be taken when using the `--update-support` option to the
 `update`, `build` or `run` commands. Support packages in Linux AppImages

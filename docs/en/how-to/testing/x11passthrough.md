@@ -1,5 +1,4 @@
-git ============================== Testing Linux Apps with Docker
-==============================
+# Testing Linux Apps with Docker
 
 Briefcase can use Docker to build apps for Linux distributions other
 than the distribution you're currently using. Docker can also be used to
@@ -121,7 +120,7 @@ and leverages many advanced features of Linux to run processes in highly
 containerized environments. Docker Desktop, however, effectively runs
 Docker Engine inside a lightweight Linux virtual machine (VM) running on
 the host machine. Therefore, when Docker Desktop runs a container, it is
-running it inside of a VM and not directly on the host system as Docker
+running it inside a VM and not directly on the host system as Docker
 Engine does (albeit in isolation via containerization).
 
 As an outcome of the design of Docker Desktop, the behavior of

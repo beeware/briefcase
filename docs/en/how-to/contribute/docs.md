@@ -4,10 +4,7 @@ You might have the best software in the world - but if nobody knows how
 to use it, what's the point? Documentation can always be improved - and
 we need need your help!
 
-Briefcase's documentation is written using [Sphinx and
-reStructuredText](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html).
-We aim to follow the [Diataxis](https://diataxis.fr) framework for
-structuring documentation.
+Briefcase's documentation is written using [MkDocs and Markdown](https://www.markdownguide.org/basic-syntax/). We aim to follow the [Diataxis](https://diataxis.fr) framework for structuring documentation.
 
 ## Building Briefcase's documentation
 
@@ -18,91 +15,6 @@ detailed explanation of dev environment setup,
 [start here][setup-dev-environment]).You
 **must** have a Python 3.12 interpreter installed and available on your
 path (i.e., `python3.12` must start a Python 3.12 interpreter).
-
-You'll also need to install the Enchant spell checking library.
-
-/// tab | macOS
-
-Enchant can be installed using [Homebrew](https://brew.sh):
-
-```console
-(venv) $ brew install enchant
-```
-
-If you're on an Apple Silicon machine (M-series), you'll also need to
-manually set the location of the Enchant library:
-
-```console
-(venv) $ export PYENCHANT_LIBRARY_PATH=/opt/homebrew/lib/libenchant-2.2.dylib
-```
-
-///
-
-/// tab | Linux
-
-Enchant can be installed as a system package:
-
-**Ubuntu / Debian**
-
-```console
-$ sudo apt update
-$ sudo apt install enchant-2
-```
-
-**Fedora**
-
-```console
-$ sudo dnf install enchant
-```
-
-**Arch / Manjaro**
-
-```console
-$ sudo pacman -Syu enchant
-```
-
-**OpenSUSE Tumbleweed**
-
-```console
-$ sudo zypper install enchant
-```
-
-///
-
-/// tab | Windows
-
-Enchant is installed automatically when you set up your development
-environment.
-
-///
-
-### Build documentation locally
-
-Once your development environment is set up, run:
-
-/// tab | macOS
-
-```console
-(venv) $ tox -e docs
-```
-
-///
-
-/// tab | Linux
-
-```console
-(venv) $ tox -e docs
-```
-
-///
-
-/// tab | Windows
-
-```doscon
-(venv) C:\...>tox -e docs
-```
-
-///
 
 The output of the file should be in the `docs/_build/html` folder. If
 there are any markup problems, they'll raise an error.
@@ -142,43 +54,9 @@ documentation source. If a change is detected, the documentation will be
 rebuilt, and any browser viewing the modified page will be automatically
 refreshed.
 
-Live preview mode will only monitor the `docs` directory for changes. If
-you're updating the inline documentation associated with Briefcase
-source code, you'll need to use the `docs-live-src` target to build
-docs:
-
-/// tab | macOS
-
-```console
-(venv) $ tox -e docs-live-src
-```
-
-///
-
-/// tab | Linux
-
-```console
-(venv) $ tox -e docs-live-src
-```
-
-///
-
-/// tab | Windows
-
-```doscon
-(venv) C:\...>tox -e docs-live-src
-```
-
-///
-
-This behaves the same as `docs-live`, but will also monitor any changes
-to the `src` folder, reflecting any changes to inline documentation.
-However, the rebuild process takes much longer, so you may not want to
-use this target unless you're actively editing inline documentation.
-
 ### Documentation linting
 
-The build process will identify reStructuredText problems, but Briefcase
+The build process will identify Markdown problems, but Briefcase
 performs some additional "lint" checks. To run the lint checks:
 
 /// tab | macOS
@@ -207,7 +85,6 @@ performs some additional "lint" checks. To run the lint checks:
 
 This will validate the documentation does not contain:
 
-- invalid syntax and markup
 - dead hyperlinks
 - misspelled words
 
@@ -222,37 +99,6 @@ the spellchecker's dictionary. When adding to this list, remember:
   "PyScript").
 - If a term is being used "as code", then it should be quoted as a
   literal rather than being added to the dictionary.
-
-### Rebuilding all documentation
-
-To force a rebuild for all of the documentation:
-
-/// tab | macOS
-
-```console
-(venv) $ tox -e docs-all
-```
-
-///
-
-/// tab | Linux
-
-```console
-(venv) $ tox -e docs-all
-```
-
-///
-
-/// tab | Windows
-
-```doscon
-(venv) C:\...>tox -e docs-all
-```
-
-///
-
-The documentation should be fully rebuilt in the `docs/_build/html`
-folder. If there are any markup problems, they'll raise an error.
 
 ## What to work on?
 

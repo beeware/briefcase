@@ -1,4 +1,4 @@
-# Contributing code to Briefcase  { id="contribute" }
+# Contributing code to Briefcase  { #contribute }
 
 If you experience problems with Briefcase, [log them on
 GitHub](https://github.com/beeware/briefcase/issues). If you want to
@@ -6,7 +6,7 @@ contribute code, please [fork the
 code](https://github.com/beeware/briefcase/fork) and [submit a pull
 request](https://github.com/beeware/briefcase/pulls).
 
-## Prerequisites  { id="dev-environment-prereqs" }
+## Prerequisites  { #dev-environment-prereqs }
 
 You'll need to install the following prerequisites.
 
@@ -29,7 +29,7 @@ View the
 
 ///
 
-## `tl;dr`{.interpreted-text role="spelling:ignore"} - Dev Quick-Setup {#dev-environment-tldr}
+## <nospell>tl;dr</nospell> - Dev Quick-Setup {#dev-environment-tldr}
 
 Set up the dev environment by running:
 
@@ -98,7 +98,7 @@ Invoke checks and tests by running:
 
 ///
 
-## Set up your development environment  { id="setup-dev-environment" }
+## Set up your development environment  { #setup-dev-environment }
 
 The recommended way of setting up your development environment for
 Briefcase is to use a [virtual
@@ -140,7 +140,7 @@ Next, go to the [Briefcase page on
 GitHub](https://github.com/beeware/briefcase), and, if you haven't
 already, [fork the
 repository](https://github.com/beeware/briefcase/fork) into your own
-account. Next, click on the "\<\> Code" button on your fork. If you have
+account. Next, click on the "<> Code" button on your fork. If you have
 the GitHub desktop application installed on your computer, you can
 select "Open with GitHub Desktop"; otherwise, copy the HTTPS URL
 provided, and use it to clone the repository to your computer using the
@@ -367,19 +367,19 @@ Ubuntu's packaging format, or support for Apple's
 [watchOS](https://github.com/beeware/briefcase/issues/5), and
 [visionOS](https://github.com/beeware/briefcase/issues/2253) platforms.
 
-## Running tests and coverage  { id="run-test-suite" }
+## Running tests and coverage  { #run-test-suite }
 
-Briefcase uses [tox](https://tox.wiki/en/latest/) to manage the testing
+Briefcase uses [`tox`](https://tox.wiki/en/latest/) to manage the testing
 process and [`pytest`](https://docs.pytest.org/en/latest) for its own
 test suite.
 
 The default `tox` command includes running:
 
-:   - pre-commit hooks
-    - `towncrier` release note check
-    - documentation linting
-    - test suite for available Python versions
-    - code coverage reporting
+- pre-commit hooks
+- `towncrier` release note check
+- documentation linting
+- test suite for available Python versions
+- code coverage reporting
 
 This is essentially what is run by CI when you submit a pull request.
 
@@ -410,7 +410,7 @@ To run the full test suite, run:
 ///
 
 The full test suite can take a while to run. You can speed it up
-considerably by running tox in parallel, by running `tox p` (or
+considerably by running `tox` in parallel, by running `tox p` (or
 `tox run-parallel`). When you run the test suite in parallel, you'll get
 less feedback on the progress of the test suite as it runs, but you'll
 still get a summary of any problems found at the end of the test run.
@@ -423,8 +423,7 @@ environment, or you've found an edge case that we haven't seen before -
 either way, let us know!
 
 As with the full test suite, and the core, this should report
-`100% test coverage
-<code-coverage>`{.interpreted-text role="ref"} - TODO: Manually fix this.
+[100% test coverage][code-coverage].
 
 ## Running test variations
 
@@ -433,10 +432,10 @@ As with the full test suite, and the core, this should report
 By default, many of the `tox` commands will attempt to run the test
 suite multiple times, once for each Python version supported by
 Briefcase. To do this, though, each of the Python versions must be
-installed on your machine and available to tox's Python
+installed on your machine and available to `tox`'s Python
 [discovery](https://virtualenv.pypa.io/en/latest/user_guide.html#python-discovery)
 process. In general, if a version of Python is available via `PATH`,
-then tox should be able to find and use it.
+then `tox` should be able to find and use it.
 
 ### Run only the test suite
 
@@ -467,13 +466,13 @@ full test suite; you can run *just* the unit tests. To do this, run:
 
 ///
 
-### Run a subset of tests  { id="test-subset" }
+### Run a subset of tests  { #test-subset }
 
-By default, tox will run all tests in the unit test suite. When you're
+By default, `tox` will run all tests in the unit test suite. When you're
 developing your new test, it may be helpful to run *just* that one test.
-To do this, you can pass in [any pytest
+To do this, you can pass in [any `pytest`
 specifier](https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run)
-as an argument to tox. These test paths are relative to the `briefcase`
+as an argument to `tox`. These test paths are relative to the `briefcase`
 directory. For example, to run only the tests in a single file, run:
 
 /// tab | macOS
@@ -504,7 +503,7 @@ You'll still get a coverage report when running a part of the test suite
 -but the coverage results will only report the lines of code that were
 executed by the specific tests you ran.
 
-### Run the test suite for a specific Python version  { id="test-py-version" }
+### Run the test suite for a specific Python version  { #test-py-version }
 
 By default `tox -e py` will run using whatever interpreter resolves as
 `python` on your machine. If you have multiple Python versions
@@ -541,7 +540,7 @@ run by adding `--` and a test specification to the command line.
 
 ### Run the test suite without coverage (fast)
 
-By default, tox will run the pytest suite in single threaded mode. You
+By default, `tox` will run the pytest suite in single threaded mode. You
 can speed up the execution of the test suite by running the test suite
 in parallel. This mode does not produce coverage files due to
 complexities in capturing coverage within spawned processes. To run a
@@ -666,7 +665,7 @@ report on Python 3.11, run:
 
 ### Coverage report for host platform
 
-If all supported versions of Python are available to tox, then coverage
+If all supported versions of Python are available to `tox`, then coverage
 for the host platform can be reported by running:
 
 /// tab | macOS
@@ -696,7 +695,7 @@ for the host platform can be reported by running:
 ### Coverage reporting in HTML
 
 A HTML coverage report can be generated by appending `-html` to any of
-the coverage tox environment names, for instance:
+the coverage `tox` environment names, for instance:
 
 /// tab | macOS
 
@@ -722,7 +721,7 @@ the coverage tox environment names, for instance:
 
 ///
 
-## Submitting a pull request  { id="pr-housekeeping" }
+## Submitting a pull request  { #pr-housekeeping }
 
 Before you submit a pull request, there's a few bits of housekeeping to
 do.
@@ -925,8 +924,8 @@ request must include at least one file in the `changes/` directory that
 provides a short description of the change implemented by the pull
 request.
 
-The change note should be in reStructuredText format, in a file that has
-name of the format `<id>.<fragment type>.rst`. If the change you are
+The change note should be in Markdown format, in a file that has
+name of the format `<id>.<fragment type>.md`. If the change you are
 proposing will fix a bug or implement a feature for which there is an
 existing issue number, the ID will be the number of that ticket. If the
 change has no corresponding issue, the PR number can be used as the ID.

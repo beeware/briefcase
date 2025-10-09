@@ -3,11 +3,11 @@
 This guide will walk you through the process of publishing a macOS app
 to the Apple App Store.
 
-> The Apple App Store makes frequent changes to the workflows and
-> nomenclature associated with publishing apps. As a result, it's very
-> difficult to keep a guide like this one up to date. If you spot any
-> problems, [let us
-> know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
+/// note | Note
+
+The Apple App Store makes frequent changes to the workflows and nomenclature associated with publishing apps. As a result, it's very difficult to keep a guide like this one up to date. If you spot any problems, [let us know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
+
+///
 
 To distribute an app on the macOS App Store, you'll need to
 [enroll in the Apple Developer Program][apple-dev-enroll]. You
@@ -18,7 +18,7 @@ Once you've signed up for an Apple ID account, open the Xcode Settings
 dialog, and add your account under the "Accounts" tab.
 
 Apps are submitted to the macOS App Store using Xcode. This requires
-that you use Briefcase's [macOS Xcode project packaging format](/reference/platforms/macOS/xcode) to
+that you use Briefcase's [macOS Xcode project packaging format][macos-xcode-project] to
 build your app. To specify this format, add `macOS Xcode` to any
 Briefcase app command you want to invoke - for example:
 

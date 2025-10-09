@@ -8,15 +8,17 @@ If you have an application called "My App", with source code in the
 `src/myapp` directory, the simplest possible `pyproject.toml` Briefcase
 configuration file would be:
 
-    [tool.briefcase]
-    project_name = "My Project"
-    bundle = "com.example"
-    version = "0.1"
+```toml
+[tool.briefcase]
+project_name = "My Project"
+bundle = "com.example"
+version = "0.1"
 
-    [tool.briefcase.app.myapp]
-    formal_name = "My App"
-    description = "My first Briefcase App"
-    sources = ['src/myapp']
+[tool.briefcase.app.myapp]
+formal_name = "My App"
+description = "My first Briefcase App"
+sources = ['src/myapp']
+```
 
 The configuration sections are tool specific, and start with the prefix
 `tool.briefcase`.
@@ -30,13 +32,13 @@ the directory that contains the `pyproject.toml` file.
 Changes to these options will not take effect until you run the
 appropriate `briefcase` command:
 
-- For [sources][], run `briefcase update`,
+- For [`sources`][], run `briefcase update`,
   or pass the `-u` option to `briefcase build` or `briefcase run`.
-- For [requires][], run
+- For [`requires`][], run
   `briefcase update -r`, or pass the `-r` option to `briefcase build` or
   `briefcase run`.
-- For [icon][] (including an
-  [document_type_id.icon][] definition in a
+- For [`icon`][] (including an
+  [`document_type_id.icon`][] definition in a
   document type), run `briefcase update --update-resources`, or pass the
   `--update-resources` option to `briefcase build` or `briefcase run`.
 - For any other options, you'll need to re-run `briefcase create`.
@@ -52,7 +54,7 @@ Each setting can be specified:
 
 - At the level of an output format (e.g., settings specific to building
   macOS DMGs);
-- At the level of an platform for an app (e.g., macOS specific
+- At the level of a platform for an app (e.g., macOS specific
   settings);
 - At the level of an individual app; or
 - Globally, for all applications in the project.
@@ -66,7 +68,7 @@ look for macOS DMG settings for `myapp`, then for macOS settings for
 ### `[tool.briefcase]` {#tool.briefcase}
 
 The base `[tool.briefcase]` section declares settings that project
-specific, or are are common to all applications in this repository.
+specific, or are common to all applications in this repository.
 
 ### `[tool.briefcase.app.<app name>]` {#tool.briefcase.app.app-name}
 
@@ -104,7 +106,7 @@ the documentation for each backend for more details.
 
 ### Required values
 
-::: bundle
+### `bundle`
 
 A reverse-domain name that can be used to identify resources for the
 application e.g., `com.example`. The bundle identifier will be combined
@@ -112,15 +114,13 @@ with the app name to produce a unique application identifier - e.g., if
 the bundle identifier is `com.example` and the app name is `myapp`, the
 application will be identified as `com.example.myapp`.
 
-::: {.attribute}
-project_name
-:::
+### `project_name`
 
 The project is the collection of all applications that are described by
 the briefcase configuration. For projects with a single app, this may be
 the same as the formal name of the solitary packaged app.
 
-::: version
+### `version`
 
 A [PEP440](https://peps.python.org/pep-0440/) compliant version string.
 
@@ -136,18 +136,16 @@ Examples of valid version strings:
 
 ### Optional values
 
-::: author
+### `author`
 
 The person or organization responsible for the project.
 
-::: {.attribute}
-author_email
-:::
+### `author_email`
 
 The contact email address for the person or organization responsible for
 the project.
 
-::: url
+### `url`
 
 A URL where more details about the project can be found.
 
@@ -155,11 +153,11 @@ A URL where more details about the project can be found.
 
 ### Required
 
-::: description
+### `description`
 
 A short, one-line description of the purpose of the application.
 
-::: sources
+### `sources`
 
 A list of paths, relative to the `pyproject.toml` file, where source
 code for the application can be found. The contents of any named files
@@ -170,7 +168,7 @@ be copied into the application bundle; the `src` directory will not be
 reproduced.
 
 Unlike most other keys in a configuration file,
-[sources][] is a *cumulative* setting. If
+[`sources`][] is a *cumulative* setting. If
 an application defines sources at the global level, application level,
 *and* platform level, the final set of sources will be the
 *concatenation* of sources from all levels, starting from least to most
@@ -183,23 +181,19 @@ be defined, and `sources` *must not* be defined.
 
 ### Optional values
 
-::: {.attribute}
-accent_color
-:::
+### `accent_color`
 
 A hexadecimal RGB color value (e.g., `#D81B60`) for a subtle secondary
 color to be used throughout an application to call attention to key
 elements. This setting is only used if the platform allows color
 modification, otherwise it is ignored.
 
-::: build
+### `build`
 
 A build identifier. An integer, used in addition to the version
 specifier, to identify a specific compiled version of an application.
 
-::: {.attribute}
-cleanup_paths
-:::
+### `cleanup_paths`
 
 A list of strings describing paths that will be *removed* from the
 project after the installation of the support package and app code. The
@@ -209,17 +203,17 @@ folder in the case of a macOS app).
 
 Paths can be:
 
-:   - An explicit reference to a single file
-    - An explicit reference to a single directory
-    - Any file system glob accepted by `pathlib.glob` (See [the Python
-      documentation for
-      details](https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob))
+- An explicit reference to a single file
+- An explicit reference to a single directory
+- Any file system glob accepted by `pathlib.glob` (See [the Python
+  documentation for
+  details](https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob))
 
 Paths are treated as format strings prior to glob expansion. You can use
 Python string formatting to include references to configuration
 properties of the app (e.g., `app.formal_name`, `app.version`, etc).
 
-For example, the following [cleanup_paths][] specification:
+For example, the following [`cleanup_paths`][] specification:
 
     cleanup_paths = [
         "path/to/unneeded_file.txt",
@@ -235,9 +229,7 @@ on an app with a formal name of "My App" would remove:
 3.  Any `.exe` file in `path` or its subdirectories.
 4.  The file `My App/content/extra.doc`.
 
-::: {.attribute}
-console_app
-:::
+### `console_app`
 
 A Boolean describing if the app is a console app, or a GUI app. Defaults
 to `False` (producing a GUI app). This setting has no effect on
@@ -247,9 +239,7 @@ will write output directly to `stdout`/`stderr` (rather than writing to
 a system log), creating a terminal window to display this output (if the
 platform allows).
 
-::: {.attribute}
-exit_regex
-:::
+### `exit_regex`
 
 A regular expression that will be executed against the console output
 generated by an application. If/when the regular expression find match,
@@ -264,9 +254,7 @@ process. The default value for this regular expression is
 `^>>>>>>>>>> EXIT (?P<returncode>.*) <<<<<<<<<<$` The regex will be
 compiled with the `re.MULTILINE` flag enabled.
 
-::: {.attribute}
-external_package_path
-:::
+### `external_package_path`
 
 /// admonition | Only for external apps
 
@@ -285,9 +273,7 @@ installed app.
 
 If `external_package_path` is defined, `sources` must *not* be defined.
 
-::: {.attribute}
-external_package_executable_path
-:::
+### `external_package_executable_path`
 
 /// admonition | Only for external apps
 
@@ -299,21 +285,19 @@ process.
 
 ///
 
-The path, relative to [external_package_path][], to the binary that will be executed as part of the
+The path, relative to [`external_package_path`][], to the binary that will be executed as part of the
 installed app. This is used to establish the path to the shortcut that
 should be installed.
 
 This setting is only used on Windows.
 
-::: {.attribute}
-formal_name
-:::
+### `formal_name`
 
 The application name as it should be displayed to humans. This name may
 contain capitalization and punctuation. If it is not specified, the
-[name][] will be used.
+[`name`][] will be used.
 
-::: icon
+### `icon`
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image to use as the icon for the application. The path
@@ -329,34 +313,28 @@ Briefcase will look for `resources/icon-20.png`,
 `resources/icon-1024.png`, and so on. The sizes that are required are
 determined by the platform template.
 
-::: {.attribute}
-installer_icon
-:::
+### `installer_icon`
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image to use as the icon for the installer. As with
-[icon][], the path should *exclude* the
+[`icon`][], the path should *exclude* the
 extension, and a platform-appropriate extension will be appended when
 the application is built.
 
-::: {.attribute}
-installer_background
-:::
+### `installer_background`
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image to use as the background for the installer. The
 path should *exclude* the extension, and a platform-appropriate
 extension will be appended when the application is built.
 
-::: {.attribute}
-long_description
-:::
+### `long_description`
 
 A longer description of the purpose of the application. This description
 can be multiple paragraphs, if necessary. The long description *must
-not* be a copy of the [description][], or
-include the [description][] as the first
-line of the [long_description][]
+not* be a copy of the [`description`][], or
+include the [`description`][] as the first
+line of the [`long_description`][]
 
 A string describing the minimum OS version that the generated app will
 support. This value is only used on platforms that have a clear
@@ -365,9 +343,7 @@ where it *is* used, the interpretation of the value is platform
 specific. Refer to individual platform guides for details on how the
 provided value is interpreted.
 
-::: {.attribute}
-requirement_installer_args
-:::
+### `requirement_installer_args`
 
 A list of strings of arguments to pass to the requirement installer when
 building the app.
@@ -412,7 +388,7 @@ requirement_installer_args = ["-f", "./this/path/does/not/exist"]
 /// admonition | Supported arguments
 
 The arguments supported in
-[requirement_installer_args][] depend on
+[`requirement_installer_args`][] depend on
 the requirement installer backend.
 
 The only currently supported requirement installer is `pip`. As such,
@@ -423,33 +399,26 @@ Briefcase does not validate the inputs to this configuration, and will
 only report errors directly indicated by the requirement installer
 backend.
 
-
 ///
 
-::: {.attribute}
-primary_color
-:::
+### `primary_color`
 
 A hexadecimal RGB color value (e.g., `#008577`) to use as the primary
 color for the application. This setting is only used if the platform
 allows color modification, otherwise it is ignored.
 
-::: {.attribute}
-primary_color_dark
-:::
+### `primary_color_dark`
 
 A hexadecimal RGB color value (e.g., `#008577`) used alongside the
 primary color. This setting is only used if the platform allows color
 modification, otherwise it is ignored.
 
-:::: {#configuration-requires-key}
-::: requires
-::::
+### `requires`
 
 A list of packages that must be packaged with this application.
 
 Unlike most other keys in a configuration file,
-[requires][] is a *cumulative* setting. If
+[`requires`][] is a *cumulative* setting. If
 an application defines requirements at the global level, application
 level, *and* platform level, the final set of requirements will be the
 *concatenation* of requirements from all levels, starting from least to
@@ -458,40 +427,44 @@ most specific.
 Any PEP 508 version specifier is legal. For example:
 
 - Bare package name:
-
-      requires = ["pillow"]
+  ```python
+  requires = ["pillow"]
+  ```
 
 - Package name with version specifier:
-
-      requires = ["pillow==9.1.0"]
+  ```python
+  requires = ["pillow==9.1.0"]
+  ```
 
 - Install from source using the `--no-binary` entry:
-
-      requires = [
-          "pillow==9.1.0",
-          "--no-binary", "pillow",
-      ]
+  ```python
+  requires = [
+      "pillow==9.1.0",
+      "--no-binary", "pillow",
+  ]
+  ```
 
 - Git repository:
-
-      requires=["git+https://github.com/beeware/briefcase.git"]
+  ```python
+  requires=["git+https://github.com/beeware/briefcase.git"]
+  ```
 
 - Local directory:
-
-      requires=["mysrc/myapp"]
+  ```python
+  requires=["mysrc/myapp"]
+  ```
 
 - Local wheel file:
+  ```python
+  requires=["fullpath/wheelfile.whl"]
+  ```
 
-      requires=["fullpath/wheelfile.whl"]
-
-::: revision
+### `revision`
 
 An identifier used to differentiate specific builds of the same version
 of an app. Defaults to `1` if not provided.
 
-::: {.attribute}
-splash_background_color
-:::
+### `splash_background_color`
 
 A hexadecimal RGB color value (e.g., `#6495ED`) to use as the background
 color for splash screens.
@@ -499,9 +472,7 @@ color for splash screens.
 If the platform output format does not use a splash screen, this setting
 is ignored.
 
-::: {.attribute}
-stub_binary
-:::
+### `stub_binary`
 
 A file path or URL pointing at a pre-compiled binary (or a zip/tarball
 of a binary) that can be used as an entry point for a bundled
@@ -510,9 +481,7 @@ application.
 If this setting is not provided, and a stub binary is required by the
 platform, Briefcase will use the default stub binary for the platform.
 
-::: {.attribute}
-stub_binary_revision
-:::
+### `stub_binary_revision`
 
 The specific revision of the stub binary that should be used. By
 default, Briefcase will use the stub binary revision nominated by the
@@ -520,12 +489,10 @@ application template. If you specify a stub binary revision, that will
 override the revision nominated by the application template.
 
 If you specify an explicit stub binary (using the
-[stub_binary][] setting), this argument is
+[`stub_binary`][] setting), this argument is
 ignored.
 
-::: {.attribute}
-support_package
-:::
+### `support_package`
 
 A file path or URL pointing at a tarball containing a Python support
 package. (i.e., a precompiled, embeddable Python interpreter for the
@@ -534,9 +501,7 @@ platform)
 If this setting is not provided, Briefcase will use the default support
 package for the platform.
 
-::: {.attribute}
-support_revision
-:::
+### `support_revision`
 
 The specific revision of a support package that should be used. By
 default, Briefcase will use the support package revision nominated by
@@ -546,17 +511,17 @@ override the revision nominated by the application template.
 If you specify an explicit support package (either as a URL or a file
 path), this argument is ignored.
 
-::: supported
+### `supported`
 
 Indicates that the platform is not supported. For example, if you know
 that the app cannot be deployed to Android for some reason, you can
 explicitly prevent deployment by setting `supported=False` in the
 Android section of the app configuration file.
 
-If [supported][] is set to `false`, the
+If [`supported`][] is set to `false`, the
 create command will fail, advising the user of the limitation.
 
-::: template
+### `template`
 
 A file path or URL pointing at a
 [cookiecutter](https://github.com/cookiecutter/cookiecutter) template
@@ -565,9 +530,7 @@ for the output format.
 If this setting is not provided, Briefcase will use a default template
 for the output format and Python version.
 
-::: {.attribute}
-template_branch
-:::
+### `template_branch`
 
 The branch of the project template to use when generating the app. If
 the template is a local file, this attribute will be ignored. If not
@@ -577,24 +540,20 @@ will use the `v0.3.9` template branch when generating the app). If
 you're using a development version of Briefcase, Briefcase will use the
 `main` branch of the template.
 
-::: {.attribute}
-test_requires
-:::
+### `test_requires`
 
 A list of packages that are required for the test suite to run.
 
 Unlike most other keys in a configuration file,
-[test_requires][] is a *cumulative*
+[`test_requires`][] is a *cumulative*
 setting. If an application defines requirements at the global level,
 application level, *and* platform level, the final set of requirements
 will be the *concatenation* of requirements from all levels, starting
 from least to most specific.
 
-See [requires][configuration-requires-key] for examples.
+See [`requires`][] for examples.
 
-::: {.attribute}
-test_sources
-:::
+### `test_sources`
 
 A list of paths, relative to the `pyproject.toml` file, where test code
 for the application can be found. The contents of any named files or
@@ -604,8 +563,8 @@ in any named path will not be included. For example, if you specify
 copied into the application bundle; the `src` directory will not be
 reproduced.
 
-As with [sources][],
-[test_sources][] is a *cumulative* setting.
+As with [`sources`][],
+[`test_sources`][] is a *cumulative* setting.
 If an application defines sources at the global level, application
 level, *and* platform level, the final set of sources will be the
 *concatenation* of test sources from all levels, starting from least to
@@ -624,35 +583,27 @@ taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
-::: permission.camera
+### `permission.camera`
 
 Permission to access the camera to take photos or video.
 
-::: permission.microphone
+### `permission.microphone`
 
 Permission to access the microphone.
 
-::: {.attribute}
-permission.coarse_location
-:::
+### `permission.coarse_location`
 
 Permission to determine a rough GPS location.
 
-::: {.attribute}
-permission.fine_location
-:::
+### `permission.fine_location`
 
 Permission to determine a precise GPS location.
 
-::: {.attribute}
-permission.background_location
-:::
+### `permission.background_location`
 
 Permission to track GPS location while in the background.
 
-::: {.attribute}
-permission.photo_library
-:::
+### `permission.photo_library`
 
 Permission to access the user's photo library.
 
@@ -676,10 +627,6 @@ permissions are mapped.
 
 ## Document types
 
-::: {.currentmodule}
-document_type_id
-:::
-
 Applications in a project can register themselves with the operating
 system as handlers for specific document types by adding a
 `document_type` configuration section for each document type the
@@ -695,15 +642,15 @@ The `document type id` is an identifier, in alphanumeric format.
 
 The document type declaration requires the following settings:
 
-::: description
+### `description`
 
 A short, one-line description of the document format.
 
-::: extension
+### `extension`
 
 The file extension to register, without a leading dot.
 
-::: icon
+### `icon`
 
 A path, relative to the directory where the `pyproject.toml` file is
 located, to an image for an icon to register for use with documents of
@@ -711,7 +658,10 @@ this type. The path should *exclude* the extension; Briefcase will
 append a platform-appropriate extension when configuring the
 application. For example, an icon specification of:
 
-    icon = "resources/icon"
+```python
+icon = "resources/icon"
+```
+
 
 will use `resources/icon.icns` on macOS, and `resources/icon.ico` on
 Windows.
@@ -720,8 +670,10 @@ Some platforms also require different *variants* (e.g., both square and
 round icons). These variants can be specified by qualifying the icon
 specification:
 
-    icon.round = "resource/round-icon"
-    icon.square = "resource/square-icon"
+```python
+icon.round = "resource/round-icon"
+icon.square = "resource/square-icon"
+```
 
 Some platforms require multiple icons, at different sizes; these will be
 handled by appending the required size to the provided icon name. For
@@ -736,9 +688,7 @@ requires round and square icons, in sizes ranging from 48px to 192px;
 Briefcase will look for `resource/round-icon-42.png`,
 `resource/square-icon-42.png`, `resource/round-icon-192.png`, and so on.
 
-::: {.attribute}
-mime_type
-:::
+### `mime_type`
 
 A MIME type for the document format. This is used to register the
 document type with the operating system. For example, `image/png` for
@@ -760,7 +710,7 @@ use the `x-` prefix, or [formally apply to
 IANA](https://www.iana.org/form/media-types) for a new registered MIME
 type.
 
-::: url
+### `url`
 
 A URL for help related to the document format.
 
@@ -771,7 +721,7 @@ relevant to that platform. In particular, Apple platforms (macOS, iOS)
 have a more elaborate system for document types, and require additional
 configuration to use document types. If you want to support document
 types on these platforms, you will need to read the macOS
-[macOS-document-types][] section for more
+[document types][macOS-document-types] section for more
 information.
 
 ## PEP621 compatibility
@@ -788,21 +738,21 @@ they are available:
 
 - `version` maps to the same key in Briefcase.
 - `authors` The `email` and `name` keys of the first value in the
-  `authors` setting map to [author][] and
-  [author_email][].
+  `authors` setting map to [`author`][] and
+  [`author_email`][].
 - `dependencies` maps to the Briefcase `requires`{.interpreted-text
   role="attr"} setting. This is a cumulative setting; any packages
-  defined in the [requires][] setting at
+  defined in the [`requires`][] setting at
   the `[tool.briefcase]` level will be appended to the packages defined
   with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to
-  [test_requires][]., As with
-  `dependencies`/[requires][], this is a
+  [`test_requires`][]., As with
+  `dependencies`/[`requires`][], this is a
   cumulative setting.
 - `text` in a `[project.license]` section will be mapped to
-  [license][].
+  [`license`][].
 - `homepage` in a `[project.urls]` section will be mapped to
-  [url][].
+  [`url`][].
 - `requires-python` will be used to validate the running Python
   interpreter's version against the requirement.

@@ -1,4 +1,4 @@
-# Accessing Briefcase packaging metadata at runtime  { id="access-packaging-metadata" }
+# Accessing Briefcase packaging metadata at runtime  { #access-packaging-metadata }
 
 When Briefcase installs your app, it adds a
 [PEP566](https://peps.python.org/pep-0566/) metadata file containing
@@ -54,7 +54,7 @@ defined in your app's `pyproject.toml` configuration:
 > - **Author-email** - [author_email][]
 
 For example, the metadata for the app constructed by the [BeeWare
-Tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-1.html)
+Tutorial](https://tutorial.beeware.org/en/latest/tutorial/tutorial-1.html)
 would contain:
 
     Metadata-Version: 2.1

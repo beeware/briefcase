@@ -4,11 +4,11 @@ The Google Play Store is the most widely-used Android app store. This
 guide focuses on how to distribute a BeeWare app on the Google Play
 Store.
 
-> The Google Play Store makes frequent changes to the workflows and
-> nomenclature associated with publishing apps. As a result, it's very
-> difficult to keep a guide like this one up to date. If you spot any
-> problems, [let us
-> know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,android&projects=&template=bug_report.yml).
+/// note | Note
+
+The Google Play Store makes frequent changes to the workflows and nomenclature associated with publishing apps. As a result, it's very difficult to keep a guide like this one up to date. If you spot any problems, [let us know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,android&projects=&template=bug_report.yml).
+
+///
 
 ## Build the app in release mode
 
@@ -61,14 +61,13 @@ is a newer format that simplifies the process of uploading your app to
 the Play Store, allows Google to manage the signing process, and allows
 the APK that is installed on your end-user's device to be smaller.
 
-
 ///
 
 ## Sign the Android App Bundle
 
 /// note | Note
 
-Before you sign the APK files, you need to [create a code signing identity.](../code-signing/android)
+Before you sign the APK files, you need to [create a code signing identity][code-signing-android].
 
 ///
 
@@ -194,7 +193,7 @@ verified certificate when you upload your app for distribution.
 
 ## Add the app to the Google Play store
 
-To publish to the Google Play store, you will need a Google Play
+To publish to the Google Play Store, you will need a Google Play
 Developer account, which costs 25 USD. You will then need to provide
 information for your app's store listing including an icon and
 screenshots, upload the app to Google, and finally roll the app out to
@@ -315,4 +314,4 @@ the navigation bar, then **App Releases**.
 
 At this point, the release process is the same as it was for your
 initial release; create a release, upload your AAB file, and submit the
-application for roll out.
+application for roll-out.

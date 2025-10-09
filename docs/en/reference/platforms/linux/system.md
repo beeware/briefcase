@@ -174,7 +174,7 @@ a single argument to pass to Docker, in the order they are specified.
 
 ## Application configuration
 
-::: linux.system
+### `linux.system`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.system` section of your
@@ -214,9 +214,7 @@ definitions will override the vendor-base definitions; and any
 vendor-base definitions will override generic system package
 definitions.
 
-::: {.attribute}
-system_requires
-:::
+### `system_requires`
 
 A list of operating system packages that must be installed for the
 system package build to succeed. If a Docker build is requested, this
@@ -248,9 +246,7 @@ has any operating system dependencies, they *must* be listed in your
 required at *build* time. To specify *runtime* system requirements, use
 the [system_runtime_requires][] setting.
 
-::: {.attribute}
-system_runtime_requires
-:::
+### `system_runtime_requires`
 
 A list of system packages that your app requires at *runtime*. These
 will be closely related to the [system_requires][] setting, but will likely be different; most notably, you
@@ -270,9 +266,7 @@ will specify that your app needs Python 3, a version of
 Any problems with installing or running your system package likely
 indicate an issue with your [system_runtime_requires][] definition.
 
-::: {.attribute}
-system_section
-:::
+### `system_section`
 
 When an application is published as a `.deb` file, Debian requires that
 you specify a "section", describing a classification of the application
@@ -283,9 +277,7 @@ allowed values for [system_section][],
 refer to the [Debian Policy
 Manual](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section).
 
-::: {.attribute}
-dockerfile_extra_content
-:::
+### `dockerfile_extra_content`
 
 Any additional Docker instructions that are required to configure the
 container used to build your Python app. For example, any dependencies

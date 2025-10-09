@@ -1,6 +1,6 @@
 # Linux
 
-## Prerequisites  { id="linux-prerequisites" }
+## Prerequisites  { #linux-prerequisites }
 
 Briefcase requires installing Python 3.9+. You will also need a method
 for managing virtual environments (such as `venv`).
@@ -13,7 +13,3 @@ format.
 
 The default output format for Linux is
 [system packages](./system).
-
-::: {.toctree maxdepth="1"}
-system appimage flatpak
-:::

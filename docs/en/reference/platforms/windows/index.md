@@ -63,7 +63,7 @@ Configuration options between the [.][app]
 and [.][visualstudio] formats are
 identical.
 
-## Prerequisites  { id="windows-prerequisites" }
+## Prerequisites  { #windows-prerequisites }
 
 Briefcase requires installing Python 3.9+.
 
@@ -137,15 +137,13 @@ the timestamp for code signing. Defaults to `sha256`.
 
 ## Application configuration
 
-::: windows
+### `windows`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml`
 file.
 
-::: {.attribute}
-system_installer
-:::
+### `system_installer`
 
 Controls whether the app will be installed as a per-user or per-machine
 app. Per-machine apps are "system" apps, and require admin permissions
@@ -157,21 +155,17 @@ app, available to all users. If `false`, the installer will install as a
 per-user app. If undefined the installer will ask the user for their
 preference.
 
-::: {.attribute}
-use_full_install_path
-:::
+### `use_full_install_path`
 
 Controls whether the app will be installed using a path which includes
 both the application name *and* the company or developer's name. If
 `true` (the default), the app will be installed to
-`Program Files\<Author Name>\<Project Name>`. If `false`, it will be
-installed to `Program Files\<Project Name>`. Using the full path makes
+`Program Files<Author Name><Project Name>`. If `false`, it will be
+installed to `Program Files<Project Name>`. Using the full path makes
 sense for larger companies with multiple applications, but less so for a
 solo developer.
 
-::: {.attribute}
-version_triple
-:::
+### `version_triple`
 
 Python and Briefcase allow any valid [PEP440 version
 number](https://peps.python.org/pep-0440/) as a
@@ -196,7 +190,7 @@ of the auto-generated value.
 
 ## Platform quirks
 
-### Use caution with  { id="--update-support" }`
+### Use caution with  { #--update-support }`
 
 Care should be taken when using the `--update-support` option to the
 `update`, `build` or `run` commands. Support packages in Windows apps
@@ -208,7 +202,7 @@ existing support package content. This *should* work; however, ensure a
 reproducible release artefacts, it is advisable to perform a clean app
 build before release.
 
-### Packaging with  { id="--adhoc-sign" }`
+### Packaging with  { #--adhoc-sign }`
 
 Using the `--adhoc-sign` option on Windows results in no signing being
 performed on the packaged app. This will result in your application

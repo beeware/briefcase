@@ -102,13 +102,13 @@ The device simulator to target. Can be either a UDID, a device name
 
 ## Application configuration
 
-::: iOS
+### `iOS`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.iOS.app` section of your `pyproject.toml`
 file.
 
-::: info
+### `info`
 
 A property whose sub-attributes define keys that will be added to the
 app's `Info.plist` file. Each entry will be converted into a key in the
@@ -122,9 +122,7 @@ will result in an `Info.plist` declaration of:
 
 Any Boolean or string value can be used for an `Info.plist` value.
 
-::: {.attribute}
-min_os_version
-:::
+### `min_os_version`
 
 The minimum iOS version that the app will support. This controls the
 value of `IPHONEOS_DEPLOYMENT_TARGET` used when building the app.
@@ -156,7 +154,7 @@ Briefcase cross platform permissions map to the following
 
 ## Platform quirks
 
-### Availability of third-party packages  { id="ios-third-party-packages" }
+### Availability of third-party packages  { #ios-third-party-packages }
 
 Briefcase is able to use third-party packages in iOS apps. As long as
 the package is available on PyPI, or you can provide a wheel file for
@@ -276,7 +274,7 @@ option:
 This will find and purge all `.a` content in your app's dependencies.
 You can add additional patterns to remove other problematic content.
 
-### Deployment to Simulated and Physical iOS Devices  { id="ios-deploy" }
+### Deployment to Simulated and Physical iOS Devices  { #ios-deploy }
 
 Briefcase provides support for deployment to simulated iOS devices
 through the command line.

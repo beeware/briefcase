@@ -2124,7 +2124,7 @@
 ## 0.1.5  { id="section-41" }
 
 - Added initial Android template
-- Force versions of pip (\>= 8.1) and setuptools (\>=27.0)
+- Force versions of pip (>= 8.1) and setuptools (>=27.0)
 - Drop support for Python 2
 
 ## 0.1.4  { id="section-42" }

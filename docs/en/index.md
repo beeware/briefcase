@@ -19,12 +19,12 @@ installation formats to be produced.
 
 Get started with a hands-on introduction for beginners.
 
-###[How-to guides] { id="how-to" }
+###[How-to guides] { #how-to }
 
 Guides and recipes for common problems and tasks, including how to
 contribute.
 
-###[Topic guides] { id="topics" }
+###[Topic guides] { #topics }
 
 Deeper explorations of concepts and issues related to Briefcase usage.
 
@@ -32,7 +32,7 @@ Deeper explorations of concepts and issues related to Briefcase usage.
 
 Technical reference - commands, modules, classes, methods.
 
-###[About Briefcase] { id="about" }
+###[About Briefcase] { #about }
 
 Frequently Asked Questions, success stories, and other details about
 Briefcase as a project.
@@ -46,7 +46,3 @@ talk to the community through:
 - [Discord](https://beeware.org/bee/chat/)
 - The Briefcase [GitHub Discussions
   forum](https://github.com/beeware/briefcase/discussions)
-
-::: {.toctree maxdepth="2" hidden="" titlesonly=""}
-tutorial/index how-to/index topics/index reference/index about/index
-:::

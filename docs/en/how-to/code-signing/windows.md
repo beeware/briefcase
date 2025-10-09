@@ -60,8 +60,6 @@ C:\...>certutil.exe -user -importpfx -p MySecretPassword My .\cert.pfx
 ```pwsh-session
 PS C:\...> Import-PfxCertificate -FilePath .\cert.pfx -CertStoreLocation Cert:\CurrentUser\My -Password MySecretPassword
 ```
-:::
-:::::
 
 Refer to your Certificate Authority's documentation for specific
 instructions.

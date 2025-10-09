@@ -111,15 +111,13 @@ Don't open a web browser after starting the development web server.
 
 ## Application configuration
 
-::: web
+### `web`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.web` section of your `pyproject.toml`
 file:
 
-::: {.attribute}
-extra_pyscript_toml_content
-:::
+### `extra_pyscript_toml_content`
 
 Any additional configuration that you wish to add to the `pyscript.toml`
 file for your deployed site. For example, you can use this to change the

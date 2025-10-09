@@ -83,7 +83,8 @@ markdown_extensions:
 
 plugins:
   search: {}
-  autorefs: {}
+  autorefs:
+    resolve_closest: true
   literate-nav:
     nav_file: SUMMARY.md
   macros:
@@ -91,3 +92,8 @@ plugins:
     j2_block_end_string: '%]]'
     j2_comment_start_string: '[#'
     j2_comment_end_string: '#]'
+  mkdocstrings:
+    handlers:
+      python:
+        inventories:
+          - https://docs.python.org/3/objects.inv

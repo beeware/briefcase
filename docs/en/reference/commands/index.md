@@ -1,9 +1,5 @@
 # Command reference
 
-::: {.toctree maxdepth="1"}
-new convert dev create update build run package publish upgrade
-:::
-
 ## Common options
 
 The following options are available to all commands:

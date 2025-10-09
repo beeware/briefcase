@@ -1,21 +1,19 @@
-# Building your Console App with Briefcase
+# Building your Console App with Briefcase { #cli-apps }
 
 ## Overview
 
 This guide explains the key differences when creating a console
 application using Briefcase, as opposed to a GUI-based app. It assumes
 you are already familiar with the basics of Briefcase and have completed
-the [BeeWare Tutorial](https://docs.beeware.org/en/latest/).
+the [BeeWare Tutorial](https://tutorial.beeware.org/en/latest/).
 
 We'll cover:
 
 1.  How selecting "Console" changes your project configuration
-2.  The [console_app][] flag in
-    `pyproject.toml`
+2.  The [`console_app`][] flag in `pyproject.toml`
 3.  How Briefcase handles command-line arguments
 4.  Operational differences in how console apps run and display output
-5.  Packaging differences specific to console apps (e.g., `.pkg` bundles
-    on macOS)
+5.  Packaging differences specific to console apps (e.g., `.pkg` bundles on macOS)
 
 ## Creating a Console App
 
@@ -78,7 +76,7 @@ statement by default.
 ## Handling Command-line Arguments
 
 You can use any standard Python tool to parse CLI arguments. Here's a
-simple example using [argparse][]:
+simple example using [`argparse`][]:
 
 ```python
 import argparse
@@ -163,15 +161,12 @@ installer will use the formal name.
 
 Key differences from GUI apps include:
 
-- **Project structure** includes `console_app = true` in
-  `pyproject.toml`;
-- **Apps are executed in the terminal**, and print directly to
-  `stdout`/`stderr`;
-- **Arguments are passed using** `-- ARGS ...` when using
-  `briefcase dev` and `briefcase run`;
+- **Project structure** includes `console_app = true` in `pyproject.toml`;
+- **Apps are executed in the terminal**, and print directly to `stdout`/`stderr`;
+- **Arguments are passed using** `-- ARGS ...` when using `briefcase dev` and
+  `briefcase run`;
 - **No GUI framework or windowing system** is used or bundled; and
-- **macOS packaging uses \`\`.pkg\`\` format**, rather than GUI
-  `.app`/`.dmg` bundles.
+- **macOS packaging uses \`\`.pkg\`\` format**, rather than GUI `.app`/`.dmg` bundles.
 
 ## What's next?
 

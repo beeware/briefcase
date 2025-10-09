@@ -1,4 +1,4 @@
-# Upgrading from Briefcase v0.2  { id="upgrading-from-briefcase-v0.2" }
+# Upgrading from Briefcase v0.2
 
 Briefcase v0.2 was built as a setuptools extension. The configuration
 for your project was contained in a `setup.py` or `setup.cfg` file, and
@@ -26,31 +26,33 @@ content to your `setup.py` or `setup.cfg` file.
 The following is a minimal starting point for your `pyproject.toml`
 file:
 
-    [tool.briefcase]
-    project_name = "My Project"
-    bundle = "com.example"
-    version = "0.1"
-    author = "Jane Developer"
-    author_email = "jane@example.com"
-    requires = []
+```toml
+[tool.briefcase]
+project_name = "My Project"
+bundle = "com.example"
+version = "0.1"
+author = "Jane Developer"
+author_email = "jane@example.com"
+requires = []
 
-    [tool.briefcase.app.myapp]
-    formal_name = "My App"
-    description = "My first Briefcase App"
-    requires = []
-    sources = ['src/myapp']
+[tool.briefcase.app.myapp]
+formal_name = "My App"
+description = "My first Briefcase App"
+requires = []
+sources = ['src/myapp']
 
-    [tool.briefcase.app.myapp.macOS]
-    requires = ['toga-cocoa==0.3.0.dev15']
+[tool.briefcase.app.myapp.macOS]
+requires = ['toga-cocoa==0.3.0.dev15']
 
-    [tool.briefcase.app.myapp.windows]
-    requires = ['toga-winforms==0.3.0.dev15']
+[tool.briefcase.app.myapp.windows]
+requires = ['toga-winforms==0.3.0.dev15']
 
-    [tool.briefcase.app.myapp.linux]
-    requires = ['toga-gtk==0.3.0.dev15']
+[tool.briefcase.app.myapp.linux]
+requires = ['toga-gtk==0.3.0.dev15']
 
-    [tool.briefcase.app.myapp.iOS]
-    requires = ['toga-iOS==0.3.0.dev15']
+[tool.briefcase.app.myapp.iOS]
+requires = ['toga-iOS==0.3.0.dev15']
+```
 
 The configuration sections are tool specific, and start with the prefix
 `tool.briefcase`. Additional dotted paths define the specificity of the
@@ -75,7 +77,7 @@ following pointers may help port other values.
 - `version` *must* be defined as a string in your `pyproject.toml` file.
   If you need to know the version of your app (or the value of any other
   app metadata specified in `pyproject.toml`) at runtime, you should use
-  [importlib.metadata](https://docs.python.org/3/library/importlib.metadata.html).
+  [`importlib.metadata`][].
   Briefcase will create `myapp.dist-info` for your application (using
   your app name instead of `myapp`).
 
@@ -122,20 +124,20 @@ app.
 Briefcase v0.3 uses its own `briefcase` entry point, with [subcommands](reference/commands) to perform
 specific functions:
 
-> - `briefcase new` - Bootstrap a new project (generating a
->   `pyproject.toml` and other stub content).
-> - `briefcase dev` - Run the app in developer mode, using the current
->   virtual environment.
-> - `briefcase create` - Use the platform template to generate the files
->   needed to build a distributable artefact for the platform.
-> - `briefcase update` - Update the source code of the application in
->   the generated project.
-> - `briefcase build` - Run whatever compilation process is necessary to
->   produce an executable file for the platform.
-> - `briefcase run` - Run the executable file for the platform.
-> - `briefcase package` - Perform whatever post-processing is necessary
->   to wrap the executable into a distributable artefact (e.g., an
->   installer).
+- `briefcase new` - Bootstrap a new project (generating a
+  `pyproject.toml` and other stub content).
+- `briefcase dev` - Run the app in developer mode, using the current
+  virtual environment.
+- `briefcase create` - Use the platform template to generate the files
+  needed to build a distributable artefact for the platform.
+- `briefcase update` - Update the source code of the application in
+  the generated project.
+- `briefcase build` - Run whatever compilation process is necessary to
+  produce an executable file for the platform.
+- `briefcase run` - Run the executable file for the platform.
+- `briefcase package` - Perform whatever post-processing is necessary
+  to wrap the executable into a distributable artefact (e.g., an
+  installer).
 
 When using these commands, there is no need to specify the platform
 (i.e. `macOS` when on a Mac). The current platform will be detected and
@@ -149,7 +151,7 @@ platform is "native"). For example, if you're on a Mac,
 task; `briefcase create iOS` would build an iOS project.
 
 The exceptions to this platform specification are `briefcase new` and
-`briefcase dev`. These two commands are platform agnostic.
+`briefcase dev`. These two commands are platform-agnostic.
 
 The Briefcase sub-commands will also detect if previous steps haven't
 been executed, and invoke any prior steps that are required. For

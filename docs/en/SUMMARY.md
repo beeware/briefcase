@@ -3,39 +3,42 @@
 <!-- rumdl-disable MD007 -->
 
 - [Tutorial](tutorial/index.md)
-- How-to guides
+- [How-to guides](how-to/index.md)
     - Obtaining a Code Signing identity
         - [Android](how-to/code-signing/android.md)
         - [macOS](how-to/code-signing/macOS.md)
         - [Windows](how-to/code-signing/windows.md)
-        - [Building your App in CI with GitHub Actions](how-to/ci.md)
-        - [Building your Console App with Briefcase](how-to/cli-apps.md)
-        - [Testing Linux Apps with Docker](how-to/x11passthrough.md)
-        - [Packaging external apps](how-to/external-apps.md)
+    - Building different types of apps
+        - [Building your App in CI with GitHub Actions](how-to/building/ci.md)
+        - [Building your Console App with Briefcase](how-to/building/cli-apps.md)
+        - [Packaging external apps](how-to/building/external-apps.md)
+    - Testing apps
+        - [Testing Linux Apps with Docker](how-to/testing/x11passthrough.md)
     - Publishing your app
-          - ./how-to/publishing/*
+        - ./how-to/publishing/*
     - Contributing to Briefcase
         - [Contributing code to Briefcase](how-to/contribute/code.md)
         - [Contributing to the documentation](how-to/contribute/docs.md)
     - Internal How-to guides
         - [How to cut a Briefcase release](how-to/internal/release.md)
-    - [Upgrading from Briefcase v0.2](how-to/upgrade-from-v0.2.md)
+    - Upgrading from previous versions
+        - [Upgrading from Briefcase v0.2](how-to/upgrading/upgrade-from-v0.2.md)
 - Topic guides
     - [Accessing Briefcase packaging metadata at runtime](topics/access-packaging-metadata.md)
 - Reference
     - [Briefcase configuration options](reference/environment.md)
     - [Project configuration options](reference/configuration.md)
-        - [Command Reference](reference/commands/index.md)
-            - [new](reference/commands/new.md)
-            - [convert](reference/commands/convert.md)
-            - [dev](reference/commands/dev.md)
-            - [create](reference/commands/create.md)
-            - [update](reference/commands/update.md)
-            - [build](reference/commands/build.md)
-            - [run](reference/commands/run.md)
-            - [package](reference/commands/package.md)
-            - [publish](reference/commands/publish.md)
-            - [upgrade](reference/commands/upgrade.md)
+    - [Command Reference](reference/commands/index.md)
+        - [new](reference/commands/new.md)
+        - [convert](reference/commands/convert.md)
+        - [dev](reference/commands/dev.md)
+        - [create](reference/commands/create.md)
+        - [build](reference/commands/build.md)
+        - [update](reference/commands/update.md)
+        - [run](reference/commands/run.md)
+        - [package](reference/commands/package.md)
+        - [publish](reference/commands/publish.md)
+        - [upgrade](reference/commands/upgrade.md)
     - [Platform support](reference/platforms/index.md)
         - [macOS](reference/platforms/macOS/index.md)
             - [.app bundle](reference/platforms/macOS/app.md)

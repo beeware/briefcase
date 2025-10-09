@@ -108,15 +108,13 @@ Flatpaks do not support splash screens or installer images.
 
 ## Application configuration
 
-::: linux.flatpak
+### `linux.flatpak`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.flatpak` section of your
 `pyproject.toml` file:
 
-::: {.attribute}
-finish_arg
-:::
+### `finish_arg`
 
 The arguments used to configure the Flatpak sandbox. `finish_arg` is an
 attribute that can have additional sub-attributes; each sub-attribute
@@ -145,26 +143,20 @@ example, to disable audio access, you would specify:
 
     finish_arg."socket=pulseaudio" = false
 
-::: {.attribute}
-flatpak_runtime_repo_alias
-:::
+### `flatpak_runtime_repo_alias`
 
 An alias to use when registering the Flatpak repository that will store
 the Flatpak runtime used to build the app. By default, Briefcase will
 use [Flathub](https://flathub.org) as its runtime repository, with an
 alias of `flathub`.
 
-::: {.attribute}
-flatpak_runtime_repo_url
-:::
+### `flatpak_runtime_repo_url`
 
 The repository URL hosting the runtime and SDK package that the Flatpak
 will use. By default, Briefcase will use [Flathub](https://flathub.org)
 as its runtime repository.
 
-::: {.attribute}
-flatpak_runtime
-:::
+### `flatpak_runtime`
 
 A string, identifying the
 [runtime](https://docs.flatpak.org/en/latest/available-runtimes.html) to
@@ -174,16 +166,12 @@ The Flatpak runtime and SDK are paired; so, both a
 [flatpak_runtime][] and a corresponding
 [flatpak_sdk][] must be defined.
 
-::: {.attribute}
-flatpak_runtime_version
-:::
+### `flatpak_runtime_version`
 
 A string, identifying the version of the Flatpak runtime that should be
 used.
 
-::: {.attribute}
-flatpak_base
-:::
+### `flatpak_base`
 
 An optional string, identifying the
 [base](https://docs.flatpak.org/en/latest/flatpak-builder-command-reference.html#flatpak-manifest)
@@ -192,16 +180,12 @@ layered on top of a runtime image, providing additional functionality
 for the packaged application. Some GUI frameworks (e.g., PyQt) provide a
 base image to ensure common required resources are available at runtime.
 
-::: {.attribute}
-flatpak_base_version
-:::
+### `flatpak_base_version`
 
 An optional string (required if [flatpak_base][] is defined), identifying the version of the Flatpak base
 that should be used.
 
-::: {.attribute}
-flatpak_sdk
-:::
+### `flatpak_sdk`
 
 A string, identifying the SDK associated with the platform that will be
 used to build the Flatpak app.
@@ -210,9 +194,7 @@ The Flatpak runtime and SDK are paired; so, both a
 [flatpak_runtime][] and a corresponding
 [flatpak_sdk][] must be defined.
 
-::: {.attribute}
-modules_extra_content
-:::
+### `modules_extra_content`
 
 Additional build instructions that will be inserted into the Flatpak
 manifest, *after* Python has been installed and `pip` is guaranteed to

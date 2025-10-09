@@ -1,9 +1,5 @@
 # macOS
 
-::: {.toctree hidden=""}
-app xcode
-:::
-
 <table class="host-platform-support-table">
 <colgroup>
 <col style="width: 11%" />
@@ -70,7 +66,7 @@ notarized when they are packaged.
 Configuration options between the [.][app]
 and [.][xcode] formats are identical.
 
-## Prerequisites  { id="macos-prerequisites" }
+## Prerequisites  { #macos-prerequisites }
 
 Briefcase requires installing Python 3.9+.
 
@@ -133,13 +129,13 @@ option to resume the notarization process for an app.
 
 ## Application configuration
 
-::: macOS
+### `macOS`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.macOS` section of your `pyproject.toml`
 file.
 
-::: entitlement
+### `entitlement`
 
 A property whose sub-attributes define keys that will be added to the
 app's `Entitlements.plist` file. Each entry will be converted into a key
@@ -166,7 +162,7 @@ to your `pyproject.toml`:
 
     entitlement."com.apple.security.cs.disable-library-validation" = false
 
-::: info
+### `info`
 
 A property whose sub-attributes define keys that will be added to the
 app's `Info.plist` file. Each entry will be converted into a key in the
@@ -180,16 +176,12 @@ will result in an `Info.plist` declaration of:
 
 Any Boolean or string value can be used for an `Info.plist` value.
 
-::: {.attribute}
-min_os_version
-:::
+### `min_os_version`
 
 The minimum macOS version that the app will support. This controls the
 value of `MACOSX_DEPLOYMENT_TARGET` used when building the app.
 
-::: {.attribute}
-universal_build
-:::
+### `universal_build`
 
 A Boolean, indicating whether Briefcase should build a universal app
 (i.e, an app that can target both x86_64 and ARM64). Defaults to `true`;
@@ -198,11 +190,7 @@ which it was built - i.e., if you build on an x86_64 machine, you will
 produce an x86_65 binary; if you build on an ARM64 machine, you will
 produce an ARM64 binary.
 
-## Document types  { id="mac" }OS-document-types}
-
-::: {.currentmodule}
-document_type_id
-:::
+## Document types  { #macOS-document-types }
 
 Internally, macOS uses Uniform Type Identifiers (UTIs) to track document
 types. UTIs are strings that uniquely identify a type of data. They are
@@ -227,7 +215,7 @@ document types are presented on macOS.
 The following macOS-specific configuration keys can be used in a
 document type declaration:
 
-::: macOS.CFBundleTypeRole
+### `macOS.CFBundleTypeRole`
 
 [CFBundleTypeRole](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/cfbundletyperole)
 declares the role the application plays with respect to the document
@@ -236,7 +224,7 @@ type. Valid values are `Editor`, `Viewer`, `Shell`, `QLGenerator`, and
 
 Briefcase will default to a role of `Viewer` for all document types.
 
-::: macOS.LSHandlerRank
+### `macOS.LSHandlerRank`
 
 [LSHandlerRank](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/lshandlerrank)
 defines the relative priority of this application when it comes to
@@ -246,7 +234,7 @@ are `Owner`, `Alternate`, `Default` and `None`.
 Briefcase will default to a role of `Alternate` for any known MIME type,
 and `Owner` for any custom MIME type.
 
-::: macOS.LSItemContentTypes
+### `macOS.LSItemContentTypes`
 
 [LSItemContentTypes](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundledocumenttypes/lsitemcontenttypes)
 define the UTI content types that the app can handle.
@@ -260,7 +248,7 @@ Although macOS technically allows an application to support multiple
 UTIs per document types, Briefcase can only assign a single content
 type. The value of [macOS.LSItemContentTypes][] must be a string, or a list containing a single value.
 
-::: macOS.UTTypeConformsTo
+### `macOS.UTTypeConformsTo`
 
 [UTTypeConformsTo](https://developer.apple.com/documentation/BundleResources/Information-Property-List/UTExportedTypeDeclarations/UTTypeConformsTo)
 defines the list of UTIs that the document type conforms to. Each entry
@@ -270,9 +258,7 @@ Briefcase will assume a default of `["public.data", "public.content"]`
 for unknown MIME types. The value is not used for known mime types (as
 the operating system knows the conforming types).
 
-::: {.attribute}
-macOS.is_core_type
-:::
+### `macOS.is_core_type`
 
 A Boolean, used to explicitly declare a content type as a core type.
 This flag is used to determine whether a `UTImportedTypeDeclarations`
@@ -307,7 +293,7 @@ helpful in determining how to expose content types for your application:
 
 ## Permissions
 
-::: macOS
+### `macOS`
 
 Briefcase cross platform permissions map to a combination of
 [info][] and
@@ -358,7 +344,7 @@ This most commonly affects the <span class="title-ref">Documents</span>
 and <span class="title-ref">Desktop</span> folders (and subfolders), but
 can affect other locations if they are synchronized with iCloud.
 
-### Packaging with  { id="--adhoc-sign" }`
+### Packaging with  { #--adhoc-sign }`
 
 Using the `--adhoc-sign` option on macOS produces an app that will be
 able to run on your own machine, but won't run on any other computer. In

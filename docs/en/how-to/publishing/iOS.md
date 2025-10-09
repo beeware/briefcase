@@ -3,11 +3,11 @@
 This guide will walk you through the process of publishing an app to the
 Apple App Store.
 
-> The Apple App Store makes frequent changes to the workflows and
-> nomenclature associated with publishing apps. As a result, it's very
-> difficult to keep a like this one up to date. If you spot any
-> problems, [let us
-> know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
+/// note | Note
+
+The Apple App Store makes frequent changes to the workflows and nomenclature associated with publishing apps. As a result, it's very difficult to keep a like this one up to date. If you spot any problems, [let us know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
+
+///
 
 To distribute an app on the iOS App Store, you'll need to
 [enroll in the Apple Developer Program][apple-dev-enroll]. You

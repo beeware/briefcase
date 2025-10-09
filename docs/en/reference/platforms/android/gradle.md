@@ -218,64 +218,48 @@ a single port.
 
 ## Application configuration
 
-::: android
+### `android`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.android` section of your `pyproject.toml`
 file.
 
-::: {.attribute}
-android_manifest_attrs_extra_content
-:::
+### `android_manifest_attrs_extra_content`
 
 Additional attributes that will be added verbatim to the `<manifest>`
 declaration of the `AndroidManifest.xml` of your app.
 
-::: {.attribute}
-android_manifest_extra_content
-:::
+### `android_manifest_extra_content`
 
 Additional content that will be added verbatim just before the closing
 `</manifest>` declaration of the `AndroidManifest.xml` of your app.
 
-::: {.attribute}
-android_manifest_application_attrs_extra_content
-:::
+### `android_manifest_application_attrs_extra_content`
 
 Additional attributes that will be added verbatim to the `<application>`
 declaration of the `AndroidManifest.xml` of your app.
 
-::: {.attribute}
-android_manifest_application_extra_content
-:::
+### `android_manifest_application_extra_content`
 
 Additional content that will be added verbatim just before the closing
 `</application>` declaration of the `AndroidManifest.xml` of your app.
 
-::: {.attribute}
-android_manifest_activity_attrs_extra_content
-:::
+### `android_manifest_activity_attrs_extra_content`
 
 Additional attributes that will be added verbatim to the `<activity>`
 declaration of the `AndroidManifest.xml` of your app.
 
-::: {.attribute}
-android_manifest_activity_extra_content
-:::
+### `android_manifest_activity_extra_content`
 
 Additional content that will be added verbatim just before the closing
 `</activity>` declaration of the `AndroidManifest.xml` of your app.
 
-::: {.attribute}
-base_theme
-:::
+### `base_theme`
 
 The base theme for the application. Defaults to
 `Theme.AppCompat.Light.DarkActionBar`
 
-::: {.attribute}
-build_gradle_dependencies
-:::
+### `build_gradle_dependencies`
 
 The list of libraries that should be linked into the Android
 application. Each library should be a versioned Maven package specifier.
@@ -285,15 +269,13 @@ If unspecified, three libraries will be linked into the app:
 - `androidx.constraintlayout:constraintlayout:1.1.3`
 - `androidx.swiperefreshlayout:swiperefreshlayout:1.1.0`
 
-::: {.attribute}
-build_gradle_extra_content
-:::
+### `build_gradle_extra_content`
 
 A string providing additional Gradle settings to use when building your
 app. This will be added verbatim to the end of your `app/build.gradle`
 file.
 
-::: feature
+### `feature`
 
 A property whose sub-properties define the features that will be marked
 as required by the final app. Each entry will be converted into a
@@ -312,9 +294,7 @@ The use of some cross-platform permissions will imply the addition of
 features; see
 [the discussion on Android permissions][android-permissions] for more details.
 
-::: {.attribute no-index=""}
-min_os_version
-:::
+### `min_os_version`
 
 The minimum API level that the app will support (i.e., the
 `minSdkVersion` for the app). This is *not* the Android version; it is
@@ -322,7 +302,7 @@ the underlying API level. For example, Android 9 uses an API level of
 28; if you wanted to specify Android 9 as your minimum supported
 version, you would define `min_os_version = "28"`.
 
-::: permission
+### `permission`
 
 A property whose sub-properties define the platform-specific permissions
 that will be marked as required by the final app. Each entry will be
@@ -338,9 +318,7 @@ will result in an `AndroidManifest.xml` declaration of:
 
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
 
-::: {.attribute}
-target_os_version
-:::
+### `target_os_version`
 
 The API level that the app will target. This controls the version of the
 Android SDK that is used to build your app (by setting the
@@ -351,9 +329,7 @@ the underlying API level. For example, Android 15 uses an API level of
 35; if you wanted to specify Android 15 as your target API level, you
 would define `target_os_version = "35"`.
 
-::: {.attribute}
-version_code
-:::
+### `version_code`
 
 In addition to a version number, Android projects require a version
 "code". This code is an integer version of your version number that
@@ -377,7 +353,7 @@ If you want to manually specify a version code by defining
 `version_code` in your application configuration. If provided, this
 value will override any auto-generated value.
 
-## Permissions  { id="android-permissions" }
+## Permissions  { #android-permissions }
 
 Briefcase cross platform permissions map to `<uses-permission>`
 declarations in the app's `AppManifest.xml`:
@@ -429,7 +405,7 @@ the Android section of your `pyproject.toml`:
 
 ## Platform quirks
 
-### Availability of third-party packages  { id="android-third-party-packages" }
+### Availability of third-party packages  { #android-third-party-packages }
 
 Briefcase is able to use third-party packages in Android apps. As long
 as the package is available on PyPI, or you can provide a wheel file for
@@ -493,7 +469,7 @@ would like a project to officially support Android, you should open a
 feature request with that project requesting Android support, and
 consider providing a PR to contribute that support.
 
-### Signing of  { id="package" }` artefacts
+### Signing of  { #package }` artefacts
 
 While it is possible to use <span class="title-ref">briefcase package
 android</span> to produce an APK or AAB file for distribution, the file

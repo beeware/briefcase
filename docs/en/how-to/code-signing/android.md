@@ -1,4 +1,4 @@
-# Android
+# Android { #code-signing-android }
 
 ## Overview
 
@@ -27,7 +27,7 @@ to use one keystore file per app you are creating and to store it in the
 created by the Android tools; but if it doesn't exist, create it.
 
 We recommend using a separate keystore file per app. Below, we use the
-**upload-key-helloworld.jks** filename. This assumes you are building an
+`upload-key-helloworld.jks` filename. This assumes you are building an
 app called "Hello World"; use the (lowercase, no spaces) app name,
 `helloworld` in the filename for the keystore.
 
@@ -87,4 +87,4 @@ access to the keystore file, but changing the password is also
 important.
 
 See [Publishing your app](../publishing/android/) for instructions on using this key to upload an app to the
-Google Play store.
+Google Play Store.
