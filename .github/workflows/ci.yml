@@ -37,6 +37,8 @@ jobs:
   towncrier:
     name: Check towncrier
     uses: beeware/.github/.github/workflows/towncrier-run.yml@main
+    with:
+      tox-source: "--group tox-uv"
 
   package:
     name: Package Briefcase
