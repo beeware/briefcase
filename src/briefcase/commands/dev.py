@@ -97,32 +97,31 @@ class DevCommand(RunAppMixin, BaseCommand):
         sorted_requires = []
         for req in requires:
             if _is_local_path(req):
-                sorted_requires.extend(["-e", req.strip()])
+                sorted_requires.extend(["-e", req])
             else:
                 sorted_requires.append(req)
 
-        if sorted_requires:
-            with self.console.wait_bar("Installing dev requirements..."):
-                try:
-                    venv.run(
-                        [
-                            sys.executable,
-                            "-u",
-                            "-X",
-                            "utf8",
-                            "-m",
-                            "pip",
-                            "install",
-                            "--upgrade",
-                            *(["-vv"] if self.console.is_deep_debug else []),
-                            *sorted_requires,
-                            *app.requirement_installer_args,
-                        ],
-                        check=True,
-                        encoding="UTF-8",
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise RequirementsInstallError() from e
+        with self.console.wait_bar("Installing dev requirements..."):
+            try:
+                venv.run(
+                    [
+                        sys.executable,
+                        "-u",
+                        "-X",
+                        "utf8",
+                        "-m",
+                        "pip",
+                        "install",
+                        "--upgrade",
+                        *(["-vv"] if self.console.is_deep_debug else []),
+                        *sorted_requires,
+                        *app.requirement_installer_args,
+                    ],
+                    check=True,
+                    encoding="UTF-8",
+                )
+            except subprocess.CalledProcessError as e:
+                raise RequirementsInstallError() from e
         return
 
     def run_dev_app(
