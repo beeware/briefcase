@@ -245,7 +245,6 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         pkg_map_body = inserts.setdefault(target, {}).setdefault(body_insert, {})
         pkg_map_body[package_key] = body_content
 
-
     def _handle_legacy_css(
         self,
         wheel: ZipFile,
@@ -255,12 +254,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     ) -> None:
         """Handle legacy CSS under /static/*.css and add to briefcase.css.
 
+        Emits a deprecation warning for every legacy CSS file discovered.
+
         :param wheel: Open wheel ZipFile being processed.
         :param path: Path object of the file inside the wheel.
         :param package_key: Provenance label (e.g. "name version").
         :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
-        # Show deprecation warning once per wheel
+        # Warn on every legacy usage
         self.console.warning(
             f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} detected.\n"
             "     Static file handling has been deprecated; this file should be "
