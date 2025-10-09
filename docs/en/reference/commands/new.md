@@ -53,40 +53,15 @@ GUI toolkit) and [Pygame](https://www.pygame.org/news) (a common Python
 game development toolkit), as well as an "empty" bootstrap that doesn't
 include any GUI code. However, Briefcase provides a
 [plug-in interface][bootstrap-interface]
-that allows GUI toolkits to provide a their own bootstrap
+that allows GUI toolkits to provide their own bootstrap
 implementation.
 
 The following third-party bootstraps are known to exist:
 
-<table>
-<thead>
-<tr>
-<th>Bootstrap</th>
-<th>Package name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="https://ppb.dev">PursuedPyBear</a></td>
-<td><code>ppb</code></td>
-<td>"Unbearably fun game development". A game toolkit with a focus on
-being education friendly and exposing an idiomatic Python
-interface.</td>
-</tr>
-<tr>
-<td><hr /></td>
-<td><hr /></td>
-<td><hr /></td>
-</tr>
-<tr>
-<td><a href="https://pyga.me">Pygame-ce</a></td>
-<td><code>pygame-ce</code></td>
-<td>A fork of pygame, the classic library for making games in
-Python.</td>
-</tr>
-</tbody>
-</table>
+| Bootstrap     | Package name | Description                                                                                                                            |
+|---------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| PursuedPyBear | ppb          | "Unbearably fun game development". A game toolkit with a focus on being education friendly and exposing an idiomatic Python interface. |
+| Pygame-ce     | pygame-ce    | A fork of pygame, the classic library for making games in Python.                                                                      |
 
 To add a third-party bootstrap, `pip install` the named package into the
 virtual environment that contains Briefcase, then run `briefcase new`.

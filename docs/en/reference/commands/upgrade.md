@@ -4,10 +4,10 @@ Briefcase uses external tools to manage the process of packaging apps.
 Where possible, Briefcase will manage the process of obtaining those
 tools. This is currently done for
 
-> - **WiX** (used by the Windows MSI backend)
-> - **linuxdeploy** (used by the Linux AppImage backend)
-> - **Java JDK** (used by the Android backed)
-> - **Android SDK** (used by the Android backend)
+- **WiX** (used by the Windows MSI backend)
+- **linuxdeploy** (used by the Linux AppImage backend)
+- **Java JDK** (used by the Android backed)
+- **Android SDK** (used by the Android backend)
 
 Over time, it may be necessary to upgrade these tools. The `upgrade`
 command provides a way to perform these upgrades.

@@ -34,7 +34,6 @@ using. For example, you will only be able to create iOS applications on
 macOS. Briefcase will check for any required tools, and will report an
 error if the platform you're targeting is not supported.
 
-
 ///
 
 ## Options
@@ -75,4 +74,4 @@ signed app to others.
 ### `-i <identity>` / `--identity <identity>`
 
 The
-[code signing identity](how-to/code-signing) to use when signing the app.
+[code signing identity][how-to] to use when signing the app.

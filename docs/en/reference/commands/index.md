@@ -23,10 +23,12 @@ value provided to Briefcase by the shell includes the quotes.
 For example, to override the template used by the create command, you
 can use `-C template=...`, but the value must be quoted:
 
-    briefcase create -C template=\"https://example.com/template\"
+```python
+briefcase create -C template=\"https://example.com/template\"
+```
 
 The only app key that *cannot* be overridden with `-C` is
-[app_name][], as it is used to identify
+`app_name`, as it is used to identify
 apps.
 
 ### `-h` / `--help`

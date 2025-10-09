@@ -14,31 +14,31 @@ To distribute an app on the macOS App Store, you'll need to
 don't need to generate any of the certificates described on that page -
 you just need an Apple ID registered in the developer program.
 
-Once you've signed up for an Apple ID account, open the Xcode Settings
+Once you've signed up for an Apple ID account, open the XCode Settings
 dialog, and add your account under the "Accounts" tab.
 
-Apps are submitted to the macOS App Store using Xcode. This requires
-that you use Briefcase's [macOS Xcode project packaging format][macos-xcode-project] to
-build your app. To specify this format, add `macOS Xcode` to any
+Apps are submitted to the macOS App Store using XCode. This requires
+that you use Briefcase's [macOS XCode project packaging format][macos-xcode-project] to
+build your app. To specify this format, add `macOS XCode` to any
 Briefcase app command you want to invoke - for example:
 
 ```console
-(venv) $ briefcase create macOS Xcode
-(venv) $ briefcase run macOS Xcode
+(venv) $ briefcase create macOS XCode
+(venv) $ briefcase run macOS XCode
 ```
 
-## Open the app in Xcode
+## Open the app in XCode
 
-To submit your app to the App Store, use Briefcase to open the Xcode
+To submit your app to the App Store, use Briefcase to open the XCode
 project associated with your project.
 
 ```console
-(venv) $ briefcase open macOS Xcode
+(venv) $ briefcase open macOS XCode
 ```
 
-## Run the app via Xcode
+## Run the app via XCode
 
-Run the app in Xcode to ensure it builds correctly and works as
+Run the app in XCode to ensure it builds correctly and works as
 expected.
 
 In order to submit your app to the App Store, you will need to provide
@@ -56,7 +56,7 @@ click to capture it as an image.
 
 ## Produce an App archive
 
-Select the root node of the Xcode project browser (it should be the
+Select the root node of the XCode project browser (it should be the
 formal name of your app), then select the **Signing & Capabilities** tab
 from configuration options that are displayed. The "Team" option under
 "Signing" will be listed as "None"; select the name of the development
@@ -64,7 +64,7 @@ team that will sign the app. If there's no team listed, select "Add an
 Account", and choose one of the teams that is associated with your Apple
 ID.
 
-In the top bar of the Xcode window, build an archive by selecting
+In the top bar of the XCode window, build an archive by selecting
 "Archive" from the Product menu.
 
 This will perform a clean build of your application, build an archive,
@@ -85,7 +85,7 @@ binary has been processed.
 Log into [App Store Connect](https://appstoreconnect.apple.com), click
 on "My Apps", then on + to add an app.
 
-Fill out the form for a new app. If you've run the app in Xcode, the
+Fill out the form for a new app. If you've run the app in XCode, the
 Bundle ID for your app should be listed; select it from the list. You
 must also create an SKU for your app - we suggest `macos-<appname>`,
 substituting the short app name that you selected when you initially
@@ -108,7 +108,7 @@ You'll then be shown another page for app details, including:
 - The name of the copyright holder
 
 Under the "Build" section, you'll be able to select the archive that you
-uploaded through Xcode.
+uploaded through XCode.
 
 The "App Review Information" section allows you to provide contact
 details in case Apple has questions during the review process. If your

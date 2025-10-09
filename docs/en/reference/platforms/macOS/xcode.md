@@ -1,4 +1,4 @@
-# macOS Xcode project
+# macOS XCode project
 
 <table class="host-platform-support-table">
 <colgroup>
@@ -50,28 +50,28 @@
 </tbody>
 </table>
 
-Briefcase supports creating a full Xcode project for a macOS app. This
+Briefcase supports creating a full XCode project for a macOS app. This
 project can then be used to build an app bundle, with the
-`briefcase build` command or directly from Xcode.
+`briefcase build` command or directly from XCode.
 
-You can specify the use of the macOS Xcode project backend by using
-`briefcase <command> macOS Xcode`.
+You can specify the use of the macOS XCode project backend by using
+`briefcase <command> macOS XCode`.
 
-Most apps will have no need to use the Xcode format - the
-[.][app] format provides everything that is
-required to run most macOS apps. The Xcode project format is useful if
+Most apps will have no need to use the XCode format - the
+[.app bundle][app-bundle] format provides everything that is
+required to run most macOS apps. The XCode project format is useful if
 you need to customize the stub binary that is used to start your app.
 
 All macOS apps, regardless of output format, use the same icon formats,
 have the same set of configuration and runtime options, have the same
 permissions, and have the same platform quirks. See
-[the documentation on macOS apps](.) for more details.
+[the documentation on macOS apps][macos] for more details.
 
 ## Application configuration
 
 Any configuration option specified in the
 `tool.briefcase.app.<appname>.macOS` section of your `pyproject.toml`
-file will be used by the macOS Xcode project. To specify a setting that
-will *only* be used by an Xcode project and *not* other macOS output
-formats, put the setting in a `tool.briefcase.app.<appname>.macOS.Xcode`
+file will be used by the macOS XCode project. To specify a setting that
+will *only* be used by an XCode project and *not* other macOS output
+formats, put the setting in a `tool.briefcase.app.<appname>.macOS.XCode`
 section of your `pyproject.toml`.

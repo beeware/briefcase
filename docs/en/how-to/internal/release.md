@@ -49,13 +49,13 @@ The procedure for cutting a new release is as follows:
 
     - `briefcase-template`
     - `briefcase-macOS-app-template`
-    - `briefcase-macOS-Xcode-template`
+    - `briefcase-macOS-XCode-template`
     - `briefcase-windows-app-template`
     - `briefcase-windows-VisualStudio-template`
     - `briefcase-linux-appimage-template`
     - `briefcase-linux-flatpak-template`
     - `briefcase-linux-system-template`
-    - `briefcase-iOS-Xcode-template`
+    - `briefcase-iOS-XCode-template`
     - `briefcase-android-gradle-template`
     - `briefcase-web-static-template`
 
@@ -110,7 +110,7 @@ The procedure for cutting a new release is as follows:
     (testvenv) $ #... any other manual checks you want to perform ...
     ```
 
-8.  Log into ReadTheDocs, visit the [Versions
+8.  Log into Read The Docs, visit the [Versions
     tab](https://readthedocs.org/projects/briefcase/versions/), and
     activate the new version. Ensure that the build completes; if
     there's a problem, you may need to correct the build configuration,

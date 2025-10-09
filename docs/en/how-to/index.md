@@ -10,13 +10,13 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
 ## Building different types of apps
 
-* [Building your App in CI with GitHub Action](ci.md) - This GitHub Actions workflow provides the basic framework necessary to test, build, and package a Briefcase project in CI for Windows, Linux, macOS, iOS, and Android.
-* [Building your Console App with Briefcase](cli-apps.md) - The key differences when creating a console application using Briefcase, as opposed to a GUI-based app.
-* [Packaging external apps](external-apps.md) - Learn how Briefcase can be used to package an application that has been constructed using another tool.
+* [Building your App in CI with GitHub Action](building/ci.md) - This GitHub Actions workflow provides the basic framework necessary to test, build, and package a Briefcase project in CI for Windows, Linux, macOS, iOS, and Android.
+* [Building your Console App with Briefcase](building/cli-apps.md) - The key differences when creating a console application using Briefcase, as opposed to a GUI-based app.
+* [Packaging external apps](building/external-apps.md) - Learn how Briefcase can be used to package an application that has been constructed using another tool.
 
 ## Testing Apps
 
-* [Testing Linux Apps with Docker](x11passthrough.md) - Configure your system to use Docker to build apps for Linux distributions other than the distribution you're currently using.
+* [Testing Linux Apps with Docker](testing/x11passthrough.md) - Configure your system to use Docker to build apps for Linux distributions other than the distribution you're currently using.
 
 ## Publishing your app
 
@@ -35,4 +35,4 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
 ## Upgrading from previous versions
 
-* [Upgrading from Briefcase v0.2](upgrade-from-v0.2.md) - The changes to configuration and processes needed to upgrade from v0.2 to v0.3.
+* [Upgrading from Briefcase v0.2](upgrading/upgrade-from-v0.2.md) - The changes to configuration and processes needed to upgrade from v0.2 to v0.3.

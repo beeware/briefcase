@@ -38,7 +38,7 @@ appropriate `briefcase` command:
   `briefcase update -r`, or pass the `-r` option to `briefcase build` or
   `briefcase run`.
 - For [`icon`][] (including an
-  [`document_type_id.icon`][] definition in a
+  [`document_type_id.icon`][icon] definition in a
   document type), run `briefcase update --update-resources`, or pass the
   `--update-resources` option to `briefcase build` or `briefcase run`.
 - For any other options, you'll need to re-run `briefcase create`.
@@ -175,7 +175,7 @@ an application defines sources at the global level, application level,
 specific.
 
 The only time `sources` is *not* required is if you are is
-[packaging an external application](how-to/external-apps). If
+[packaging an external application][packaging-external-apps]. If
 you are packaging an external application, `external_package_path` must
 be defined, and `sources` *must not* be defined.
 
@@ -205,9 +205,7 @@ Paths can be:
 
 - An explicit reference to a single file
 - An explicit reference to a single directory
-- Any file system glob accepted by `pathlib.glob` (See [the Python
-  documentation for
-  details](https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob))
+- Any file system glob accepted by [`pathlib.glob`][pathlib.Path.glob]
 
 Paths are treated as format strings prior to glob expansion. You can use
 Python string formatting to include references to configuration
@@ -261,7 +259,7 @@ compiled with the `re.MULTILINE` flag enabled.
 /// admonition | Only for external apps
 
 This setting is only required if you're using Briefcase to
-[package an external application](how-to/external-apps). It
+[package an external application][packaging-external-apps]. It
 is not required if you are using Briefcase for the entire app creation
 process.
 
@@ -280,7 +278,7 @@ If `external_package_path` is defined, `sources` must *not* be defined.
 /// admonition | Only for external apps
 
 This setting is only allowed if you're using Briefcase to
-[package an external application](how-to/external-apps). It
+[package an external application][packaging-external-apps]. It
 is not allowed if you are using Briefcase for the entire app creation
 process.
 
@@ -297,7 +295,7 @@ This setting is only used on Windows.
 
 The application name as it should be displayed to humans. This name may
 contain capitalization and punctuation. If it is not specified, the
-[`name`][] will be used.
+`name` will be used.
 
 ### `icon`
 
@@ -336,7 +334,7 @@ A longer description of the purpose of the application. This description
 can be multiple paragraphs, if necessary. The long description *must
 not* be a copy of the [`description`][], or
 include the [`description`][] as the first
-line of the [`long_description`][]
+line of the [`long_description`][].
 
 A string describing the minimum OS version that the generated app will
 support. This value is only used on platforms that have a clear
@@ -367,7 +365,7 @@ The following examples will have the relative path transformed to an
 absolute one when Briefcase runs the requirement installation command if
 the path `wheels` exists relative to the configuration file:
 
-```TOML
+```toml
 requirement_installer_args = ["--find-links", "./wheels"]
 
 requirement_installer_args = ["-f", "../wheels"]
@@ -377,7 +375,7 @@ On the other hand, the next two examples avoid it because the string
 starts with `-`, does not start with a relative path indication (`./` or
 `../`), or do not resolve to an existing path:
 
-```TOML
+```toml
 requirement_installer_args = ["-f./wheels"]
 
 requirement_installer_args = ["--find-links=./wheels"]
@@ -526,7 +524,7 @@ create command will fail, advising the user of the limitation.
 ### `template`
 
 A file path or URL pointing at a
-[cookiecutter](https://github.com/cookiecutter/cookiecutter) template
+[Cookiecutter](https://github.com/cookiecutter/cookiecutter) template
 for the output format.
 
 If this setting is not provided, Briefcase will use a default template

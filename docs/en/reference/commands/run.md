@@ -23,17 +23,17 @@ in a Python module named `myapp`, test mode will attempt to launch
 discover and start the test suite.
 
 The code for your test suite can specified using the
-[test_sources][] setting; test-specific
-requirements can be specified with [test_requires][]. Test sources and requirements will only be included in
+[`test_sources`][] setting; test-specific
+requirements can be specified with [`test_requires`][]. Test sources and requirements will only be included in
 your app when running in test mode.
 
 Briefcase will monitor the log output of the test suite, looking for the
 output corresponding to test suite completion. Briefcase has built-in
-support for [pytest](https://docs.pytest.org/en/latest) and
+support for [`pytest`](https://docs.pytest.org/en/latest) and
 [unittest](https://docs.python.org/3/library/unittest.html) test suites;
 support for other test frameworks can be added using the
-[test_success_regex][] and
-[test_failure_regex][] settings.
+`test_success_regex` and
+`test_failure_regex` settings.
 
 ### Usage
 

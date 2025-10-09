@@ -60,7 +60,7 @@
 </tr>
 <tr>
 <td>iOS</td>
-<td><a href="./iOS/xcode"><strong>Xcode project</strong></a></td>
+<td><a href="./iOS/xcode"><strong>XCode project</strong></a></td>
 <td>{{ ci_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td></td>
@@ -122,7 +122,7 @@
 <td></td>
 </tr>
 <tr>
-<td><a href="./macOS/xcode/#"><span>Xcode project</span></a></td>
+<td><a href="./macOS/xcode/#"><span>XCode project</span></a></td>
 <td class="tested-status-symbol">{{ ci_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td></td>

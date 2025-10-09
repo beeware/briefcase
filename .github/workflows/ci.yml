@@ -31,6 +31,8 @@ jobs:
   pre-commit:
     name: Pre-commit checks
     uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
+    with:
+      pre-commit-source: "--group pre-commit"
 
   towncrier:
     name: Check towncrier
@@ -96,10 +98,7 @@ jobs:
         path: dist
 
     - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
+      run: python -m pip install --group tox-uv
 
     - name: Test
       id: test
@@ -143,10 +142,7 @@ jobs:
         python-version: "3.10"
 
     - name: Install Tox
-      uses: beeware/.github/.github/actions/install-requirement@main
-      with:
-        requirements: tox
-        extra: dev
+      run: python -m pip install --group tox-uv
 
     - name: Retrieve Coverage Data
       uses: actions/download-artifact@v5.0.0

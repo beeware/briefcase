@@ -296,7 +296,7 @@ Google will then check that you've filled out all the necessary
 compliance details for your app; if there are any missing, you'll be
 prompted to complete those details.
 
-Once you've completed those details, select **Publishing Overvie** from
+Once you've completed those details, select **Publishing Overview** from
 the navigation sidebar. You should see "Changes ready to send for
 review", and a button marked **Send for review**. Click this button.
 

@@ -119,11 +119,11 @@ The `round` and `square` icons should include their background color in
 the image. The `adaptive` icons should have a transparent background;
 the icon image should be centered in the overall image, and should not
 exceed the drawable area. The background color of the adaptive icon will
-be the value specified with [splash_background_color][].
+be the value specified with [`splash_background_color`][].
 
 The icon will also be used to populate the splash screen. You can
 specify a background color for the splash screen using the
-[splash_background_color][] configuration
+[`splash_background_color`][] configuration
 setting.
 
 Android projects do not support installer images.
@@ -132,16 +132,16 @@ Android projects do not support installer images.
 
 Android allows for some customization of the colors used by your app:
 
-- [base_theme][] is used to set the base
+- [`base_theme`][] is used to set the base
   Android theme.
-- [accent_color][] is used as a subtle
+- [`accent_color`][] is used as a subtle
   highlight throughout your app to call attention to key elements. It's
   used on things like form labels and inputs.
-- [primary_color][] is the main branding
+- [`primary_color`][] is the main branding
   color of the app and is used to color the app bar in the main window.
-- [primary_color_dark][] is used alongside
+- [`primary_color_dark`][] is used alongside
   the primary color to color the status bar at the top of the screen.
-- [splash_background_color][] is the color
+- [`splash_background_color`][] is the color
   of the splash background that displays while an app is loading.
 
 ## Additional options
@@ -178,17 +178,7 @@ The device or emulator to target. Can be specified as:
   If any of these attributes are *not* specified, they will fall back to
   reasonable defaults.
 
-#### `--Xemulator=<value>`
-
-A configuration argument to be passed to the emulator on startup. For
-example, to start the emulator in "headless" mode (i.e., without a
-display window), specify `--Xemulator=-no-window`. See [the Android
-documentation](https://developer.android.com/studio/run/emulator-commandline)
-for details on the full list of options that can be provided.
-
-You may specify multiple `--Xemulator` arguments; each one specifies a
-single argument to pass to the emulator, in the order they are
-specified.
+-8<- "reference/platforms/linux/docker_build_options.md"
 
 #### `--shutdown-on-exit`
 
@@ -312,11 +302,15 @@ sub-attribute.
 
 For example, specifying:
 
-    permission."android.permission.HIGH_SAMPLING_RATE_SENSORS" = true
+```python
+permission."android.permission.HIGH_SAMPLING_RATE_SENSORS" = true
+```
 
 will result in an `AndroidManifest.xml` declaration of:
 
-    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
+```xml
+<uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
+```
 
 ### `target_os_version`
 
@@ -340,14 +334,10 @@ version number with the build number. It does this by using each part of
 the main version number (padded to 3 digits if necessary) and the build
 number as 2 significant digits of the final version code:
 
-> - Version `1.0`, build 1 becomes `1000001` (i.e, `1`, `00`, `00`,
->   `01`)
-> - Version `1.2`, build 37 becomes `1020037` (i.e., `1`, `02`, `00`,
->   `37`)
-> - Version `1.2.37`, build 42 becomes `1023742` (i.e, `1`, `02`, `37`,
->   `42`)
-> - Version `2020.6`, build 4 becomes `2020060004` (i.e., `2020`, `06`,
->   `00`, `04`)
+> - Version `1.0`, build 1 becomes `1000001` (i.e, `1`, `00`, `00`, `01`)
+> - Version `1.2`, build 37 becomes `1020037` (i.e., `1`, `02`, `00`, `37`)
+> - Version `1.2.37`, build 42 becomes `1023742` (i.e, `1`, `02`, `37`, `42`)
+> - Version `2020.6`, build 4 becomes `2020060004` (i.e., `2020`, `06`, `00`, `04`)
 
 If you want to manually specify a version code by defining
 `version_code` in your application configuration. If provided, this
@@ -358,26 +348,26 @@ value will override any auto-generated value.
 Briefcase cross platform permissions map to `<uses-permission>`
 declarations in the app's `AppManifest.xml`:
 
-- [permission.camera][]:
+- [`permission.camera`][permissioncamera]:
   `android.permission.CAMERA`
-- [permission.microphone][]:
+- [`permission.microphone`][permissioncamera]:
   `android.permission.RECORD_AUDIO`
-- [permission.coarse_location][]:
+- [`permission.coarse_location`][permissioncoarse_location]:
   `android.permission.ACCESS_COARSE_LOCATION`
-- [permission.fine_location][]:
+- [`permission.fine_location`][permissionfine_location]:
   `android.permission.ACCESS_FINE_LOCATION`
-- [permission.background_location][]:
+- [`permission.background_location`][permissionbackground_location]:
   `android.permission.ACCESS_BACKGROUND_LOCATION`
-- [permission.photo_library][]:
+- [`permission.photo_library`][permissionphoto_library]:
   `android.permission.READ_MEDIA_VISUAL_USER_SELECTED`
 
 Every application will be automatically granted the
 `android.permission.INTERNET` and `android.permission.NETWORK_STATE`
 permissions.
 
-Specifying a [permission.camera][]
+Specifying a [`permission.camera`][permissioncamera]
 permission will result in the following non-required
-[feature][] definitions being implicitly
+[`feature`][] definitions being implicitly
 added to your app:
 
 - `android.hardware.camera`,
@@ -386,10 +376,10 @@ added to your app:
 - `android.hardware.camera.external` and
 - `android.hardware.camera.autofocus`.
 
-Specifying the [permission.coarse_location][], [permission.fine_location][]
-or [permission.background_location][]
+Specifying the [`permission.coarse_location`][permissioncoarse_location], [`permission.fine_location`][permissionfine_location]
+or [`permission.background_location`][permissionbackground_location]
 permissions will result in the following non-required
-[feature][] declarations being implicitly
+[`feature`][] declarations being implicitly
 added to your app:
 
 - `android.hardware.location.network`
@@ -401,7 +391,9 @@ explicitly required by manually defining these feature requirements. For
 example, to make GPS hardware required, you could add the following to
 the Android section of your `pyproject.toml`:
 
-    feature."android.hardware.location.gps" = True
+```toml
+feature."android.hardware.location.gps" = True
+```
 
 ## Platform quirks
 
@@ -409,7 +401,7 @@ the Android section of your `pyproject.toml`:
 
 Briefcase is able to use third-party packages in Android apps. As long
 as the package is available on PyPI, or you can provide a wheel file for
-the package, it can be added to the [requires][] declaration in your `pyproject.toml` file and used by your
+the package, it can be added to the [`requires`][] declaration in your `pyproject.toml` file and used by your
 app at runtime.
 
 If the package is pure Python (i.e., it does not contain a binary
@@ -435,8 +427,7 @@ every package that is on PyPI. If you see any of the following messages
 when building an app for a mobile platform, then the package (or this
 version of it) probably isn't supported yet:
 
-- The error ["Chaquopy cannot compile native
-  code"](https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code)
+- The error ["Chaquopy cannot compile native code"](https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code)
 - A reference to downloading a `.tar.gz` version of the package
 - A reference to `Building wheels for collected packages: <package>`
 
@@ -469,7 +460,7 @@ would like a project to officially support Android, you should open a
 feature request with that project requesting Android support, and
 consider providing a PR to contribute that support.
 
-### Signing of  { #package }` artefacts
+### Signing of `briefcase package` artefacts
 
 While it is possible to use <span class="title-ref">briefcase package
 android</span> to produce an APK or AAB file for distribution, the file

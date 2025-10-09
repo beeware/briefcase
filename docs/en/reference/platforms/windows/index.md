@@ -52,20 +52,20 @@
 
 Briefcase supports two output formats for Windows apps:
 
-- A [.][app] with a pre-compiled binary;
+- A [Windows app folder][windows-app-folder] with a pre-compiled binary;
   and
-- A [.][visualstudio] which can be used to
+- A [Visual Studio project][visual-studio-project] which can be used to
   build an app with a customized binary.
 
-The default output format for Windows is a [.][app].
+The default output format for Windows is a [Windows app folder][windows-app-folder].
 
-Configuration options between the [.][app]
-and [.][visualstudio] formats are
+Configuration options between the [Windows app folder][windows-app-folder]
+and [Visual Studio project][visual-studio-project] formats are
 identical.
 
 ## Prerequisites  { #windows-prerequisites }
 
-Briefcase requires installing Python 3.9+.
+Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
 
 ## Packaging format
 
@@ -116,14 +116,14 @@ certificate for code signing. Defaults to `My`.
 
 Common Stores:
 
-|                                            |                  |
-|--------------------------------------------|------------------|
-| Personal                                   | My               |
-| Intermediate Certification Authorities     | CA               |
-| Third-Party Root Certification Authorities | AuthRoot         |
-| Trusted People                             | TrustedPeople    |
-| Trusted Publishers                         | TrustedPublisher |
-| Trusted Root Certification Authorities     | Root             |
+| Windows internal name | Certificate store type                     |
+|-----------------------|--------------------------------------------|
+| My                    | Personal                                   |
+| CA                    | Intermediate Certification Authorities     |
+| AuthRoot              | Third-Party Root Certification Authorities |
+| TrustedPeople         | Trusted People                             |
+| TrustedPublisher      | Trusted Publishers                         |
+| Root                  | Trusted Root Certification Authorities     |
 
 ### `--timestamp-url <url>`
 
@@ -169,12 +169,12 @@ solo developer.
 
 Python and Briefcase allow any valid [PEP440 version
 number](https://peps.python.org/pep-0440/) as a
-[version][] specifier. However, MSI
+[`version`][] specifier. However, MSI
 installers require a strict integer triple version number. Many
 PEP440-compliant version numbers, such as "1.2", "1.2.3b3", and
 "1.2.3.4", are invalid for MSI installers.
 
-Briefcase will attempt to convert your [version][] into a valid MSI value by extracting the first three parts
+Briefcase will attempt to convert your [`version`][] into a valid MSI value by extracting the first three parts
 of the main series version number (excluding pre, post and dev version
 indicators), padding with zeros if necessary:
 
@@ -184,13 +184,13 @@ indicators), padding with zeros if necessary:
 > - `1.2.3.4` becomes `1.2.3`.
 
 However, if you need to override this default value, you can define
-[version_triple][] in your app settings. If
+[`version_triple`][] in your app settings. If
 provided, this value will be used in the MSI configuration file instead
 of the auto-generated value.
 
 ## Platform quirks
 
-### Use caution with  { #--update-support }`
+### Use caution with `--update-support`
 
 Care should be taken when using the `--update-support` option to the
 `update`, `build` or `run` commands. Support packages in Windows apps
@@ -202,7 +202,7 @@ existing support package content. This *should* work; however, ensure a
 reproducible release artefacts, it is advisable to perform a clean app
 build before release.
 
-### Packaging with  { #--adhoc-sign }`
+### Packaging with `--adhoc-sign`
 
 Using the `--adhoc-sign` option on Windows results in no signing being
 performed on the packaged app. This will result in your application
@@ -211,8 +211,7 @@ is able to install your app.
 
 ### Tkinter is not available
 
-Briefcase uses the official [Python.org Windows Embeddable
-package](https://docs.python.org/3/using/windows.html#windows-embeddable)
+Briefcase uses the official [Python.org Windows Embeddable package](https://docs.python.org/3/using/windows.html#windows-embeddable)
 to provide Python binaries for the Windows app. This embeddable
 distribution is missing some standard library modules that would be part
 of a normal Python.org install - most notably `tkinter`. This is due to

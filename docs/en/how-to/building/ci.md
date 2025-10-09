@@ -82,10 +82,10 @@ The artefacts produced and uploaded by this workflow will not be signed;
 therefore, when the app is executed locally, some platforms may show a
 disconcerting warning about the security of the app or prevent the app
 from running altogether. See more information about code signing in the
-[identity guides](../how-to/code-signing/).
+[identity guides][obtaining-a-code-signing-identity].
 
 ## Workflow File Contents
 
 ```YAML
--8<- "en/how-to/building/workflow.yaml"
+-8<- "how-to/building/workflow.yaml"
 ```

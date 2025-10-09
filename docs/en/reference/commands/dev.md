@@ -24,7 +24,7 @@ $ briefcase dev <platform> <output format>
 ```
 
 The first time the application runs in developer mode, any requirements
-listed in a [requires][] configuration item
+listed in a [`requires`][] configuration item
 in `pyproject.toml` will be installed into the current environment.
 
 ## Options

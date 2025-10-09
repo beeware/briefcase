@@ -69,7 +69,6 @@ correctly), please [open a
 ticket](https://github.com/beeware/briefcase/issues) with the contents
 of your `/etc/os-release` file.
 
-
 ///
 
 The packaged app includes a stub binary, so that the app will appear in
@@ -126,8 +125,8 @@ ensure these files are complete and correct before publishing your app.
 
 The Linux system app template also includes an initial draft manfile for
 your app. This manfile will be populated with the
-[description][] and
-[long_description][] of your app. You may
+[`description`][] and
+[`long_description`][] of your app. You may
 wish to add more details on app usage.
 
 ## Additional options
@@ -147,7 +146,7 @@ and `ubuntu:22.04` will be identified as different versions (even though
 they the same version).
 
 You can specify any identifier you want, provided the distribution is
-still supported by the vendor, and system Python is Python 3.9 or later.
+still supported by the vendor, and system Python is Python 3.10 or later.
 
 The following Linux vendors are known to work as Docker targets:
 
@@ -223,48 +222,56 @@ for the app build. These entries should be the format the target Linux
 distribution will accept. For example, if you're using a Debian-derived
 distribution, you might use:
 
-    system_requires = ["libgirepository1.0-dev", "libcairo2-dev"]
+```python
+system_requires = ["libgirepository1.0-dev", "libcairo2-dev"]
+```
 
 to make the GTK GI and Cairo operating system development packages
 available to your app. However, if you're on a RedHat-derived
 distribution, you would use:
 
-    system_requires = ["gobject-introspection-devel", "python3-cairo-devel"]
+```python
+system_requires = ["gobject-introspection-devel", "python3-cairo-devel"]
+```
 
 If you see errors during `briefcase build` of the form:
 
-    Could not find dependency: libSomething.so.1
+```python
+Could not find dependency: libSomething.so.1
+```
 
 but the app works under `briefcase dev`, the problem may be an
-incomplete [system_requires][] definition.
+incomplete [`system_requires`][] definition.
 The `briefcase build` process generates a new environment that is
 completely isolated from your development environment, so if your app
 has any operating system dependencies, they *must* be listed in your
-[system_requires][] definition.
+[`system_requires`][] definition.
 
-[system_requires][] are the packages
+[`system_requires`][] are the packages
 required at *build* time. To specify *runtime* system requirements, use
-the [system_runtime_requires][] setting.
+the [`system_runtime_requires`][] setting.
 
 ### `system_runtime_requires`
 
 A list of system packages that your app requires at *runtime*. These
-will be closely related to the [system_requires][] setting, but will likely be different; most notably, you
+will be closely related to the [`system_requires`][] setting, but will likely be different; most notably, you
 will probably need `-dev` packages at build time, but non `-dev`
 packages at runtime.
 
-[system_runtime_requires][] should be
+[`system_runtime_requires`][] should be
 specified as system package requirements; they can optionally include
 version pins. Briefcase will automatically include the dependencies
 needed for Python. For example:
 
-    system_runtime_requires = ["libgtk-3-0 (>=3.14)", "libwebkit2gtk-4.1-0"]
+```python
+system_runtime_requires = ["libgtk-3-0 (>=3.14)", "libwebkit2gtk-4.1-0"]
+```
 
 will specify that your app needs Python 3, a version of
 `libgtk >= 3.14`, and any version of `libwebkit2gtk`.
 
 Any problems with installing or running your system package likely
-indicate an issue with your [system_runtime_requires][] definition.
+indicate an issue with your [`system_runtime_requires`][] definition.
 
 ### `system_section`
 
@@ -272,8 +279,8 @@ When an application is published as a `.deb` file, Debian requires that
 you specify a "section", describing a classification of the application
 area. The template will provide a default section of `utils`; if you
 want to override that default, you can specify a value for
-[system_section][]. For details on the
-allowed values for [system_section][],
+[`system_section`][]. For details on the
+allowed values for [`system_section`][],
 refer to the [Debian Policy
 Manual](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section).
 
@@ -282,12 +289,12 @@ Manual](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-secti
 Any additional Docker instructions that are required to configure the
 container used to build your Python app. For example, any dependencies
 that cannot be configured with `apt-get` could be installed.
-[dockerfile_extra_content][] is string
+[`dockerfile_extra_content`][] is string
 literal that will be added verbatim to the end of the project
 Dockerfile.
 
 Any Dockerfile instructions added by
-[dockerfile_extra_content][] will be
+[`dockerfile_extra_content`][] will be
 executed as the `brutus` user, rather than the `root` user. If you need
 to perform container setup operations as `root`, switch the container's
 user to `root`, perform whatever operations are required, then switch
@@ -307,8 +314,8 @@ back to the `brutus` user - e.g.:
 ### Local path references and Docker builds
 
 Docker builds are not able to reference local paths in the
-[requires][] and
-[requirement_installer_args][]
+[`requires`][] and
+[`requirement_installer_args`][]
 configurations. This is because the Docker container only has access to
 specific file paths on the host system. See [issue
 \#2018](https://github.com/beeware/briefcase/issues/2081) for more

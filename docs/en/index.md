@@ -6,25 +6,25 @@ native application. It supports producing binaries for:
 - macOS, as a standalone .app
 - Windows, as an MSI installer
 - Linux, as a native system package
-- iOS, as an Xcode project
+- iOS, as an XCode project
 - Android, as a Gradle project
-- the Web, as a static web site using PyScript for client-side Python
+- the Web, as a static website using PyScript for client-side Python
 
 It is also extensible, allowing for additional platforms and
 installation formats to be produced.
 
 ## Table of contents
 
-###Tutorial
+### [Tutorial](tutorial/index.md)
 
 Get started with a hands-on introduction for beginners.
 
-###[How-to guides] { #how-to }
+### [How-to guides][how-to]
 
 Guides and recipes for common problems and tasks, including how to
 contribute.
 
-###[Topic guides] { #topics }
+### Topic guides
 
 Deeper explorations of concepts and issues related to Briefcase usage.
 
@@ -32,7 +32,7 @@ Deeper explorations of concepts and issues related to Briefcase usage.
 
 Technical reference - commands, modules, classes, methods.
 
-###[About Briefcase] { #about }
+### About Briefcase
 
 Frequently Asked Questions, success stories, and other details about
 Briefcase as a project.

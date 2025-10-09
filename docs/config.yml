@@ -3,6 +3,7 @@ copyright: © Russell Keith-Magee
 
 not_in_nav: |
   /index.md
+  /reference/platforms/linux/docker_build_options.md
 
 validation:
   omitted_files: warn
@@ -73,7 +74,7 @@ markdown_extensions:
   pymdownx.blocks.tab:
     alternate_style: true
   pymdownx.snippets:
-    base_path: ["docs"]
+    base_path: ["docs/en"]
     url_download: true
     check_paths: true
   toc:

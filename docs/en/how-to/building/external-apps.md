@@ -94,7 +94,7 @@ file by hand - you should use the [`entitlement`][] setting in your `pyproject.t
 If Briefcase's configuration options are not sufficient for your
 requirements, you can either fork the template used by Briefcase and use
 the [`template`][] option to point at your
-custom template; or you can [submit a pull request to Briefcase](how-to/contribute/code) to support your
+custom template; or you can [submit a pull request to Briefcase][contribute] to support your
 customization use case.
 
 ## Packaging an external app

@@ -141,7 +141,9 @@ Briefcase adds the following finish arguments by default:
 These can be disabled by explicitly setting their value to `False`; for
 example, to disable audio access, you would specify:
 
-    finish_arg."socket=pulseaudio" = false
+```python
+finish_arg."socket=pulseaudio" = false
+```
 
 ### `flatpak_runtime_repo_alias`
 
@@ -163,8 +165,8 @@ A string, identifying the
 use as a base for the Flatpak app.
 
 The Flatpak runtime and SDK are paired; so, both a
-[flatpak_runtime][] and a corresponding
-[flatpak_sdk][] must be defined.
+[`flatpak_runtime`][] and a corresponding
+[`flatpak_sdk`][] must be defined.
 
 ### `flatpak_runtime_version`
 
@@ -182,7 +184,7 @@ base image to ensure common required resources are available at runtime.
 
 ### `flatpak_base_version`
 
-An optional string (required if [flatpak_base][] is defined), identifying the version of the Flatpak base
+An optional string (required if [`flatpak_base`][] is defined), identifying the version of the Flatpak base
 that should be used.
 
 ### `flatpak_sdk`
@@ -191,8 +193,8 @@ A string, identifying the SDK associated with the platform that will be
 used to build the Flatpak app.
 
 The Flatpak runtime and SDK are paired; so, both a
-[flatpak_runtime][] and a corresponding
-[flatpak_sdk][] must be defined.
+[`flatpak_runtime`][] and a corresponding
+[`flatpak_sdk`][] must be defined.
 
 ### `modules_extra_content`
 
@@ -216,16 +218,18 @@ an NFS mounted drive.
 If you get errors about `renameat` when building an app, similar to the
 following:
 
-    [helloworld] Building Flatpak...
-    Downloading sources
-    Initializing build dir
-    Committing stage init to cache
-    Error: Writing metadata object: renameat: Operation not permitted
-    Building...
+```console
+[helloworld] Building Flatpak...
+Downloading sources
+Initializing build dir
+Committing stage init to cache
+Error: Writing metadata object: renameat: Operation not permitted
+Building...
 
-    Error while building app helloworld.
+Error while building app helloworld.
 
-    Log saved to ...
+Log saved to ...
+```
 
 you may be building on an NFS drive. Move your project to local storage,
 and retry the build.

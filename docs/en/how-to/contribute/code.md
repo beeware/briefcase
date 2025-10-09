@@ -12,20 +12,19 @@ You'll need to install the following prerequisites.
 
 /// tab | macOS
 
-View the [macOS prerequisites][macos-prerequisites].
+Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
 
 ///
 
 /// tab | Linux
 
-View the [Linux prerequisites][linux-prerequisites].
+Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
 
 ///
 
 /// tab | Windows
 
-View the
-[Windows prerequisites][windows-prerequisites].
+Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
 
 ///
 
@@ -341,7 +340,7 @@ problem) can be a huge help.
 
 ### Contribute improvements to documentation
 
-We've got a [separate contribution guide](./docs) for documentation contributions. This covers how to set up
+We've got a [separate contribution guide][contribute-docs] for documentation contributions. This covers how to set up
 your development environment to build Briefcase's documentation, and
 separate ideas for what to work on.
 
@@ -979,7 +978,7 @@ You can also see existing examples of news fragments in the `changes`
 directory of the Briefcase repository. If this folder is empty, it's
 likely because Briefcase has recently published a new release; change
 note files are deleted and combined to update the
-[release notes](about/releases) with
+[release notes][release-history] with
 each release. You can look at that file to see the style of comment that
 is required; you can look at [recently merged
 PRs](https://github.com/beeware/briefcase/pulls?q=is%3Apr+is%3Amerged)

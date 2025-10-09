@@ -52,23 +52,23 @@
 
 Briefcase supports two output formats for macOS apps:
 
-- An [.][app] with a pre-compiled binary;
+- An [.app bundle][app-bundle] with a pre-compiled binary;
   and
-- An [.][xcode] which can be used to build
+- An [macOS XCode project][macos-xcode-project] which can be used to build
   an app with a customized binary.
 
-The default output format for macOS is an [.][app].
+The default output format for macOS is an [.app bundle][app-bundle].
 
 Both output formats support packaging as a macOS DMG, PKG or as a
 standalone signed app bundle. By default, apps will be both signed and
 notarized when they are packaged.
 
-Configuration options between the [.][app]
-and [.][xcode] formats are identical.
+Configuration options between the [.app bundle][app-bundle]
+and [macOS XCode project][macos-xcode-project] formats are identical.
 
 ## Prerequisites  { #macos-prerequisites }
 
-Briefcase requires installing Python 3.9+.
+Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
 
 ## Packaging format
 
@@ -98,8 +98,7 @@ macOS apps.
 This option is only used when creating a `.pkg` installer.
 
 The
-`code signing identity </how-to/code-signing/macOS>`{.interpreted-text
-role="doc"} - TODO: Manually fix this to use when signing the installer package. This is a
+[code signing identity][code-signing-macos] to use when signing the installer package. This is a
 *different* signing identity to the one used to sign the app, but it
 must be from the same team as the app signing identity.
 
@@ -141,11 +140,15 @@ A property whose sub-attributes define keys that will be added to the
 app's `Entitlements.plist` file. Each entry will be converted into a key
 in the entitlements file. For example, specifying:
 
-    entitlement."com.apple.vm.networking" = true
+```python
+entitlement."com.apple.vm.networking" = true
+```
 
 will result in an `Entitlements.plist` declaration of:
 
-    <key>com.apple.vm.networking</key><true/>
+```python
+<key>com.apple.vm.networking</key><true/>
+```
 
 Any Boolean, string, list, or dictionary value can be used as an
 entitlement value.
@@ -160,7 +163,9 @@ You can disable these default entitlements by defining them manually.
 For example, to enable library validation, you could add the following
 to your `pyproject.toml`:
 
-    entitlement."com.apple.security.cs.disable-library-validation" = false
+```python
+entitlement."com.apple.security.cs.disable-library-validation" = false
+```
 
 ### `info`
 
@@ -168,11 +173,15 @@ A property whose sub-attributes define keys that will be added to the
 app's `Info.plist` file. Each entry will be converted into a key in the
 entitlements file. For example, specifying:
 
-    info."NSAppleScriptEnabled" = true
+```python
+info."NSAppleScriptEnabled" = true
+```
 
 will result in an `Info.plist` declaration of:
 
-    <key>NSAppleScriptEnabled</key><true/>
+```python
+<key>NSAppleScriptEnabled</key><true/>
+```
 
 Any Boolean or string value can be used for an `Info.plist` value.
 
@@ -246,7 +255,7 @@ It will construct a UTI of the form
 
 Although macOS technically allows an application to support multiple
 UTIs per document types, Briefcase can only assign a single content
-type. The value of [macOS.LSItemContentTypes][] must be a string, or a list containing a single value.
+type. The value of [`macOS.LSItemContentTypes`][macoslsitemcontenttypes] must be a string, or a list containing a single value.
 
 ### `macOS.UTTypeConformsTo`
 
@@ -275,7 +284,7 @@ document is structured as a directory on disk, but presents to the user
 as a single icon. An `.app` bundle is an example of a package document
 type.
 
-To define a package type, set [macOS.UTTypeConformsTo][] to `["com.apple.package", "public.content"]`. If other UTI
+To define a package type, set [`macOS.UTTypeConformsTo`][macosuttypeconformsto] to `["com.apple.package", "public.content"]`. If other UTI
 types apply, they can also be added to this list.
 
 ### Further customization
@@ -296,38 +305,38 @@ helpful in determining how to expose content types for your application:
 ### `macOS`
 
 Briefcase cross platform permissions map to a combination of
-[info][] and
-[entitlement][] keys:
+[`info`][] and
+[`entitlement`][] keys:
 
-- [permission.microphone][]: an
-  [info][] entry for
+- [`permission.microphone`][permissionmicrophone]: an
+  [`info`][] entry for
   `NSMicrophoneUsageDescription`; and an `entitlement`{.interpreted-text
   role="attr"} of `com.apple.security.device.audio-input`
-- [permission.camera][]: an
-  [info][] entry for
+- [`permission.camera`][permissioncamera]: an
+  [`info`][] entry for
   `NSCameraUsageDescription`; and an `entitlement`{.interpreted-text
   role="attr"} of `com.apple.security.device.camera`
-- [permission.coarse_location][]: an
-  [info][] entry for
+- [`permission.coarse_location`][permissioncoarse_location]: an
+  [`info`][] entry for
   `NSLocationUsageDescription` (ignored if
-  [permission.background_location][] or
-  [permission.fine_location][] is defined);
+  [`permission.background_location`][permissionbackground_location] or
+  [`permission.fine_location`][permissionfine_location] is defined);
   plus an entitlement of
   `com.apple.security.personal-information.location`
-- [permission.fine_location][]: an
-  [info][] entry for
+- [`permission.fine_location`][permissionfine_location]: an
+  [`info`][] entry for
   `NSLocationUsageDescription`(ignored if
-  [permission.background_location][] is
-  defined); plus an [entitlement][] of
+  [`permission.background_location`][permissionbackground_location] is
+  defined); plus an [`entitlement`][] of
   `com.apple.security.personal-information.location`
-- [permission.background_location][]: an
-  [info][] entry for
+- [`permission.background_location`][permissionbackground_location]: an
+  [`info`][] entry for
   `NSLocationUsageDescription`; plus an `entitlement`{.interpreted-text
   role="attr"} of `com.apple.security.personal-information.location`
-- [permission.photo_library][]: an
-  [info][] entry for
+- [`permission.photo_library`][permissionphoto_library]: an
+  [`info`][] entry for
   `NSPhotoLibraryUsageDescription`; plus an
-  [entitlement][] of
+  [`entitlement`][] of
   `com.apple.security.personal-information.photos-library`
 
 ## Platform quirks
@@ -384,10 +393,12 @@ needed at runtime by Python code that imports and uses NumPy.
 If you determine that content is not needed at runtime, it can be
 removed from the app using the `cleanup_paths` configuration option:
 
-    cleanup_paths = [
-        "**/app_packages/**/*.a",
-        "**/app_packages/**/*.h",
-    ]
+```python
+cleanup_paths = [
+    "**/app_packages/**/*.a",
+    "**/app_packages/**/*.h",
+]
+```
 
 This will find and purge all `.a` content and `.h` content in your app's
 dependencies. You can add additional patterns to remove other unneeded
@@ -408,10 +419,10 @@ component, you will need to consult the documentation of the package to
 determine how to compile a wheel.
 
 You can then directly add the wheel file to the
-[requires][] definition for your app, or
+[`requires`][] definition for your app, or
 put the wheel in a folder and add:
 
-```TOML
+```toml
 requirement_installer_args = ["--find-links", "<path-to-wheel-folder>"]
 ```
 

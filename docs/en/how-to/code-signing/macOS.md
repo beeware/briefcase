@@ -1,4 +1,4 @@
-# macOS
+# macOS { #code-signing-macos }
 
 ## Overview
 

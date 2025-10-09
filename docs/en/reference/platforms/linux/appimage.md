@@ -69,10 +69,9 @@ support, but the core team does not consider addressing AppImage bugs a
 priority.
 
 If you need to distribute a Linux app,
-[System packages](./system) or
-[Flatpaks](./flatpak) are much more
+[System packages][native-system-packages] or
+[Flatpaks][flatpak] are much more
 reliable options.
-
 
 ///
 
@@ -140,17 +139,7 @@ AppImages.
 
 Use native execution, rather than using Docker to start a container.
 
-### `--Xdocker-build=<value>`
-
-A configuration argument to be passed to the Docker build command for
-the app image. For example, to provide an additional build argument to
-the Dockerfile, specify `--Xdocker-build=--build-arg=ARG=value`. See
-[the Docker build
-documentation](https://docs.docker.com/reference/cli/docker/buildx/build/#options)
-for details on the full list of options that can be provided.
-
-You may specify multiple `--Xdocker-build` arguments; each one specifies
-a single argument to pass to Docker, in the order they are specified.
+-8<- "reference/platforms/linux/docker_build_options.md"
 
 ## Application configuration
 
@@ -172,7 +161,7 @@ image when building the AppImage. Should be one of:
 - `manylinux2_28`
 
 New projects will default to `manylinux2014`. If an application doesn't
-specify a [manylinux][] value,
+specify a [`manylinux`][] value,
 `ubuntu:18.04` will be used as the base image.
 
 ### `manylinux_image_tag`
@@ -187,14 +176,18 @@ will be passed to the Docker context when building the container for the
 app build. By default, entries should be Ubuntu 18.04 `apt` package
 requirements. For example:
 
-    system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
+```python
+system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
+```
 
 would make the GTK GI and Cairo operating system libraries available to
 your app.
 
 If you see errors during `briefcase build` of the form:
 
-    Could not find dependency: libSomething.so.1
+```python
+Could not find dependency: libSomething.so.1
+```
 
 but the app works under `briefcase dev`, the problem may be an
 incomplete `system_requires` definition. The `briefcase build` process
@@ -213,7 +206,7 @@ cannot be automatically discovered by Linuxdeploy. GTK and Qt both have
 complex runtime resource requirements that can be difficult for
 Linuxdeploy to identify automatically.
 
-The [linuxdeploy_plugins][] declaration is
+The [`linuxdeploy_plugins`][] declaration is
 a list of strings. Briefcase can take plugin definitions in three
 formats:
 
@@ -230,11 +223,15 @@ For example, the `gtk` plugin requires the `DEPLOY_GTK_VERSION`
 environment variable. To set this variable with the Briefcase-managed
 GTK Linuxdeploy plugin, you would define:
 
-    linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 gtk"]
+```python
+linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 gtk"]
+```
 
 Or, if you were using a plugin stored as a local file:
 
-    linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 path/to/plugins/linuxdeploy-gtk-plugin.sh"]
+```python
+linuxdeploy_plugins = ["DEPLOY_GTK_VERSION=3 path/to/plugins/linuxdeploy-gtk-plugin.sh"]
+```
 
 ### `dockerfile_extra_content`
 
@@ -250,14 +247,16 @@ to perform container setup operations as `root`, switch the container's
 user to `root`, perform whatever operations are required, then switch
 back to the `brutus` user - e.g.:
 
-    dockerfile_extra_content = """
-    RUN <first command run as brutus>
+```python
+dockerfile_extra_content = """
+RUN <first command run as brutus>
 
-    USER root
-    RUN <second command run as root>
+USER root
+RUN <second command run as root>
 
-    USER brutus
-    """
+USER brutus
+"""
+```
 
 ## Platform quirks
 
@@ -305,11 +304,15 @@ limitation.
 
 If you get the error:
 
-    ValueError: Namespace Something not available
+```console
+ValueError: Namespace Something not available
+```
 
 or:
 
-    ImportError: /usr/lib/libSomething.so.0: undefined symbol: some_symbol
+```console
+ImportError: /usr/lib/libSomething.so.0: undefined symbol: some_symbol
+```
 
 it is likely that one or more of the libraries you are using in your app
 requires a Linuxdeploy plugin. GUI libraries, or libraries that do
@@ -332,100 +335,116 @@ library that contains a binary submodule; that submodule uses `libpng`,
 install Pillow from a `manylinux` wheel, you may see an error similar to
 the following at runtime:
 
-    Traceback (most recent call last):
-    File "/tmp/.mount_TestbewwDi98/usr/app/testbed/app.py", line 54, in main
-      test()
-    File "/tmp/.mount_TestbewwDi98/usr/app/testbed/linux.py", line 94, in test_pillow
-       from PIL import Image
-    File "/tmp/.mount_TestbewwDi98/usr/app_packages/PIL/Image.py", line 132, in <module>
-       from . import _imaging as core
-    ImportError: libtiff-d0580107.so.5.7.0: ELF load command address/offset not properly aligned
+```console
+Traceback (most recent call last):
+File "/tmp/.mount_TestbewwDi98/usr/app/testbed/app.py", line 54, in main
+  test()
+File "/tmp/.mount_TestbewwDi98/usr/app/testbed/linux.py", line 94, in test_pillow
+   from PIL import Image
+File "/tmp/.mount_TestbewwDi98/usr/app_packages/PIL/Image.py", line 132, in <module>
+   from . import _imaging as core
+ImportError: libtiff-d0580107.so.5.7.0: ELF load command address/offset not properly aligned
+```
 
 This indicates that one of the libraries that has been included in the
 AppImage has become corrupted as a result of double processing.
 
 The solution is to ask Briefcase to install the affected library from
 source. This can be done by adding a `"--no-binary"` entry to the
-[requires][] declaration for your app. For
+[`requires`][] declaration for your app. For
 example, if your app includes Pillow as a requirement:
 
-    requires = ["pillow==9.1.0"]
+```python
+requires = ["pillow==9.1.0"]
+```
 
 You can force Briefcase to install Pillow from source by adding:
 
-    requires = [
-        "pillow==9.1.0",
-        "--no-binary", "pillow",
-    ]
+```python
+requires = [
+    "pillow==9.1.0",
+    "--no-binary", "pillow",
+]
+```
 
 Since the library will be installed from source, you also need to add
 any system requirements that are needed to compile the binary library.
 For example, Pillow requires the development libraries for the various
 image formats that it uses:
 
-    system_requires = [
-        ... other system requirements ...
-        "libjpeg-dev",
-        "libpng-dev",
-        "libtiff-dev",
-    ]
+```python
+system_requires = [
+    ... other system requirements ...
+    "libjpeg-dev",
+    "libpng-dev",
+    "libtiff-dev",
+]
+```
 
 If you are missing a system requirement, the call to `briefcase build`
 will fail with an error:
 
-    error: subprocess-exited-with-error
+```console
+error: subprocess-exited-with-error
 
-    × pip subprocess to install build dependencies did not run successfully.
-    │ exit code: 1
-    ╰─> See above for output.
+× pip subprocess to install build dependencies did not run successfully.
+│ exit code: 1
+╰─> See above for output.
 
-    note: This error originates from a subprocess, and is likely not a problem with pip.
-    >>> Return code: 1
+note: This error originates from a subprocess, and is likely not a problem with pip.
+>>> Return code: 1
 
-    Unable to install requirements. This may be because one of your
-    requirements is invalid, or because pip was unable to connect
-    to the PyPI server.
+Unable to install requirements. This may be because one of your
+requirements is invalid, or because pip was unable to connect
+to the PyPI server.
+```
 
 You must add a separate `--no-binary` option for every binary library
 you want to install from source. For example, if your app also includes
 the `cryptography` library, and you want to install that library from
 source, you would add:
 
-    requires = [
-        "pillow==9.1.0",
-        "cryptography==37.0.2",
-        "--no-binary", "pillow",
-        "--no-binary", "cryptography",
-    ]
+```python
+requires = [
+    "pillow==9.1.0",
+    "cryptography==37.0.2",
+    "--no-binary", "pillow",
+    "--no-binary", "cryptography",
+]
+```
 
 If you want to force *all* packages to be installed from source, you can
 add a single `:all` declaration:
 
-    requires = [
-        "pillow==9.1.0",
-        "cryptography==37.0.2",
-        "--no-binary", ":all:",
-    ]
+```python
+requires = [
+    "pillow==9.1.0",
+    "cryptography==37.0.2",
+    "--no-binary", ":all:",
+]
+```
 
 The `--no-binary` declaration doesn't need to be added to the same
-[requires][] declaration that defines the
+[`requires`][] declaration that defines the
 requirement. For example, if you have a library that is used on all
 platforms, the declaration will probably be in the top-level
-[requires][], not the platform-specific
-[requires][]. If you add `--no-binary` in
+[`requires`][], not the platform-specific
+[`requires`][]. If you add `--no-binary` in
 the top-level requires, the use of a binary wheel would be prevented on
 *all* platforms. To avoid this, you can add the requirement in the
 top-level requires, but add the `--no-binary` declaration to the
 Linux-specific requirements:
 
-    [tool.briefcase.app.helloworld]
-    formal_name = "Hello World"
-    ...
-    requires = [
-        "pillow",
-    ]
+```python
+[tool.briefcase.app.helloworld]
+formal_name = "Hello World"
+...
+requires = [
+    "pillow",
+]
 
-    [tool.briefcase.app.helloworld.linux]
-    requires = [
-        "--no-binary", "pillow"
-    ]
+[tool.briefcase.app.helloworld.linux]
+requires = [
+    "--no-binary", "pillow"
+]
+```

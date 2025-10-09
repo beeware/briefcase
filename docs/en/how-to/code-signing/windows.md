@@ -61,13 +61,14 @@ C:\...>certutil.exe -user -importpfx -p MySecretPassword My .\cert.pfx
 PS C:\...> Import-PfxCertificate -FilePath .\cert.pfx -CertStoreLocation Cert:\CurrentUser\My -Password MySecretPassword
 ```
 
+///
+
 Refer to your Certificate Authority's documentation for specific
 instructions.
 
 ## Certificate's SHA-1 Thumbprint
 
-On Windows,
-[briefcase package](reference/commands/package) cannot retrieve the list of installed code signing
+On Windows, [briefcase package][package] cannot retrieve the list of installed code signing
 certificates automatically. You need to retrieve the identity manually,
 and provide the certificates identity as a command line argument.
 

@@ -14,12 +14,12 @@ To distribute an app on the iOS App Store, you'll need to
 don't need to generate any of the certificates described on that page -
 you just need an Apple ID registered in the developer program.
 
-Once you've signed up for an Apple ID account, open the Xcode Settings
+Once you've signed up for an Apple ID account, open the XCode Settings
 dialog, and add your account under the "Accounts" tab.
 
-## Open the app in Xcode
+## Open the app in XCode
 
-Use Briefcase to open the Xcode project associated with your project.
+Use Briefcase to open the XCode project associated with your project.
 
 ```console
 (venv) $ briefcase open iOS
@@ -43,14 +43,14 @@ The iOS and iPad simulators have a "Save Screen" button in their title
 bar; this will capture screenshots of the necessary size.
 
 You can change simulator device by clicking on the device target int the
-top bar of the Xcode window. Click on the device name, and select the
+top bar of the XCode window. Click on the device name, and select the
 device from the list. If the device you need doesn't exist on this list,
 click on "Manage Run Destinations" to add a simulator for that device
 type.
 
 ## Produce an App archive
 
-Select the root node of the Xcode project browser (it should be the
+Select the root node of the XCode project browser (it should be the
 formal name of your app), then select the **Signing & Capabilities** tab
 from configuration options that are displayed. The "Team" option under
 "Signing" will be listed as "None"; select the name of the development
@@ -58,7 +58,7 @@ team that will sign the app. If there's no team listed, select "Add an
 Account", and choose one of the teams that is associated with your Apple
 ID.
 
-In the top bar of the Xcode window, change the target device from a
+In the top bar of the XCode window, change the target device from a
 simulator to "Any iOS device". Clean the build products folder (select
 "Clean Build Folder..." from the Product menu), then build an archive by
 selecting "Archive" from the Product menu. This will perform a clean
@@ -80,7 +80,7 @@ binary has been processed.
 Log into [App Store Connect](https://appstoreconnect.apple.com), click
 on "My Apps", then on + to add an app.
 
-Fill out the form for a new app. If you've run the app in Xcode, the
+Fill out the form for a new app. If you've run the app in XCode, the
 Bundle ID for your app should be listed; select it from the list. You
 must also create an SKU for your app - we suggest `ios-<appname>`,
 substituting the short app name that you selected when you initially
@@ -103,7 +103,7 @@ You'll then be shown another page for app details, including:
 - The name of the copyright holder
 
 Under the "Build" section, you'll be able to select the archive that you
-uploaded through Xcode.
+uploaded through XCode.
 
 The "App Review Information" section allows you to provide contact
 details in case Apple has questions during the review process. If your

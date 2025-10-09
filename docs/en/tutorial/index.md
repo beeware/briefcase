@@ -8,5 +8,5 @@ of the BeeWare suite of tools.
 through the process of building a native Python application from
 scratch.
 
-Once you've done that tutorial, the [Briefcase How-To Guides](../how-to) provide details on
+Once you've done that tutorial, the [Briefcase How-To Guides][how-to] provide details on
 performing specific tasks with Briefcase.

@@ -86,5 +86,5 @@ You should change the password. It is most critical to limit who has
 access to the keystore file, but changing the password is also
 important.
 
-See [Publishing your app](../publishing/android/) for instructions on using this key to upload an app to the
+See [Publishing your app](../publishing/android.md) for instructions on using this key to upload an app to the
 Google Play Store.

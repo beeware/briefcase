@@ -1,4 +1,4 @@
-# iOS Xcode project
+# iOS XCode project
 
 <table class="host-platform-support-table">
 <colgroup>
@@ -50,7 +50,7 @@
 </tbody>
 </table>
 
-When generating an iOS project, Briefcase produces an Xcode project.
+When generating an iOS project, Briefcase produces an XCode project.
 
 ## Icon format
 
@@ -84,7 +84,7 @@ iOS projects do not support installer images.
 
 iOS allows for some customization of the colors used by your app:
 
-- [splash_background_color][] is the color
+- [`splash_background_color`][] is the color
   of the splash background that displays while an app is loading.
 
 ## Additional options
@@ -114,11 +114,15 @@ A property whose sub-attributes define keys that will be added to the
 app's `Info.plist` file. Each entry will be converted into a key in the
 entitlements file. For example, specifying:
 
-    info."UIFileSharingEnabled" = true
+```python
+info."UIFileSharingEnabled" = true
+```
 
 will result in an `Info.plist` declaration of:
 
-    <key>UIFileSharingEnabled</key><true/>
+```text
+<key>UIFileSharingEnabled</key><true/>
+```
 
 Any Boolean or string value can be used for an `Info.plist` value.
 
@@ -130,26 +134,26 @@ value of `IPHONEOS_DEPLOYMENT_TARGET` used when building the app.
 ## Permissions
 
 Briefcase cross platform permissions map to the following
-[info][] keys:
+[`info`][] keys:
 
-- [permission.camera][]:
+- [`permission.camera`][permissioncamera]:
   `NSCameraUsageDescription`
-- [permission.microphone][]:
+- [`permission.microphone`][permissionmicrophone]:
   `NSMicrophoneUsageDescription`
-- [permission.coarse_location][]:
+- [`permission.coarse_location`][permissioncoarse_location]:
   - `NSLocationDefaultAccuracyReduced=True`
   - `NSLocationWhenInUseUsageDescription` if `fine_location` is not
     defined
-- [permission.fine_location][]:
+- [`permission.fine_location`][permissionfine_location]:
   - `NSLocationDefaultAccuracyReduced=False`
   - `NSLocationWhenInUseUsageDescription`
-- [permission.background_location][]:
+- [`permission.background_location`][permissionbackground_location]:
   - `NSLocationAlwaysAndWhenInUseUsageDescription`
   - `NSLocationWhenInUseUsageDescription` if neither
-    [permission.fine_location][] or
-    [permission.coarse_location][] is set
+    [`permission.fine_location`][permissionfine_location] or
+    [`permission.coarse_location`][permissioncoarse_location] is set
   - `UIBackgroundModes` will include `location` and `processing`
-- [permission.photo_library][]:
+- [`permission.photo_library`][permissionphoto_library]:
   `NSPhotoLibraryAddUsageDescription`
 
 ## Platform quirks
@@ -158,7 +162,7 @@ Briefcase cross platform permissions map to the following
 
 Briefcase is able to use third-party packages in iOS apps. As long as
 the package is available on PyPI, or you can provide a wheel file for
-the package, it can be added to the [requires][] declaration in your `pyproject.toml` file and used by your
+the package, it can be added to the [`requires`][] declaration in your `pyproject.toml` file and used by your
 app at runtime.
 
 If the package is pure Python (i.e., it does not contain a binary
@@ -182,8 +186,10 @@ the BeeWare project, and as a result, it does not have binary wheels for
 *every* package that is available on PyPI, or even every *version* of
 every package that is on PyPI. If you see the message:
 
-    ERROR: Could not find a version that satisfies the requirement <package name> (from versions: none)
-    ERROR: No matching distribution found for <package name>
+```console
+ERROR: Could not find a version that satisfies the requirement <package name> (from versions: none)
+ERROR: No matching distribution found for <package name>
+```
 
 then the package (or the version that you've specified) probably isn't
 supported yet.
@@ -232,10 +238,10 @@ component, you'll need to use
 other similar tooling to compile compatible wheels.
 
 You can then directly add the wheel file to the
-[requires][] definition for your app, or
+[`requires`][] definition for your app, or
 put the wheel in a folder and add:
 
-```TOML
+```toml
 requirement_installer_args = ["--find-links", "<path-to-wheel-folder>"]
 ```
 
@@ -267,9 +273,11 @@ To avoid this, you must purge any binary content from your app before
 submission. You can do this using the `cleanup_paths` configuration
 option:
 
-    cleanup_paths = [
-        "*/app_packages.*/**/*.a",
-    ]
+```python
+cleanup_paths = [
+    "*/app_packages.*/**/*.a",
+]
+```
 
 This will find and purge all `.a` content in your app's dependencies.
 You can add additional patterns to remove other problematic content.
@@ -280,16 +288,15 @@ Briefcase provides support for deployment to simulated iOS devices
 through the command line.
 
 If you want to deploy to a physical iOS device, you will need need to
-use Xcode through the following steps:
+use XCode through the following steps:
 
 1.  Run `briefcase open ios` in the command line. This will open your
-    application in Xcode.
-2.  Setup your Apple Developer account with your certificate in Xcode.
+    application in XCode.
+2.  Setup your Apple Developer account with your certificate in XCode.
 3.  In the project navigator, select your application at the top level
     (the root of the project).
-4.  Select the <span class="title-ref">Signing and Capabilities</span>
-    tab in the editor area.
+4.  Select the *Signing and Capabilities* tab in the editor area.
 5.  Select your Apple Developer team or individual account from the
-    <span class="title-ref">Team</span> drop-down.
+    *Team* drop-down.
 6.  Select your specific device.
 7.  Press the run button.

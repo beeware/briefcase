@@ -121,7 +121,7 @@ In Briefcase v0.2, there was only one entry point:
 artefact; and, if you provided the `-s` argument, would also start the
 app.
 
-Briefcase v0.3 uses its own `briefcase` entry point, with [subcommands](reference/commands) to perform
+Briefcase v0.3 uses its own `briefcase` entry point, with [subcommands][command-reference] to perform
 specific functions:
 
 - `briefcase new` - Bootstrap a new project (generating a
