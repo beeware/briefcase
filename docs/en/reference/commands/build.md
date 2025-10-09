@@ -43,14 +43,14 @@ the platform you're targeting is not supported.
 
 The following options can be provided at the command line.
 
-### `-a <app name>` / `--app <app name>` {#a-app-name---app-app-name}
+### `-a <app name>` / `--app <app name>`
 
 Run a specific application target in your project. This argument is only
 required if your project contains more than one application target. The
 app name specified should be the machine-readable package name for the
 app.
 
-### `-u` / `--update` {#u---update}
+### `-u` / `--update`
 
 Update the application's source code before building. Equivalent to
 running:
@@ -60,7 +60,7 @@ $ briefcase update
 $ briefcase build
 ```
 
-### `-r` / `--update-requirements` {#r---update-requirements}
+### `-r` / `--update-requirements`
 
 Update application requirements before building. Equivalent to running:
 
@@ -69,7 +69,7 @@ $ briefcase update -r
 $ briefcase build
 ```
 
-### `--update-resources` {#update-resources}
+### `--update-resources`
 
 Update application resources such as icons before building. Equivalent
 to running:
@@ -79,7 +79,7 @@ $ briefcase update --update-resources
 $ briefcase build
 ```
 
-### `--update-support` {#update-support}
+### `--update-support`
 
 Update application support package before building. Equivalent to
 running:
@@ -89,7 +89,7 @@ $ briefcase update --update-resources
 $ briefcase build
 ```
 
-### `--update-stub` {#update-stub}
+### `--update-stub`
 
 Update stub binary before building. Equivalent to running:
 
@@ -98,7 +98,7 @@ $ briefcase update --update-stub
 $ briefcase build
 ```
 
-### `--test` {#test}
+### `--test`
 
 Build the app in test mode in the bundled app environment. Running
 `build --test` will also cause an update to ensure that the packaged
@@ -110,7 +110,7 @@ pass `-r` / `--update-requirements` the first time you build in test
 mode to ensure that your testing requirements are present in the test
 app.
 
-### `--no-update` {#no-update}
+### `--no-update`
 
 Prevent the automated update of app code that is performed when
 specifying by the `--test` option.

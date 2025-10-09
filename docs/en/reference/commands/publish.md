@@ -35,6 +35,6 @@ $ briefcase publish <platform> <output format>
 
 The following options can be provided at the command line.
 
-### `-c <channel>` / `--channel <channel>` {#c-channel---channel-channel}
+### `-c <channel>` / `--channel <channel>`
 
 Nominate a publication channel to use.

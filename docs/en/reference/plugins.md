@@ -10,7 +10,7 @@ Each plug-in is defined using an [entry
 point](https://packaging.python.org/en/latest/specifications/entry-points/)
 definition in `pyproject.toml`.
 
-## `briefcase.bootstraps` {#bootstrap-interface}
+## `briefcase.bootstraps`
 
 The Briefcase
 [new project wizard](reference/commands/new) asks users to select a GUI toolkit. The option selected at
@@ -33,7 +33,7 @@ configuration:
     [project.entry-points."briefcase.bootstraps"]
     Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
 
-## `briefcase.platforms` and `briefcase.formats.*` {#briefcase.platforms-and-briefcase.formats.}
+## `briefcase.platforms` and `briefcase.formats.*`
 
 Each command implemented by Briefcase is specialized by a platform and
 output format. This implementation is defined using a pair of plug-ins -

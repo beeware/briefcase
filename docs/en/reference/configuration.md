@@ -65,12 +65,12 @@ building a macOS DMG for an application called `myapp`, Briefcase will
 look for macOS DMG settings for `myapp`, then for macOS settings for
 `myapp`, then for `myapp` settings, then for project-level settings.
 
-### `[tool.briefcase]` {#tool.briefcase}
+### `[tool.briefcase]`
 
 The base `[tool.briefcase]` section declares settings that project
 specific, or are common to all applications in this repository.
 
-### `[tool.briefcase.app.<app name>]` {#tool.briefcase.app.app-name}
+### `[tool.briefcase.app.<app name>]`
 
 Configuration options for a specific application.
 
@@ -82,7 +82,7 @@ not include any of the [filenames prohibited by
 Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions)
 (i.e., `CON`, `PRN`, or `LPT1`).
 
-### `[tool.briefcase.app.<app name>.<platform>]` {#tool.briefcase.app.app-name.platform}
+### `[tool.briefcase.app.<app name>.<platform>]`
 
 Configuration options for an application that are platform specific. The
 platform must match a name for a platform supported by Briefcase (e.g.,
@@ -90,7 +90,7 @@ platform must match a name for a platform supported by Briefcase (e.g.,
 can be obtained by running `briefcase -h`, and inspecting the help for
 the `platform` option
 
-### `[tool.briefcase.app.<app name>.<platform>.<output format>]` {#tool.briefcase.app.app-name.platform.output-format}
+### `[tool.briefcase.app.<app name>.<platform>.<output format>]`
 
 Configuration options that are specific to a particular output format.
 For example, macOS applications can be generated in `app` or `dmg`
@@ -215,12 +215,14 @@ properties of the app (e.g., `app.formal_name`, `app.version`, etc).
 
 For example, the following [`cleanup_paths`][] specification:
 
-    cleanup_paths = [
-        "path/to/unneeded_file.txt",
-        "path/to/unneeded_directory",
-        "path/**/*.exe",
-        "{app.formal_name}/content/extra.doc"
-    ]
+```python
+cleanup_paths = [
+    "path/to/unneeded_file.txt",
+    "path/to/unneeded_directory",
+    "path/**/*.exe",
+    "{app.formal_name}/content/extra.doc"
+]
+```
 
 on an app with a formal name of "My App" would remove:
 

@@ -135,7 +135,7 @@ wish to add more details on app usage.
 The following options can be provided at the command line when producing
 Deb packages:
 
-### `--target` {#target}
+### `--target`
 
 A Docker base image identifier for the Linux distribution you want to
 target. The identifier will be in the pattern `<vendor>:<codename>`
@@ -160,7 +160,7 @@ The following Linux vendors are known to work as Docker targets:
 - Arch Linux (e.g., `archlinux:latest`)
 - Manjaro Linux (e.g., `manjarolinux/base:latest`)
 
-### `--Xdocker-build=<value>` {#xdocker-buildvalue}
+### `--Xdocker-build=<value>`
 
 A configuration argument to be passed to the Docker build command for
 the app image. For example, to provide an additional build argument to

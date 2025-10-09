@@ -10,7 +10,7 @@ Want to see examples of Briefcase in use? Here's some:
   that was packaged for distribution using Briefcase.
 - [Mu](https://codewith.mu) is a simple code editor for beginner
   programmers. It uses Briefcase to prepare a macOS installer.
-- [Napari](https://napari.org/) is a multi-dimensional image viewer for
+- [Napari](https://napari.org/) is a multidimensional image viewer for
   python. It uses Briefcase to prepare bundled Windows, macOS, and Linux
   installers.
 - [Patent Toolkit](https://patenttk.com/) is a suite of tools for patent
@@ -25,5 +25,5 @@ Want to see examples of Briefcase in use? Here's some:
   macOS.
 - [Beanquick](https://twobitsware.com/beanquick) is a fast, offline, and
   intuitive desktop app for double-entry bookkeeping. Built on
-  `Beancount`{.interpreted-text role="spelling:ignore"} with
+  Beancount with
   lightning-fast natural language input.

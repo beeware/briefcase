@@ -59,14 +59,14 @@ $ briefcase run <platform> <output format>
 
 The following options can be provided at the command line.
 
-## `-a <app name>` / `--app <app name>` {#a-app-name---app-app-name}
+## `-a <app name>` / `--app <app name>`
 
 Run a specific application target in your project. This argument is only
 required if your project contains more than one application target. The
 app name specified should be the machine-readable package name for the
 app.
 
-## `-u` / `--update` {#u---update}
+## `-u` / `--update`
 
 Update the application's source code before running. Equivalent to
 running:
@@ -77,7 +77,7 @@ $ briefcase build
 $ briefcase run
 ```
 
-## `-r` / `--update-requirements` {#r---update-requirements}
+## `-r` / `--update-requirements`
 
 Update application requirements before running. Equivalent to running:
 
@@ -87,7 +87,7 @@ $ briefcase build
 $ briefcase run
 ```
 
-## `--update-resources` {#update-resources}
+## `--update-resources`
 
 Update application resources such as icons before running. Equivalent to
 running:
@@ -98,7 +98,7 @@ $ briefcase build
 $ briefcase run
 ```
 
-## `--update-support` {#update-support}
+## `--update-support`
 
 Update application support package before running. Equivalent to
 running:
@@ -109,7 +109,7 @@ $ briefcase build
 $ briefcase run
 ```
 
-## `--update-stub` {#update-stub}
+## `--update-stub`
 
 Update stub binary before running. Equivalent to running:
 
@@ -119,14 +119,14 @@ $ briefcase build
 $ briefcase run
 ```
 
-## `--test` {#test}
+## `--test`
 
 Run the app in test mode in the bundled app environment. Running
 `run --test` will also cause an update and build to ensure that the
 packaged application contains the most recent test code. To prevent this
 update and build, use the `--no-update` option.
 
-## `--no-update` {#no-update}
+## `--no-update`
 
 Prevent the automated update and build of app code that is performed
 when specifying by the `--test` option.

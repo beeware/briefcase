@@ -41,14 +41,14 @@ error if the platform you're targeting is not supported.
 
 The following options can be provided at the command line.
 
-### `-a <app name>` / `--app <app name>` {#a-app-name---app-app-name}
+### `-a <app name>` / `--app <app name>`
 
 Run a specific application target in your project. This argument is only
 required if your project contains more than one application target. The
 app name specified should be the machine-readable package name for the
 app.
 
-### `-u` / `--update` {#u---update}
+### `-u` / `--update`
 
 Update and recompile the application's code before running. Equivalent
 to running:
@@ -58,12 +58,12 @@ $ briefcase update
 $ briefcase package
 ```
 
-### `-p <format>`, `--packaging-format <format>` {#p-format---packaging-format-format}
+### `-p <format>`, `--packaging-format <format>`
 
 The format to use for packaging. The available packaging formats are
 platform dependent.
 
-### `--adhoc-sign` {#adhoc-sign}
+### `--adhoc-sign`
 
 Perform the bare minimum signing that will result in a app that can run
 on your local machine. This may result in no signing, or signing with an
@@ -72,7 +72,7 @@ development and testing. However, care should be taken using this option
 for release artefacts, as it may not be possible to distribute an ad-hoc
 signed app to others.
 
-### `-i <identity>` / `--identity <identity>` {#i-identity---identity-identity}
+### `-i <identity>` / `--identity <identity>`
 
 The
 [code signing identity](how-to/code-signing) to use when signing the app.

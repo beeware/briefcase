@@ -136,11 +136,11 @@ AppImages do not support splash screens or installer images.
 The following options can be provided at the command line when producing
 AppImages.
 
-### `--no-docker` {#no-docker}
+### `--no-docker`
 
 Use native execution, rather than using Docker to start a container.
 
-### `--Xdocker-build=<value>` {#xdocker-buildvalue}
+### `--Xdocker-build=<value>`
 
 A configuration argument to be passed to the Docker build command for
 the app image. For example, to provide an additional build argument to
@@ -261,7 +261,7 @@ back to the `brutus` user - e.g.:
 
 ## Platform quirks
 
-### Use caution with  { #--update-support }`
+### Use caution with  `--update-support`
 
 Care should be taken when using the `--update-support` option to the
 `update`, `build` or `run` commands. Support packages in Linux AppImages
@@ -291,7 +291,7 @@ Packaging on Linux is a difficult problem - especially when it comes to
 binary libraries. The following are some common problems you may see,
 and ways that they can be mitigated.
 
-### Failure to load  { id="-1.0-so.0" }` {#failure-to-load-libpango-1.0-so.0}
+### Failure to load `libpango-1.0-so.0`
 
 Older Linux distributions (e.g., Ubuntu 18.04) may not be compatible
 with AppImages of Toga apps produced by Briefcase, complaining about

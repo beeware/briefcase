@@ -11,12 +11,12 @@ talk to the community through:
 ## Code of Conduct
 
 The BeeWare community has a strict [Code of
-Conduct](https://beeware.org/contributing/index.html). All users and
+Conduct](https://beeware.org/community/behavior/code-of-conduct/). All users and
 developers are expected to adhere to this code.
 
 If you have any concerns about this code of conduct, or you wish to
 report a violation of this code, please contact the project founder
-[Russell Keith-Magee](russell@keith-magee.com).
+[Russell Keith-Magee](mailto:russell@keith-magee.com).
 
 ## Contributing
 

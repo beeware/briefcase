@@ -40,6 +40,6 @@ $ briefcase upgrade <tool_name>
 
 The following options can be provided at the command line.
 
-### `-l` / `--list` {#l---list}
+### `-l` / `--list`
 
 List the tools that are currently being managed by Briefcase.

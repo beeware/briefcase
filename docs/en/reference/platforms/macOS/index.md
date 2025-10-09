@@ -93,7 +93,7 @@ macOS apps do not support splash screens or installer images.
 The following options can be provided at the command line when packaging
 macOS apps.
 
-### `--installer-identity <identity>` {#installer-identity-identity}
+### `--installer-identity <identity>`
 
 This option is only used when creating a `.pkg` installer.
 
@@ -103,7 +103,7 @@ role="doc"} - TODO: Manually fix this to use when signing the installer package.
 *different* signing identity to the one used to sign the app, but it
 must be from the same team as the app signing identity.
 
-### `--no-sign-installer` {#no-sign-installer}
+### `--no-sign-installer`
 
 This option is only used when creating a `.pkg` installer.
 
@@ -112,13 +112,13 @@ and testing. However, care should be taken using this option for release
 artefacts, as it may not be possible to distribute an unsigned installer
 to others.
 
-### `--no-notarize` {#no-notarize}
+### `--no-notarize`
 
 Do not submit the application for notarization. By default, apps will be
 submitted for notarization unless they have been signed with an ad-hoc
 signing identity.
 
-### `--resume <submission ID>` {#resume-submission-id}
+### `--resume <submission ID>`
 
 Apple's notarization server can take a long time to respond - in some
 cases, hours. When you submit an app for notarization, the console

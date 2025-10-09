@@ -94,7 +94,7 @@ iOS projects:
 
 ### run
 
-#### `-d <device>` / `--device <device>` {#d-device---device-device}
+#### `-d <device>` / `--device <device>`
 
 The device simulator to target. Can be either a UDID, a device name
 (e.g., `"iPhone 11"`), or a device name and OS version

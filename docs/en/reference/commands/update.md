@@ -33,25 +33,25 @@ $ briefcase update <platform> <output format>
 
 The following options can be provided at the command line.
 
-### `-a <app name>` / `--app <app name>` {#a-app-name---app-app-name}
+### `-a <app name>` / `--app <app name>`
 
 Run a specific application target in your project. This argument is only
 required if your project contains more than one application target. The
 app name specified should be the machine-readable package name for the
 app.
 
-### `-r` / `--update-requirements` {#r---update-requirements}
+### `-r` / `--update-requirements`
 
 Update application requirements.
 
-### `--update-resources` {#update-resources}
+### `--update-resources`
 
 Update application resources such as icons.
 
-### `--update-support` {#update-support}
+### `--update-support`
 
 Update application support package.
 
-### `--update-stub` {#update-stub}
+### `--update-stub`
 
 Update stub binary.

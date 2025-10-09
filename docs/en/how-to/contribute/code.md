@@ -29,7 +29,7 @@ View the
 
 ///
 
-## <nospell>tl;dr</nospell> - Dev Quick-Setup {#dev-environment-tldr}
+## <nospell>tl;dr</nospell> - Dev Quick-Setup { #dev-environment-tldr }
 
 Set up the dev environment by running:
 

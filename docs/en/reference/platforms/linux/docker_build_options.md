@@ -1,4 +1,4 @@
-# `--Xdocker-build=<value>` {#xdocker-buildvalue}
+# `--Xdocker-build=<value>`
 
 A configuration argument to be passed to the Docker build command for
 the app image. For example, to provide an additional build argument to

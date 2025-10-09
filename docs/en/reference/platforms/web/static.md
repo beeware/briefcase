@@ -94,18 +94,18 @@ web projects:
 
 ### run
 
-#### `--host <ip or hostname>` {#host-ip-or-hostname}
+#### `--host <ip or hostname>`
 
 The hostname or IP address that the development web server should be
 bound to. Defaults to `localhost`.
 
-#### `-p <port>` / `--port <port>` {#p-port---port-port}
+#### `-p <port>` / `--port <port>`
 
 The port that the development web server should be bound to. Defaults to
 `8080`. If port `8080` is already in use, an arbitrary available port
 will be used.
 
-#### `--no-browser` {#no-browser}
+#### `--no-browser`
 
 Don't open a web browser after starting the development web server.
 
