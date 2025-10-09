@@ -303,12 +303,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         rel_inside = "/".join(parts[3:])
 
         if not rel_inside or rel_inside.endswith("/"):
-            self.console.debug(f"    {filename}: skipping, not a valid insert file.")
+            self.console.warning(
+                f"    {filename}: skipping; not a valid insert file (empty path or directory)."
+            )
             return
 
         if "~" not in rel_inside:
-            self.console.debug(
-                f"    {filename}: skipping, filename must match '<target>~<insert>'."
+            self.console.warning(
+                f"    {filename}: skipping; filename must match '<target>~<insert>'."
             )
             return
 
