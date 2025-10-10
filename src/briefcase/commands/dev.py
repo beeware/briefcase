@@ -122,7 +122,6 @@ class DevCommand(RunAppMixin, BaseCommand):
                 )
             except subprocess.CalledProcessError as e:
                 raise RequirementsInstallError() from e
-        return
 
     def run_dev_app(
         self,
