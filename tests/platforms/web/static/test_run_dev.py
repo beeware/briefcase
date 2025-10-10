@@ -77,4 +77,6 @@ def test_install_dev_requirements(dev_command, first_app_config, default_venv):
 
 def test_venv_name_override(dev_command):
     """StaticWebDevCommand overrides venv_name to 'dev-web'."""
-    assert dev_command.venv_name == "dev-web"
+
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    assert dev_command.venv_name == f"dev-web-{python_version}"

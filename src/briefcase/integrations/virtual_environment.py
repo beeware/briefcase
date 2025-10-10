@@ -235,7 +235,7 @@ class NoOpVenvContext(Tool):
     def check_and_update_marker(self) -> bool:
         """Check marker file and update if needed.
 
-        :returns: True if this is a new environment of Python executable changed.
+        :returns: True if this is a new environment or Python executable changed.
         """
 
         if not self.marker_path.exists():
