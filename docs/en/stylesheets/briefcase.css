@@ -1,0 +1,51 @@
+:root {
+    color-scheme: light dark;
+}
+
+table.platform-support-table thead tr th {
+    vertical-align: bottom;
+    background-color: light-dark(#e8e8e8, #313643);
+    font-weight: 700;
+}
+
+table.platform-support-table tbody tr td:first-of-type {
+    vertical-align: middle;
+}
+
+table.platform-support-table,
+table.host-platform-support-table {
+    width: 100%;
+    border: solid 0.05rem var(--md-typeset-table-color);
+    border-radius: 0.4em;
+}
+
+table.host-platform-support-table {
+    text-align: center;
+}
+
+table.host-platform-support-table thead tr th{
+    background-color: light-dark(#e8e8e8, #313643);
+    font-weight: 700;
+}
+
+table.platform-support-table thead tr th,
+table.platform-support-table tbody tr td {
+    padding: 0.05em 0 0.05em 0.25em;
+}
+
+table.platform-support-table tbody tr td.target-app-format-windows {
+    padding-right: 0.2em;
+}
+
+table.platform-support-table tbody tr td.tested-status-symbol,
+table.platform-support-table tbody tr td:nth-child(n + 3) {
+    text-align: center;
+    padding-left: 0;
+}
+
+table.platform-support-table thead tr th,
+table.platform-support-table tbody tr td,
+table.host-platform-support-table thead tr th,
+table.host-platform-support-table tbody tr td {
+    border: solid 0.02em var(--md-typeset-table-color);
+}
