@@ -252,7 +252,7 @@ a custom location for Briefcase's tools.
                     )
                 else:  # pragma: no-cover-if-is-windows
                     os.makedirs(data_path, exist_ok=True)
-            except (subprocess.CalledProcessError, OSError):
+            except (subprocess.CalledProcessError, OSError) as e:
                 raise BriefcaseCommandError(
                     f"""
 Failed to create the Briefcase directory to store tools and support files:
@@ -263,7 +263,7 @@ You can set the environment variable BRIEFCASE_HOME to specify
 a custom location for Briefcase's tools.
 
 """
-                )
+                ) from e
 
         return Path(data_path)
 

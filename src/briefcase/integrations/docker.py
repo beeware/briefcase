@@ -232,8 +232,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                 ["docker", "buildx", "version"],
                 env=cls.subprocess_env(),
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING) from e
 
     def _write_test_path(self) -> Path:
         """Host system filepath to perform write test from a container."""
