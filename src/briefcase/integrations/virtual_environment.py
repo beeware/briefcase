@@ -23,6 +23,7 @@ class VenvContext(Tool):
     def __init__(self, tools: ToolCache, venv_path: Path):
         super().__init__(tools=tools)
         self.venv_path = venv_path
+        self.created = False
 
     @classmethod
     def verify_install(
@@ -68,6 +69,7 @@ class VenvContext(Tool):
                 check=True,
             )
             self.update_core_tools()
+            self.created = True
         except stdlib_subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Failed to create virtual environment at {self.venv_path}"
@@ -203,15 +205,77 @@ class VenvEnvironment:
         return False
 
 
+class NoOpVenvContext(Tool):
+    """Context for wrapping subprocess for no-op venv.
+
+    Provides the same interface as VenvContext but pass calls through to the native
+    subrpocess
+    """
+
+    name = "no_op_environment"
+    full_name = "No-Op Environment"
+
+    def __init__(self, tools, marker_path: Path, **kwargs):
+        super().__init__(tools, **kwargs)
+        self.created = False
+        self.venv_path = None
+        self.marker_path = marker_path
+
+    @classmethod
+    def verify_install(
+        cls, tools: ToolCache, marker_path: Path, **kwargs
+    ) -> "NoOpVenvContext":
+        """Return a NoOpVenvContext for the specified path."""
+        return cls(tools=tools, marker_path=marker_path)
+
+    def exists(self) -> bool:
+        """A no-op env always exists."""
+        return True
+
+    def check_and_update_marker(self) -> bool:
+        """Check marker file and update if needed.
+
+        :returns: True if this is a new environment or Python executable changed.
+        """
+
+        if not self.marker_path.exists():
+            self.marker_path.parent.mkdir(parents=True, exist_ok=True)
+            self.marker_path.write_text(sys.executable, encoding="utf-8")
+            return True
+        try:
+            existing_executable = self.marker_path.read_text(encoding="utf-8").strip()
+            if existing_executable != sys.executable:
+                self.marker_path.write_text(sys.executable, encoding="utf-8")
+                return True
+        except (OSError, UnicodeDecodeError):
+            self.marker_path.write_text(sys.executable, encoding="utf-8")
+            return True
+        return False
+
+    def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
+        """Run command through native subprocess."""
+        return self.tools.subprocess.run(args, **kwargs)
+
+    def Popen(self, args: SubprocessArgsT, **kwargs) -> stdlib_subprocess.Popen:
+        """Run command through native subprocess.Popen."""
+        return self.tools.subprocess.Popen(args, **kwargs)
+
+    def check_output(self, args: SubprocessArgsT, **kwargs) -> str:
+        """Run command through native subprocess.check_output."""
+        return self.tools.subprocess.check_output(args, **kwargs)
+
+
 class NoOpEnvironment:
     """A no-op environment that returns a native runner."""
 
-    def __init__(self, tools: ToolCache, console: Console):
+    def __init__(self, tools: ToolCache, console: Console, marker_path: Path):
         self.tools = tools
         self.console = console
+        self.noop_context = NoOpVenvContext(tools=tools, marker_path=marker_path)
 
     def __enter__(self):
-        return self.tools.subprocess
+        self.noop_context.check_and_update_marker()
+        return self.noop_context
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
@@ -238,7 +302,8 @@ def virtual_environment(
     :returns: A context manager for an environment where code can be executed.
     """
     if not isolated:
-        return NoOpEnvironment(tools=tools, console=console)
+        marker_path = venv_path / "venv_path"
+        return NoOpEnvironment(tools=tools, console=console, marker_path=marker_path)
 
     if venv_path is None:
         raise BriefcaseCommandError("A virtual environment path must be provided")
