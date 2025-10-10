@@ -242,20 +242,8 @@ def validate_install_options_config(config):
                     f"Install option {name!r} does not provide a description."
                 )
 
-            try:
-                # Annotate a type onto the option configuration based on the
-                # default value. For now, boolean is the only valid type, but
-                # this could change in future.
-                option["default"] = config_item["default"]
-                option["type"] = type(option["default"]).__name__
-                if option["type"] not in {"bool"}:
-                    raise BriefcaseConfigError(
-                        f"Default value for install option {name!r} is not a boolean."
-                    )
-            except KeyError:
-                raise BriefcaseConfigError(
-                    f"Install option {name!r} does not provide a default."
-                )
+            # Options are booleans, and are False by default
+            option["default"] = bool(config_item.get("default", False))
 
     return install_options
 
