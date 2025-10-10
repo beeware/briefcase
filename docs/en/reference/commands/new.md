@@ -52,7 +52,7 @@ Briefcase includes bootstraps for [Toga](https://toga.readthedocs.io)
 GUI toolkit) and [Pygame](https://www.pygame.org/news) (a common Python
 game development toolkit), as well as an "empty" bootstrap that doesn't
 include any GUI code. However, Briefcase provides a
-[plug-in interface][bootstrap-interface]
+[plugin interface][bootstrap-interface]
 that allows GUI toolkits to provide their own bootstrap
 implementation.
 

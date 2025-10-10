@@ -23,9 +23,9 @@
         - [How to cut a Briefcase release](how-to/internal/release.md)
     - Upgrading from previous versions
         - [Upgrading from Briefcase v0.2](how-to/upgrading/upgrade-from-v0.2.md)
-- Topic guides
+- [Topic guides](topics/index.md)
     - [Accessing Briefcase packaging metadata at runtime](topics/access-packaging-metadata.md)
-- Reference
+- [Reference](reference/index.md)
     - [Briefcase configuration options](reference/environment.md)
     - [Project configuration options](reference/configuration.md)
     - [Command Reference](reference/commands/index.md)
@@ -56,8 +56,8 @@
             - [Gradle project](reference/platforms/android/gradle.md)
         - Web
             - [Static Web](reference/platforms/web/static.md)
-    - [Plug-ins](reference/plugins.md)
-- About Briefcase
+    - [Plugins](reference/plugins.md)
+- [About Briefcase](about/index.md)
     - [Frequently asked questions](about/faq.md)
     - [The Briefcase developer and user community](about/community.md)
     - [Success stories](about/success.md)

@@ -13,9 +13,9 @@ native application. It supports producing binaries for:
 It is also extensible, allowing for additional platforms and
 installation formats to be produced.
 
-## Table of contents
+## Documentation
 
-### [Tutorial](tutorial/index.md)
+### [Tutorial][tutorial-index]
 
 Get started with a hands-on introduction for beginners.
 
@@ -24,15 +24,15 @@ Get started with a hands-on introduction for beginners.
 Guides and recipes for common problems and tasks, including how to
 contribute.
 
-### Topic guides
+### [Topic guides][topics]
 
 Deeper explorations of concepts and issues related to Briefcase usage.
 
-###Reference
+### [Reference][reference-index]
 
 Technical reference - commands, modules, classes, methods.
 
-### About Briefcase
+### [About Briefcase][about]
 
 Frequently Asked Questions, success stories, and other details about
 Briefcase as a project.
@@ -44,5 +44,16 @@ talk to the community through:
 
 - [@beeware@fosstodon.org on Mastodon](https://fosstodon.org/@beeware)
 - [Discord](https://beeware.org/bee/chat/)
-- The Briefcase [GitHub Discussions
-  forum](https://github.com/beeware/briefcase/discussions)
+- The Briefcase [GitHub Discussions forum](https://github.com/beeware/briefcase/discussions)
+
+### Code of Conduct
+
+The BeeWare community has a strict [Code of Conduct](https://beeware.org/community/behavior/code-of-conduct/). All users and developers are expected to adhere to this code.
+
+If you have any concerns about this code of conduct, or you wish to
+report a violation of this code, please contact the project founder
+[Russell Keith-Magee](mailto:russell@keith-magee.com).
+
+### Contributing
+
+If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues). If you want to contribute code, please follow the [Briefcase code contribution guide][contribute]. For documentation contributions, follow the [Briefcase docs contribution guide][contribute-docs].
