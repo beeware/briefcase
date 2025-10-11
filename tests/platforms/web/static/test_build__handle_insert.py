@@ -46,7 +46,7 @@ def test_handle_insert_register_valid_file(build_command, tmp_path):
 def test_handle_insert_skip_dir_entries(
     build_command,
     tmp_path,
-    monkeypatch,
+    capsys,
     entry,
     expected_skip,
 ):
@@ -59,10 +59,6 @@ def test_handle_insert_skip_dir_entries(
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr(entry, "")
 
-    # Capture debug messages
-    debugs = []
-    monkeypatch.setattr(build_command.console, "debug", debugs.append)
-
     # Run the handler against this entry
     inserts = {}
     with zipfile.ZipFile(wheel_path) as zf:
@@ -74,19 +70,21 @@ def test_handle_insert_skip_dir_entries(
             inserts=inserts,
         )
 
+    output = capsys.readouterr().out
+
     # Directory entries should be ignored completely
     assert inserts == {}
     # And a debug message explaining the skip should be logged
     if expected_skip:
-        assert any("skipping, not a valid insert file" in m for m in debugs)
+        assert "skipping; not a valid insert file" in output
     else:
-        assert all("skipping, not a valid insert file" not in m for m in debugs)
+        assert "skipping; not a valid insert file" not in output
 
 
 def test_handle_insert_missing_tilde_skipped(
     build_command,
     tmp_path,
-    monkeypatch,
+    capsys,
 ):
     """Files under deploy/inserts without '~' are skipped with a debug log."""
     # Create a dummy wheel containing an invalid insert file (no "~" in name)
@@ -94,10 +92,6 @@ def test_handle_insert_missing_tilde_skipped(
     missing_tilde = "dummy/deploy/inserts/index.html"
     with zipfile.ZipFile(wheel_filename, "w") as zf:
         zf.writestr(missing_tilde, "<div>oops</div>")
-
-    # Capture debug messages
-    debugs = []
-    monkeypatch.setattr(build_command.console, "debug", debugs.append)
 
     inserts = {}
     # Run handler directly on the invalid file
@@ -110,10 +104,12 @@ def test_handle_insert_missing_tilde_skipped(
             inserts=inserts,
         )
 
+    output = capsys.readouterr().out
+
     # File should be ignored completely
     assert inserts == {}
     # And a debug message should clearly say why (missing "~")
-    assert any("must match '<target>~<insert>'" in m for m in debugs)
+    assert "must match '<target>~<insert>'" in output
 
 
 def test_handle_insert_append_existing_contrib(build_command, tmp_path):
