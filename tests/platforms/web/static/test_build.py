@@ -15,7 +15,7 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.web.static import StaticWebBuildCommand
 
-from ....utils import create_file, create_wheel
+from ....utils import create_wheel
 
 
 @pytest.fixture
@@ -47,6 +47,22 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
                 "first_app",
                 extra_content=[
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
+                    (
+                        "dependency/deploy/config.toml",
+                        """
+implementation = "pyscript"
+
+[pyscript]
+version = "2024.11.1"
+""",
+                    ),
+                    (
+                        "dependency/deploy/pyscript.toml",
+                        """
+existing-key-1 = "value-1"
+existing-key-2 = 2
+""",
+                    ),
                 ],
             )
         elif args[0][5] == "pip":
@@ -132,6 +148,60 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
             ],
         }
 
+    # index.html has insertions
+    with (bundle_path / "www/index.html").open(encoding="utf-8") as f:
+        assert (
+            f.read()
+            == "\n".join(
+                [
+                    "<!doctype html>",
+                    "<html>",
+                    "  <head>",
+                    "    <!--@@ head:start @@-->",
+                    "    <!--@@ head:end @@-->",
+                    "    <!--@@ head-python:start @@-->",
+                    "    <!--------------------------------------------------",
+                    "     * briefcase",
+                    "     -------------------------------------------------->",
+                    '    <script type="module">',
+                    "        // Hide the splash screen when the page is ready.",
+                    '        import { hooks } from "https://pyscript.net/releases/2024.11.1/core.js";',
+                    "        hooks.main.onReady.add(() => {",
+                    '            document.getElementById("briefcase-splash").classList.add("hidden");',
+                    "        });",
+                    "    </script>",
+                    "",
+                    '    <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">',
+                    '    <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>',
+                    "    <!--@@ head-python:end @@-->",
+                    "  </head>",
+                    "  <body>",
+                    '    <div id="briefcase-splash"></div>',
+                    "",
+                    "    <!--@@ body-start:start @@-->",
+                    "    <!--@@ body-start:end @@-->",
+                    "",
+                    "    <!--@@ body-python:start @@-->",
+                    "    <!--------------------------------------------------",
+                    "     * briefcase",
+                    "     -------------------------------------------------->",
+                    '    <script type="py" async="false" config="pyscript.toml">',
+                    "        import runpy",
+                    "        result = runpy.run_module(",
+                    '            "first-app", run_name="__main__", alter_sys=True',
+                    "        )",
+                    "    </script>",
+                    "    <!--@@ body-python:end @@-->",
+                    "",
+                    "    <!--@@ body-end:start @@-->",
+                    "    <!--@@ body-end:end @@-->",
+                    "  </body>",
+                    "</html>",
+                ]
+            )
+            + "\n"
+        )
+
     # briefcase.css has been appended
     with (bundle_path / "www/static/css/briefcase.css").open(encoding="utf-8") as f:
         assert (
@@ -143,25 +213,24 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
                     "  display: None;",
                     "}",
                     "/*******************************************************************",
-                    " ******************** Wheel contributed styles ********************/",
-                    "",
-                    "/*******************************************************",
-                    " * dependency 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "******************** Wheel contributed styles ********************/",
+                    "/*@@ css:start @@*/",
+                    "/**************************************************",
+                    " * dependency 1.2.3 (legacy static CSS: style.css)",
+                    " *************************************************/",
                     "div { margin: 10px; }",
                     "",
-                    "/*******************************************************",
-                    " * first_app 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "/**************************************************",
+                    " * first_app 1.2.3 (legacy static CSS: style.css)",
+                    " *************************************************/",
                     "span { margin: 10px; }",
                     "",
-                    "/*******************************************************",
-                    " * other 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "/**************************************************",
+                    " * other 1.2.3 (legacy static CSS: style.css)",
+                    " *************************************************/",
                     "div { padding: 10px; }",
+                    "/*@@ css:end @@*/",
+                    "",
                 ]
             )
             + "\n"
@@ -195,6 +264,12 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
         bundle_path / "www/static/wheels"
     )
 
+    # Mock extracting pyscript.toml from a wheel.
+    build_command.extract_pyscript_config = lambda _: (
+        {"existing-key-1": "value-1", "existing-key-2": 2},
+        "2024.11.1",
+    )
+
     # Build the web app.
     build_command.build_app(first_app_generated)
 
@@ -210,56 +285,6 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
                 {"src": "https://example.com/pyodide.js"},
             ],
         }
-
-
-def test_build_app_no_template_pyscript_toml(
-    build_command, first_app_generated, tmp_path
-):
-    """An app whose template doesn't provide pyscript.toml gets a basic config."""
-    # Remove the templated pyscript.toml
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
-    (bundle_path / "www/pyscript.toml").unlink()
-
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
-
-    # Build the web app.
-    build_command.build_app(first_app_generated)
-
-    # Pyscript.toml has been written with only the packages content
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "packages": [],
-        }
-
-
-def test_build_app_invalid_template_pyscript_toml(
-    build_command, first_app_generated, tmp_path
-):
-    """An app with an invalid pyscript.toml raises an error."""
-    # Re-write an invalid templated pyscript.toml
-    bundle_path = tmp_path / "base_path/build/first-app/web/static"
-    (bundle_path / "www/pyscript.toml").unlink()
-    create_file(
-        bundle_path / "www/pyscript.toml",
-        """
-This is not valid toml.
-""",
-    )
-
-    # Mock the side effect of invoking shutil
-    build_command.tools.shutil.rmtree.side_effect = lambda *args: shutil.rmtree(
-        bundle_path / "www/static/wheels"
-    )
-
-    # Building the web app raises an error
-    with pytest.raises(
-        BriefcaseConfigError,
-        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
-    ):
-        build_command.build_app(first_app_generated)
 
 
 def test_build_app_invalid_extra_pyscript_toml_content(
@@ -370,6 +395,12 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
         bundle_path / "www/static/wheels"
     )
 
+    # Mock extracting pyscript.toml from a wheel.
+    build_command.extract_pyscript_config = lambda _: (
+        {"existing-key-1": "value-1", "existing-key-2": 2},
+        "2024.11.1",
+    )
+
     # Build the web app.
     build_command.build_app(first_app_generated)
 
@@ -436,13 +467,14 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     "  display: None;",
                     "}",
                     "/*******************************************************************",
-                    " ******************** Wheel contributed styles ********************/",
-                    "",
-                    "/*******************************************************",
-                    " * first_app 1.2.3::style.css",
-                    " *******************************************************/",
-                    "",
+                    "******************** Wheel contributed styles ********************/",
+                    "/*@@ css:start @@*/",
+                    "/**************************************************",
+                    " * first_app 1.2.3 (legacy static CSS: style.css)",
+                    " *************************************************/",
                     "span { margin: 10px; }",
+                    "/*@@ css:end @@*/",
+                    "",
                 ]
             )
             + "\n"
@@ -498,13 +530,6 @@ def test_app_package_fail(build_command, first_app_generated, tmp_path):
 
     # Wheels folder still exists
     assert (bundle_path / "www/static/wheels").is_dir()
-
-    # Pyscript.toml content has not changed
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "existing-key-1": "value-1",
-            "existing-key-2": 2,
-        }
 
 
 def test_dependency_fail(build_command, first_app_generated, tmp_path):
@@ -574,10 +599,3 @@ def test_dependency_fail(build_command, first_app_generated, tmp_path):
 
     # Wheels folder still exists
     assert (bundle_path / "www/static/wheels").is_dir()
-
-    # Pyscript.toml content has not changed
-    with (bundle_path / "www/pyscript.toml").open("rb") as f:
-        assert tomllib.load(f) == {
-            "existing-key-1": "value-1",
-            "existing-key-2": 2,
-        }
