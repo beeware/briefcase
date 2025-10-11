@@ -233,7 +233,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             <script type="py" async="false" config="pyscript.toml">
                 import runpy
                 result = runpy.run_module(
-                    {app.app_name}, run_name="__main__", alter_sys=True
+                    "{app.app_name}", run_name="__main__", alter_sys=True
                 )
             </script>
             """

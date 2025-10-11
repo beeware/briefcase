@@ -188,7 +188,7 @@ existing-key-2 = 2
                     '    <script type="py" async="false" config="pyscript.toml">',
                     "        import runpy",
                     "        result = runpy.run_module(",
-                    '            first-app, run_name="__main__", alter_sys=True',
+                    '            "first-app", run_name="__main__", alter_sys=True',
                     "        )",
                     "    </script>",
                     "    <!--@@ body-python:end @@-->",
