@@ -20,7 +20,7 @@ def test_handle_legacy_css_warn_and_append(
     tmp_path,
     capsys,
 ):
-    """Legacy CSS warns and appends to existing contrib key."""
+    """Legacy CSS warns and appends to new contrib key."""
     wheel_path = Path(tmp_path) / "dummy-1.2.3.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr("dummy/static/one.css", "h1 { x:1; }")
@@ -31,6 +31,7 @@ def test_handle_legacy_css_warn_and_append(
         build_command._handle_legacy_css(
             wheel=zf,
             path=Path("dummy/static/one.css"),
+            filename="dummy/static/one.css",
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -44,6 +45,7 @@ def test_handle_legacy_css_warn_and_append(
         build_command._handle_legacy_css(
             wheel=zf,
             path=Path("dummy/static/one.css"),
+            filename="dummy/static/one.css",
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -72,6 +74,7 @@ def test_handle_legacy_css_non_utf8_raise(build_command, tmp_path):
         build_command._handle_legacy_css(
             wheel=zf,
             path=Path("dummy/static/bad.css"),
+            filename="dummy/static/bad.css",
             package_key="pkg 1.0",
             inserts=inserts,
         )

@@ -265,7 +265,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """
         # Warn on every legacy usage
         self.console.warning(
-            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} detected.\n"
+            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {filename} detected.\n"
             "     Static file handling has been deprecated; this file should be "
             "converted into an insert."
         )
