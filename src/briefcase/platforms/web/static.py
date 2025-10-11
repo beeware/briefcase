@@ -194,7 +194,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
     def _append_pyscript_insert(
         self,
-        app,
+        app: AppConfig,
         filename: Path,
         pyscript_version: str,
         inserts: dict[str, dict[str, dict[str, str]]],
@@ -233,7 +233,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             <script type="py" async="false" config="pyscript.toml">
                 import runpy
                 result = runpy.run_module(
-                    "{app.app_name}", run_name="__main__", alter_sys=True
+                    {app.app_name}, run_name="__main__", alter_sys=True
                 )
             </script>
             """
@@ -249,6 +249,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         self,
         wheel: ZipFile,
         path: Path,
+        filename: str,
         package_key: str,
         inserts: dict[str, dict[str, dict[str, str]]],
     ) -> None:
@@ -258,6 +259,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         :param wheel: Open wheel ZipFile being processed.
         :param path: Path object of the file inside the wheel.
+        :param filename: Filename string inside the wheel.
         :param package_key: Provenance label (e.g. "name version").
         :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
@@ -268,7 +270,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             "converted into an insert."
         )
 
-        css_text = wheel.read(str(path)).decode("utf-8")
+        css_text = wheel.read(filename).decode("utf-8")
 
         rel_inside = "/".join(path.parts[2:])
         contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
@@ -356,7 +358,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     and parts[1] == "static"
                     and path.suffix.lower() == ".css"
                 ):
-                    self._handle_legacy_css(wheel, path, package_key, inserts)
+                    self._handle_legacy_css(wheel, path, filename, package_key, inserts)
 
                 # New deploy/inserts handling
                 elif len(parts) >= 3 and parts[1] == "deploy" and parts[2] == "inserts":
@@ -548,7 +550,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 )
 
             # Add pyscript insertion to inserts
-            self._append_pyscript_insert("index.html", pyscript_version, inserts)
+            self._append_pyscript_insert(app, "index.html", pyscript_version, inserts)
 
             # Write inserts per target
             for target, target_inserts in sorted(inserts.items()):
