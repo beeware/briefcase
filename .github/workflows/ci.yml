@@ -194,8 +194,6 @@ jobs:
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
-      xcode-version: ${{ matrix.xcode-version }}
-      ios-simulator: ${{ matrix.ios-simulator }}
     strategy:
       fail-fast: false
       matrix:
