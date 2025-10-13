@@ -271,7 +271,9 @@ class NoOpEnvironment:
     def __init__(self, tools: ToolCache, console: Console, marker_path: Path):
         self.tools = tools
         self.console = console
-        self.noop_context = NoOpVenvContext(tools=tools, marker_path=marker_path)
+        self.noop_context = NoOpVenvContext.verify_install(
+            tools=tools, marker_path=marker_path
+        )
 
     def __enter__(self):
         self.noop_context.check_and_update_marker()

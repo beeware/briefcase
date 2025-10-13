@@ -50,6 +50,8 @@ def test_isolated_false_uses_marker_path(mock_tools, dummy_console, venv_path):
     assert isinstance(env, NoOpEnvironment)
     expected_marker = venv_path / "venv_path"
     assert env.noop_context.marker_path == expected_marker
+    assert env.tools == mock_tools
+    assert env.console == dummy_console
 
 
 def test_recreate_true_passes_to_venv_environment(mock_tools, dummy_console, venv_path):
