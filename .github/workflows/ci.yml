@@ -64,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "macos-13", "macos-latest", "windows-latest", "ubuntu-24.04" ]
+        platform: [ "macos-15-intel", "macos-latest", "windows-latest", "ubuntu-24.04" ]
         python-version: [ "3.10", "3.14" ]
         include:
           # Ensure the Python versions between min and max are tested
@@ -183,7 +183,7 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
 
   verify-apps:
     name: Build app
@@ -200,14 +200,4 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-13", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
-        include:
-          - framework: "toga"
-            runner-os: "macos-15"
-            xcode-version: "16.4"
-            ios-simulator: "iPhone 16e::iOS 18.5"
-
-          # Default xcode handling works for macOS-13
-          - framework: "toga"
-            runner-os: "macos-13"
-            ios-simulator: "iPhone SE (3rd generation)"
+        runner-os: [ "macos-15-intel", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
