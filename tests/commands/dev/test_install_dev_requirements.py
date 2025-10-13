@@ -16,11 +16,8 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
 
     first_app.requires = [
         "package-one",
+        "./local",
         "package_two",
-        "packagethree",
-        "./local1",
-        "../local2",
-        "../../something/local3",
     ]
 
     mock_venv = MagicMock()
@@ -40,14 +37,77 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
         + (["-vv"] if logging_level == LogLevel.DEEP_DEBUG else [])
         + [
             "package-one",
+            "-e",
+            "./local",
             "package_two",
-            "packagethree",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+
+def test_install_requirements_local_path_formats(dev_command, first_app):
+    """Test all local path formats that pip supports for editable installation."""
+    first_app.requires = [
+        # Relative paths and single level
+        "./current-dir",
+        "../parent-dir",
+        # Relative paths and multiple levels
+        "../../grandparent/package",
+        "./deeply/nested/package",
+        "../sibling/package",
+        # Simple relative paths
+        "folder/package",
+        "src/mypackage",
+        # Absolute paths
+        "/absolute/path",
+        # Windows paths
+        "folder\\windows",
+        ".\\windows\\current",
+        "..\\windows\\parent",
+        "C:\\absolute\\windows",
+        # One regular package as well
+        "package1",
+    ]
+
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
+
+    mock_venv.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
             "-e",
-            "./local1",
+            "./current-dir",
             "-e",
-            "../local2",
+            "../parent-dir",
             "-e",
-            "../../something/local3",
+            "../../grandparent/package",
+            "-e",
+            "./deeply/nested/package",
+            "-e",
+            "../sibling/package",
+            "-e",
+            "folder/package",
+            "-e",
+            "src/mypackage",
+            "-e",
+            "/absolute/path",
+            "-e",
+            "folder\\windows",
+            "-e",
+            ".\\windows\\current",
+            "-e",
+            "..\\windows\\parent",
+            "-e",
+            "C:\\absolute\\windows",
+            "package1",
         ],
         check=True,
         encoding="UTF-8",
