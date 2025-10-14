@@ -1,1 +1,1 @@
-The deprecated macos-13 CI runner was replaced with the macos-15-intel runner.
+The deprecated macos-13 CI runner was replaced with macos-15-intel.
