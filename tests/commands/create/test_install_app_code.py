@@ -684,7 +684,7 @@ Name: my-app
 Formal-Name: My App
 App-ID: com.example.my-app
 Version: 1.2.3
-Download-URL:
+Download-URL:\x20
 Summary: This is a simple app
 """
         )
