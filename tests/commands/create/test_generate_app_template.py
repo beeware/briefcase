@@ -42,6 +42,7 @@ def full_context():
         "custom_permissions": {},
         "requests": {},
         "document_types": {},
+        "install_options": {},
         "license": {"file": "LICENSE"},
         "requirement_installer_args": [],
         "external_package_path": None,

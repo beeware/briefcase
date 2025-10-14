@@ -23,10 +23,10 @@ def txt_to_rtf(txt):
     :param text: The original text.
     :returns: The text in RTF format.
     """
-    rtf = ["{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\n"]
+    rtf = ["{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"]
     for line in txt.split("\n"):
         if line.lstrip().startswith("*"):
-            rtf.append(f"\\bullet {line[line.index('*') + 1 :]}")
+            rtf.append(f"\\bullet{line[line.index('*') + 1 :]} ")
         elif line:
             # Add a space at the end to ensure multi-line paragraphs
             # have a word break. Strip whitespace to ensure that
@@ -198,8 +198,10 @@ class WindowsCreateCommand(CreateCommand):
                     self.tools.shutil.copy(license_file, installed_license)
                     license_text = None
                 else:
-                    license_text = license_file.read_text()
-                    installed_license.write_text(txt_to_rtf(license_text))
+                    license_text = license_file.read_text(encoding="utf-8")
+                    installed_license.write_text(
+                        txt_to_rtf(license_text), encoding="utf-8"
+                    )
             else:
                 raise BriefcaseCommandError(
                     f"""\
@@ -218,7 +220,10 @@ to be a full license. Briefcase will generate a `LICENSE.rtf` file for your
 project; you should ensure that the contents of this file is adequate.
 """
                 )
-            installed_license.write_text(txt_to_rtf(license_text))
+            installed_license.write_text(
+                txt_to_rtf(license_text),
+                encoding="utf-8",
+            )
         else:
             raise BriefcaseCommandError(
                 """\
@@ -543,10 +548,10 @@ class WindowsPackageCommand(PackageCommand):
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",
-                        "-o",
-                        self.distribution_path(app),
                         "-pdbtype",
                         "none",
+                        "-o",
+                        self.distribution_path(app),
                     ],
                     check=True,
                     cwd=self.bundle_path(app),

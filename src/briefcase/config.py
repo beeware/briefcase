@@ -194,6 +194,7 @@ a single value should be provided.
 def validate_install_options_config(config):
     """Validate that a install options are valid and complete, and convert into ."""
     install_options = {}
+    known_names = set()
     if config:
         for i, config_item in enumerate(config):
             try:
@@ -218,13 +219,16 @@ def validate_install_options_config(config):
                 )
 
             option = {}
-            if name in install_options:
+            if name.upper() in known_names:
                 raise BriefcaseConfigError(
                     f"Install option names must be unique. The name {name!r}, "
                     f"used by install option {i}, has already been defined."
                 )
-            else:
-                install_options[name] = option
+
+            # install_options needs to retain the original name, but we need names to be
+            # case-unique as well, so we track a separate set of known upper case names.
+            known_names.add(name.upper())
+            install_options[name] = option
 
             try:
                 # Options must have a string title.
