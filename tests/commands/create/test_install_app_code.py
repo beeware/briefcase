@@ -638,3 +638,53 @@ def test_only_test_sources_test_mode(
     # Original app definitions haven't changed
     assert myapp.sources is None
     assert myapp.test_sources == ["tests", "othertests"]
+
+
+def test_dist_info_with_missing_optional_fields(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path_index,
+):
+    """Dist-info is created correctly when optional app fields are set to None."""
+
+    myapp.url = None
+    myapp.author = None
+    myapp.author_email = None
+
+    # Mock shutil so we can track usage.
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
+
+    myapp.sources = None
+
+    create_command.install_app_code(myapp)
+
+    # No request was made to install requirements
+    create_command.tools.shutil.rmtree.assert_called_once_with(app_path)
+    create_command.tools.os.mkdir.assert_called_once_with(app_path)
+    create_command.tools.shutil.copytree.assert_not_called()
+    create_command.tools.shutil.copy.assert_not_called()
+
+    dist_info_path = app_path / "my_app-1.2.3.dist-info"
+
+    # Confirm the metadata files exist.
+    assert (dist_info_path / "INSTALLER").exists()
+    assert (dist_info_path / "METADATA").exists()
+
+    with (dist_info_path / "INSTALLER").open(encoding="utf-8") as f:
+        assert f.read() == "briefcase\n"
+
+    with (dist_info_path / "METADATA").open(encoding="utf-8") as f:
+        assert (
+            f.read()
+            == f"""Metadata-Version: 2.1
+Briefcase-Version: {briefcase.__version__}
+Name: my-app
+Formal-Name: My App
+App-ID: com.example.my-app
+Version: 1.2.3
+Download-URL:
+Summary: This is a simple app
+"""
+        )
