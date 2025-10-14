@@ -1,5 +1,5 @@
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -26,8 +26,7 @@ def test_handle_insert_register_valid_file(build_command, tmp_path):
     with zipfile.ZipFile(wheel_path) as zf:
         build_command._handle_insert(
             wheel=zf,
-            parts=Path(filename).parts,
-            filename=filename,
+            path=PurePosixPath(filename),
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -64,8 +63,7 @@ def test_handle_insert_skip_dir_entries(
     with zipfile.ZipFile(wheel_path) as zf:
         build_command._handle_insert(
             wheel=zf,
-            parts=Path(entry).parts,
-            filename=entry,
+            path=PurePosixPath(entry),
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -98,8 +96,7 @@ def test_handle_insert_missing_tilde_skipped(
     with zipfile.ZipFile(wheel_filename) as zf:
         build_command._handle_insert(
             wheel=zf,
-            parts=Path(missing_tilde).parts,
-            filename=missing_tilde,
+            path=PurePosixPath(missing_tilde),
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -124,16 +121,14 @@ def test_handle_insert_append_existing_contrib(build_command, tmp_path):
     with zipfile.ZipFile(wheel_path) as zf:
         build_command._handle_insert(
             wheel=zf,
-            parts=Path(filename).parts,
-            filename=filename,
+            path=PurePosixPath(filename),
             package_key="pkg 1.0",
             inserts=inserts,
         )
         # Second registration appends to same key
         build_command._handle_insert(
             wheel=zf,
-            parts=Path(filename).parts,
-            filename=filename,
+            path=PurePosixPath(filename),
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -161,8 +156,7 @@ def test_handle_insert_non_utf8_raises(
     with zipfile.ZipFile(wheel_path) as zf, pytest.raises(UnicodeDecodeError):
         build_command._handle_insert(
             wheel=zf,
-            parts=Path(filename).parts,
-            filename=filename,
+            path=PurePosixPath(filename),
             package_key="pkg 1.0",
             inserts=inserts,
         )

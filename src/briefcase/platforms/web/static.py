@@ -4,7 +4,7 @@ import subprocess
 import sys
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
 from typing import Any
 from zipfile import ZipFile
@@ -248,8 +248,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     def _handle_legacy_css(
         self,
         wheel: ZipFile,
-        path: Path,
-        filename: str,
+        path: PurePosixPath,
         package_key: str,
         inserts: dict[str, dict[str, dict[str, str]]],
     ) -> None:
@@ -258,19 +257,19 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         Emits a deprecation warning for every legacy CSS file discovered.
 
         :param wheel: Open wheel ZipFile being processed.
-        :param path: Path object of the file inside the wheel.
+        :param path: PurePosixPath object of the file inside the wheel.
         :param filename: Filename string inside the wheel.
         :param package_key: Provenance label (e.g. "name version").
         :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
         # Warn on every legacy usage
         self.console.warning(
-            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {filename} detected.\n"
+            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} detected.\n"
             "     Static file handling has been deprecated; this file should be "
             "converted into an insert."
         )
 
-        css_text = wheel.read(filename).decode("utf-8")
+        css_text = wheel.read(str(path)).decode("utf-8")
 
         rel_inside = "/".join(path.parts[2:])
         contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
@@ -287,42 +286,40 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
     def _handle_insert(
         self,
         wheel: ZipFile,
-        parts: tuple[str, ...],
-        filename: str,
+        path: PurePosixPath,
         package_key: str,
         inserts: dict[str, dict[str, dict[str, str]]],
     ) -> None:
         """Handle deploy/inserts/<target>~<insert> files and register inserts.
 
         :param wheel: Open wheel ZipFile being processed.
-        :param parts: Path parts of the filename inside the wheel.
-        :param filename: Filename string inside the wheel.
+        :param path: PurePosixPath object of the file inside the wheel.
         :param package_key: Provenance label (e.g. "name version").
         :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
-        self.console.info(f"    Found {filename}")
+        self.console.info(f"    Found {path}")
 
-        rel_inside = "/".join(parts[3:])
+        rel_inside = "/".join(path.parts[3:])
 
         if not rel_inside or rel_inside.endswith("/"):
             self.console.warning(
-                f"    {filename}: skipping; not a valid insert file (empty path or directory)."
+                f"    {path}: skipping; not a valid insert file (empty path or directory)."
             )
             return
 
         if "~" not in rel_inside:
             self.console.warning(
-                f"    {filename}: skipping; filename must match '<target>~<insert>'."
+                f"    {path}: skipping; filename must match '<target>~<insert>'."
             )
             return
 
         # Preserve any '~' that might exist in the target path by splitting from the right
         target, insert = rel_inside.rsplit("~", 1)
-        self.console.info(f"    {filename}: Adding {insert} insert for {target}")
+        self.console.info(f"    {path}: Adding {insert} insert for {target}")
 
-        text = wheel.read(filename).decode("utf-8")
+        text = wheel.read(str(path)).decode("utf-8")
 
-        contrib_key = f"{package_key} (deploy insert: {rel_inside} from {filename})"
+        contrib_key = f"{package_key} (deploy insert: {rel_inside} from {path})"
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
         if contrib_key in pkg_map and pkg_map[contrib_key]:
             pkg_map[contrib_key] += "\n" + text
@@ -349,7 +346,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         with ZipFile(wheelfile) as wheel:
             for filename in sorted(wheel.namelist()):
                 # Skip directories and shallow paths
-                path = Path(filename)
+                path = PurePosixPath(filename)
                 parts = path.parts
 
                 # Legacy CSS handling
@@ -358,11 +355,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     and parts[1] == "static"
                     and path.suffix.lower() == ".css"
                 ):
-                    self._handle_legacy_css(wheel, path, filename, package_key, inserts)
+                    self._handle_legacy_css(wheel, path, package_key, inserts)
 
                 # New deploy/inserts handling
                 elif len(parts) >= 3 and parts[1] == "deploy" and parts[2] == "inserts":
-                    self._handle_insert(wheel, parts, filename, package_key, inserts)
+                    self._handle_insert(wheel, path, package_key, inserts)
 
     def extract_pyscript_config(self, wheels):
         """Process multiple wheels to gather a config.toml and a base pyscript.toml

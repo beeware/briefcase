@@ -1,5 +1,5 @@
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -30,8 +30,7 @@ def test_handle_legacy_css_warn_and_append(
         # First call - warn
         build_command._handle_legacy_css(
             wheel=zf,
-            path=Path("dummy/static/one.css"),
-            filename="dummy/static/one.css",
+            path=PurePosixPath("dummy/static/one.css"),
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -44,8 +43,7 @@ def test_handle_legacy_css_warn_and_append(
         # Second call - no additional warning, content appended
         build_command._handle_legacy_css(
             wheel=zf,
-            path=Path("dummy/static/one.css"),
-            filename="dummy/static/one.css",
+            path=PurePosixPath("dummy/static/one.css"),
             package_key="pkg 1.0",
             inserts=inserts,
         )
@@ -73,8 +71,7 @@ def test_handle_legacy_css_non_utf8_raise(build_command, tmp_path):
     with zipfile.ZipFile(wheel_path) as zf, pytest.raises(UnicodeDecodeError):
         build_command._handle_legacy_css(
             wheel=zf,
-            path=Path("dummy/static/bad.css"),
-            filename="dummy/static/bad.css",
+            path=PurePosixPath("dummy/static/bad.css"),
             package_key="pkg 1.0",
             inserts=inserts,
         )
