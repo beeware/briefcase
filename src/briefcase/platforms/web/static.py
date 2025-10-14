@@ -455,14 +455,31 @@ class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
     description = "Run a static web project in development mode. (Work in progress)"
 
-    def run_dev_app(self, app: AppConfig, env, passthrough=None, **kwargs):
+    @property
+    def venv_name(self) -> str:
+        """Returns the name of the virtual environment directory.
+
+        :returns: Name for virtual environment directory
+        """
+
+        return "dev-web"
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--no-isolation",
+            dest="isolated",
+            action="store_false",
+            default=True,
+            help="Run without creating an isolated environment (not recommended for web).",
+        )
+
+    def run_dev_app(self, app: AppConfig, **options):
         raise UnsupportedCommandError(
             platform="web",
             output_format="static",
             command="dev",
         )
-
-    # implement logic to run the web server in development mode
 
 
 # Declare the briefcase command bindings

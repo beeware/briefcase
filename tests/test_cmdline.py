@@ -19,6 +19,7 @@ from briefcase.platforms.macOS.app import (
     macOSAppPublishCommand,
     macOSAppRunCommand,
 )
+from briefcase.platforms.web.static import StaticWebDevCommand
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
@@ -241,6 +242,43 @@ def test_dev_command(
         "run_app": True,
         "test_mode": False,
         "passthrough": [],
+        **expected_options,
+    }
+    assert overrides == expected_overrides
+
+
+@pytest.mark.parametrize(
+    "cmdline, expected_output_format, expected_options, expected_overrides",
+    [
+        ("dev web --no-isolation", "static", {"isolated": False}, {}),
+    ],
+)
+def test_web_dev_command(
+    monkeypatch,
+    console,
+    cmdline,
+    expected_output_format,
+    expected_options,
+    expected_overrides,
+):
+    """``briefcase dev`` returns the Dev command."""
+    # Pretend we're on macOS, regardless of where the tests run.
+    monkeypatch.setattr(sys, "platform", "darwin")
+
+    cmd, options, overrides = do_cmdline_parse(shlex.split(cmdline), console)
+
+    assert isinstance(cmd, StaticWebDevCommand)
+    assert cmd.platform == "web"
+    assert cmd.output_format == expected_output_format
+    assert cmd.console.input_enabled
+    assert cmd.console.verbosity == LogLevel.INFO
+    assert options == {
+        "appname": None,
+        "update_requirements": False,
+        "run_app": True,
+        "test_mode": False,
+        "passthrough": [],
+        "isolated": True,
         **expected_options,
     }
     assert overrides == expected_overrides

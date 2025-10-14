@@ -1,0 +1,1 @@
+Fix Linux Flatpak docs syntax; TOML uses "true", not "True".
