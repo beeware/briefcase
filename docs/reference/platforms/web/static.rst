@@ -197,10 +197,8 @@ directory which must use this naming convention:
 
 Where:
 
-* The target file path in relation to the project root directory appears as
-``<target-file>`` (e.g., ``index.html`` or ``static/css/briefcase.css``).
-* The slot name for insertion appears as ``<slot-name>``
-(e.g., ``head``, ``body-end``, ``css``).
+* The target file path in relation to the project root directory appears as ``<target-file>`` (e.g., ``index.html`` or ``static/css/briefcase.css``).
+* The slot name for insertion appears as ``<slot-name>`` (e.g., ``head``, ``body-end``, ``css``).
 * The tilde (``~``) character separates the target path from the slot name.
 
 **Examples:**
@@ -211,3 +209,55 @@ Where:
   slot of ``index.html``
 * ``mypackage/deploy/inserts/static/css/briefcase.css~css`` - Inserts into the ``css``
   slot of ``static/css/briefcase.css``
+
+Insert Content Format
+---------------------
+
+The content of insert files needs to follow the format given below which the target system requires for processing:
+
+* For HTML slots, provide HTML content
+* For CSS slots, provide CSS content
+* For JavaScript slots, provide JavaScript content
+
+The system adds automatic banner comments to each insert which show their source package information. The system processes inserts from the same package and slot in order of their sorted sequence.
+
+**Example HTML insert** (``mypackage/deploy/inserts/index.html~head``)::
+
+    <link rel="stylesheet" href="static/css/mypackage.css">
+    <script src="static/js/mypackage.js"></script>
+
+**Example CSS insert** (``mypackage/deploy/inserts/static/css/briefcase.css~css``)::
+
+    .my-custom-class {
+        color: blue;
+        font-weight: bold;
+    }
+
+Legacy Static Files (Deprecated)
+=================================
+
+.. deprecated:: 0.3.21
+    The legacy static file system has been deprecated in favor of the insert system.
+
+Before the insertion system was introduced, packages could place their static CSS files inside a ``/static`` directory within their package structure. The system would automatically find these files to include them in ``static/css/briefcase.css``.
+
+Currently, the previous method has been marked for removal. When Briefcase detects CSS files located under the ``/static/`` directory of a wheel it performs the following actions:
+
+1. The system displays a deprecation warning to users.
+2. The system convert the CSS content into an insert which will be added to ``static/css/briefcase.css``.
+3. The system adds a comment which shows the file came from a legacy static file.
+
+**Migration to inserts:**
+
+Instead of::
+
+    mypackage/
+        static/
+            mystyles.css
+
+Use::
+
+    mypackage/
+        deploy/
+            inserts/
+                static/css/briefcase.css~css
