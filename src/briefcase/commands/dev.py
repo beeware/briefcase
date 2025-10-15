@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from briefcase.commands.create import _is_local_path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
@@ -76,7 +77,8 @@ class DevCommand(RunAppMixin, BaseCommand):
         )
 
     def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
-        """Install the requirements for the app dev.
+        """Install the requirements for the app dev. Local dependencies are editable
+        installed.
 
         This will always include test requirements, if specified.
 
@@ -92,6 +94,13 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("No application requirements")
             return
 
+        sorted_requires = []
+        for req in requires:
+            if _is_local_path(req):
+                sorted_requires.extend(["-e", req])
+            else:
+                sorted_requires.append(req)
+
         with self.console.wait_bar("Installing dev requirements..."):
             try:
                 venv.run(
@@ -105,7 +114,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                         "install",
                         "--upgrade",
                         *(["-vv"] if self.console.is_deep_debug else []),
-                        *requires,
+                        *sorted_requires,
                         *app.requirement_installer_args,
                     ],
                     check=True,
@@ -270,9 +279,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # If one exists, assume that the requirements have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
-        dist_info_path = (
-            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
-        )
+        dist_info_path = self.app_module_path(app).parent / app.dist_info_name
         if not run_app:
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
