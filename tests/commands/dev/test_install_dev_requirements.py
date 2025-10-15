@@ -46,8 +46,8 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
     )
 
 
-def test_install_requirements_local_path_formats(dev_command, first_app):
-    """Test all local path formats that pip supports for editable installation."""
+def test_install_requirements_path_formats(dev_command, first_app):
+    """Test possible path formats that pip supports for editable installation."""
     first_app.requires = [
         # Relative paths and single level
         "./current-dir",
@@ -66,7 +66,19 @@ def test_install_requirements_local_path_formats(dev_command, first_app):
         ".\\windows\\current",
         "..\\windows\\parent",
         "C:\\absolute\\windows",
-        # One regular package as well
+        # SCM URLs (should NOT get -e for now):
+        "git+https://github.com/user/repo.git",
+        "git+ssh://git@github.com/user/repo.git",
+        "hg+https://bitbucket.org/user/repo",
+        # Tarballs (should NOT get -e):
+        "./local/package.tar.gz",
+        "./local/package.zip",
+        "./local/package.whl",
+        "./local/package.tar.bz2",
+        "./local/package.tar",
+        "https://github.com/user/repo/archive/main.tar.gz",
+        "https://files.pythonhosted.org/packages/.../package-1.0.tar.gz",
+        # Regular packages (should NOT get -e):
         "package1",
     ]
 
@@ -107,6 +119,16 @@ def test_install_requirements_local_path_formats(dev_command, first_app):
             "..\\windows\\parent",
             "-e",
             "C:\\absolute\\windows",
+            "git+https://github.com/user/repo.git",
+            "git+ssh://git@github.com/user/repo.git",
+            "hg+https://bitbucket.org/user/repo",
+            "./local/package.tar.gz",
+            "./local/package.zip",
+            "./local/package.whl",
+            "./local/package.tar.bz2",
+            "./local/package.tar",
+            "https://github.com/user/repo/archive/main.tar.gz",
+            "https://files.pythonhosted.org/packages/.../package-1.0.tar.gz",
             "package1",
         ],
         check=True,
