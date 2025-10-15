@@ -213,7 +213,7 @@ into a string for display to the user.
 
 .. attribute:: default
 
-A boolean describing the initial value of the option in the GUI. If not provided,
+A Boolean describing the initial value of the option in the GUI. If not provided,
 defaults to ``False``.
 
 Using installer options
