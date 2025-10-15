@@ -36,7 +36,6 @@ def test_package_app(package_command, first_app_built, tmp_path):
     with ZipFile(archive_file) as archive:
         assert sorted(archive.namelist()) == [
             "index.html",
-            "pyscript.toml",
             "static/",
             "static/css/",
             "static/css/briefcase.css",
