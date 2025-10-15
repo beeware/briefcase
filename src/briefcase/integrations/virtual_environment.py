@@ -215,18 +215,18 @@ class NoOpVenvContext(Tool):
     name = "no_op_environment"
     full_name = "No-Op Environment"
 
-    def __init__(self, tools, marker_path: Path, **kwargs):
+    def __init__(self, tools, venv_path: Path, **kwargs):
         super().__init__(tools, **kwargs)
         self.created = False
-        self.venv_path = None
-        self.marker_path = marker_path
+        self.venv_path = venv_path
+        self.marker_path = venv_path / "venv_path"
 
     @classmethod
     def verify_install(
-        cls, tools: ToolCache, marker_path: Path, **kwargs
+        cls, tools: ToolCache, venv_path: Path, **kwargs
     ) -> "NoOpVenvContext":
         """Return a NoOpVenvContext for the specified path."""
-        return cls(tools=tools, marker_path=marker_path)
+        return cls(tools=tools, venv_path=venv_path)
 
     def exists(self) -> bool:
         """A no-op env always exists."""
@@ -268,15 +268,15 @@ class NoOpVenvContext(Tool):
 class NoOpEnvironment:
     """A no-op environment that returns a native runner."""
 
-    def __init__(self, tools: ToolCache, console: Console, marker_path: Path):
+    def __init__(self, tools: ToolCache, console: Console, venv_path: Path):
         self.tools = tools
         self.console = console
         self.noop_context = NoOpVenvContext.verify_install(
-            tools=tools, marker_path=marker_path
+            tools=tools, venv_path=venv_path
         )
 
     def __enter__(self):
-        self.noop_context.check_and_update_marker()
+        self.noop_context.created = self.noop_context.check_and_update_marker()
         return self.noop_context
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -304,8 +304,7 @@ def virtual_environment(
     :returns: A context manager for an environment where code can be executed.
     """
     if not isolated:
-        marker_path = venv_path / "venv_path"
-        return NoOpEnvironment(tools=tools, console=console, marker_path=marker_path)
+        return NoOpEnvironment(tools=tools, console=console, venv_path=venv_path)
 
     if venv_path is None:
         raise BriefcaseCommandError("A virtual environment path must be provided")

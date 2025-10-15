@@ -82,12 +82,12 @@ def test_marker_persists_across_instances(mock_tools, tmp_path):
     """Marker file persists and is readable by new instances."""
     from briefcase.integrations.virtual_environment import NoOpVenvContext
 
-    marker_path = tmp_path / "marker"
+    venv_path = tmp_path / "venv"
 
-    context1 = NoOpVenvContext(tools=mock_tools, marker_path=marker_path)
+    context1 = NoOpVenvContext(tools=mock_tools, venv_path=venv_path)
     result1 = context1.check_and_update_marker()
     assert result1 is True
 
-    context2 = NoOpVenvContext(tools=mock_tools, marker_path=marker_path)
+    context2 = NoOpVenvContext(tools=mock_tools, venv_path=venv_path)
     result2 = context2.check_and_update_marker()
     assert result2 is False

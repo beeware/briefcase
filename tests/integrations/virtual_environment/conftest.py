@@ -25,13 +25,8 @@ def venv_context(mock_tools, venv_path):
 
 
 @pytest.fixture
-def marker_path(tmp_path):
-    return tmp_path / ".briefcase" / "dev" / "venv_marker"
-
-
-@pytest.fixture
-def noop_context(mock_tools, marker_path):
-    return NoOpVenvContext(tools=mock_tools, marker_path=marker_path)
+def noop_context(mock_tools, venv_path):
+    return NoOpVenvContext(tools=mock_tools, venv_path=venv_path)
 
 
 @pytest.fixture
