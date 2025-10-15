@@ -102,7 +102,14 @@ class WindowsCreateCommand(CreateCommand):
         :param app: The config object for the app
         :return: The full path where install scripts should be installed.
         """
-        return self.bundle_path(app) / self.path_index(app, "extras_path")
+        try:
+            extras_path = self.path_index(app, "extras_path")
+        except KeyError:
+            # For backwards compatibility - if the template doesn't define an extras
+            # path, default to `extras`.
+            extras_path = "extras"
+
+        return self.bundle_path(app) / extras_path
 
     def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
@@ -248,6 +255,10 @@ app's configuration.
         installer_path = getattr(app, "installer_path", "_installer")
         install_scripts_path = self.extras_path(app) / installer_path
 
+        # Ensure the extras path exists, so that the path used by WiX exists
+        self.extras_path(app).mkdir(exist_ok=True, parents=True)
+
+        # Install the post-install script
         if post_install := getattr(app, "post_install_script", None):
             post_install_script = self.base_path / post_install
             if post_install_script.suffix != ".bat":
@@ -266,6 +277,7 @@ app's configuration.
                     install_scripts_path / "post_install.bat",
                 )
 
+        # Install the pre-uninstall script
         if pre_uninstall := getattr(app, "pre_uninstall_script", None):
             pre_uninstall_script = self.base_path / pre_uninstall
             if pre_uninstall_script.suffix != ".bat":
@@ -284,6 +296,7 @@ app's configuration.
                     install_scripts_path / "pre_uninstall.bat",
                 )
 
+        # Install the license.
         with self.console.wait_bar("Installing license..."):
             self.install_license(app)
 

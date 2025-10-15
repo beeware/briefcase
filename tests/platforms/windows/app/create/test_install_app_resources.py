@@ -12,6 +12,9 @@ def test_minimal_app_resources(create_command, first_app_templated, tmp_path):
 
     create_command.install_app_resources(first_app_templated)
 
+    # The extras path exists
+    assert (tmp_path / "base_path/build/first-app/windows/app/custom_extras").is_dir()
+
     # A LICENSE.rtf file has been written.
     assert (tmp_path / "base_path/build/first-app/windows/app/LICENSE.rtf").is_file()
 
@@ -127,3 +130,20 @@ def test_alternate_installer_path(create_command, first_app_templated, tmp_path)
 
     # A LICENSE.rtf file has been written.
     assert (base_path / "LICENSE.rtf").is_file()
+
+
+def test_legacy_template_support(create_command, first_app_templated, tmp_path):
+    """If briefcase.toml doesn't define extras_path; fall back to "extras"."""
+    # Create an empty briefcase.toml
+    create_file(tmp_path / "base_path/build/first-app/windows/app/briefcase.toml", "")
+
+    # Create a license file
+    create_file(tmp_path / "base_path/LICENSE", "This is a license file")
+
+    create_command.install_app_resources(first_app_templated)
+
+    # The extras path exists
+    assert (tmp_path / "base_path/build/first-app/windows/app/extras").is_dir()
+
+    # A LICENSE.rtf file has been written.
+    assert (tmp_path / "base_path/build/first-app/windows/app/LICENSE.rtf").is_file()
