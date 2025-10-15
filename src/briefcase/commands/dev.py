@@ -16,6 +16,7 @@ from briefcase.integrations.virtual_environment import (
 )
 
 from .base import BaseCommand
+from .create import write_dist_info
 
 
 class DevCommand(RunAppMixin, BaseCommand):
@@ -277,6 +278,9 @@ class DevCommand(RunAppMixin, BaseCommand):
         # If one exists, assume that the requirements have already been
         # installed. If a dependency update has been manually requested,
         # do it regardless.
+        dist_info_path = (
+            self.app_module_path(app).parent / f"{app.module_name}.dist-info"
+        )
 
         if not run_app:
             # If we are not running the app, it means we should update requirements.
@@ -290,6 +294,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             if venv.created or update_requirements:
                 self.console.info("Installing requirements...", prefix=app.app_name)
                 self.install_dev_requirements(app, venv, **options)
+                write_dist_info(app, dist_info_path)
 
             if run_app:
                 if app.test_mode:
