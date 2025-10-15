@@ -139,3 +139,48 @@ Briefcase performs the following operations when processing this file:
 A Briefcase project must have only one package that defines deployment configuration
 through a ``config.toml`` file. The system will produce an error when multiple packages
 in the dependencies attempt to define deployment settings.
+
+Insert System
+=============
+
+The insert system allows Python packages to inject HTML, CSS, and JavaScript content
+into specific locations (called "slots") in the generated web application. This is the
+recommended way to add custom web resources to your Briefcase web application.
+
+How Inserts Work
+----------------
+
+The build process of Briefcase performs the following operations:
+
+1. The system scans through all wheel files to detect insert content.
+2. The system organizes collected inserts according to their target files and slot names.
+3. The system writes the accumulated content into designated slots in the target files.
+
+Insert Markers
+--------------
+
+the target files such as ``index.html`` or ``briefcase.css`` need to include marker
+comments that indicate where inserts should be placed. Two marker formats are supported:
+
+**HTML markers:**
+
+.. code-block:: html
+
+    <!--@@ slot-name:start @@-->
+    <!--@@ slot-name:end @@-->
+
+**CSS/JavaScript markers:**
+
+.. code-block:: css
+
+    /*@@ slot-name:start @@*/
+    /*@@ slot-name:end @@*/
+
+Common insert slots in Briefcase web templates include:
+
+* ``head``: Content to insert in the HTML ``<head>`` section
+* ``head-python``: Python-related content for the ``<head>`` (used by PyScript)
+* ``body-start``: Content at the start of the ``<body>``
+* ``body-python``: Python execution content in the ``<body>`` (used by PyScript)
+* ``body-end``: Content at the end of the ``<body>``
+* ``css``: Custom CSS content in ``static/css/briefcase.css``
