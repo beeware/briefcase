@@ -1063,12 +1063,12 @@ def _is_local_path(reference):
     if os.altsep:
         separators.append(os.altsep)
 
-    tarball_extensions = [".tar.gz", ".tar.bz2", ".tar", ".zip", ".whl"]
+    extensions = [".tar.gz", ".tar.bz2", ".tar", ".zip", ".whl"]
 
     return (
         any(sep in reference for sep in separators)
         and (not _has_url(reference))
-        and (not any(reference.endswith(ext) for ext in tarball_extensions))
+        and (not any(reference.endswith(ext) for ext in extensions))
     )
 
 
