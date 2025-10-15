@@ -56,7 +56,7 @@ defined in your app's `pyproject.toml` configuration:
 - **Author-email** - [`author_email`][]
 
 For example, the metadata for the app constructed by the [BeeWare
-Tutorial](https://tutorial.beeware.org/en/latest/tutorial/tutorial-1.html)
+Tutorial](https://tutorial.beeware.org/en/latest/tutorial/tutorial-1)
 would contain:
 
 ```python
