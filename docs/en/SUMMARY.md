@@ -16,7 +16,7 @@
         - [Testing Linux Apps with Docker](how-to/testing/x11passthrough.md)
     - Publishing your app
         - ./how-to/publishing/*
-    - Contributing to Briefcase
+    - [Contributing to Briefcase](how-to/contribute/index.md)
         - [Contributing code to Briefcase](how-to/contribute/code.md)
         - [Contributing to the documentation](how-to/contribute/docs.md)
     - Internal How-to guides

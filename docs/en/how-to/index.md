@@ -24,7 +24,7 @@ How-to guides are recipes that take the user through steps in key subjects. They
 * [iOS](publishing/iOS.md) - Publish an iOS app to the Apple App Store.
 * [macOS](publishing/macOS.md) - Publish a macOS app to the Apple App Store.
 
-## Contributing to Briefcase
+## [Contributing to Briefcase](contribute/index.md)
 
 * [Contributing code to Briefcase](contribute/code.md) - The process to follow to contribute to Briefcase source code.
 * [Contributing to the documentation](contribute/docs.md) - The process to follow to contribute to Briefcase documentation.
