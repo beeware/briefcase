@@ -97,3 +97,45 @@ and change the default PyScript app name, you could use::
     [[runtimes]]
     src = "https://example.com/custom/pyodide.js"
     """
+
+Deployment Configuration
+========================
+
+Web packages can include deployment configuration to control how Briefcase builds
+and deploys web applications.  The deployment process relies on a ``config.toml``
+file and associated deployment files included in Python packages.
+
+config.toml
+-----------
+
+A package can specify deployment settings through a ``config.toml`` file located
+at ``<package>/deploy/config.toml``. The deployment configuration file accepts the
+following information:
+
+* ``implementation``: The web implementation to use (currently only ``"pyscript"``
+  is supported). If not specified, defaults to ``"pyscript"``.
+* ``pyscript.version``: The PyScript version to use (e.g., ``"2024.11.1"``). If not
+  specified, Briefcase will use its default PyScript version.
+
+Example ``config.toml``::
+
+    implementation = "pyscript"
+
+    [pyscript]
+    version = "2024.11.1"
+
+pyscript.toml
+-------------
+
+A package can include a base ``pyscript.toml`` file located at
+``<package>/deploy/pyscript.toml``. The base configuration in this file serves as
+the foundation for Briefcase to generate the final ``pyscript.toml`` file.
+Briefcase performs the following operations when processing this file:
+
+1. The system reads the base ``pyscript.toml`` file from the package directory.
+2. The system adds the ``packages`` list which contains all wheel files to the configuration.
+3. Merge in any :attr:`extra_pyscript_toml_content` from ``pyproject.toml``
+
+A Briefcase project must have only one package that defines deployment configuration
+through a ``config.toml`` file. The system will produce an error when multiple packages
+in the dependencies attempt to define deployment settings.
