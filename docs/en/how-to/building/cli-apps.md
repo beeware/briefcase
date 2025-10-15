@@ -5,7 +5,7 @@
 This guide explains the key differences when creating a console
 application using Briefcase, as opposed to a GUI-based app. It assumes
 you are already familiar with the basics of Briefcase and have completed
-the [BeeWare Tutorial](https://tutorial.beeware.org/en/latest/).
+the [BeeWare Tutorial](https://tutorial.beeware.org/).
 
 We'll cover:
 
