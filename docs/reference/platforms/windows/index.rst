@@ -222,8 +222,10 @@ Using installer options
 When an installer option is defined, the value of the option will be passed to the
 post-install script as a command line argument. If your installer defines an option
 with a name of ``foo``, the argument ``--foo=1`` will be passed to your post-install
-script if the option is selected by the user ``--foo=`` will be passed if the option
-is *not* selected.
+script if the option is selected by the user ``--foo=0`` will be passed if the option
+is *not* selected. The ``--allusers`` option will always be passed to post-install
+scripts; this option describes whether the app has been installed for all users, or
+just for the current user.
 
 Platform quirks
 ===============
