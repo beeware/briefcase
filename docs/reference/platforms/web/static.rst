@@ -137,7 +137,7 @@ Briefcase performs the following operations when processing this file:
 3. Merge in any :attr:`extra_pyscript_toml_content` from ``pyproject.toml``
 
 A Briefcase project must have only one package that defines deployment configuration
-through a ``config.toml`` file. The system will produce an error when multiple packages
+through a ``config.toml`` file located at ``<package>/deploy/config.toml``. The system will produce an error when multiple packages
 in the dependencies attempt to define deployment settings.
 
 Insert System
