@@ -184,3 +184,30 @@ Common insert slots in Briefcase web templates include:
 * ``body-python``: Python execution content in the ``<body>`` (used by PyScript)
 * ``body-end``: Content at the end of the ``<body>``
 * ``css``: Custom CSS content in ``static/css/briefcase.css``
+
+Creating Insert Files
+---------------------
+
+Python packages can include inserts by placing files inside the ``deploy/inserts/``
+directory which must use this naming convention:
+
+.. code-block:: text
+
+    <package>/deploy/inserts/<target-file>~<slot-name>
+
+Where:
+
+* The target file path in relation to the project root directory appears as
+``<target-file>`` (e.g., ``index.html`` or ``static/css/briefcase.css``).
+* The slot name for insertion appears as ``<slot-name>``
+(e.g., ``head``, ``body-end``, ``css``).
+* The tilde (``~``) character separates the target path from the slot name.
+
+**Examples:**
+
+* ``mypackage/deploy/inserts/index.html~head`` - Inserts into the ``head`` slot of
+  ``index.html``
+* ``mypackage/deploy/inserts/index.html~body-end`` - Inserts into the ``body-end``
+  slot of ``index.html``
+* ``mypackage/deploy/inserts/static/css/briefcase.css~css`` - Inserts into the ``css``
+  slot of ``static/css/briefcase.css``
