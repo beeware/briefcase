@@ -1,10 +1,16 @@
+from pathlib import Path
 from unittest import mock
 
 import pytest
 
 from briefcase.commands.base import BaseCommand
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.macOS.app import macOSAppMixin, macOSCreateMixin
+from briefcase.platforms.macOS.app import (
+    macOSAppMixin,
+    macOSCreateMixin,
+    macOSMixin,
+    macOSPackageMixin,
+)
 from tests.utils import create_file, create_plist_file
 
 
@@ -93,3 +99,29 @@ entitlements_path="Entitlements.plist"
     first_app_config.packaging_format = "dmg"
 
     return first_app_config
+
+
+class _DummyPathsCmd(macOSPackageMixin, macOSMixin, BaseCommand):
+    """Concrete-enough command to exercise notarization_path()/distribution_path()."""
+
+    command = "package"
+
+    def __init__(self, base_path: Path, **kwargs):
+        super().__init__(base_path=base_path / "base_path", **kwargs)
+        # Ensure dist_path exists; distribution_path() uses it.
+        self.dist_path = self.base_path / "dist"
+        self.dist_path.mkdir(parents=True, exist_ok=True)
+
+    # Used by notarization_path() when packaging_format == "zip"
+    def package_path(self, app):
+        return self.base_path / f"build/{app.app_name}/macos/app/{app.formal_name}.app"
+
+    # Satisfy abstract requirement; not used by these tests.
+    def binary_path(self, app):
+        # Could be the app bundle itself or a plausible binary path.
+        return self.package_path(app)  # or: / "Contents/MacOS" / app.formal_name
+
+
+@pytest.fixture
+def paths_cmd(dummy_console, tmp_path):
+    return _DummyPathsCmd(console=dummy_console, base_path=tmp_path)

@@ -1,0 +1,1 @@
+Briefcase can now store per-project and per-user defaults for some options, such as author details, preferred simulators, and signing identities.

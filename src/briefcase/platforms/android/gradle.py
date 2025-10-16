@@ -18,7 +18,7 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig, parsed_version
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
@@ -396,7 +396,27 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """
-        device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
+        if device_or_avd is None:
+            configured = None
+            android_section = getattr(app, "android", None)
+            if isinstance(android_section, dict):
+                configured = android_section.get("device")
+            else:
+                configured = getattr(android_section, "device", None)
+            if configured:
+                device_or_avd = configured
+
+        if isinstance(device_or_avd, str):
+            device_or_avd = device_or_avd.strip()
+
+        try:
+            device, name, avd = self.tools.android_sdk.select_target_device(
+                device_or_avd
+            )
+        except InvalidDeviceError as e:
+            raise BriefcaseCommandError(
+                f"Unable to find device or AVD '{device_or_avd}'."
+            ) from e
 
         # If there's no device ID, that means the emulator isn't running.
         # If there's no AVD either, it means the user has chosen to create

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import re
+import sys
 import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
 from importlib.metadata import entry_points
+from pathlib import Path
 
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
@@ -13,10 +15,15 @@ from briefcase.config import (
     make_class_name,
     validate_url,
 )
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.git import Git
 
 from .base import BaseCommand
+
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
+    pass
+else:  # pragma: no-cover-if-gte-py311
+    pass
 
 LICENSE_OPTIONS = {
     "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
@@ -63,6 +70,35 @@ def parse_project_overrides(project_overrides: list[str]) -> dict[str, str]:
                     )
                 overrides[key] = value
     return overrides
+
+
+def _ensure_gitignore_briefcase(app_path: Path) -> None:
+    """Ensure that .briefcase is in the .gitignore file in the project root.
+
+    If there is no .gitignore file, create one. If there is a .gitignore file, but it
+    doesn't include .briefcase, add it to the end of the file.
+    """
+    app_path.mkdir(parents=True, exist_ok=True)
+
+    gitignore_path = app_path / ".gitignore"
+    want = ".briefcase/"
+
+    try:
+        if gitignore_path.exists():
+            # Keep existing content; append .briefcase/ only if missing
+            lines = [
+                ln.rstrip("\n")
+                for ln in gitignore_path.read_text(encoding="utf-8").splitlines()
+            ]
+            if want not in [ln.strip() for ln in lines]:
+                lines.append(want)
+                # Ensure trailing newline at end of file
+                gitignore_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        else:
+            # Create a fresh .gitignore with a trailing newline
+            gitignore_path.write_text(want + "\n", encoding="utf-8")
+    except OSError as e:
+        raise BriefcaseConfigError(f"Unable to update {gitignore_path}: {e}") from e
 
 
 class NewCommand(BaseCommand):
@@ -568,6 +604,9 @@ class NewCommand(BaseCommand):
             output_path=self.base_path,
             extra_context=context,
         )
+
+        # Ensure that .briefcase is in the .gitignore file in the project root.
+        _ensure_gitignore_briefcase(self.base_path / context["app_name"])
 
         # Perform any post-template processing required by the bootstrap.
         bootstrap.post_generate(base_path=self.base_path / context["app_name"])
