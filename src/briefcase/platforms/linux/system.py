@@ -349,10 +349,10 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                     raise BriefcaseCommandError(
                         "Unable to parse glibc dependency version from version string."
                     )
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     "Unable to determine glibc dependency version."
-                )
+                ) from e
 
         else:
             target_glibc = super().target_glibc_version(app)

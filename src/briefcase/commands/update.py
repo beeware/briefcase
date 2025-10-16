@@ -109,10 +109,10 @@ class UpdateCommand(CreateCommand):
         if app_name:
             try:
                 apps_to_update = {app_name: self.apps[app_name]}
-            except KeyError:
+            except KeyError as e:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from e
         elif app:
             apps_to_update = {app.app_name: app}
         else:

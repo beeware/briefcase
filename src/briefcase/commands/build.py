@@ -140,10 +140,10 @@ class BuildCommand(BaseCommand):
         if app_name:
             try:
                 apps_to_build = {app_name: self.apps[app_name]}
-            except KeyError:
+            except KeyError as e:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from e
         elif app:
             apps_to_build = {app.app_name: app}
         else:
