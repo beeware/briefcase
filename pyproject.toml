@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==9.2.0",
+    "setuptools_scm==9.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -95,14 +95,14 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.10.5",
+    "coverage[toml] == 7.10.7",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.1",
+    "httpx-retries == 0.4.3",
     "pre-commit == 4.3.0",
-    "pytest == 8.4.1",
+    "pytest == 8.4.2",
     "pytest-xdist == 3.8.0",
     "setuptools_scm == 9.2.0",
-    "tox == 4.28.4",
+    "tox == 4.31.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
@@ -112,8 +112,8 @@ docs = [
     # independent of the docs extra. Ideally, we'd use dependency groups for docs
     # dependencies, but RTD doesn't support them yet. In addition to these dependencies,
     # you should also run `pip install -r ../requirements-docs.txt`
-    "furo == 2025.7.19",
-    "pyenchant == 3.2.2",
+    "furo == 2025.9.25",
+    "pyenchant == 3.3.0",
     "sphinx == 8.2.3",
     "sphinx_tabs == 3.4.7",
     "sphinx-autobuild == 2024.10.3",

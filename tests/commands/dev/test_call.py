@@ -1,8 +1,11 @@
+from unittest import mock
+
 import pytest
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.virtual_environment import VenvContext
 
 
 class DummyDevCommand(DevCommand):
@@ -21,6 +24,17 @@ class DummyDevCommand(DevCommand):
 
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
+        self.mock_venv_context = mock.MagicMock(spec=VenvContext)
+
+        self.tools.virtual_environment.create = mock.MagicMock(
+            side_effect=self.virtual_environment
+        )
+        # Track which venvs exist for this command instance
+        self._existing_venvs = set()
+
+    def simulate_existing_venv(self, appname, isolated=False):
+        """Mark a venv as already existing (for testing installed apps)."""
+        self._existing_venvs.add((appname, isolated))
 
     def verify_host(self):
         super().verify_host()
@@ -38,14 +52,56 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def install_dev_requirements(self, app, **kwargs):
-        self.actions.append(("dev_requirements", app.app_name, kwargs))
+    def virtual_environment(self, venv_path, isolated=False, recreate=False):
+        # Extract the app name from the venv_path to use as a cache key.
+        app_name = venv_path.parts[-2]
+        self.actions.append(("virtual-environment", app_name, isolated, recreate))
+
+        # Simulate venv.created behavior:
+        # - created=True if venv doesn't exist yet (first time) OR recreate=True
+        # - created=False if venv already exists and recreate=False
+
+        venv_key = (app_name, isolated)
+
+        if recreate:
+            # Recreating - always True
+            self.mock_venv_context.created = True
+        elif venv_key in self._existing_venvs:
+            # Venv already exists
+            self.mock_venv_context.created = False
+        else:
+            # First time creating this venv
+            self.mock_venv_context.created = True
+            self._existing_venvs.add(venv_key)
+
+        mock_context = mock.MagicMock()
+        mock_context.__enter__.return_value = self.mock_venv_context
+        mock_context.__exit__.return_value = False
+        return mock_context
+
+    def install_dev_requirements(self, app, venv, **kwargs):
+        self.actions.append(
+            (
+                "dev_requirements",
+                app.app_name,
+                venv,
+            )
+        )
 
     def get_environment(self, app):
         return self.env
 
-    def run_dev_app(self, app, env, **kwargs):
-        self.actions.append(("run_dev", app.app_name, app.test_mode, kwargs, env))
+    def run_dev_app(self, app, env, venv, passthrough, **kwargs):
+        self.actions.append(
+            (
+                "run_dev",
+                app.app_name,
+                app.test_mode,
+                venv,
+                passthrough,
+                env,
+            )
+        )
         return full_options({"run_dev_state": app.app_name, "env": env}, kwargs)
 
 
@@ -63,6 +119,8 @@ def test_no_args_one_app(dev_command, first_app):
     dev_command.apps = {
         "first": first_app,
     }
+    # Simulate that the venv already exists (installed app)
+    dev_command.simulate_existing_venv("first")
 
     # Configure no command line options
     options, _ = dev_command.parse_options([])
@@ -80,8 +138,17 @@ def test_no_args_one_app(dev_command, first_app):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "first", False, False),
         # Run the first app devly
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -110,6 +177,8 @@ def test_with_arg_one_app(dev_command, first_app):
     dev_command.apps = {
         "first": first_app,
     }
+    # Simulate that the venv already exists (installed app)
+    dev_command.simulate_existing_venv("first")
 
     # Configure a -a command line option
     options, _ = dev_command.parse_options(["-a", "first"])
@@ -127,8 +196,17 @@ def test_with_arg_one_app(dev_command, first_app):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "first", False, False),
         # Run the first app devly
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -139,6 +217,9 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         "first": first_app,
         "second": second_app,
     }
+    # Simulate that the venvs already exist (installed apps)
+    dev_command.simulate_existing_venv("first")
+    dev_command.simulate_existing_venv("second")
 
     # Configure a --app command line option
     options, _ = dev_command.parse_options(["--app", "second"])
@@ -156,8 +237,17 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         ("verify-app-template", "second"),
         # App tools are verified for app
         ("verify-app-tools", "second"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "second", False, False),
         # Run the second app devly
-        ("run_dev", "second", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "second",
+            False,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -187,6 +277,8 @@ def test_update_requirements(dev_command, first_app):
     dev_command.apps = {
         "first": first_app,
     }
+    # Simulate that the venv already exists (installed app)
+    dev_command.simulate_existing_venv("first")
 
     # Configure a requirements update
     options, _ = dev_command.parse_options(["-r"])
@@ -204,10 +296,23 @@ def test_update_requirements(dev_command, first_app):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired with recreate=True
+        ("virtual-environment", "first", False, True),
         # An update was requested
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            dev_command.mock_venv_context,
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -234,10 +339,23 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "first", False, False),
         # The app will be installed
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            dev_command.mock_venv_context,
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -265,10 +383,23 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired with recreate=True
+        ("virtual-environment", "first", False, True),
         # An update was requested
-        ("dev_requirements", "first", {}),
+        (
+            "dev_requirements",
+            "first",
+            dev_command.mock_venv_context,
+        ),
         # Then, it will be started
-        ("run_dev", "first", False, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            False,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -285,7 +416,6 @@ def test_no_run(dev_command, first_app_uninstalled):
     # Run the run command
     dev_command(**options)
 
-    # The right sequence of things will be done
     assert dev_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -295,8 +425,14 @@ def test_no_run(dev_command, first_app_uninstalled):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
-        # Only update requirements without running the app
-        ("dev_requirements", "first", {}),
+        # Virtual environment context is acquired with recreate=True
+        ("virtual-environment", "first", False, True),
+        # An update was requested
+        (
+            "dev_requirements",
+            "first",
+            dev_command.mock_venv_context,
+        ),
     ]
 
 
@@ -306,6 +442,8 @@ def test_run_test(dev_command, first_app):
     dev_command.apps = {
         "first": first_app,
     }
+    # Simulate that the venv already exists (installed app)
+    dev_command.simulate_existing_venv("first")
 
     # Configure the test option
     options, _ = dev_command.parse_options(["--test"])
@@ -323,8 +461,17 @@ def test_run_test(dev_command, first_app):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "first", False, False),
         # Then, it will be started
-        ("run_dev", "first", True, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            True,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
 
 
@@ -351,8 +498,17 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         ("verify-app-template", "first"),
         # App tools are verified for app
         ("verify-app-tools", "first"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "first", False, False),
         # Development requirements will be installed
-        ("dev_requirements", "first", {}),
+        ("dev_requirements", "first", dev_command.mock_venv_context),
         # Then, it will be started
-        ("run_dev", "first", True, {"passthrough": []}, dev_command.env),
+        (
+            "run_dev",
+            "first",
+            True,
+            dev_command.mock_venv_context,
+            [],
+            dev_command.env,
+        ),
     ]
