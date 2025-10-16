@@ -1,3 +1,7 @@
+# MkDocs
+_build
+comment.md
+
 *.pyc
 *~
 .*.sw[op]
