@@ -27,7 +27,6 @@ def test_toolcache_typing():
         "git",  # An external API, not a Briefcase Tool
         "xcode_cli",  # Tested by the Xcode module
         "ETC_OS_RELEASE",  # A constant, not a tool
-        "no_op_environment",
     }
     # Tool classes to exclude from dynamic annotation checks.
     tool_klasses_skip_dynamic_checks = {
@@ -73,7 +72,6 @@ def test_toolcache_typing():
     assert ToolCache.__annotations__["git"] == "git_"
     assert ToolCache.__annotations__["xcode_cli"] == "XcodeCliTools"
     assert ToolCache.__annotations__["ETC_OS_RELEASE"] == "Path"
-    assert ToolCache.__annotations__["no_op_environment"] == "NoOpVenvContext"
 
 
 def test_third_party_tools_available():

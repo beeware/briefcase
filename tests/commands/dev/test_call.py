@@ -25,6 +25,10 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
         self.mock_venv_context = mock.MagicMock(spec=VenvContext)
+
+        self.tools.virtual_environment.create = mock.MagicMock(
+            side_effect=self.virtual_environment
+        )
         # Track which venvs exist for this command instance
         self._existing_venvs = set()
 
@@ -48,14 +52,15 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def virtual_environment(self, appname, isolated=False, recreate=False):
-        self.actions.append(("virtual-environment", appname, isolated, recreate))
+    def virtual_environment(self, venv_path, isolated=False, recreate=False):
+        app_name = venv_path.parts[-2]
+        self.actions.append(("virtual-environment", app_name, isolated, recreate))
 
         # Simulate venv.created behavior:
         # - created=True if venv doesn't exist yet (first time) OR recreate=True
         # - created=False if venv already exists and recreate=False
 
-        venv_key = (appname, isolated)
+        venv_key = (app_name, isolated)
 
         if recreate:
             # Recreating - always True
