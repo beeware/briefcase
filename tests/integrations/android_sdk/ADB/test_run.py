@@ -58,17 +58,17 @@ def test_error_handling(mock_tools, adb, name, exception, tmp_path):
     """ADB.run() can parse errors returned by adb."""
     # Set up a mock command with a subprocess module that has with sample data loaded.
     adb_samples = Path(__file__).parent / "adb_errors"
-    with (adb_samples / (name + ".out")).open("r", encoding="utf-8") as adb_output_file:
-        with (adb_samples / (name + ".returncode")).open(
+    with (
+        (adb_samples / (name + ".out")).open("r", encoding="utf-8") as adb_output_file,
+        (adb_samples / (name + ".returncode")).open(
             encoding="utf-8"
-        ) as returncode_file:
-            mock_tools.subprocess.check_output.side_effect = (
-                subprocess.CalledProcessError(
-                    returncode=int(returncode_file.read().strip()),
-                    cmd=["ignored"],
-                    output=adb_output_file.read(),
-                )
-            )
+        ) as returncode_file,
+    ):
+        mock_tools.subprocess.check_output.side_effect = subprocess.CalledProcessError(
+            returncode=int(returncode_file.read().strip()),
+            cmd=["ignored"],
+            output=adb_output_file.read(),
+        )
 
     # invoke run()
     with pytest.raises(exception):
