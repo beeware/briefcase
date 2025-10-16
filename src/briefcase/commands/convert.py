@@ -107,17 +107,12 @@ class ConvertCommand(NewCommand):
         """
         intro = (
             "We need a name that can serve as a machine-readable Python package name for "
-            "your application. This name must be PEP508-compliant - that means the name "
-            "may only contain letters, numbers, hyphens and underscores; it can't contain "
-            "spaces or punctuation, and it can't start with a hyphen or underscore."
+            "your application. The name may only contain letters, numbers, hyphens and underscores; "
+            "it can't contain spaces or punctuation, and it can't start with a hyphen, underscore or a number."
         )
 
         default = "hello-world"
-        if (
-            "name" in self.pep621_data
-            and is_valid_app_name(self.pep621_data["name"])
-            and override_value is None
-        ):
+        if "name" in self.pep621_data and override_value is None:
             app_name = canonicalize_name(self.pep621_data["name"])
             self.console.divider(title="App name")
             self.console.prompt()
@@ -126,13 +121,36 @@ class ConvertCommand(NewCommand):
             )
             return app_name
 
-        if is_valid_app_name(self.base_path.name):  # Directory name is normalised
-            default = canonicalize_name(self.base_path.name)
+        canonicalized_name = canonicalize_name(self.base_path.name)
+        # Case 1: Project name is usable as-is (e.g., "foobar", "foo-bar")
+        if (
+            is_valid_app_name(self.base_path.name)
+            and canonicalized_name == self.base_path.name
+        ):
+            # Directory name is already valid - use it directly without prompting
+            if override_value is None:
+                self.console.divider(title="App name")
+                self.console.prompt()
+                self.console.prompt(
+                    f"Using directory name as app name: {self.base_path.name!r}"
+                )
+                return self.base_path.name
+            # If override_value is provided, fall through to prompt with it
+            default = self.base_path.name
             intro += (
                 "\n\n"
                 f"Based on your PEP508 formatted directory name, we suggest an "
                 f"app name of '{default}', but you can use another name if you want."
             )
+        # Case 2: Project name could be valid after canonicalization (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
+        elif is_valid_app_name(canonicalized_name):
+            default = canonicalized_name
+            intro += (
+                "\n\n"
+                f"Based on your directory name, we suggest an "
+                f"app name of '{default}', but you can use another name if you want."
+            )
+        # Case 3: Project name isn't valid, even after canonicalization - fall back to default
 
         return self.console.text_question(
             intro=intro,
