@@ -777,7 +777,6 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         :returns: Name for virtual environment directory
         """
-
         return "dev-web"
 
     def add_options(self, parser):
