@@ -1,0 +1,1 @@
+The Briefcase documentation now includes the missing documentation for the recently introduced asset-gathering strategy for web projects.

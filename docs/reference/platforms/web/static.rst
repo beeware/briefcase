@@ -97,3 +97,167 @@ and change the default PyScript app name, you could use::
     [[runtimes]]
     src = "https://example.com/custom/pyodide.js"
     """
+
+Deployment Configuration
+========================
+
+Web packages can include deployment configuration to control how Briefcase builds
+and deploys web applications.  The deployment process relies on a ``config.toml``
+file and associated deployment files included in Python packages.
+
+config.toml
+-----------
+
+A package can specify deployment settings through a ``config.toml`` file located
+at ``<package>/deploy/config.toml``. The deployment configuration file accepts the
+following information:
+
+* ``implementation``: The web implementation to use (currently only ``"pyscript"``
+  is supported). If not specified, defaults to ``"pyscript"``.
+* ``pyscript.version``: The PyScript version to use (e.g., ``"2024.11.1"``). If not
+  specified, Briefcase will use its default PyScript version.
+
+Example ``config.toml``::
+
+    implementation = "pyscript"
+
+    [pyscript]
+    version = "2024.11.1"
+
+pyscript.toml
+-------------
+
+A package can include a base ``pyscript.toml`` file located at
+``<package>/deploy/pyscript.toml``. The base configuration in this file serves as
+the foundation for Briefcase to generate the final ``pyscript.toml`` file.
+Briefcase performs the following operations when processing this file:
+
+1. The system reads the base ``pyscript.toml`` file from the package directory.
+2. The system adds the ``packages`` list which contains all wheel files to the configuration.
+3. Merge in any :attr:`extra_pyscript_toml_content` from ``pyproject.toml``
+
+A Briefcase project must have only one package that defines deployment configuration
+through a ``config.toml`` file located at ``<package>/deploy/config.toml``. The system will produce an error when multiple packages
+in the dependencies attempt to define deployment settings.
+
+Insert System
+=============
+
+The insert system allows Python packages to inject HTML, CSS, and JavaScript content
+into specific locations (called "slots") in the generated web application. This is the
+recommended way to add custom web resources to your Briefcase web application.
+
+How Inserts Work
+----------------
+
+The build process of Briefcase performs the following operations:
+
+1. The system scans through all wheel files to detect insert content.
+2. The system organizes collected inserts according to their target files and slot names.
+3. The system writes the accumulated content into designated slots in the target files.
+
+Insert Markers
+--------------
+
+the target files such as ``index.html`` or ``briefcase.css`` need to include marker
+comments that indicate where inserts should be placed. Two marker formats are supported:
+
+**HTML markers:**
+
+.. code-block:: html
+
+    <!--@@ slot-name:start @@-->
+    <!--@@ slot-name:end @@-->
+
+**CSS/JavaScript markers:**
+
+.. code-block:: css
+
+    /*@@ slot-name:start @@*/
+    /*@@ slot-name:end @@*/
+
+Common insert slots in Briefcase web templates include:
+
+* ``head``: Content to insert in the HTML ``<head>`` section
+* ``head-python``: Python-related content for the ``<head>`` (used by PyScript)
+* ``body-start``: Content at the start of the ``<body>``
+* ``body-python``: Python execution content in the ``<body>`` (used by PyScript)
+* ``body-end``: Content at the end of the ``<body>``
+* ``css``: Custom CSS content in ``static/css/briefcase.css``
+
+Creating Insert Files
+---------------------
+
+Python packages can include inserts by placing files inside the ``deploy/inserts/``
+directory which must use this naming convention:
+
+.. code-block:: text
+
+    <package>/deploy/inserts/<target-file>~<slot-name>
+
+Where:
+
+* The target file path in relation to the project root directory appears as ``<target-file>`` (e.g., ``index.html`` or ``static/css/briefcase.css``).
+* The slot name for insertion appears as ``<slot-name>`` (e.g., ``head``, ``body-end``, ``css``).
+* The tilde (``~``) character separates the target path from the slot name.
+
+**Examples:**
+
+* ``mypackage/deploy/inserts/index.html~head`` - Inserts into the ``head`` slot of
+  ``index.html``
+* ``mypackage/deploy/inserts/index.html~body-end`` - Inserts into the ``body-end``
+  slot of ``index.html``
+* ``mypackage/deploy/inserts/static/css/briefcase.css~css`` - Inserts into the ``css``
+  slot of ``static/css/briefcase.css``
+
+Insert Content Format
+---------------------
+
+The content of insert files needs to follow the format given below which the target system requires for processing:
+
+* For HTML slots, provide HTML content
+* For CSS slots, provide CSS content
+* For JavaScript slots, provide JavaScript content
+
+The system adds automatic banner comments to each insert which show their source package information. The system processes inserts from the same package and slot in order of their sorted sequence.
+
+**Example HTML insert** (``mypackage/deploy/inserts/index.html~head``)::
+
+    <link rel="stylesheet" href="static/css/mypackage.css">
+    <script src="static/js/mypackage.js"></script>
+
+**Example CSS insert** (``mypackage/deploy/inserts/static/css/briefcase.css~css``)::
+
+    .my-custom-class {
+        color: blue;
+        font-weight: bold;
+    }
+
+Legacy Static Files (Deprecated)
+=================================
+
+.. deprecated:: 0.3.21
+    The legacy static file system has been deprecated in favor of the insert system.
+
+Before the insertion system was introduced, packages could place their static CSS files inside a ``/static`` directory within their package structure. The system would automatically find these files to include them in ``static/css/briefcase.css``.
+
+Currently, the previous method has been marked for removal. When Briefcase detects CSS files located under the ``/static/`` directory of a wheel it performs the following actions:
+
+1. The system displays a deprecation warning to users.
+2. The system convert the CSS content into an insert which will be added to ``static/css/briefcase.css``.
+3. The system adds a comment which shows the file came from a legacy static file.
+
+**Migration to inserts:**
+
+Instead of::
+
+    mypackage/
+        static/
+            mystyles.css
+
+Use::
+
+    mypackage/
+        deploy/
+            inserts/
+                static/css/briefcase.css~css
