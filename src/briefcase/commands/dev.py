@@ -8,9 +8,7 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import (
-    VenvContext,
-)
+from briefcase.integrations.virtual_environment import VenvContext
 
 from .base import BaseCommand
 from .create import write_dist_info

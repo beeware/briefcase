@@ -53,6 +53,7 @@ class DummyDevCommand(DevCommand):
         self.actions.append(("verify-app-tools", app.app_name))
 
     def virtual_environment(self, venv_path, isolated=False, recreate=False):
+        # Extract the app name from the venv_path to use as a cache key.
         app_name = venv_path.parts[-2]
         self.actions.append(("virtual-environment", app_name, isolated, recreate))
 
