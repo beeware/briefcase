@@ -209,6 +209,8 @@ def test_create_external(tracking_create_command, tmp_path):
         ("finalize-app-config", "first"),
         # Create the first app
         ("generate", "first"),
+        # Populate resources for the first app
+        ("resources", "first"),
     ]
 
     # New app content has been created
