@@ -28,7 +28,7 @@ To install Briefcase, run:
     $ python -m pip install briefcase
 
 If you would like a full introduction to using Briefcase, try the
-[BeeWare tutorial](https://docs.beeware.org). This tutorial walks you
+[BeeWare tutorial](https://tutorial.beeware.org/). This tutorial walks you
 through the process of creating and packaging a new application with
 Briefcase.
 

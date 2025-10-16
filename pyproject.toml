@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==9.2.0",
+    "setuptools_scm==9.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -97,12 +97,12 @@ dependencies = [
 dev = [
     "coverage[toml] == 7.10.7",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.2",
+    "httpx-retries == 0.4.3",
     "pre-commit == 4.3.0",
     "pytest == 8.4.2",
     "pytest-xdist == 3.8.0",
     "setuptools_scm == 9.2.0",
-    "tox == 4.30.2",
+    "tox == 4.31.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
