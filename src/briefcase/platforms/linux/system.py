@@ -637,9 +637,8 @@ class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
     def verify_host(self):
         """If we're *not* using Docker, verify that we're actually on Linux."""
         super().verify_host()
-        if not self.use_docker:
-            if self.tools.host_os != "Linux":
-                raise UnsupportedHostError(self.supported_host_os_reason)
+        if not self.use_docker and self.tools.host_os != "Linux":
+            raise UnsupportedHostError(self.supported_host_os_reason)
 
 
 class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
