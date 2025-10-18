@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+from contextlib import suppress
 from datetime import date, datetime
 from pathlib import Path
 
@@ -882,11 +883,9 @@ class CreateCommand(BaseCommand):
         except KeyError:
             paths_to_remove = []
 
-        try:
-            # Add any user-specified paths, expanded using the app as template context.
+        # Add any user-specified paths, expanded using the app as template context.
+        with suppress(AttributeError):
             paths_to_remove.extend([glob.format(app=app) for glob in app.cleanup_paths])
-        except AttributeError:
-            pass
 
         # Remove __pycache__ folders. These folders might contain stale PYC
         # artefacts, or encode file paths that reflect the original source

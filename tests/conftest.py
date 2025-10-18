@@ -2,6 +2,7 @@ import inspect
 import os
 import subprocess
 import time
+from contextlib import suppress
 from unittest.mock import ANY, MagicMock
 
 import pytest
@@ -16,10 +17,8 @@ def pytest_sessionstart(session):
 
     os.environ["TERM"] = "dumb"
     os.environ["NO_COLOR"] = "1"
-    try:
+    with suppress(KeyError):
         del os.environ["FORCE_COLOR"]
-    except KeyError:
-        pass
 
 
 # alias so fixtures can still use them
