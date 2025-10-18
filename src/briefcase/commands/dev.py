@@ -131,7 +131,9 @@ class DevCommand(RunAppMixin, BaseCommand):
         main_module = app.main_module()
 
         # Add in the environment settings to get Python in the state we want.
-        env.update(self.DEV_ENVIRONMENT)
+        # If an environment variable is already defined, don't overwrite it.
+        for env_key, env_value in self.DEV_ENVIRONMENT.items():
+            env[env_key] = self.tools.os.environ.get(env_key, env_value)
 
         cmdline = [
             # Do not add additional switches for sys.executable; see DEV_ENVIRONMENT
