@@ -95,10 +95,10 @@ class AndroidSDK(ManagedTool):
                     "AMD64": "win",
                 },
             }[self.tools.host_os][self.tools.host_arch]
-        except KeyError as e:
+        except KeyError:
             raise IncompatibleToolError(
                 tool=self.full_name, env_var="ANDROID_HOME"
-            ) from e
+            ) from None
 
         return (
             f"https://dl.google.com/android/repository/"
@@ -167,11 +167,11 @@ class AndroidSDK(ManagedTool):
                     "AMD64": "x86_64",
                 },
             }[self.tools.host_os][self.tools.host_arch]
-        except KeyError as e:
+        except KeyError:
             raise BriefcaseCommandError(
                 "The Android emulator does not currently support "
                 f"{self.tools.host_os} {self.tools.host_arch} hardware."
-            ) from e
+            ) from None
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:

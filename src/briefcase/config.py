@@ -110,37 +110,37 @@ def validate_document_type_config(document_type_id, document_type):
             raise BriefcaseConfigError(
                 f"The extension provided for document type {document_type_id!r} is not alphanumeric."
             )
-    except KeyError as e:
+    except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide an extension."
-        ) from e
+        ) from None
 
     try:
         if not isinstance(document_type["icon"], str):
             raise BriefcaseConfigError(
                 f"The icon definition associated with document type {document_type_id!r} is not a string."
             )
-    except KeyError as e:
+    except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not define an icon."
-        ) from e
+        ) from None
 
     try:
         if not isinstance(document_type["description"], str):
             raise BriefcaseConfigError(
                 f"The description associated with document type {document_type_id!r} is not a string."
             )
-    except KeyError as e:
+    except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide a description."
-        ) from e
+        ) from None
 
     try:
         validate_url(document_type["url"])
-    except KeyError as e:
+    except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide a URL."
-        ) from e
+        ) from None
     except ValueError as e:
         raise BriefcaseConfigError(
             f"The URL associated with document type {document_type_id!r} is invalid: {e}"

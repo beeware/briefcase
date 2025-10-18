@@ -1012,10 +1012,10 @@ class CreateCommand(BaseCommand):
         if app_name:
             try:
                 apps_to_create = {app_name: self.apps[app_name]}
-            except KeyError as e:
+            except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                ) from e
+                ) from None
         elif app:
             apps_to_create = {app.app_name: app}
         else:

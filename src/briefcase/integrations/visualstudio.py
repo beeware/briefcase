@@ -95,7 +95,7 @@ or unset the environment variable; then re-run Briefcase.
 """
                     )
 
-            except KeyError as e:
+            except KeyError:
                 # No %MSBUILD% environment variable. Look for vswhere.exe
                 vswhere_path = None
                 if program_files := tools.os.environ.get("ProgramFiles(x86)"):
@@ -122,7 +122,7 @@ variable that points at the MSBuild.exe provided by your Visual Studio
 installation.
 
 """
-                    ) from e
+                    ) from None
 
                 # Retrieve metadata for Visual Studio install
                 try:
