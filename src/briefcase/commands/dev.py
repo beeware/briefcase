@@ -180,7 +180,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         """Create a shell environment where PYTHONPATH points to the source directories
         described by the app config.
 
-        param app: The config object for the app
+        :param app: The config object for the app
         """
 
         env = {
