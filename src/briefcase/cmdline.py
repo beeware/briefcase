@@ -109,7 +109,7 @@ def parse_cmdline(args, console: Console | None = None):
     )
 
     # argparse handles `--` specially, so make the passthrough args bypass the parser.
-    def parse_known_args(args):
+    def parse_known_args(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
         args, passthrough = split_passthrough(args)
         options, extra = parser.parse_known_args(args)
         if passthrough:

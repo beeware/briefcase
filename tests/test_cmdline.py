@@ -30,7 +30,7 @@ def console() -> Console:
     console.close()
 
 
-def do_cmdline_parse(args: list, console: Console):
+def do_cmdline_parse(args: list[str], console: Console):
     """Simulate process to parse command line."""
     Command, extra_cmdline = cmdline.parse_cmdline(args)
     cmd = Command(console=console)
