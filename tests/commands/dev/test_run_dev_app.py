@@ -244,7 +244,7 @@ def test_dev_run_console(dev_command, first_app, tmp_path):
 
 
 def test_dev_run_console_with_args(dev_command, first_app, tmp_path):
-    "The console app can be run in dev mode with arguments"
+    """The console app can be run in dev mode with arguments."""
     # Modify the app to be a console app
     first_app.console_app = True
     mock_venv = mock.MagicMock()
