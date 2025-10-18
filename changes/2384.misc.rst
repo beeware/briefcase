@@ -1,1 +1,1 @@
-Resolved the SIMXXX caregory of ruff rules.
+Resolved ruff rule category `SIM - flake8-simplify <https://docs.astral.sh/ruff/rules/#flake8-simplify-sim>`_.
