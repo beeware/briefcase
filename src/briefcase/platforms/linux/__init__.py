@@ -42,7 +42,7 @@ def parse_freedesktop_os_release(content):
                     raise ParseError(
                         "Failed to parse output of FreeDesktop os-release file; "
                         f"Line {line_number}: {e}"
-                    )
+                    ) from e
             values[name] = val
         else:
             raise ParseError(
