@@ -754,10 +754,7 @@ class Console:
             error_message="Please enter Y or N",
             transform=lambda s: s.lower()[:1],
         )
-        if result == "y":
-            return True
-
-        return False
+        return result == "y"
 
     def input_selection(
         self,
