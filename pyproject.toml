@@ -62,8 +62,8 @@ dependencies = [
     # Dependencies required at runtime are set as ranges to ensure maximum
     # compatibility with the end-user's development environment.
     #
-    # Any dependency that is part of the "core python toolchain" (e.g. pip, wheel)
-    # specify a minimum version, but no maximum, because we always want the most
+    # Any dependency that is part of the "core python toolchain" (e.g., pip, wheel)
+    # specifies a minimum version, but no maximum, because we always want the most
     # recent version.
     "packaging >= 24.2",
     "pip >= 24.3",
@@ -239,7 +239,7 @@ extend-select = [
     "ASYNC",  # flake8-async
     "C4",     # flake8-comprehensions
     "I",      # isort
-    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
+    # The SIM rules are *very* opinionated and don't necessarily make for better code.
     # They may be worth occasionally turning on just to see if something could actually
     # use improvement.
     # "SIM",    # flake8-simplify
@@ -247,7 +247,7 @@ extend-select = [
 
 # Below is a list of ignored rules.  Many (if not all) of these have been disabled
 # to facilitate a smooth transition from tools like black and isort to ruff, where
-# instances of these errors were caught.  Many if not all of these are candidates
+# instances of these errors were caught.  Many, if not all, of these are candidates
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
@@ -276,7 +276,7 @@ type = [
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
-# the way to make case sensitive skips of words etc
+# the way to make case-sensitive skips of words etc.
 ignore-regex = '\bNd\b'
-# case insensitive
+# case-insensitive
 # ignore-words-list = ''
