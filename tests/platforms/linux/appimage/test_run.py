@@ -37,7 +37,7 @@ def test_unsupported_host_os(run_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux AppImages can only be executed on Linux.",
+        match=r"Linux AppImages can only be executed on Linux\.",
     ):
         run_command()
 

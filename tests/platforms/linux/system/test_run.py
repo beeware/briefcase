@@ -107,7 +107,7 @@ def test_unsupported_host_os(run_command, first_app, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux system projects can only be executed on Linux.",
+        match=r"Linux system projects can only be executed on Linux\.",
     ):
         run_command()
 

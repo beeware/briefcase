@@ -426,7 +426,7 @@ def test_winsdk_invalid_install_from_default_dir(
     # Verify the install
     with pytest.raises(
         BriefcaseCommandError,
-        match="Unable to locate a suitable Windows SDK v87.0 installation.",
+        match=r"Unable to locate a suitable Windows SDK v87.0 installation\.",
     ):
         WindowsSDK.verify(mock_tools)
 

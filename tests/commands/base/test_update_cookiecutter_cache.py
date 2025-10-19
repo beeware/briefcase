@@ -433,7 +433,7 @@ def test_git_repo_with_missing_origin_remote(base_command, mock_git):
     # Update the cache
     with pytest.raises(
         BriefcaseCommandError,
-        match="Unable to check out template branch.",
+        match=r"Unable to check out template branch\.",
     ):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git", branch="special"

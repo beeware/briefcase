@@ -211,7 +211,7 @@ errors pretty printing info"""
     ]
     with pytest.raises(
         BriefcaseCommandError,
-        match="does not have\npermissions to invoke Docker.",
+        match=r"does not have\npermissions to invoke Docker\.",
     ):
         Docker.verify(mock_tools)
 

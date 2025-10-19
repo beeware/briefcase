@@ -23,7 +23,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Flatpaks can only be built on Linux.",
+        match=r"Flatpaks can only be built on Linux\.",
     ):
         create_command()
 

@@ -41,7 +41,7 @@ def test_unsupported_host_os_with_docker(create_command, host_os, tmp_path):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux system projects can only be built on Linux, or on macOS using Docker.",
+        match=r"Linux system projects can only be built on Linux, or on macOS using Docker\.",
     ):
         create_command()
 
@@ -54,7 +54,7 @@ def test_unsupported_host_os_without_docker(create_command, host_os, tmp_path):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux system projects can only be built on Linux, or on macOS using Docker.",
+        match=r"Linux system projects can only be built on Linux, or on macOS using Docker\.",
     ):
         create_command()
 

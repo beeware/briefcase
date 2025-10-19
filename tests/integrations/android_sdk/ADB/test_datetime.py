@@ -32,7 +32,7 @@ def test_datetime_failure_call(adb):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Error obtaining device date/time.",
+        match=r"Error obtaining device date/time\.",
     ):
         adb.datetime()
 
@@ -43,6 +43,6 @@ def test_datetime_failure_bad_value(adb):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Error obtaining device date/time.",
+        match=r"Error obtaining device date/time\.",
     ):
         adb.datetime()

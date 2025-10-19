@@ -112,7 +112,7 @@ def test_build_env_abi_failure(package_command, first_app, format):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Failed to determine build environment's ABI for packaging.",
+        match=r"Failed to determine build environment's ABI for packaging\.",
     ):
         getattr(package_command, f"{format}_abi")(first_app)
 

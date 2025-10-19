@@ -48,7 +48,7 @@ def test_unsupported_arch(mock_tools):
 
     with pytest.raises(
         IncompatibleToolError,
-        match="Briefcase cannot install Java JDK on this machine.",
+        match=r"Briefcase cannot install Java JDK on this machine\.",
     ):
         JDK.verify(mock_tools)
 
