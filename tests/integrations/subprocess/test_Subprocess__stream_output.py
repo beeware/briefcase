@@ -8,7 +8,7 @@ from briefcase.console import LogLevel
 from briefcase.integrations import subprocess
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_sub(mock_sub):
     # also mock cleanup for stream output testing
     mock_sub.cleanup = mock.MagicMock()
