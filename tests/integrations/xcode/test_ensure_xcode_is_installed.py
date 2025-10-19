@@ -279,7 +279,6 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
         # exact match
         ((11, 2, 0), "11.2"),  # Exact match.
         ((11, 2), "11.2"),  # Exact match, implied revision.
-        ((11,), "11.2"),  # Exact match, implied minor version.
         # exceeds version
         ((11, 1, 1), "11.2"),  # Exact match.
         ((11, 1), "11.2"),  # Exact match, implied revision.

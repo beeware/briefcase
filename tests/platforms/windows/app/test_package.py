@@ -122,7 +122,6 @@ def test_verify_with_signing(package_command, monkeypatch):
         (["--file-digest", "sha2000"], {"file_digest": "sha2000"}, False),
         (["-i", "asdf"], {"identity": "asdf"}, True),
         (["--identity", "asdf"], {"identity": "asdf"}, True),
-        (["--identity", "asdf"], {"identity": "asdf"}, True),
         (
             [
                 "-i",

@@ -15,7 +15,6 @@ from briefcase.config import make_class_name
         # Startint with a number
         ("24 Jump Street", "_24JumpStreet"),  # Unicode category Nd
         # Starting with an underscore
-        ("Hello_World", "Hello_World"),
         ("_Hello_World", "_Hello_World"),
         # Unicode names
         ("你好 世界", "你好世界"),

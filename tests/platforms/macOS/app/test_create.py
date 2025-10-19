@@ -787,7 +787,6 @@ def test_invalid_min_os_version(create_command, first_app_templated):
     "host_arch, other_arch",
     [
         ("arm64", "x86_64"),
-        ("arm64", "x86_64"),
     ],
 )
 def test_install_app_packages_no_binary(
@@ -991,7 +990,6 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
 @pytest.mark.parametrize(
     "host_arch, other_arch",
     [
-        ("arm64", "x86_64"),
         ("arm64", "x86_64"),
     ],
 )

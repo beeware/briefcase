@@ -25,7 +25,6 @@ def custom_packing_format():
         ("filename.part.archive", True),
         ("filename.archive.ext", True),
         ("filename.part.archive.ext", True),
-        ("filename.part.archive.ext", True),
         ("filename", False),
         ("filename.doc", False),
         ("filename.archive.doc", False),
