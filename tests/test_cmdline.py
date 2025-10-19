@@ -395,7 +395,7 @@ def test_bare_command(monkeypatch, console):
 def test_linux_default(console):
     """``briefcase create`` returns the linux create system command on Linux."""
 
-    cmd, options, overrides = do_cmdline_parse("create".split(), console)
+    cmd, options, _overrides = do_cmdline_parse("create".split(), console)
 
     assert isinstance(cmd, LinuxSystemCreateCommand)
     assert cmd.platform == "linux"

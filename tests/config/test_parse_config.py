@@ -600,7 +600,7 @@ def test_document_types():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(
+    _global_options, apps = parse_config(
         config_file,
         platform="macOS",
         output_format="Xcode",
@@ -674,7 +674,7 @@ def test_pep621_defaults():
         """
     )
 
-    global_options, apps = parse_config(
+    _global_options, apps = parse_config(
         config_file,
         platform="macOS",
         output_format="app",
