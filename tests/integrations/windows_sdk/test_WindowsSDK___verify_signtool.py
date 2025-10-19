@@ -13,7 +13,7 @@ def windows_sdk(mock_tools, tmp_path, monkeypatch) -> WindowsSDK:
     monkeypatch.setattr(WindowsSDK, "SDK_VERSION", "83.0")
     monkeypatch.setattr(WindowsSDK, "SDK_MIN_VERSION", 0)
 
-    yield WindowsSDK(
+    return WindowsSDK(
         tools=mock_tools,
         root_path=tmp_path / "win_sdk",
         version="83.1.0.0",
