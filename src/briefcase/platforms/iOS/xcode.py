@@ -3,6 +3,7 @@ from __future__ import annotations
 import plistlib
 import subprocess
 import time
+from collections.abc import Collection
 from pathlib import Path
 from uuid import UUID
 
@@ -713,7 +714,7 @@ class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
 
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
-    publication_channels = ["ios_appstore"]
+    publication_channels: Collection[str] = ["ios_appstore"]
     default_publication_channel = "ios_appstore"
 
 

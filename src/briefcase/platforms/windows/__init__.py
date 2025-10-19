@@ -1,6 +1,7 @@
 import re
 import subprocess
 import uuid
+from collections.abc import Collection
 from pathlib import Path, PurePath
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -15,7 +16,7 @@ DEFAULT_OUTPUT_FORMAT = "app"
 
 class WindowsMixin:
     platform = "windows"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
     platform_target_version = "0.3.24"
 

@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 import webbrowser
+from collections.abc import Collection
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
@@ -764,7 +765,7 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     description = "Publish a static web app."
-    publication_channels = ["s3"]
+    publication_channels: Collection[str] = ["s3"]
     default_publication_channel = "s3"
 
 

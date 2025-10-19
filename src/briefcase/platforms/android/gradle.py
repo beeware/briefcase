@@ -5,6 +5,7 @@ import datetime
 import re
 import subprocess
 import time
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.commands import (
@@ -151,7 +152,7 @@ class GradleMixin:
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
-    hidden_app_properties = {"permission", "feature"}
+    hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""

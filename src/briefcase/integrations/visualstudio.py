@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
@@ -11,7 +12,7 @@ from briefcase.integrations.subprocess import json_parser
 class VisualStudio(Tool):
     name = "visualstudio"
     full_name = "Visual Studio"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
     VSCODE_REQUIRED_COMPONENTS = """
     * .NET Desktop Development
       - Default packages

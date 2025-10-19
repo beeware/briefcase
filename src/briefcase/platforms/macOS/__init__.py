@@ -6,6 +6,7 @@ import plistlib
 import re
 import subprocess
 import time
+from collections.abc import Collection
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
@@ -77,7 +78,7 @@ class SigningIdentity:
 
 class macOSMixin:
     platform = "macOS"
-    supported_host_os = {"Darwin"}
+    supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
     platform_target_version: str | None = "0.3.20"
@@ -151,7 +152,7 @@ that is not synchronized with iCloud, and re-run `briefcase {self.command}`."""
 
 
 class macOSCreateMixin(AppPackagesMergeMixin):
-    hidden_app_properties = {"permission", "entitlement"}
+    hidden_app_properties: Collection[str] = {"permission", "entitlement"}
 
     def generate_app_template(self, app: AppConfig):
         """Create an application bundle.

@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +12,7 @@ class DummyTool(Tool):
 
     name = "UnmanagedDummyTool"
     full_name = "Unmanaged Dummy Tool"
-    supported_host_os = {"wonky"}
+    supported_host_os: Collection[str] = {"wonky"}
 
     @classmethod
     def verify_install(cls, tools, **kwargs):

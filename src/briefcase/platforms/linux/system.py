@@ -4,6 +4,7 @@ import gzip
 import re
 import subprocess
 import tarfile
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.commands import (
@@ -37,7 +38,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     # Docker exists. It is used by commands that are "passive" from the
     # perspective of the build system (e.g., Run).
     output_format = "system"
-    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux"}
     supported_host_os_reason = (
         "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
@@ -838,7 +839,7 @@ no extension).
 
 class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
     description = "Run a Linux system project."
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux system projects can only be executed on Linux."
 
     def run_app(
@@ -890,7 +891,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
 class LinuxSystemDevCommand(LinuxMixin, DevCommand):
     description = "Run a Linux system app in development mode"
     output_format = "system"
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux system dev mode is only supported on Linux."
 
 

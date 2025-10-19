@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from briefcase.commands.run import RunAppMixin
@@ -27,7 +28,7 @@ class DevCommand(RunAppMixin, BaseCommand):
     # rather patently, Not Good.
     # To avoid this causing unwanted hilarity, we use environment variables to configure the
     # Python interpreter rather than command-line options.
-    DEV_ENVIRONMENT = {
+    DEV_ENVIRONMENT: Mapping[str, str] = {
         # Equivalent of passing "-u"
         "PYTHONUNBUFFERED": "1",
         # Equivalent of passing "-X dev"

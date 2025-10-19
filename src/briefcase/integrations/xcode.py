@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import re
 import subprocess
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
@@ -20,7 +21,7 @@ class DeviceState(enum.Enum):
 class Xcode(Tool):
     name = "xcode"
     full_name = "Xcode"
-    supported_host_os = {"Darwin"}
+    supported_host_os: Collection[str] = {"Darwin"}
 
     @classmethod
     def verify_install(
@@ -207,7 +208,7 @@ installation is complete.
 class XcodeCliTools(Tool):
     name = "xcode_cli"
     full_name = "Xcode Command Line Tools"
-    supported_host_os = {"Darwin"}
+    supported_host_os: Collection[str] = {"Darwin"}
 
     @classmethod
     def verify_install(cls, tools: ToolCache, **kwargs) -> XcodeCliTools:

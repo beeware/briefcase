@@ -11,6 +11,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
+from collections.abc import Collection
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -125,7 +126,7 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
 
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
-    supported_host_os = {"Darwin", "Linux", "Windows"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
 
     # defined by platform-specific subclasses

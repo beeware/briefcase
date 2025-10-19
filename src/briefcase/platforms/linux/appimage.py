@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Collection
 
 from briefcase.commands import (
     BuildCommand,
@@ -33,7 +34,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     # docker exists. It is used by commands that are "passive" from the
     # perspective of the build system, like open and run.
     output_format = "appimage"
-    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux"}
     supported_host_os_reason = (
         "Linux AppImages can only be built on Linux, or on macOS using Docker."
     )
@@ -364,7 +365,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
 class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
     def run_app(

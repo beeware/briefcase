@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Collection
 from datetime import date, datetime
 from pathlib import Path
 
@@ -96,7 +97,7 @@ class CreateCommand(BaseCommand):
         )
 
     # app properties that won't be exposed to the context
-    hidden_app_properties = {"permission"}
+    hidden_app_properties: Collection[str] = {"permission"}
 
     @property
     def app_template_url(self) -> str:
