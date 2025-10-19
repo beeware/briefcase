@@ -265,11 +265,11 @@ def test_deb_package_no_long_description(package_command, first_app_deb, tmp_pat
 @pytest.mark.parametrize(
     "input, output",
     [
-        ["", ""],
-        ["one line", "one line"],
-        ["first line\nsecond line", "first line\n second line"],
-        ["first line\n\nsecond line", "first line\n second line"],
-        ["first line\n  \nsecond line", "first line\n second line"],
+        ("", ""),
+        ("one line", "one line"),
+        ("first line\nsecond line", "first line\n second line"),
+        ("first line\n\nsecond line", "first line\n second line"),
+        ("first line\n  \nsecond line", "first line\n second line"),
     ],
 )
 def test_multiline_long_description(input, output):

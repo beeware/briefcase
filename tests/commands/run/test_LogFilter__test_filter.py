@@ -5,18 +5,18 @@ from briefcase.commands.run import LogFilter
 
 @pytest.mark.parametrize(
     "recent_history, returncode",
-    (
+    [
         # Zero return code
-        [">>>>>>>>>> EXIT 0 <<<<<<<<<<", 0],
+        (">>>>>>>>>> EXIT 0 <<<<<<<<<<", 0),
         # positive integer return code
-        [">>>>>>>>>> EXIT 123 <<<<<<<<<<", 123],
+        (">>>>>>>>>> EXIT 123 <<<<<<<<<<", 123),
         # Zero return code
-        [">>>>>>>>>> EXIT -15 <<<<<<<<<<", -15],
+        (">>>>>>>>>> EXIT -15 <<<<<<<<<<", -15),
         # Non-alpha return code
-        [">>>>>>>>>> EXIT abc <<<<<<<<<<", -999],
+        (">>>>>>>>>> EXIT abc <<<<<<<<<<", -999),
         # Mixed return code
-        [">>>>>>>>>> EXIT 42 and some more <<<<<<<<<<", -999],
-    ),
+        (">>>>>>>>>> EXIT 42 and some more <<<<<<<<<<", -999),
+    ],
 )
 def test_default_exit_filter(recent_history, returncode):
     """The default exit filter captures exit criteria."""
@@ -28,7 +28,7 @@ def test_default_exit_filter(recent_history, returncode):
 
 @pytest.mark.parametrize(
     "recent_history",
-    (
+    [
         # No exit
         "This doesn't match",
         # Not enough chevrons
@@ -37,7 +37,7 @@ def test_default_exit_filter(recent_history, returncode):
         ">>>>>>>>>> EXEUNT 3 <<<<<<<<<<",
         # Extra text
         ">>>>>>>>>> EXIT 3 <<<<<<<<<< but there's more!",
-    ),
+    ],
 )
 def test_default_exit_filter_no_match(recent_history):
     """The default exit filter *doesn't* catch content that doesn't match the regex."""

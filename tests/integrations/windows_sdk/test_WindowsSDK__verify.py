@@ -253,28 +253,28 @@ def test_winsdk_nonlatest_install_from_reg(
     "reg_installs, additional_installs",
     [
         # One invalid registry install; no additional installs
-        [[("invalid_1", "85.0.1")], []],
+        ([("invalid_1", "85.0.1")], []),
         # One invalid registry install with missing SDK version; no additional installs
-        [[("invalid_1", "")], []],
+        ([("invalid_1", "")], []),
         # One invalid registry install but directory key lookup fails; no additional installs
-        [[("invalid_1", "85.0.1"), (FileNotFoundError, "")], []],
+        ([("invalid_1", "85.0.1"), (FileNotFoundError, "")], []),
         # One invalid registry install but version key lookup fails; no additional installs
-        [[("invalid_1", "85.0.1"), ("invalid_1", FileNotFoundError)], []],
+        ([("invalid_1", "85.0.1"), ("invalid_1", FileNotFoundError)], []),
         # Multiple invalid registry installs; no additional installs
-        [[("invalid_1", "85.0.1"), ("invalid_2", "85.0.2")], []],
-        [[("invalid_1", "85.0.0"), ("invalid_2", "86.0.2")], []],
+        ([("invalid_1", "85.0.1"), ("invalid_2", "85.0.2")], []),
+        ([("invalid_1", "85.0.0"), ("invalid_2", "86.0.2")], []),
         # One invalid registry install; one additional invalid install
-        [[("invalid_2", "85.0.1")], [("invalid_2", "85.0.2")]],
+        ([("invalid_2", "85.0.1")], [("invalid_2", "85.0.2")]),
         # One invalid registry install; multiple additional invalid installs
-        [[("invalid_3", "85.0.1")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]],
-        [[("invalid_3", "")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]],
+        ([("invalid_3", "85.0.1")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]),
+        ([("invalid_3", "")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]),
         # Multiple invalid registry installs; one additional install
-        [[("invalid_4", "85.0.1"), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]],
-        [
+        ([("invalid_4", "85.0.1"), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]),
+        (
             [("invalid_4", FileNotFoundError), ("invalid_5", "85.0.3")],
             [("invalid_5", "85.0.4")],
-        ],
-        [[(FileNotFoundError, ""), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]],
+        ),
+        ([(FileNotFoundError, ""), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]),
     ],
 )
 def test_winsdk_invalid_install_from_reg(

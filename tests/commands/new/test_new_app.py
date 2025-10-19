@@ -173,7 +173,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
 
 @pytest.mark.parametrize(
     "briefcase_version",
-    ("37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"),
+    ["37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"],
 )
 def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     """In a dev version, template will fall back to the 'main' branch if a versioned

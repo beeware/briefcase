@@ -129,7 +129,7 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
 
 @pytest.mark.parametrize(
     ("stderr_string", "error_message"),
-    (
+    [
         pytest.param(
             "\n    stderr: '\nfatal: could not clone repository 'https://example.com' \n'",
             "Could not clone repository 'https://example.com'.",
@@ -162,7 +162,7 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
             "This may be because your computer is offline",
             id="fallback-hint",
         ),
-    ),
+    ],
 )
 def test_repo_clone_error(stderr_string, error_message, base_command, mock_git):
     """If git emits error information when cloning, Briefcase provides that to the user.

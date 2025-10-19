@@ -38,27 +38,27 @@ def test_formats(package_command):
 @pytest.mark.parametrize(
     "format, vendor, codename, revision, filename",
     [
-        ["rpm", "rhel", "9", None, "first-app-0.0.1-1.el9.wonky.rpm"],
-        ["rpm", "rhel", "9", 5, "first-app-0.0.1-5.el9.wonky.rpm"],
-        ["rpm", "fedora", "37", None, "first-app-0.0.1-1.fc37.wonky.rpm"],
-        [
+        ("rpm", "rhel", "9", None, "first-app-0.0.1-1.el9.wonky.rpm"),
+        ("rpm", "rhel", "9", 5, "first-app-0.0.1-5.el9.wonky.rpm"),
+        ("rpm", "fedora", "37", None, "first-app-0.0.1-1.fc37.wonky.rpm"),
+        (
             "deb",
             "debian",
             "bullseye",
             None,
             "first-app_0.0.1-1~debian-bullseye_wonky.deb",
-        ],
-        ["deb", "debian", "bullseye", 5, "first-app_0.0.1-5~debian-bullseye_wonky.deb"],
-        ["deb", "ubuntu", "jammy", None, "first-app_0.0.1-1~ubuntu-jammy_wonky.deb"],
-        [
+        ),
+        ("deb", "debian", "bullseye", 5, "first-app_0.0.1-5~debian-bullseye_wonky.deb"),
+        ("deb", "ubuntu", "jammy", None, "first-app_0.0.1-1~ubuntu-jammy_wonky.deb"),
+        (
             "deb",
             "linuxmint",
             "vera",
             None,
             "first-app_0.0.1-1~linuxmint-vera_wonky.deb",
-        ],
-        ["pkg", "arch", "rolling", None, "first-app-0.0.1-1-wonky.pkg.tar.zst"],
-        ["pkg", "manjaro", "rolling", None, "first-app-0.0.1-1-wonky.pkg.tar.zst"],
+        ),
+        ("pkg", "arch", "rolling", None, "first-app-0.0.1-1-wonky.pkg.tar.zst"),
+        ("pkg", "manjaro", "rolling", None, "first-app-0.0.1-1-wonky.pkg.tar.zst"),
     ],
 )
 def test_distribution_path(
