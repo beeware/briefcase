@@ -48,11 +48,11 @@ class DevCommand(RunAppMixin, BaseCommand):
 
     def bundle_path(self, app):
         """A placeholder; Dev command doesn't have a bundle path."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def binary_path(self, app):
         """A placeholder; Dev command doesn't have a binary path."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def add_options(self, parser):
         parser.add_argument("-a", "--app", dest="appname", help="The app to run")
@@ -113,7 +113,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                     encoding="UTF-8",
                 )
             except subprocess.CalledProcessError as e:
-                raise RequirementsInstallError() from e
+                raise RequirementsInstallError from e
 
     def run_dev_app(
         self,

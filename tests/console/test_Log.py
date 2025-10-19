@@ -343,7 +343,7 @@ def test_save_log_to_file_extra_interrupted(mock_now, console, command, tmp_path
     console.save_log = True
 
     def extra1():
-        raise KeyboardInterrupt()
+        raise KeyboardInterrupt
 
     extra2 = MagicMock()
     for extra in [extra1, extra2]:
@@ -510,7 +510,7 @@ def test_log_error_with_context(console, capsys):
     try:
         with console.context("Deep"):
             console.info("this is deep context")
-            raise ValueError()
+            raise ValueError
     except ValueError:
         console.info("this is cleanup")
 

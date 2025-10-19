@@ -38,7 +38,7 @@ class DummyConsole(Console):
 
     def input(self, prompt, *args, **kwargs):
         if not self.input_enabled:
-            raise InputDisabled()
+            raise InputDisabled
         self.prompts.append(prompt)
         return self.values.pop(0)
 

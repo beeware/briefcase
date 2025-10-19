@@ -74,11 +74,11 @@ class NewCommand(BaseCommand):
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def binary_path(self, app):
         """A placeholder; New command doesn't have a binary path."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def parse_config(self, filename, overrides):
         """There is no configuration when starting a new project; this implementation

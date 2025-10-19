@@ -89,7 +89,7 @@ class LogFilter:
                     # to close normally before raising StopStreaming.
                     with suppress(subprocess.TimeoutExpired):
                         self.log_popen.wait(timeout=3)
-                    raise StopStreaming()
+                    raise StopStreaming
 
         # Return the display line
         yield display_line
@@ -187,7 +187,7 @@ class RunAppMixin:
                         )
                     else:
                         self.console.error("Test suite failed!", prefix=app.app_name)
-                        raise BriefcaseTestSuiteFailure()
+                        raise BriefcaseTestSuiteFailure
             elif log_stream:
                 # If we're monitoring a log stream, and the log stream reported a
                 # non-zero exit code, surface that error to the user.
