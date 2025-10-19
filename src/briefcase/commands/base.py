@@ -144,9 +144,9 @@ class BaseCommand(ABC):
         self,
         console: Console,
         tools: ToolCache = None,
-        apps: dict[str, AppConfig] = None,
-        base_path: Path = None,
-        data_path: Path = None,
+        apps: dict[str, AppConfig] | None = None,
+        base_path: Path | None = None,
+        data_path: Path | None = None,
         is_clone: bool = False,
     ):
         """Base for all Commands.

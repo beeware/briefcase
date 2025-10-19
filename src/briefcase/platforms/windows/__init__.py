@@ -307,13 +307,13 @@ class WindowsPackageCommand(PackageCommand):
     def package_app(
         self,
         app: AppConfig,
-        identity: str = None,
+        identity: str | None = None,
         adhoc_sign: bool = False,
-        file_digest: str = None,
+        file_digest: str | None = None,
         use_local_machine: bool = False,
-        cert_store: str = None,
-        timestamp_url: str = None,
-        timestamp_digest: str = None,
+        cert_store: str | None = None,
+        timestamp_url: str | None = None,
+        timestamp_digest: str | None = None,
         **kwargs,
     ):
         """Package an application.
