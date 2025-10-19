@@ -230,7 +230,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
         if len(self.apps) == 1:
-            app = list(self.apps.values())[0]
+            app = next(iter(self.apps.values()))
         elif appname:
             try:
                 app = self.apps[appname]

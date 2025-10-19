@@ -213,7 +213,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         if len(simulators) == 0:
             raise BriefcaseCommandError("No iOS simulators available.")
         elif len(simulators) == 1:
-            iOS_tag = list(simulators.keys())[0]
+            iOS_tag = next(iter(simulators.keys()))
         else:
             iOS_tag = self.console.selection_question(
                 intro="Select iOS version:",
@@ -226,7 +226,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         if len(devices) == 0:
             raise BriefcaseCommandError(f"No simulators available for {iOS_tag}.")
         elif len(devices) == 1:
-            udid = list(devices.keys())[0]
+            udid = next(iter(devices.keys()))
         else:
             udid = self.console.selection_question(
                 intro="Select simulator device to use:",
