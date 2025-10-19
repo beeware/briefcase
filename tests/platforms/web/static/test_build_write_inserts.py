@@ -57,7 +57,7 @@ def test_write_insert_warn_if_file_missing(build_command, app_config, monkeypatc
     warnings = []
     monkeypatch.setattr(build_command.console, "warning", warnings.append)
 
-    # Attempt to insert into a file that doesn’t exist
+    # Attempt to insert into a file that doesn't exist
     inserts = {"header": {"pkg": "<div/>"}}
     build_command.write_inserts(app_config, Path("notexist.html"), inserts)
 

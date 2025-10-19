@@ -100,7 +100,7 @@ class LogLevel(IntEnum):
 
 
 class NotDeadYet:
-    # I’m getting better! No you’re not, you’ll be stone dead in a minute.
+    # I'm getting better! No, you're not, you'll be stone dead in a minute.
 
     def __init__(self, console: Console):
         """A keep-alive spinner for long-running processes without console output.
