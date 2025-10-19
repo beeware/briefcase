@@ -572,7 +572,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 installed = provided_by = package
 
             try:
-                self.tools.subprocess.check_output(system_verify + [installed], quiet=1)
+                self.tools.subprocess.check_output([*system_verify, installed], quiet=1)
             except subprocess.CalledProcessError:
                 missing.add(provided_by)
 
@@ -862,7 +862,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
             if app.console_app and not app.test_mode:
                 self.console.info("=" * 75)
                 self.tools[app].app_context.run(
-                    [self.binary_path(app)] + passthrough,
+                    [self.binary_path(app), *passthrough],
                     cwd=self.tools.home_path,
                     bufsize=1,
                     stream_output=False,
@@ -871,7 +871,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
             else:
                 # Start the app in a way that lets us stream the logs
                 app_popen = self.tools[app].app_context.Popen(
-                    [self.binary_path(app)] + passthrough,
+                    [self.binary_path(app), *passthrough],
                     cwd=self.tools.home_path,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
@@ -997,8 +997,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 [
                     f"libc6 (>={app.glibc_version})",
                     f"libpython{app.python_version_tag}",
+                    *getattr(app, "system_runtime_requires", []),
                 ]
-                + getattr(app, "system_runtime_requires", [])
             )
 
             with (DEBIAN_path / "control").open("w", encoding="utf-8") as f:
@@ -1070,7 +1070,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
         # so this will be the target-specific definition, if one exists.
         system_runtime_requires = [
             "python3",
-        ] + getattr(app, "system_runtime_requires", [])
+            *getattr(app, "system_runtime_requires", []),
+        ]
 
         # Write the spec file
         with self.console.wait_bar("Write RPM spec file..."):
@@ -1260,7 +1261,8 @@ with details about the release.
             system_runtime_requires_list = [
                 f"glibc>={app.glibc_version}",
                 "python3",
-            ] + getattr(app, "system_runtime_requires", [])
+                *getattr(app, "system_runtime_requires", []),
+            ]
 
             system_runtime_requires = " ".join(
                 f"'{pkg}'" for pkg in system_runtime_requires_list

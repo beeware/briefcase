@@ -172,7 +172,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         except AttributeError:
             parsed = parsed_version(app.version)
 
-            v = (list(parsed.release) + [0, 0])[:3]  # version triple
+            v = ([*parsed.release, 0, 0])[:3]  # version triple
             build = int(getattr(app, "build", "0"))
             version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
 

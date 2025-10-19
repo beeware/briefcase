@@ -305,8 +305,8 @@ def test_docker_image_hint(mock_tools):
     Docker.verify(mock_tools, image_tag="myimage:tagtorulethemall")
 
     mock_tools.subprocess.check_output.assert_has_calls(
-        DOCKER_VERIFICATION_CALLS
-        + [
+        [
+            *DOCKER_VERIFICATION_CALLS,
             call(
                 ["docker", "images", "-q", "myimage:tagtorulethemall"],
                 env={"DOCKER_CLI_HINTS": "false"},

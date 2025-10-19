@@ -537,7 +537,7 @@ class macOSRunMixin:
             self.tools.subprocess.run(
                 # Force a new app to be launched
                 ["open", "-n", self.binary_path(app)]
-                + ((["--args"] + passthrough) if passthrough else []),
+                + (["--args", *passthrough] if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
                 **sub_kwargs,
@@ -1542,9 +1542,7 @@ with your app's licensing terms.
                     installer_path / "root",
                     "--component-plist",
                     components_plist_path,
-                ]
-                + install_args
-                + [
+                    *install_args,
                     installer_packages_path / f"{app.app_name}.pkg",
                 ],
                 check=True,
@@ -1566,9 +1564,7 @@ with your app's licensing terms.
                     installer_path / "packages",
                     "--resources",
                     installer_path / "resources",
-                ]
-                + signing_options
-                + [
+                    *signing_options,
                     dist_path,
                 ],
                 check=True,

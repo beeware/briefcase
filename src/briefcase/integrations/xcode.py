@@ -114,14 +114,15 @@ you can re-run Briefcase.
                 if version_lines:
                     # Split the content after the first space
                     # and split that content on the dots.
-                    # Append 0's to fill any gaps caused by
-                    # version numbers that don't have a minor version.
                     # At this point, version lines *must* have at least one element,
                     # and each line *must* have a string with at least one space,
                     # so if either array lookup fails, something weird is happening.
-                    version = tuple(
-                        int(v) for v in version_lines[0].split(" ")[1].split(".")
-                    ) + (0, 0)
+                    version_string = version_lines[0].split(" ")[1]
+
+                    # Append 0's to fill any gaps caused by
+                    # version numbers that don't have a minor version.
+                    parsed_version = tuple(int(v) for v in version_string.split("."))
+                    version = (*parsed_version, 0, 0)
 
                     if version < min_version:
                         min_version = ".".join(str(v) for v in min_version)

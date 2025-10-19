@@ -309,7 +309,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        return super()._extra_pip_args(app) + [
+        return [
+            *super()._extra_pip_args(app),
             "--only-binary=:all:",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
@@ -666,8 +667,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self.console.info(f"Starting {label}...", prefix=app.app_name)
             with self.console.wait_bar(f"Launching {label}..."):
                 output = self.tools.subprocess.check_output(
-                    ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
-                    + passthrough
+                    [
+                        "xcrun",
+                        "simctl",
+                        "launch",
+                        udid,
+                        app.bundle_identifier,
+                        *passthrough,
+                    ]
                 )
                 try:
                     app_pid = int(output.split(":")[1].strip())

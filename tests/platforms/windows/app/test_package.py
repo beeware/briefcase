@@ -336,9 +336,7 @@ def test_package_msi_with_codesigning(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + additional_args
-            + [
+                *additional_args,
                 tmp_path
                 / "base_path"
                 / "build"
@@ -346,7 +344,7 @@ def test_package_msi_with_codesigning(
                 / "windows"
                 / "app"
                 / "src"
-                / "First App.exe"
+                / "First App.exe",
             ],
             check=True,
         ),
@@ -392,9 +390,9 @@ def test_package_msi_with_codesigning(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + additional_args
-            + [tmp_path / "base_path/dist/First App-0.0.1.msi"],
+                *additional_args,
+                tmp_path / "base_path/dist/First App-0.0.1.msi",
+            ],
             check=True,
         ),
     ]
@@ -450,9 +448,7 @@ def test_package_zip_with_codesigning(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + additional_args
-            + [
+                *additional_args,
                 tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
             ],
             check=True,
@@ -694,8 +690,6 @@ def test_external_package_zip(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + [
                 tmp_path / "base_path/external/src/internal/app.exe",
             ],
             check=True,

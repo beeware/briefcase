@@ -154,7 +154,7 @@ class WindowsRunCommand(RunCommand):
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 encoding="UTF-8",
                 bufsize=1,
@@ -164,7 +164,7 @@ class WindowsRunCommand(RunCommand):
         else:
             # Start the app in a way that lets us stream the logs
             app_popen = self.tools.subprocess.Popen(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 encoding="UTF-8",
                 stdout=subprocess.PIPE,

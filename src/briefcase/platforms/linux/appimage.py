@@ -347,8 +347,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         "--output",
                         "appimage",
                         "-v0" if self.console.is_deep_debug else "-v1",
-                    ]
-                    + additional_args,
+                        *additional_args,
+                    ],
                     env=env,
                     check=True,
                     cwd=self.bundle_path(app),
@@ -387,7 +387,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 bufsize=1,
                 stream_output=False,
@@ -396,7 +396,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         else:
             # Start the app in a way that lets us stream the logs
             app_popen = self.tools.subprocess.Popen(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 **kwargs,
                 stdout=subprocess.PIPE,

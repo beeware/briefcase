@@ -45,7 +45,7 @@ def test_rewrite_head_system_python_replacement(
     """rewrite_head replaces sys.executable with venv executable."""
     result = venv_context._rewrite_head(args)
 
-    expected = [venv_context.executable] + expected_suffix
+    expected = [venv_context.executable, *expected_suffix]
     assert result == expected
 
 

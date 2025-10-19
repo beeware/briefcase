@@ -22,7 +22,7 @@ def test_default_exit_filter(recent_history, returncode):
     """The default exit filter captures exit criteria."""
     exit_func = LogFilter.test_filter(LogFilter.DEFAULT_EXIT_REGEX)
 
-    tail = "\n".join(["line 1", "line 2"] + [recent_history])
+    tail = "\n".join(["line 1", "line 2", recent_history])
     assert exit_func(tail) == returncode
 
 
@@ -43,7 +43,7 @@ def test_default_exit_filter_no_match(recent_history):
     """The default exit filter *doesn't* catch content that doesn't match the regex."""
     exit_func = LogFilter.test_filter(LogFilter.DEFAULT_EXIT_REGEX)
 
-    tail = "\n".join(["line 1", "line 2"] + [recent_history])
+    tail = "\n".join(["line 1", "line 2", recent_history])
     assert exit_func(tail) is None
 
 

@@ -286,8 +286,8 @@ def test_web_dev_command(
 
 @pytest.mark.parametrize(
     "cmdline, expected_options, expected_overrides",
-    dev_run_parameters("run")
-    + [
+    [
+        *dev_run_parameters("run"),
         ("run -u", {"update": True}, {}),
         ("run --update", {"update": True}, {}),
         ("run --update-resources", {"update_resources": True}, {}),
