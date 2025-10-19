@@ -31,7 +31,8 @@ def test_handle_insert_register_valid_file(build_command, tmp_path):
             inserts=inserts,
         )
 
-    assert "index.html" in inserts and "header" in inserts["index.html"]
+    assert "index.html" in inserts
+    assert "header" in inserts["index.html"]
     assert any("<s>ok</s>" in v for v in inserts["index.html"]["header"].values())
 
 
