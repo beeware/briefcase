@@ -24,7 +24,7 @@ def test_escape_gradle(value, expected):
     "value, expected",
     [
         ("helloworld", "helloworld"),
-        ("helloworldı", '"helloworldı"'),
+        ("helloworldı", '"helloworldı"'),  # noqa: RUF001 (ambiguous non-ASCII symbol)
     ],
 )
 def test_escape_non_ascii(value, expected):
