@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "support_revision, host_arch, is_32bit_python, url",
+    ("support_revision", "host_arch", "is_32bit_python", "url"),
     [
         (
             "3.10.9+20230116",

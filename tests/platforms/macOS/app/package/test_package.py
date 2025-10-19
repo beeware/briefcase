@@ -16,7 +16,7 @@ def test_package_formats(package_command):
 
 
 @pytest.mark.parametrize(
-    "is_console_app, packaging_format, actual_format",
+    ("is_console_app", "packaging_format", "actual_format"),
     [
         (False, None, "dmg"),  # default for GUI app is DMG
         (False, "dmg", "dmg"),

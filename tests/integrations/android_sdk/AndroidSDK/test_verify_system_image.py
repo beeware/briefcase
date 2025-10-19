@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch",
+    ("host_os", "host_arch"),
     [
         ("Windows", "arm64"),
         ("Linux", "armv7l"),

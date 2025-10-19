@@ -92,7 +92,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
 
 @pytest.mark.parametrize(
-    "manylinux, tag, host_os, host_arch, is_user_mapped, context",
+    ("manylinux", "tag", "host_os", "host_arch", "is_user_mapped", "context"),
     [
         # Fallback.
         (None, None, "Linux", "x86_64", False, {"use_non_root_user": True}),

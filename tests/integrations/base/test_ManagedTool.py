@@ -64,7 +64,7 @@ def nonmanaged_managed_tool(mock_tools) -> NonManagedManagedTool:
 
 
 @pytest.mark.parametrize(
-    "klass, kwargs",
+    ("klass", "kwargs"),
     [
         (DummyManagedTool, {}),
         (DummyManagedTool, {"one": "two", "three": "four"}),
@@ -91,7 +91,7 @@ def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "klass, kwargs",
+    ("klass", "kwargs"),
     [
         (DummyManagedTool, {}),
         (DummyManagedTool, {"one": "two", "three": "four"}),

@@ -6,7 +6,7 @@ from tests.integrations.virtual_environment.utils import (
 )
 
 
-@pytest.mark.parametrize("env_override, other_kwargs", ENVIRONMENT_TEST_PARAMS)
+@pytest.mark.parametrize(("env_override", "other_kwargs"), ENVIRONMENT_TEST_PARAMS)
 def test_run_environment_handling(
     venv_context,
     mock_subprocess_setup,

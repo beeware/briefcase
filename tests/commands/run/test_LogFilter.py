@@ -80,7 +80,7 @@ def test_clean_filter_unclean_output():
 
 
 @pytest.mark.parametrize(
-    "raw, expected_output, use_content_filter, clean_output, returncode",
+    ("raw", "expected_output", "use_content_filter", "clean_output", "returncode"),
     [
         # Without cleaning, simple content is passed through as is.
         (

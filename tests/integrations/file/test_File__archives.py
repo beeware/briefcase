@@ -17,7 +17,7 @@ def custom_packing_format():
 
 
 @pytest.mark.parametrize(
-    "filename, outcome",
+    ("filename", "outcome"),
     [
         ("filename.tar", True),
         ("filename.zip", True),

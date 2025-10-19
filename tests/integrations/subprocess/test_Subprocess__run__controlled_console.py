@@ -112,7 +112,7 @@ def test_debug_call_with_env(mock_sub, sub_stream_kw, sleep_zero, capsys, tmp_pa
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, kwargs",
+    ("in_kwargs", "kwargs"),
     [
         (
             {},

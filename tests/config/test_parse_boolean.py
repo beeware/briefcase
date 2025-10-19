@@ -26,7 +26,7 @@ def test_invalid_values(user_input_val):
 
 
 @pytest.mark.parametrize(
-    "user_input_val, expected",
+    ("user_input_val", "expected"),
     [("         yEs ", True), ("nO          ", False), ("    YEs", True)],
 )
 def test_whitespace(user_input_val, expected):

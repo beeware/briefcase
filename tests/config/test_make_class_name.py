@@ -4,7 +4,7 @@ from briefcase.config import make_class_name
 
 
 @pytest.mark.parametrize(
-    "formal_name, candidate",
+    ("formal_name", "candidate"),
     [
         # Some simple cases
         ("Hello World", "HelloWorld"),

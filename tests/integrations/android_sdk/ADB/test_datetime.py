@@ -8,7 +8,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "device_output, expected_datetime",
+    ("device_output", "expected_datetime"),
     [
         ("2023-07-12 09:28:04", datetime(2023, 7, 12, 9, 28, 4)),
         ("2023-07-12 09:28:04\n", datetime(2023, 7, 12, 9, 28, 4)),

@@ -103,7 +103,7 @@ def file_perms() -> int:
 
 
 @pytest.mark.parametrize(
-    "url,content_disposition",
+    ("url", "content_disposition"),
     [
         # A `None` value for `content_disposition` means we skip the header.
         # Other values are passed through as HTTP header values.

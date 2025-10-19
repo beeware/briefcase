@@ -25,7 +25,7 @@ def new_command(dummy_console, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "briefcase_version, expected_branch",
+    ("briefcase_version", "expected_branch"),
     [
         ("37.42.1", "v37.42.1"),
         ("37.42.2.dev0+gad61a29.d20220919", "v37.42.2"),

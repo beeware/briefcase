@@ -37,7 +37,7 @@ def test_handle_insert_register_valid_file(build_command, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "entry, expected_skip",
+    ("entry", "expected_skip"),
     [
         ("dummy/deploy/inserts/", True),  # Top-level directory entry
         ("dummy/deploy/inserts/assets/", False),  # Nested directory entry

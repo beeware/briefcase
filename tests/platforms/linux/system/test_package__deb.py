@@ -83,7 +83,7 @@ def test_verify_no_docker(package_command, first_app_deb, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "vendor_base, error_msg",
+    ("vendor_base", "error_msg"),
     [
         (
             "debian",
@@ -263,7 +263,7 @@ def test_deb_package_no_long_description(package_command, first_app_deb, tmp_pat
 
 
 @pytest.mark.parametrize(
-    "input, output",
+    ("input", "output"),
     [
         ("", ""),
         ("one line", "one line"),

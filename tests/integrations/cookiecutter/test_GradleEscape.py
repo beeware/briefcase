@@ -6,7 +6,7 @@ from briefcase.integrations.cookiecutter import GradleEscape
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         ("Hello World", "Hello World"),
         ("Hello ' World", "Hello \\' World"),
@@ -21,7 +21,7 @@ def test_escape_gradle(value, expected):
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         ("helloworld", "helloworld"),
         ("helloworldı", '"helloworldı"'),  # noqa: RUF001 (ambiguous non-ASCII symbol)

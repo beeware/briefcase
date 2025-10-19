@@ -70,7 +70,7 @@ def full_context():
 
 
 @pytest.mark.parametrize(
-    "briefcase_version, expected_branch",
+    ("briefcase_version", "expected_branch"),
     [
         ("37.42.1", "v37.42.1"),
         ("37.42.2.dev0+gad61a29.d20220919", "v37.42.2"),
@@ -113,7 +113,7 @@ def test_default_template(
 
 
 @pytest.mark.parametrize(
-    "briefcase_version,template_branch",
+    ("briefcase_version", "template_branch"),
     [
         ("37.42.7.dev0+gad61a29.d20220919", "v37.42.7"),
         ("37.42.7.dev73+gad61a29.d20220919", "v37.42.7"),

@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "in_text, out_text",
+    ("in_text", "out_text"),
     [
         (
             "There is nothing wrong with your television set.",
@@ -54,7 +54,7 @@ def test_textwrap(console, in_text, out_text):
 
 
 @pytest.mark.parametrize(
-    "width, in_text, out_text",
+    ("width", "in_text", "out_text"),
     [
         (20, "This is 27 characters long.", "This is 27\ncharacters long."),
         (

@@ -56,7 +56,7 @@ DEFAULT_FINISH_ARGS = {
 
 
 @pytest.mark.parametrize(
-    "permissions, finish_args, context",
+    ("permissions", "finish_args", "context"),
     [
         # No permissions
         (

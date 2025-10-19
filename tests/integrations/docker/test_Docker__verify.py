@@ -412,7 +412,7 @@ def test_user_mapping_write_test_file_cleanup_fails(mock_tools, mock_write_test_
         Docker.verify(mock_tools)
 
 
-@pytest.mark.parametrize("file_owner_id, expected", [(1000, True), (0, False)])
+@pytest.mark.parametrize(("file_owner_id", "expected"), [(1000, True), (0, False)])
 def test_user_mapping_setting(
     mock_tools,
     user_mapping_run_calls,

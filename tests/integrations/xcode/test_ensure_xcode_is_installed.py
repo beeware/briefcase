@@ -255,7 +255,7 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
 
 
 @pytest.mark.parametrize(
-    "min_version, version",
+    ("min_version", "version"),
     [
         # Exact match
         ((11, 2, 1), "11.2.1"),  # Exact match
@@ -326,7 +326,7 @@ def test_installed_with_minimum_version_success(
 
 
 @pytest.mark.parametrize(
-    "min_version, version",
+    ("min_version", "version"),
     [
         ((11, 2, 5), "11.2.1"),  # insufficient revision
         ((11, 3), "11.2.1"),  # Insufficient micro version

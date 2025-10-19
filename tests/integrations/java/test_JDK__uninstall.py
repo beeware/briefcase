@@ -11,7 +11,7 @@ from briefcase.integrations.java import JDK
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home",
+    ("host_os", "java_home"),
     [
         ("Linux", Path("tools", "java17")),
         ("Windows", Path("tools", "java17")),
@@ -49,7 +49,7 @@ def test_java_running(mock_tools, host_os, java_home, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home",
+    ("host_os", "java_home"),
     [
         ("Linux", Path("tools", "java17")),
         ("Windows", Path("tools", "java17")),

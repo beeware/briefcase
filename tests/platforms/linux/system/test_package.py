@@ -36,7 +36,7 @@ def test_formats(package_command):
 
 
 @pytest.mark.parametrize(
-    "format, vendor, codename, revision, filename",
+    ("format", "vendor", "codename", "revision", "filename"),
     [
         ("rpm", "rhel", "9", None, "first-app-0.0.1-1.el9.wonky.rpm"),
         ("rpm", "rhel", "9", 5, "first-app-0.0.1-5.el9.wonky.rpm"),
@@ -118,7 +118,7 @@ def test_build_env_abi_failure(package_command, first_app, format):
 
 
 @pytest.mark.parametrize(
-    "base_vendor, input_format, output_format",
+    ("base_vendor", "input_format", "output_format"),
     [
         # System packaging maps to known formats
         ("debian", "system", "deb"),

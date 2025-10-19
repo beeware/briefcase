@@ -78,7 +78,7 @@ def test_supported_host_os_without_docker(create_command):
 
 
 @pytest.mark.parametrize(
-    "is_user_mapped, host_os, use_non_root",
+    ("is_user_mapped", "host_os", "use_non_root"),
     [
         (False, "Darwin", True),
         (True, "Darwin", True),

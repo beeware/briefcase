@@ -72,7 +72,7 @@ def test_run_stream_output_false(mock_sub, sub_kw):
 
 
 @pytest.mark.parametrize(
-    "cmdline, kwargs",
+    ("cmdline", "kwargs"),
     [
         ([], {}),
         (["Hello", "World"], {}),
@@ -102,7 +102,7 @@ def test_negative_condition_not_controlled(
 
 
 @pytest.mark.parametrize(
-    "cmdline, kwargs",
+    ("cmdline", "kwargs"),
     [
         ([], {}),
         (["Hello", "World"], {}),

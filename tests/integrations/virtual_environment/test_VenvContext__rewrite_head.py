@@ -21,7 +21,7 @@ def test_rewrite_head_empty(venv_context: VenvContext, empty_args):
 
 
 @pytest.mark.parametrize(
-    "args, expected_suffix",
+    ("args", "expected_suffix"),
     [
         (
             [sys.executable],

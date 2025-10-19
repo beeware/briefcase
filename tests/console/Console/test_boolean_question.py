@@ -32,7 +32,7 @@ def test_boolean_question_no(console):
 
 
 @pytest.mark.parametrize(
-    "default, expected, prompt",
+    ("default", "expected", "prompt"),
     [
         (True, True, "Confirm? [Y/n]? "),
         (False, False, "Confirm? [y/N]? "),
@@ -53,7 +53,7 @@ def test_boolean_question_default_used(console, default, expected, prompt):
 
 
 @pytest.mark.parametrize(
-    "override_value, expected_result",
+    ("override_value", "expected_result"),
     [
         ("Yes", True),
         ("no", False),

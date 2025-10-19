@@ -93,7 +93,7 @@ def test_unknown_command():
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_options, expected_overrides",
+    ("cmdline", "expected_options", "expected_overrides"),
     [
         (
             "new",
@@ -132,7 +132,7 @@ def test_new_command(console, cmdline, expected_options, expected_overrides):
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_options, expected_overrides",
+    ("cmdline", "expected_options", "expected_overrides"),
     [
         (
             "convert",
@@ -209,7 +209,7 @@ def dev_run_parameters(command):
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_output_format, expected_options, expected_overrides",
+    ("cmdline", "expected_output_format", "expected_options", "expected_overrides"),
     [
         *[(c, "app", o, ov) for c, o, ov in dev_run_parameters("dev")],
         ("dev --no-run", "app", {"run_app": False}, {}),
@@ -248,7 +248,7 @@ def test_dev_command(
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_output_format, expected_options, expected_overrides",
+    ("cmdline", "expected_output_format", "expected_options", "expected_overrides"),
     [
         ("dev web --no-isolation", "static", {"isolated": False}, {}),
     ],
@@ -285,7 +285,7 @@ def test_web_dev_command(
 
 
 @pytest.mark.parametrize(
-    "cmdline, expected_options, expected_overrides",
+    ("cmdline", "expected_options", "expected_overrides"),
     [
         *dev_run_parameters("run"),
         ("run -u", {"update": True}, {}),
@@ -330,7 +330,7 @@ def test_run_command(
 
 
 @pytest.mark.parametrize(
-    "cmdline,expected_options,expected_overrides",
+    ("cmdline", "expected_options", "expected_overrides"),
     [
         (
             "upgrade",

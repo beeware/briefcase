@@ -100,7 +100,7 @@ def test_unsupported_arch(mock_tools):
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch",
+    ("host_os", "host_arch"),
     [
         ("Darwin", "arm64"),
         ("Darwin", "x86_64"),

@@ -4,7 +4,7 @@ from briefcase.commands.run import LogFilter
 
 
 @pytest.mark.parametrize(
-    "recent_history, returncode",
+    ("recent_history", "returncode"),
     [
         # Zero return code
         (">>>>>>>>>> EXIT 0 <<<<<<<<<<", 0),

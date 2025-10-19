@@ -115,7 +115,7 @@ def test_verify_with_signing(package_command, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "cli_args, signing_options, is_sdk_needed",
+    ("cli_args", "signing_options", "is_sdk_needed"),
     [
         ([], {}, False),
         (["--adhoc-sign"], {"adhoc_sign": True}, False),
@@ -194,7 +194,7 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
 
 
 @pytest.mark.parametrize(
-    "kwargs, external",
+    ("kwargs", "external"),
     [
         # Default behavior (adhoc signing, internal app)
         ({}, False),
@@ -288,7 +288,7 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
 
 
 @pytest.mark.parametrize(
-    "use_local_machine, additional_args",
+    ("use_local_machine", "additional_args"),
     [(False, []), (True, ["-sm"])],
 )
 def test_package_msi_with_codesigning(
@@ -398,7 +398,7 @@ def test_package_msi_with_codesigning(
 
 
 @pytest.mark.parametrize(
-    "use_local_machine, additional_args",
+    ("use_local_machine", "additional_args"),
     [(False, []), (True, ["-sm"])],
 )
 def test_package_zip_with_codesigning(

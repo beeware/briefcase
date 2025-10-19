@@ -4,7 +4,7 @@ from briefcase.console import sanitize_text
 
 
 @pytest.mark.parametrize(
-    "input_text, sanitized_text",
+    ("input_text", "sanitized_text"),
     [
         (
             "log output",

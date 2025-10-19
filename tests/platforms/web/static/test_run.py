@@ -243,7 +243,7 @@ def test_run_with_args(monkeypatch, run_command, first_app_built):
 
 
 @pytest.mark.parametrize(
-    "host, port, exception, message",
+    ("host", "port", "exception", "message"),
     [
         (
             "localhost",

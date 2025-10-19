@@ -57,7 +57,7 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "manylinux, tag",
+    ("manylinux", "tag"),
     [
         (None, "appimage"),
         ("manylinux1", "manylinux1-appimage"),

@@ -79,7 +79,8 @@ def test_unsupported_os(mock_tools, host_os):
 
 
 @pytest.mark.parametrize(
-    "host_arch, sdk_arch", [("AMD64", "x64"), ("ARM64", "arm64"), ("gothic", "gothic")]
+    ("host_arch", "sdk_arch"),
+    [("AMD64", "x64"), ("ARM64", "arm64"), ("gothic", "gothic")],
 )
 def test_winsdk_arch(
     mock_tools,
@@ -250,7 +251,7 @@ def test_winsdk_nonlatest_install_from_reg(
 
 
 @pytest.mark.parametrize(
-    "reg_installs, additional_installs",
+    ("reg_installs", "additional_installs"),
     [
         # One invalid registry install; no additional installs
         ([("invalid_1", "85.0.1")], []),

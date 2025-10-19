@@ -4,7 +4,7 @@ from briefcase.integrations.subprocess import ParseError, json_parser
 
 
 @pytest.mark.parametrize(
-    "data, output",
+    ("data", "output"),
     [
         ('{"key": "value"}', {"key": "value"}),
         (b'{"key": "value"}', {"key": "value"}),
