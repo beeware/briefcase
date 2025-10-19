@@ -346,7 +346,7 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     LocalHTTPServer.socket = socket
 
     # Mock server execution
-    mock_serve_forever = mock.MagicMock(side_effect=ValueError())
+    mock_serve_forever = mock.MagicMock(side_effect=ValueError("Some error"))
     monkeypatch.setattr(HTTPServer, "serve_forever", mock_serve_forever)
 
     # Mock shutdown
@@ -362,7 +362,7 @@ def test_cleanup_runtime_server_error(monkeypatch, run_command, first_app_built)
     monkeypatch.setattr(webbrowser, "open_new_tab", mock_open_new_tab)
 
     # Run the app; it raises an error
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Some error"):
         run_command.run_app(
             first_app_built,
             passthrough=[],

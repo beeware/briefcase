@@ -312,9 +312,9 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
 
-    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
+    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
@@ -402,9 +402,9 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
 
-    run_command.tools.subprocess.run.side_effect = OSError
+    run_command.tools.subprocess.run.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
@@ -504,9 +504,9 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
         run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
     )
 
-    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
+    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
