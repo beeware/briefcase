@@ -78,7 +78,7 @@ def test_missing_subkeys():
     assert briefcase_config == {"key": "value"}
 
 
-def test_specified_license_file():
+def test_specified_license_file_pep621():
     "The license file is included in the briefcase config if specified in the PEP621 config"
     briefcase_config = {"key": "value"}
 

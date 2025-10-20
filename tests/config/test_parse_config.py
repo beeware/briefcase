@@ -3,6 +3,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
+import briefcase.config
 from briefcase.config import parse_config
 from briefcase.exceptions import BriefcaseConfigError
 
@@ -729,32 +730,30 @@ def test_license_is_string_project():
         "appvalue": "the app",
         "license": {"file": "LICENSE"},
     }
-    console.warning.assert_called_once_with(
-        """
+    msg = """
 *************************************************************************
-** WARNING: License Definition for the Project is Deprecated           **
+** WARNING: No license file specified for the Project                  **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier. See
+    the official documentation for more information:
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    https://packaging.python.org/en/latest/specifications/license-expression/
 
-    The current configuration for the Project has a 'license' field
-    that is specified as a string:
 
-        license = "Some license"
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for the Project:
-
-        license.file = "LICENSE"
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
-    )
+    console.warning.assert_called_once_with(msg)
 
 
 def test_license_is_string_project_and_app():
@@ -791,25 +790,24 @@ def test_license_is_string_project_and_app():
             call(
                 """
 *************************************************************************
-** WARNING: License Definition for the Project is Deprecated           **
+** WARNING: No license file specified for the Project                  **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier. See
+    the official documentation for more information:
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    https://packaging.python.org/en/latest/specifications/license-expression/
 
-    The current configuration for the Project has a 'license' field
-    that is specified as a string:
 
-        license = "Some license"
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for the Project:
-
-        license.file = "LICENSE"
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
@@ -817,28 +815,275 @@ def test_license_is_string_project_and_app():
             call(
                 """
 *************************************************************************
-** WARNING: License Definition for 'my_app' is Deprecated              **
+** WARNING: No license file specified for 'my_app'                     **
 *************************************************************************
 
-    Briefcase now uses PEP 621 format for license definitions.
+    Briefcase requires a license file. However, the only license
+    information found in the pyproject.toml file was the `license`
+    attribute, which should contain an SPDX license identifier. See
+    the official documentation for more information:
 
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
+    https://packaging.python.org/en/latest/specifications/license-expression/
 
-    The current configuration for 'my_app' has a 'license' field
-    that is specified as a string:
 
-        license = "Another license"
+    Not knowing where the license file is, Briefcase will attempt its
+    default license file path: 'LICENSE'. Specify the path to the license
+    file explicitly if this path is wrong or to silence this warning. You
+    can do that by replacing the license line in your pyproject.toml-file
+    with the following line:
 
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for 'my_app':
-
-        license.file = "LICENSE"
+        license-files = ["LICENSE"]  # or some other path
 
 *************************************************************************
 """
             ),
         ]
     )
+
+
+@pytest.fixture
+def dir_with_license(tmp_path):
+    (tmp_path / "MY-LICENSE").write_text("MY-LICENSE", encoding="utf-8")
+    (tmp_path / "AUTHORS").write_text("AUTHORS", encoding="utf-8")
+    return tmp_path.absolute()
+
+
+def test_pep639_license_in_app_config(dir_with_license):
+    config_file = BytesIO(
+        b"""
+        [tool.briefcase]
+        value = 0
+        license-files = ["MY-LICENSE"]
+
+        [tool.briefcase.app.my_app]
+        appvalue = "the app"
+        license-files = ["MY-LICENSE"]
+        """
+    )
+
+    console = Mock()
+    global_options, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+        cwd=dir_with_license,
+    )
+    assert global_options == {
+        "value": 0,
+        "license": {"file": "MY-LICENSE"},
+    }
+    assert apps["my_app"] == {
+        "app_name": "my_app",
+        "value": 0,
+        "appvalue": "the app",
+        "license": {"file": "MY-LICENSE"},
+    }
+
+
+@pytest.mark.parametrize(
+    "config_file_content",
+    [
+        pytest.param(
+            "[project]\nlicense-files = ['MY-LICENSE']", id="single_existing_file"
+        ),
+        pytest.param(
+            "[project]\nlicense-files = ['MY-LICENSE', 'NON_EXISTING']",
+            id="many_files_first_exists",
+        ),
+        pytest.param(
+            "[project]\nlicense-files = ['MY-LICENSE', 'AUTHORS']",
+            id="many_files_all_exists",
+        ),
+        pytest.param(
+            "[project]\nlicense-files = ['NON_EXISTING','MY-LICENSE']",
+            id="many_files_last_exists",
+        ),
+        pytest.param("[project]\nlicense-files = ['MY-LICEN[CS]E']", id="glob_pattern"),
+    ],
+)
+@pytest.mark.parametrize(
+    "license, global_config",
+    [
+        pytest.param(None, "", id="without_briefcase_license_file"),
+        pytest.param(
+            "OLD_LICENSE",
+            "license= { file = 'OLD_LICENSE' }",
+            id="with_briefcase_license_file",
+        ),
+    ],
+)
+def test_first_specified_license_file_pep639(
+    config_file_content, license, global_config, dir_with_license
+):
+    """The first file in license-files is used if no license in briefcase_config."""
+    supposed_license = "MY-LICENSE"
+    briefcase_config = (
+        f"[tool.briefcase]\n{global_config}\n[tool.briefcase.app.my_app]\n"
+    )
+    if license:
+        supposed_license = license
+
+    config_file = BytesIO(f"{config_file_content}\n{briefcase_config}".encode())
+    console = Mock()
+    global_options, _ = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+        cwd=dir_with_license,
+    )
+    assert global_options == {"license": {"file": supposed_license}}
+
+
+def test_specified_license_file_doesnt_exist_pep639_fails(dir_with_license):
+    """An exception is raised if no license file match the 'license-files' glob."""
+    briefcase_config = "[tool.briefcase]\n[tool.briefcase.app.my_app]\n"
+    config_file = BytesIO(
+        f"[project]\nlicense-files=['NON_EXISTING']\n{briefcase_config}".encode()
+    )
+    with pytest.raises(BriefcaseConfigError):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+            cwd=dir_with_license,
+        )
+
+
+def test_more_than_one_license_file_pep639_warns(dir_with_license):
+    """A warning is shown if multiple license files match the 'license-files' glob."""
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = ['MY-LICENSE', 'AUTHORS']
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+        cwd=dir_with_license,
+    )
+    console.warning.assert_called_once_with("""
+*************************************************************************
+** WARNING: More than one license file found                           **
+*************************************************************************
+
+    More than one license matches the glob patterns specified in
+    `project.license-files`. The first of these files (MY-LICENSE)
+    will be used, and the rest will be ignored. Consider merging all
+    files in to one combined file if you need to include all licenses.
+
+*************************************************************************
+""")
+
+
+def test_both_license_file_and_license_dict(dir_with_license):
+    """An error is raised if the license-files field is set and license is a dict.
+
+    PEP639 specifies that an exception MUST be raised if the license-files attribute is
+    set while the license field is a dict.
+    """
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = ['MY-LICENSE']
+license = { text = 'SOME_TEXT' }
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+
+    with pytest.raises(BriefcaseConfigError):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+            cwd=dir_with_license,
+        )
+
+
+def test_non_list_licence_files(dir_with_license):
+    """An error is raised if the license-files field is something other than a list."""
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = 'MY-LICENSE'
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+
+    with pytest.raises(BriefcaseConfigError):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+            cwd=dir_with_license,
+        )
+
+
+def test_platform_specific_license(dir_with_license):
+    """The platform specific license works with PEP621 and PEP639."""
+    config_toml = b"""
+[project]
+license = { text = 'SOME_TEXT' }
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+[tool.briefcase.app.my_app.macOS]
+license-files = ['MY-LICENSE']
+
+[tool.briefcase.app.my_app.linux]
+license = { text = 'OTHER_TEXT' }
+"""
+
+    global_options_macos, apps_macos = parse_config(
+        BytesIO(config_toml),
+        platform="macOS",
+        output_format="app",
+        console=Mock(),
+        cwd=dir_with_license,
+    )
+
+    global_options_linux, apps_linux = parse_config(
+        BytesIO(config_toml),
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+        cwd=dir_with_license,
+    )
+
+    assert global_options_macos == {"license": {"text": "SOME_TEXT"}}
+    assert global_options_linux == {"license": {"text": "SOME_TEXT"}}
+    assert apps_macos["my_app"]["license"] == {"file": "MY-LICENSE"}
+    assert apps_linux["my_app"]["license"] == {"text": "OTHER_TEXT"}
+
+
+def test_without_cwd(dir_with_license, monkeypatch):
+    """The current working directory is used if cwd is not specified."""
+    config_file = BytesIO(
+        b"""
+[project]
+license-files = ['MY-LICENSE']
+[tool.briefcase]
+[tool.briefcase.app.my_app]
+"""
+    )
+    mock_path_constructor = Mock(return_value=dir_with_license)
+    monkeypatch.setattr(briefcase.config, "Path", mock_path_constructor)
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=Mock(),
+    )
+    mock_path_constructor.assert_called_once()
