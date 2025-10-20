@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.exceptions import MissingToolError
@@ -9,7 +10,7 @@ from briefcase.integrations.base import ManagedTool, ToolCache
 class RCEdit(ManagedTool):
     name = "rcedit"
     full_name = "RCEdit"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
 
     @property
     def download_url(self) -> str:

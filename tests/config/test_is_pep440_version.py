@@ -4,7 +4,7 @@ from briefcase.config import is_pep440_canonical_version, parsed_version
 
 
 @pytest.mark.parametrize(
-    "version, parsed",
+    ("version", "parsed"),
     [
         (
             "0.1",

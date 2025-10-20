@@ -4,7 +4,7 @@ from briefcase.config import validate_url
 
 
 @pytest.mark.parametrize(
-    "app_name, bundle, candidate",
+    ("app_name", "bundle", "candidate"),
     [
         ("some-app", "com.example", "https://example.com/some-app"),
         ("some_app", "com.example.more", "https://more.example.com/some_app"),

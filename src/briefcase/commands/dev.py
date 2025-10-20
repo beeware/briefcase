@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from briefcase.commands.run import RunAppMixin
@@ -27,7 +28,7 @@ class DevCommand(RunAppMixin, BaseCommand):
     # rather patently, Not Good.
     # To avoid this causing unwanted hilarity, we use environment variables to configure the
     # Python interpreter rather than command-line options.
-    DEV_ENVIRONMENT = {
+    DEV_ENVIRONMENT: Mapping[str, str] = {
         # Equivalent of passing "-u"
         "PYTHONUNBUFFERED": "1",
         # Equivalent of passing "-X dev"
@@ -232,7 +233,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
         if len(self.apps) == 1:
-            app = list(self.apps.values())[0]
+            app = next(iter(self.apps.values()))
         elif appname:
             try:
                 app = self.apps[appname]

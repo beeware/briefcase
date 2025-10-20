@@ -660,7 +660,7 @@ def parse_config(config_file, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
-    for name, config in [("project", global_config)] + list(all_apps.items()):
+    for name, config in [("project", global_config), *all_apps.items()]:
         if isinstance(config.get("license"), str):
             section_name = "the Project" if name == "project" else f"{name!r}"
             console.warning(

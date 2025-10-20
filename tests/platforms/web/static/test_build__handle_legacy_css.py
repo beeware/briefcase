@@ -57,7 +57,8 @@ def test_handle_legacy_css_warn_and_append(
 
     # Content appended
     out = inserts["static/css/briefcase.css"]["css"][key]
-    assert "h1 { x:1; }" in out and "/*extra*/" in out
+    assert "h1 { x:1; }" in out
+    assert "/*extra*/" in out
 
 
 def test_handle_legacy_css_non_utf8_raise(build_command, tmp_path):

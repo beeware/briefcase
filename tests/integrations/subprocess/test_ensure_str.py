@@ -4,7 +4,7 @@ from briefcase.integrations.subprocess import ensure_str
 
 
 @pytest.mark.parametrize(
-    "indata, output",
+    ("indata", "output"),
     [
         ("a string 1\na string 2", "a string 1\na string 2"),
         (b"some bytes 1\nsome bytes 2", "some bytes 1\nsome bytes 2"),

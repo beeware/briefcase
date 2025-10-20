@@ -44,5 +44,5 @@ def test_invalid_formal_name(new_command, name, tmp_path):
     """Test that invalid app names are rejected."""
     (tmp_path / "existing").mkdir()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="is not a valid formal name"):
         new_command.validate_formal_name(name)

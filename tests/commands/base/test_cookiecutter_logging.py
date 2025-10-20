@@ -16,7 +16,7 @@ def base_command(base_command):
 
 
 @pytest.mark.parametrize(
-    "logging_level, handler_expected",
+    ("logging_level", "handler_expected"),
     [
         (LogLevel.DEEP_DEBUG, True),
         (LogLevel.DEBUG, False),

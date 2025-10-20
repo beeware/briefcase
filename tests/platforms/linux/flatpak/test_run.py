@@ -79,9 +79,9 @@ def test_run_gui_app_with_passthrough(run_command, first_app_config):
 
 def test_run_gui_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem starting the GUI app, an exception is raised."""
-    run_command.tools.flatpak.run.side_effect = OSError
+    run_command.tools.flatpak.run.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app_config, passthrough=[])
 
     # The run command was still invoked
@@ -140,9 +140,9 @@ def test_run_console_app_failed(run_command, first_app_config, tmp_path):
     """If there's a problem starting the console app, an exception is raised."""
     first_app_config.console_app = True
 
-    run_command.tools.flatpak.run.side_effect = OSError
+    run_command.tools.flatpak.run.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app_config, passthrough=[])
 
     # The run command was still invoked

@@ -94,13 +94,13 @@ def test_unsupported_arch(mock_tools):
 
     with pytest.raises(
         IncompatibleToolError,
-        match="Briefcase cannot install Android SDK on this machine.",
+        match=r"Briefcase cannot install Android SDK on this machine\.",
     ):
         AndroidSDK.verify(mock_tools)
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch",
+    ("host_os", "host_arch"),
     [
         ("Darwin", "arm64"),
         ("Darwin", "x86_64"),

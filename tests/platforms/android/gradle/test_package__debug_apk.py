@@ -44,7 +44,7 @@ def test_distribution_path(package_command, first_app_apk, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "host_os, gradlew_name, tool_debug_mode",
+    ("host_os", "gradlew_name", "tool_debug_mode"),
     [
         ("Windows", "gradlew.bat", True),
         ("Windows", "gradlew.bat", False),

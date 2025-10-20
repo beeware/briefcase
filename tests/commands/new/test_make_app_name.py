@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "formal_name, candidate",
+    ("formal_name", "candidate"),
     [
         ("Hello World", "helloworld"),
         ("Hello World!", "helloworld"),

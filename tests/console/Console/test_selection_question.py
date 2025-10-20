@@ -74,7 +74,7 @@ def test_selection_question_bad_input(console):
     assert result == "third"
 
 
-@pytest.mark.parametrize("index, default", [("1", "first"), ("3", "third")])
+@pytest.mark.parametrize(("index", "default"), [("1", "first"), ("3", "third")])
 def test_selection_question_default(console, index, default):
     """If selection_question has a default, it is returned for no input."""
     # Return an empty response when prompted as though the user press entered

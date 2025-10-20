@@ -6,7 +6,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "output, expected_list",
+    ("output", "expected_list"),
     [
         ("", []),
         ("first\n", ["first"]),

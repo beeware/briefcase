@@ -127,7 +127,7 @@ def test_explicit_invalid_device(mock_tools, android_sdk):
 
     # Select emulator with an invalid device ID
     with pytest.raises(InvalidDeviceError):
-        device, name, avd = android_sdk.select_target_device("deadbeefcafe")
+        _device, _name, _avd = android_sdk.select_target_device("deadbeefcafe")
 
     # No input was requested
     assert mock_tools.console.prompts == []
@@ -138,7 +138,7 @@ def test_explicit_invalid_avd(mock_tools, android_sdk):
 
     # Select emulator with an invalid AVD
     with pytest.raises(InvalidDeviceError):
-        device, name, avd = android_sdk.select_target_device("@invalidEmulator")
+        _device, _name, _avd = android_sdk.select_target_device("@invalidEmulator")
 
     # No input was requested
     assert mock_tools.console.prompts == []

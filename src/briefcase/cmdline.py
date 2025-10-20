@@ -113,7 +113,7 @@ def parse_cmdline(args, console: Console | None = None):
         args, passthrough = split_passthrough(args)
         options, extra = parser.parse_known_args(args)
         if passthrough:
-            extra += ["--"] + passthrough
+            extra += ["--", *passthrough]
         return options, extra
 
     # Use parse_known_args to ensure any extra arguments can be ignored,

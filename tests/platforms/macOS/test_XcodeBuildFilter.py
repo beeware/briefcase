@@ -4,7 +4,7 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter
 
 
 @pytest.mark.parametrize(
-    "original, filtered",
+    ("original", "filtered"),
     [
         # Nothing to filter
         (
