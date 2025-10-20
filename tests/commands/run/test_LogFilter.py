@@ -16,7 +16,7 @@ def test_default_filter():
         exit_filter=None,
     )
 
-    for i in range(0, 10):
+    for i in range(10):
         line = f"this is line {i}"
 
         # Every line is returned verbatim
@@ -42,7 +42,7 @@ def test_clean_filter():
         exit_filter=None,
     )
 
-    for i in range(0, 10):
+    for i in range(10):
         line = f"this is line {i}"
 
         # The line has the preamble stripped
@@ -69,7 +69,7 @@ def test_clean_filter_unclean_output():
         exit_filter=None,
     )
 
-    for i in range(0, 10):
+    for i in range(10):
         line = f"this is line {i}"
 
         # Every line is returned verbatim

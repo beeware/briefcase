@@ -1201,7 +1201,7 @@ In future, you can specify this device by running:
                     # XDG_CONFIG_HOME and will not be able to find the AVD to run it.
                     env={
                         **self.env,
-                        **{"XDG_CONFIG_HOME": None},
+                        "XDG_CONFIG_HOME": None,
                     },
                 )
             except subprocess.CalledProcessError as e:

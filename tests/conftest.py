@@ -75,9 +75,7 @@ def sub_check_output_kw(sub_kw):
     """Default keyword arguments for all subprocess.check_output calls."""
     return {
         **sub_kw,
-        **{
-            "stderr": subprocess.STDOUT,
-        },
+        "stderr": subprocess.STDOUT,
     }
 
 
@@ -86,11 +84,9 @@ def sub_stream_kw(sub_kw):
     """Default keyword arguments for all output streaming subprocess calls."""
     return {
         **sub_kw,
-        **{
-            "stdout": subprocess.PIPE,
-            "stderr": subprocess.STDOUT,
-            "bufsize": 1,
-        },
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.STDOUT,
+        "bufsize": 1,
     }
 
 

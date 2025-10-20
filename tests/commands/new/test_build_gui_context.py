@@ -791,7 +791,7 @@ def test_custom_bootstrap(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )

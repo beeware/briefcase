@@ -83,7 +83,6 @@ class NewCommand(BaseCommand):
     def parse_config(self, filename, overrides):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""
-        pass
 
     def add_options(self, parser):
         parser.add_argument(
