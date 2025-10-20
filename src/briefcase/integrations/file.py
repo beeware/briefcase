@@ -288,7 +288,7 @@ class File(Tool):
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         """
-        # `temp_file` is used in the `finally` block, so make sure it's assigned 
+        # `temp_file` is used in the `finally` block, so make sure it's assigned
         # before the `try`.
         temp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115 (use context manager)
             dir=filename.parent,
