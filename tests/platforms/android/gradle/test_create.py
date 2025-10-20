@@ -421,6 +421,24 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
                 "features": {},
             },
         ),
+        # Bluetooth permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_NETWORK_STATE": True,
+                    "android.permission.BLUETOOTH": True,
+                    "android.permission.BLUETOOTH_ADMIN": True,
+                    "android.permission.BLUETOOTH_CONNECT": True,
+                    "android.permission.BLUETOOTH_SCAN": True,
+                    "android.permission.INTERNET": True,
+                },
+                "features": {},
+            },
+        ),
         # Override and augment by cross-platform definitions
         (
             {

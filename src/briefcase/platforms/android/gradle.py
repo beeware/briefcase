@@ -245,6 +245,12 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         # Default feature usage for all Android apps
         features = {}
 
+        if x_permissions["bluetooth"]:
+            permissions["android.permission.BLUETOOTH"] = True
+            permissions["android.permission.BLUETOOTH_ADMIN"] = True
+            permissions["android.permission.BLUETOOTH_CONNECT"] = True
+            permissions["android.permission.BLUETOOTH_SCAN"] = True
+
         if x_permissions["camera"]:
             permissions["android.permission.CAMERA"] = True
             features["android.hardware.camera"] = False
