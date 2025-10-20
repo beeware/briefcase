@@ -1,1 +1,0 @@
-The `RSE ruff rule set <https://docs.astral.sh/ruff/rules/#flake8-raise-rse>`_ was enabled and all findings were fixed.

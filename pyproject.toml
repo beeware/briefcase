@@ -241,7 +241,6 @@ extend-select = [
     "C4",     # flake8-comprehensions
     "I",      # isort
     "RUF",    # ruff-specific rules
-    "RSE",    # flake8-raise
     "PT",     # flake8-pytest-style
     # The SIM rules are *very* opinionated, and don't necessarily make for better code.
     # They may be worth occasionally turning on just to see if something could actually
