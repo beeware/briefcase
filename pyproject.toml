@@ -252,7 +252,6 @@ extend-select = [
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
-    "B904",    # use raise ... from ...
 ]
 
 
