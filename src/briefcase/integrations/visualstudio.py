@@ -122,7 +122,7 @@ variable that points at the MSBuild.exe provided by your Visual Studio
 installation.
 
 """
-                    )
+                    ) from None
 
                 # Retrieve metadata for Visual Studio install
                 try:
@@ -175,15 +175,15 @@ Ensure that Visual Studio following workloads and components installed:
 {cls.VSCODE_REQUIRED_COMPONENTS}
 Then restart Briefcase.
 """
-                    )
+                    ) from None
 
             # Try to invoke MSBuild at the established location
             try:
                 tools.subprocess.check_output([msbuild_path, "--version"])
-            except (subprocess.CalledProcessError, OSError):
+            except (subprocess.CalledProcessError, OSError) as e:
                 raise BriefcaseCommandError(
                     "MSBuild appears to exist, but Briefcase can't start it."
-                )
+                ) from e
 
             visualstudio = VisualStudio(
                 tools=tools,

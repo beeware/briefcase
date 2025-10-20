@@ -95,13 +95,13 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.10.7",
+    "coverage[toml] == 7.11.0",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.3",
+    "httpx-retries == 0.4.5",
     "pre-commit == 4.3.0",
     "pytest == 8.4.2",
     "pytest-xdist == 3.8.0",
-    "setuptools_scm == 9.2.0",
+    "setuptools_scm == 9.2.1",
     "tox == 4.31.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
@@ -252,7 +252,6 @@ extend-select = [
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
-    "B904",    # use raise ... from ...
 ]
 
 
