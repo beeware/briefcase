@@ -608,6 +608,7 @@ class macOSSigningMixin:
         :param allow_adhoc: Should the adhoc identities be allowed?
         :returns: The final identity to use
         """
+
         # If the adhoc identity is allowed, add it first so it appears first in the list
         # of options.
         identities = {}
