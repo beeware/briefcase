@@ -829,7 +829,7 @@ no extension).
                     self.console.verbose(
                         "Updating file permissions on "
                         f"{path.relative_to(self.bundle_path(app))} "
-                        f"from {oct(old_perms)[2:]} to {oct(new_perms)[2:]}"
+                        f"from {old_perms:o} to {new_perms:o}"
                     )
                     path.chmod(new_perms)
 

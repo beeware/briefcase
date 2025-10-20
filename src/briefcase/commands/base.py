@@ -1094,7 +1094,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # any partial remnants of this initial clone.
                     # If we're getting a GitError, we know the directory must exist.
                     self.tools.shutil.rmtree(cached_template)
-                    git_fatal_message = re.findall(r"(?<=fatal: ).*?$", e.stderr, re.S)
+                    git_fatal_message = re.findall(
+                        r"(?<=fatal: ).*?$", e.stderr, flags=re.DOTALL
+                    )
                     if git_fatal_message:
                         # GitError captures stderr with single quotes. Because the regex above
                         # takes everything after git's "fatal" message, we need to strip that final single quote.

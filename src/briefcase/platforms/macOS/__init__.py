@@ -1172,8 +1172,7 @@ password:
                 expected_filename = id_matches[0]["name"]
                 # .app files are zipped for notarization, but the app itself is
                 # notarized; strip the .zip suffix for filename matching purposes.
-                if expected_filename.endswith(".zip"):
-                    expected_filename = expected_filename[:-4]
+                expected_filename = expected_filename.removesuffix(".zip")
 
                 if expected_filename != self.notarization_path(app).name:
                     raise BriefcaseCommandError(
