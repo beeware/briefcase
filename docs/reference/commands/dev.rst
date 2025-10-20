@@ -69,3 +69,30 @@ For example:
 will run the app in normal mode, passing the ``--wiggle`` and ``--test`` flags to
 the app's command line. The app will *not* run in *Briefcase's* test mode; the
 ``--test`` flag will be left for your own app to interpret.
+
+Environment variables
+---------------------
+
+By default, ``briefcase dev`` will use the following environment variables:
+
+- ``PYTHONDEVMODE=1`` activates additional runtime checks,
+  e.g., :py:class:`DeprecationWarning` (see also |PYTHONDEVMODE|_).
+- ``PYTHONUNBUFFERED=1`` forces the ``stdout`` and ``stderr`` streams to be unbuffered
+  (see also |PYTHONUNBUFFERED|_).
+- ``PYTHONUTF8=1`` forces the usage of the UTF-8 encoding (see also |PYTHONUTF8|_).
+
+To deactivate this behavior, you can explicitly set the environment variables to empty
+strings:
+
+- For one command execution on Linux or macOS: ``PYTHONDEVMODE= briefcase dev``
+- For the current shell on Linux or macOS: ``export PYTHONDEVMODE=``
+- For the current shell in Windows PowerShell: ``$env:PYTHONDEVMODE = ""``
+
+.. |PYTHONDEVMODE| replace:: ``PYTHONDEVMODE``
+.. _PYTHONDEVMODE: https://docs.python.org/3/using/cmdline.html#envvar-PYTHONDEVMODE
+
+.. |PYTHONUNBUFFERED| replace:: ``PYTHONUNBUFFERED``
+.. _PYTHONUNBUFFERED: https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
+
+.. |PYTHONUTF8| replace:: ``PYTHONUTF8``
+.. _PYTHONUTF8: https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUTF8
