@@ -239,7 +239,7 @@ class ConvertCommand(NewCommand):
             default = "tests"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
-                + "'tests' might be your test directory"
+                "'tests' might be your test directory"
             )
         elif (self.base_path / "test").is_dir():
             default = "test"
@@ -394,7 +394,7 @@ class ConvertCommand(NewCommand):
                 default_author = git_username
                 intro = (
                     f"{intro}\n\n"
-                    + f"Based on your git configuration, we believe it could be '{git_username}'."
+                    f"Based on your git configuration, we believe it could be '{git_username}'."
                 )
 
             return self.console.text_question(
@@ -417,9 +417,9 @@ class ConvertCommand(NewCommand):
         author = self.console.selection_question(
             intro=(
                 f"{intro}\n\n"
-                + "We found these author names in the PEP621 formatted "
-                + "'pyproject.toml'. Who do you want to be credited as the author of "
-                + "this application?"
+                "We found these author names in the PEP621 formatted "
+                "'pyproject.toml'. Who do you want to be credited as the author of "
+                "this application?"
             ),
             description="Author",
             options=options,
