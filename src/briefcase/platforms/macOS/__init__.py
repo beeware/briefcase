@@ -1179,10 +1179,10 @@ password:
                         f"{submission_id} is not a submission ID for this project. "
                         f"It notarizes a file named {expected_filename}"
                     )
-            except IndexError as e:
+            except IndexError:
                 raise BriefcaseCommandError(
                     f"{submission_id} is not a known submission ID for this identity."
-                ) from e
+                ) from None
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     "Unable to invoke notarytool to determine validity of submission ID.\n"
