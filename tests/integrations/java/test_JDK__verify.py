@@ -48,7 +48,7 @@ def test_unsupported_arch(mock_tools):
 
     with pytest.raises(
         IncompatibleToolError,
-        match="Briefcase cannot install Java JDK on this machine.",
+        match=r"Briefcase cannot install Java JDK on this machine\.",
     ):
         JDK.verify(mock_tools)
 
@@ -228,7 +228,7 @@ def test_valid_provided_java_home(mock_tools, capsys):
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home",
+    ("host_os", "java_home"),
     [
         ("Linux", Path("tools", "java17")),
         ("Windows", Path("tools", "java17")),
@@ -269,7 +269,7 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home, error_type",
+    ("host_os", "java_home", "error_type"),
     [
         ("Linux", Path("tools", "java17"), FileNotFoundError),
         ("Linux", Path("tools", "java17"), NotADirectoryError),
@@ -316,7 +316,7 @@ def test_no_javac(mock_tools, host_os, java_home, error_type, tmp_path, capsys):
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home",
+    ("host_os", "java_home"),
     [
         ("Linux", Path("tools", "java17")),
         ("Windows", Path("tools", "java17")),
@@ -358,7 +358,7 @@ def test_javac_error(mock_tools, host_os, java_home, tmp_path, capsys):
 
 
 @pytest.mark.parametrize(
-    "host_os, java_home",
+    ("host_os", "java_home"),
     [
         ("Linux", Path("tools", "java17")),
         ("Windows", Path("tools", "java17")),
@@ -401,7 +401,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, jdk_url, jhome, is_32bit",
+    ("host_os", "host_arch", "jdk_url", "jhome", "is_32bit"),
     [
         (
             "Darwin",

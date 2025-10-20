@@ -1,0 +1,1 @@
+The `PT ruff rule set <https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt>`_ was enabled and all findings were fixed.

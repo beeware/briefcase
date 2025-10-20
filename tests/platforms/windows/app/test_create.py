@@ -22,7 +22,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Windows applications can only be built on Windows.",
+        match=r"Windows applications can only be built on Windows\.",
     ):
         create_command()
 
@@ -73,7 +73,7 @@ def test_context(create_command, first_app_config):
 
 
 @pytest.mark.parametrize(
-    "version, version_triple",
+    ("version", "version_triple"),
     [
         ("1", "1.0.0"),
         ("1.2", "1.2.0"),
@@ -122,7 +122,7 @@ def test_explicit_guid(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "revision, micro",
+    ("revision", "micro"),
     [
         # Numerical revision
         (5, "5"),

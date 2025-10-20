@@ -103,7 +103,7 @@ def file_perms() -> int:
 
 
 @pytest.mark.parametrize(
-    "url,content_disposition",
+    ("url", "content_disposition"),
     [
         # A `None` value for `content_disposition` means we skip the header.
         # Other values are passed through as HTTP header values.
@@ -387,7 +387,7 @@ def test_iter_bytes_connection_error(mock_tools):
     mock_tools.httpx.stream.return_value.__enter__.return_value = response
 
     # Download the file
-    with pytest.raises(NetworkFailure, match="Unable to download something.zip"):
+    with pytest.raises(NetworkFailure, match=r"Unable to download something\.zip"):
         mock_tools.file.download(
             url="https://example.com/something.zip?useful=Yes",
             download_path=mock_tools.base_path,

@@ -54,12 +54,12 @@ def test_wait_bar_done_message_nested_non_interactive(non_interactive_console, c
 
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
-    (
+    [
         ("Wait message...", False, "Wait message... done\n\n"),
         ("", False, "\n"),
         ("Wait Message...", True, "\n"),
         ("", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_transient_interactive(console, message, transient, output, capsys):
     """Output is present or absent based on presence of message and transient value."""
@@ -71,12 +71,12 @@ def test_wait_bar_transient_interactive(console, message, transient, output, cap
 
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
-    (
+    [
         ("Wait message...", False, "Wait message... started\nWait message... done\n\n"),
         ("", False, "\n"),
         ("Wait message...", True, "Wait message... started\nWait message... done\n\n"),
         ("", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_transient_non_interactive(
     non_interactive_console,
@@ -94,7 +94,7 @@ def test_wait_bar_transient_non_interactive(
 
 @pytest.mark.parametrize(
     ("message_one", "message_two", "transient", "output"),
-    (
+    [
         (
             "Wait message 1...",
             "Wait message 2...",
@@ -104,7 +104,7 @@ def test_wait_bar_transient_non_interactive(
         ("", "", False, "\n"),
         ("Wait message 1...", "Wait message 2...", True, "\n"),
         ("", "", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_transient_nested_interactive(
     console,
@@ -126,7 +126,7 @@ def test_wait_bar_transient_nested_interactive(
 
 @pytest.mark.parametrize(
     ("message_one", "message_two", "transient", "output"),
-    (
+    [
         (
             "Wait message 1...",
             "Wait message 2...",
@@ -151,7 +151,7 @@ def test_wait_bar_transient_nested_interactive(
             ),
         ),
         ("", "", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_transient_nested_non_interactive(
     non_interactive_console,
@@ -173,12 +173,12 @@ def test_wait_bar_transient_nested_non_interactive(
 
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
-    (
+    [
         ("Wait message...", False, "Wait message... aborted\n\n"),
         ("", False, "\n"),
         ("Wait Message...", True, "\n"),
         ("", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_keyboard_interrupt_interactive(
     console,
@@ -200,7 +200,7 @@ def test_wait_bar_keyboard_interrupt_interactive(
 
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
-    (
+    [
         (
             "Wait message...",
             False,
@@ -213,7 +213,7 @@ def test_wait_bar_keyboard_interrupt_interactive(
             "Wait message... started\nWait message... aborted\n\n",
         ),
         ("", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_keyboard_interrupt_non_interactive(
     non_interactive_console,
@@ -235,7 +235,7 @@ def test_wait_bar_keyboard_interrupt_non_interactive(
 
 @pytest.mark.parametrize(
     ("message_one", "message_two", "transient", "output"),
-    (
+    [
         (
             "Wait message 1...",
             "Wait message 2...",
@@ -245,7 +245,7 @@ def test_wait_bar_keyboard_interrupt_non_interactive(
         ("", "", False, "\n"),
         ("Wait message 1...", "Wait message 2...", True, "\n"),
         ("", "", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_keyboard_interrupt_nested_interactive(
     console,
@@ -269,7 +269,7 @@ def test_wait_bar_keyboard_interrupt_nested_interactive(
 
 @pytest.mark.parametrize(
     ("message_one", "message_two", "transient", "output"),
-    (
+    [
         (
             "Wait message 1...",
             "Wait message 2...",
@@ -294,7 +294,7 @@ def test_wait_bar_keyboard_interrupt_nested_interactive(
             ),
         ),
         ("", "", True, "\n"),
-    ),
+    ],
 )
 def test_wait_bar_keyboard_interrupt_nested_non_interactive(
     non_interactive_console,

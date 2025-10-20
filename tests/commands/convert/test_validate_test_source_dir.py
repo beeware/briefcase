@@ -23,5 +23,5 @@ def test_test_source_dir_shouldnt_contain_test_entry_script(convert_command):
     test_entry_path = convert_command.base_path / test_source_dir / f"{app_name}.py"
     create_file(test_entry_path, "TEST ENTRY SCRIPT")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="reserved for the briefcase test"):
         convert_command.validate_test_source_dir(app_name, test_source_dir)

@@ -25,7 +25,7 @@ def test_parse_config(new_command):
 
 
 @pytest.mark.parametrize(
-    "cmdline, overrides",
+    ("cmdline", "overrides"),
     [
         ([], {}),
         (["-Q", "license=MIT"], {"license": "MIT"}),

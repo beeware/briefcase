@@ -40,8 +40,8 @@ def test_prepare(mock_tools, my_app, extra_args, tmp_path, sub_stream_kw):
             "--build-arg",
             "HOST_GID=42",
             os.fsdecode(tmp_path / "base/path/to/src"),
-        ]
-        + extra_args,
+            *extra_args,
+        ],
         **sub_stream_kw,
     )
 

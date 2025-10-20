@@ -5,7 +5,7 @@ from rich.console import ColorSystem
 
 
 @pytest.mark.parametrize(
-    "no_color, color_system, is_enabled",
+    ("no_color", "color_system", "is_enabled"),
     [
         (False, ColorSystem.TRUECOLOR, True),
         (False, None, False),

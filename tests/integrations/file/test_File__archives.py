@@ -17,14 +17,13 @@ def custom_packing_format():
 
 
 @pytest.mark.parametrize(
-    "filename, outcome",
+    ("filename", "outcome"),
     [
         ("filename.tar", True),
         ("filename.zip", True),
         ("filename.archive", True),
         ("filename.part.archive", True),
         ("filename.archive.ext", True),
-        ("filename.part.archive.ext", True),
         ("filename.part.archive.ext", True),
         ("filename", False),
         ("filename.doc", False),

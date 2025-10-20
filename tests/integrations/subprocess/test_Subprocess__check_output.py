@@ -40,7 +40,7 @@ EXPECTED_SUCCESS_OUTPUT = (
 
 @pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
 @pytest.mark.parametrize(
-    "quiet, verbosity, expected_output, expected_log",
+    ("quiet", "verbosity", "expected_output", "expected_log"),
     [
         (0, LogLevel.INFO, "", EXPECTED_SUCCESS_OUTPUT),
         (0, LogLevel.DEBUG, EXPECTED_SUCCESS_OUTPUT, EXPECTED_SUCCESS_OUTPUT),
@@ -323,7 +323,7 @@ EXPECTED_ERROR_LOG_OUTPUT = (
 
 
 @pytest.mark.parametrize(
-    "quiet, verbosity, expected_output, expected_log",
+    ("quiet", "verbosity", "expected_output", "expected_log"),
     [
         (0, LogLevel.INFO, EXPECTED_ERROR_OUTPUT, EXPECTED_ERROR_LOG_OUTPUT),
         (0, LogLevel.DEBUG, EXPECTED_ERROR_LOG_OUTPUT, EXPECTED_ERROR_LOG_OUTPUT),
@@ -389,7 +389,7 @@ def test_calledprocesserror_exception_logging_no_output(mock_sub, capsys, caplog
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, kwargs",
+    ("in_kwargs", "kwargs"),
     [
         (
             {},

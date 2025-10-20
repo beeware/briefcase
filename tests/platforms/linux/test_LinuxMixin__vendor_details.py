@@ -6,7 +6,7 @@ from .os_release import OS_RELEASE
 
 
 @pytest.mark.parametrize(
-    "docker, vendor, codename, vendor_base",
+    ("docker", "vendor", "codename", "vendor_base"),
     [
         ("archlinux:latest", "arch", "rolling", "arch"),
         ("manjaro/base:latest", "manjaro", "rolling", "arch"),

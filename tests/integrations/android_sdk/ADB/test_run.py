@@ -44,7 +44,7 @@ def test_quiet_command(mock_tools, adb, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "name, exception",
+    ("name", "exception"),
     [
         # When the device is not found, look for a command the user can run to get a
         # list of valid devices.

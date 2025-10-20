@@ -139,11 +139,10 @@ def test_input_disabled_with_override(disabled_console):
 def test_input_disabled_validation_failure(disabled_console):
     """If input is disabled, and validation fails, an error is raised."""
 
+    def not_valid(text):
+        raise ValueError("Well that won't work...")
+
     with pytest.raises(InputDisabled, match=r"Well that won't work..."):
-
-        def not_valid(text):
-            raise ValueError("Well that won't work...")
-
         disabled_console.text_question(
             intro="Some introduction",
             description="My variable",
@@ -156,11 +155,11 @@ def test_input_disabled_validation_failure(disabled_console):
 
 def test_input_disabled_validation_failure_with_override(disabled_console):
     """If input is disabled, and validation fails for override, an error is raised."""
+
+    def not_valid(text):
+        raise ValueError("Well that won't work...")
+
     with pytest.raises(InputDisabled, match=r"Well that won't work..."):
-
-        def not_valid(text):
-            raise ValueError("Well that won't work...")
-
         disabled_console.text_question(
             intro="Some introduction",
             description="My variable",

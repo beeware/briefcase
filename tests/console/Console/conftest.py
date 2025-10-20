@@ -33,4 +33,4 @@ def disabled_console() -> DummyConsole:
 @pytest.fixture
 def non_interactive_console(console, monkeypatch) -> DummyConsole:
     monkeypatch.setattr(os, "isatty", lambda _: False)
-    yield console
+    return console

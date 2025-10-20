@@ -99,7 +99,7 @@ def test_call_with_parser_error(mock_sub, capsys, sub_check_output_kw):
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, kwargs",
+    ("in_kwargs", "kwargs"),
     [
         ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),

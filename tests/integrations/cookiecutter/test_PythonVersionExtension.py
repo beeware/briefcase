@@ -6,7 +6,7 @@ from briefcase.integrations.cookiecutter import PythonVersionExtension
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # Single digit minor
         ("3.8.4.dev5", "3.8"),
@@ -30,7 +30,7 @@ def test_py_tag(value, expected):
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # Single digit minor
         ("3.8.4.dev5", "38"),
@@ -54,7 +54,7 @@ def test_py_libtag(value, expected):
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # Single digit minor
         ("3.8.4", "3.8.4"),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Collection
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -13,7 +14,7 @@ from briefcase.integrations.base import ManagedTool, ToolCache
 class WiX(ManagedTool):
     name = "wix"
     full_name = "WiX"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
 
     # WARNING: version 6 and later have licensing issues: see
     # https://github.com/beeware/briefcase/issues/1185.

@@ -199,9 +199,8 @@ def test_merge_problem(dummy_command, tmp_path):
         BriefcaseCommandError,
         match=r"Unable to create fat library for second[/\\]sub1[/\\]module1.dylib",
     ):
-        merged_path = tmp_path / "merged_app_packages"
         dummy_command.merge_app_packages(
-            merged_path,
+            tmp_path / "merged_app_packages",
             sources=[
                 tmp_path / "app_packages.gothic",
                 tmp_path / "app_packages.modern",

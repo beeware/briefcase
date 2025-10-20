@@ -117,7 +117,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 """
 
     # Platform-specific template context dictionary for Docker installation details
-    DOCKER_INSTALL_URL = {
+    DOCKER_INSTALL_URL: Mapping[str, str] = {
         "Windows": "https://docs.docker.com/docker-for-windows/install/",
         "Darwin": "https://docs.docker.com/docker-for-mac/install/",
         "Linux": "https://docs.docker.com/engine/install/#server",

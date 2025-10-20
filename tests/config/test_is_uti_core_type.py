@@ -7,7 +7,7 @@ from briefcase.platforms.macOS import utils
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 @pytest.mark.parametrize(
-    "uti, result",
+    ("uti", "result"),
     [
         (None, False),
         ("com.unknown.data", False),

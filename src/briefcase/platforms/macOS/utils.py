@@ -60,7 +60,7 @@ class AppPackagesMergeMixin:
     def find_binary_packages(
         self,
         install_path: Path,
-        universal_suffix: str = None,
+        universal_suffix: str | None = None,
     ) -> list[tuple[str, str]]:
         """Find the packages that have been installed that have binary components.
 

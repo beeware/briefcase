@@ -21,7 +21,7 @@ def build_command(dummy_console, tmp_path):
     return command
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path):
     """An macOS App can be built."""
     # Enable verbose tool logging

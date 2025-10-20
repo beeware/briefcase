@@ -211,7 +211,7 @@ errors pretty printing info"""
     ]
     with pytest.raises(
         BriefcaseCommandError,
-        match="does not have\npermissions to invoke Docker.",
+        match=r"does not have\npermissions to invoke Docker\.",
     ):
         Docker.verify(mock_tools)
 
@@ -305,8 +305,8 @@ def test_docker_image_hint(mock_tools):
     Docker.verify(mock_tools, image_tag="myimage:tagtorulethemall")
 
     mock_tools.subprocess.check_output.assert_has_calls(
-        DOCKER_VERIFICATION_CALLS
-        + [
+        [
+            *DOCKER_VERIFICATION_CALLS,
             call(
                 ["docker", "images", "-q", "myimage:tagtorulethemall"],
                 env={"DOCKER_CLI_HINTS": "false"},
@@ -412,7 +412,7 @@ def test_user_mapping_write_test_file_cleanup_fails(mock_tools, mock_write_test_
         Docker.verify(mock_tools)
 
 
-@pytest.mark.parametrize("file_owner_id, expected", [(1000, True), (0, False)])
+@pytest.mark.parametrize(("file_owner_id", "expected"), [(1000, True), (0, False)])
 def test_user_mapping_setting(
     mock_tools,
     user_mapping_run_calls,

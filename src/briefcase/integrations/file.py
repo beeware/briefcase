@@ -184,7 +184,7 @@ class File(Tool):
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)
-        filename: Path = None
+        filename: Path | None = None
         try:
             with self.tools.httpx.stream(
                 "GET",
