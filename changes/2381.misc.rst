@@ -1,1 +1,1 @@
-Resolved ruff rule `B904 - raise-without-from-inside-except <https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/>`_.
+Resolved ruff rule ``B904`` - raise-without-from-inside-except.
