@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-from contextlib import suppress
 
 from briefcase.commands import (
     BuildCommand,
@@ -217,8 +216,10 @@ class LinuxAppImageCreateCommand(
             pass
 
         # Use the non-root user if Docker is not mapping usernames
-        with suppress(AttributeError):  # ignore if not using Docker
+        try:
             context["use_non_root_user"] = not self.tools.docker.is_user_mapped
+        except AttributeError:
+            pass  # ignore if not using Docker
 
         return context
 

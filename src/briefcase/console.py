@@ -10,7 +10,7 @@ import textwrap
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
@@ -412,8 +412,10 @@ class Console:
             stacktrace. Defaults to the main thread.
         """
         exc_info = sys.exc_info()
-        with suppress(AttributeError):
+        try:
             self.skip_log = exc_info[1].skip_logfile
+        except AttributeError:
+            pass
 
         self.stacktraces.append((label, Traceback.extract(*exc_info, show_locals=True)))
 

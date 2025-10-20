@@ -5,7 +5,6 @@ import keyword
 import re
 import sys
 import unicodedata
-from contextlib import suppress
 from types import SimpleNamespace
 from urllib.parse import urlparse
 
@@ -232,8 +231,10 @@ def parsed_version(version):
 
     # Convert strings to values
     for key in ("epoch", "pre_value", "post", "dev"):
-        with suppress(TypeError):
+        try:
             groupdict[key] = int(groupdict[key])
+        except TypeError:
+            pass
 
     tag = groupdict.pop("pre_tag")
     value = groupdict.pop("pre_value")
@@ -575,11 +576,15 @@ def merge_pep621_config(global_config, pep621_config):
 
     # Use the details of the first author as the Briefcase author.
     if "author" not in global_config:
-        with suppress(KeyError, IndexError):
+        try:
             global_config["author"] = pep621_config["authors"][0]["name"]
+        except (KeyError, IndexError):
+            pass
     if "author_email" not in global_config:
-        with suppress(KeyError, IndexError):
+        try:
             global_config["author_email"] = pep621_config["authors"][0]["email"]
+        except (KeyError, IndexError):
+            pass
 
     # Briefcase requires is cumulative over PEP621 dependencies
     try:
@@ -638,8 +643,10 @@ def parse_config(config_file, platform, output_format, console):
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
     # Merge the PEP621 configuration (if it exists)
-    with suppress(KeyError):
+    try:
         merge_pep621_config(global_config, pyproject["project"])
+    except KeyError:
+        pass
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())

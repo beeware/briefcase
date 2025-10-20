@@ -4,7 +4,6 @@ import gzip
 import re
 import subprocess
 import tarfile
-from contextlib import suppress
 from pathlib import Path
 
 from briefcase.commands import (
@@ -669,10 +668,12 @@ class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateC
         # enabling the root user. This might cause problems later, but it's part of a
         # much bigger "does the project need to be updated in light of configuration
         # changes" problem.
-        with suppress(AttributeError):  # ignore if not using Docker
+        try:
             context["use_non_root_user"] = (
                 self.tools.host_os == "Darwin" or not self.tools.docker.is_user_mapped
             )
+        except AttributeError:
+            pass  # ignore if not using Docker
 
         return context
 
