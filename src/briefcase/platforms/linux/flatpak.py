@@ -56,7 +56,7 @@ class LinuxFlatpakMixin(LinuxMixin):
                     "If you specify a custom Flatpak runtime repository, "
                     "you must also specify an alias for that repository using "
                     "`flatpak_runtime_repo_alias`"
-                )
+                ) from None
 
         except AttributeError:
             repo_alias = Flatpak.DEFAULT_REPO_ALIAS

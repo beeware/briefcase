@@ -40,7 +40,7 @@ class Flatpak(Tool):
                             "Briefcase requires Flatpak 1.0 or later."
                         )
                 else:
-                    raise ValueError(f"Unexpected tool name {parts[0]}")
+                    raise ValueError(f"Unexpected tool name {parts[0]}") from None
             except (ValueError, IndexError):
                 tools.console.warning(
                     """\

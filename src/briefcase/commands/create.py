@@ -360,7 +360,7 @@ class CreateCommand(BaseCommand):
                             platform=self.platform,
                             host_arch=self.tools.host_arch,
                             is_32bit=self.tools.is_32bit_python,
-                        )
+                        ) from None
 
                 support_package_url = self.support_package_url(support_revision)
                 custom_support_package = False
@@ -1016,7 +1016,7 @@ class CreateCommand(BaseCommand):
             except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from None
         elif app:
             apps_to_create = {app.app_name: app}
         else:
