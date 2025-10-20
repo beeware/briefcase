@@ -55,10 +55,10 @@ class SigningIdentity:
     def team_id_from_name(cls, name):
         try:
             return re.match(r".*\(([\dA-Z]*)\)", name)[1]
-        except TypeError as e:
+        except TypeError:
             raise BriefcaseCommandError(
                 f"Couldn't extract Team ID from signing identity {name!r}"
-            ) from e
+            ) from None
 
     @property
     def is_adhoc(self):
@@ -1255,8 +1255,8 @@ password:
                                 "Unknown problem retrieving notarization status."
                             ) from e
 
-        except KeyboardInterrupt as e:
-            raise NotarizationInterrupted("Notarization interrupted by user.") from e
+        except KeyboardInterrupt:
+            raise NotarizationInterrupted("Notarization interrupted by user.") from None
         else:
             filename = self.notarization_path(app)
             try:

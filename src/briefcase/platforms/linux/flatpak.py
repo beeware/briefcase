@@ -49,12 +49,12 @@ class LinuxFlatpakMixin(LinuxMixin):
             repo_url = app.flatpak_runtime_repo_url
             try:
                 repo_alias = app.flatpak_runtime_repo_alias
-            except AttributeError as e:
+            except AttributeError:
                 raise BriefcaseConfigError(
                     "If you specify a custom Flatpak runtime repository, "
                     "you must also specify an alias for that repository using "
                     "`flatpak_runtime_repo_alias`"
-                ) from e
+                ) from None
 
         except AttributeError:
             repo_alias = Flatpak.DEFAULT_REPO_ALIAS

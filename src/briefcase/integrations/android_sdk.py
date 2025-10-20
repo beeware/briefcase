@@ -936,13 +936,13 @@ connection.
                 raise BriefcaseCommandError(
                     f"Unable to create emulator with definition {device_or_avd!r}"
                 ) from e
-            except KeyError as e:
-                raise BriefcaseCommandError("No AVD provided for new device.") from e
+            except KeyError:
+                raise BriefcaseCommandError("No AVD provided for new device.") from None
             except TypeError as e:
                 property = str(e).split(" ")[-1]
                 raise BriefcaseCommandError(
                     f"Unknown device property {property}."
-                ) from e
+                ) from None
 
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()

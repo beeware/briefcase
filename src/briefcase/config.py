@@ -144,7 +144,7 @@ def validate_document_type_config(document_type_id, document_type):
     except ValueError as e:
         raise BriefcaseConfigError(
             f"The URL associated with document type {document_type_id!r} is invalid: {e}"
-        ) from e
+        ) from None
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
