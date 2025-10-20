@@ -249,6 +249,7 @@ extend-select = [
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
+    "SIM105",  # use `contextlib.suppress` (too opinionated)
     "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
