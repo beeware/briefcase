@@ -36,7 +36,6 @@ def test_unsupported_template_version(package_command, first_app_generated):
 
 
 def test_distribution_path(package_command, first_app_apk, tmp_path):
-    print(package_command.packaging_formats)
     assert (
         package_command.distribution_path(first_app_apk)
         == tmp_path / "base_path/dist/First App-0.0.1.debug.apk"
