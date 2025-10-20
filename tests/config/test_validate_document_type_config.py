@@ -227,7 +227,7 @@ def test_document_type_macOS_config_with_list_of_content_types(valid_document):
     ]
     with pytest.raises(
         BriefcaseConfigError,
-        match="Document type 'ext' has multiple content types.",
+        match=r"Document type 'ext' has multiple content types\.",
     ):
         validate_document_type_config("ext", valid_document)
 

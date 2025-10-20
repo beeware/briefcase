@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch",
+    ("host_os", "host_arch"),
     [
         ("Windows", "arm64"),
         ("Linux", "armv7l"),
@@ -127,7 +127,7 @@ def test_problem_downloading_system_image(mock_tools, android_sdk):
     # Attempt to verify the system image
     with pytest.raises(
         BriefcaseCommandError,
-        match="Error while installing the 'system-images;android-31;default;x86_64' Android system image.",
+        match=r"Error while installing the 'system-images;android-31;default;x86_64' Android system image\.",
     ):
         android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 

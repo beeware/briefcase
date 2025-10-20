@@ -127,7 +127,7 @@ def test_home_path_default(simple_tools):
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="Linux/macOS specific tests")
 @pytest.mark.parametrize(
-    "home_path, expected_path",
+    ("home_path", "expected_path"),
     [
         (None, Path.home()),
         ("/path/to/home", Path("/path/to/home")),
@@ -147,7 +147,7 @@ def test_nonwindows_home_path(dummy_console, home_path, expected_path, tmp_path)
 
 @pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 @pytest.mark.parametrize(
-    "home_path, expected_path",
+    ("home_path", "expected_path"),
     [
         (None, Path.home()),
         ("Y:\\path\\to\\home", Path("Y:\\path\\to\\home")),
@@ -165,7 +165,7 @@ def test_windows_home_path(dummy_console, home_path, expected_path, tmp_path):
     assert tools.home_path == expected_path
 
 
-@pytest.mark.parametrize("maxsize, is_32bit", [(2**32, True), (2**64, False)])
+@pytest.mark.parametrize(("maxsize", "is_32bit"), [(2**32, True), (2**64, False)])
 def test_is_32bit_python(dummy_console, maxsize, is_32bit, monkeypatch, tmp_path):
     """Whether Python is 32bits is sensitive to `sys.maxsize`."""
     monkeypatch.setattr(sys, "maxsize", maxsize)
@@ -179,7 +179,7 @@ def test_is_32bit_python(dummy_console, maxsize, is_32bit, monkeypatch, tmp_path
 
 
 @pytest.mark.parametrize(
-    "mock_encoding, expected_encoding",
+    ("mock_encoding", "expected_encoding"),
     [
         ("iso-123", "ISO-123"),
         ("", "ISO-4242"),

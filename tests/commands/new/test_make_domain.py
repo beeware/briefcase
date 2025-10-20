@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "bundle, candidate",
+    ("bundle", "candidate"),
     [
         ("com.example", "example.com"),
         ("com.example.more", "more.example.com"),

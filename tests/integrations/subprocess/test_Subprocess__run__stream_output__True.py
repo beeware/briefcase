@@ -238,7 +238,7 @@ def test_calledprocesserror_exception_logging(mock_sub, sleep_zero, capsys):
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, kwargs",
+    ("in_kwargs", "kwargs"),
     [
         ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),

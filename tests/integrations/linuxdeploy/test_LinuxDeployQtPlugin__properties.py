@@ -19,7 +19,7 @@ def test_file_path(mock_tools, linuxdeploy_qt_plugin):
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, linuxdeploy_arch",
+    ("host_os", "host_arch", "linuxdeploy_arch"),
     [
         ("Linux", "x86_64", "x86_64"),
         ("Linux", "i686", "i386"),
@@ -44,7 +44,7 @@ def test_plugin_id(linuxdeploy_qt_plugin):
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, linuxdeploy_arch",
+    ("host_os", "host_arch", "linuxdeploy_arch"),
     [
         ("Linux", "x86_64", "x86_64"),
         ("Linux", "i686", "i386"),

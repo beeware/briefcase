@@ -4,7 +4,7 @@ from briefcase.platforms.android.gradle import safe_formal_name
 
 
 @pytest.mark.parametrize(
-    "formal_name, safe_name",
+    ("formal_name", "safe_name"),
     [
         ("Hello World", "Hello World"),
         # The invalid list is all stripped

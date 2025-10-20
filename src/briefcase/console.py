@@ -9,7 +9,7 @@ import sys
 import textwrap
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Collection, Iterable, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
@@ -68,7 +68,7 @@ class RichConsoleHighlighter(RegexHighlighter):
     """
 
     base_style = "repr."
-    highlights = [
+    highlights: Collection[str] = [
         r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)"
     ]
 
@@ -100,7 +100,7 @@ class LogLevel(IntEnum):
 
 
 class NotDeadYet:
-    # I’m getting better! No you’re not, you’ll be stone dead in a minute.
+    # I'm getting better! No, you're not, you'll be stone dead in a minute.
 
     def __init__(self, console: Console):
         """A keep-alive spinner for long-running processes without console output.

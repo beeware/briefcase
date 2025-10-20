@@ -226,8 +226,8 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
         xcode + "\n",  # xcode-select -p
         "\n".join(
             [
-                "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."  # noqa: E501
-                "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",  # noqa: E501
+                "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."
+                "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",
                 "Xcode 13.2.1",
                 "Build version 13C100",
             ]
@@ -255,7 +255,7 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
 
 
 @pytest.mark.parametrize(
-    "min_version, version",
+    ("min_version", "version"),
     [
         # Exact match
         ((11, 2, 1), "11.2.1"),  # Exact match
@@ -279,7 +279,6 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
         # exact match
         ((11, 2, 0), "11.2"),  # Exact match.
         ((11, 2), "11.2"),  # Exact match, implied revision.
-        ((11,), "11.2"),  # Exact match, implied minor version.
         # exceeds version
         ((11, 1, 1), "11.2"),  # Exact match.
         ((11, 1), "11.2"),  # Exact match, implied revision.
@@ -327,7 +326,7 @@ def test_installed_with_minimum_version_success(
 
 
 @pytest.mark.parametrize(
-    "min_version, version",
+    ("min_version", "version"),
     [
         ((11, 2, 5), "11.2.1"),  # insufficient revision
         ((11, 3), "11.2.1"),  # Insufficient micro version

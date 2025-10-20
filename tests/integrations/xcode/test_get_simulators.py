@@ -59,7 +59,7 @@ def test_simctl_missing(mock_tools, simulator):
         cmd=["xcrun", "simctl", "list", "-j"], returncode=1
     )
 
-    with pytest.raises(BriefcaseError, match="Unable to run xcrun simctl."):
+    with pytest.raises(BriefcaseError, match=r"Unable to run xcrun simctl\."):
         get_simulators(mock_tools, "iOS", simulator_location=simulator)
 
 

@@ -14,7 +14,7 @@ def _create_version_info(major, minor, patch=0):
 
 
 @pytest.mark.parametrize(
-    "minor_version, today, is_valid",
+    ("minor_version", "today", "is_valid"),
     [
         (8, datetime(2025, 10, 1), False),  # after EOL
         (9, datetime(2025, 10, 1), True),  # on EOL

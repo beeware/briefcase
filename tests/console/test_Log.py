@@ -57,7 +57,7 @@ def logging_console() -> logging.Logger:
 
 
 @pytest.mark.parametrize(
-    "verbosity, verbose_enabled, debug_enabled, deep_debug_enabled",
+    ("verbosity", "verbose_enabled", "debug_enabled", "deep_debug_enabled"),
     [
         (-1, False, False, False),
         (0, False, False, False),
@@ -531,7 +531,7 @@ def test_log_error_with_context(console, capsys):
 
 
 @pytest.mark.parametrize(
-    "logging_level, handler_expected",
+    ("logging_level", "handler_expected"),
     [
         (LogLevel.DEEP_DEBUG, True),
         (LogLevel.DEBUG, False),

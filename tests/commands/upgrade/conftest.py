@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from unittest.mock import MagicMock
 
 import pytest
@@ -78,7 +79,7 @@ def mock_no_managed_tool_registry(monkeypatch):
 
 class DummyToolBase(Tool):
     name = "dummy_tool_base"
-    supported_host_os = {"wonky"}
+    supported_host_os: Collection[str] = {"wonky"}
 
     @classmethod
     def verify_install(cls, tools, **kwargs):
@@ -87,7 +88,7 @@ class DummyToolBase(Tool):
 
 class DummyManagedToolBase(ManagedTool):
     name = "dummy_managed_tool_base"
-    supported_host_os = {"wonky"}
+    supported_host_os: Collection[str] = {"wonky"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

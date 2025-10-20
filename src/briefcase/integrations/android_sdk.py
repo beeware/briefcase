@@ -1282,7 +1282,7 @@ In future, you can specify this device by running:
 
         # Start the emulator
         emulator_popen = self.tools.subprocess.Popen(
-            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8"] + extra_args,
+            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8", *extra_args],
             env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1471,7 +1471,7 @@ class ADB:
         # This keeps performance good in the success case.
         try:
             output = self.tools.subprocess.check_output(
-                [self.tools.android_sdk.adb_path, "-s", self.device] + list(arguments),
+                [self.tools.android_sdk.adb_path, "-s", self.device, *arguments],
                 quiet=quiet,
             )
             # add returns status code 0 in the case of failure. The only tangible evidence

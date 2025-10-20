@@ -57,7 +57,7 @@ def test_write_insert_warn_if_file_missing(build_command, app_config, monkeypatc
     warnings = []
     monkeypatch.setattr(build_command.console, "warning", warnings.append)
 
-    # Attempt to insert into a file that doesn’t exist
+    # Attempt to insert into a file that doesn't exist
     inserts = {"header": {"pkg": "<div/>"}}
     build_command.write_inserts(app_config, Path("notexist.html"), inserts)
 
@@ -154,7 +154,8 @@ def test_write_insert_replaces_all_matches(build_command, app_config):
     out = target.read_text(encoding="utf-8")
 
     # Both occurrences replaced
-    assert "X" not in out and "Y" not in out
+    assert "X" not in out
+    assert "Y" not in out
     assert out.count("Z") == 2
 
 
@@ -187,7 +188,8 @@ def test_write_insert_handles_html_and_css_markers(build_command, app_config):
     assert "<link/>" in out
     assert "/**************************************************" in out
     assert "h1{}" in out
-    assert "OLD_HTML" not in out and "OLD_CSS" not in out
+    assert "OLD_HTML" not in out
+    assert "OLD_CSS" not in out
 
 
 def test_write_insert_preserves_multiline_indent(build_command, app_config):

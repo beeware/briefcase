@@ -5,7 +5,7 @@ from briefcase.platforms.macOS import SigningIdentity
 
 
 @pytest.mark.parametrize(
-    "identity_id, identity_name, team_id",
+    ("identity_id", "identity_name", "team_id"),
     [
         ("CAFEBEEF", "Developer ID Application: Jane Developer (DEADBEEF)", "DEADBEEF"),
         (

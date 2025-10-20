@@ -86,7 +86,7 @@ def test_non_str_cwd_provided(mock_sub):
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, final_kwargs",
+    ("in_kwargs", "final_kwargs"),
     [
         # Default handling
         (

@@ -357,7 +357,7 @@ def test_install_custom_stub_binary_zip(
     ).exists()
 
 
-@pytest.mark.parametrize("stub_filename", ("stub.tar", "stub.tar.gz"))
+@pytest.mark.parametrize("stub_filename", ["stub.tar", "stub.tar.gz"])
 def test_install_custom_stub_binary_tar(
     create_command,
     myapp,

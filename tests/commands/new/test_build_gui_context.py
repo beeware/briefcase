@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from unittest.mock import MagicMock
 
 import pytest
@@ -766,7 +767,7 @@ def test_custom_bootstrap(
     """A context is create for a custom bootstrap."""
 
     class GuiBootstrap:
-        fields = ["requires", "platform"]
+        fields: Collection[str] = ["requires", "platform"]
 
         def __init__(self, console, context):
             self.console = console

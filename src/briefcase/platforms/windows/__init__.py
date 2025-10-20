@@ -1,6 +1,7 @@
 import re
 import subprocess
 import uuid
+from collections.abc import Collection
 from pathlib import Path, PurePath
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -15,7 +16,7 @@ DEFAULT_OUTPUT_FORMAT = "app"
 
 class WindowsMixin:
     platform = "windows"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
     platform_target_version = "0.3.24"
 
@@ -154,7 +155,7 @@ class WindowsRunCommand(RunCommand):
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 encoding="UTF-8",
                 bufsize=1,
@@ -164,7 +165,7 @@ class WindowsRunCommand(RunCommand):
         else:
             # Start the app in a way that lets us stream the logs
             app_popen = self.tools.subprocess.Popen(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 encoding="UTF-8",
                 stdout=subprocess.PIPE,
@@ -307,13 +308,13 @@ class WindowsPackageCommand(PackageCommand):
     def package_app(
         self,
         app: AppConfig,
-        identity: str = None,
+        identity: str | None = None,
         adhoc_sign: bool = False,
-        file_digest: str = None,
+        file_digest: str | None = None,
         use_local_machine: bool = False,
-        cert_store: str = None,
-        timestamp_url: str = None,
-        timestamp_digest: str = None,
+        cert_store: str | None = None,
+        timestamp_url: str | None = None,
+        timestamp_digest: str | None = None,
         **kwargs,
     ):
         """Package an application.

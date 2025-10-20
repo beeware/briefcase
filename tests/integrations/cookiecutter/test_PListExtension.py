@@ -6,7 +6,7 @@ from briefcase.integrations.cookiecutter import PListExtension
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (True, "<true/>"),
         (False, "<false/>"),

@@ -4,7 +4,7 @@ from briefcase.integrations.windows_sdk import WindowsSDK
 
 
 @pytest.mark.parametrize(
-    "sdk_version, supported",
+    ("sdk_version", "supported"),
     [
         ("42.42.1000", True),
         ("42.42.1000.0", True),

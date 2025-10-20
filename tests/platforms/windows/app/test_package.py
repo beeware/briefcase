@@ -115,13 +115,12 @@ def test_verify_with_signing(package_command, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "cli_args, signing_options, is_sdk_needed",
+    ("cli_args", "signing_options", "is_sdk_needed"),
     [
         ([], {}, False),
         (["--adhoc-sign"], {"adhoc_sign": True}, False),
         (["--file-digest", "sha2000"], {"file_digest": "sha2000"}, False),
         (["-i", "asdf"], {"identity": "asdf"}, True),
-        (["--identity", "asdf"], {"identity": "asdf"}, True),
         (["--identity", "asdf"], {"identity": "asdf"}, True),
         (
             [
@@ -195,7 +194,7 @@ def test_parse_options(package_command, cli_args, signing_options, is_sdk_needed
 
 
 @pytest.mark.parametrize(
-    "kwargs, external",
+    ("kwargs", "external"),
     [
         # Default behavior (adhoc signing, internal app)
         ({}, False),
@@ -289,7 +288,7 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
 
 
 @pytest.mark.parametrize(
-    "use_local_machine, additional_args",
+    ("use_local_machine", "additional_args"),
     [(False, []), (True, ["-sm"])],
 )
 def test_package_msi_with_codesigning(
@@ -336,9 +335,7 @@ def test_package_msi_with_codesigning(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + additional_args
-            + [
+                *additional_args,
                 tmp_path
                 / "base_path"
                 / "build"
@@ -346,7 +343,7 @@ def test_package_msi_with_codesigning(
                 / "windows"
                 / "app"
                 / "src"
-                / "First App.exe"
+                / "First App.exe",
             ],
             check=True,
         ),
@@ -392,16 +389,16 @@ def test_package_msi_with_codesigning(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + additional_args
-            + [tmp_path / "base_path/dist/First App-0.0.1.msi"],
+                *additional_args,
+                tmp_path / "base_path/dist/First App-0.0.1.msi",
+            ],
             check=True,
         ),
     ]
 
 
 @pytest.mark.parametrize(
-    "use_local_machine, additional_args",
+    ("use_local_machine", "additional_args"),
     [(False, []), (True, ["-sm"])],
 )
 def test_package_zip_with_codesigning(
@@ -450,9 +447,7 @@ def test_package_zip_with_codesigning(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + additional_args
-            + [
+                *additional_args,
                 tmp_path / "base_path/build/first-app/windows/app/src/First App.exe",
             ],
             check=True,
@@ -694,8 +689,6 @@ def test_external_package_zip(
                 "http://freetimestamps.com",
                 "-td",
                 "sha56",
-            ]
-            + [
                 tmp_path / "base_path/external/src/internal/app.exe",
             ],
             check=True,

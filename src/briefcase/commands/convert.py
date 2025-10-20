@@ -782,7 +782,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
-        project_overrides: list[str] = None,
+        project_overrides: list[str] | None = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.
