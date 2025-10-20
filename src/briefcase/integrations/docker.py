@@ -348,7 +348,7 @@ Delete this file and run Briefcase again.
     # since the cache retains a reference to the instance that called the
     # method. Since the Docker tools usually exist one at a time, this is not
     # a big concern
-    @cache  # noqa B019
+    @cache  # noqa: B019
     def cache_image(self, image_tag: str):
         """Ensures an image is available and cached locally.
 

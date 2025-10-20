@@ -244,6 +244,7 @@ extend-select = [
     "PT",     # flake8-pytest-style
     "FURB",   # refurb
     "ISC",    # flake8-implicit-str-concat
+    "PGH",    # pygrep-hooks
     # The SIM rules are *very* opinionated, and don't necessarily make for better code.
     # They may be worth occasionally turning on just to see if something could actually
     # use improvement.
