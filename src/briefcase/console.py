@@ -709,7 +709,7 @@ class Console:
         Prompt should be bold if markup is included.
         """
         if not self.input_enabled:
-            raise InputDisabled
+            raise InputDisabled()
 
         # make the prompt *bold* if it doesn't already contain markup
         escaped_prompt = f"[bold]{escape(prompt)}[/bold]" if not markup else prompt

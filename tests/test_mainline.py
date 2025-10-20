@@ -152,7 +152,7 @@ def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
 
     # Monkeypatch a keyboard interrupt into the create command
     def interrupted_generate_app_template(self, app):
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt()
 
     monkeypatch.setattr(
         CreateCommand, "generate_app_template", interrupted_generate_app_template
@@ -174,7 +174,7 @@ def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, cap
 
     # Monkeypatch a keyboard interrupt into the create command
     def interrupted_generate_app_template(self, app):
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt()
 
     monkeypatch.setattr(
         CreateCommand, "generate_app_template", interrupted_generate_app_template
@@ -196,7 +196,7 @@ def test_test_failure(monkeypatch, pyproject_toml, tmp_path, capsys):
 
     # Monkeypatch a keyboard interrupt into the run command
     def run_call(self, **kwargs):
-        raise BriefcaseTestSuiteFailure
+        raise BriefcaseTestSuiteFailure()
 
     monkeypatch.setattr(RunCommand, "__call__", run_call)
 

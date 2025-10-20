@@ -202,7 +202,7 @@ precision = 1
 exclude_lines = [
     "pragma: no cover",
     "@(abc\\.)?abstractmethod",
-    "NotImplementedError",
+    "NotImplementedError\\(\\)",
     "if TYPE_CHECKING:",
 ]
 

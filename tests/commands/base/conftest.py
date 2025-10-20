@@ -27,7 +27,7 @@ class DummyCommand(BaseCommand):
         parser.add_argument("-r", "--required", required=True)
 
     def binary_path(self, app):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def bundle_package_path(self, app):
         return self.bundle_path(app) / "src/package"
@@ -104,7 +104,7 @@ class OtherDummyCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def binary_path(self, app):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 @pytest.fixture

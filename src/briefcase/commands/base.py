@@ -456,7 +456,7 @@ a custom location for Briefcase's tools.
         # abstractmethod so that we don't have to define this method on platforms that
         # don't support external packaging. If this method is ever invoked on a platform
         # that doesn't support external packaging, we've got a problem.
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def package_path(self, app):
         """The root path of the content that will be packaged for distribution.
@@ -481,7 +481,7 @@ a custom location for Briefcase's tools.
         # abstractmethod so that we don't have to define this method on platforms that
         # don't support external packaging. If this method is ever invoked on a platform
         # that doesn't support external packaging, we've got a problem.
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def package_executable_path(self, app):
         """The path, relative to the package path, of the binary that is executed as the

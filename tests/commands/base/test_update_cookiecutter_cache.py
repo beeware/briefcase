@@ -56,7 +56,7 @@ def test_new_repo_template_interrupt(base_command, mock_git):
     # Raise a KeyboardInterrupt during a the clone, having written the git config file.
     def clone_failure(to_path, **kwargs):
         create_file(to_path / ".git" / "config", "git config")
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt()
 
     # Prime the error when the clone is interrupted
     base_command.tools.git.Repo.clone_from.side_effect = clone_failure
@@ -80,7 +80,7 @@ def test_new_repo_template_mkdir_interrupt(base_command, mock_git):
     # the entire folder; then raise the KeyboardInterrupt.
     def clone_failure(to_path, **kwargs):
         shutil.rmtree(to_path)
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt()
 
     # Prime the error when the clone is interrupted
     base_command.tools.git.Repo.clone_from.side_effect = clone_failure

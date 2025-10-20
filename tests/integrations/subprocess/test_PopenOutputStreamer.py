@@ -266,7 +266,7 @@ def test_filter_func_stop_iteration(streamer, capsys):
     # and terminates streaming when a blank line is seen.
     def filter_func(line):
         if line == "":
-            raise subprocess.StopStreaming
+            raise subprocess.StopStreaming()
         yield line.replace("output", "filtered")
 
     streamer.filter_func = filter_func
@@ -291,7 +291,7 @@ def test_filter_func_output_and_stop_iteration(streamer, capsys):
     def filter_func(line):
         if line == "":
             yield "This should be the last line"
-            raise subprocess.StopStreaming
+            raise subprocess.StopStreaming()
         yield line.replace("output", "filtered")
 
     streamer.filter_func = filter_func

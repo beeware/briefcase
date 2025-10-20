@@ -1611,7 +1611,7 @@ with your app's licensing terms.
                     self.console.warning(
                         f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
                     )
-                    raise AttributeError
+                    raise AttributeError()
             except AttributeError:
                 # No installer icon specified. Fall back to the app icon
                 if app.icon:
