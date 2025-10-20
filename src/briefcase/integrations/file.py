@@ -288,13 +288,16 @@ class File(Tool):
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         """
+        # Don't use a context manager to separate operations and related errors:
+        # Create, open, write, close, move, delete.
+        temp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115 (use context manager)
+            dir=filename.parent,
+            prefix=f"{filename.name}.",
+            suffix=".download",
+            delete=False,
+        )
         try:
-            with tempfile.NamedTemporaryFile(
-                dir=filename.parent,
-                prefix=f"{filename.name}.",
-                suffix=".download",
-                delete=False,
-            ) as temp_file:
+            with temp_file:
                 total = response.headers.get("content-length")
                 if total is None:
                     response.read()
