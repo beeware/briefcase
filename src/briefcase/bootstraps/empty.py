@@ -92,7 +92,7 @@ system_runtime_requires = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "24.08"
+flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """
 

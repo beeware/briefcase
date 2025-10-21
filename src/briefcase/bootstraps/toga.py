@@ -191,7 +191,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "48"
+flatpak_runtime_version = "49"
 flatpak_sdk = "org.gnome.Sdk"
 """
 
@@ -219,7 +219,7 @@ requires = [
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
 build_gradle_dependencies = [
-    "com.google.android.material:material:1.12.0",
+    "com.google.android.material:material:1.13.0",
     # Needed for DetailedList
     # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for MapView
