@@ -37,7 +37,9 @@ from briefcase.exceptions import InputDisabled
 MAX_TEXT_WIDTH = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
 
 # Regex to identify settings likely to contain sensitive information
-SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
+SENSITIVE_SETTING_RE = re.compile(
+    r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.IGNORECASE
+)
 
 # 7-bit C1 ANSI escape sequences
 ANSI_ESC_SEQ_RE_DEF = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"

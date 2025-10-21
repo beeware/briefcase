@@ -729,7 +729,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             # Not sure why, but this is needed to mollify coverage for the
             # "test_cleanup_server_error" case. Without this pass, a missing branch
             # is reported for the "if httpd: -> exit" branch
-            pass
+            pass  # noqa: PIE790 (unnecessary pass)
 
         return {}
 

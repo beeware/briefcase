@@ -242,6 +242,11 @@ extend-select = [
     "I",      # isort
     "RUF",    # ruff-specific rules
     "PT",     # flake8-pytest-style
+    "FURB",   # refurb
+    "ISC",    # flake8-implicit-str-concat
+    "PGH",    # pygrep-hooks
+    "T20",    # flake8-print
+    "PIE",    # flake8-pie
     "SIM",    # flake8-simplify
 ]
 

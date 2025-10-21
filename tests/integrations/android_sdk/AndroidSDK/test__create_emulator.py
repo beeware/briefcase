@@ -99,7 +99,7 @@ def test_create_emulator(
         ],
         env={
             **android_sdk.env,
-            **{"XDG_CONFIG_HOME": None},
+            "XDG_CONFIG_HOME": None,
         },
     )
 
@@ -175,7 +175,7 @@ def test_create_emulator_with_defaults(
         ],
         env={
             **android_sdk.env,
-            **{"XDG_CONFIG_HOME": None},
+            "XDG_CONFIG_HOME": None,
         },
     )
 
@@ -225,7 +225,7 @@ def test_create_failure(mock_tools, android_sdk):
         ],
         env={
             **android_sdk.env,
-            **{"XDG_CONFIG_HOME": None},
+            "XDG_CONFIG_HOME": None,
         },
     )
 

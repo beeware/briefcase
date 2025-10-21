@@ -117,7 +117,7 @@ class LogFilter:
             return None
 
         # Annotate the function with the regex that will be used in the function.
-        filter_func.regex = re.compile(pattern, re.MULTILINE)
+        filter_func.regex = re.compile(pattern, flags=re.MULTILINE)
         return filter_func
 
 
