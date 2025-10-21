@@ -247,10 +247,7 @@ extend-select = [
     "PGH",    # pygrep-hooks
     "T20",    # flake8-print
     "PIE",    # flake8-pie
-    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
-    # They may be worth occasionally turning on just to see if something could actually
-    # use improvement.
-    # "SIM",    # flake8-simplify
+    "SIM",    # flake8-simplify
 ]
 
 # Below is a list of ignored rules.  Many (if not all) of these have been disabled
@@ -259,6 +256,8 @@ extend-select = [
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
+    "SIM105",  # use `contextlib.suppress` (too opinionated)
+    "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
 

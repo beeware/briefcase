@@ -159,7 +159,9 @@ class Console:
         # Rich only records what's being logged if it is actually written somewhere;
         # writing to /dev/null allows Rich to do so without needing to print the
         # logs in the console or save them to file before it is known a file is wanted.
-        self._dev_null = open(os.devnull, "w", encoding="utf-8", errors="ignore")
+        self._dev_null = open(  # noqa: SIM115 (can't use context manager here)
+            os.devnull, "w", encoding="utf-8", errors="ignore"
+        )
         self._log_impl = RichConsole(
             file=self._dev_null,
             record=True,
@@ -758,10 +760,7 @@ class Console:
             error_message="Please enter Y or N",
             transform=lambda s: s.lower()[:1],
         )
-        if result == "y":
-            return True
-
-        return False
+        return result == "y"
 
     def input_selection(
         self,
