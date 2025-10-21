@@ -83,7 +83,7 @@ def full_options(state, options):
     return full
 
 
-def split_passthrough(args):
+def split_passthrough(args: list[str]) -> tuple[list[str], list[str]]:
     try:
         pos = args.index("--")
     except ValueError:
@@ -801,7 +801,7 @@ any compatibility problems, and then add the compatibility declaration.
                 version_specifier=requires_python, running_version=running_version
             )
 
-    def parse_options(self, extra):
+    def parse_options(self, extra: list[str]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Parse the command line arguments for the Command.
 
         After the initial ArgumentParser runs to choose the Command for the selected

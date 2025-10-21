@@ -300,17 +300,19 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
     def update_app_metadata(self, app: AppConfig):
-        with self.console.wait_bar("Setting main module..."):
-            with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
-                # Set the name of the app's main module; this will depend
-                # on whether we're in test mode.
-                f.write(
-                    f"""\
+        with (
+            self.console.wait_bar("Setting main module..."),
+            self.metadata_resource_path(app).open("w", encoding="utf-8") as f,
+        ):
+            # Set the name of the app's main module; this will depend
+            # on whether we're in test mode.
+            f.write(
+                f"""\
 <resources>
     <string name="main_module">{app.main_module()}</string>
 </resources>
 """
-                )
+            )
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.

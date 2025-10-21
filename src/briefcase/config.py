@@ -195,11 +195,8 @@ VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
 def is_valid_bundle_identifier(bundle):
-    # Ensure the bundle identifier follows the basi
-    if not VALID_BUNDLE_RE.match(bundle):
-        return False
-
-    return True
+    """Check if the bundle identifier follows the basic reversed domain name pattern."""
+    return VALID_BUNDLE_RE.match(bundle) is not None
 
 
 # This is the canonical definition from PEP440, modified to include named groups
