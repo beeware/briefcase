@@ -76,12 +76,6 @@ class StaticWebMixin:
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
 
-    def output_format_template_context(self, app: AppConfig):
-        """Add style framework details to the app template."""
-        return {
-            "style_framework": getattr(app, "style_framework", "None"),
-        }
-
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):
     description = "Update an existing static web project."
@@ -253,7 +247,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         package_key: str,
         inserts: dict[str, dict[str, dict[str, str]]],
     ) -> None:
-        """Handle legacy CSS under /static/*.css and add to briefcase.css.
+        """Handle legacy CSS under /static/*.css and add to style.css.
 
         Emits a deprecation warning for every legacy CSS file discovered.
 
@@ -275,8 +269,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         rel_inside = "/".join(path.parts[2:])
         contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
 
-        # Add CSS content to briefcase.css insert slot
-        target = "static/css/briefcase.css"
+        # Add CSS content to style.css insert slot
+        target = "static/css/style.css"
         insert = "css"
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
         if pkg_map.get(contrib_key):
@@ -335,7 +329,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """Process a wheel to collect insert and style content.
 
         Scans the wheel for:
-        * Legacy CSS - .css files under /static/ added to briefcase.css.
+        * Legacy CSS - .css files under /static/ added to style.css.
         * Deploy inserts - files under /deploy/inserts/<target>~<insert>.
 
         :param wheelfile: Path to the wheel file.

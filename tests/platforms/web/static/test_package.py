@@ -38,7 +38,7 @@ def test_package_app(package_command, first_app_built, tmp_path):
             "index.html",
             "static/",
             "static/css/",
-            "static/css/briefcase.css",
+            "static/css/style.css",
             "static/wheels/",
             "static/wheels/dummy-1.2.3-py3-none-any.whl",
         ]

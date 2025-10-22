@@ -43,9 +43,9 @@ app_requirements_path="requirements.txt"
 """,
     )
 
-    # Create the initial briefcase.css with CSS insert markers
+    # Create the initial style.css with CSS insert markers
     create_file(
-        bundle_path / "www/static/css/briefcase.css",
+        bundle_path / "www/static/css/style.css",
         """
 #pyconsole {
   display: None;
