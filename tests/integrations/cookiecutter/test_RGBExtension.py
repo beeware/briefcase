@@ -6,7 +6,7 @@ from briefcase.integrations.cookiecutter import RGBExtension
 
 
 @pytest.mark.parametrize(
-    "value, red, green, blue",
+    ("value", "red", "green", "blue"),
     [
         ("#000000", 0.0, 0.0, 0.0),
         ("#FFFFFF", 1.0, 1.0, 1.0),

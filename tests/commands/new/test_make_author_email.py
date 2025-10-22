@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "name, bundle, candidate",
+    ("name", "bundle", "candidate"),
     [
         ("Jane Developer", "com.example", "jane@example.com"),
         ("Jane Developer", "com.example.more", "jane@more.example.com"),

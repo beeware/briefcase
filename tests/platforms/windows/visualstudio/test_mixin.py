@@ -20,7 +20,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Windows applications can only be built on Windows.",
+        match=r"Windows applications can only be built on Windows\.",
     ):
         create_command()
 

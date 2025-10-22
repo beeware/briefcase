@@ -6,7 +6,7 @@ from ...utils import create_file
 
 
 @pytest.mark.parametrize(
-    "files, sorted",
+    ("files", "sorted"),
     [
         # Files in a directory are sorted lexically
         (

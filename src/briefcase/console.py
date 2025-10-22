@@ -9,7 +9,7 @@ import sys
 import textwrap
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Collection, Iterable, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
@@ -37,7 +37,9 @@ from briefcase.exceptions import InputDisabled
 MAX_TEXT_WIDTH = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
 
 # Regex to identify settings likely to contain sensitive information
-SENSITIVE_SETTING_RE = re.compile(r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.I)
+SENSITIVE_SETTING_RE = re.compile(
+    r"API|TOKEN|KEY|SECRET|PASS|SIGNATURE", flags=re.IGNORECASE
+)
 
 # 7-bit C1 ANSI escape sequences
 ANSI_ESC_SEQ_RE_DEF = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
@@ -68,7 +70,7 @@ class RichConsoleHighlighter(RegexHighlighter):
     """
 
     base_style = "repr."
-    highlights = [
+    highlights: Collection[str] = [
         r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)"
     ]
 
@@ -100,7 +102,7 @@ class LogLevel(IntEnum):
 
 
 class NotDeadYet:
-    # I’m getting better! No you’re not, you’ll be stone dead in a minute.
+    # I'm getting better! No, you're not, you'll be stone dead in a minute.
 
     def __init__(self, console: Console):
         """A keep-alive spinner for long-running processes without console output.
@@ -157,7 +159,9 @@ class Console:
         # Rich only records what's being logged if it is actually written somewhere;
         # writing to /dev/null allows Rich to do so without needing to print the
         # logs in the console or save them to file before it is known a file is wanted.
-        self._dev_null = open(os.devnull, "w", encoding="utf-8", errors="ignore")
+        self._dev_null = open(  # noqa: SIM115 (can't use context manager here)
+            os.devnull, "w", encoding="utf-8", errors="ignore"
+        )
         self._log_impl = RichConsole(
             file=self._dev_null,
             record=True,
@@ -718,7 +722,7 @@ class Console:
             # Use underlying Rich input() to read from user
             input_value = self._console_impl.input(escaped_prompt, markup=True)
         except EOFError:
-            raise KeyboardInterrupt
+            raise KeyboardInterrupt from None
 
         self.to_log(prompt)
         self.to_log(f"User input: {input_value}")
@@ -756,10 +760,7 @@ class Console:
             error_message="Please enter Y or N",
             transform=lambda s: s.lower()[:1],
         )
-        if result == "y":
-            return True
-
-        return False
+        return result == "y"
 
     def input_selection(
         self,
@@ -950,7 +951,7 @@ class Console:
             try:
                 default = str([option[0] for option in ordered].index(default) + 1)
             except ValueError:
-                raise ValueError(f"{default!r} is not a valid default value")
+                raise ValueError(f"{default!r} is not a valid default value") from None
 
         for i, (_, value) in enumerate(ordered, start=1):
             self.prompt(f"  {i}) {value}")
@@ -996,7 +997,9 @@ class Console:
             try:
                 return parse_boolean(override_value)
             except ValueError as e:
-                raise ValueError(f"Invalid override value for {description}: {e}")
+                raise ValueError(
+                    f"Invalid override value for {description}: {e}"
+                ) from None
 
         self.prompt()
         self.prompt(self.textwrap(intro))

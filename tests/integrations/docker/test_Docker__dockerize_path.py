@@ -8,7 +8,7 @@ import pytest
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 @pytest.mark.parametrize(
-    "original, path_map, dockerized",
+    ("original", "path_map", "dockerized"),
     [
         # Simple values are unmodified
         ("value", None, "value"),

@@ -95,10 +95,10 @@ class AndroidSDK(ManagedTool):
                     "AMD64": "win",
                 },
             }[self.tools.host_os][self.tools.host_arch]
-        except KeyError as e:
+        except KeyError:
             raise IncompatibleToolError(
                 tool=self.full_name, env_var="ANDROID_HOME"
-            ) from e
+            ) from None
 
         return (
             f"https://dl.google.com/android/repository/"
@@ -171,7 +171,7 @@ class AndroidSDK(ManagedTool):
             raise BriefcaseCommandError(
                 "The Android emulator does not currently support "
                 f"{self.tools.host_os} {self.tools.host_arch} hardware."
-            )
+            ) from None
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
@@ -937,10 +937,12 @@ connection.
                     f"Unable to create emulator with definition {device_or_avd!r}"
                 ) from e
             except KeyError:
-                raise BriefcaseCommandError("No AVD provided for new device.")
+                raise BriefcaseCommandError("No AVD provided for new device.") from None
             except TypeError as e:
                 property = str(e).split(" ")[-1]
-                raise BriefcaseCommandError(f"Unknown device property {property}.")
+                raise BriefcaseCommandError(
+                    f"Unknown device property {property}."
+                ) from None
 
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()
@@ -1199,7 +1201,7 @@ In future, you can specify this device by running:
                     # XDG_CONFIG_HOME and will not be able to find the AVD to run it.
                     env={
                         **self.env,
-                        **{"XDG_CONFIG_HOME": None},
+                        "XDG_CONFIG_HOME": None,
                     },
                 )
             except subprocess.CalledProcessError as e:
@@ -1280,7 +1282,7 @@ In future, you can specify this device by running:
 
         # Start the emulator
         emulator_popen = self.tools.subprocess.Popen(
-            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8"] + extra_args,
+            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8", *extra_args],
             env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1469,7 +1471,7 @@ class ADB:
         # This keeps performance good in the success case.
         try:
             output = self.tools.subprocess.check_output(
-                [self.tools.android_sdk.adb_path, "-s", self.device] + list(arguments),
+                [self.tools.android_sdk.adb_path, "-s", self.device, *arguments],
                 quiet=quiet,
             )
             # add returns status code 0 in the case of failure. The only tangible evidence

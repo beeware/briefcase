@@ -117,7 +117,7 @@ class LogFilter:
             return None
 
         # Annotate the function with the regex that will be used in the function.
-        filter_func.regex = re.compile(pattern, re.MULTILINE)
+        filter_func.regex = re.compile(pattern, flags=re.MULTILINE)
         return filter_func
 
 
@@ -278,7 +278,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
         if len(self.apps) == 1:
-            app = list(self.apps.values())[0]
+            app = next(iter(self.apps.values()))
         elif appname:
             try:
                 app = self.apps[appname]

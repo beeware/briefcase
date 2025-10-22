@@ -103,7 +103,7 @@ def test_verify_no_docker(package_command, first_app_pkg, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "vendor_base, error_msg",
+    ("vendor_base", "error_msg"),
     [
         (
             "arch",

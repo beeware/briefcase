@@ -113,7 +113,7 @@ def validate_document_type_config(document_type_id, document_type):
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide an extension."
-        )
+        ) from None
 
     try:
         if not isinstance(document_type["icon"], str):
@@ -123,7 +123,7 @@ def validate_document_type_config(document_type_id, document_type):
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not define an icon."
-        )
+        ) from None
 
     try:
         if not isinstance(document_type["description"], str):
@@ -133,18 +133,18 @@ def validate_document_type_config(document_type_id, document_type):
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide a description."
-        )
+        ) from None
 
     try:
         validate_url(document_type["url"])
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide a URL."
-        )
+        ) from None
     except ValueError as e:
         raise BriefcaseConfigError(
             f"The URL associated with document type {document_type_id!r} is invalid: {e}"
-        )
+        ) from None
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
@@ -256,11 +256,8 @@ VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
 def is_valid_bundle_identifier(bundle):
-    # Ensure the bundle identifier follows the basi
-    if not VALID_BUNDLE_RE.match(bundle):
-        return False
-
-    return True
+    """Check if the bundle identifier follows the basic reversed domain name pattern."""
+    return VALID_BUNDLE_RE.match(bundle) is not None
 
 
 # This is the canonical definition from PEP440, modified to include named groups
@@ -724,7 +721,7 @@ def parse_config(config_file, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
-    for name, config in [("project", global_config)] + list(all_apps.items()):
+    for name, config in [("project", global_config), *all_apps.items()]:
         if isinstance(config.get("license"), str):
             section_name = "the Project" if name == "project" else f"{name!r}"
             console.warning(

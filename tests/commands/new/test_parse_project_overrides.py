@@ -5,7 +5,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "cmdline, overrides",
+    ("cmdline", "overrides"),
     [
         ([], {}),
         (["license=MIT"], {"license": "MIT"}),

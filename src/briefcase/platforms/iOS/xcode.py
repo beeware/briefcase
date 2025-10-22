@@ -3,6 +3,7 @@ from __future__ import annotations
 import plistlib
 import subprocess
 import time
+from collections.abc import Collection
 from pathlib import Path
 from uuid import UUID
 
@@ -213,7 +214,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         if len(simulators) == 0:
             raise BriefcaseCommandError("No iOS simulators available.")
         elif len(simulators) == 1:
-            iOS_tag = list(simulators.keys())[0]
+            iOS_tag = next(iter(simulators.keys()))
         else:
             iOS_tag = self.console.selection_question(
                 intro="Select iOS version:",
@@ -226,7 +227,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         if len(devices) == 0:
             raise BriefcaseCommandError(f"No simulators available for {iOS_tag}.")
         elif len(devices) == 1:
-            udid = list(devices.keys())[0]
+            udid = next(iter(devices.keys()))
         else:
             udid = self.console.selection_question(
                 intro="Select simulator device to use:",
@@ -309,7 +310,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        return super()._extra_pip_args(app) + [
+        return [
+            *super()._extra_pip_args(app),
             "--only-binary=:all:",
             "--extra-index-url",
             "https://pypi.anaconda.org/beeware/simple",
@@ -336,7 +338,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         except KeyError:
             raise BriefcaseCommandError(
                 "Your iOS XCframework doesn't specify a minimum iOS version."
-            )
+            ) from None
         except FileNotFoundError:
             # If a plist file couldn't be found, it's an old-style support package;
             # Determine the min iOS version from the VERSIONS file in the support package.
@@ -666,8 +668,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             self.console.info(f"Starting {label}...", prefix=app.app_name)
             with self.console.wait_bar(f"Launching {label}..."):
                 output = self.tools.subprocess.check_output(
-                    ["xcrun", "simctl", "launch", udid, app.bundle_identifier]
-                    + passthrough
+                    [
+                        "xcrun",
+                        "simctl",
+                        "launch",
+                        udid,
+                        app.bundle_identifier,
+                        *passthrough,
+                    ]
                 )
                 try:
                     app_pid = int(output.split(":")[1].strip())
@@ -706,7 +714,7 @@ class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
 
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
-    publication_channels = ["ios_appstore"]
+    publication_channels: Collection[str] = ["ios_appstore"]
     default_publication_channel = "ios_appstore"
 
 

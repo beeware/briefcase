@@ -4,7 +4,7 @@ from ...utils import create_file
 
 
 @pytest.mark.parametrize(
-    "unbuilt, built",
+    ("unbuilt", "built"),
     [
         (True, True),
         (True, False),

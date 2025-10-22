@@ -199,7 +199,7 @@ def test_exception_with_no_license(build_command, first_app):
     # Build the app
     with pytest.raises(
         BriefcaseCommandError,
-        match="Your project does not contain a LICENSE definition.",
+        match=r"Your project does not contain a LICENSE definition\.",
     ):
         build_command.build_app(first_app)
 

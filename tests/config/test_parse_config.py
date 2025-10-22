@@ -11,7 +11,7 @@ def test_invalid_toml():
     """If the config file isn't TOML, raise an error."""
     config_file = BytesIO(b"this is not toml!")
 
-    with pytest.raises(BriefcaseConfigError, match="Invalid pyproject.toml"):
+    with pytest.raises(BriefcaseConfigError, match=r"Invalid pyproject\.toml"):
         parse_config(
             config_file,
             platform="macOS",
@@ -30,7 +30,7 @@ def test_no_briefcase_section():
         """
     )
 
-    with pytest.raises(BriefcaseConfigError, match="No tool.briefcase section"):
+    with pytest.raises(BriefcaseConfigError, match=r"No tool\.briefcase section"):
         parse_config(
             config_file,
             platform="macOS",
@@ -600,7 +600,7 @@ def test_document_types():
     )
 
     # Request a macOS app
-    global_options, apps = parse_config(
+    _global_options, apps = parse_config(
         config_file,
         platform="macOS",
         output_format="Xcode",
@@ -674,7 +674,7 @@ def test_pep621_defaults():
         """
     )
 
-    global_options, apps = parse_config(
+    _global_options, apps = parse_config(
         config_file,
         platform="macOS",
         output_format="app",

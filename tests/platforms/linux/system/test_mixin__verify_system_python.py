@@ -25,7 +25,7 @@ def test_valid_python3(monkeypatch, create_command):
 
 
 @pytest.mark.parametrize(
-    "resolved_path, expected_error",
+    ("resolved_path", "expected_error"),
     [
         ("/usr/bin/pythonX", "Can't determine the system python version"),
         ("/usr/bin/python3", "Can't determine the system python version"),

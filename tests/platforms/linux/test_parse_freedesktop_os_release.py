@@ -23,7 +23,7 @@ KEY4=42
 
 
 @pytest.mark.parametrize(
-    "content, error",
+    ("content", "error"),
     [
         ("KEY=value\nnot valid content", r"Line 2: 'not valid content'"),
         ("KEY=value\nBAD='unbalanced quote", r"string literal"),

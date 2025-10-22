@@ -95,13 +95,13 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "coverage[toml] == 7.10.7",
+    "coverage[toml] == 7.11.0",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.3",
+    "httpx-retries == 0.4.5",
     "pre-commit == 4.3.0",
     "pytest == 8.4.2",
     "pytest-xdist == 3.8.0",
-    "setuptools_scm == 9.2.0",
+    "setuptools_scm == 9.2.1",
     "tox == 4.31.0",
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
@@ -240,10 +240,14 @@ extend-select = [
     "ASYNC",  # flake8-async
     "C4",     # flake8-comprehensions
     "I",      # isort
-    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
-    # They may be worth occasionally turning on just to see if something could actually
-    # use improvement.
-    # "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific rules
+    "PT",     # flake8-pytest-style
+    "FURB",   # refurb
+    "ISC",    # flake8-implicit-str-concat
+    "PGH",    # pygrep-hooks
+    "T20",    # flake8-print
+    "PIE",    # flake8-pie
+    "SIM",    # flake8-simplify
 ]
 
 # Below is a list of ignored rules.  Many (if not all) of these have been disabled
@@ -252,7 +256,8 @@ extend-select = [
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
-    "B904",    # use raise ... from ...
+    "SIM105",  # use `contextlib.suppress` (too opinionated)
+    "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
 

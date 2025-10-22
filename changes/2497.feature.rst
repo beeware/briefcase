@@ -1,0 +1,1 @@
+``briefcase dev`` no longer overwrites explicitly set environment variables.

@@ -184,7 +184,7 @@ class File(Tool):
         :returns: The filename of the downloaded (or cached) file.
         """
         download_path.mkdir(parents=True, exist_ok=True)
-        filename: Path = None
+        filename: Path | None = None
         try:
             with self.tools.httpx.stream(
                 "GET",
@@ -288,7 +288,9 @@ class File(Tool):
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         """
-        temp_file = tempfile.NamedTemporaryFile(
+        # `temp_file` is used in the `finally` block, so make sure it's assigned
+        # before the `try`.
+        temp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115 (use context manager)
             dir=filename.parent,
             prefix=f"{filename.name}.",
             suffix=".download",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
@@ -11,7 +12,7 @@ from briefcase.integrations.subprocess import json_parser
 class VisualStudio(Tool):
     name = "visualstudio"
     full_name = "Visual Studio"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
     VSCODE_REQUIRED_COMPONENTS = """
     * .NET Desktop Development
       - Default packages
@@ -24,7 +25,7 @@ class VisualStudio(Tool):
         self,
         tools: ToolCache,
         msbuild_path: Path,
-        install_metadata: dict[str, str | int | bool] = None,
+        install_metadata: dict[str, str | int | bool] | None = None,
     ):
         super().__init__(tools=tools)
         self._msbuild_path = msbuild_path
@@ -79,7 +80,7 @@ class VisualStudio(Tool):
             # Look for an %MSBUILD% environment variable
             try:
                 msbuild_path = Path(tools.os.environ["MSBUILD"])
-                install_metadata: dict[str, str | int | bool] = None
+                install_metadata: dict[str, str | int | bool] | None = None
 
                 if not msbuild_path.exists():
                     # The location referenced by %MSBUILD% doesn't exist
@@ -122,7 +123,7 @@ variable that points at the MSBuild.exe provided by your Visual Studio
 installation.
 
 """
-                    )
+                    ) from None
 
                 # Retrieve metadata for Visual Studio install
                 try:
@@ -175,15 +176,15 @@ Ensure that Visual Studio following workloads and components installed:
 {cls.VSCODE_REQUIRED_COMPONENTS}
 Then restart Briefcase.
 """
-                    )
+                    ) from None
 
             # Try to invoke MSBuild at the established location
             try:
                 tools.subprocess.check_output([msbuild_path, "--version"])
-            except (subprocess.CalledProcessError, OSError):
+            except (subprocess.CalledProcessError, OSError) as e:
                 raise BriefcaseCommandError(
                     "MSBuild appears to exist, but Briefcase can't start it."
-                )
+                ) from e
 
             visualstudio = VisualStudio(
                 tools=tools,

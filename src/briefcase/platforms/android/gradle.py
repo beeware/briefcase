@@ -5,6 +5,7 @@ import datetime
 import re
 import subprocess
 import time
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.commands import (
@@ -151,7 +152,7 @@ class GradleMixin:
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
-    hidden_app_properties = {"permission", "feature"}
+    hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
@@ -172,7 +173,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         except AttributeError:
             parsed = parsed_version(app.version)
 
-            v = (list(parsed.release) + [0, 0])[:3]  # version triple
+            v = ([*parsed.release, 0, 0])[:3]  # version triple
             build = int(getattr(app, "build", "0"))
             version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
 
@@ -299,17 +300,19 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
     def update_app_metadata(self, app: AppConfig):
-        with self.console.wait_bar("Setting main module..."):
-            with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
-                # Set the name of the app's main module; this will depend
-                # on whether we're in test mode.
-                f.write(
-                    f"""\
+        with (
+            self.console.wait_bar("Setting main module..."),
+            self.metadata_resource_path(app).open("w", encoding="utf-8") as f,
+        ):
+            # Set the name of the app's main module; this will depend
+            # on whether we're in test mode.
+            f.write(
+                f"""\
 <resources>
     <string name="main_module">{app.main_module()}</string>
 </resources>
 """
-                )
+            )
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.

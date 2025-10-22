@@ -19,10 +19,15 @@ def test_valid_url(url):
     [
         "not a URL!",  # Free text.
         "file:///usr/local/bin",  # File URL
-        "gopher://example.com",  # URL, but not a webpage.
     ],
 )
 def test_invalid_url(url):
     """Test that invalid URLs are rejected."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Not a valid URL"):
         validate_url(url)
+
+
+def test_invalid_website_url():
+    """Test that non-website URLs are rejected."""
+    with pytest.raises(ValueError, match="Not a valid website URL"):
+        validate_url("gopher://example.com")  # URL, but not a webpage

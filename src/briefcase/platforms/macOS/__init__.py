@@ -6,6 +6,7 @@ import plistlib
 import re
 import subprocess
 import time
+from collections.abc import Collection
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
@@ -58,7 +59,7 @@ class SigningIdentity:
         except TypeError:
             raise BriefcaseCommandError(
                 f"Couldn't extract Team ID from signing identity {name!r}"
-            )
+            ) from None
 
     @property
     def is_adhoc(self):
@@ -77,7 +78,7 @@ class SigningIdentity:
 
 class macOSMixin:
     platform = "macOS"
-    supported_host_os = {"Darwin"}
+    supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
     # 0.3.20 introduced a framework-based support package.
     platform_target_version: str | None = "0.3.20"
@@ -151,7 +152,7 @@ that is not synchronized with iCloud, and re-run `briefcase {self.command}`."""
 
 
 class macOSCreateMixin(AppPackagesMergeMixin):
-    hidden_app_properties = {"permission", "entitlement"}
+    hidden_app_properties: Collection[str] = {"permission", "entitlement"}
 
     def generate_app_template(self, app: AppConfig):
         """Create an application bundle.
@@ -537,7 +538,7 @@ class macOSRunMixin:
             self.tools.subprocess.run(
                 # Force a new app to be launched
                 ["open", "-n", self.binary_path(app)]
-                + ((["--args"] + passthrough) if passthrough else []),
+                + (["--args", *passthrough] if passthrough else []),
                 cwd=self.tools.home_path,
                 check=True,
                 **sub_kwargs,
@@ -563,8 +564,8 @@ class macOSRunMixin:
                 stop_func=lambda: is_process_dead(app_pid),
                 log_stream=True,
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.")
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(f"Unable to start app {app.app_name}.") from e
         finally:
             # Ensure the App also terminates when exiting. The ordering here is a little
             # odd; the if could/should be outside the context manager, but coverage has
@@ -739,7 +740,7 @@ or
                 return
             else:
                 self.tools.subprocess.output_error(e)
-                raise BriefcaseCommandError(f"Unable to code sign {path}.")
+                raise BriefcaseCommandError(f"Unable to code sign {path}.") from e
 
     def sign_app(
         self,
@@ -1171,8 +1172,7 @@ password:
                 expected_filename = id_matches[0]["name"]
                 # .app files are zipped for notarization, but the app itself is
                 # notarized; strip the .zip suffix for filename matching purposes.
-                if expected_filename.endswith(".zip"):
-                    expected_filename = expected_filename[:-4]
+                expected_filename = expected_filename.removesuffix(".zip")
 
                 if expected_filename != self.notarization_path(app).name:
                     raise BriefcaseCommandError(
@@ -1182,12 +1182,12 @@ password:
             except IndexError:
                 raise BriefcaseCommandError(
                     f"{submission_id} is not a known submission ID for this identity."
-                )
-            except subprocess.CalledProcessError:
+                ) from None
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     "Unable to invoke notarytool to determine validity of submission ID.\n"
                     "Are you sure this is the identity that was used to notarize the app?"
-                )
+                ) from e
 
     def finalize_notarization(
         self,
@@ -1256,7 +1256,7 @@ password:
                             ) from e
 
         except KeyboardInterrupt:
-            raise NotarizationInterrupted("Notarization interrupted by user.")
+            raise NotarizationInterrupted("Notarization interrupted by user.") from None
         else:
             filename = self.notarization_path(app)
             try:
@@ -1268,10 +1268,10 @@ password:
                     ["xcrun", "stapler", "staple", filename],
                     check=True,
                 )
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to staple notarization onto {filename.relative_to(self.base_path)}"
-                )
+                ) from e
 
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.
@@ -1501,20 +1501,22 @@ with your app's licensing terms.
 
         components_plist_path = self.bundle_path(app) / "installer/components.plist"
 
-        with self.console.wait_bar("Writing component manifest..."):
-            with components_plist_path.open("wb") as components_plist:
-                plistlib.dump(
-                    [
-                        {
-                            "BundleHasStrictIdentifier": True,
-                            "BundleIsRelocatable": False,
-                            "BundleIsVersionChecked": True,
-                            "BundleOverwriteAction": "upgrade",
-                            "RootRelativeBundlePath": self.package_path(app).name,
-                        }
-                    ],
-                    components_plist,
-                )
+        with (
+            self.console.wait_bar("Writing component manifest..."),
+            components_plist_path.open("wb") as components_plist,
+        ):
+            plistlib.dump(
+                [
+                    {
+                        "BundleHasStrictIdentifier": True,
+                        "BundleIsRelocatable": False,
+                        "BundleIsVersionChecked": True,
+                        "BundleOverwriteAction": "upgrade",
+                        "RootRelativeBundlePath": self.package_path(app).name,
+                    }
+                ],
+                components_plist,
+            )
 
         # Console apps are installed in /Library/Formal Name, and include the
         # post-install scripts. Normal apps are installed in /Applications, and don't
@@ -1542,9 +1544,7 @@ with your app's licensing terms.
                     installer_path / "root",
                     "--component-plist",
                     components_plist_path,
-                ]
-                + install_args
-                + [
+                    *install_args,
                     installer_packages_path / f"{app.app_name}.pkg",
                 ],
                 check=True,
@@ -1566,9 +1566,7 @@ with your app's licensing terms.
                     installer_path / "packages",
                     "--resources",
                     installer_path / "resources",
-                ]
-                + signing_options
-                + [
+                    *signing_options,
                     dist_path,
                 ],
                 check=True,

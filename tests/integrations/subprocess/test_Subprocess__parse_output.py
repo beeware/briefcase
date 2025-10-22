@@ -15,16 +15,16 @@ def second_line_parser(data):
     """A test parser that returns the second line of input."""
     try:
         return data.splitlines()[1]
-    except IndexError:
-        raise ParseError("Input does not contain 2 lines")
+    except IndexError as e:
+        raise ParseError("Input does not contain 2 lines") from e
 
 
 def third_line_parser(data):
     """A test parser that returns the third line of input."""
     try:
         return data.splitlines()[2]
-    except IndexError:
-        raise ParseError("Input does not contain 3 lines")
+    except IndexError as e:
+        raise ParseError("Input does not contain 3 lines") from e
 
 
 def test_call(mock_sub, capsys, sub_check_output_kw):
@@ -99,7 +99,7 @@ def test_call_with_parser_error(mock_sub, capsys, sub_check_output_kw):
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, kwargs",
+    ("in_kwargs", "kwargs"),
     [
         ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),

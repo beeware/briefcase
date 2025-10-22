@@ -20,7 +20,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="macOS applications require the Xcode command line tools, which are only available on macOS.",
+        match=r"macOS applications require the Xcode command line tools, which are only available on macOS\.",
     ):
         create_command()
 

@@ -8,7 +8,7 @@ import shutil
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from briefcase.integrations.linuxdeploy import LinuxDeploy
     from briefcase.integrations.rcedit import RCEdit
     from briefcase.integrations.subprocess import Subprocess
-    from briefcase.integrations.virtual_environment import VenvContext
+    from briefcase.integrations.virtual_environment import VirtualEnvironment
     from briefcase.integrations.visualstudio import VisualStudio
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
@@ -57,7 +57,7 @@ class Tool(ABC):
 
     name: str
     full_name: str
-    supported_host_os: set[str] = {"Darwin", "Linux", "Windows"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
 
     def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools
@@ -157,7 +157,7 @@ class ToolCache(Mapping):
     linuxdeploy: LinuxDeploy
     rcedit: RCEdit
     subprocess: Subprocess
-    virtual_environment: VenvContext
+    virtual_environment: VirtualEnvironment
     visualstudio: VisualStudio
     windows_sdk: WindowsSDK
     wix: WiX

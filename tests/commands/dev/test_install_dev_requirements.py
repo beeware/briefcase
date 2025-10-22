@@ -46,7 +46,7 @@ def test_install_requirements_error(dev_command, first_app):
 
     with pytest.raises(
         RequirementsInstallError,
-        match="Unable to install requirements.",
+        match=r"Unable to install requirements\.",
     ):
         dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 

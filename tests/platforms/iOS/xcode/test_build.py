@@ -19,7 +19,7 @@ def build_command(dummy_console, tmp_path):
     )
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_build_app(build_command, first_app_generated, tool_debug_mode, tmp_path):
     """An iOS App can be built."""
     build_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)

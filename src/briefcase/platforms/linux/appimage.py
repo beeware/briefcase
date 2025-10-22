@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Collection
 
 from briefcase.commands import (
     BuildCommand,
@@ -33,7 +34,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     # docker exists. It is used by commands that are "passive" from the
     # perspective of the build system, like open and run.
     output_format = "appimage"
-    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux"}
     supported_host_os_reason = (
         "Linux AppImages can only be built on Linux, or on macOS using Docker."
     )
@@ -347,8 +348,8 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
                         "--output",
                         "appimage",
                         "-v0" if self.console.is_deep_debug else "-v1",
-                    ]
-                    + additional_args,
+                        *additional_args,
+                    ],
                     env=env,
                     check=True,
                     cwd=self.bundle_path(app),
@@ -364,7 +365,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
 class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
     description = "Run a Linux AppImage."
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux AppImages can only be executed on Linux."
 
     def run_app(
@@ -387,7 +388,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 bufsize=1,
                 stream_output=False,
@@ -396,7 +397,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
         else:
             # Start the app in a way that lets us stream the logs
             app_popen = self.tools.subprocess.Popen(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 **kwargs,
                 stdout=subprocess.PIPE,
