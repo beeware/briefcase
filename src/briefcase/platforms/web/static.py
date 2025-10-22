@@ -314,7 +314,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
             return
 
-        # Preserve any '~' that might exist in the target path by splitting from the right
+        # Preserve any '~' that might exist in the target path
         target, insert = rel_inside.rsplit("~", 1)
         self.console.info(f"    {path}: Adding {insert} insert for {target}")
 
@@ -410,7 +410,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 # Gather implementation from config.toml
                 implementation = config_data.get("implementation", None)
 
-                # Currently, only pyscript is supported. Warn if another implementation is found,
+                # Currently, only pyscript is supported.
+                # Warn if another implementation is found,
                 # but fail safe to using pyscript with a warning.
                 if implementation is None:
                     self.console.warning(

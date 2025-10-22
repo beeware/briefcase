@@ -301,8 +301,8 @@ Delete {jdk_zip_path} and run briefcase again.
             jdk_zip_path.unlink()  # Zip file no longer needed once unpacked.
 
             # The tarball will unpack into <briefcase data dir>/tools/jdk-17.0.X+7
-            # (or whatever name matches the current release).
-            # We turn this into <briefcase data dir>/tools/java so we have a consistent name.
+            # (or whatever name matches the current release). We turn this
+            # into <briefcase data dir>/tools/java so we have a consistent name.
             java_unpack_path = (
                 self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
             )

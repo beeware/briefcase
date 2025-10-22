@@ -522,7 +522,8 @@ class ConvertCommand(NewCommand):
         intro = "What license do you want to use for this project's code? "
         default = None
 
-        # If there is license information in the pyproject.toml file, use that, otherwise check the license file
+        # If there is license information in the pyproject.toml file, use that,
+        # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
             default = self.get_license_from_text(self.pep621_data["license"]["text"])
             default_source = "the PEP621 formatted pyproject.toml"
@@ -638,9 +639,10 @@ class ConvertCommand(NewCommand):
         if pyproject_file.exists():
             pep621_pyproject = pyproject_file.read_text(encoding="utf-8")
 
-            # The pyproject.toml file in the target directory has no briefcase keys, so it's
-            # safe to copy-paste the text, and that way also keep formatting and comments.
-            # We merge it this way to preserve comments in the original pyproject.toml file
+            # The pyproject.toml file in the target directory has no briefcase keys, so
+            # it's safe to copy-paste the text, and that way also keep formatting and
+            # comments. We merge it this way to preserve comments in the original
+            # pyproject.toml file
             briefcase_comment = "# content below this line added by briefcase convert"
             merged_pyproject = (
                 f"{pep621_pyproject}\n\n\n{briefcase_comment}\n{briefcase_pyproject}"

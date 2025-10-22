@@ -341,7 +341,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             ) from None
         except FileNotFoundError:
             # If a plist file couldn't be found, it's an old-style support package;
-            # Determine the min iOS version from the VERSIONS file in the support package.
+            # Determine min. iOS version from the VERSIONS file in the support package
             versions = dict(
                 [part.strip() for part in line.split(": ", 1)]
                 for line in (
