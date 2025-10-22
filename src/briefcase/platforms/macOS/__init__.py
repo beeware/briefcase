@@ -199,7 +199,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
             support_min_version = info_plist.get("MinimumOSVersion", "11.0")
         except FileNotFoundError:
             # If a plist file couldn't be found, it's an old-style support package;
-            # Determine the min macOS version from the VERSIONS file in the support package.
+            # Determine min. macOS version from the VERSIONS file in the support package
             versions = dict(
                 [part.strip() for part in line.split(": ", 1)]
                 for line in (
@@ -273,7 +273,7 @@ macOS version of {macOS_min_version} is not available.
                 universal_suffix="_universal2",
             )
 
-            # Now install dependencies for the architecture that isn't the host architecture.
+            # Install dependencies for the architecture that isn't the host architecture
             other_arch = {
                 "arm64": "x86_64",
                 "x86_64": "arm64",
@@ -320,19 +320,19 @@ in the macOS configuration section of your pyproject.toml.
             else:
                 self.console.info("All packages are pure Python, or universal.")
 
-            # If given the option of a single architecture binary or a universal2 binary,
-            # pip will install the single platform binary. However, a common situation on
-            # macOS is for there to be an x86_64 binary and a universal2 binary. This means
-            # you only get a universal2 binary in the "other" install pass. This then causes
-            # problems with merging, because the "other" binary contains a copy of the
-            # architecture that the "host" platform provides.
+            # If given the option of a single architecture binary or a universal2
+            # binary, pip will install the single platform binary. However, a common
+            # situation on macOS is for there to be an x86_64 binary and a universal2
+            # binary. This means you only get a universal2 binary in the "other" install
+            # pass. This then causes problems with merging, because the "other" binary
+            # contains a copy of the architecture that the "host" platform provides.
             #
-            # To avoid this - ensure that the libraries in the app packages for the "other"
-            # arch are all thin.
+            # To avoid this - ensure that the libraries in the app packages for the
+            # "other" arch are all thin.
             #
-            # This doesn't matter if it happens the other way around - if the "host" arch
-            # installs a universal binary, then the "other" arch won't be asked to install
-            # a binary at all.
+            # This doesn't matter if it happens the other way around - if the "host"
+            # arch installs a universal binary, then the "other" arch won't be asked to
+            # install a binary at all.
             self.thin_app_packages(other_app_packages_path, arch=other_arch)
 
             # Merge the binaries
@@ -397,7 +397,8 @@ in the macOS configuration section of your pyproject.toml.
             info["NSPhotoLibraryUsageDescription"] = cross_platform["photo_library"]
             entitlements["com.apple.security.personal-information.photo_library"] = True
 
-        # Override any info and entitlement definitions with the platform specific definitions
+        # Override any info and entitlement definitions
+        # with the platform-specific definitions
         info.update(getattr(app, "info", {}))
         entitlements.update(getattr(app, "entitlement", {}))
 
@@ -478,7 +479,7 @@ class macOSRunMixin:
                     **sub_kwargs,
                 )
             except subprocess.CalledProcessError:
-                # The command line app *could* returns an error code, which is entirely legal.
+                # The command line app *could* return an error code, which is legal.
                 # Ignore any subprocess error here.
                 pass
 

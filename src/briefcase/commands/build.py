@@ -110,7 +110,8 @@ class BuildCommand(BaseCommand):
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
-        # This can't be done with argparse, because it isn't a simple mutually exclusive group.
+        # This can't be done with argparse because it isn't
+        # a simple mutually exclusive group.
         if no_update:
             if update:
                 raise BriefcaseCommandError(

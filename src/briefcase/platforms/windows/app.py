@@ -74,7 +74,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
 
         if hasattr(self.tools, "windows_sdk"):
             # If an app has been packaged and code signed previously, then the digital
-            # signature on the app binary needs to be removed before re-building the app.
+            # signature on the app binary must be removed before re-building the app.
             # It is not safe to use RCEdit on signed binaries since it corrupts them.
             with self.console.wait_bar(
                 "Removing any digital signatures from stub app..."
@@ -115,9 +115,8 @@ Recreating the app layout may also help resolve this issue:
                         "--set-version-string",
                         "CompanyName",
                         app.author,
-                        # Although "FileDescription" sounds like it should be a... description,
-                        # this is the label that appears as a grouping in the Task Manager
-                        # when the application runs.
+                        # "FileDescription" is the label that appears as a grouping
+                        # in the Task Manager when the application runs.
                         "--set-version-string",
                         "FileDescription",
                         app.formal_name,

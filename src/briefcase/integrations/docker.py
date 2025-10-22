@@ -770,7 +770,8 @@ Briefcase will proceed, but if access to the display is rejected, this may be wh
         xauth_file_path.unlink(missing_ok=True)
         xauth_file_path.touch()
 
-        # Create a xauth database for the target display using the current display's cookie
+        # Create an xauth database for the target display
+        # using the current display's cookie
         try:
             self.tools.subprocess.check_output(
                 [

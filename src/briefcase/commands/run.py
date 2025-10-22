@@ -55,11 +55,12 @@ class LogFilter:
             if filtered is None:
                 return
 
-            # If there's a cleaned line, we can determine if it should be included in analysis
+            # If there's a cleaned line, we can determine if it should be
+            # included in analysis
             clean_line, included = filtered
         else:
             # If we don't perform cleaning, we assume all content is potentially
-            # Python, and should be included in analysis
+            # Python and should be included in analysis
             clean_line = line
             included = True
 
