@@ -192,38 +192,46 @@ a single value should be provided.
 
 
 def validate_install_options_config(config):
-    """Validate that a install options are valid and complete, and convert into ."""
+    """Validate that a install options are valid and complete, and convert to a dict.
+
+    The dict format is required because Cookiecutter doesn't allow passing a list as a
+    context value; you have to use the reliable iteration order of a dict instead.
+    """
     install_options = {}
     known_names = set()
     if config:
         for i, config_item in enumerate(config):
             try:
                 name = config_item["name"]
+                if not isinstance(name, str):
+                    raise BriefcaseConfigError(
+                        f"Name for install option {i} is not a string."
+                    ) from None
             except KeyError:
                 raise BriefcaseConfigError(
                     f"Install option {i} does not define a `name`."
-                )
+                ) from None
 
             # Options must be valid Python identifiers
             if not name.isidentifier():
                 raise BriefcaseConfigError(
                     f"{name!r} cannot be used as an install option name, "
                     "as it is not a valid Python identifier."
-                )
+                ) from None
 
             # Option names may be coerced into upper case; and there are
             # a small number of reserved identifiers.
             if name.upper() in {"ALLUSERS"}:
                 raise BriefcaseConfigError(
                     f"{name!r} is a reserved install option identifier."
-                )
+                ) from None
 
             option = {}
             if name.upper() in known_names:
                 raise BriefcaseConfigError(
                     f"Install option names must be unique. The name {name!r}, "
                     f"used by install option {i}, has already been defined."
-                )
+                ) from None
 
             # install_options needs to retain the original name, but we need names to be
             # case-unique as well, so we track a separate set of known upper case names.
@@ -232,19 +240,27 @@ def validate_install_options_config(config):
 
             try:
                 # Options must have a string title.
-                option["title"] = str(config_item["title"])
+                option["title"] = config_item["title"]
+                if not isinstance(option["title"], str):
+                    raise BriefcaseConfigError(
+                        f"Title for install option {name!r} is not a string."
+                    ) from None
             except KeyError:
                 raise BriefcaseConfigError(
                     f"Install option {name!r} does not provide a title."
-                )
+                ) from None
 
             try:
                 # Options must have a string title.
-                option["description"] = str(config_item["description"])
+                option["description"] = config_item["description"]
+                if not isinstance(option["description"], str):
+                    raise BriefcaseConfigError(
+                        f"Description for install option {name!r} is not a string."
+                    ) from None
             except KeyError:
                 raise BriefcaseConfigError(
                     f"Install option {name!r} does not provide a description."
-                )
+                ) from None
 
             # Options are booleans, and are False by default
             option["default"] = bool(config_item.get("default", False))

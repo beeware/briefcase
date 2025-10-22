@@ -68,6 +68,17 @@ def test_missing_name(option_config):
         validate_install_options_config(option_config)
 
 
+def test_non_string(option_config):
+    """Install option name must be a string."""
+    option_config[1]["name"] = 42
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Name for install option 1 is not a string",
+    ):
+        validate_install_options_config(option_config)
+
+
 @pytest.mark.parametrize(
     "name",
     [
@@ -132,23 +143,15 @@ def test_missing_title(option_config):
         validate_install_options_config(option_config)
 
 
-@pytest.mark.parametrize(
-    "title, expected",
-    [
-        ("This is a title", "This is a title"),
-        (42, "42"),
-    ],
-)
-def test_string_title(option_config, title, expected):
-    """Install option titles are coerced to strings."""
-    option_config[1]["title"] = title
-    install_options = validate_install_options_config(option_config)
+def test_non_string_title(option_config):
+    """Install options must provide a title."""
+    option_config[1]["title"] = 42
 
-    assert install_options["second"] == {
-        "title": expected,
-        "description": "Do the second thing",
-        "default": False,
-    }
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Title for install option 'second' is not a string.",
+    ):
+        validate_install_options_config(option_config)
 
 
 def test_missing_description(option_config):
@@ -161,20 +164,11 @@ def test_missing_description(option_config):
         validate_install_options_config(option_config)
 
 
-@pytest.mark.parametrize(
-    "description, expected",
-    [
-        ("This is a description", "This is a description"),
-        (42, "42"),
-    ],
-)
-def test_string_description(option_config, description, expected):
-    """Install option descriptions are coerced to strings."""
-    option_config[1]["description"] = description
-    install_options = validate_install_options_config(option_config)
-
-    assert install_options["second"] == {
-        "title": "Second option",
-        "description": expected,
-        "default": False,
-    }
+def test_non_string_description(option_config):
+    """Install options must provide a string description."""
+    option_config[1]["description"] = 42
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Description for install option 'second' is not a string.",
+    ):
+        validate_install_options_config(option_config)

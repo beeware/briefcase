@@ -6,7 +6,7 @@ from briefcase.platforms.windows import txt_to_rtf
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    ("input", "expected"),
     [
         pytest.param(
             "",

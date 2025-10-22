@@ -191,9 +191,9 @@ Windows MSI installers are able to present a panel of optional features to the u
 as part of the installation process. These features are binary flags which can then be
 used by a post-install script to perform additional installation behaviors.
 
-Installer options are defined using a TOML array of tables - each option is in
-group named ``[[ toga.briefcase.app.<app name>.install_option ]]``. Each option
-must define the following keys:
+Installer options are defined using a TOML array of tables - each option is in a
+group named ``[[ toga.briefcase.app.<app name>.install_option ]]``, which must
+define the following keys:
 
 .. attribute:: name
 
@@ -203,13 +203,11 @@ cannot have ``value`` and ``VALUE`` in the same configuration).
 
 .. attribute:: title
 
-A short human-readable label describing the option. Any value provided will be converted
-into a string for display to the user.
+A short human-readable label describing the option, as a string.
 
 .. attribute:: description
 
-A longer description of the purpose of the option. Any value provided will be converted
-into a string for display to the user.
+A longer description of the purpose of the option, as a string.
 
 .. attribute:: default
 
@@ -224,8 +222,8 @@ post-install script as a command line argument. If your installer defines an opt
 with a name of ``foo``, the argument ``--foo=1`` will be passed to your post-install
 script if the option is selected by the user ``--foo=0`` will be passed if the option
 is *not* selected. The ``--allusers`` option will always be passed to post-install
-scripts; this option describes whether the app has been installed for all users, or
-just for the current user.
+scripts; this option will be 1 if the app has been installed for all users, or 0 if
+it has only been installed for the current user.
 
 Platform quirks
 ===============
