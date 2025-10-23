@@ -1017,7 +1017,6 @@ any compatibility problems, and then add the compatibility declaration.
         """
         debuggers = get_debuggers()
         debugger_names = list(reversed(debuggers.keys()))
-        choices_help = [f"'{choice}'" for choice in debugger_names]
 
         parser.add_argument(
             "--debug",
@@ -1027,7 +1026,7 @@ any compatibility problems, and then add the compatibility declaration.
             const="pdb",
             choices=debugger_names,
             metavar="DEBUGGER",
-            help=f"{context_label} the app with the specified debugger. One of {', '.join(choices_help)} (default: pdb)",
+            help=f"{context_label} the app with the specified debugger. One of %(choices)s (default: %(const)s)",
         )
 
         if run_cmd:
