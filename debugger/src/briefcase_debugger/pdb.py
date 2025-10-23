@@ -13,19 +13,21 @@ def start_pdb(config: DebuggerConfig, verbose: bool):
 
     # Print help message
     host_os = config["host_os"]
+    telnet_cmd = f"telnet {host} {port}"
+    nc_cmd = f"nc {host} {port}"
     if host_os == "Windows":
-        cmds_hint = f"    telnet {host} {port}"
+        cmds_hint = f"    {telnet_cmd}"
     elif host_os in ("Linux", "Darwin"):
-        cmds_hint = f"    nc {host} {port}"
+        cmds_hint = f"    {nc_cmd}"
     else:
         cmds_hint = f"""\
- - telnet {host} {port}
- - nc {host} {port}
+ - {telnet_cmd}
+ - {nc_cmd}
 """
     print(f"""
 Remote PDB server opened at {host}:{port}.
 Waiting for debugger to attach...
-You are using '{host_os}' as host OS. To connect to remote PDB use for example:
+To connect to remote PDB use for example:
 
 {cmds_hint}
 
