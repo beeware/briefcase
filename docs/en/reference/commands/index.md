@@ -28,7 +28,7 @@ briefcase create -C template=\"https://example.com/template\"
 ```
 
 The only app key that *cannot* be overridden with `-C` is
-`app_name`, as it is used to identify
+[`app_name`][], as it is used to identify
 apps.
 
 ### `-h` / `--help`

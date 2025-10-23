@@ -70,7 +70,7 @@ look for macOS DMG settings for `myapp`, then for macOS settings for
 The base `[tool.briefcase]` section declares settings that project
 specific, or are common to all applications in this repository.
 
-### `[tool.briefcase.app.<app name>]`
+### `[tool.briefcase.app.<app name>]` {: #app_name }
 
 Configuration options for a specific application.
 

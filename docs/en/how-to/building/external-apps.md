@@ -32,7 +32,7 @@ On macOS, the [`external_package_path`][]
 should be the location of the `.app` bundle that you want to distribute
 to users. The configured [`formal_name`][]
 must match the name of the app bundle (e.g., `Hello World.app` should
-use a formal name of `Hello World`); the `app_name` will be used for the
+use a formal name of `Hello World`); the [`app_name`][] will be used for the
 shortcut installed in `/usr/local/bin` when creating a
 [console app][cli-apps].
 

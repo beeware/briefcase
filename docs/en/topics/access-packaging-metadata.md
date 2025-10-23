@@ -41,10 +41,10 @@ that contains the following identifying keys:
 It will also have the following keys, derived from your application's
 `pyproject.toml` configuration:
 
-- **Name** - `app_name`
+- **Name** - [`app_name`][]
 - **Formal-Name** - [`formal_name`][]
 - **App-ID** - [`bundle`][] and
-  `app_name`, joined with a `.`
+  [`app_name`][], joined with a `.`
 - **Version** - [`version`][]
 - **Summary** - [`description`][]
 
