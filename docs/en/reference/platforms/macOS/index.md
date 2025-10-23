@@ -310,12 +310,10 @@ Briefcase cross platform permissions map to a combination of
 
 - [`permission.microphone`][permissionmicrophone]: an
   [`info`][] entry for
-  `NSMicrophoneUsageDescription`; and an `entitlement`{.interpreted-text
-  role="attr"} of `com.apple.security.device.audio-input`
+  `NSMicrophoneUsageDescription`; and an [`entitlement`][] of `com.apple.security.device.audio-input`
 - [`permission.camera`][permissioncamera]: an
   [`info`][] entry for
-  `NSCameraUsageDescription`; and an `entitlement`{.interpreted-text
-  role="attr"} of `com.apple.security.device.camera`
+  `NSCameraUsageDescription`; and an [`entitlement`][] of `com.apple.security.device.camera`
 - [`permission.coarse_location`][permissioncoarse_location]: an
   [`info`][] entry for
   `NSLocationUsageDescription` (ignored if
@@ -331,8 +329,7 @@ Briefcase cross platform permissions map to a combination of
   `com.apple.security.personal-information.location`
 - [`permission.background_location`][permissionbackground_location]: an
   [`info`][] entry for
-  `NSLocationUsageDescription`; plus an `entitlement`{.interpreted-text
-  role="attr"} of `com.apple.security.personal-information.location`
+  `NSLocationUsageDescription`; plus an [`entitlement`][] of `com.apple.security.personal-information.location`
 - [`permission.photo_library`][permissionphoto_library]: an
   [`info`][] entry for
   `NSPhotoLibraryUsageDescription`; plus an

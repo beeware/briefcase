@@ -740,8 +740,7 @@ they are available:
 - `authors` The `email` and `name` keys of the first value in the
   `authors` setting map to [`author`][] and
   [`author_email`][].
-- `dependencies` maps to the Briefcase `requires`{.interpreted-text
-  role="attr"} setting. This is a cumulative setting; any packages
+- `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages
   defined in the [`requires`][] setting at
   the `[tool.briefcase]` level will be appended to the packages defined
   with `dependencies` at the `[project]` level.

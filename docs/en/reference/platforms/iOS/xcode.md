@@ -136,25 +136,19 @@ value of `IPHONEOS_DEPLOYMENT_TARGET` used when building the app.
 Briefcase cross platform permissions map to the following
 [`info`][] keys:
 
-- [`permission.camera`][permissioncamera]:
-  `NSCameraUsageDescription`
-- [`permission.microphone`][permissionmicrophone]:
-  `NSMicrophoneUsageDescription`
+- [`permission.camera`][permissioncamera]: `NSCameraUsageDescription`
+- [`permission.microphone`][permissionmicrophone]: `NSMicrophoneUsageDescription`
 - [`permission.coarse_location`][permissioncoarse_location]:
   - `NSLocationDefaultAccuracyReduced=True`
-  - `NSLocationWhenInUseUsageDescription` if `fine_location` is not
-    defined
+  - `NSLocationWhenInUseUsageDescription` if `fine_location` is not defined
 - [`permission.fine_location`][permissionfine_location]:
   - `NSLocationDefaultAccuracyReduced=False`
   - `NSLocationWhenInUseUsageDescription`
 - [`permission.background_location`][permissionbackground_location]:
   - `NSLocationAlwaysAndWhenInUseUsageDescription`
-  - `NSLocationWhenInUseUsageDescription` if neither
-    [`permission.fine_location`][permissionfine_location] or
-    [`permission.coarse_location`][permissioncoarse_location] is set
+  - `NSLocationWhenInUseUsageDescription` if neither [`permission.fine_location`][permissionfine_location] or [`permission.coarse_location`][permissioncoarse_location] is set
   - `UIBackgroundModes` will include `location` and `processing`
-- [`permission.photo_library`][permissionphoto_library]:
-  `NSPhotoLibraryAddUsageDescription`
+- [`permission.photo_library`][permissionphoto_library]: `NSPhotoLibraryAddUsageDescription`
 
 ## Platform quirks
 
