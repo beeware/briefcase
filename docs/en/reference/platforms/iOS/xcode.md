@@ -102,8 +102,6 @@ The device simulator to target. Can be either a UDID, a device name
 
 ## Application configuration
 
-### `iOS`
-
 The following options can be added to the
 `tool.briefcase.app.<appname>.iOS.app` section of your `pyproject.toml`
 file.

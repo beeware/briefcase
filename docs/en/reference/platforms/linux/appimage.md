@@ -143,8 +143,6 @@ Use native execution, rather than using Docker to start a container.
 
 ## Application configuration
 
-### `linux.appimage`
-
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.appimage` section of your
 `pyproject.toml` file.

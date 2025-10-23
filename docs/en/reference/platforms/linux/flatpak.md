@@ -108,8 +108,6 @@ Flatpaks do not support splash screens or installer images.
 
 ## Application configuration
 
-### `linux.flatpak`
-
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.flatpak` section of your
 `pyproject.toml` file:

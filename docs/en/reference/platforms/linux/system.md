@@ -173,8 +173,6 @@ a single argument to pass to Docker, in the order they are specified.
 
 ## Application configuration
 
-### `linux.system`
-
 The following options can be added to the
 `tool.briefcase.app.<appname>.linux.system` section of your
 `pyproject.toml` file; if defined in this section, the values will apply

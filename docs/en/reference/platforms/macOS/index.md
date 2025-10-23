@@ -128,8 +128,6 @@ option to resume the notarization process for an app.
 
 ## Application configuration
 
-### `macOS`
-
 The following options can be added to the
 `tool.briefcase.app.<appname>.macOS` section of your `pyproject.toml`
 file.

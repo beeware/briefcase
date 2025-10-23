@@ -178,8 +178,6 @@ The device or emulator to target. Can be specified as:
   If any of these attributes are *not* specified, they will fall back to
   reasonable defaults.
 
--8<- "reference/platforms/linux/docker_build_options.md"
-
 #### `--shutdown-on-exit`
 
 Instruct Briefcase to shut down the emulator when the run finishes. This
@@ -207,8 +205,6 @@ You may specify multiple `--reverse-port` arguments; each one specifies
 a single port.
 
 ## Application configuration
-
-### `android`
 
 The following options can be added to the
 `tool.briefcase.app.<appname>.android` section of your `pyproject.toml`
@@ -334,10 +330,10 @@ version number with the build number. It does this by using each part of
 the main version number (padded to 3 digits if necessary) and the build
 number as 2 significant digits of the final version code:
 
-> - Version `1.0`, build 1 becomes `1000001` (i.e, `1`, `00`, `00`, `01`)
-> - Version `1.2`, build 37 becomes `1020037` (i.e., `1`, `02`, `00`, `37`)
-> - Version `1.2.37`, build 42 becomes `1023742` (i.e, `1`, `02`, `37`, `42`)
-> - Version `2020.6`, build 4 becomes `2020060004` (i.e., `2020`, `06`, `00`, `04`)
+- Version `1.0`, build 1 becomes `1000001` (i.e, `1`, `00`, `00`, `01`)
+- Version `1.2`, build 37 becomes `1020037` (i.e., `1`, `02`, `00`, `37`)
+- Version `1.2.37`, build 42 becomes `1023742` (i.e, `1`, `02`, `37`, `42`)
+- Version `2020.6`, build 4 becomes `2020060004` (i.e., `2020`, `06`, `00`, `04`)
 
 If you want to manually specify a version code by defining
 `version_code` in your application configuration. If provided, this

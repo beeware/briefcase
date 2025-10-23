@@ -137,8 +137,6 @@ the timestamp for code signing. Defaults to `sha256`.
 
 ## Application configuration
 
-### `windows`
-
 The following options can be added to the
 `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml`
 file.

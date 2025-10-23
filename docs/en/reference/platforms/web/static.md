@@ -109,8 +109,6 @@ Don't open a web browser after starting the development web server.
 
 ## Application configuration
 
-### `web`
-
 The following options can be added to the
 `tool.static.app.<appname>.web` section of your `pyproject.toml`
 file:
