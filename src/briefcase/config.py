@@ -174,7 +174,8 @@ a single value should be provided.
         else:
             uti = None
 
-        # If an UTI is provided in LSItemContentTypes, that takes precedence over a MIME type
+        # If an UTI is provided in LSItemContentTypes,
+        # that takes precedence over a MIME type
         if is_uti_core_type(uti) or ((uti := mime_type_to_uti(mime_type)) is not None):
             macOS.setdefault("is_core_type", True)
             macOS.setdefault("LSItemContentTypes", [uti])

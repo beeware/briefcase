@@ -21,13 +21,13 @@ class DevCommand(RunAppMixin, BaseCommand):
     output_format = ""
     description = "Run a Briefcase project in the dev environment."
 
-    # On macOS CoreFoundation/NSApplication will do its own independent parsing of argc/argv.
-    # This means that whatever we pass to the Python interpreter on start-up will also be
-    # visible to NSApplication which will interpret things like `-u` (used to make I/O
-    # unbuffered in CPython) as `-u [URL]` (a request to open a document by URL). This is,
-    # rather patently, Not Good.
-    # To avoid this causing unwanted hilarity, we use environment variables to configure the
-    # Python interpreter rather than command-line options.
+    # On macOS CoreFoundation/NSApplication will do its own independent parsing of
+    # argc/argv. This means that whatever we pass to the Python interpreter on start-up
+    # will also be visible to NSApplication which will interpret things like `-u` (used
+    # to make I/O unbuffered in CPython) as `-u [URL]` (a request to open a document by
+    # URL). This is, rather patently, Not Good.
+    # To avoid this causing unwanted hilarity, we use environment variables to configure
+    # the Python interpreter rather than command-line options.
     DEV_ENVIRONMENT: Mapping[str, str] = {
         # Equivalent of passing "-u"
         "PYTHONUNBUFFERED": "1",

@@ -239,7 +239,6 @@ build_gradle_dependencies = [
 requires = [
     "toga-web~=0.5.0",
 ]
-style_framework = "Shoelace v2.3"
 """,
     }
 

@@ -202,8 +202,8 @@ existing-key-2 = 2
             + "\n"
         )
 
-    # briefcase.css has been appended
-    with (bundle_path / "www/static/css/briefcase.css").open(encoding="utf-8") as f:
+    # style.css has been appended
+    with (bundle_path / "www/static/css/style.css").open(encoding="utf-8") as f:
         assert (
             f.read()
             == "\n".join(
@@ -364,9 +364,9 @@ def test_build_app_missing_wheel_dir(build_command, first_app_generated, tmp_pat
     # Pyscript.toml has been written
     assert (bundle_path / "www/pyscript.toml").exists()
 
-    # briefcase.css has been appended
+    # style.css has been appended
     # (just check for existence; a full check is done in other tests)
-    assert (bundle_path / "www/static/css/briefcase.css").exists()
+    assert (bundle_path / "www/static/css/style.css").exists()
 
 
 def test_build_app_no_requirements(build_command, first_app_generated, tmp_path):
@@ -456,8 +456,8 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
             ],
         }
 
-    # briefcase.css has been appended
-    with (bundle_path / "www/static/css/briefcase.css").open(encoding="utf-8") as f:
+    # style.css has been appended
+    with (bundle_path / "www/static/css/style.css").open(encoding="utf-8") as f:
         assert (
             f.read()
             == "\n".join(

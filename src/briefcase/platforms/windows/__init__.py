@@ -70,7 +70,8 @@ class WindowsMixin:
             raise UnsupportedHostError(
                 f"Windows applications cannot be built on an {self.tools.host_arch} machine."
             )
-        # 64bit Python is required to ensure 64bit wheels are installed/created for the app
+        # 64bit Python is required to ensure 64bit wheels are installed/created
+        # for the app
         if self.tools.is_32bit_python:
             raise UnsupportedHostError(
                 """\

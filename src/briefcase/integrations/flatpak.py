@@ -270,7 +270,8 @@ flatpak run {bundle_identifier}
         flatpak_run_cmd.extend([] if args is None else args)
 
         if self.tools.console.is_deep_debug:
-            # Must come before bundle identifier; otherwise, it's passed as an arg to app
+            # Must come before bundle identifier;
+            # otherwise, it's passed as an arg to app
             flatpak_run_cmd.insert(2, "--verbose")
 
         if stream_output:

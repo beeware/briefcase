@@ -240,7 +240,8 @@ class CreateCommand(BaseCommand):
                 # Ensure the output format is in the case we expect
                 "format": self.output_format.lower(),
                 # Properties of the generating environment
-                # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
+                # The full Python version string, including minor and dev/a/b/c suffixes
+                # (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
@@ -938,9 +939,10 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        # External apps (apps that define 'external_package_path') need the packaging metadata
-        # from the template, but not the app content, dependencies, support package etc.
-        # App *resources* are installed, because they might be required for the installer.
+        # External apps (apps that define 'external_package_path') need the packaging
+        # metadata from the template, but not the app content, dependencies, support
+        # package etc. App *resources* are installed, because they might be required for
+        # the installer.
         if app.external_package_path:
             self.console.info(
                 "Installing application resources...", prefix=app.app_name
