@@ -189,10 +189,10 @@ Python packages can include inserts by placing files inside the `deploy/inserts/
 
 Where:
 
-* The target file path is specified in relation to the project root directory appears as `<target-file>` (e.g., `index.html` or `static/css/static.css`).
+* The target file path is specified in relation to the project root directory appears as `<target-file>` (e.g., `index.html` or `static/css/style.css`).
 * The tilde (`~`) character separates the target path from the slot name.
 
 For example, a package named `mypackage` could include the following files as inserts:
 
 * `mypackage/deploy/inserts/index.html~head` - Inserts into the `head` slot of `index.html` in the root of the deployment directory
-* `mypackage/deploy/inserts/static/css/static.css~css` - Inserts into the `css` slot of `static/css/static.css`
+* `mypackage/deploy/inserts/static/css/style.css~css` - Inserts into the `css` slot of `static/css/style.css`
