@@ -125,6 +125,22 @@ The following options can be added to the
 ``tool.briefcase.app.<appname>.windows`` section of your ``pyproject.toml``
 file.
 
+.. attribute:: installer_path
+
+The name of a directory in the package bundle that can be used to store post-install and
+pre-uninstall scripts. Defaults to ``_installer``.
+
+.. attribute:: post_install_script
+
+A path, relative to the project root, to a Windows ``.bat`` file that will be executed
+after the installer content has been unpacked. Only used for MSI packaging.
+
+.. attribute:: pre_uninstall_script
+
+A path, relative to the project root, to a Windows ``.bat`` file that will be executed
+before the installed content is removed by uninstalling the app. Only used for MSI
+packaging.
+
 .. attribute:: system_installer
 
 Controls whether the app will be installed as a per-user or per-machine app.
@@ -165,6 +181,49 @@ pre, post and dev version indicators), padding with zeros if necessary:
 However, if you need to override this default value, you can define
 :attr:`version_triple` in your app settings. If provided, this value will be used in the
 MSI configuration file instead of the auto-generated value.
+
+Installer options
+~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: install_option
+
+Windows MSI installers are able to present a panel of optional features to the user
+as part of the installation process. These features are binary flags which can then be
+used by a post-install script to perform additional installation behaviors.
+
+Installer options are defined using a TOML array of tables - each option is in a
+group named ``[[ toga.briefcase.app.<app name>.install_option ]]``, which must
+define the following keys:
+
+.. attribute:: name
+
+An identifier for the option. This name must be a valid Python identifier; the list of
+options specified for an app must be unique when converted into upper case (i.e., you
+cannot have ``value`` and ``VALUE`` in the same configuration).
+
+.. attribute:: title
+
+A short human-readable label describing the option, as a string.
+
+.. attribute:: description
+
+A longer description of the purpose of the option, as a string.
+
+.. attribute:: default
+
+A Boolean describing the initial value of the option in the GUI. If not provided,
+defaults to ``False``.
+
+Using installer options
+-----------------------
+
+When an installer option is defined, the value of the option will be made available to
+the post-install script as an environment variable whose name is the capitalized version
+of the option name. If your installer defines an option with a name of ``foo``, an
+environment variable of ``OPTION_FOO`` will be defined, with a value of 1 if the option
+has been selected by the user, and 0 if the option has not been selected. The
+``ALLUSERS`` environment variable will also be set; its value will be 1 if the app has
+been installed for all users, or 0 if it has only been installed for the current user.
 
 Platform quirks
 ===============
