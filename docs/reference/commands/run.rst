@@ -137,25 +137,31 @@ contains the most recent test code. To prevent this update and build, use the
 Prevent the automated update and build of app code that is performed when
 specifying by the ``--test`` option.
 
+.. _run-debug:
+
 ``--debug <debugger>``
 ----------------------
 
-Run the app in debug mode in the bundled app environment and establish an
+Run the app in debug mode in the bundled app environment and establish a
 debugger connection via a socket.
 
 Currently the following debuggers are supported:
 
-- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
-- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
+- ``pdb``: This is used for debugging via console (see :doc:`Debug via PDB </how-to/debugging/pdb>`)
+- ``debugpy``: This is used for debugging via VS Code (see :doc:`Debug via VS Code </how-to/debugging/vscode>`)
 
-For ``debugpy`` there is also a mapping of the source code from your bundled
-app to your local copy of the apps source code in the ``build`` folder. This
-is useful for devices like iOS and Android, where the running source code is
-not available on the host system.
+For ``debugpy`` Briefcase will automatically apply path mapping of the source code
+from your bundled app in the ``build`` folder to your local source code defined
+under ``sources`` in your ``pyproject.toml``. This would collide with an existing
+``pathMappings`` setting in your VS Code ``launch.json`` file. Therefore, if you
+are using ``debugpy``, do not set ``pathMappings`` manually in your VS Code
+``launch.json``.
 
-If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is used as default.
+If calling only ``--debug`` without selecting a debugger explicitly, ``pdb``
+is used as default.
 
-This is an **experimental** new feature, that is currently only support on Windows and macOS.
+This is an **experimental** new feature, that is currently only supported on
+Windows and macOS.
 
 The selected debugger in ``run --debug <debugger>`` has to match the selected
 debugger in ``build --debug <debugger>``.

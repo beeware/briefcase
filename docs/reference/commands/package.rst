@@ -7,7 +7,8 @@ platform's default output format.
 
 This will produce an installable artefact.
 
-You should not package an application that is build using ``build --test`` or ``build --debug <debugger>``.
+You should not package an application that was built using ``build --test`` or
+``build --debug <debugger>``.
 
 Usage
 =====

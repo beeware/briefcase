@@ -116,18 +116,19 @@ your testing requirements are present in the test app.
 ``--debug <debugger>``
 ----------------------
 
-Build the app in debug mode in the bundled app environment and establish an
-debugger connection via a socket. This installs the selected debugger in the
-bundled app.
+Build the app in debug mode in the bundled app environment and installs the
+selected debugger in the bundled app.
 
 Currently the following debuggers are supported:
 
-- ``pdb``: This is used for debugging via console (see :doc:`Debug via Console </how-to/debugging/console>`)
-- ``debugpy``: This is used for debugging via VSCode (see :doc:`Debug via VSCode </how-to/debugging/vscode>`)
+- ``pdb``: This is used for debugging via console (see :doc:`Debug via PDB </how-to/debugging/pdb>`)
+- ``debugpy``: This is used for debugging via VS Code (see :doc:`Debug via VS Code </how-to/debugging/vscode>`)
 
-If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is used as default.
+If calling only ``--debug`` without selecting a debugger explicitly, ``pdb`` is
+used as default.
 
-This is an **experimental** new feature, that is currently only support on Windows and macOS.
+This is an **experimental** new feature, that is currently only supported on
+Windows and macOS.
 
 This option may slow down the app a little bit.
 

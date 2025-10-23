@@ -8,5 +8,5 @@ following sections describe how you can debug your app with or without an IDE.
 .. toctree::
    :maxdepth: 1
 
-   console
+   pdb
    vscode

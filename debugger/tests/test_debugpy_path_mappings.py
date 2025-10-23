@@ -140,7 +140,7 @@ def test_mappings_none(monkeypatch):
             ],
             id="ios",
         ),
-        # Android (with VSCode running on Windows)
+        # Android (with VS Code running on Windows)
         pytest.param(
             "posix",
             AppPathMappings(
@@ -172,7 +172,7 @@ def test_mappings_none(monkeypatch):
             ],
             id="android-on-windows-host",
         ),
-        # Android (with VSCode running on POSIX system)
+        # Android (with VS Code running on POSIX system)
         pytest.param(
             "posix",
             AppPathMappings(
