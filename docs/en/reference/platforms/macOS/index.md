@@ -16,7 +16,7 @@
 </colgroup>
 <thead>
 <tr>
-<th colspan="11"><a href="../../../../reference/platforms">Host Platform Support</a></th>
+<th colspan="11"><a href="../../../reference/platforms">Host Platform Support</a></th>
 </tr>
 <tr>
 <th colspan="2">macOS</th>
