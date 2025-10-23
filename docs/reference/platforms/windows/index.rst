@@ -217,13 +217,14 @@ defaults to ``False``.
 Using installer options
 -----------------------
 
-When an installer option is defined, the value of the option will be passed to the
-post-install script as a command line argument. If your installer defines an option
-with a name of ``foo``, the argument ``--foo=1`` will be passed to your post-install
-script if the option is selected by the user ``--foo=0`` will be passed if the option
-is *not* selected. The ``--allusers`` option will always be passed to post-install
-scripts; this option will be 1 if the app has been installed for all users, or 0 if
-it has only been installed for the current user.
+When an installer option is defined, the value of the option will be made available to
+the post-install script as an environment variable whose name is the capitalized version
+of the option name. If your installer defines an option with a name of ``foo``, an
+environment variable of ``FOO`` will be defined, with a value of 1 if the option has
+been selected by the user, and 0 will be defined if the option has not been selected.
+The ``ALLUSERS`` environment variable will also be set; this option will be 1 if the app
+has been installed for all users, or 0 if it has only been installed for the current
+user.
 
 Platform quirks
 ===============
