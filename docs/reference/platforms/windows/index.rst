@@ -220,11 +220,10 @@ Using installer options
 When an installer option is defined, the value of the option will be made available to
 the post-install script as an environment variable whose name is the capitalized version
 of the option name. If your installer defines an option with a name of ``foo``, an
-environment variable of ``FOO`` will be defined, with a value of 1 if the option has
-been selected by the user, and 0 if the option has not been selected.
-The ``ALLUSERS`` environment variable will also be set; its value will be 1 if the app
-has been installed for all users, or 0 if it has only been installed for the current
-user.
+environment variable of ``OPTION_FOO`` will be defined, with a value of 1 if the option
+has been selected by the user, and 0 if the option has not been selected. The
+``ALLUSERS`` environment variable will also be set; its value will be 1 if the app has
+been installed for all users, or 0 if it has only been installed for the current user.
 
 Platform quirks
 ===============
