@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-## What version of Python does Briefcase support?
+## What versions of Python are supported?
 
 Python 3.10 or higher.
 
