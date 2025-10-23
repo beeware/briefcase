@@ -206,7 +206,7 @@ def validate_install_options_config(config):
                 if not isinstance(name, str):
                     raise BriefcaseConfigError(
                         f"Name for install option {i} is not a string."
-                    ) from None
+                    )
             except KeyError:
                 raise BriefcaseConfigError(
                     f"Install option {i} does not define a `name`."
@@ -217,21 +217,21 @@ def validate_install_options_config(config):
                 raise BriefcaseConfigError(
                     f"{name!r} cannot be used as an install option name, "
                     "as it is not a valid Python identifier."
-                ) from None
+                )
 
             # Option names may be coerced into upper case; and there are
             # a small number of reserved identifiers.
             if name.upper() in {"ALLUSERS"}:
                 raise BriefcaseConfigError(
                     f"{name!r} is a reserved install option identifier."
-                ) from None
+                )
 
             option = {}
             if name.upper() in known_names:
                 raise BriefcaseConfigError(
                     f"Install option names must be unique. The name {name!r}, "
                     f"used by install option {i}, has already been defined."
-                ) from None
+                )
 
             # install_options needs to retain the original name, but we need names to be
             # case-unique as well, so we track a separate set of known upper case names.
@@ -244,7 +244,7 @@ def validate_install_options_config(config):
                 if not isinstance(option["title"], str):
                     raise BriefcaseConfigError(
                         f"Title for install option {name!r} is not a string."
-                    ) from None
+                    )
             except KeyError:
                 raise BriefcaseConfigError(
                     f"Install option {name!r} does not provide a title."
@@ -256,7 +256,7 @@ def validate_install_options_config(config):
                 if not isinstance(option["description"], str):
                     raise BriefcaseConfigError(
                         f"Description for install option {name!r} is not a string."
-                    ) from None
+                    )
             except KeyError:
                 raise BriefcaseConfigError(
                     f"Install option {name!r} does not provide a description."
