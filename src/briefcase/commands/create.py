@@ -189,6 +189,7 @@ class CreateCommand(BaseCommand):
         return {
             key: app.permission.pop(key, None)
             for key in [
+                "bluetooth",
                 "camera",
                 "microphone",
                 "coarse_location",

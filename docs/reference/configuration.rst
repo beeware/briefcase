@@ -555,6 +555,10 @@ starting from least to most specific, with the most specific taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
 
+.. attribute:: permission.bluetooth
+
+Permission to connect to an external device via Bluetooth.
+
 .. attribute:: permission.camera
 
 Permission to access the camera to take photos or video.
