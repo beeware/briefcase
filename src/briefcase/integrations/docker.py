@@ -117,7 +117,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
 """
 
     # Platform-specific template context dictionary for Docker installation details
-    DOCKER_INSTALL_URL = {
+    DOCKER_INSTALL_URL: Mapping[str, str] = {
         "Windows": "https://docs.docker.com/docker-for-windows/install/",
         "Darwin": "https://docs.docker.com/docker-for-mac/install/",
         "Linux": "https://docs.docker.com/engine/install/#server",
@@ -232,8 +232,8 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                 ["docker", "buildx", "version"],
                 env=cls.subprocess_env(),
             )
-        except subprocess.CalledProcessError:
-            raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(cls.BUILDX_PLUGIN_MISSING) from e
 
     def _write_test_path(self) -> Path:
         """Host system filepath to perform write test from a container."""
@@ -328,7 +328,7 @@ Delete this file and run Briefcase again.
             ) from e
 
         # If the file is not owned by `root`, then Docker is mapping usernames
-        is_user_mapped = 0 != self.tools.os.stat(host_write_test_path).st_uid
+        is_user_mapped = self.tools.os.stat(host_write_test_path).st_uid != 0
 
         # Delete the file inside the container since it may be owned by root on the host
         try:
@@ -348,7 +348,7 @@ Delete this file and run Briefcase again.
     # since the cache retains a reference to the instance that called the
     # method. Since the Docker tools usually exist one at a time, this is not
     # a big concern
-    @cache  # noqa B019
+    @cache  # noqa: B019
     def cache_image(self, image_tag: str):
         """Ensures an image is available and cached locally.
 
@@ -718,7 +718,7 @@ Briefcase will proceed, but if access to the display is rejected, this may be wh
             sock.settimeout(3)
             try:
                 # returns 0 only if the connection is successful
-                return 0 == sock.connect_ex(("localhost", 6000 + display_num))
+                return sock.connect_ex(("localhost", 6000 + display_num)) == 0
             except OSError:
                 return False
 
@@ -770,7 +770,8 @@ Briefcase will proceed, but if access to the display is rejected, this may be wh
         xauth_file_path.unlink(missing_ok=True)
         xauth_file_path.touch()
 
-        # Create a xauth database for the target display using the current display's cookie
+        # Create an xauth database for the target display
+        # using the current display's cookie
         try:
             self.tools.subprocess.check_output(
                 [

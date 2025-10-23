@@ -1,110 +1,48 @@
-from unittest.mock import MagicMock
-
 import pytest
 
-from briefcase.integrations.virtual_environment import VenvEnvironment
+from briefcase.integrations.virtual_environment import (
+    NoOpEnvironment,
+    VenvEnvironment,
+    VirtualEnvironment,
+)
 
 
 @pytest.fixture
-def cwd_tmp_path(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
+def virtual_environment(mock_tools):
+    return VirtualEnvironment.verify(mock_tools)
 
 
-def test_recreate_true(mock_tools, dummy_console, tmp_path, cwd_tmp_path):
-    """Context manager recreates environment when recreate=True."""
-    venv_path = tmp_path / "test_venv"
-    env = VenvEnvironment(
-        mock_tools,
-        dummy_console,
-        path=venv_path,
-        recreate=True,
-    )
+def test_isolated(virtual_environment, venv_path):
+    """Factory returns VenvEnvironment when isolated is true."""
+    env = virtual_environment.create(venv_path, isolated=True, recreate=False)
 
-    env.venv_context = MagicMock()
-
-    with env as context:
-        assert context == env.venv_context
-        env.venv_context.recreate.assert_called_once()
+    assert isinstance(env, VenvEnvironment)
+    assert env.path == venv_path
+    assert not env.recreate
 
 
-def test_recreate_true_exists(mock_tools, dummy_console, tmp_path, cwd_tmp_path):
-    """Context manager recreates environment when recreate=True, even when venv
-    exists."""
-    venv_path = tmp_path / "test_venv"
-    env = VenvEnvironment(
-        mock_tools,
-        dummy_console,
-        path=venv_path,
-        recreate=True,
-    )
+def test_non_isolated(virtual_environment, venv_path):
+    """Factory returns NoOpEnvironment when isolated is false."""
+    env = virtual_environment.create(venv_path, isolated=False, recreate=False)
 
-    env.venv_context = MagicMock()
-    env.venv_context.exists.return_value = True
-
-    with env as context:
-        assert context == env.venv_context
-        env.venv_context.exists.assert_not_called()
-        env.venv_context.recreate.assert_called_once()
-        env.venv_context.create.assert_not_called()
+    assert isinstance(env, NoOpEnvironment)
+    assert env.path == venv_path
+    assert not env.recreate
 
 
-def test_venv_nonexistent(mock_tools, dummy_console, tmp_path, cwd_tmp_path):
-    """Context manager creates environment when it doesn't exist."""
-    venv_path = tmp_path / "test_venv"
-    env = VenvEnvironment(
-        mock_tools,
-        dummy_console,
-        path=venv_path,
-        recreate=False,
-    )
+def test_recreate_isolated(virtual_environment, venv_path):
+    """An isolated environment can be re-created."""
+    env = virtual_environment.create(venv_path, isolated=True, recreate=True)
 
-    env.venv_context = MagicMock()
-    env.venv_context.exists.return_value = False
-
-    with env as context:
-        assert context == env.venv_context
-        env.venv_context.exists.assert_called_once()
-        env.venv_context.create.assert_called_once()
+    assert isinstance(env, VenvEnvironment)
+    assert env.path == venv_path
+    assert env.recreate
 
 
-def test_venv_exists(mock_tools, dummy_console, tmp_path, cwd_tmp_path):
-    """Context manager does nothing when environment exists and recreate=False."""
-    venv_path = tmp_path / "test_venv"
-    env = VenvEnvironment(
-        mock_tools,
-        dummy_console,
-        path=venv_path,
-        recreate=False,
-    )
+def test_recreate_non_isolated(virtual_environment, venv_path):
+    """An non-isolated environment can be re-created."""
+    env = virtual_environment.create(venv_path, isolated=False, recreate=True)
 
-    env.venv_context = MagicMock()
-    env.venv_context.exists.return_value = True
-
-    with env as context:
-        assert context == env.venv_context
-        env.venv_context.exists.assert_called_once()
-        env.venv_context.create.assert_not_called()
-        env.venv_context.recreate.assert_not_called()
-
-
-def test_exception_handling(mock_tools, dummy_console, tmp_path, cwd_tmp_path):
-    """Context manager handles exceptions properly."""
-    venv_path = tmp_path / "test_venv"
-    env = VenvEnvironment(
-        mock_tools,
-        dummy_console,
-        path=venv_path,
-        recreate=False,
-    )
-
-    env.venv_context = MagicMock()
-    env.venv_context.exists.return_value = True
-
-    try:
-        with env as context:
-            assert context == env.venv_context
-            raise ValueError("Test exception")
-    except ValueError:
-        pass
-
-    env.venv_context.exists.assert_called_once()
+    assert isinstance(env, NoOpEnvironment)
+    assert env.path == venv_path
+    assert env.recreate

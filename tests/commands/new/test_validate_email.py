@@ -20,5 +20,5 @@ def test_valid_email(new_command, email):
 )
 def test_invalid_email(new_command, email):
     """Test that invalid email addresses are rejected."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Not a valid email address"):
         new_command.validate_email(email)

@@ -1,0 +1,1 @@
+Resolved ruff rule category ``SIM`` - flake8-simplify.

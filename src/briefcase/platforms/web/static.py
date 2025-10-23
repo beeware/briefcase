@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 import webbrowser
+from collections.abc import Collection
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
@@ -278,7 +279,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         target = "static/css/briefcase.css"
         insert = "css"
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-        if contrib_key in pkg_map and pkg_map[contrib_key]:
+        if pkg_map.get(contrib_key):
             pkg_map[contrib_key] += "\n" + css_text
         else:
             pkg_map[contrib_key] = css_text
@@ -313,7 +314,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
             return
 
-        # Preserve any '~' that might exist in the target path by splitting from the right
+        # Preserve any '~' that might exist in the target path
         target, insert = rel_inside.rsplit("~", 1)
         self.console.info(f"    {path}: Adding {insert} insert for {target}")
 
@@ -321,7 +322,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         contrib_key = f"{package_key} (deploy insert: {rel_inside} from {path})"
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-        if contrib_key in pkg_map and pkg_map[contrib_key]:
+        if pkg_map.get(contrib_key):
             pkg_map[contrib_key] += "\n" + text
         else:
             pkg_map[contrib_key] = text
@@ -409,7 +410,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 # Gather implementation from config.toml
                 implementation = config_data.get("implementation", None)
 
-                # Currently, only pyscript is supported. Warn if another implementation is found,
+                # Currently, only pyscript is supported.
+                # Warn if another implementation is found,
                 # but fail safe to using pyscript with a warning.
                 if implementation is None:
                     self.console.warning(
@@ -728,7 +730,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             # Not sure why, but this is needed to mollify coverage for the
             # "test_cleanup_server_error" case. Without this pass, a missing branch
             # is reported for the "if httpd: -> exit" branch
-            pass
+            pass  # noqa: PIE790 (unnecessary pass)
 
         return {}
 
@@ -764,7 +766,7 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     description = "Publish a static web app."
-    publication_channels = ["s3"]
+    publication_channels: Collection[str] = ["s3"]
     default_publication_channel = "s3"
 
 
@@ -777,7 +779,6 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
 
         :returns: Name for virtual environment directory
         """
-
         return "dev-web"
 
     def add_options(self, parser):

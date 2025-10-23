@@ -7,7 +7,7 @@ from briefcase.platforms.linux.system import LinuxSystemBuildCommand
 
 
 @pytest.mark.parametrize(
-    "vendor, codename",
+    ("vendor", "codename"),
     [
         ("ubuntu", "jammy"),
         ("debian", "bullseye"),
@@ -31,7 +31,7 @@ def test_build_path(
 
 
 @pytest.mark.parametrize(
-    "vendor, codename",
+    ("vendor", "codename"),
     [
         ("ubuntu", "jammy"),
         ("debian", "bullseye"),
@@ -71,7 +71,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "packaging_format, vendor_base, filename",
+    ("packaging_format", "vendor_base", "filename"),
     [
         ("deb", "debian", "first-app_0.0.1-1~somevendor-surprising_wonky.deb"),
         ("rpm", "fedora", "first-app-0.0.1-1.elsurprising.wonky.rpm"),
@@ -123,7 +123,7 @@ def test_distribution_path_unknown(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "vendor, codename",
+    ("vendor", "codename"),
     [
         ("ubuntu", "jammy"),
         ("debian", "bullseye"),

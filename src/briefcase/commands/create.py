@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Collection
 from datetime import date, datetime
 from pathlib import Path
 
@@ -96,7 +97,7 @@ class CreateCommand(BaseCommand):
         )
 
     # app properties that won't be exposed to the context
-    hidden_app_properties = {"permission"}
+    hidden_app_properties: Collection[str] = {"permission"}
 
     @property
     def app_template_url(self) -> str:
@@ -239,7 +240,8 @@ class CreateCommand(BaseCommand):
                 # Ensure the output format is in the case we expect
                 "format": self.output_format.lower(),
                 # Properties of the generating environment
-                # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
+                # The full Python version string, including minor and dev/a/b/c suffixes
+                # (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
@@ -359,7 +361,7 @@ class CreateCommand(BaseCommand):
                             platform=self.platform,
                             host_arch=self.tools.host_arch,
                             is_32bit=self.tools.is_32bit_python,
-                        )
+                        ) from None
 
                 support_package_url = self.support_package_url(support_revision)
                 custom_support_package = False
@@ -937,8 +939,9 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        # External apps (apps that define 'external_package_path') need the packaging metadata
-        # from the template, but not the app content, dependencies, support package etc.
+        # External apps (apps that define 'external_package_path') need the packaging
+        # metadata from the template, but not the app content, dependencies, support
+        # package, etc.
         if app.external_package_path:
             self.console.info("Removing generated app content...", prefix=app.app_name)
             self.tools.shutil.rmtree(self.bundle_package_path(app))
@@ -1015,7 +1018,7 @@ class CreateCommand(BaseCommand):
             except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from None
         elif app:
             apps_to_create = {app.app_name: app}
         else:
@@ -1043,11 +1046,32 @@ def _has_url(requirement):
     return any(
         f"{scheme}:" in requirement
         for scheme in (
-            ["http", "https", "file", "ftp"]
-            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
-            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
-            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
-            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+            "http",
+            "https",
+            "file",
+            "ftp",
+            "git+file",
+            "git+https",
+            "git+ssh",
+            "git+http",
+            "git+git",
+            "git",
+            "hg+file",
+            "hg+http",
+            "hg+https",
+            "hg+ssh",
+            "hg+static-http",
+            "svn",
+            "svn+svn",
+            "svn+http",
+            "svn+https",
+            "svn+ssh",
+            "bzr+http",
+            "bzr+https",
+            "bzr+ssh",
+            "bzr+sftp",
+            "bzr+ftp",
+            "bzr+lp",
         )
     )
 

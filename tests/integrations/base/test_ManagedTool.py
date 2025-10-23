@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,7 +16,7 @@ class DummyManagedTool(ManagedTool):
 
     name = "ManagedDummyTool"
     full_name = "Managed Dummy Tool"
-    supported_host_os = {"wonky"}
+    supported_host_os: Collection[str] = {"wonky"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,7 +64,7 @@ def nonmanaged_managed_tool(mock_tools) -> NonManagedManagedTool:
 
 
 @pytest.mark.parametrize(
-    "klass, kwargs",
+    ("klass", "kwargs"),
     [
         (DummyManagedTool, {}),
         (DummyManagedTool, {"one": "two", "three": "four"}),
@@ -90,7 +91,7 @@ def test_tool_verify(mock_tools, klass, kwargs, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "klass, kwargs",
+    ("klass", "kwargs"),
     [
         (DummyManagedTool, {}),
         (DummyManagedTool, {"one": "two", "three": "four"}),

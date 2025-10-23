@@ -4,7 +4,7 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 
 
 @pytest.mark.parametrize(
-    "original, filtered",
+    ("original", "filtered"),
     [
         # macOS Logging preamble
         (

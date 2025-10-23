@@ -53,7 +53,7 @@ def test_parse_options_with_overrides(base_command):
 
 
 @pytest.mark.parametrize(
-    "verbosity, log_level",
+    ("verbosity", "log_level"),
     [
         ("", LogLevel.INFO),
         ("-v", LogLevel.VERBOSE),

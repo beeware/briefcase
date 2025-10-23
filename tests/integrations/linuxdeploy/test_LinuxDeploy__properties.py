@@ -21,7 +21,7 @@ def test_file_path(linuxdeploy, mock_tools):
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, is_32bit_python, linuxdeploy_arch",
+    ("host_os", "host_arch", "is_32bit_python", "linuxdeploy_arch"),
     [
         ("Linux", "x86_64", False, "x86_64"),
         ("Linux", "x86_64", True, "i386"),
@@ -50,13 +50,13 @@ def test_file_name_unsupported_arch(mock_tools):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux AppImages cannot be built on IA-64.",
+        match=r"Linux AppImages cannot be built on IA-64\.",
     ):
         _ = LinuxDeploy(mock_tools).file_name
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, linuxdeploy_arch",
+    ("host_os", "host_arch", "linuxdeploy_arch"),
     [
         ("Linux", "x86_64", "x86_64"),
         ("Linux", "i686", "i386"),

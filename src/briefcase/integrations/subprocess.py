@@ -291,7 +291,6 @@ class Subprocess(Tool):
     def prepare(self):
         """Perform any environment preparation required to execute processes."""
         # This is a no-op; the native subprocess environment is ready-to-use.
-        pass
 
     @contextlib.contextmanager
     def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:

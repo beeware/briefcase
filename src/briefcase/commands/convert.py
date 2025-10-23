@@ -94,7 +94,6 @@ class ConvertCommand(NewCommand):
     def _validate_existing_app_name(self, candidate):
         """Override default validation to allow app names with a pre-existing
         directory."""
-        pass
 
     def input_app_name(self, override_value: str | None) -> str:
         """Ask about the app name, using hints from the pyproject.toml file or directory
@@ -239,7 +238,7 @@ class ConvertCommand(NewCommand):
             default = "tests"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
-                + "'tests' might be your test directory"
+                "'tests' might be your test directory"
             )
         elif (self.base_path / "test").is_dir():
             default = "test"
@@ -394,7 +393,7 @@ class ConvertCommand(NewCommand):
                 default_author = git_username
                 intro = (
                     f"{intro}\n\n"
-                    + f"Based on your git configuration, we believe it could be '{git_username}'."
+                    f"Based on your git configuration, we believe it could be '{git_username}'."
                 )
 
             return self.console.text_question(
@@ -417,9 +416,9 @@ class ConvertCommand(NewCommand):
         author = self.console.selection_question(
             intro=(
                 f"{intro}\n\n"
-                + "We found these author names in the PEP621 formatted "
-                + "'pyproject.toml'. Who do you want to be credited as the author of "
-                + "this application?"
+                "We found these author names in the PEP621 formatted "
+                "'pyproject.toml'. Who do you want to be credited as the author of "
+                "this application?"
             ),
             description="Author",
             options=options,
@@ -523,7 +522,8 @@ class ConvertCommand(NewCommand):
         intro = "What license do you want to use for this project's code? "
         default = None
 
-        # If there is license information in the pyproject.toml file, use that, otherwise check the license file
+        # If there is license information in the pyproject.toml file, use that,
+        # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
             default = self.get_license_from_text(self.pep621_data["license"]["text"])
             default_source = "the PEP621 formatted pyproject.toml"
@@ -639,9 +639,10 @@ class ConvertCommand(NewCommand):
         if pyproject_file.exists():
             pep621_pyproject = pyproject_file.read_text(encoding="utf-8")
 
-            # The pyproject.toml file in the target directory has no briefcase keys, so it's
-            # safe to copy-paste the text, and that way also keep formatting and comments.
-            # We merge it this way to preserve comments in the original pyproject.toml file
+            # The pyproject.toml file in the target directory has no briefcase keys, so
+            # it's safe to copy-paste the text, and that way also keep formatting and
+            # comments. We merge it this way to preserve comments in the original
+            # pyproject.toml file
             briefcase_comment = "# content below this line added by briefcase convert"
             merged_pyproject = (
                 f"{pep621_pyproject}\n\n\n{briefcase_comment}\n{briefcase_pyproject}"
@@ -782,7 +783,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
-        project_overrides: list[str] = None,
+        project_overrides: list[str] | None = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.

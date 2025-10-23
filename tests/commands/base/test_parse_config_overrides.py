@@ -5,7 +5,7 @@ from briefcase.exceptions import BriefcaseConfigError
 
 
 @pytest.mark.parametrize(
-    "overrides, values",
+    ("overrides", "values"),
     [
         # No content
         (None, {}),
@@ -52,7 +52,7 @@ def test_valid_overrides(overrides, values):
 
 
 @pytest.mark.parametrize(
-    "overrides, message",
+    ("overrides", "message"),
     [
         # Bare string
         (["foobar"], r"Unable to parse configuration override "),

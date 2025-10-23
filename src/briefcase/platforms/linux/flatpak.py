@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Collection
+
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -18,7 +20,7 @@ from briefcase.platforms.linux import LinuxMixin
 
 class LinuxFlatpakMixin(LinuxMixin):
     output_format = "flatpak"
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Flatpaks can only be built on Linux."
     platform_target_version = "0.3.20"
 
@@ -54,7 +56,7 @@ class LinuxFlatpakMixin(LinuxMixin):
                     "If you specify a custom Flatpak runtime repository, "
                     "you must also specify an alias for that repository using "
                     "`flatpak_runtime_repo_alias`"
-                )
+                ) from None
 
         except AttributeError:
             repo_alias = Flatpak.DEFAULT_REPO_ALIAS
@@ -104,7 +106,7 @@ Your application configuration must provide values for
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
-    hidden_app_properties = {"permission", "finish_arg"}
+    hidden_app_properties: Collection[str] = {"permission", "finish_arg"}
 
     def output_format_template_context(self, app: AppConfig):
         """Add flatpak runtime/SDK details to the app template."""
