@@ -1,7 +1,6 @@
 # Briefcase
 
-Briefcase is a tool for converting a Python project into a standalone
-native application. It supports producing binaries for:
+Briefcase is a tool for converting a Python project into a standalone native application. It supports producing binaries for:
 
 - macOS, as a standalone .app
 - Windows, as an MSI installer
@@ -10,8 +9,7 @@ native application. It supports producing binaries for:
 - Android, as a Gradle project
 - the Web, as a static website using PyScript for client-side Python
 
-It is also extensible, allowing for additional platforms and
-installation formats to be produced.
+It is also extensible, allowing for additional platforms and installation formats to be produced.
 
 ## Documentation
 
@@ -21,8 +19,7 @@ Get started with a hands-on introduction for beginners.
 
 ### [How-to guides][how-to]
 
-Guides and recipes for common problems and tasks, including how to
-contribute.
+Guides and recipes for common problems and tasks, including how to contribute.
 
 ### [Topic guides][topics]
 
@@ -34,13 +31,11 @@ Technical reference - commands, modules, classes, methods.
 
 ### [About Briefcase][about]
 
-Frequently Asked Questions, success stories, and other details about
-Briefcase as a project.
+Frequently Asked Questions, success stories, and other details about Briefcase as a project.
 
 ## Community
 
-Briefcase is part of the [BeeWare suite](https://beeware.org). You can
-talk to the community through:
+Briefcase is part of the [BeeWare suite](https://beeware.org). You can talk to the community through:
 
 - [@beeware@fosstodon.org on Mastodon](https://fosstodon.org/@beeware)
 - [Discord](https://beeware.org/bee/chat/)
@@ -50,9 +45,7 @@ talk to the community through:
 
 The BeeWare community has a strict [Code of Conduct](https://beeware.org/community/behavior/code-of-conduct/). All users and developers are expected to adhere to this code.
 
-If you have any concerns about this code of conduct, or you wish to
-report a violation of this code, please contact the project founder
-[Russell Keith-Magee](mailto:russell@keith-magee.com).
+If you have any concerns about this code of conduct, or you wish to report a violation of this code, please contact the project founder [Russell Keith-Magee](mailto:russell@keith-magee.com).
 
 ### Contributing
 

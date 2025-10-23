@@ -2,18 +2,13 @@
 
 **COMING SOON**
 
-Uploads your application to a publication channel. By default, targets
-the current platform's default output format, using that format's
-default publication channel.
+Uploads your application to a publication channel. By default, targets the current platform's default output format, using that format's default publication channel.
 
-You may need to provide additional configuration details (e.g.,
-authentication credentials), depending on the publication channel
-selected.
+You may need to provide additional configuration details (e.g., authentication credentials), depending on the publication channel selected.
 
 ## Usage
 
-To publish the application artefacts for the current platform's default
-output format to the default publication channel:
+To publish the application artefacts for the current platform's default output format to the default publication channel:
 
 ```console
 $ briefcase publish

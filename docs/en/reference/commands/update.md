@@ -1,17 +1,12 @@
 # update
 
-While you're developing an application, you may need to rapidly iterate
-on the code, making small changes and then re-building. The update
-command applies any changes you've made to your code to the packaged
-application code.
+While you're developing an application, you may need to rapidly iterate on the code, making small changes and then re-building. The update command applies any changes you've made to your code to the packaged application code.
 
-It will *not* update requirements or installer resources unless
-specifically requested.
+It will *not* update requirements or installer resources unless specifically requested.
 
 ## Usage
 
-To repackage your application's code for the current platform's default
-output format:
+To repackage your application's code for the current platform's default output format:
 
 ```console
 $ briefcase update
@@ -35,10 +30,7 @@ The following options can be provided at the command line.
 
 ### `-a <app name>` / `--app <app name>`
 
-Run a specific application target in your project. This argument is only
-required if your project contains more than one application target. The
-app name specified should be the machine-readable package name for the
-app.
+Run a specific application target in your project. This argument is only required if your project contains more than one application target. The app name specified should be the machine-readable package name for the app.
 
 ### `-r` / `--update-requirements`
 

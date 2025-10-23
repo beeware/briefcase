@@ -59,6 +59,5 @@
     - [Plugins](reference/plugins.md)
 - [About Briefcase](about/index.md)
     - [Frequently asked questions](about/faq.md)
-    - [The Briefcase developer and user community](about/community.md)
     - [Success stories](about/success.md)
     - [Release history](about/releases.md)

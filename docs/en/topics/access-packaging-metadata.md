@@ -1,17 +1,8 @@
 # Accessing Briefcase packaging metadata at runtime  { #access-packaging-metadata }
 
-When Briefcase installs your app, it adds a
-[PEP566](https://peps.python.org/pep-0566/) metadata file containing
-information about your app, and Briefcase itself. You can retrieve this
-information at runtime using the Python builtin library
-[`importlib.metadata`][].
-`importlib.metadata` was added in Python 3.8; however, it has been
-backported and published on PyPI as
-[`importlib.metadata`][] for
-older versions of Python.
+When Briefcase installs your app, it adds a [PEP566](https://peps.python.org/pep-0566/) metadata file containing information about your app, and Briefcase itself. You can retrieve this information at runtime using the Python builtin library [`importlib.metadata`][]. `importlib.metadata` was added in Python 3.8; however, it has been backported and published on PyPI as [`importlib.metadata`][] for older versions of Python.
 
-To access application metadata at runtime, you can use the following
-code:
+To access application metadata at runtime, you can use the following code:
 
 ```python
 import sys
@@ -27,37 +18,26 @@ app_module = sys.modules['__main__'].__package__
 metadata = importlib_metadata.metadata(app_module)
 ```
 
-The `metadata` returned by this code will be a dictionary-like object
-that contains the following identifying keys:
+The `metadata` returned by this code will be a dictionary-like object that contains the following identifying keys:
 
-- **Metadata-Version** - The syntax version of the metadata file
-  itself (as defined in [PEP566](https://peps.python.org/pep-0566/)).
-- **Briefcase-Version** - The version of Briefcase used to package the
-  app. The existence of this key in app metadata can be used to
-  identify if your application code is running in a Briefcase
-  container; it will only exist if the app has been packaged by
-  Briefcase.
+- **Metadata-Version** - The syntax version of the metadata file itself (as defined in [PEP566](https://peps.python.org/pep-0566/)).
+- **Briefcase-Version** - The version of Briefcase used to package the app. The existence of this key in app metadata can be used to identify if your application code is running in a Briefcase container; it will only exist if the app has been packaged by Briefcase.
 
-It will also have the following keys, derived from your application's
-`pyproject.toml` configuration:
+It will also have the following keys, derived from your application's `pyproject.toml` configuration:
 
 - **Name** - [`app_name`][]
 - **Formal-Name** - [`formal_name`][]
-- **App-ID** - [`bundle`][] and
-  [`app_name`][], joined with a `.`
+- **App-ID** - [`bundle`][] and [`app_name`][], joined with a `.`
 - **Version** - [`version`][]
 - **Summary** - [`description`][]
 
-The metadata may also contain the following keys, if they have been
-defined in your app's `pyproject.toml` configuration:
+The metadata may also contain the following keys, if they have been defined in your app's `pyproject.toml` configuration:
 
 - **Home-page** - [`url`][]
 - **Author** - [`author`][]
 - **Author-email** - [`author_email`][]
 
-For example, the metadata for the app constructed by the [BeeWare
-Tutorial](https://tutorial.beeware.org/en/latest/tutorial/tutorial-1)
-would contain:
+For example, the metadata for the app constructed by the [BeeWare Tutorial](https://tutorial.beeware.org/en/latest/tutorial/tutorial-1) would contain:
 
 ```python
 Metadata-Version: 2.1

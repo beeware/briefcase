@@ -1,20 +1,15 @@
 # upgrade
 
-Briefcase uses external tools to manage the process of packaging apps.
-Where possible, Briefcase will manage the process of obtaining those
-tools. This is currently done for
+Briefcase uses external tools to manage the process of packaging apps. Where possible, Briefcase will manage the process of obtaining those tools. This is currently done for
 
 - **WiX** (used by the Windows MSI backend)
 - **linuxdeploy** (used by the Linux AppImage backend)
 - **Java JDK** (used by the Android backed)
 - **Android SDK** (used by the Android backend)
 
-Over time, it may be necessary to upgrade these tools. The `upgrade`
-command provides a way to perform these upgrades.
+Over time, it may be necessary to upgrade these tools. The `upgrade` command provides a way to perform these upgrades.
 
-If you are managing your own version of these tools (e.g., if you have
-downloaded the Android SDK and have set the `ANDROID_HOME` environment
-variable), you must manage any upgrades on your own.
+If you are managing your own version of these tools (e.g., if you have downloaded the Android SDK and have set the `ANDROID_HOME` environment variable), you must manage any upgrades on your own.
 
 ## Usage
 
