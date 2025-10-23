@@ -45,7 +45,7 @@ Plus individual contributions from [users like you](https://beeware.org/communit
 
 ## Documentation
 
-Documentation for Briefcase can be found on [Read The Docs](https://briefcase.readthedocs.io).
+Documentation for Briefcase can be found on [Read The Docs](https://briefcase.beeware.org).
 
 ## Community
 
@@ -61,4 +61,4 @@ We foster a welcoming and respectful community as described in our [BeeWare Comm
 
 If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues).
 
-If you'd like to contribute to Briefcase development, our [contribution guide](https://briefcase.readthedocs.io/en/latest/how-to/contribute/index.html) details how to set up a development environment, and other requirements we have as part of our contribution process.
+If you'd like to contribute to Briefcase development, our [contribution guide](https://briefcase.beeware.org/en/latest/how-to/contribute) details how to set up a development environment, and other requirements we have as part of our contribution process.
