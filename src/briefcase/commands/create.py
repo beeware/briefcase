@@ -941,8 +941,14 @@ class CreateCommand(BaseCommand):
 
         # External apps (apps that define 'external_package_path') need the packaging
         # metadata from the template, but not the app content, dependencies, support
-        # package, etc.
+        # package etc. App *resources* are installed, because they might be required for
+        # the installer.
         if app.external_package_path:
+            self.console.info(
+                "Installing application resources...", prefix=app.app_name
+            )
+            self.install_app_resources(app=app)
+
             self.console.info("Removing generated app content...", prefix=app.app_name)
             self.tools.shutil.rmtree(self.bundle_package_path(app))
 

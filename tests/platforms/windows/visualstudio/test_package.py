@@ -42,6 +42,8 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 "first-app.wxs",
                 "-loc",
                 "unicode.wxl",
+                "-pdbtype",
+                "none",
                 "-o",
                 tmp_path / "base_path/dist/First App-0.0.1.msi",
             ],
