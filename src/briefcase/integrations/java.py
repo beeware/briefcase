@@ -19,8 +19,8 @@ class JDK(ManagedTool):
 
     # Latest OpenJDK as of January 2025: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.15"
-    JDK_BUILD = "6"
+    JDK_RELEASE = "17.0.17"
+    JDK_BUILD = "10"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
