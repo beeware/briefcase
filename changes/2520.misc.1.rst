@@ -1,1 +1,0 @@
-The `RUF ruff rule set <https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf>`_ was enabled and all findings were fixed.
