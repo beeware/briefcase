@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+copyright: © Russell Keith-Magee
+
+not_in_nav: |
+  /index.md
+  /reference/platforms/linux/docker_build_options.md
+
+validation:
+  omitted_files: warn
+  absolute_links: relative_to_docs
+  anchors: warn
+  unrecognized_links: warn
+
+extra:
+  project_name: briefcase
+  package_name: briefcase
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/beeware
+      name: BeeWare on GitHub
+    - icon: fontawesome/brands/mastodon
+      link: https://fosstodon.org/@beeware
+      name: BeeWare on Mastodon
+    - icon: fontawesome/brands/discord
+      link: https://beeware.org/bee/chat/
+      name: BeeWare on Discord
+  "ci_tested": ●
+  "maintainer_tested": ○
+  "not_tested": △
+
+extra_css:
+  - stylesheets/briefcase.css
+
+theme:
+  name: material
+  language: en
+  logo: images/briefcase.png
+  favicon: assets/images/brutus-256.png
+  features:
+    - content.tabs.link
+    - toc.follow
+    - navigation.indexes
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+  custom_dir: overrides
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+markdown_extensions:
+  pymdownx.highlight: {}
+  pymdownx.superfences: {}
+  pymdownx.blocks.admonition: {}
+  pymdownx.blocks.caption: {}
+  pymdownx.blocks.tab:
+    alternate_style: true
+  pymdownx.snippets:
+    base_path: ["docs/en"]
+    url_download: true
+    check_paths: true
+  toc:
+    permalink: true
+    title: On this page
+  attr_list: {}
+
+plugins:
+  search: {}
+  autorefs:
+    resolve_closest: true
+  literate-nav:
+    nav_file: SUMMARY.md
+  macros: {}
+  mkdocstrings:
+    handlers:
+      python:
+        inventories:
+          - https://docs.python.org/3/objects.inv
