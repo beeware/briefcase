@@ -320,4 +320,4 @@ The [Chaquopy repository](https://github.com/chaquo/chaquopy/blob/master/server/
 
 ### Signing of `briefcase package` artefacts
 
-While it is possible to use <span class="title-ref">briefcase package android</span> to produce an APK or AAB file for distribution, the file is *not* usable as-is. It must be signed regardless of whether you're distributing your app through the Play Store, or via loading the APK directly. For details on how to manually sign your code, see the instructions on [signing an Android App Bundle](https://briefcase.readthedocs.io/en/stable/how-to/publishing/android.html#sign-the-android-app-bundle).
+While it is possible to use <span class="title-ref">briefcase package android</span> to produce an APK or AAB file for distribution, the file is *not* usable as-is. It must be signed regardless of whether you're distributing your app through the Play Store, or via loading the APK directly. For details on how to manually sign your code, see the instructions on [signing an Android App Bundle][sign-the-android-app-bundle].
