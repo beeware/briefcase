@@ -492,7 +492,7 @@ class Console:
 
         # Capture env vars removing any potentially sensitive information
         sanitized_env_vars = "\n".join(
-            f"\t{env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
+            f"\t{env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"  # noqa: E501 (line too long)
             for env_var, value in sorted(command.tools.os.environ.items())
         )
 
@@ -523,7 +523,7 @@ class Console:
             #     directory (e.g. /usr/local).
             # sys.prefix is updated (from base_prefix's value) to the virtual env's
             #     site-specific directory.
-            f"Virtual env:     {hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix}\n"
+            f"Virtual env:     {hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix}\n"  # noqa: E501 (line too long)
             # for conda, prefix and base_prefix are likely the same
             # but contain a conda-meta dir.
             f"Conda env:       {(Path(sys.prefix) / 'conda-meta').exists()}\n"
