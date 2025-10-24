@@ -222,9 +222,11 @@ WindowsSDKVersion: {environ_sdk_version}
                 f"""\
 Unable to locate a suitable Windows SDK v{cls.SDK_VERSION} installation.
 
-Ensure at least v{cls.SDK_VERSION}.{cls.SDK_MIN_VERSION}.0 is installed and the components below are included:
+Ensure at least v{cls.SDK_VERSION}.{cls.SDK_MIN_VERSION}.0 is installed \
+and the components below are included:
 {cls.SDK_REQUIRED_COMPONENTS}
-See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ to install the SDK.
+See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ \
+to install the SDK.
 """
             )
 

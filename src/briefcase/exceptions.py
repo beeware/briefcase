@@ -136,7 +136,8 @@ class IncompatibleToolError(BriefcaseCommandError):
             msg=f"""\
 Briefcase cannot install {tool} on this machine.
 
-Install {tool} manually and specify the installation directory in the {env_var} environment variable.
+Install {tool} manually and specify the installation directory in the {env_var} \
+environment variable.
             """
         )
 
@@ -208,9 +209,11 @@ class MissingSupportPackage(BriefcaseCommandError):
         platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
             f"""\
-Unable to download {platform_name} support package for Python {self.python_version_tag} on {self.host_arch}.
+Unable to download {platform_name} support package for Python \
+{self.python_version_tag} on {self.host_arch}.
 
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch} \
+is not yet
 supported on {platform_name}. You will need to:
     * Use an older version of Python; or
     * Compile your own custom support package.
@@ -227,9 +230,11 @@ class MissingStubBinary(BriefcaseCommandError):
         platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
             f"""\
-Unable to download {platform_name} stub binary for Python {self.python_version_tag} on {self.host_arch}.
+Unable to download {platform_name} stub binary for Python {self.python_version_tag} on \
+{self.host_arch}.
 
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
+This is likely because either Python {self.python_version_tag} and/or {self.host_arch} \
+is not yet
 supported on {platform_name}. You will need to:
     * Use an older version of Python; or
     * Compile your own stub binary.

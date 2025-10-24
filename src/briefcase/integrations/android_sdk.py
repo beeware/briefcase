@@ -308,10 +308,12 @@ class AndroidSDK(ManagedTool):
 
     {sdk_root_env}
 
-    does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. Briefcase requires
+    does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. \
+Briefcase requires
     this version to be installed to use an external Android SDK.
 
-    Use Android Studio's SDK Manager to install Command-Line Tools {cls.SDK_MANAGER_VER}.
+    Use Android Studio's SDK Manager to install Command-Line Tools \
+{cls.SDK_MANAGER_VER}.
 
     Briefcase will proceed using its own SDK instance.
 
@@ -430,7 +432,8 @@ class AndroidSDK(ManagedTool):
             except (shutil.ReadError, EOFError) as e:
                 raise BriefcaseCommandError(
                     f"""\
-Unable to unpack Android SDK Command-Line Tools ZIP file. The download may have been interrupted
+Unable to unpack Android SDK Command-Line Tools ZIP file. \
+The download may have been interrupted
 or corrupted.
 
 Delete {cmdline_tools_zip_path} and run briefcase again.
