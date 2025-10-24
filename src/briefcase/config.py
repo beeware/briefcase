@@ -480,19 +480,23 @@ class AppConfig(BaseConfig):
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                f"{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
-                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
-                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+                f"""\
+{self.app_name!r} is not a valid app name.
+
+App names must not be reserved keywords such as 'and', 'for' and 'while'.
+They must also be PEP508 compliant (i.e., they can only include letters,
+numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."""
             )
 
         if not is_valid_bundle_identifier(self.bundle):
             raise BriefcaseConfigError(
-                f"{self.bundle!r} is not a valid bundle identifier.\n\n"
-                "The bundle should be a reversed domain name. It must contain at least 2\n"
-                "dot-separated sections; each section may only include letters, numbers,\n"
-                "and hyphens; and each section may not contain any reserved words (like\n"
-                "'switch', or 'while')."
+                f"""\
+{self.bundle!r} is not a valid bundle identifier.
+
+The bundle should be a reversed domain name. It must contain at least 2
+dot-separated sections; each section may only include letters, numbers,
+and hyphens; and each section may not contain any reserved words (like
+'switch', or 'while')."""
             )
 
         for document_type_id, document_type in self.document_types.items():
@@ -503,9 +507,11 @@ class AppConfig(BaseConfig):
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                f"Version number for {self.app_name!r} ({self.version}) is not valid.\n\n"
-                "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details."
+                f"""\
+Version number for {self.app_name!r} ({self.version}) is not valid.
+
+Version numbers must be PEP440 compliant;
+see https://www.python.org/dev/peps/pep-0440/ for details."""
             )
 
         if self.sources:
