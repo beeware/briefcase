@@ -603,7 +603,8 @@ class Console:
         :param message: text explaining what is being awaited; should end in '...'
         :param done_message: text appended to the message after exiting
         :param transient: if True, remove bar and message from screen after exiting;
-            if False (default), the message will remain on the screen without pulsing bar.
+            if False (default), the message will remain on the screen without pulsing
+            bar.
         :param markup: whether to interpret Rich styling markup in the message; if True,
             the message must already be escaped; defaults False.
         :returns:  Keep-alive spinner to notify user Briefcase is still waiting
@@ -868,7 +869,8 @@ class Console:
         :param description: A short description of the question being asked. This text
             is used in prompts and a header bar prefacing the question.
         :param intro: An introductory paragraph explaining the question being asked.
-        :param default: The default value if the user hits enter without typing anything.
+        :param default: The default value if the user hits enter without typing
+            anything.
         :param validator: (optional) A validator function; accepts a single input (the
             candidate response), returns True if the answer is valid, or raises
             ValueError() with a debugging message if the candidate value isn't valid.
