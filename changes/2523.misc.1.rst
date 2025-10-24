@@ -1,1 +1,0 @@
-Activated ruff rule categories ``FURB``, ``ISC``, ``PGH``, ``PIE``, and ``T20``.
