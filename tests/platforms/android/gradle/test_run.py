@@ -463,7 +463,7 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     # Mock datetime.now() at +0s, +0.5s, +1.5s,... +5.5s
     mock_datetime.now.side_effect = [
         pid_lookup_start_datetime + datetime.timedelta(seconds=delay)
-        for delay in [0] + [x + 0.5 for x in range(0, 6)]
+        for delay in [0] + [x + 0.5 for x in range(6)]
     ]
     monkeypatch.setattr(datetime, "datetime", mock_datetime)
 

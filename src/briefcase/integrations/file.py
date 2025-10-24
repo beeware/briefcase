@@ -199,9 +199,9 @@ class File(Tool):
                         url=url, status_code=response.status_code
                     )
 
-                # The initial URL might (read: will) go through URL redirects, so
-                # we need the *final* response. We look at either the `Content-Disposition`
-                # header, or the final URL, to extract the cache filename.
+                # The initial URL might go through URL redirects, so we need the *final*
+                # response. We look at either the `Content-Disposition` header or the
+                # final URL to extract the cache filename.
                 cache_full_name = response.url.path
                 header_value = response.headers.get("Content-Disposition")
                 if header_value:
@@ -233,10 +233,11 @@ class File(Tool):
                 description = filename.name if filename else url
 
             if isinstance(e, httpx.TooManyRedirects):
-                # httpx, unlike requests, will not follow redirects indefinitely, and defaults to
-                # 20 redirects before calling it quits. If the download attempt exceeds 20 redirects,
-                # Briefcase probably needs to re-evaluate the URLs it is using for that download
-                # and ideally find a starting point that won't have so many redirects.
+                # httpx, unlike requests, will not follow redirects indefinitely and
+                # defaults to 20 redirects before calling it quits. If the download
+                # attempt exceeds 20 redirects, Briefcase probably needs to re-evaluate
+                # the URLs it is using for that download and ideally find a starting
+                # point that won't have so many redirects.
                 hint = "exceeded redirects when downloading the file.\n\nPlease report this as a bug to Briefcase."
             elif isinstance(e, httpx.DecodingError):
                 hint = "the server sent a malformed response."
@@ -288,7 +289,9 @@ class File(Tool):
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         """
-        temp_file = tempfile.NamedTemporaryFile(
+        # `temp_file` is used in the `finally` block, so make sure it's assigned
+        # before the `try`.
+        temp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115 (use context manager)
             dir=filename.parent,
             prefix=f"{filename.name}.",
             suffix=".download",

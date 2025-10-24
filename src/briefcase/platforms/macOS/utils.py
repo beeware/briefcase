@@ -53,9 +53,10 @@ def sha256_file_digest(path: Path) -> str:
 
 
 class AppPackagesMergeMixin:
-    # A mixin containing the utilities to merge independent platform-specific app_packages folders
-    # into a single "fat" app_packages folder. This is currently only used by macOS, but it *could*
-    # be required on iOS if they ever re-introduce multiple on-device architectures.
+    # A mixin containing the utilities to merge independent platform-specific
+    # app_packages folders into a single "fat" app_packages folder.
+    # This is currently only used by macOS, but it *could* be required on iOS
+    # if they ever re-introduce multiple on-device architectures.
 
     def find_binary_packages(
         self,
@@ -83,8 +84,8 @@ class AppPackagesMergeMixin:
             if is_purelib:
                 continue
 
-            # If the tag ends with the universal tag, the binary package can be used on all
-            # targets, and doesn't need additional processing.
+            # If the tag ends with the universal tag, the binary package can be used on
+            # all targets and doesn't need additional processing.
             if universal_suffix and tag.endswith(universal_suffix):
                 continue
 
@@ -203,22 +204,24 @@ class AppPackagesMergeMixin:
             progress_bar = self.console.progress_bar()
             self.console.info(f"Thinning libraries in {app_packages.name}...")
             task_id = progress_bar.add_task("Create fat libraries", total=len(dylibs))
-            with progress_bar:
-                with concurrent.futures.ThreadPoolExecutor(
+            with (
+                progress_bar,
+                concurrent.futures.ThreadPoolExecutor(
                     max_workers=1 if self.console.is_deep_debug else None
-                ) as executor:
-                    futures = []
-                    for path in dylibs:
-                        future = executor.submit(
-                            self.ensure_thin_binary,
-                            path=path,
-                            arch=arch,
-                        )
-                        futures.append(future)
-                    for future in concurrent.futures.as_completed(futures):
-                        progress_bar.update(task_id, advance=1)
-                        if future.exception():
-                            raise future.exception()
+                ) as executor,
+            ):
+                futures = []
+                for path in dylibs:
+                    future = executor.submit(
+                        self.ensure_thin_binary,
+                        path=path,
+                        arch=arch,
+                    )
+                    futures.append(future)
+                for future in concurrent.futures.as_completed(futures):
+                    progress_bar.update(task_id, advance=1)
+                    if future.exception():
+                        raise future.exception()
         else:
             self.console.info("No libraries require thinning.")
 
@@ -255,12 +258,12 @@ class AppPackagesMergeMixin:
                         target_path.mkdir(exist_ok=True)
                     else:
                         if is_mach_o_binary(source_path):
-                            # Dynamic libraries need to be merged; do this in a second pass.
+                            # Dynamic libraries need to be merged in a second pass
                             dylibs.add(relative_path)
                         elif target_path.exists():
-                            # The file already exists. Check for differences; if there are any
-                            # differences outside `dist-info` or `__pycache__` folders, warn
-                            # the user.
+                            # The file already exists. Check for differences; if there
+                            # are any differences outside `dist-info` or `__pycache__`
+                            # folders, warn the user.
                             digest = sha256_file_digest(source_path)
                             if digests[relative_path] != digest and not (
                                 relative_path.parent.name == "__pycache__"
@@ -284,23 +287,25 @@ class AppPackagesMergeMixin:
             progress_bar = self.console.progress_bar()
             self.console.info("Merging libraries...")
             task_id = progress_bar.add_task("Create fat libraries", total=len(dylibs))
-            with progress_bar:
-                with concurrent.futures.ThreadPoolExecutor(
+            with (
+                progress_bar,
+                concurrent.futures.ThreadPoolExecutor(
                     max_workers=1 if self.console.is_deep_debug else None
-                ) as executor:
-                    futures = []
-                    for relative_path in dylibs:
-                        future = executor.submit(
-                            self.lipo_dylib,
-                            target_path=target_app_packages,
-                            relative_path=relative_path,
-                            sources=sources,
-                        )
-                        futures.append(future)
-                    for future in concurrent.futures.as_completed(futures):
-                        progress_bar.update(task_id, advance=1)
-                        if future.exception():
-                            raise future.exception()
+                ) as executor,
+            ):
+                futures = []
+                for relative_path in dylibs:
+                    future = executor.submit(
+                        self.lipo_dylib,
+                        target_path=target_app_packages,
+                        relative_path=relative_path,
+                        sources=sources,
+                    )
+                    futures.append(future)
+                for future in concurrent.futures.as_completed(futures):
+                    progress_bar.update(task_id, advance=1)
+                    if future.exception():
+                        raise future.exception()
         else:
             self.console.info("No libraries require merging.")
 

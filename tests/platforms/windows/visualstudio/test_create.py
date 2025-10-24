@@ -4,7 +4,7 @@ from briefcase.platforms.windows.visualstudio import WindowsVisualStudioCreateCo
 
 # Most tests and fixtures are the same for both "app" and "visualstudio". This file only
 # contains those that need to be overridden.
-from ..app.test_create import *  # noqa: F403
+from ..app.create.test_create import *  # noqa: F403
 
 
 @pytest.fixture

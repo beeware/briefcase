@@ -176,8 +176,9 @@ WindowsSDKVersion: {environ_sdk_version}
         try:
             sdk.tools.subprocess.check_output([sdk.signtool_exe, "-?"])
         except (OSError, subprocess.CalledProcessError):
-            # Windows can raise OSError when it cannot run signtool. This can happen
-            # when an old version of the SDK is installed and only signtool is installed.
+            # Windows can raise OSError when it cannot run signtool.
+            # This can happen when an old version of the SDK is installed
+            # and only signtool is installed.
             return False
 
         return True

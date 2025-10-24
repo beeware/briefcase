@@ -47,7 +47,7 @@ def test_question_sequence_bootstrap_context(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )
@@ -204,7 +204,7 @@ def test_question_sequence_with_overrides(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )
@@ -252,7 +252,7 @@ def test_question_sequence_with_bad_bootstrap_override(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )

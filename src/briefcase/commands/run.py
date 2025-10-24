@@ -55,11 +55,12 @@ class LogFilter:
             if filtered is None:
                 return
 
-            # If there's a cleaned line, we can determine if it should be included in analysis
+            # If there's a cleaned line, we can determine if it should be
+            # included in analysis
             clean_line, included = filtered
         else:
             # If we don't perform cleaning, we assume all content is potentially
-            # Python, and should be included in analysis
+            # Python and should be included in analysis
             clean_line = line
             included = True
 
@@ -117,7 +118,7 @@ class LogFilter:
             return None
 
         # Annotate the function with the regex that will be used in the function.
-        filter_func.regex = re.compile(pattern, re.MULTILINE)
+        filter_func.regex = re.compile(pattern, flags=re.MULTILINE)
         return filter_func
 
 

@@ -108,12 +108,12 @@ class GradleMixin:
         # Gradle may install the emulator via the dependency chain build-tools > tools >
         # emulator. (The `tools` package only shows up in sdkmanager if you pass
         # `--include_obsolete`.) However, the old sdkmanager built into Android Gradle
-        # plugin 4.2 doesn't know about macOS on ARM, so it'll install an x86_64 emulator
-        # which won't work with ARM system images.
+        # plugin 4.2 doesn't know about macOS on ARM, so it'll install an x86_64
+        # emulator which won't work with ARM system images.
         #
         # Work around this by pre-installing the emulator with our own sdkmanager before
-        # running Gradle. For simplicity, we do this on all platforms, since the user will
-        # almost certainly want an emulator soon enough.
+        # running Gradle. For simplicity, we do this on all platforms, since the user
+        # will almost certainly want an emulator soon enough.
         self.tools.android_sdk.verify_emulator()
 
         gradlew = "gradlew.bat" if self.tools.host_os == "Windows" else "gradlew"
@@ -219,7 +219,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
-            # Extract test packages, to enable features like test discovery and assertion
+            # Extract test packages to enable features like test discovery and assertion
             # rewriting.
             "extract_packages": ", ".join(
                 f'"{name}"'
@@ -275,7 +275,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         if x_permissions["photo_library"]:
             permissions["android.permission.READ_MEDIA_VISUAL_USER_SELECTED"] = True
 
-        # Override any permission and entitlement definitions with the platform specific definitions
+        # Override any permission and entitlement definitions
+        # with the platform-specific definitions
         permissions.update(app.permission)
         features.update(getattr(app, "feature", {}))
 
@@ -300,17 +301,19 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
     def update_app_metadata(self, app: AppConfig):
-        with self.console.wait_bar("Setting main module..."):
-            with self.metadata_resource_path(app).open("w", encoding="utf-8") as f:
-                # Set the name of the app's main module; this will depend
-                # on whether we're in test mode.
-                f.write(
-                    f"""\
+        with (
+            self.console.wait_bar("Setting main module..."),
+            self.metadata_resource_path(app).open("w", encoding="utf-8") as f,
+        ):
+            # Set the name of the app's main module; this will depend
+            # on whether we're in test mode.
+            f.write(
+                f"""\
 <resources>
     <string name="main_module">{app.main_module()}</string>
 </resources>
 """
-                )
+            )
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.

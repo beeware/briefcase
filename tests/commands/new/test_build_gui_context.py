@@ -239,7 +239,6 @@ build_gradle_dependencies = [
 requires = [
     "toga-web~=0.5.0",
 ]
-style_framework = "Shoelace v2.3"
 """,
     }
 
@@ -791,7 +790,7 @@ def test_custom_bootstrap(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )

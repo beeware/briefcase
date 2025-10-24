@@ -83,16 +83,11 @@ def test_validated_input_with_invalid_override(console):
     rejected and the user is prompted until valid text is entered."""
     console.values = ["bad", "hello"]
 
-    def validator(text):
-        if text in {"bad", "bad-override"}:
-            return False
-        return True
-
     value = console.text_question(
         intro="Some introduction",
         description="My variable",
         default="goodbye",
-        validator=validator,
+        validator=lambda text: text not in {"bad", "bad-override"},
         override_value="bad-override",
     )
 

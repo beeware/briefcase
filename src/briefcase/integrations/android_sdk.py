@@ -292,8 +292,9 @@ class AndroidSDK(ManagedTool):
 """
                     )
             elif sdk.cmdline_tools_path.parent.exists():
-                # a cmdline-tools directory exists but the required version isn't installed.
-                # try to install the required version using the 'latest' version.
+                # a cmdline-tools directory exists,
+                # but the required version isn't installed.
+                # Try to install the required version using the 'latest' version.
                 if not sdk.install_cmdline_tools():
                     sdk = None
                     tools.console.warning(
@@ -412,8 +413,10 @@ class AndroidSDK(ManagedTool):
         # So, the unpacking process is:
         #
         #  1. Make a <sdk_path>/cmdline-tools folder
-        #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
-        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<cmdline-tools version>
+        #  2. Unpack the zip file into that folder, creating
+        #      <sdk_path>/cmdline-tools/cmdline-tools
+        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to
+        #      <sdk_path>/cmdline-tools/<cmdline-tools version>
 
         with self.tools.console.wait_bar(
             f"Installing Android SDK Command-Line Tools {self.SDK_MANAGER_VER}..."
@@ -1201,7 +1204,7 @@ In future, you can specify this device by running:
                     # XDG_CONFIG_HOME and will not be able to find the AVD to run it.
                     env={
                         **self.env,
-                        **{"XDG_CONFIG_HOME": None},
+                        "XDG_CONFIG_HOME": None,
                     },
                 )
             except subprocess.CalledProcessError as e:
@@ -1474,9 +1477,10 @@ class ADB:
                 [self.tools.android_sdk.adb_path, "-s", self.device, *arguments],
                 quiet=quiet,
             )
-            # add returns status code 0 in the case of failure. The only tangible evidence
-            # of failure is the message "Failure [INSTALL_FAILED_OLDER_SDK]" in the,
-            # console output; so if that message exists in the output, raise an exception.
+            # add returns status code 0 in the case of failure.
+            # The only tangible evidence of failure is the message
+            # "Failure [INSTALL_FAILED_OLDER_SDK]" in the console output;
+            # so if that message exists in the output, raise an exception.
             if "Failure [INSTALL_FAILED_OLDER_SDK]" in output:
                 raise BriefcaseCommandError(
                     "Your device doesn't meet the minimum SDK requirements of this app."
@@ -1529,9 +1533,9 @@ class ADB:
         :returns: `None` on success; raises an exception on failure.
         """
         try:
-            # `am start` also accepts string array extras, but we pass the arguments as a
-            # single JSON string, because JSON deals with edge cases like whitespace and
-            # escaping in a reliable and well-documented way.
+            # `am start` also accepts string array extras, but we pass the arguments as
+            # a single JSON string, because JSON deals with edge cases like whitespace
+            # and escaping in a reliable and well-documented way.
             output = self.run(
                 "shell",
                 "am",
@@ -1718,11 +1722,11 @@ Activity class not found while starting app.
         :returns: The PID of the given app as a string, or None if it isn't
         running.
         """
-        # The pidof command is available since API level 24. The level 23 emulator image also
-        # includes it, but it doesn't work correctly (it returns all processes).
+        # The pidof command is available since API level 24. The level 23 emulator image
+        # also includes it, but it doesn't work correctly (it returns all processes).
         try:
-            # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
-            # process was found.
+            # Exit status is unreliable: some devices (e.g. Nexus 4) return 0
+            # even when no process was found.
             return self.run("shell", "pidof", "-s", package, **kwargs).strip() or None
         except subprocess.CalledProcessError:
             return None
