@@ -108,7 +108,8 @@ def validate_document_type_config(document_type_id, document_type):
             and document_type["extension"].isalnum()
         ):
             raise BriefcaseConfigError(
-                f"The extension provided for document type {document_type_id!r} is not alphanumeric."
+                f"The extension provided for document type "
+                f"{document_type_id!r} is not alphanumeric."
             )
     except KeyError:
         raise BriefcaseConfigError(
@@ -118,7 +119,8 @@ def validate_document_type_config(document_type_id, document_type):
     try:
         if not isinstance(document_type["icon"], str):
             raise BriefcaseConfigError(
-                f"The icon definition associated with document type {document_type_id!r} is not a string."
+                f"The icon definition associated with document type "
+                f"{document_type_id!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
@@ -128,7 +130,8 @@ def validate_document_type_config(document_type_id, document_type):
     try:
         if not isinstance(document_type["description"], str):
             raise BriefcaseConfigError(
-                f"The description associated with document type {document_type_id!r} is not a string."
+                f"The description associated with document type "
+                f"{document_type_id!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
@@ -143,7 +146,8 @@ def validate_document_type_config(document_type_id, document_type):
         ) from None
     except ValueError as e:
         raise BriefcaseConfigError(
-            f"The URL associated with document type {document_type_id!r} is invalid: {e}"
+            f"The URL associated with document type {document_type_id!r} "
+            f"is invalid: {e}"
         ) from None
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
@@ -334,7 +338,8 @@ def parse_boolean(value: str) -> bool:
         return False
     else:
         raise ValueError(
-            f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}"
+            f"Invalid boolean value: {value!r}. "
+            f"Expected one of {truth_vals | false_vals}"
         )
 
 

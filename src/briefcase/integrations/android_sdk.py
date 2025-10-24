@@ -29,7 +29,8 @@ def create_avd_validator(emulators):
     def _validate_avd_name(avd):
         if not PEP508_NAME_RE.match(avd):
             raise ValueError(
-                "An emulator name may only contain letters, numbers, hyphens and underscores."
+                "An emulator name may only contain "
+                "letters, numbers, hyphens and underscores."
             )
         elif avd in emulators:
             raise ValueError(f"An emulator named '{avd}' already exists.")
@@ -888,7 +889,10 @@ connection.
                         name = "Unknown device (offline)"
                         authorized = False
                     else:
-                        name = f"Device not available for development ({' '.join(parts[1:])})"
+                        name = (
+                            f"Device not available for development "
+                            f"({' '.join(parts[1:])})"
+                        )
                         authorized = False
 
                     devices[parts[0]] = {

@@ -442,7 +442,10 @@ class Console:
 
         with command.console.wait_bar("Saving log...", transient=True):
             self.to_console()
-            log_filename = f"briefcase.{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}.{command.command}.log"
+            log_filename = (
+                f"briefcase.{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}."
+                f"{command.command}.log"
+            )
             log_filepath = command.base_path / self.LOG_DIR / log_filename
             try:
                 log_filepath.parent.mkdir(parents=True, exist_ok=True)

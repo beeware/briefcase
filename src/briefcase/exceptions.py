@@ -69,8 +69,8 @@ class UnsupportedCommandError(BriefcaseError):
 
     def __str__(self):
         return (
-            f"The {self.command} command for the {self.platform} {self.output_format} format "
-            "has not been implemented (yet!)."
+            f"The {self.command} command for the {self.platform} {self.output_format} "
+            f"format has not been implemented (yet!)."
         )
 
 
@@ -157,7 +157,8 @@ class InvalidTemplateBranch(BriefcaseCommandError):
         self.template_repo = template_repo
         self.branch = branch
         super().__init__(
-            f"Could not find a branch named {branch!r} in template repository {template_repo!r}."
+            f"Could not find a branch named {branch!r} "
+            f"in template repository {template_repo!r}."
         )
 
 
@@ -165,7 +166,8 @@ class InvalidTemplateRepository(BriefcaseCommandError):
     def __init__(self, template):
         self.template = template
         super().__init__(
-            f"Unable to clone application template; is the template path {template!r} correct?"
+            f"Unable to clone application template; "
+            f"is the template path {template!r} correct?"
         )
 
 
