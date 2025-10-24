@@ -117,7 +117,7 @@ class JDK(ManagedTool):
                 else:
                     install_message = f"""
 *************************************************************************
-** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK                  **
+** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK **
 *************************************************************************
 
     Android requires a Java {cls.JDK_MAJOR_VER} JDK, but the location pointed to by the
