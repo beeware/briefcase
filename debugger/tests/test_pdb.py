@@ -39,7 +39,7 @@ def test_no_debugger_verbose(monkeypatch, capsys):
 
 @pytest.mark.parametrize("verbose", [True, False])
 @pytest.mark.parametrize(
-    "host_os,expected_host_cmds",
+    ("host_os", "expected_host_cmds"),
     [
         ("Windows", ["telnet somehost 9999"]),
         ("Darwin", ["nc somehost 9999"]),

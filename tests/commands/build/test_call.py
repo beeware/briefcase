@@ -1130,7 +1130,7 @@ def test_build_debug_unsupported(build_command, first_app, second_app):
 
     # Configure command line options
     with pytest.raises(SystemExit):
-        options, _ = build_command.parse_options(["--debug=pdb"])
+        _, _ = build_command.parse_options(["--debug=pdb"])
 
 
 def test_build_invalid_update(build_command, first_app, second_app):

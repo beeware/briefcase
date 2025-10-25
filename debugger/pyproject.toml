@@ -45,5 +45,10 @@ skip_covered = true
 skip_empty = true
 precision = 1
 
+[tool.ruff.lint]
+ignore = [
+    "T20",    # flake8-print (useful for briefcase, but not in the debugger)
+]
+
 [tool.setuptools_scm]
 root = "../"

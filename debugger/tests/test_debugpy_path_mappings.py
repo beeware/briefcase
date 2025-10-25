@@ -30,7 +30,13 @@ def test_mappings_none(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "os_name,app_path_mappings,app_packages_path_mappings,sys_path,expected_path_mappings",
+    (
+        "os_name",
+        "app_path_mappings",
+        "app_packages_path_mappings",
+        "sys_path",
+        "expected_path_mappings",
+    ),
     [
         # Windows
         pytest.param(
@@ -233,7 +239,7 @@ def test_mappings(
 
 
 @pytest.mark.parametrize(
-    "os_name,app_path_mappings",
+    ("os_name", "app_path_mappings"),
     [
         # Windows
         pytest.param(
@@ -277,5 +283,5 @@ def test_mappings_wrong_sys_path(
     sys_path = []
     monkeypatch.setattr(sys, "path", sys_path)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"No sys.path entry matches regex"):
         briefcase_debugger.debugpy.load_path_mappings(config, False)

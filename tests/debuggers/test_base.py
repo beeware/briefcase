@@ -24,7 +24,7 @@ class DummyDist:
 
 
 @pytest.mark.parametrize(
-    "direct_url,is_editable",
+    ("direct_url", "is_editable"),
     [
         (json.dumps({"dir_info": {"editable": True}}), True),  # editable
         (json.dumps({"dir_info": {"editable": False}}), False),  # not editable
@@ -66,14 +66,12 @@ def test_get_debugger():
     assert isinstance(get_debugger("debugpy"), DebugpyDebugger)
 
     # Test with an unknown debugger name
-    try:
+    with pytest.raises(BriefcaseCommandError, match="Unknown debugger: unknown"):
         get_debugger("unknown")
-    except BriefcaseCommandError as e:
-        assert str(e) == "Unknown debugger: unknown"
 
 
 @pytest.mark.parametrize(
-    "debugger_name, expected_class, connection_mode",
+    ("debugger_name", "expected_class", "connection_mode"),
     [
         (
             "pdb",

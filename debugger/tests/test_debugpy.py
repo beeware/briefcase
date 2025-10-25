@@ -40,7 +40,7 @@ def test_no_debugger_verbose(monkeypatch, capsys):
 
 
 @pytest.mark.parametrize(
-    "os_name,app_path_mappings,sys_path,expected_path_mappings",
+    ("os_name", "app_path_mappings", "sys_path", "expected_path_mappings"),
     [
         (
             "nt",
@@ -77,7 +77,7 @@ def test_no_debugger_verbose(monkeypatch, capsys):
     ],
 )
 @pytest.mark.parametrize(
-    "verbose,some_verbose_output,pydevd_trace_level",
+    ("verbose", "some_verbose_output", "pydevd_trace_level"),
     [
         (True, "Extracted path mappings:\n[0] host =   ", 3),
         (False, "", 0),
@@ -147,7 +147,7 @@ def test_with_debugger(
     assert captured.err == ""
 
     assert some_verbose_output in captured.out
-    assert fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL == pydevd_trace_level
+    assert pydevd_trace_level == fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL
 
 
 def test_with_debugger_without_path_mappings(monkeypatch, capsys):
