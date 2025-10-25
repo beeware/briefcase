@@ -38,10 +38,11 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Get packages
+      - name: Get Packages
         uses: actions/download-artifact@v5.0.0
         with:
-          name: ${{ needs.ci.outputs.artifact-name }}
+          pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
+          merge-multiple: true
           path: dist
 
       - name: Purge non-release packages
