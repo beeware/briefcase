@@ -4,7 +4,7 @@ It is possible to debug a Briefcase app via [PDB](https://docs.python.org/3/libr
 
 ## Development
 
-Debugging a development app is quite easy. Just add `breakpoint()` inside your code and start the app via `briefcase dev`. When the breakpoint is hit, the pdb console opens in your terminal and you can debug your app.
+Debugging a development app is quite easy. Just add `breakpoint()` inside your code and start the app via `briefcase dev`. When the breakpoint is hit, the PDB console opens in your terminal and you can debug your app.
 
 ## Bundled App
 
