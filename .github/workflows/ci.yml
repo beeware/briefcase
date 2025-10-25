@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ci
   workflow_call:
     inputs:
       attest-package:
@@ -11,9 +12,9 @@ on:
         default: "false"
         type: string
     outputs:
-      artifact-name:
-        description: "Name of the uploaded artifact; use for artifact retrieval."
-        value: ${{ jobs.package.outputs.artifact-name }}
+      artifact-basename:
+        description: "Base name of the uploaded artifacts; use for artifact retrieval."
+        value: ${{ jobs.package.outputs.artifact-basename }}
 
 # Cancel active CI runs for a PR before starting another run
 concurrency:
@@ -42,33 +43,20 @@ jobs:
       id-token: write
       contents: read
       attestations: write
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    strategy:
+      matrix:
+        subdir:
+        - "."
+        - "debugger"
+        - "automation"
+    uses: timrid/beeware-.github/.github/workflows/python-package-create.yml@no-differentiator-when-subdirectory-is-root
     with:
+      build-subdirectory: ${{ matrix.subdir }}
       attest: ${{ inputs.attest-package }}
-
-  package-debugger:
-    name: Package Debugger
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
-    with:
-      build-subdirectory: "debugger"
-
-  package-automation:
-    name: Package Automation
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
-    with:
-      build-subdirectory: "automation"
 
   unit-tests:
     name: Unit tests
-    needs: [ pre-commit, towncrier, package, package-debugger ]
+    needs: [ pre-commit, towncrier, package ]
     runs-on: ${{ matrix.platform }}
     continue-on-error: ${{ matrix.experimental || false }}
     strategy:
@@ -102,7 +90,8 @@ jobs:
     - name: Get Packages
       uses: actions/download-artifact@v5.0.0
       with:
-        name: ${{ needs.package.outputs.artifact-name }}
+        pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
+        merge-multiple: true
         path: dist
 
     - name: Install Tox
@@ -133,12 +122,6 @@ jobs:
       if: always() && contains('success,failure', steps.test.outcome)
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
-
-    - name: Get Debugger Package
-      uses: actions/download-artifact@v4.3.0
-      with:
-        name: ${{ needs.package-debugger.outputs.artifact-name }}
-        path: dist
 
     - name: Test Debugger
       run: |
@@ -194,7 +177,7 @@ jobs:
 
   verify-projects:
     name: Verify project
-    needs: [ package, package-automation, unit-tests ]
+    needs: [ package, unit-tests ]
     uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
       runner-os: ${{ matrix.runner-os }}
@@ -207,7 +190,7 @@ jobs:
 
   verify-apps:
     name: Build app
-    needs: [ package, package-automation, unit-tests ]
+    needs: [ package, unit-tests ]
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
