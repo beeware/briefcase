@@ -38,7 +38,7 @@ def create_command(dummy_console, tmp_path, first_app_templated):
 
 
 @pytest.mark.parametrize(
-    "permissions, info, entitlements, context",
+    ("permissions", "info", "entitlements", "context"),
     [
         # No permissions
         (
@@ -363,7 +363,7 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "host_arch, other_arch",
+    ("host_arch", "other_arch"),
     [
         ("arm64", "x86_64"),
         ("x86_64", "arm64"),
@@ -784,9 +784,8 @@ def test_invalid_min_os_version(create_command, first_app_templated):
 
 
 @pytest.mark.parametrize(
-    "host_arch, other_arch",
+    ("host_arch", "other_arch"),
     [
-        ("arm64", "x86_64"),
         ("arm64", "x86_64"),
     ],
 )
@@ -989,9 +988,8 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
 
 
 @pytest.mark.parametrize(
-    "host_arch, other_arch",
+    ("host_arch", "other_arch"),
     [
-        ("arm64", "x86_64"),
         ("arm64", "x86_64"),
     ],
 )

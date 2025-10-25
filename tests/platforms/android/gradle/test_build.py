@@ -50,7 +50,7 @@ def test_unsupported_template_version(build_command, first_app_generated):
 
 
 @pytest.mark.parametrize(
-    "host_os, gradlew_name, tool_debug_mode",
+    ("host_os", "gradlew_name", "tool_debug_mode"),
     [
         ("Windows", "gradlew.bat", True),
         ("Windows", "gradlew.bat", False),
@@ -117,7 +117,7 @@ def test_build_app(
 
 
 @pytest.mark.parametrize(
-    "host_os, gradlew_name, debug_mode",
+    ("host_os", "gradlew_name", "debug_mode"),
     [
         ("Windows", "gradlew.bat", True),
         ("Windows", "gradlew.bat", False),

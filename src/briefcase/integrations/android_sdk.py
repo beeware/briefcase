@@ -95,10 +95,10 @@ class AndroidSDK(ManagedTool):
                     "AMD64": "win",
                 },
             }[self.tools.host_os][self.tools.host_arch]
-        except KeyError as e:
+        except KeyError:
             raise IncompatibleToolError(
                 tool=self.full_name, env_var="ANDROID_HOME"
-            ) from e
+            ) from None
 
         return (
             f"https://dl.google.com/android/repository/"
@@ -171,7 +171,7 @@ class AndroidSDK(ManagedTool):
             raise BriefcaseCommandError(
                 "The Android emulator does not currently support "
                 f"{self.tools.host_os} {self.tools.host_arch} hardware."
-            )
+            ) from None
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
@@ -292,8 +292,9 @@ class AndroidSDK(ManagedTool):
 """
                     )
             elif sdk.cmdline_tools_path.parent.exists():
-                # a cmdline-tools directory exists but the required version isn't installed.
-                # try to install the required version using the 'latest' version.
+                # a cmdline-tools directory exists,
+                # but the required version isn't installed.
+                # Try to install the required version using the 'latest' version.
                 if not sdk.install_cmdline_tools():
                     sdk = None
                     tools.console.warning(
@@ -412,8 +413,10 @@ class AndroidSDK(ManagedTool):
         # So, the unpacking process is:
         #
         #  1. Make a <sdk_path>/cmdline-tools folder
-        #  2. Unpack the zip file into that folder, creating <sdk_path>/cmdline-tools/cmdline-tools
-        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to <sdk_path>/cmdline-tools/<cmdline-tools version>
+        #  2. Unpack the zip file into that folder, creating
+        #      <sdk_path>/cmdline-tools/cmdline-tools
+        #  3. Move <sdk_path>/cmdline-tools/cmdline-tools to
+        #      <sdk_path>/cmdline-tools/<cmdline-tools version>
 
         with self.tools.console.wait_bar(
             f"Installing Android SDK Command-Line Tools {self.SDK_MANAGER_VER}..."
@@ -937,10 +940,12 @@ connection.
                     f"Unable to create emulator with definition {device_or_avd!r}"
                 ) from e
             except KeyError:
-                raise BriefcaseCommandError("No AVD provided for new device.")
+                raise BriefcaseCommandError("No AVD provided for new device.") from None
             except TypeError as e:
                 property = str(e).split(" ")[-1]
-                raise BriefcaseCommandError(f"Unknown device property {property}.")
+                raise BriefcaseCommandError(
+                    f"Unknown device property {property}."
+                ) from None
 
         # Get the list of attached devices (includes running emulators)
         running_devices = self.devices()
@@ -1199,7 +1204,7 @@ In future, you can specify this device by running:
                     # XDG_CONFIG_HOME and will not be able to find the AVD to run it.
                     env={
                         **self.env,
-                        **{"XDG_CONFIG_HOME": None},
+                        "XDG_CONFIG_HOME": None,
                     },
                 )
             except subprocess.CalledProcessError as e:
@@ -1280,7 +1285,7 @@ In future, you can specify this device by running:
 
         # Start the emulator
         emulator_popen = self.tools.subprocess.Popen(
-            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8"] + extra_args,
+            [self.emulator_path, f"@{avd}", "-dns-server", "8.8.8.8", *extra_args],
             env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1469,12 +1474,13 @@ class ADB:
         # This keeps performance good in the success case.
         try:
             output = self.tools.subprocess.check_output(
-                [self.tools.android_sdk.adb_path, "-s", self.device] + list(arguments),
+                [self.tools.android_sdk.adb_path, "-s", self.device, *arguments],
                 quiet=quiet,
             )
-            # add returns status code 0 in the case of failure. The only tangible evidence
-            # of failure is the message "Failure [INSTALL_FAILED_OLDER_SDK]" in the,
-            # console output; so if that message exists in the output, raise an exception.
+            # add returns status code 0 in the case of failure.
+            # The only tangible evidence of failure is the message
+            # "Failure [INSTALL_FAILED_OLDER_SDK]" in the console output;
+            # so if that message exists in the output, raise an exception.
             if "Failure [INSTALL_FAILED_OLDER_SDK]" in output:
                 raise BriefcaseCommandError(
                     "Your device doesn't meet the minimum SDK requirements of this app."
@@ -1527,9 +1533,9 @@ class ADB:
         :returns: `None` on success; raises an exception on failure.
         """
         try:
-            # `am start` also accepts string array extras, but we pass the arguments as a
-            # single JSON string, because JSON deals with edge cases like whitespace and
-            # escaping in a reliable and well-documented way.
+            # `am start` also accepts string array extras, but we pass the arguments as
+            # a single JSON string, because JSON deals with edge cases like whitespace
+            # and escaping in a reliable and well-documented way.
             output = self.run(
                 "shell",
                 "am",
@@ -1716,11 +1722,11 @@ Activity class not found while starting app.
         :returns: The PID of the given app as a string, or None if it isn't
         running.
         """
-        # The pidof command is available since API level 24. The level 23 emulator image also
-        # includes it, but it doesn't work correctly (it returns all processes).
+        # The pidof command is available since API level 24. The level 23 emulator image
+        # also includes it, but it doesn't work correctly (it returns all processes).
         try:
-            # Exit status is unreliable: some devices (e.g. Nexus 4) return 0 even when no
-            # process was found.
+            # Exit status is unreliable: some devices (e.g. Nexus 4) return 0
+            # even when no process was found.
             return self.run("shell", "pidof", "-s", package, **kwargs).strip() or None
         except subprocess.CalledProcessError:
             return None

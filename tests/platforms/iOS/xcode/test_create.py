@@ -33,7 +33,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="iOS applications require Xcode, which is only available on macOS.",
+        match=r"iOS applications require Xcode, which is only available on macOS\.",
     ):
         create_command()
 
@@ -386,7 +386,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
 
 
 @pytest.mark.parametrize(
-    "permissions, info, context",
+    ("permissions", "info", "context"),
     [
         # No permissions
         (

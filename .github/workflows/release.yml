@@ -34,7 +34,7 @@ jobs:
           echo "VERSION=${GITHUB_REF_NAME#v}" | tee -a $GITHUB_ENV
 
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.x"
 
@@ -59,7 +59,7 @@ jobs:
           test $(briefcase --version) = $VERSION
 
       - name: Create release
-        uses: ncipollo/release-action@v1.18.0
+        uses: ncipollo/release-action@v1.20.0
         with:
           name: ${{ env.VERSION }}
           draft: true

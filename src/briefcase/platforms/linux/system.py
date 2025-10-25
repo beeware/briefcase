@@ -4,6 +4,7 @@ import gzip
 import re
 import subprocess
 import tarfile
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.commands import (
@@ -37,7 +38,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
     # Docker exists. It is used by commands that are "passive" from the
     # perspective of the build system (e.g., Run).
     output_format = "system"
-    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux"}
     supported_host_os_reason = (
         "Linux system projects can only be built on Linux, or on macOS using Docker."
     )
@@ -349,10 +350,10 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                     raise BriefcaseCommandError(
                         "Unable to parse glibc dependency version from version string."
                     )
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     "Unable to determine glibc dependency version."
-                )
+                ) from e
 
         else:
             target_glibc = super().target_glibc_version(app)
@@ -572,7 +573,7 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 installed = provided_by = package
 
             try:
-                self.tools.subprocess.check_output(system_verify + [installed], quiet=1)
+                self.tools.subprocess.check_output([*system_verify, installed], quiet=1)
             except subprocess.CalledProcessError:
                 missing.add(provided_by)
 
@@ -636,9 +637,8 @@ class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
     def verify_host(self):
         """If we're *not* using Docker, verify that we're actually on Linux."""
         super().verify_host()
-        if not self.use_docker:
-            if self.tools.host_os != "Linux":
-                raise UnsupportedHostError(self.supported_host_os_reason)
+        if not self.use_docker and self.tools.host_os != "Linux":
+            raise UnsupportedHostError(self.supported_host_os_reason)
 
 
 class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
@@ -828,7 +828,7 @@ no extension).
                     self.console.verbose(
                         "Updating file permissions on "
                         f"{path.relative_to(self.bundle_path(app))} "
-                        f"from {oct(old_perms)[2:]} to {oct(new_perms)[2:]}"
+                        f"from {old_perms:o} to {new_perms:o}"
                     )
                     path.chmod(new_perms)
 
@@ -838,7 +838,7 @@ no extension).
 
 class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
     description = "Run a Linux system project."
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux system projects can only be executed on Linux."
 
     def run_app(
@@ -862,7 +862,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
             if app.console_app and not app.test_mode:
                 self.console.info("=" * 75)
                 self.tools[app].app_context.run(
-                    [self.binary_path(app)] + passthrough,
+                    [self.binary_path(app), *passthrough],
                     cwd=self.tools.home_path,
                     bufsize=1,
                     stream_output=False,
@@ -871,7 +871,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
             else:
                 # Start the app in a way that lets us stream the logs
                 app_popen = self.tools[app].app_context.Popen(
-                    [self.binary_path(app)] + passthrough,
+                    [self.binary_path(app), *passthrough],
                     cwd=self.tools.home_path,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
@@ -890,7 +890,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
 class LinuxSystemDevCommand(LinuxMixin, DevCommand):
     description = "Run a Linux system app in development mode"
     output_format = "system"
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux system dev mode is only supported on Linux."
 
 
@@ -997,8 +997,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                 [
                     f"libc6 (>={app.glibc_version})",
                     f"libpython{app.python_version_tag}",
+                    *getattr(app, "system_runtime_requires", []),
                 ]
-                + getattr(app, "system_runtime_requires", [])
             )
 
             with (DEBIAN_path / "control").open("w", encoding="utf-8") as f:
@@ -1070,114 +1070,119 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
         # so this will be the target-specific definition, if one exists.
         system_runtime_requires = [
             "python3",
-        ] + getattr(app, "system_runtime_requires", [])
+            *getattr(app, "system_runtime_requires", []),
+        ]
 
         # Write the spec file
-        with self.console.wait_bar("Write RPM spec file..."):
-            with (rpmbuild_path / "SPECS" / f"{app.app_name}.spec").open(
+        with (
+            self.console.wait_bar("Write RPM spec file..."),
+            (rpmbuild_path / "SPECS" / f"{app.app_name}.spec").open(
                 "w", encoding="utf-8"
-            ) as f:
-                f.write(
-                    "\n".join(
-                        [
-                            # By default, rpmbuild thinks all .py files are executable,
-                            # and if a .py doesn't have a shebang line, it will
-                            # tell you that it will remove the executable bit -
-                            # even if the executable bit isn't set.
-                            # We disable the processor that does this.
-                            "%global __brp_mangle_shebangs %{nil}",
-                            # rpmbuild tries to strip binaries, which messes with
-                            # binary wheels. Disable these checks.
-                            "%global __brp_strip %{nil}",
-                            "%global __brp_strip_static_archive %{nil}",
-                            "%global __brp_strip_comment_note %{nil}",
-                            # Disable RPATH checking, because check-rpaths can't deal with
-                            # the structure of manylinux wheels
-                            "%global __brp_check_rpaths %{nil}",
-                            # Disable all the auto-detection that tries to magically
-                            # determine requirements from the binaries
-                            f"%global __requires_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
-                            f"%global __provides_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
-                            # Disable debug processing.
-                            "%global _enable_debug_package 0",
-                            "%global debug_package %{nil}",
-                            "",
-                            # Base package metadata
-                            f"Name:           {app.app_name}",
-                            f"Version:        {app.version}",
-                            f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
-                            f"Summary:        {app.description}",
-                            "",
-                            "License:        Unknown",  # TODO: Add license information (see #1829)
-                            f"URL:            {app.url}",
-                            "Source0:        %{name}-%{version}.tar.gz",
-                            "",
-                        ]
-                        + [
-                            f"Requires:       {requirement}"
-                            for requirement in system_runtime_requires
-                        ]
-                        + [
-                            "",
-                            f"ExclusiveArch:  {self.rpm_abi(app)}",
-                            "",
-                            "%description",
-                            app.long_description,
-                            "",
-                            "%prep",
-                            "%autosetup",
-                            "",
-                            "%build",
-                            "",
-                            "%install",
-                            "cp -r usr %{buildroot}/usr",
-                        ]
-                    )
+            ) as f,
+        ):
+            f.write(
+                "\n".join(
+                    [
+                        # By default, rpmbuild thinks all .py files are executable,
+                        # and if a .py doesn't have a shebang line, it will
+                        # tell you that it will remove the executable bit -
+                        # even if the executable bit isn't set.
+                        # We disable the processor that does this.
+                        "%global __brp_mangle_shebangs %{nil}",
+                        # rpmbuild tries to strip binaries, which messes with
+                        # binary wheels. Disable these checks.
+                        "%global __brp_strip %{nil}",
+                        "%global __brp_strip_static_archive %{nil}",
+                        "%global __brp_strip_comment_note %{nil}",
+                        # Disable RPATH checking, because check-rpaths can't deal with
+                        # the structure of manylinux wheels
+                        "%global __brp_check_rpaths %{nil}",
+                        # Disable all the auto-detection that tries to magically
+                        # determine requirements from the binaries
+                        f"%global __requires_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
+                        f"%global __provides_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
+                        # Disable debug processing.
+                        "%global _enable_debug_package 0",
+                        "%global debug_package %{nil}",
+                        "",
+                        # Base package metadata
+                        f"Name:           {app.app_name}",
+                        f"Version:        {app.version}",
+                        f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
+                        f"Summary:        {app.description}",
+                        "",
+                        "License:        Unknown",  # TODO: Add license information (see #1829)
+                        f"URL:            {app.url}",
+                        "Source0:        %{name}-%{version}.tar.gz",
+                        "",
+                    ]
+                    + [
+                        f"Requires:       {requirement}"
+                        for requirement in system_runtime_requires
+                    ]
+                    + [
+                        "",
+                        f"ExclusiveArch:  {self.rpm_abi(app)}",
+                        "",
+                        "%description",
+                        app.long_description,
+                        "",
+                        "%prep",
+                        "%autosetup",
+                        "",
+                        "%build",
+                        "",
+                        "%install",
+                        "cp -r usr %{buildroot}/usr",
+                    ]
                 )
+            )
 
-                f.write("\n\n%files\n")
-                # Build the file manifest. Include any file that is found; also include
-                # any directory that includes an app_name component, as those paths
-                # will need to be cleaned up afterwards. Files that *aren't*
-                # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
-                # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
-                # *not* cleaned up, as they're part of more general system structures.
-                for filename in sorted(self.package_path(app).glob("**/*")):
-                    path = filename.relative_to(self.package_path(app))
+            f.write("\n\n%files\n")
+            # Build the file manifest. Include any file that is found; also include
+            # any directory that includes an app_name component, as those paths
+            # will need to be cleaned up afterwards. Files that *aren't*
+            # in <app_name> (sub)directories (e.g., /usr/bin/<app_name> or
+            # /usr/share/man/man1/<app_name>.1.gz) will be included, but paths
+            # *not* cleaned up, as they're part of more general system structures.
+            for filename in sorted(self.package_path(app).glob("**/*")):
+                path = filename.relative_to(self.package_path(app))
 
-                    if filename.is_dir():
-                        if app.app_name in path.parts:
-                            f.write(f'%dir "/{path}"\n')
-                    else:
-                        f.write(f'"/{path}"\n')
+                if filename.is_dir():
+                    if app.app_name in path.parts:
+                        f.write(f'%dir "/{path}"\n')
+                else:
+                    f.write(f'"/{path}"\n')
 
-                # Add the changelog content to the bottom of the spec file.
-                f.write("\n%changelog\n")
-                changelog = find_changelog_filename(self.base_path)
+            # Add the changelog content to the bottom of the spec file.
+            f.write("\n%changelog\n")
+            changelog = find_changelog_filename(self.base_path)
 
-                if changelog is None:
-                    raise BriefcaseCommandError(
-                        """\
+            if changelog is None:
+                raise BriefcaseCommandError(
+                    """\
 Your project does not contain a changelog file with a known file name. You
 must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
 """
-                    )
+                )
 
-                # Write the changelog content
-                f.write((self.base_path / changelog).read_text(encoding="utf-8"))
+            # Write the changelog content
+            f.write((self.base_path / changelog).read_text(encoding="utf-8"))
 
-        with self.console.wait_bar("Building source archive..."):
-            with tarfile.open(
+        with (
+            self.console.wait_bar("Building source archive..."),
+            tarfile.open(
                 rpmbuild_path / f"SOURCES/{self.bundle_package_path(app).name}.tar.gz",
                 "w:gz",
-            ) as archive:
-                archive.add(
-                    self.package_path(app),
-                    arcname=self.bundle_package_path(app).name,
-                )
+            ) as archive,
+        ):
+            archive.add(
+                self.package_path(app),
+                arcname=self.bundle_package_path(app).name,
+            )
 
         with self.console.wait_bar("Building RPM package..."):
             try:
@@ -1243,15 +1248,17 @@ with details about the release.
             self.tools.shutil.copy(changelog_source, pkgbuild_path / changelog)
 
         # Build the source archive
-        with self.console.wait_bar("Building source archive..."):
-            with tarfile.open(
+        with (
+            self.console.wait_bar("Building source archive..."),
+            tarfile.open(
                 pkgbuild_path / f"{self.bundle_package_path(app).name}.tar.gz",
                 "w:gz",
-            ) as archive:
-                archive.add(
-                    self.package_path(app),
-                    arcname=self.bundle_package_path(app).name,
-                )
+            ) as archive,
+        ):
+            archive.add(
+                self.package_path(app),
+                arcname=self.bundle_package_path(app).name,
+            )
 
         # Write the arch PKGBUILD file.
         with self.console.wait_bar("Write PKGBUILD file..."):
@@ -1260,7 +1267,8 @@ with details about the release.
             system_runtime_requires_list = [
                 f"glibc>={app.glibc_version}",
                 "python3",
-            ] + getattr(app, "system_runtime_requires", [])
+                *getattr(app, "system_runtime_requires", []),
+            ]
 
             system_runtime_requires = " ".join(
                 f"'{pkg}'" for pkg in system_runtime_requires_list

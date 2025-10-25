@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==9.2.0",
+    "setuptools_scm==9.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -91,34 +91,40 @@ dependencies = [
     "tomli_w >= 1.0, < 2.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
-dev = [
-    "coverage[toml] == 7.10.6",
-    "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.1",
+pre-commit = [
     "pre-commit == 4.3.0",
-    "pytest == 8.4.1",
-    "pytest-xdist == 3.8.0",
+]
+
+setuptools-scm = [
     "setuptools_scm == 9.2.0",
-    "tox == 4.29.0",
+]
+
+towncrier = [
+    "towncrier==24.8.0",
+]
+
+tox-uv = [
+    "tox-uv == 1.28.0",
+]
+
+dev = [
+    "coverage[toml] == 7.11.0",
+    "coverage-conditional-plugin == 0.9.0",
+    "httpx-retries == 0.4.5",
+    "pytest == 8.4.2",
+    "pytest-xdist == 3.8.0",
+    {include-group = "pre-commit"},
+    {include-group = "setuptools-scm"},
+    {include-group = "tox-uv"},
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
 docs = [
-    # Docs requirements are *mostly* handled by the `docs` extra; but we can't include
-    # the theme that way, so the theme is installed using a requirements.txt file,
-    # independent of the docs extra. Ideally, we'd use dependency groups for docs
-    # dependencies, but RTD doesn't support them yet. In addition to these dependencies,
-    # you should also run `pip install -r ../requirements-docs.txt`
-    "furo == 2025.7.19",
-    "pyenchant == 3.2.2",
-    "sphinx == 8.2.3",
-    "sphinx_tabs == 3.4.7",
-    "sphinx-autobuild == 2024.10.3",
-    "sphinx-copybutton == 0.5.2",
-    "sphinxcontrib-spelling == 8.0.1",
+    "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
+    {include-group = "setuptools-scm"}
 ]
 
 [project.urls]
@@ -244,10 +250,14 @@ extend-select = [
     "ASYNC",  # flake8-async
     "C4",     # flake8-comprehensions
     "I",      # isort
-    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
-    # They may be worth occasionally turning on just to see if something could actually
-    # use improvement.
-    # "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific rules
+    "PT",     # flake8-pytest-style
+    "FURB",   # refurb
+    "ISC",    # flake8-implicit-str-concat
+    "PGH",    # pygrep-hooks
+    "T20",    # flake8-print
+    "PIE",    # flake8-pie
+    "SIM",    # flake8-simplify
 ]
 
 # Below is a list of ignored rules.  Many (if not all) of these have been disabled
@@ -256,7 +266,8 @@ extend-select = [
 # for future fixes throughout the project.
 ignore = [
     "E501",    # line length
-    "B904",    # use raise ... from ...
+    "SIM105",  # use `contextlib.suppress` (too opinionated)
+    "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
 
@@ -267,10 +278,10 @@ ignore = [
 directory = "changes"
 package = "briefcase"
 package_dir = "src"
-filename = "docs/about/releases.rst"
-title_format = "{version} ({project_date})"
-issue_format = "`#{issue} <https://github.com/beeware/briefcase/issues/{issue}>`__"
-template = "changes/template.rst"
+filename = "docs/about/releases.md"
+title_format = "## {version} ({project_date})"
+issue_format = "[#{issue}](https://github.com/beeware/briefcase/issues/{issue})"
+template = "changes/template.md"
 type = [
     { directory = "feature", name = "Features", showcontent = true },
     { directory = "bugfix", name = "Bugfixes", showcontent = true },
@@ -281,7 +292,7 @@ type = [
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
-# the way to make case sensitive skips of words etc
+# the way to make case-sensitive skips of words etc
 ignore-regex = '\bNd\b'
-# case insensitive
+# case-insensitive
 # ignore-words-list = ''

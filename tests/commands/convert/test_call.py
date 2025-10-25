@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "cmdline, overrides",
+    ("cmdline", "overrides"),
     [
         ([], {}),
         (["-Q", "license=MIT"], {"license": "MIT"}),

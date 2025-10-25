@@ -168,7 +168,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
 
 
 @pytest.mark.parametrize(
-    "in_kwargs, kwargs",
+    ("in_kwargs", "kwargs"),
     [
         ({}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),
         ({"text": True}, {"text": True, "encoding": ANY, "errors": "backslashreplace"}),

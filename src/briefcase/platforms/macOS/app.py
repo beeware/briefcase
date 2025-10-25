@@ -124,8 +124,8 @@ class macOSAppBuildCommand(
 
         if not getattr(app, "universal_build", True):
             with self.console.wait_bar("Ensuring stub binary is thin..."):
-                # The stub binary is universal by default. If we're building a non-universal app,
-                # we can strip the binary to remove the unused slice. This occurs before the
+                # The stub binary is universal by default. If we're building a
+                # non-universal app, we can strip the binary to remove the unused slice.
                 self.ensure_thin_binary(
                     self.binary_executable_path(app),
                     arch=self.tools.host_arch,

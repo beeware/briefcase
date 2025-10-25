@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from pathlib import Path
 
 # winreg can only be imported on Windows
@@ -17,7 +17,7 @@ from briefcase.integrations.base import Tool, ToolCache
 class WindowsSDK(Tool):
     name = "windows_sdk"
     full_name = "Windows SDK"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
 
     SDK_VERSION = "10.0"
     # Oldest supported SDK version is 10.0.15063.0
@@ -29,7 +29,7 @@ class WindowsSDK(Tool):
     # Subkey for "latest" installed SDK version
     SDK_VERSION_KEY = "ProductVersion"
     # As a fallback, possible default locations for SDK
-    DEFAULT_SDK_DIRS = [
+    DEFAULT_SDK_DIRS: Collection[Path] = [
         Path(rf"C:\Program Files (x86)\Windows Kits\{SDK_VERSION.split('.')[0]}")
     ]
     # Installing parts of the SDK for UWP apps is not inherently required; however,
@@ -176,8 +176,9 @@ WindowsSDKVersion: {environ_sdk_version}
         try:
             sdk.tools.subprocess.check_output([sdk.signtool_exe, "-?"])
         except (OSError, subprocess.CalledProcessError):
-            # Windows can raise OSError when it cannot run signtool. This can happen
-            # when an old version of the SDK is installed and only signtool is installed.
+            # Windows can raise OSError when it cannot run signtool.
+            # This can happen when an old version of the SDK is installed
+            # and only signtool is installed.
             return False
 
         return True

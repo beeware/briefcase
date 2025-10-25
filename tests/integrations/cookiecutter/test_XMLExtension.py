@@ -6,7 +6,7 @@ from briefcase.integrations.cookiecutter import XMLExtension
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # Literal booleans
         (True, "true"),
@@ -27,7 +27,7 @@ def test_bool_attr(value, expected):
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # No special characters
         ("Hello World", "Hello World"),
@@ -47,7 +47,7 @@ def test_xml_escape(value, expected):
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # A single quote wrapped in double quotes
         ("Hello ' World", '"Hello \' World"'),

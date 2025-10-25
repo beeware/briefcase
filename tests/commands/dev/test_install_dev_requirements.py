@@ -1,5 +1,6 @@
 import sys
 from subprocess import CalledProcessError
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,9 +16,10 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
 
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
-    dev_command.install_dev_requirements(app=first_app)
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    mock_venv.run.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -39,17 +41,16 @@ def test_install_requirements_error(dev_command, first_app):
     """Ensure RequirementsInstallError exception is raised for install errors."""
     first_app.requires = ["package-one", "package_two", "packagethree"]
 
-    dev_command.tools.subprocess.run.side_effect = CalledProcessError(
-        returncode=-1, cmd="pip"
-    )
+    mock_venv = MagicMock()
+    mock_venv.run.side_effect = CalledProcessError(returncode=-1, cmd="pip")
 
     with pytest.raises(
         RequirementsInstallError,
-        match="Unable to install requirements.",
+        match=r"Unable to install requirements\.",
     ):
-        dev_command.install_dev_requirements(app=first_app)
+        dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    mock_venv.run.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -72,9 +73,10 @@ def test_no_requirements(dev_command, first_app):
     """Ensure dependency installation is not attempted when nothing to install."""
     first_app.requires = []
 
-    dev_command.install_dev_requirements(app=first_app)
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_not_called()
+    mock_venv.run.assert_not_called()
 
 
 def test_no_requirements_with_requirement_installer_Args(dev_command, first_app):
@@ -83,9 +85,10 @@ def test_no_requirements_with_requirement_installer_Args(dev_command, first_app)
     first_app.requires = []
     first_app.requirement_installer_args = ["--no-cache"]
 
-    dev_command.install_dev_requirements(app=first_app)
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_not_called()
+    mock_venv.run.assert_not_called()
 
 
 def test_install_requirements_test_mode(dev_command, first_app):
@@ -93,9 +96,10 @@ def test_install_requirements_test_mode(dev_command, first_app):
     first_app.requires = ["package-one", "package_two", "packagethree"]
     first_app.test_requires = ["test-one", "test_two"]
 
-    dev_command.install_dev_requirements(app=first_app)
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    mock_venv.run.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -121,9 +125,10 @@ def test_only_test_requirements(dev_command, first_app):
     first_app.requires = None
     first_app.test_requires = ["test-one", "test_two"]
 
-    dev_command.install_dev_requirements(app=first_app)
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    mock_venv.run.assert_called_once_with(
         [
             sys.executable,
             "-u",
@@ -146,9 +151,10 @@ def test_requirement_installer_args(dev_command, first_app):
     first_app.requires = ["one", "two"]
     first_app.requirement_installer_args = ["--no-cache"]
 
-    dev_command.install_dev_requirements(app=first_app)
+    mock_venv = MagicMock()
+    dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
-    dev_command.tools.subprocess.run.assert_called_once_with(
+    mock_venv.run.assert_called_once_with(
         [
             sys.executable,
             "-u",

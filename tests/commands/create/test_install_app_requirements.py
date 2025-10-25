@@ -803,7 +803,7 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
 
 
 @pytest.mark.parametrize(
-    "altsep, requirement, expected",
+    ("altsep", "requirement", "expected"),
     [
         (None, "asdf/xcvb", True),
         (None, "asdf>xcvb", False),

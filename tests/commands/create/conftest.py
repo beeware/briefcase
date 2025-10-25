@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Collection
 from unittest import mock
 
 import pytest
@@ -21,7 +22,7 @@ def monkeypatch_tool_host_os(monkeypatch):
     monkeypatch.setattr(
         Tool,
         "supported_host_os",
-        Tool.supported_host_os.union({"c64"}),
+        {"c64", *Tool.supported_host_os},
     )
 
 
@@ -46,12 +47,12 @@ class DummyCreateCommand(CreateCommand):
     """A dummy create command that stubs out all the required interfaces of the Create
     command."""
 
-    supported_host_os = {"c64"}
+    supported_host_os: Collection[str] = {"c64"}
     # Platform and format contain upper case to test case normalization
     platform = "Tester"
     output_format = "Dummy"
     description = "Dummy create command"
-    hidden_app_properties = {"permission", "request"}
+    hidden_app_properties: Collection[str] = {"permission", "request"}
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
         super().__init__(*args, **kwargs)

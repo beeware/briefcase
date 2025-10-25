@@ -194,7 +194,7 @@ def test_upgrade_unmanaged_tools(upgrade_command, mock_tool_registry, capsys):
     """If only unmanaged tools are requested to upgrade, error is raised."""
     with pytest.raises(
         UpgradeToolError,
-        match="Briefcase is not managing not_installed, unmanaged, unmanaged_managed.",
+        match=r"Briefcase is not managing not_installed, unmanaged, unmanaged_managed\.",
     ):
         upgrade_command(tool_list=["unmanaged", "unmanaged_managed", "not_installed"])
 
@@ -273,7 +273,7 @@ def test_unknown_tool(upgrade_command, mock_tool_registry, capsys):
 
     with pytest.raises(
         UpgradeToolError,
-        match="Briefcase does not know how to manage unknown_tool_1, unknown_tool_2.",
+        match=r"Briefcase does not know how to manage unknown_tool_1, unknown_tool_2\.",
     ):
         upgrade_command(tool_list=["managed_1", "unknown_tool_1", "unknown_tool_2"])
 

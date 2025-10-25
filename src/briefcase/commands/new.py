@@ -83,7 +83,6 @@ class NewCommand(BaseCommand):
     def parse_config(self, filename, overrides):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""
-        pass
 
     def add_options(self, parser):
         parser.add_argument(
@@ -598,7 +597,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
-        project_overrides: list[str] = None,
+        project_overrides: list[str] | None = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.

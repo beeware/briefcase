@@ -6,7 +6,7 @@ from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_bundle(flatpak, tool_debug_mode, tmp_path):
     """A Flatpak project can be bundled."""
     # Enable verbose tool logging

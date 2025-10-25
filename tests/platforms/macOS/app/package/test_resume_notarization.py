@@ -832,7 +832,7 @@ def test_filename_mismatch(
 
 
 @pytest.mark.parametrize(
-    "response, error",
+    ("response", "error"),
     [
         # A response with an unknown status code.
         (

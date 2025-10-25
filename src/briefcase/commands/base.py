@@ -11,6 +11,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
+from collections.abc import Collection
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms import get_output_formats, get_platforms
 
 
@@ -83,7 +85,7 @@ def full_options(state, options):
     return full
 
 
-def split_passthrough(args):
+def split_passthrough(args: list[str]) -> tuple[list[str], list[str]]:
     try:
         pos = args.index("--")
     except ValueError:
@@ -126,7 +128,7 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
 
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
-    supported_host_os = {"Darwin", "Linux", "Windows"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
 
     # defined by platform-specific subclasses
@@ -147,9 +149,9 @@ class BaseCommand(ABC):
         self,
         console: Console,
         tools: ToolCache = None,
-        apps: dict[str, AppConfig] = None,
-        base_path: Path = None,
-        data_path: Path = None,
+        apps: dict[str, AppConfig] | None = None,
+        base_path: Path | None = None,
+        data_path: Path | None = None,
         is_clone: bool = False,
     ):
         """Base for all Commands.
@@ -179,6 +181,7 @@ class BaseCommand(ABC):
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
+        VirtualEnvironment.verify(tools=self.tools)
         File.verify(tools=self.tools)
 
         if not is_clone:
@@ -256,7 +259,7 @@ a custom location for Briefcase's tools.
                     )
                 else:  # pragma: no-cover-if-is-windows
                     os.makedirs(data_path, exist_ok=True)
-            except (subprocess.CalledProcessError, OSError):
+            except (subprocess.CalledProcessError, OSError) as e:
                 raise BriefcaseCommandError(
                     f"""
 Failed to create the Briefcase directory to store tools and support files:
@@ -267,7 +270,7 @@ You can set the environment variable BRIEFCASE_HOME to specify
 a custom location for Briefcase's tools.
 
 """
-                )
+                ) from e
 
         return Path(data_path)
 
@@ -819,7 +822,7 @@ any compatibility problems, and then add the compatibility declaration.
                 version_specifier=requires_python, running_version=running_version
             )
 
-    def parse_options(self, extra):
+    def parse_options(self, extra: list[str]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Parse the command line arguments for the Command.
 
         After the initial ArgumentParser runs to choose the Command for the selected
@@ -1145,18 +1148,21 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                         self.tools.shutil.rmtree(cached_template)
                     raise
                 except self.tools.git.exc.GitError as e:
-                    # The clone failed; to make sure the repo is in a clean state, clean up
-                    # any partial remnants of this initial clone.
+                    # The clone failed; to make sure the repo is in a clean state,
+                    # clean up any partial remnants of this initial clone.
                     # If we're getting a GitError, we know the directory must exist.
                     self.tools.shutil.rmtree(cached_template)
-                    git_fatal_message = re.findall(r"(?<=fatal: ).*?$", e.stderr, re.S)
+                    git_fatal_message = re.findall(
+                        r"(?<=fatal: ).*?$", e.stderr, flags=re.DOTALL
+                    )
                     if git_fatal_message:
-                        # GitError captures stderr with single quotes. Because the regex above
-                        # takes everything after git's "fatal" message, we need to strip that final single quote.
+                        # GitError captures stderr with single quotes. Because the regex
+                        # above takes everything after git's "fatal" message, we need to
+                        # strip that final single quote.
                         hint = git_fatal_message[0].rstrip("'").strip()
 
-                        # git is inconsistent with capitalisation of the first word of the message
-                        # and about periods at the end of the message.
+                        # git is inconsistent with capitalization of the first word of
+                        # the message and about periods at the end of the message.
                         hint = f"{hint[0].upper()}{hint[1:]}{'' if hint[-1] == '.' else '.'}"
                     else:
                         hint = (
@@ -1250,9 +1256,11 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 no_input=True,
                 output_dir=str(output_path),
                 checkout=branch,
-                # Use a copy to prevent changes propagating among tests while test suite is running
+                # Use a copy to prevent changes propagating among tests
+                # while the test suite is running
                 extra_context=extra_context.copy(),
-                # Store replay data in the Briefcase template cache instead of ~/.cookiecutter_replay
+                # Store replay data in the Briefcase template cache
+                # instead of ~/.cookiecutter_replay
                 default_config={"replay_dir": str(self.template_cache_path(".replay"))},
             )
         except subprocess.CalledProcessError as e:
@@ -1286,7 +1294,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         extra_context = extra_context.copy()
         # Additional context that can be used for the Briefcase template pyproject.toml
-        # header to include the version of Briefcase as well as the source of the template.
+        # header to include the version of Briefcase as well as the source of the
+        # template.
         extra_context.update(
             {
                 "template_source": template,

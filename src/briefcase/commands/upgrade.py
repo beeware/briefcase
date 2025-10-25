@@ -84,7 +84,8 @@ class UpgradeCommand(BaseCommand):
 
         # Let the user know if any requested tools are not being managed
         if tool_list:
-            if unmanaged_tools := tool_list - {tool.name for tool in tools_to_upgrade}:
+            unmanaged_tools = tool_list - {tool.name for tool in tools_to_upgrade}
+            if unmanaged_tools:
                 error_msg = (
                     f"Briefcase is not managing {', '.join(sorted(unmanaged_tools))}."
                 )

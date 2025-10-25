@@ -6,7 +6,7 @@ from briefcase.integrations.cookiecutter import TOMLEscape
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         # Single digit minor
         ("Hello World", "Hello World"),
@@ -22,10 +22,10 @@ def test_escape_toml(value, expected):
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         ("helloworld", "helloworld"),
-        ("helloworldı", '"helloworldı"'),
+        ("helloworldı", '"helloworldı"'),  # noqa: RUF001 (ambiguous non-ASCII symbol)
     ],
 )
 def test_escape_non_ascii(value, expected):

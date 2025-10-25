@@ -57,7 +57,7 @@ def logging_console() -> logging.Logger:
 
 
 @pytest.mark.parametrize(
-    "verbosity, verbose_enabled, debug_enabled, deep_debug_enabled",
+    ("verbosity", "verbose_enabled", "debug_enabled", "deep_debug_enabled"),
     [
         (-1, False, False, False),
         (0, False, False, False),
@@ -216,9 +216,11 @@ def test_save_log_to_file_no_exception(
         pass
     with command.tools.console.wait_bar("wait message..."):
         pass
-    with contextlib.suppress(KeyboardInterrupt):
-        with command.tools.console.wait_bar("abort message..."):
-            raise KeyboardInterrupt
+    with (
+        contextlib.suppress(KeyboardInterrupt),
+        command.tools.console.wait_bar("abort message..."),
+    ):
+        raise KeyboardInterrupt
 
     project_root = tmp_path / "project_root"
     project_root.mkdir(exist_ok=True)
@@ -531,7 +533,7 @@ def test_log_error_with_context(console, capsys):
 
 
 @pytest.mark.parametrize(
-    "logging_level, handler_expected",
+    ("logging_level", "handler_expected"),
     [
         (LogLevel.DEEP_DEBUG, True),
         (LogLevel.DEBUG, False),
