@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from .conftest import DummyCommand
 
 
@@ -45,13 +47,18 @@ def test_package_executable_path(base_command, my_app, tmp_path):
     assert bundle_package_executable_path == "internal/my-app.exe"
 
 
-def test_external_package_executable_path(base_command, my_app, tmp_path):
-    my_app.external_package_executable_path = "alternate/the_app.exe"
+@pytest.mark.parametrize(
+    "external_package_executable_path", ["", "alternate/the_app.exe"]
+)
+def test_external_package_executable_path(
+    base_command, my_app, tmp_path, external_package_executable_path
+):
+    my_app.external_package_executable_path = external_package_executable_path
 
     package_executable_path = base_command.package_executable_path(my_app)
     bundle_package_executable_path = base_command.bundle_package_executable_path(my_app)
 
-    assert package_executable_path == "alternate/the_app.exe"
+    assert package_executable_path == external_package_executable_path
     assert bundle_package_executable_path == "internal/my-app.exe"
 
 

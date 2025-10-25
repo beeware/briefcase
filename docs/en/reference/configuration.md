@@ -188,7 +188,7 @@ This setting is only allowed if you're using Briefcase to [package an external a
 
 ///
 
-The path, relative to [`external_package_path`][], to the binary that will be executed as part of the installed app. This is used to establish the path to the shortcut that should be installed.
+The path, relative to [`external_package_path`][], to the binary that will be executed as part of the installed app. This is used to install a shortcut in the Start menu. If you don't want to install a shortcut, set this to an empty string.
 
 This setting is only used on Windows.
 
