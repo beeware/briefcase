@@ -489,7 +489,7 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-        if app.external_package_executable_path is not None:
+        if app.external_package_executable_path:
             return app.external_package_executable_path
         else:
             return self.bundle_package_executable_path(app)

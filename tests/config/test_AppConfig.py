@@ -414,3 +414,28 @@ def test_no_source_for_app():
             sources=["src/something", "src/other"],
             license={"file": "LICENSE"},
         )
+
+
+@pytest.mark.parametrize(
+    ("install_launcher", "console_app", "expected"),
+    [
+        (True, False, True),
+        (False, False, False),
+        (None, False, True),
+        #
+        (True, True, True),
+        (False, True, False),
+        (None, True, False),
+    ],
+)
+def test_install_launcher(install_launcher, console_app, expected):
+    config = AppConfig(
+        app_name="my-app",
+        version="1.2.3",
+        bundle="org.beeware",
+        description="A simple app",
+        license={"file": "LICENSE"},
+        install_launcher=install_launcher,
+        console_app=console_app,
+    )
+    assert config.install_launcher == expected
