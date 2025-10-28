@@ -28,8 +28,8 @@ def test_unsupported_host_os(create_command, host_os):
 
 
 @pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
-def test_unsupported_arch(create_command, host_arch, first_app_config, capsys):
-    """Windows commands can only run on x86-64."""
+def test_unsupported_arch(create_command, host_arch, first_app_config):
+    """Internal apps can only be developed on x86-64."""
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = host_arch
     create_command.apps["first"] = first_app_config
@@ -40,10 +40,15 @@ def test_unsupported_arch(create_command, host_arch, first_app_config, capsys):
     ):
         create_command.verify_host()
 
-    assert capsys.readouterr() == ("", "")
 
-    # External apps can be built on a different architecture, with a warning.
+@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+def test_unsupported_arch_external(create_command, host_arch, first_app_config, capsys):
+    """External apps can be built on a different architecture, with a warning."""
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = host_arch
+    create_command.apps["first"] = first_app_config
     first_app_config.external_package_path = "external"
+
     create_command.verify_host()
     stdout, stderr = capsys.readouterr()
     assert "WARNING: Possible architecture mismatch" in stdout
