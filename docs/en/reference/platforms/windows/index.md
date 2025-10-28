@@ -167,7 +167,7 @@ However, if you need to override this default value, you can define [`version_tr
 
 ## Installer options
 
-Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a [`post_install_script`][] to perform additional installation behaviors.
+Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors.
 
 Installer options are defined using a TOML array of tables - each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]`, which must define the following keys:
 
