@@ -436,6 +436,7 @@ class AppConfig(BaseConfig):
         requirement_installer_args: list[str] | None = None,
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
+        install_launcher: bool | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -470,6 +471,9 @@ class AppConfig(BaseConfig):
         )
         self.external_package_path = external_package_path
         self.external_package_executable_path = external_package_executable_path
+        self.install_launcher = (
+            install_launcher if (install_launcher is not None) else (not console_app)
+        )
 
         self.test_mode: bool = False
 

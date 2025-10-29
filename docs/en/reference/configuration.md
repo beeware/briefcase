@@ -188,7 +188,7 @@ This setting is only allowed if you're using Briefcase to [package an external a
 
 ///
 
-The path, relative to [`external_package_path`][], to the binary that will be executed as part of the installed app. This is used to establish the path to the shortcut that should be installed.
+The path, relative to [`external_package_path`][], to the executable that will be used by the [application launcher][install_launcher] and [document types][].
 
 This setting is only used on Windows.
 
@@ -201,6 +201,12 @@ The application name as it should be displayed to humans. This name may contain 
 A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the application. The path should *exclude* the extension; Briefcase will append a platform appropriate extension when configuring the application. For example, an icon specification of `icon = "resources/icon"` will use `resources/icon.icns` on macOS, and `resources/icon.ico` on Windows.
 
 Some platforms require multiple icons, at different sizes; these will be handled by appending the required size to the provided icon name. For example, iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will look for `resources/icon-20.png`, `resources/icon-1024.png`, and so on. The sizes that are required are determined by the platform template.
+
+#### `install_launcher`
+
+Whether the installer should add the app to the system's applications menu. Defaults to `True`, unless the app is a [console app][cli-apps].
+
+This setting is only used on Windows.
 
 #### `installer_icon`
 

@@ -130,14 +130,17 @@ pre-uninstall scripts. Defaults to `_installer`.
 
 ### `post_install_script`
 
-A path, relative to the project root, to a Windows `.bat` file that will be executed
-after the installer content has been unpacked. Only used for MSI packaging.
+/// note | Only used for MSI packaging
+///
+
+A path, relative to the project root, to a Windows `.bat` file that will be executed during installation, after the installer content has been unpacked. Its working directory will be the installed location.
 
 ### `pre_uninstall_script`
 
-A path, relative to the project root, to a Windows `.bat` file that will be executed
-before the installed content is removed by uninstalling the app. Only used for MSI
-packaging.
+/// note | Only used for MSI packaging
+///
+
+A path, relative to the project root, to a Windows `.bat` file that will be executed during uninstallation, before the installed content is removed. Its working directory will be the installed location.
 
 ### `system_installer`
 
@@ -164,7 +167,7 @@ However, if you need to override this default value, you can define [`version_tr
 
 ## Installer options
 
-Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a post-install script to perform additional installation behaviors.
+Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors.
 
 Installer options are defined using a TOML array of tables - each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]`, which must define the following keys:
 
@@ -188,7 +191,7 @@ A Boolean describing the initial value of the option in the GUI. If not provided
 
 ### Using installer options
 
-When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable whose name is the capitalized version of the option name. If your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
+When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable. For example, if your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
 
 ## Platform quirks
 

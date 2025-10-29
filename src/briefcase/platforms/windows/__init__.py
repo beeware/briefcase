@@ -65,11 +65,32 @@ class WindowsMixin:
 
     def verify_host(self):
         super().verify_host()
-        # the stub app only supports x86-64 right now
+        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
+        # is the same (#1887). However, we can package an external x86-64 app on any
+        # build machine.
         if self.tools.host_arch != "AMD64":
-            raise UnsupportedHostError(
-                f"Windows applications cannot be built on an {self.tools.host_arch} machine."
-            )
+            if all(app.external_package_path for app in self.apps.values()):
+                if not self.is_clone:
+                    self.console.warning(
+                        f"""
+*************************************************************************
+** WARNING: Possible architecture mismatch                             **
+*************************************************************************
+
+The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
+supports x86-64 installers.
+
+You are responsible for ensuring that the content of external_package_path
+is compatible with x86-64.
+
+*************************************************************************
+"""
+                    )
+            else:
+                raise UnsupportedHostError(
+                    f"Windows applications cannot be built on an {self.tools.host_arch} machine."
+                )
+
         # 64bit Python is required to ensure 64bit wheels are installed/created
         # for the app
         if self.tools.is_32bit_python:
