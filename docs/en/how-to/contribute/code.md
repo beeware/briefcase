@@ -35,7 +35,7 @@ $ git clone https://github.com/beeware/briefcase.git
 $ cd briefcase
 $ python3 -m venv .venv
 $ . .venv/bin/activate
-(.venv) $ python -m pip install -Ue ".[dev]"
+(.venv) $ python -m pip install -Ue . --group dev
 (.venv) $ pre-commit install
 ```
 
@@ -48,7 +48,7 @@ $ git clone https://github.com/beeware/briefcase.git
 $ cd briefcase
 $ python3 -m venv .venv
 $ . .venv/bin/activate
-(.venv) $ python -m pip install -Ue ".[dev]"
+(.venv) $ python -m pip install -Ue . --group dev
 (.venv) $ pre-commit install
 ```
 
@@ -61,7 +61,7 @@ C:\...>git clone https://github.com/beeware/briefcase.git
 C:\...>cd briefcase
 C:\...>py -m venv .venv
 C:\...>.venv\Scripts\activate
-(.venv) C:\...>python -m pip install -Ue .[dev]
+(.venv) C:\...>python -m pip install -Ue . --group dev
 (.venv) C:\...>pre-commit install
 ```
 
@@ -209,7 +209,7 @@ Now that you have the source code, you can do an [editable install](https://setu
 /// tab | macOS
 
 ```console
-(.venv) $ python -m pip install -e ".[dev]"
+(.venv) $ python -m pip install -Ue . --group dev
 ```
 
 ///
@@ -217,7 +217,7 @@ Now that you have the source code, you can do an [editable install](https://setu
 /// tab | Linux
 
 ```console
-(.venv) $ python -m pip install -e ".[dev]"
+(.venv) $ python -m pip install -Ue . --group dev
 ```
 
 ///
@@ -225,7 +225,7 @@ Now that you have the source code, you can do an [editable install](https://setu
 /// tab | Windows
 
 ```doscon
-(.venv) C:\...>python -m pip install -e .[dev]
+(.venv) C:\...>python -m pip install -Ue . --group dev
 ```
 
 ///
