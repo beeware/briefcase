@@ -4,6 +4,8 @@ Compile/build an application installer. By default, targets the current platform
 
 This will produce an installable artefact.
 
+You should not package an application that was built using `build --test` or `build --debug <debugger>`.
+
 ## Usage
 
 To build an installer of the default output format for the current platform:

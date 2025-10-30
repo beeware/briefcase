@@ -41,7 +41,8 @@ jobs:
       - name: Get packages
         uses: actions/download-artifact@v6.0.0
         with:
-          name: ${{ needs.ci.outputs.artifact-name }}
+          pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
+          merge-multiple: true
           path: dist
 
       - name: Purge non-release packages

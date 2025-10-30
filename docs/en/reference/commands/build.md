@@ -93,3 +93,22 @@ If you have previously run the app in "normal" mode, you may need to pass `-r` /
 ### `--no-update`
 
 Prevent the automated update of app code that is performed when specifying by the `--test` option.
+
+### `--debug <debugger>`
+
+Build the app in debug mode in the bundled app environment and installs the selected debugger in the bundled app.
+
+Currently the following debuggers are supported:
+
+- `pdb`: This is used for debugging via console (see [Debug via PDB][debug-pdb])
+- `debugpy`: This is used for debugging via VS Code (see [Debug via VS Code][debug-vscode])
+
+If calling only `--debug` without selecting a debugger explicitly, `pdb` is used as default.
+
+This is an **experimental** new feature, that is currently only supported on Windows and macOS.
+
+This option may slow down the app a little bit.
+
+If you have previously run the app in "normal" mode, you may need to pass `-r` / `--update-requirements` the first time you build in debug mode to ensure that the debugger is embedded in your bundled app.
+
+The selected debugger in `build --debug <debugger>` has to match the selected debugger in `run --debug <debugger>`.
