@@ -541,7 +541,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             label = "app"
 
         self.console.info(
-            f"Starting {label} on an {device} running iOS {iOS_version} (device UDID {udid})",
+            (
+                f"Starting {label} on an {device} running iOS {iOS_version} "
+                f"(device UDID {udid})"
+            ),
             prefix=app.app_name,
         )
 

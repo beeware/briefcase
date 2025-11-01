@@ -218,8 +218,9 @@ class macOSCreateMixin(AppPackagesMergeMixin):
 
         if Version(macOS_min_version) < Version(support_min_version):
             raise BriefcaseCommandError(
-                f"Your macOS app specifies a minimum macOS version of {macOS_min_version}, "
-                f"but the support package only supports {support_min_version}"
+                f"Your macOS app specifies a minimum macOS version of "
+                f"{macOS_min_version}, but the support package only supports "
+                f"{support_min_version}"
             )
 
         macOS_min_tag = macOS_min_version.replace(".", "_")
@@ -553,7 +554,8 @@ class macOSRunMixin:
 
             if app_pid is None:
                 raise BriefcaseCommandError(
-                    f"Unable to find process for app {app.app_name} to start log streaming."
+                    f"Unable to find process for app {app.app_name} "
+                    f"to start log streaming."
                 )
 
             # Stream the app logs.
@@ -638,7 +640,8 @@ class macOSSigningMixin:
 
             if not identities:
                 raise BriefcaseCommandError(
-                    f"No installer signing identities for team {app_identity.team_id} could be found."
+                    f"No installer signing identities for team "
+                    f"{app_identity.team_id} could be found."
                 )
         else:
             ident_type = "application"
@@ -736,7 +739,8 @@ or
             ):
                 # We should not be signing this in the first place
                 self.console.verbose(
-                    f"... {Path(path).relative_to(self.base_path)} does not require a signature"
+                    f"... {Path(path).relative_to(self.base_path)} "
+                    f"does not require a signature"
                 )
                 return
             else:
@@ -1100,7 +1104,8 @@ password:
                         )
                     except subprocess.CalledProcessError as e:
                         raise BriefcaseCommandError(
-                            f"Unable to store credentials for team ID {identity.team_id}."
+                            f"Unable to store credentials for team ID "
+                            f"{identity.team_id}."
                         ) from e
 
                 # Attempt the notarization
@@ -1133,7 +1138,8 @@ password:
                     else:
                         self.tools.subprocess.output_error(e)
                         raise BriefcaseCommandError(
-                            f"Unable to submit {filename.relative_to(self.base_path)} for notarization."
+                            f"Unable to submit {filename.relative_to(self.base_path)} "
+                            f"for notarization."
                         ) from e
         finally:
             # If we're using .zip packaging, the archive is temporary and isn't used for
@@ -1186,8 +1192,10 @@ password:
                 ) from None
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    "Unable to invoke notarytool to determine validity of submission ID.\n"
-                    "Are you sure this is the identity that was used to notarize the app?"
+                    "Unable to invoke notarytool to determine validity of "
+                    "submission ID.\n"
+                    "Are you sure this is the identity that was used to notarize "
+                    "the app?"
                 ) from e
 
     def finalize_notarization(
@@ -1263,7 +1271,8 @@ password:
             try:
                 self.console.info()
                 self.console.info(
-                    f"Stapling notarization onto {filename.relative_to(self.base_path)}..."
+                    f"Stapling notarization onto "
+                    f"{filename.relative_to(self.base_path)}..."
                 )
                 self.tools.subprocess.run(
                     ["xcrun", "stapler", "staple", filename],
@@ -1271,7 +1280,8 @@ password:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to staple notarization onto {filename.relative_to(self.base_path)}"
+                    f"Unable to staple notarization onto "
+                    f"{filename.relative_to(self.base_path)}"
                 ) from e
 
         # Notarization on a zip package is performed on the bare app, so we can't
@@ -1611,7 +1621,8 @@ with your app's licensing terms.
                 icon_filename = self.base_path / f"{app.installer_icon}.icns"
                 if not icon_filename.exists():
                     self.console.warning(
-                        f"Can't find {app.installer_icon}.icns to use as DMG installer icon"
+                        f"Can't find {app.installer_icon}.icns "
+                        f"to use as DMG installer icon"
                     )
                     raise AttributeError()
             except AttributeError:
@@ -1620,7 +1631,8 @@ with your app's licensing terms.
                     icon_filename = self.base_path / f"{app.icon}.icns"
                     if not icon_filename.exists():
                         self.console.warning(
-                            f"Can't find {app.icon}.icns to use as fallback DMG installer icon"
+                            f"Can't find {app.icon}.icns "
+                            f"to use as fallback DMG installer icon"
                         )
                         icon_filename = None
                 else:
@@ -1636,7 +1648,8 @@ with your app's licensing terms.
                     dmg_settings["background"] = os.fsdecode(image_filename)
                 else:
                     self.console.warning(
-                        f"Can't find {app.installer_background}.png to use as DMG background"
+                        f"Can't find {app.installer_background}.png "
+                        f"to use as DMG background"
                     )
             except AttributeError:
                 # No installer background image provided
