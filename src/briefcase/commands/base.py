@@ -654,9 +654,8 @@ a custom location for Briefcase's tools.
         This is used as a repository label/tag to identify the appropriate templates,
         etc. to use.
         """
-        return (
-            f"{self.tools.sys.version_info.major}.{self.tools.sys.version_info.minor}"
-        )
+        major, minor, *_ = self.tools.sys.version_info
+        return f"{major}.{minor}"
 
     def verify_host(self):
         """Verify the host OS is supported by the Command."""

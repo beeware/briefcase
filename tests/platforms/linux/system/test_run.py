@@ -11,7 +11,10 @@ from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux import parse_freedesktop_os_release, system
-from briefcase.platforms.linux.system import LinuxSystemRunCommand
+from briefcase.platforms.linux.system import (
+    LinuxSystemMostlyPassiveMixin,
+    LinuxSystemRunCommand,
+)
 
 
 @pytest.fixture
@@ -29,6 +32,11 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
 
     # Set the host architecture for test purposes.
     command.tools.host_arch = "wonky"
+
+    # Mock the existence of a valid system Python
+    monkeypatch.setattr(
+        LinuxSystemMostlyPassiveMixin, "verify_system_python", mock.MagicMock()
+    )
 
     # Provide Docker
     monkeypatch.setattr(
