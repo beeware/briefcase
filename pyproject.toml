@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==9.2.1",
+    "setuptools_scm==9.2.2",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -103,11 +103,11 @@ setuptools-scm = [
 ]
 
 towncrier = [
-    "towncrier==24.8.0",
+    "towncrier==25.8.0",
 ]
 
 tox-uv = [
-    "tox-uv == 1.28.0",
+    "tox-uv == 1.29.0",
 ]
 
 dev = [

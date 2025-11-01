@@ -28,16 +28,36 @@ def test_unsupported_host_os(create_command, host_os):
 
 
 @pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
-def test_unsupported_arch(create_command, host_arch):
-    """Windows commands can only run on x86-64."""
+def test_unsupported_arch(create_command, host_arch, first_app_config):
+    """Internal apps can only be developed on x86-64."""
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = host_arch
+    create_command.apps["first"] = first_app_config
 
     with pytest.raises(
         UnsupportedHostError,
         match=f"Windows applications cannot be built on an {host_arch} machine.",
     ):
-        create_command()
+        create_command.verify_host()
+
+
+@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+def test_unsupported_arch_external(create_command, host_arch, first_app_config, capsys):
+    """External apps can be built on a different architecture, with a warning."""
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = host_arch
+    create_command.apps["first"] = first_app_config
+    first_app_config.external_package_path = "external"
+
+    create_command.verify_host()
+    stdout, stderr = capsys.readouterr()
+    assert "WARNING: Possible architecture mismatch" in stdout
+    assert stderr == ""
+
+    # The warning is not repeated on cloned commands.
+    create_command.is_clone = True
+    create_command.verify_host()
+    assert capsys.readouterr() == ("", "")
 
 
 def test_supported_arch(create_command):
@@ -45,7 +65,7 @@ def test_supported_arch(create_command):
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = "AMD64"
 
-    create_command()
+    create_command.verify_host()
 
 
 def test_unsupported_32bit_python(create_command):
