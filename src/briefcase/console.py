@@ -491,8 +491,13 @@ class Console:
                         self.error(traceback.format_exc())
 
         # Capture env vars removing any potentially sensitive information
+        def display_env_value(_env_var: str, _value: str) -> str:
+            if SENSITIVE_SETTING_RE.search(_env_var):
+                return "********************"
+            return _value
+
         sanitized_env_vars = "\n".join(
-            f"\t{env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"  # noqa: E501 (line too long)
+            f"\t{env_var}={display_env_value(env_var, value)}"
             for env_var, value in sorted(command.tools.os.environ.items())
         )
 
