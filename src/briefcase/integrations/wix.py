@@ -97,7 +97,8 @@ class WiX(ManagedTool):
             if installed_version != str(wix.version):
                 if installed_version is not None:
                     tools.console.info(
-                        f"The WiX toolset is an unsupported version ({installed_version})"
+                        f"The WiX toolset is an unsupported version "
+                        f"({installed_version})"
                     )
                 if install:
                     wix.upgrade()

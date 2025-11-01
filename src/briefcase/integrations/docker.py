@@ -940,7 +940,8 @@ class DockerAppContext(Tool):
                     )
                 except subprocess.CalledProcessError as e:
                     raise BriefcaseCommandError(
-                        f"Error building Docker container image for {self.app.app_name}."
+                        f"Error building Docker container image "
+                        f"for {self.app.app_name}."
                     ) from e
 
     @contextlib.contextmanager

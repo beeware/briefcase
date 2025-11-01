@@ -129,7 +129,8 @@ you can re-run Briefcase.
                         min_version = ".".join(str(v) for v in min_version)
                         version = ".".join(str(v) for v in version)
                         raise BriefcaseCommandError(
-                            f"Xcode {min_version} is required; {version} is installed. Please update Xcode."
+                            f"Xcode {min_version} is required; {version} is installed. "
+                            f"Please update Xcode."
                         )
                     else:
                         # Version number is acceptable
@@ -393,7 +394,9 @@ You need to accept the Xcode license before Briefcase can package your app.
 def get_simulators(
     tools: ToolCache,
     os_name: str,
-    simulator_location: str = "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/",
+    simulator_location: str = (
+        "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/"
+    ),
 ) -> dict[str, str]:
     """Obtain the simulators available on this machine.
 

@@ -96,7 +96,8 @@ def get_process_id_by_command(
         pid = sorted(matching_procs, key=operator.itemgetter("create_time"))[-1]["pid"]
         if console:
             console.info(
-                f"Multiple running instances of app found. Using most recently created app process {pid}."
+                f"Multiple running instances of app found. "
+                f"Using most recently created app process {pid}."
             )
         return pid
 
@@ -586,8 +587,9 @@ class Subprocess(Tool):
             # * Use check_output() instead of run() to capture console output
             #   without streaming.
             raise AssertionError(
-                "Subprocess.run() was invoked while dynamic Rich content is active (or via "
-                "`stream_output`) with stdout redirected while stderr was not redirected."
+                "Subprocess.run() was invoked while dynamic Rich content is active (or "
+                "via `stream_output`) with stdout redirected while stderr was not "
+                "redirected."
             )
         for arg in [arg for arg in ["timeout", "input"] if arg in kwargs]:
             raise AssertionError(

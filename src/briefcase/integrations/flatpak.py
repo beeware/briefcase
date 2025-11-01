@@ -199,8 +199,10 @@ You must install both flatpak and flatpak-builder.
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                f"Unable to install Flatpak runtime {runtime}/{self.tools.host_arch}/{runtime_version} "
-                f"and SDK {sdk}/{self.tools.host_arch}/{runtime_version} from repo {repo_alias}."
+                f"Unable to install "
+                f"Flatpak runtime {runtime}/{self.tools.host_arch}/{runtime_version} "
+                f"and SDK {sdk}/{self.tools.host_arch}/{runtime_version} "
+                f"from repo {repo_alias}."
             ) from e
 
     def build(self, bundle_identifier: str, app_name: str, path: Path):
