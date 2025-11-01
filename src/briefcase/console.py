@@ -518,12 +518,11 @@ class Console:
             # replace line breaks with spaces
             # (use chr(10) since '\n' isn't allowed in f-strings...)
             f"Python version:  {sys.version.replace(chr(10), ' ')}\n"
-            # sys.real_prefix was used in older versions of virtualenv.
             # sys.base_prefix is always the python exe's original site-specific
             #     directory (e.g. /usr/local).
             # sys.prefix is updated (from base_prefix's value) to the virtual env's
             #     site-specific directory.
-            f"Virtual env:     {hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix}\n"  # noqa: E501 (line too long)
+            f"Virtual env:     {sys.base_prefix != sys.prefix}\n"
             # for conda, prefix and base_prefix are likely the same
             # but contain a conda-meta dir.
             f"Conda env:       {(Path(sys.prefix) / 'conda-meta').exists()}\n"
