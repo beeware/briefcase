@@ -58,11 +58,13 @@ class ConvertCommand(NewCommand):
         test_path = self.base_path / test_source_dir
         if (test_entry := test_path / f"{module_name}.py").exists():
             raise ValueError(
-                f"'{test_entry}' is reserved for the briefcase test entry script, but it already exists.\n"
+                f"'{test_entry}' is reserved for the briefcase test entry script, "
+                f"but it already exists.\n"
                 "\n"
                 "Briefcase expects this file to contain the test entry script, so if "
-                f"'{self.base_path / test_source_dir}' is your test directory, you must "
-                f"rename '{test_entry}' before setting up your project for briefcase."
+                f"'{self.base_path / test_source_dir}' is your test directory, you "
+                f"must rename '{test_entry}' before setting up your project for "
+                f"briefcase."
             )
 
         return True
@@ -105,10 +107,11 @@ class ConvertCommand(NewCommand):
         :returns: The app name
         """
         intro = (
-            "We need a name that can serve as a machine-readable Python package name for "
-            "your application. This name must be PEP508-compliant - that means the name "
-            "may only contain letters, numbers, hyphens and underscores; it can't contain "
-            "spaces or punctuation, and it can't start with a hyphen or underscore."
+            "We need a name that can serve as a machine-readable Python package name "
+            "for your application. This name must be PEP508-compliant - that means the "
+            "name may only contain letters, numbers, hyphens and underscores; it can't "
+            "contain spaces or punctuation, and it can't start with a hyphen or "
+            "underscore."
         )
 
         default = "hello-world"
@@ -196,10 +199,11 @@ class ConvertCommand(NewCommand):
             "working directory).\n"
             "\n"
             "For example, if you have an existing project 'myapp', and you can start "
-            "'myapp' by running 'src/myapp/__main__.py', then you should set the source "
-            "directory to 'src/myapp'.\n"
+            "'myapp' by running 'src/myapp/__main__.py', then you should set the "
+            "source directory to 'src/myapp'.\n"
             "\n"
-            f"Based on your project's folder layout, we believe it might be '{default}'."
+            f"Based on your project's folder layout, we believe it might be "
+            f"'{default}'."
         )
         return default, intro
 
@@ -228,11 +232,11 @@ class ConvertCommand(NewCommand):
         :returns: The test source directory
         """
         intro = (
-            "We also need to know the path to the test suite (if it exists). The test path "
-            "should be relative to the project root directory.\n"
+            "We also need to know the path to the test suite (if it exists). "
+            "The test path should be relative to the project root directory.\n"
             "\n"
-            "If the provided directory doesn't exist, it will be created and populated with "
-            "some default test files."
+            "If the provided directory doesn't exist, it will be created and populated "
+            "with some default test files."
         )
         if (self.base_path / "tests").is_dir():
             default = "tests"
@@ -393,7 +397,8 @@ class ConvertCommand(NewCommand):
                 default_author = git_username
                 intro = (
                     f"{intro}\n\n"
-                    f"Based on your git configuration, we believe it could be '{git_username}'."
+                    f"Based on your git configuration,"
+                    f" we believe it could be '{git_username}'."
                 )
 
             return self.console.text_question(
@@ -427,7 +432,9 @@ class ConvertCommand(NewCommand):
         )
         if author == "Other":
             author = self.console.text_question(
-                intro="Who do you want to be credited as the author of this application?",
+                intro=(
+                    "Who do you want to be credited as the author of this application?"
+                ),
                 description="Author",
                 default=default_author,
                 override_value=None,
@@ -456,9 +463,9 @@ class ConvertCommand(NewCommand):
 
         intro = (
             "What email address should people use to contact the developers of this "
-            "application? This might be your own email address, or a generic contact address "
-            f"you set up specifically for this application. Based on {default_source}, "
-            f"we believe it could be '{default}'."
+            "application? This might be your own email address, or a generic contact "
+            "address you set up specifically for this application. "
+            f"Based on {default_source}, we believe it could be '{default}'."
         )
 
         author_email = self.console.text_question(
@@ -729,7 +736,10 @@ class ConvertCommand(NewCommand):
 
         self.console.info()
         self.console.info(
-            f"Generating required files to set up '{context['formal_name']}' with Briefcase",
+            (
+                f"Generating required files to set up '{context['formal_name']}' "
+                f"with Briefcase"
+            ),
             prefix=context["app_name"],
         )
 
