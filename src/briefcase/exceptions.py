@@ -133,12 +133,12 @@ class IncompatibleToolError(BriefcaseCommandError):
     def __init__(self, tool: str, env_var: str):
         self.tool = tool
         super().__init__(
-            msg=f"""\
-Briefcase cannot install {tool} on this machine.
-
-Install {tool} manually and specify the installation directory in the {env_var} \
-environment variable.
-            """
+            msg=(
+                f"Briefcase cannot install {tool} on this machine."
+                f"\n\n"
+                f"Install {tool} manually and specify the installation "
+                f"directory in the {env_var} environment variable."
+            )
         )
 
 
