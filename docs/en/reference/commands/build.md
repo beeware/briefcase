@@ -96,7 +96,7 @@ Prevent the automated update of app code that is performed when specifying by th
 
 ### `--debug <debugger>`
 
-Build the app in debug mode in the bundled app environment and installs the selected debugger in the bundled app.
+Install the selected debugger into the bundled app.
 
 Currently the following debuggers are supported:
 

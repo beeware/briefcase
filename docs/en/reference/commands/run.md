@@ -100,14 +100,12 @@ Prevent the automated update and build of app code that is performed when specif
 
 ## `--debug <debugger>`   { #run-debug }
 
-Run the app in debug mode in the bundled app environment and establish a debugger connection via a socket.
+Run the app in debug mode.
 
 Currently the following debuggers are supported:
 
 - `pdb`: This is used for debugging via console (see [Debug via PDB][debug-pdb])
 - `debugpy`: This is used for debugging via VS Code (see [Debug via VS Code][debug-vscode])
-
-For `debugpy` Briefcase will automatically apply path mapping of the source code from your bundled app in the `build` folder to your local source code defined under `sources` in your `pyproject.toml`. This would collide with an existing `pathMappings` setting in your VS Code `launch.json` file. Therefore, if you are using `debugpy`, do not set `pathMappings` manually in your VS Code `launch.json`.
 
 If calling only `--debug` without selecting a debugger explicitly, `pdb` is used as default.
 

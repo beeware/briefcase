@@ -1,6 +1,6 @@
 # Debug via VS Code   { #debug-vscode }
 
-Debugging is possible at different stages in your development process. It is different to debug a development app via `briefcase dev` than a bundled app that is built via `briefcase build` and run via `briefcase run`.
+Debugging is possible at different stages in your development process. You can debug a development app via `briefcase dev`, or a bundled app that is built via `briefcase build` and run via `briefcase run`.
 
 ## Development
 
@@ -70,7 +70,7 @@ The app will not start until you attach the debugger. Once you attach the VS Cod
 
 But there are some restrictions that must be taken into account:
 
-- Restart your application via the green circle is not working. You have to stop the app manually and start it again via `briefcase run --debug debugpy`.
+- Restarting your application via the green circle is not working. You have to stop the app manually and start it again via `briefcase run --debug debugpy`.
 - `justMyCode` has to be set to `false`. When setting it to `true`, or not defining it at all, breakpoints are missed on some platforms (e.g., Windows). The reason for this is currently unknown.
 - `pathMappings` should not be set manually in the `launch.json`. The path mappings will be set by Briefcase programmatically and if setting it manually too the manual setting will overwrite settings by Briefcase.
 
