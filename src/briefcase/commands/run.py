@@ -339,7 +339,8 @@ class RunCommand(RunAppMixin, BaseCommand):
                 ) from e
         else:
             raise BriefcaseCommandError(
-                "Project specifies more than one application; use --app to specify which one to start."
+                "Project specifies more than one application; "
+                "use --app to specify which one to start."
             )
 
         # Confirm host compatibility, that all required tools are available,
@@ -351,14 +352,12 @@ class RunCommand(RunAppMixin, BaseCommand):
         if (
             (not template_file.exists())  # App hasn't been created
             or update  # An explicit update has been requested
-            or update_requirements  # An explicit update of requirements has been requested
-            or update_resources  # An explicit update of resources has been requested
-            or update_support  # An explicit update of support files has been requested
-            or update_stub  # An explicit update of the stub binary has been requested
+            or update_requirements  # An explicit requirements update has been requested
+            or update_resources  # An explicit resource update has been requested
+            or update_support  # An explicit support file update has been requested
+            or update_stub  # An explicit stub binary update has been requested
             or (not exec_file.exists())  # Executable binary doesn't exist yet
-            or (
-                app.test_mode and not no_update
-            )  # Test mode, but updates have not been disabled
+            or (app.test_mode and not no_update)  # Test mode, but updates are enabled
         ):
             state = self.build_command(
                 app,

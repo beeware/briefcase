@@ -69,16 +69,12 @@ class BuildCommand(BaseCommand):
             state = self.create_command(app, **options)
         elif (
             update  # An explicit update has been requested
-            or update_requirements  # An explicit update of requirements has been requested
-            or update_resources  # An explicit update of resources has been requested
-            or update_support  # An explicit update of app support has been requested
-            or update_stub  # An explicit update of the stub binary has been requested
-            or (
-                app.test_mode and not no_update
-            )  # Test mode, but updates have not been disabled
-            or (
-                app.debugger and not no_update
-            )  # Debug mode, but updates have not been disabled
+            or update_requirements  # An explicit requirements update has been requested
+            or update_resources  # An explicit resource update has been requested
+            or update_support  # An explicit app support update has been requested
+            or update_stub  # An explicit stub binary update has been requested
+            or (app.test_mode and not no_update)  # Test mode, but updates are enabled
+            or (app.debugger and not no_update)  # Debug mode, but updates are enabled
         ):
             state = self.update_command(
                 app,

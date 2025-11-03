@@ -67,11 +67,33 @@ class WindowsMixin:
 
     def verify_host(self):
         super().verify_host()
-        # the stub app only supports x86-64 right now
+        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
+        # is the same (#1887). However, we can package an external x86-64 app on any
+        # build machine.
         if self.tools.host_arch != "AMD64":
-            raise UnsupportedHostError(
-                f"Windows applications cannot be built on an {self.tools.host_arch} machine."
-            )
+            if all(app.external_package_path for app in self.apps.values()):
+                if not self.is_clone:
+                    self.console.warning(
+                        f"""
+*************************************************************************
+** WARNING: Possible architecture mismatch                             **
+*************************************************************************
+
+The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
+supports x86-64 installers.
+
+You are responsible for ensuring that the content of external_package_path
+is compatible with x86-64.
+
+*************************************************************************
+"""
+                    )
+            else:
+                raise UnsupportedHostError(
+                    f"Windows applications cannot be built on an "
+                    f"{self.tools.host_arch} machine."
+                )
+
         # 64bit Python is required to ensure 64bit wheels are installed/created
         # for the app
         if self.tools.is_32bit_python:
@@ -215,12 +237,12 @@ class WindowsCreateCommand(CreateCommand):
                     )
             else:
                 raise BriefcaseCommandError(
-                    f"""\
-Your `pyproject.toml` specifies a license file of {str(license_file.relative_to(self.base_path))!r}.
-However, this file does not exist.
-
-Ensure you have correctly spelled the filename in your `license.file` setting.
-"""
+                    f"Your `pyproject.toml` specifies a license file of "
+                    f"{str(license_file.relative_to(self.base_path))!r}.\n"
+                    f"However, this file does not exist."
+                    f"\n\n"
+                    "Ensure you have correctly spelled the filename in your "
+                    "`license.file` setting."
                 )
         elif license_text := app.license.get("text"):
             if len(license_text.splitlines()) <= 1:
@@ -388,8 +410,8 @@ class WindowsPackageCommand(PackageCommand):
         parser.add_argument(
             "--use-local-machine-stores",
             help=(
-                "Specifies the code signing certificate is stored in the Local Machine's "
-                "stores instead of the Current User's"
+                "Specifies the code signing certificate is stored in the "
+                "Local Machine's stores instead of the Current User's"
             ),
             action="store_true",
             dest="use_local_machine",
@@ -398,8 +420,8 @@ class WindowsPackageCommand(PackageCommand):
         parser.add_argument(
             "--cert-store",
             help=(
-                "The internal Windows name for the certificate store containing the certificate "
-                "for code signing; defaults to 'My' for the Personal store"
+                "The internal Windows name for the certificate store containing the "
+                "certificate for code signing; defaults to 'My' for the Personal store"
             ),
             default="My",
             required=False,
@@ -444,7 +466,8 @@ class WindowsPackageCommand(PackageCommand):
 
         if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
             raise BriefcaseCommandError(
-                f"Codesigning identify {identity!r} must be a certificate SHA-1 thumbprint."
+                f"Codesigning identify {identity!r} must be a "
+                f"certificate SHA-1 thumbprint."
             )
 
         sign_command = [
