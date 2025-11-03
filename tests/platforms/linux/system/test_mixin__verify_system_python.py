@@ -1,5 +1,4 @@
 import re
-import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,7 +7,6 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import system
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_valid_python3(monkeypatch, create_command):
     """If Briefcase is being run with the system python, verification passes."""
     # /usr/bin/python3 exists
@@ -31,7 +29,6 @@ def test_valid_python3(monkeypatch, create_command):
     create_command.verify_system_python()
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_bad_python3(monkeypatch, create_command):
     """If Briefcase's Python version differs from system Python, verification fails."""
     # /usr/bin/python3 exists
@@ -60,7 +57,6 @@ def test_bad_python3(monkeypatch, create_command):
         create_command.verify_system_python()
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_missing_python3(monkeypatch, create_command):
     """If Briefcase can't find the system Python, verification fails."""
     # /usr/bin/python3 does not exist
