@@ -271,9 +271,12 @@ class AppPackagesMergeMixin:
                             ):
                                 self.console.warning(
                                     f"{relative_path} has different content "
-                                    f"between sources; ignoring {source_app_packages.suffix[1:]} version. "
-                                    f"This is usually safe if the file content is not used at runtime. "
-                                    f"See https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels for more details."
+                                    f"between sources; ignoring "
+                                    f"{source_app_packages.suffix[1:]} version. "
+                                    f"This is usually safe if the file content is not "
+                                    f"used at runtime. See "
+                                    f"https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels "
+                                    f"for more details."
                                 )
                         else:
                             # The file doesn't exist yet; copy it as is (including
