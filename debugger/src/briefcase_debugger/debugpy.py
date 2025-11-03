@@ -99,7 +99,7 @@ To connect to debugpy using VS Code add the following configuration to '.vscode/
     ]
 }}
 
-For more information see: https://briefcase.readthedocs.io/en/stable/how-to/debugging/vscode.html#bundled-app
+For more information see: https://briefcase.beeware.org/en/stable/how-to/debugging/vscode/#bundled-app
 """
     )
     debugpy.wait_for_client()

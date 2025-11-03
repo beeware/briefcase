@@ -1045,7 +1045,7 @@ any compatibility problems, and then add the compatibility declaration.
             parser.add_argument(
                 "--debugger-host",
                 default="localhost",
-                help="The host on which to run the debug server (default: localhost)",
+                help="The host on which to run the debug server (default: %(default)s)",
                 required=False,
             )
             parser.add_argument(
@@ -1053,7 +1053,7 @@ any compatibility problems, and then add the compatibility declaration.
                 "--debugger-port",
                 default=5678,
                 type=int,
-                help="The port on which to run the debug server (default: 5678)",
+                help="The port on which to run the debug server (default: %(default)s)",
                 required=False,
             )
 

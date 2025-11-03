@@ -31,7 +31,7 @@ To connect to remote PDB use for example:
 
 {cmds_hint}
 
-For more information see: https://briefcase.readthedocs.io/en/stable/how-to/debugging/console.html#bundled-app
+For more information see: https://briefcase.beeware.org/en/stable/how-to/debugging/pdb/#bundled-app
 """)
 
     # Create a RemotePdb instance
