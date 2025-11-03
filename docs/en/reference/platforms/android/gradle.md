@@ -197,6 +197,8 @@ Additional content that will be added verbatim just before the closing `</activi
 
 The base theme for the application. Defaults to `Theme.AppCompat.Light.DarkActionBar`
 
+<a name="android.build_gradle_dependencies"><!-- needed for compatibility with 0.3.25 docs build -->
+
 ### `build_gradle_dependencies`
 
 The list of libraries that should be linked into the Android application. Each library should be a versioned Maven package specifier. If unspecified, three libraries will be linked into the app:

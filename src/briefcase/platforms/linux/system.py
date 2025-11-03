@@ -57,7 +57,10 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         parser.add_argument(
             "--target",
             dest="target",
-            help="Docker base image tag for the distribution to target for the build (e.g., `ubuntu:jammy`)",
+            help=(
+                "Docker base image tag for the distribution to target for the build "
+                "(e.g., `ubuntu:jammy`)"
+            ),
             required=False,
         )
         parser.add_argument(
@@ -146,7 +149,8 @@ class LinuxSystemPassiveMixin(LinuxMixin):
         ) = self.vendor_details(freedesktop_info)
 
         self.console.info(
-            f"Targeting {app.target_vendor}:{app.target_codename} (Vendor base {app.target_vendor_base})"
+            f"Targeting {app.target_vendor}:{app.target_codename} "
+            f"(Vendor base {app.target_vendor_base})"
         )
 
         if not self.use_docker:
@@ -382,7 +386,10 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
     def docker_image_tag(self, app: AppConfig):
         """The Docker image tag for an app."""
-        return f"briefcase/{app.bundle_identifier.lower()}:{app.target_vendor}-{app.target_codename}"
+        return (
+            f"briefcase/{app.bundle_identifier.lower()}:"
+            f"{app.target_vendor}-{app.target_codename}"
+        )
 
     def verify_tools(self):
         """If we're using Docker, verify that it is available."""
@@ -476,8 +483,9 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         system_version: tuple[int, int] = ast.literal_eval(raw_system_version)
         if system_version != self.tools.sys.version_info[:2]:
             raise BriefcaseCommandError(
-                f"The version of Python being used to run Briefcase ({self.python_version_tag}) "
-                f"is not the system python3 ({system_version[0]}.{system_version[1]})."
+                f"The version of Python being used to run Briefcase "
+                f"({self.python_version_tag}) is not the system python3 "
+                f"({system_version[0]}.{system_version[1]})."
             )
 
     def _system_requirement_tools(self, app: AppConfig):
@@ -742,9 +750,10 @@ class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
                 if license_file.is_file():
                     self.tools.shutil.copy(license_file, doc_folder / "copyright")
                 else:
+                    _relative_license_path = license_file.relative_to(self.base_path)
                     raise BriefcaseCommandError(
                         f"""\
-Your `pyproject.toml` specifies a license file of {str(license_file.relative_to(self.base_path))!r}.
+Your `pyproject.toml` specifies a license file of {str(_relative_license_path)!r}.
 However, this file does not exist.
 
 Ensure you have correctly spelled the filename in your `license.file` setting.
@@ -815,7 +824,8 @@ no extension).
                     outfile.close()
             else:
                 raise BriefcaseCommandError(
-                    f"Template does not provide a manpage source file `{app.app_name}.1`"
+                    f"Template does not provide a manpage source file "
+                    f"`{app.app_name}.1`"
                 )
 
         self.console.verbose("Update file permissions...")
@@ -1118,7 +1128,8 @@ class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
                         f"Release:        {getattr(app, 'revision', 1)}%{{?dist}}",
                         f"Summary:        {app.description}",
                         "",
-                        "License:        Unknown",  # TODO: Add license information (see #1829)
+                        # TODO: Add license information (see #1829)
+                        "License:        Unknown",
                         f"URL:            {app.url}",
                         "Source0:        %{name}-%{version}.tar.gz",
                         "",
@@ -1234,12 +1245,12 @@ no extension).
 
         if changelog is None:
             raise BriefcaseCommandError(
-                """\
-Your project does not contain a changelog file with a valid file name.
-Create a changelog file with the following as its name (CHANGELOG, HISTORY, NEWS or RELEASES)
-with extensions (.md, .rst, .txt or no extension) in the same directory as your `pyproject.toml`
-with details about the release.
-"""
+                "Your project does not contain a changelog file with a valid file name."
+                "\n\n"
+                "Create a changelog file with the following as its name (CHANGELOG, "
+                "HISTORY, NEWS or RELEASES) with extensions (.md, .rst, .txt or no "
+                "extension) in the same directory as your `pyproject.toml` with "
+                "details about the release."
             )
 
         changelog_source = self.base_path / changelog

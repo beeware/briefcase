@@ -171,6 +171,9 @@ def test_binary_path_internal_app(base_command, first_app):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"'first' defines 'external_package_executable_path', but not 'external_package_path'",
+        match=(
+            r"'first' defines 'external_package_executable_path', "
+            r"but not 'external_package_path'"
+        ),
     ):
         base_command.finalize(first_app)

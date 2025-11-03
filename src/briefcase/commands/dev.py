@@ -144,7 +144,9 @@ class DevCommand(RunAppMixin, BaseCommand):
                 "import runpy, sys;"
                 "sys.path.pop(0);"
                 f"sys.argv.extend({passthrough!r});"
-                f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
+                f"runpy.run_module("
+                f'"{main_module}", run_name="__main__", alter_sys=True'
+                f")"
             ),
         ]
 
@@ -244,7 +246,8 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         else:
             raise BriefcaseCommandError(
-                "Project specifies more than one application; use --app to specify which one to start."
+                "Project specifies more than one application; "
+                "use --app to specify which one to start."
             )
 
         # Confirm host compatibility, that all required tools are available,

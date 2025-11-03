@@ -139,28 +139,32 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             slot = re.escape(insert)
 
             # Build the compiled patterns directly once per slot
-            compiled_markers = [
-                (
-                    re.compile(
-                        rf"(^[ \t]*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
-                        flags=re.MULTILINE | re.DOTALL,
-                    ),
-                    r"{indent}<!--@@ {insert}:start @@-->\n{content}{indent}<!--@@ {insert}:end @@-->",
-                    "html",
+            html_marker = (
+                re.compile(
+                    rf"(^[ \t]*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
+                    flags=re.MULTILINE | re.DOTALL,
                 ),
                 (
-                    re.compile(
-                        rf"(^[ \t]*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
-                        flags=re.MULTILINE | re.DOTALL,
-                    ),
-                    r"{indent}/*@@ {insert}:start @@*/\n{content}{indent}/*@@ {insert}:end @@*/",
-                    "css",
+                    r"{indent}<!--@@ {insert}:start @@-->\n"
+                    r"{content}{indent}<!--@@ {insert}:end @@-->"
                 ),
-            ]
+                "html",
+            )
+            css_marker = (
+                re.compile(
+                    rf"(^[ \t]*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
+                    flags=re.MULTILINE | re.DOTALL,
+                ),
+                (
+                    r"{indent}/*@@ {insert}:start @@*/\n"
+                    r"{content}{indent}/*@@ {insert}:end @@*/"
+                ),
+                "css",
+            )
 
             # Apply all matching marker styles
             any_match = False
-            for pattern, repl_tmpl, kind in compiled_markers:
+            for pattern, repl_tmpl, kind in [html_marker, css_marker]:
                 # Search for pattern within file.
                 pattern_found = pattern.search(file_text)
                 if pattern_found:
@@ -259,7 +263,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """
         # Warn on every legacy usage
         self.console.warning(
-            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} detected.\n"
+            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} "
+            f"detected.\n"
             "     Static file handling has been deprecated; this file should be "
             "converted into an insert."
         )
@@ -298,7 +303,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         if not rel_inside or rel_inside.endswith("/"):
             self.console.warning(
-                f"    {path}: skipping; not a valid insert file (empty path or directory)."
+                f"    {path}: skipping; "
+                f"not a valid insert file (empty path or directory)."
             )
             return
 
@@ -413,8 +419,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     )
                 elif implementation != "pyscript":
                     self.console.warning(
-                        "At present, 'pyscript' is the only supported web implementation. "
-                        "This project may not work correctly."
+                        "At present, 'pyscript' is the only supported web "
+                        "implementation. This project may not work correctly."
                     )
 
                 # Get pyscript version from config.toml. Use default if not present.
@@ -433,8 +439,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     ) from e
                 except (KeyError, FileNotFoundError):
                     self.console.info(
-                        f"Pyscript configuration file not found in {config_package_list[0]}. "
-                        "Using default configuration."
+                        f"Pyscript configuration file not found in "
+                        f"{config_package_list[0]}. Using default configuration."
                     )
                     pyscript_config = {}
 
@@ -663,8 +669,8 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             except OSError as e:
                 if e.errno in (errno.EADDRINUSE, errno.ENOSR):
                     self.console.warning(
-                        f"Using a system-allocated port since port {port} is already in use. "
-                        "Use -p/--port to manually specify a port."
+                        f"Using a system-allocated port since port {port} is already "
+                        f"in use. Use -p/--port to manually specify a port."
                     )
                     httpd = LocalHTTPServer(
                         self.project_path(app),
@@ -696,11 +702,13 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         except PermissionError as e:
             if port < 1024:
                 raise BriefcaseCommandError(
-                    "Unable to start web server; Permission denied. Try using a port > 1023."
+                    "Unable to start web server; Permission denied. "
+                    "Try using a port > 1023."
                 ) from e
             else:
                 raise BriefcaseCommandError(
-                    "Unable to start web server; Permission denied. Did you specify a valid host and port?"
+                    "Unable to start web server; Permission denied. "
+                    "Did you specify a valid host and port?"
                 ) from e
         except OSError as e:
             if e.errno in (errno.EADDRNOTAVAIL, errno.ENOSTR):
@@ -782,7 +790,10 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             dest="isolated",
             action="store_false",
             default=True,
-            help="Run without creating an isolated environment (not recommended for web).",
+            help=(
+                "Run without creating an isolated environment "
+                "(not recommended for web)."
+            ),
         )
 
     def run_dev_app(self, app: AppConfig, **options):
