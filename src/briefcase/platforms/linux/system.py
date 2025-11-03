@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 import gzip
 import re
 import subprocess
@@ -477,15 +476,16 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
                 "('/usr/bin/python3' does not exist)"
             )
 
-        raw_system_version = self.tools.subprocess.check_output(
-            [system_python_bin, "-c", "import sys; print(sys.version_info[:2])"]
-        )
-        system_version: tuple[int, int] = ast.literal_eval(raw_system_version)
-        if system_version != self.tools.sys.version_info[:2]:
+        running_version = self.tools.sys.version
+        system_version = self.tools.subprocess.check_output(
+            [system_python_bin, "-c", "import sys; print(sys.version)"]
+        ).strip()
+
+        if system_version != running_version:
             raise BriefcaseCommandError(
                 f"The version of Python being used to run Briefcase "
-                f"({self.python_version_tag}) is not the system python3 "
-                f"({system_version[0]}.{system_version[1]})."
+                f"({running_version!r}) is not the system python3 "
+                f"({system_version!r})."
             )
 
     def _system_requirement_tools(self, app: AppConfig):
