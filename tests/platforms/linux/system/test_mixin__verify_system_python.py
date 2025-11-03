@@ -22,8 +22,7 @@ def test_valid_python3(monkeypatch, create_command):
     )
 
     # mock the running Python's 'sys.version'
-    briefcase_version = "3.13.3 (main, Aug 14 2025, 11:53:40) [GCC 14.2.0]"
-    monkeypatch.setattr(create_command.tools.sys, "version", briefcase_version)
+    monkeypatch.setattr(create_command.tools.sys, "version", system_version)
 
     # System Python can be verified
     create_command.verify_system_python()
@@ -43,13 +42,14 @@ def test_bad_python3(monkeypatch, create_command):
         create_command.tools.subprocess, "check_output", system_python_check_output
     )
 
-    # mock the running Python's 'sys.version'
-    briefcase_version = "3.13.3 (main, Apr  9 2025, 04:03:52) [Clang 20.1.0 ]"
+    # mock the running Python's 'sys.version'. Even though the major.minor.micro version
+    # is the same, the release fingerprint is different.
+    briefcase_version = "3.13.3 (main, Apr  9 2025, 04:03:52) [Clang 20.1.0]"
     monkeypatch.setattr(create_command.tools.sys, "version", briefcase_version)
 
     expected_error = re.escape(
         "The version of Python being used to run Briefcase "
-        "('3.13.3 (main, Apr  9 2025, 04:03:52) [Clang 20.1.0 ]') "
+        "('3.13.3 (main, Apr  9 2025, 04:03:52) [Clang 20.1.0]') "
         "is not the system python3 "
         "('3.13.3 (main, Aug 14 2025, 11:53:40) [GCC 14.2.0]')."
     )
