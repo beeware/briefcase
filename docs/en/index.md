@@ -11,25 +11,23 @@ Briefcase is a tool for converting a Python project into a standalone native app
 
 It is also extensible, allowing for additional platforms and installation formats to be produced.
 
-## Documentation
-
-### [Tutorial][tutorial-index]
+## [Tutorial][tutorial-index]
 
 Get started with a hands-on introduction for beginners.
 
-### [How-to guides][how-to]
+## [How-to guides][how-to]
 
 Guides and recipes for common problems and tasks, including how to contribute.
 
-### [Topic guides][topics]
+## [Topic guides][topics]
 
 Deeper explorations of concepts and issues related to Briefcase usage.
 
-### [Reference][reference-index]
+## [Reference][reference-index]
 
 Technical reference - commands, modules, classes, methods.
 
-### [About Briefcase][about]
+## [About Briefcase][about]
 
 Frequently Asked Questions, success stories, and other details about Briefcase as a project.
 
