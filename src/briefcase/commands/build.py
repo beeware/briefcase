@@ -66,13 +66,11 @@ class BuildCommand(BaseCommand):
             state = self.create_command(app, **options)
         elif (
             update  # An explicit update has been requested
-            or update_requirements  # An explicit update of requirements has been requested
-            or update_resources  # An explicit update of resources has been requested
-            or update_support  # An explicit update of app support has been requested
-            or update_stub  # An explicit update of the stub binary has been requested
-            or (
-                app.test_mode and not no_update
-            )  # Test mode, but updates have not been disabled
+            or update_requirements  # An explicit requirements update has been requested
+            or update_resources  # An explicit resource update has been requested
+            or update_support  # An explicit app support update has been requested
+            or update_stub  # An explicit stub binary update has been requested
+            or (app.test_mode and not no_update)  # Test mode, but updates are enabled
         ):
             state = self.update_command(
                 app,
@@ -110,7 +108,8 @@ class BuildCommand(BaseCommand):
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
-        # This can't be done with argparse, because it isn't a simple mutually exclusive group.
+        # This can't be done with argparse because it isn't
+        # a simple mutually exclusive group.
         if no_update:
             if update:
                 raise BriefcaseCommandError(
@@ -143,7 +142,7 @@ class BuildCommand(BaseCommand):
             except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from None
         elif app:
             apps_to_build = {app.app_name: app}
         else:

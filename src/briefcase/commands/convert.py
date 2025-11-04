@@ -58,11 +58,13 @@ class ConvertCommand(NewCommand):
         test_path = self.base_path / test_source_dir
         if (test_entry := test_path / f"{module_name}.py").exists():
             raise ValueError(
-                f"'{test_entry}' is reserved for the briefcase test entry script, but it already exists.\n"
+                f"'{test_entry}' is reserved for the briefcase test entry script, "
+                f"but it already exists.\n"
                 "\n"
                 "Briefcase expects this file to contain the test entry script, so if "
-                f"'{self.base_path / test_source_dir}' is your test directory, you must "
-                f"rename '{test_entry}' before setting up your project for briefcase."
+                f"'{self.base_path / test_source_dir}' is your test directory, you "
+                f"must rename '{test_entry}' before setting up your project for "
+                f"briefcase."
             )
 
         return True
@@ -94,7 +96,6 @@ class ConvertCommand(NewCommand):
     def _validate_existing_app_name(self, candidate):
         """Override default validation to allow app names with a pre-existing
         directory."""
-        pass
 
     def input_app_name(self, override_value: str | None) -> str:
         """Ask about the app name, using hints from the pyproject.toml file or directory
@@ -106,10 +107,11 @@ class ConvertCommand(NewCommand):
         :returns: The app name
         """
         intro = (
-            "We need a name that can serve as a machine-readable Python package name for "
-            "your application. This name must be PEP508-compliant - that means the name "
-            "may only contain letters, numbers, hyphens and underscores; it can't contain "
-            "spaces or punctuation, and it can't start with a hyphen or underscore."
+            "We need a name that can serve as a machine-readable Python package name "
+            "for your application. This name must be PEP508-compliant - that means the "
+            "name may only contain letters, numbers, hyphens and underscores; it can't "
+            "contain spaces or punctuation, and it can't start with a hyphen or "
+            "underscore."
         )
 
         default = "hello-world"
@@ -197,10 +199,11 @@ class ConvertCommand(NewCommand):
             "working directory).\n"
             "\n"
             "For example, if you have an existing project 'myapp', and you can start "
-            "'myapp' by running 'src/myapp/__main__.py', then you should set the source "
-            "directory to 'src/myapp'.\n"
+            "'myapp' by running 'src/myapp/__main__.py', then you should set the "
+            "source directory to 'src/myapp'.\n"
             "\n"
-            f"Based on your project's folder layout, we believe it might be '{default}'."
+            f"Based on your project's folder layout, we believe it might be "
+            f"'{default}'."
         )
         return default, intro
 
@@ -229,17 +232,17 @@ class ConvertCommand(NewCommand):
         :returns: The test source directory
         """
         intro = (
-            "We also need to know the path to the test suite (if it exists). The test path "
-            "should be relative to the project root directory.\n"
+            "We also need to know the path to the test suite (if it exists). "
+            "The test path should be relative to the project root directory.\n"
             "\n"
-            "If the provided directory doesn't exist, it will be created and populated with "
-            "some default test files."
+            "If the provided directory doesn't exist, it will be created and populated "
+            "with some default test files."
         )
         if (self.base_path / "tests").is_dir():
             default = "tests"
             intro += (
                 "\n\nBased on your project's folder structure, we believe "
-                + "'tests' might be your test directory"
+                "'tests' might be your test directory"
             )
         elif (self.base_path / "test").is_dir():
             default = "test"
@@ -394,7 +397,8 @@ class ConvertCommand(NewCommand):
                 default_author = git_username
                 intro = (
                     f"{intro}\n\n"
-                    + f"Based on your git configuration, we believe it could be '{git_username}'."
+                    f"Based on your git configuration,"
+                    f" we believe it could be '{git_username}'."
                 )
 
             return self.console.text_question(
@@ -417,9 +421,9 @@ class ConvertCommand(NewCommand):
         author = self.console.selection_question(
             intro=(
                 f"{intro}\n\n"
-                + "We found these author names in the PEP621 formatted "
-                + "'pyproject.toml'. Who do you want to be credited as the author of "
-                + "this application?"
+                "We found these author names in the PEP621 formatted "
+                "'pyproject.toml'. Who do you want to be credited as the author of "
+                "this application?"
             ),
             description="Author",
             options=options,
@@ -428,7 +432,9 @@ class ConvertCommand(NewCommand):
         )
         if author == "Other":
             author = self.console.text_question(
-                intro="Who do you want to be credited as the author of this application?",
+                intro=(
+                    "Who do you want to be credited as the author of this application?"
+                ),
                 description="Author",
                 default=default_author,
                 override_value=None,
@@ -457,9 +463,9 @@ class ConvertCommand(NewCommand):
 
         intro = (
             "What email address should people use to contact the developers of this "
-            "application? This might be your own email address, or a generic contact address "
-            f"you set up specifically for this application. Based on {default_source}, "
-            f"we believe it could be '{default}'."
+            "application? This might be your own email address, or a generic contact "
+            "address you set up specifically for this application. "
+            f"Based on {default_source}, we believe it could be '{default}'."
         )
 
         author_email = self.console.text_question(
@@ -523,7 +529,8 @@ class ConvertCommand(NewCommand):
         intro = "What license do you want to use for this project's code? "
         default = None
 
-        # If there is license information in the pyproject.toml file, use that, otherwise check the license file
+        # If there is license information in the pyproject.toml file, use that,
+        # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
             default = self.get_license_from_text(self.pep621_data["license"]["text"])
             default_source = "the PEP621 formatted pyproject.toml"
@@ -639,9 +646,10 @@ class ConvertCommand(NewCommand):
         if pyproject_file.exists():
             pep621_pyproject = pyproject_file.read_text(encoding="utf-8")
 
-            # The pyproject.toml file in the target directory has no briefcase keys, so it's
-            # safe to copy-paste the text, and that way also keep formatting and comments.
-            # We merge it this way to preserve comments in the original pyproject.toml file
+            # The pyproject.toml file in the target directory has no briefcase keys, so
+            # it's safe to copy-paste the text, and that way also keep formatting and
+            # comments. We merge it this way to preserve comments in the original
+            # pyproject.toml file
             briefcase_comment = "# content below this line added by briefcase convert"
             merged_pyproject = (
                 f"{pep621_pyproject}\n\n\n{briefcase_comment}\n{briefcase_pyproject}"
@@ -728,7 +736,10 @@ class ConvertCommand(NewCommand):
 
         self.console.info()
         self.console.info(
-            f"Generating required files to set up '{context['formal_name']}' with Briefcase",
+            (
+                f"Generating required files to set up '{context['formal_name']}' "
+                f"with Briefcase"
+            ),
             prefix=context["app_name"],
         )
 
@@ -782,7 +793,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
-        project_overrides: list[str] = None,
+        project_overrides: list[str] | None = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.

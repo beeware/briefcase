@@ -20,7 +20,7 @@ def update_command(dummy_console, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "old_config, device_config_path, sim_config_path",
+    ("old_config", "device_config_path", "sim_config_path"),
     [
         (
             False,

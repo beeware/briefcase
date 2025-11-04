@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from unittest.mock import MagicMock
 
 import pytest
@@ -34,7 +35,7 @@ def test_question_sequence_bootstrap_context(
     passed_context = {}
 
     class GuiBootstrap:
-        fields = []
+        fields: Collection[str] = []
 
         def __init__(self, console, context):
             nonlocal passed_context
@@ -46,7 +47,7 @@ def test_question_sequence_bootstrap_context(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )
@@ -192,7 +193,7 @@ def test_question_sequence_with_overrides(
     new_command.console.values = []
 
     class GuiBootstrap:
-        fields = []
+        fields: Collection[str] = []
 
         def __init__(self, console, context):
             self.context = context.copy()
@@ -203,7 +204,7 @@ def test_question_sequence_with_overrides(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )
@@ -240,7 +241,7 @@ def test_question_sequence_with_bad_bootstrap_override(
     class GuiBootstrap:
         # if this custom bootstrap is chosen, the lack of
         # requires() would cause an error
-        fields = ["requires"]
+        fields: Collection[str] = ["requires"]
 
         def __init__(self, console, context):
             pass
@@ -251,7 +252,7 @@ def test_question_sequence_with_bad_bootstrap_override(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )

@@ -136,7 +136,7 @@ def test_verify_tools_download_failure(build_command):
     assert build_command.build_app.call_count == 0
 
 
-@pytest.mark.parametrize("debug_mode", (True, False))
+@pytest.mark.parametrize("debug_mode", [True, False])
 def test_build_appimage(build_command, first_app, debug_mode, tmp_path, sub_stream_kw):
     """A Linux app can be packaged as an AppImage."""
     # Enable verbose tool logging

@@ -193,7 +193,7 @@ class PackageCommand(BaseCommand):
             except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from None
         elif app:
             apps_to_package = {app.app_name: app}
         else:

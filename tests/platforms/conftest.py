@@ -37,7 +37,7 @@ def uppercase_app_config():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def underscore_app_config(first_app_config):
     return AppConfig(
         app_name="first_app",

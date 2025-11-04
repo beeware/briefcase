@@ -226,7 +226,7 @@ DOCKERIZE_TEST_PARAMS = [
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
-@pytest.mark.parametrize("in_kwargs, out_args_kwargs", DOCKERIZE_TEST_PARAMS)
+@pytest.mark.parametrize(("in_kwargs", "out_args_kwargs"), DOCKERIZE_TEST_PARAMS)
 @pytest.mark.usefixtures("mock_docker")
 def test_dockerized_complex_call(mock_tools, in_kwargs, out_args_kwargs):
     """Docker command includes combination of options."""

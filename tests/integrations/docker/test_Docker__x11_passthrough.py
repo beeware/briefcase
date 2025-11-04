@@ -40,7 +40,7 @@ XAUTH_LIST_RET_2 = (
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 @pytest.mark.parametrize(
-    "display_num, expected_socket_path",
+    ("display_num", "expected_socket_path"),
     [("1", "/tmp/.X11-unix/X1"), (2, "/tmp/.X11-unix/X2")],
 )
 @pytest.mark.usefixtures("mock_docker")
@@ -54,7 +54,7 @@ def test_x11_display_socket_path(mock_tools, display_num, expected_socket_path):
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 @pytest.mark.parametrize(
-    "path_is_socket_outcome, expected_outcome",
+    ("path_is_socket_outcome", "expected_outcome"),
     [(True, True), (OSError, False), (False, False)],
 )
 @pytest.mark.usefixtures("mock_docker")
@@ -71,7 +71,7 @@ def test_x11_is_display_socket(mock_tools, path_is_socket_outcome, expected_outc
 
 
 @pytest.mark.parametrize(
-    "connect_ret, display_num, connect_port, expected_outcome",
+    ("connect_ret", "display_num", "connect_port", "expected_outcome"),
     [
         (0, 0, 6000, True),
         (0, 100, 6100, True),
@@ -108,7 +108,7 @@ def test_x11_is_display_tcp(
 
 
 @pytest.mark.parametrize(
-    "is_socket_outcomes, is_tcp_outcomes, expected_display_num",
+    ("is_socket_outcomes", "is_tcp_outcomes", "expected_display_num"),
     [
         ([False], [False], 50),
         # Due to short-circuiting, only the first iterator is consumed if it returns False
@@ -133,7 +133,7 @@ def test_x11_allocate_display_success(
 
 
 @pytest.mark.parametrize(
-    "is_socket_outcomes, is_tcp_outcomes",
+    ("is_socket_outcomes", "is_tcp_outcomes"),
     [
         ([True] * 250, [False] * 250),
         ([False] * 250, [True] * 250),
@@ -154,7 +154,7 @@ def test_x11_allocate_display_failure(mock_tools, is_socket_outcomes, is_tcp_out
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 @pytest.mark.parametrize(
-    "display_number, expected_xauth_path",
+    ("display_number", "expected_xauth_path"),
     [
         (1, Path.cwd() / "build/.briefcase.docker.xauth.1"),
         (50, Path.cwd() / "build/.briefcase.docker.xauth.50"),
@@ -416,7 +416,7 @@ def test_x11_tcp_proxy_unknown_display_socket(mock_tools):
 
 
 @pytest.mark.parametrize(
-    "is_unix, is_tcp, current_display_num, target_display_num, connect_def",
+    ("is_unix", "is_tcp", "current_display_num", "target_display_num", "connect_def"),
     [
         (False, True, 142, 42, "TCP:localhost:{tcp_port}"),
         (False, True, 166, 66, "TCP:localhost:{tcp_port}"),
@@ -474,12 +474,14 @@ def test_x11_passthrough_missing_DISPLAY(mock_tools, DISPLAY):
     # Mock DISPLAY environment variable
     mock_tools.os.getenv.return_value = DISPLAY
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match="The DISPLAY environment variable must be set to run an app in Docker",
+    with (
+        pytest.raises(
+            BriefcaseCommandError,
+            match="The DISPLAY environment variable must be set to run an app in Docker",
+        ),
+        mock_tools.docker.x11_passthrough({}),
     ):
-        with mock_tools.docker.x11_passthrough({}):
-            pass
+        pass
 
 
 @pytest.mark.skipif(
@@ -505,9 +507,11 @@ def test_x11_passthrough_fails(mock_tools):
         side_effect=OSError("write failed")
     )
 
-    with pytest.raises(OSError, match="write failed"):
-        with mock_tools.docker.x11_passthrough({}):
-            pass
+    with (
+        pytest.raises(OSError, match="write failed"),
+        mock_tools.docker.x11_passthrough({}),
+    ):
+        pass
 
     # Proxy cleanup ran
     mock_tools.subprocess.cleanup.assert_called_once_with(
@@ -520,7 +524,7 @@ def test_x11_passthrough_fails(mock_tools):
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 @pytest.mark.parametrize(
-    "in_kwargs, out_kwargs",
+    ("in_kwargs", "out_kwargs"),
     [
         (
             {
@@ -598,7 +602,7 @@ def test_x11_passthrough_xauth_fails(mock_tools, in_kwargs, out_kwargs, capsys):
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
 @pytest.mark.parametrize(
-    "in_kwargs, out_kwargs",
+    ("in_kwargs", "out_kwargs"),
     [
         (
             {

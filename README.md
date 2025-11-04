@@ -9,8 +9,7 @@
 [![Build Status](https://github.com/beeware/briefcase/workflows/CI/badge.svg?branch=main)](https://github.com/beeware/briefcase/actions)
 [![Discord server](https://img.shields.io/discord/836455665257021440?label=Discord%20Chat&logo=discord&style=plastic)](https://beeware.org/bee/chat/)
 
-Briefcase is a tool for converting a Python project into a standalone
-native application. You can package projects for:
+Briefcase is a tool for converting a Python project into a standalone native application. You can package projects for:
 
 - Mac
 - Windows
@@ -27,49 +26,34 @@ To install Briefcase, run:
 
     $ python -m pip install briefcase
 
-If you would like a full introduction to using Briefcase, try the
-[BeeWare tutorial](https://docs.beeware.org). This tutorial walks you
-through the process of creating and packaging a new application with
-Briefcase.
+If you would like a full introduction to using Briefcase, try the [BeeWare tutorial](https://tutorial.beeware.org). This tutorial walks you through the process of creating and packaging a new application with Briefcase.
 
 ## Financial support
 
-The BeeWare project would not be possible without the generous support
-of our financial members:
+The BeeWare project would not be possible without the generous support of our financial members:
 
 [![Anaconda logo](https://beeware.org/community/members/anaconda/anaconda-large.png)](https://anaconda.com/)
 
 Anaconda Inc. - Advancing AI through open source.
 
-Plus individual contributions from [users like
-you](https://beeware.org/community/members/). If you find Briefcase, or
-other BeeWare tools useful, please consider becoming a financial member.
+Plus individual contributions from [users like you](https://beeware.org/community/members/). If you find Briefcase, or other BeeWare tools useful, please consider becoming a financial member.
 
 ## Documentation
 
-Documentation for Briefcase can be found on [Read The
-Docs](https://briefcase.readthedocs.io).
+Documentation for Briefcase can be found on [Read The Docs](https://briefcase.beeware.org).
 
 ## Community
 
-Briefcase is part of the [BeeWare suite](https://beeware.org). You can
-talk to the community through:
+Briefcase is part of the [BeeWare suite](https://beeware.org). You can talk to the community through:
 
 - [@beeware@fosstodon.org on Mastodon](https://fosstodon.org/@beeware)
 - [Discord](https://beeware.org/bee/chat/)
-- The Briefcase [GitHub Discussions
-  forum](https://github.com/beeware/briefcase/discussions)
+- The Briefcase [GitHub Discussions forum](https://github.com/beeware/briefcase/discussions)
 
-We foster a welcoming and respectful community as described in our
-[BeeWare Community Code of
-Conduct](https://beeware.org/community/behavior/).
+We foster a welcoming and respectful community as described in our [BeeWare Community Code of Conduct](https://beeware.org/community/behavior/).
 
 ## Contributing
 
-If you experience problems with Briefcase, [log them on
-GitHub](https://github.com/beeware/briefcase/issues).
+If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues).
 
-If you'd like to contribute to Briefcase development, our [contribution
-guide](https://briefcase.readthedocs.io/en/latest/how-to/contribute/index.html)
-details how to set up a development environment, and other requirements
-we have as part of our contribution process.
+If you'd like to contribute to Briefcase development, our [contribution guide](https://briefcase.beeware.org/en/latest/how-to/contribute) details how to set up a development environment, and other requirements we have as part of our contribution process.

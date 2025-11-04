@@ -21,12 +21,12 @@ def test_false_values(user_input_val):
 
 @pytest.mark.parametrize("user_input_val", ["maybe", "2", "", "help"])
 def test_invalid_values(user_input_val):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid boolean value"):
         parse_boolean(user_input_val)
 
 
 @pytest.mark.parametrize(
-    "user_input_val, expected",
+    ("user_input_val", "expected"),
     [("         yEs ", True), ("nO          ", False), ("    YEs", True)],
 )
 def test_whitespace(user_input_val, expected):

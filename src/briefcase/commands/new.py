@@ -59,7 +59,8 @@ def parse_project_overrides(project_overrides: list[str]) -> dict[str, str]:
                     )
                 if key in overrides:
                     raise BriefcaseCommandError(
-                        f"Project configuration override {key!r} specified multiple times"
+                        f"Project configuration override {key!r} specified multiple "
+                        f"times"
                     )
                 overrides[key] = value
     return overrides
@@ -83,7 +84,6 @@ class NewCommand(BaseCommand):
     def parse_config(self, filename, overrides):
         """There is no configuration when starting a new project; this implementation
         overrides the base so that no config is parsed."""
-        pass
 
     def add_options(self, parser):
         parser.add_argument(
@@ -136,7 +136,8 @@ class NewCommand(BaseCommand):
                 self.console.textwrap(
                     f"{candidate!r} is not a valid formal name.\n"
                     "\n"
-                    "Formal names must include at least one valid Python identifier character."
+                    "Formal names must include at least one valid Python identifier "
+                    "character."
                 )
             )
 
@@ -152,8 +153,8 @@ class NewCommand(BaseCommand):
                 self.console.textwrap(
                     f"A {candidate!r} directory already exists.\n"
                     f"\n"
-                    f"Select a different name, move to a different parent directory, or "
-                    f"delete the existing folder."
+                    f"Select a different name, move to a different parent directory, "
+                    f"or delete the existing folder."
                 )
             )
 
@@ -203,8 +204,8 @@ class NewCommand(BaseCommand):
                     "\n"
                     "The bundle should be a reversed domain name. It must contain at "
                     "least 2 dot-separated sections; each section may only include "
-                    "letters, numbers, and hyphens; and each section may not contain any "
-                    "reserved words (like 'switch', or 'while')."
+                    "letters, numbers, and hyphens; and each section may not contain "
+                    "any reserved words (like 'switch', or 'while')."
                 )
             )
 
@@ -330,13 +331,13 @@ class NewCommand(BaseCommand):
 
         bundle = self.console.text_question(
             intro=(
-                "Now we need a bundle identifier for your application.\n"
-                "\n"
+                "Now we need a bundle identifier for your application."
+                "\n\n"
                 "App stores need to protect against having multiple applications with "
                 "the same name; the bundle identifier is the namespace they use to "
                 "identify applications that come from you. The bundle identifier is "
-                "usually the domain name of your company or project, in reverse order.\n"
-                "\n"
+                "usually the domain name of your company or project, in reverse order."
+                "\n\n"
                 "For example, if you are writing an application for Example Corp, "
                 "whose website is example.com, your bundle would be 'com.example'. "
                 "The bundle will be combined with your application's machine readable "
@@ -371,7 +372,8 @@ class NewCommand(BaseCommand):
             default_author = git_username
             author_intro = (
                 f"{author_intro}\n\n"
-                f"Based on your git configuration, we believe it could be '{git_username}'."
+                f"Based on your git configuration, "
+                f"we believe it could be '{git_username}'."
             )
         author = self.console.text_question(
             intro=author_intro,
@@ -394,7 +396,8 @@ class NewCommand(BaseCommand):
             default_author_email = git_email
             author_email_intro = (
                 f"{author_email_intro}\n\n"
-                f"Based on your git configuration, we believe it could be '{git_email}'."
+                f"Based on your git configuration, "
+                f"we believe it could be '{git_email}'."
             )
         author_email = self.console.text_question(
             intro=author_email_intro,
@@ -598,7 +601,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
-        project_overrides: list[str] = None,
+        project_overrides: list[str] | None = None,
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.

@@ -11,7 +11,10 @@ from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux import parse_freedesktop_os_release, system
-from briefcase.platforms.linux.system import LinuxSystemRunCommand
+from briefcase.platforms.linux.system import (
+    LinuxSystemMostlyPassiveMixin,
+    LinuxSystemRunCommand,
+)
 
 
 @pytest.fixture
@@ -29,6 +32,11 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
 
     # Set the host architecture for test purposes.
     command.tools.host_arch = "wonky"
+
+    # Mock the existence of a valid system Python
+    monkeypatch.setattr(
+        LinuxSystemMostlyPassiveMixin, "verify_system_python", mock.MagicMock()
+    )
 
     # Provide Docker
     monkeypatch.setattr(
@@ -107,7 +115,7 @@ def test_unsupported_host_os(run_command, first_app, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux system projects can only be executed on Linux.",
+        match=r"Linux system projects can only be executed on Linux\.",
     ):
         run_command()
 
@@ -312,9 +320,9 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
 
-    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
+    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
@@ -402,9 +410,9 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
 
-    run_command.tools.subprocess.run.side_effect = OSError
+    run_command.tools.subprocess.run.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
@@ -504,9 +512,9 @@ def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeyp
         run_command.tools.os, "environ", {"ENVVAR": "Value", "DISPLAY": ":99"}
     )
 
-    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError
+    run_command.tools.subprocess._subprocess.Popen.side_effect = OSError("Some error")
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="Some error"):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked

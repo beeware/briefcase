@@ -59,7 +59,7 @@ def test_support_package_filename(create_command):
 
 
 @pytest.mark.parametrize(
-    "version, build, version_code",
+    ("version", "build", "version_code"),
     [
         ("0.1", None, "10000"),
         ("0.1a3", None, "10000"),
@@ -100,7 +100,7 @@ def test_version_code(create_command, first_app_config, version, build, version_
 
 
 @pytest.mark.parametrize(
-    "input, output, has_warning",
+    ("input", "output", "has_warning"),
     [
         (
             None,
@@ -193,7 +193,7 @@ if sys.platform == "win32":
     ]
 
 
-@pytest.mark.parametrize("test_sources, expected", extract_packages_params)
+@pytest.mark.parametrize(("test_sources", "expected"), extract_packages_params)
 def test_extract_packages(create_command, first_app_config, test_sources, expected):
     first_app_config.test_sources = test_sources
     context = create_command.output_format_template_context(first_app_config)
@@ -201,7 +201,7 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
 
 
 @pytest.mark.parametrize(
-    "permissions, features, context",
+    ("permissions", "features", "context"),
     [
         # No permissions
         (

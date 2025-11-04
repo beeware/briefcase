@@ -48,7 +48,10 @@ class UpgradeCommand(BaseCommand):
             "tool_list",
             metavar="tool",
             nargs="*",
-            help="The Briefcase-managed tool to upgrade. If no tool is named, all tools will be upgraded",
+            help=(
+                "The Briefcase-managed tool to upgrade. "
+                "If no tool is named, all tools will be upgraded"
+            ),
         )
 
     def get_tools_to_upgrade(self, tool_list: set[str]) -> list[ManagedTool]:
@@ -63,7 +66,8 @@ class UpgradeCommand(BaseCommand):
         if tool_list:
             if invalid_tools := tool_list - set(tool_registry):
                 raise UpgradeToolError(
-                    f"Briefcase does not know how to manage {', '.join(sorted(invalid_tools))}."
+                    "Briefcase does not know how to manage "
+                    f"{', '.join(sorted(invalid_tools))}."
                 )
             upgrade_list = {
                 tool for name, tool in tool_registry.items() if name in tool_list
@@ -84,7 +88,8 @@ class UpgradeCommand(BaseCommand):
 
         # Let the user know if any requested tools are not being managed
         if tool_list:
-            if unmanaged_tools := tool_list - {tool.name for tool in tools_to_upgrade}:
+            unmanaged_tools = tool_list - {tool.name for tool in tools_to_upgrade}
+            if unmanaged_tools:
                 error_msg = (
                     f"Briefcase is not managing {', '.join(sorted(unmanaged_tools))}."
                 )
@@ -103,7 +108,10 @@ class UpgradeCommand(BaseCommand):
         """
         if tools_to_upgrade := self.get_tools_to_upgrade(set(tool_list)):
             self.console.info(
-                f"Briefcase {'is managing' if list_tools else 'will upgrade'} the following tools:",
+                (
+                    f"Briefcase {'is managing' if list_tools else 'will upgrade'} "
+                    f"the following tools:"
+                ),
                 prefix=self.command,
             )
             for tool in tools_to_upgrade:

@@ -10,7 +10,7 @@ from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, name",
+    ("host_os", "host_arch", "name"),
     [
         ("Darwin", "arm64", "mac"),
         ("Darwin", "x86_64", "mac"),
@@ -30,7 +30,7 @@ def test_cmdline_tools_url(mock_tools, android_sdk, host_os, host_arch, name):
 
 
 @pytest.mark.parametrize(
-    "host_os, sdkmanager_name",
+    ("host_os", "sdkmanager_name"),
     [("Windows", "sdkmanager.bat"), ("NonWindows", "sdkmanager")],
 )
 def test_sdkmanager_path(mock_tools, android_sdk, host_os, sdkmanager_name):
@@ -45,7 +45,7 @@ def test_sdkmanager_path(mock_tools, android_sdk, host_os, sdkmanager_name):
 
 
 @pytest.mark.parametrize(
-    "host_os, adb_name",
+    ("host_os", "adb_name"),
     [("Windows", "adb.exe"), ("NonWindows", "adb")],
 )
 def test_adb_path(mock_tools, android_sdk, host_os, adb_name):
@@ -57,7 +57,7 @@ def test_adb_path(mock_tools, android_sdk, host_os, adb_name):
 
 
 @pytest.mark.parametrize(
-    "host_os, avdmanager_name",
+    ("host_os", "avdmanager_name"),
     [("Windows", "avdmanager.bat"), ("NonWindows", "avdmanager")],
 )
 def test_avdmanager_path(mock_tools, android_sdk, host_os, avdmanager_name):
@@ -72,7 +72,7 @@ def test_avdmanager_path(mock_tools, android_sdk, host_os, avdmanager_name):
 
 
 @pytest.mark.parametrize(
-    "host_os, emulator_name",
+    ("host_os", "emulator_name"),
     [("Windows", "emulator.exe"), ("NonWindows", "emulator")],
 )
 def test_emulator_path(mock_tools, android_sdk, host_os, emulator_name):
@@ -105,7 +105,7 @@ def test_managed_install(mock_tools, android_sdk):
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, emulator_abi",
+    ("host_os", "host_arch", "emulator_abi"),
     [
         ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),
@@ -124,7 +124,7 @@ def test_emulator_abi(mock_tools, android_sdk, host_os, host_arch, emulator_abi)
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch",
+    ("host_os", "host_arch"),
     [
         ("Darwin", "powerpc"),
         ("Windows", "arm64"),

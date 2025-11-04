@@ -1,6 +1,7 @@
 import re
 import subprocess
 import uuid
+from collections.abc import Collection
 from pathlib import Path, PurePath
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -13,9 +14,36 @@ from briefcase.integrations.wix import WiX
 DEFAULT_OUTPUT_FORMAT = "app"
 
 
+def txt_to_rtf(txt):
+    """A very simple TXT to RTF converter.
+
+    The entire document is rendered in Courier. Any blank line is interpreted as a
+    paragraph marker; any line starting with a * is rendered as a bullet. Everything
+    else is rendered verbatim in the RTF document.
+
+    :param text: The original text.
+    :returns: The text in RTF format.
+    """
+    rtf = ["{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"]
+    for line in txt.split("\n"):
+        if line.lstrip().startswith("*"):
+            rtf.append(f"\\bullet{line[line.index('*') + 1 :]} ")
+        elif line:
+            # Add a space at the end to ensure multi-line paragraphs
+            # have a word break. Strip whitespace to ensure that
+            # indented bullet paragraphs don't have extra space.
+            rtf.append(line.strip() + " ")
+        else:
+            # A blank line is a paragraph+line break.
+            rtf.append("\\par\\line")
+    rtf.append("}")
+
+    return "\n".join(rtf)
+
+
 class WindowsMixin:
     platform = "windows"
-    supported_host_os = {"Windows"}
+    supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
     platform_target_version = "0.3.24"
 
@@ -37,12 +65,35 @@ class WindowsMixin:
 
     def verify_host(self):
         super().verify_host()
-        # the stub app only supports x86-64 right now
+        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
+        # is the same (#1887). However, we can package an external x86-64 app on any
+        # build machine.
         if self.tools.host_arch != "AMD64":
-            raise UnsupportedHostError(
-                f"Windows applications cannot be built on an {self.tools.host_arch} machine."
-            )
-        # 64bit Python is required to ensure 64bit wheels are installed/created for the app
+            if all(app.external_package_path for app in self.apps.values()):
+                if not self.is_clone:
+                    self.console.warning(
+                        f"""
+*************************************************************************
+** WARNING: Possible architecture mismatch                             **
+*************************************************************************
+
+The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
+supports x86-64 installers.
+
+You are responsible for ensuring that the content of external_package_path
+is compatible with x86-64.
+
+*************************************************************************
+"""
+                    )
+            else:
+                raise UnsupportedHostError(
+                    f"Windows applications cannot be built on an "
+                    f"{self.tools.host_arch} machine."
+                )
+
+        # 64bit Python is required to ensure 64bit wheels are installed/created
+        # for the app
         if self.tools.is_32bit_python:
             raise UnsupportedHostError(
                 """\
@@ -64,6 +115,25 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.python_version_tag}.{micro}/"
             f"{self.support_package_filename(support_revision)}"
         )
+
+    def extras_path(self, app: AppConfig) -> Path:
+        """Obtain the path for extra installer content.
+
+        Extra installer content is content that needs to be inserted into the installer,
+        in addition to material in the packaging path. It is primarily used to add
+        installer scripts when packaging an externally managed app.
+
+        :param app: The config object for the app
+        :return: The full path where install scripts should be installed.
+        """
+        try:
+            extras_path = self.path_index(app, "extras_path")
+        except KeyError:
+            # For backwards compatibility - if the template doesn't define an extras
+            # path, default to `extras`.
+            extras_path = "extras"
+
+        return self.bundle_path(app) / extras_path
 
     def output_format_template_context(self, app: AppConfig):
         """Additional template context required by the output format.
@@ -132,6 +202,128 @@ class WindowsCreateCommand(CreateCommand):
 """
         )
 
+    def install_license(self, app: AppConfig):
+        """Install the license for the project as RTF content.
+
+        Currently assumes PEP621 format for `license`:
+        * If `license.file` is an RTF file, it is used verbatim
+        * If `license.file` is any other file, it is converted to RTF
+          using a simple text->RTF conversion.
+        * If `license.text` is provided, that text is converted to
+          RTF; with a warning for the case where `license.text` is
+          a one-line license name/description.
+
+        If no `license` field is defined, or it points at a file that
+        doesn't exist an error is raised.
+
+        When PEP639 support is added, we will need to adapt this method.
+
+        :param app: The config object for the app
+        """
+        installed_license = self.bundle_path(app) / "LICENSE.rtf"
+
+        if license_file := app.license.get("file"):
+            license_file = self.base_path / license_file
+            if license_file.is_file():
+                if license_file.suffix == ".rtf":
+                    self.tools.shutil.copy(license_file, installed_license)
+                    license_text = None
+                else:
+                    license_text = license_file.read_text(encoding="utf-8")
+                    installed_license.write_text(
+                        txt_to_rtf(license_text), encoding="utf-8"
+                    )
+            else:
+                raise BriefcaseCommandError(
+                    f"Your `pyproject.toml` specifies a license file of "
+                    f"{str(license_file.relative_to(self.base_path))!r}.\n"
+                    f"However, this file does not exist."
+                    f"\n\n"
+                    "Ensure you have correctly spelled the filename in your "
+                    "`license.file` setting."
+                )
+        elif license_text := app.license.get("text"):
+            if len(license_text.splitlines()) <= 1:
+                self.console.warning(
+                    """
+Your app specifies a license using `license.text`, but the value doesn't appear
+to be a full license. Briefcase will generate a `LICENSE.rtf` file for your
+project; you should ensure that the contents of this file is adequate.
+"""
+                )
+            installed_license.write_text(
+                txt_to_rtf(license_text),
+                encoding="utf-8",
+            )
+        else:
+            raise BriefcaseCommandError(
+                """\
+Your project does not contain a `license` definition.
+
+Create a file named `LICENSE` in the same directory as your `pyproject.toml`
+with your app's licensing terms, and set `license.file = 'LICENSE'` in your
+app's configuration.
+"""
+            )
+
+    def install_app_resources(self, app: AppConfig):
+        """Install Windows-specific app resources.
+
+        This includes any post-install or pre-uninstall scripts, plus converting the
+        LICENSE file into an RTF file.
+
+        :param app: The config object for the app
+        """
+        super().install_app_resources(app)
+
+        installer_path = getattr(app, "installer_path", "_installer")
+        install_scripts_path = self.extras_path(app) / installer_path
+
+        # Ensure the extras path exists, so that the path used by WiX exists
+        self.extras_path(app).mkdir(exist_ok=True, parents=True)
+
+        # Install the post-install script
+        if post_install := getattr(app, "post_install_script", None):
+            post_install_script = self.base_path / post_install
+            if post_install_script.suffix != ".bat":
+                raise BriefcaseCommandError(
+                    "Windows post-install scripts must be .bat files."
+                )
+            elif not post_install_script.is_file():
+                raise BriefcaseCommandError(
+                    f"Couldn't find post-install script {post_install}."
+                )
+
+            with self.console.wait_bar("Installing post-install script..."):
+                install_scripts_path.mkdir(exist_ok=True, parents=True)
+                self.tools.shutil.copyfile(
+                    post_install_script,
+                    install_scripts_path / "post_install.bat",
+                )
+
+        # Install the pre-uninstall script
+        if pre_uninstall := getattr(app, "pre_uninstall_script", None):
+            pre_uninstall_script = self.base_path / pre_uninstall
+            if pre_uninstall_script.suffix != ".bat":
+                raise BriefcaseCommandError(
+                    "Windows pre-uninstall scripts must be .bat files."
+                )
+            elif not pre_uninstall_script.is_file():
+                raise BriefcaseCommandError(
+                    f"Couldn't find pre-uninstall script {pre_uninstall}."
+                )
+
+            with self.console.wait_bar("Installing pre-uninstall script..."):
+                install_scripts_path.mkdir(exist_ok=True, parents=True)
+                self.tools.shutil.copyfile(
+                    pre_uninstall_script,
+                    install_scripts_path / "pre_uninstall.bat",
+                )
+
+        # Install the license.
+        with self.console.wait_bar("Installing license..."):
+            self.install_license(app)
+
 
 class WindowsRunCommand(RunCommand):
     def run_app(
@@ -154,7 +346,7 @@ class WindowsRunCommand(RunCommand):
         if app.console_app and not app.test_mode:
             self.console.info("=" * 75)
             self.tools.subprocess.run(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 encoding="UTF-8",
                 bufsize=1,
@@ -164,7 +356,7 @@ class WindowsRunCommand(RunCommand):
         else:
             # Start the app in a way that lets us stream the logs
             app_popen = self.tools.subprocess.Popen(
-                [self.binary_path(app)] + passthrough,
+                [self.binary_path(app), *passthrough],
                 cwd=self.tools.home_path,
                 encoding="UTF-8",
                 stdout=subprocess.PIPE,
@@ -214,8 +406,8 @@ class WindowsPackageCommand(PackageCommand):
         parser.add_argument(
             "--use-local-machine-stores",
             help=(
-                "Specifies the code signing certificate is stored in the Local Machine's "
-                "stores instead of the Current User's"
+                "Specifies the code signing certificate is stored in the "
+                "Local Machine's stores instead of the Current User's"
             ),
             action="store_true",
             dest="use_local_machine",
@@ -224,8 +416,8 @@ class WindowsPackageCommand(PackageCommand):
         parser.add_argument(
             "--cert-store",
             help=(
-                "The internal Windows name for the certificate store containing the certificate "
-                "for code signing; defaults to 'My' for the Personal store"
+                "The internal Windows name for the certificate store containing the "
+                "certificate for code signing; defaults to 'My' for the Personal store"
             ),
             default="My",
             required=False,
@@ -270,7 +462,8 @@ class WindowsPackageCommand(PackageCommand):
 
         if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
             raise BriefcaseCommandError(
-                f"Codesigning identify {identity!r} must be a certificate SHA-1 thumbprint."
+                f"Codesigning identify {identity!r} must be a "
+                f"certificate SHA-1 thumbprint."
             )
 
         sign_command = [
@@ -307,13 +500,13 @@ class WindowsPackageCommand(PackageCommand):
     def package_app(
         self,
         app: AppConfig,
-        identity: str = None,
+        identity: str | None = None,
         adhoc_sign: bool = False,
-        file_digest: str = None,
+        file_digest: str | None = None,
         use_local_machine: bool = False,
-        cert_store: str = None,
-        timestamp_url: str = None,
-        timestamp_digest: str = None,
+        cert_store: str | None = None,
+        timestamp_url: str | None = None,
+        timestamp_digest: str | None = None,
         **kwargs,
     ):
         """Package an application.
@@ -393,6 +586,8 @@ class WindowsPackageCommand(PackageCommand):
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",
+                        "-pdbtype",
+                        "none",
                         "-o",
                         self.distribution_path(app),
                     ],

@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "ldd_output, version",
+    ("ldd_output", "version"),
     [
         # ubuntu:focal
         (

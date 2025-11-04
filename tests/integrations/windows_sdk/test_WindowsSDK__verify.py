@@ -79,7 +79,8 @@ def test_unsupported_os(mock_tools, host_os):
 
 
 @pytest.mark.parametrize(
-    "host_arch, sdk_arch", [("AMD64", "x64"), ("ARM64", "arm64"), ("gothic", "gothic")]
+    ("host_arch", "sdk_arch"),
+    [("AMD64", "x64"), ("ARM64", "arm64"), ("gothic", "gothic")],
 )
 def test_winsdk_arch(
     mock_tools,
@@ -250,31 +251,31 @@ def test_winsdk_nonlatest_install_from_reg(
 
 
 @pytest.mark.parametrize(
-    "reg_installs, additional_installs",
+    ("reg_installs", "additional_installs"),
     [
         # One invalid registry install; no additional installs
-        [[("invalid_1", "85.0.1")], []],
+        ([("invalid_1", "85.0.1")], []),
         # One invalid registry install with missing SDK version; no additional installs
-        [[("invalid_1", "")], []],
+        ([("invalid_1", "")], []),
         # One invalid registry install but directory key lookup fails; no additional installs
-        [[("invalid_1", "85.0.1"), (FileNotFoundError, "")], []],
+        ([("invalid_1", "85.0.1"), (FileNotFoundError, "")], []),
         # One invalid registry install but version key lookup fails; no additional installs
-        [[("invalid_1", "85.0.1"), ("invalid_1", FileNotFoundError)], []],
+        ([("invalid_1", "85.0.1"), ("invalid_1", FileNotFoundError)], []),
         # Multiple invalid registry installs; no additional installs
-        [[("invalid_1", "85.0.1"), ("invalid_2", "85.0.2")], []],
-        [[("invalid_1", "85.0.0"), ("invalid_2", "86.0.2")], []],
+        ([("invalid_1", "85.0.1"), ("invalid_2", "85.0.2")], []),
+        ([("invalid_1", "85.0.0"), ("invalid_2", "86.0.2")], []),
         # One invalid registry install; one additional invalid install
-        [[("invalid_2", "85.0.1")], [("invalid_2", "85.0.2")]],
+        ([("invalid_2", "85.0.1")], [("invalid_2", "85.0.2")]),
         # One invalid registry install; multiple additional invalid installs
-        [[("invalid_3", "85.0.1")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]],
-        [[("invalid_3", "")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]],
+        ([("invalid_3", "85.0.1")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]),
+        ([("invalid_3", "")], [("invalid_3", "85.0.3"), ("invalid_3", "85.0.2")]),
         # Multiple invalid registry installs; one additional install
-        [[("invalid_4", "85.0.1"), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]],
-        [
+        ([("invalid_4", "85.0.1"), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]),
+        (
             [("invalid_4", FileNotFoundError), ("invalid_5", "85.0.3")],
             [("invalid_5", "85.0.4")],
-        ],
-        [[(FileNotFoundError, ""), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]],
+        ),
+        ([(FileNotFoundError, ""), ("invalid_5", "85.0.3")], [("invalid_5", "85.0.4")]),
     ],
 )
 def test_winsdk_invalid_install_from_reg(
@@ -426,7 +427,7 @@ def test_winsdk_invalid_install_from_default_dir(
     # Verify the install
     with pytest.raises(
         BriefcaseCommandError,
-        match="Unable to locate a suitable Windows SDK v87.0 installation.",
+        match=r"Unable to locate a suitable Windows SDK v87.0 installation\.",
     ):
         WindowsSDK.verify(mock_tools)
 

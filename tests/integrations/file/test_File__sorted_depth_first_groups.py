@@ -6,7 +6,7 @@ from ...utils import create_file
 
 
 @pytest.mark.parametrize(
-    "files, groups",
+    ("files", "groups"),
     [
         # Files in a single directory are sorted lexically into the same group
         (

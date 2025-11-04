@@ -36,12 +36,17 @@ def test_valid_app_name(new_command, name):
         "false",  # Python, Java and Javascript keyword (in different cases)
         "False",  # Python, Java and Javascript keyword (in different cases)
         "FALSE",  # Python, Java and Javascript keyword (in different cases)
-        "existing",  # pre-existing directory name
     ],
 )
 def test_invalid_app_name(new_command, name, tmp_path):
     """Test that invalid app names are rejected."""
+    with pytest.raises(ValueError, match="is not a valid app name"):
+        new_command.validate_app_name(name)
+
+
+def test_directory_already_exists(new_command, tmp_path):
+    """Test that names of existing directories are rejected."""
     (tmp_path / "existing").mkdir()
 
-    with pytest.raises(ValueError):
-        new_command.validate_app_name(name)
+    with pytest.raises(ValueError, match="directory already exists"):
+        new_command.validate_app_name("existing")

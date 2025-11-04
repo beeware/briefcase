@@ -6,7 +6,7 @@ import pytest
 from briefcase.console import LogLevel
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_run(flatpak, tool_debug_mode):
     """A Flatpak project can be executed."""
     # Enable verbose tool logging
@@ -41,7 +41,7 @@ def test_run(flatpak, tool_debug_mode):
     assert result == log_popen
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_run_with_args(flatpak, tool_debug_mode):
     """A Flatpak project can be executed with additional arguments."""
     # Enable verbose tool logging
@@ -78,7 +78,7 @@ def test_run_with_args(flatpak, tool_debug_mode):
     assert result == log_popen
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_run_non_streaming(flatpak, tool_debug_mode):
     """A Flatpak project can be executed in non-streaming mode."""
     # Enable verbose tool logging

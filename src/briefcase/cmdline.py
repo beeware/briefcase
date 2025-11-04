@@ -109,11 +109,11 @@ def parse_cmdline(args, console: Console | None = None):
     )
 
     # argparse handles `--` specially, so make the passthrough args bypass the parser.
-    def parse_known_args(args):
+    def parse_known_args(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
         args, passthrough = split_passthrough(args)
         options, extra = parser.parse_known_args(args)
         if passthrough:
-            extra += ["--"] + passthrough
+            extra += ["--", *passthrough]
         return options, extra
 
     # Use parse_known_args to ensure any extra arguments can be ignored,
@@ -147,7 +147,7 @@ def parse_cmdline(args, console: Console | None = None):
         if extra and not extra[0].startswith("-"):
             name = extra.pop(0)
             # Normalize the platform name to the registered capitalization
-            platform = {n.lower(): n for n in platforms.keys()}.get(name.lower(), name)
+            platform = {n.lower(): n for n in platforms}.get(name.lower(), name)
         else:
             platform = {
                 "darwin": "macOS",
@@ -159,11 +159,11 @@ def parse_cmdline(args, console: Console | None = None):
         try:
             platform_module = platforms[platform]
         except KeyError:
-            raise InvalidPlatformError(platform, platforms.keys())
+            raise InvalidPlatformError(platform, platforms.keys()) from None
 
         # If the output format wasn't explicitly specified, check to see
         # Otherwise, extract and use the default output_format for the platform.
-        if extra and not extra[0].startswith("-") and not extra[0] == "--":
+        if extra and not extra[0].startswith("-") and extra[0] != "--":
             output_format = extra.pop(0)
         else:
             output_format = platform_module.DEFAULT_OUTPUT_FORMAT
@@ -184,11 +184,11 @@ def parse_cmdline(args, console: Console | None = None):
             raise InvalidFormatError(
                 requested=output_format,
                 choices=list(output_formats.keys()),
-            )
+            ) from None
         except AttributeError:
             raise UnsupportedCommandError(
                 platform=platform,
                 output_format=output_format,
                 command=options.command,
-            )
+            ) from None
     return Command, extra

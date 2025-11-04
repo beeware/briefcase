@@ -4,7 +4,7 @@ from briefcase.console import InputDisabled
 
 
 @pytest.mark.parametrize(
-    "value, expected, default, transform",
+    ("value", "expected", "default", "transform"),
     [
         ("A", "A", None, None),
         ("C", "C", None, None),

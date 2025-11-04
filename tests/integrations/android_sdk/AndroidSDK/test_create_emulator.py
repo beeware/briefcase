@@ -28,7 +28,7 @@ def android_sdk(android_sdk) -> AndroidSDK:
 
 
 @pytest.mark.parametrize(
-    "host_os, host_arch, emulator_abi",
+    ("host_os", "host_arch", "emulator_abi"),
     [
         ("Darwin", "x86_64", "x86_64"),
         ("Darwin", "arm64", "arm64-v8a"),

@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from unittest.mock import MagicMock
 
 import pytest
@@ -227,7 +228,7 @@ requires = [
 base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
 
 build_gradle_dependencies = [
-    "com.google.android.material:material:1.12.0",
+    "com.google.android.material:material:1.13.0",
     # Needed for DetailedList
     # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for MapView
@@ -238,7 +239,6 @@ build_gradle_dependencies = [
 requires = [
     "toga-web~=0.5.0",
 ]
-style_framework = "Shoelace v2.3"
 """,
     }
 
@@ -330,7 +330,7 @@ system_runtime_requires = [
 """,
         "pyproject_table_linux_flatpak": """\
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "24.08"
+flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         "pyproject_table_windows": """\
@@ -629,7 +629,7 @@ linuxdeploy_plugins = [
 """,
         "pyproject_table_linux_flatpak": """\
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "24.08"
+flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         "pyproject_table_windows": """\
@@ -732,7 +732,7 @@ system_runtime_requires = [
 """,
         "pyproject_table_linux_flatpak": """\
 flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "24.08"
+flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
 """,
         "pyproject_table_windows": """\
@@ -766,7 +766,7 @@ def test_custom_bootstrap(
     """A context is create for a custom bootstrap."""
 
     class GuiBootstrap:
-        fields = ["requires", "platform"]
+        fields: Collection[str] = ["requires", "platform"]
 
         def __init__(self, console, context):
             self.console = console
@@ -790,7 +790,7 @@ def test_custom_bootstrap(
         MagicMock(
             return_value={
                 **mock_builtin_bootstraps,
-                **{"Custom GUI": GuiBootstrap},
+                "Custom GUI": GuiBootstrap,
             },
         ),
     )

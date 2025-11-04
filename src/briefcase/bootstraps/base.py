@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Collection
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -29,7 +30,7 @@ class BaseGuiBootstrap:
     # Any fields defined here must be implemented as methods that return a ``str``
     # or ``None``. Returning ``None`` omits the field as a key in the context, thereby
     # deferring the value for the field to the cookiecutter template.
-    fields: list[str] = [
+    fields: Collection[str] = [
         "app_source",
         "app_start_source",
         "pyproject_table_briefcase_extra_content",

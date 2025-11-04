@@ -6,7 +6,7 @@ from .test_WindowsSDK__verify import setup_winsdk_install
 
 
 @pytest.mark.parametrize(
-    "versions, expected",
+    ("versions", "expected"),
     [
         ([], []),
         (["85.0.1"], ["85.0.1.0"]),
