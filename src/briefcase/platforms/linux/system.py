@@ -469,16 +469,23 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
 
         Requires that the app tools have been verified.
         """
-        system_python_bin = Path("/usr/bin/python3").resolve()
-        system_version = system_python_bin.name.split(".")
-        if system_version[0] != "python3" or len(system_version) == 1:
-            raise BriefcaseCommandError("Can't determine the system python version")
+        system_python_bin = Path("/usr/bin/python3")
+        if not system_python_bin.exists():
+            raise BriefcaseCommandError(
+                "Can't determine the system python version "
+                "('/usr/bin/python3' does not exist)"
+            )
 
-        if system_version[1] != str(self.tools.sys.version_info.minor):
+        running_version = self.tools.sys.version
+        system_version = self.tools.subprocess.check_output(
+            [system_python_bin, "-c", "import sys; print(sys.version)"]
+        ).strip()
+
+        if system_version != running_version:
             raise BriefcaseCommandError(
                 f"The version of Python being used to run Briefcase "
-                f"({self.python_version_tag}) is not the system python3 "
-                f"(3.{system_version[1]})."
+                f"({running_version!r}) is not the system python3 "
+                f"({system_version!r})."
             )
 
     def _system_requirement_tools(self, app: AppConfig):
