@@ -246,6 +246,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         features = {}
 
         if x_permissions["bluetooth"]:
+            permissions["android.permission.ACCESS_COARSE_LOCATION"] = True
+            permissions["android.permission.ACCESS_FINE_LOCATION"] = True
             permissions["android.permission.BLUETOOTH"] = True
             permissions["android.permission.BLUETOOTH_ADMIN"] = True
             permissions["android.permission.BLUETOOTH_CONNECT"] = True

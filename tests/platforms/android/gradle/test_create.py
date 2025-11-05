@@ -429,6 +429,8 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                    "android.permission.ACCESS_FINE_LOCATION": True,
                     "android.permission.ACCESS_NETWORK_STATE": True,
                     "android.permission.BLUETOOTH": True,
                     "android.permission.BLUETOOTH_ADMIN": True,
