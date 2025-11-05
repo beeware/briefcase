@@ -45,7 +45,7 @@ def test_unsupported_host_os_with_docker(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
+        match=r"Linux AppImages can only be built on Linux, or on macOS using Docker\.",
     ):
         create_command()
 
@@ -58,7 +58,7 @@ def test_unsupported_host_os_without_docker(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="Linux AppImages can only be built on Linux, or on macOS using Docker.",
+        match=r"Linux AppImages can only be built on Linux, or on macOS using Docker\.",
     ):
         create_command()
 
@@ -92,7 +92,7 @@ def test_finalize_nodocker(create_command, first_app_config, capsys):
 
 
 @pytest.mark.parametrize(
-    "manylinux, tag, host_os, host_arch, is_user_mapped, context",
+    ("manylinux", "tag", "host_os", "host_arch", "is_user_mapped", "context"),
     [
         # Fallback.
         (None, None, "Linux", "x86_64", False, {"use_non_root_user": True}),

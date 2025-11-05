@@ -25,7 +25,7 @@ def norm_sp(text: str, max_spaces: int = 100) -> str:
 
 
 @pytest.mark.parametrize(
-    "show, message, expected_console_output",
+    ("show", "message", "expected_console_output"),
     [
         (True, "a line of output", "a line of output\n"),
         (False, "a line of output", ""),

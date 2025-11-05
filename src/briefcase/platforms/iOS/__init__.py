@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Collection
+
 from briefcase.integrations.xcode import Xcode
 
 DEFAULT_OUTPUT_FORMAT = "Xcode"
@@ -7,7 +9,7 @@ DEFAULT_OUTPUT_FORMAT = "Xcode"
 
 class iOSMixin:
     platform = "iOS"
-    supported_host_os = {"Darwin"}
+    supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = (
         "iOS applications require Xcode, which is only available on macOS."
     )

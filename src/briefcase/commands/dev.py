@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from briefcase.commands.run import RunAppMixin
@@ -20,14 +21,14 @@ class DevCommand(RunAppMixin, BaseCommand):
     output_format = ""
     description = "Run a Briefcase project in the dev environment."
 
-    # On macOS CoreFoundation/NSApplication will do its own independent parsing of argc/argv.
-    # This means that whatever we pass to the Python interpreter on start-up will also be
-    # visible to NSApplication which will interpret things like `-u` (used to make I/O
-    # unbuffered in CPython) as `-u [URL]` (a request to open a document by URL). This is,
-    # rather patently, Not Good.
-    # To avoid this causing unwanted hilarity, we use environment variables to configure the
-    # Python interpreter rather than command-line options.
-    DEV_ENVIRONMENT = {
+    # On macOS CoreFoundation/NSApplication will do its own independent parsing of
+    # argc/argv. This means that whatever we pass to the Python interpreter on start-up
+    # will also be visible to NSApplication which will interpret things like `-u` (used
+    # to make I/O unbuffered in CPython) as `-u [URL]` (a request to open a document by
+    # URL). This is, rather patently, Not Good.
+    # To avoid this causing unwanted hilarity, we use environment variables to configure
+    # the Python interpreter rather than command-line options.
+    DEV_ENVIRONMENT: Mapping[str, str] = {
         # Equivalent of passing "-u"
         "PYTHONUNBUFFERED": "1",
         # Equivalent of passing "-X dev"
@@ -131,7 +132,9 @@ class DevCommand(RunAppMixin, BaseCommand):
         main_module = app.main_module()
 
         # Add in the environment settings to get Python in the state we want.
-        env.update(self.DEV_ENVIRONMENT)
+        # If an environment variable is already defined, don't overwrite it.
+        for env_key, env_value in self.DEV_ENVIRONMENT.items():
+            env[env_key] = self.tools.os.environ.get(env_key, env_value)
 
         cmdline = [
             # Do not add additional switches for sys.executable; see DEV_ENVIRONMENT
@@ -141,7 +144,9 @@ class DevCommand(RunAppMixin, BaseCommand):
                 "import runpy, sys;"
                 "sys.path.pop(0);"
                 f"sys.argv.extend({passthrough!r});"
-                f'runpy.run_module("{main_module}", run_name="__main__", alter_sys=True)'
+                f"runpy.run_module("
+                f'"{main_module}", run_name="__main__", alter_sys=True'
+                f")"
             ),
         ]
 
@@ -180,7 +185,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         """Create a shell environment where PYTHONPATH points to the source directories
         described by the app config.
 
-        param app: The config object for the app
+        :param app: The config object for the app
         """
 
         env = {
@@ -230,7 +235,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         # in pyproject.toml, then we can use it as a default;
         # otherwise look for a -a/--app option.
         if len(self.apps) == 1:
-            app = list(self.apps.values())[0]
+            app = next(iter(self.apps.values()))
         elif appname:
             try:
                 app = self.apps[appname]
@@ -241,7 +246,8 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         else:
             raise BriefcaseCommandError(
-                "Project specifies more than one application; use --app to specify which one to start."
+                "Project specifies more than one application; "
+                "use --app to specify which one to start."
             )
 
         # Confirm host compatibility, that all required tools are available,

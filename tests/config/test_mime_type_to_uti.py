@@ -7,7 +7,7 @@ from briefcase.platforms.macOS import utils
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
 @pytest.mark.parametrize(
-    "mime_type, uti",
+    ("mime_type", "uti"),
     [
         (None, None),
         ("application/pdf", "com.adobe.pdf"),

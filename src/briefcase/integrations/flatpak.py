@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Collection
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -11,7 +12,7 @@ from briefcase.integrations.subprocess import SubprocessArgT
 class Flatpak(Tool):
     name = "flatpak"
     full_name = "Flatpak"
-    supported_host_os = {"Linux"}
+    supported_host_os: Collection[str] = {"Linux"}
 
     DEFAULT_REPO_ALIAS = "flathub"
     DEFAULT_REPO_URL = "https://flathub.org/repo/flathub.flatpakrepo"
@@ -39,7 +40,7 @@ class Flatpak(Tool):
                             "Briefcase requires Flatpak 1.0 or later."
                         )
                 else:
-                    raise ValueError(f"Unexpected tool name {parts[0]}")
+                    raise ValueError(f"Unexpected tool name {parts[0]}") from None
             except (ValueError, IndexError):
                 tools.console.warning(
                     """\
@@ -269,7 +270,8 @@ flatpak run {bundle_identifier}
         flatpak_run_cmd.extend([] if args is None else args)
 
         if self.tools.console.is_deep_debug:
-            # Must come before bundle identifier; otherwise, it's passed as an arg to app
+            # Must come before bundle identifier;
+            # otherwise, it's passed as an arg to app
             flatpak_run_cmd.insert(2, "--verbose")
 
         if stream_output:

@@ -35,7 +35,7 @@ def test_handle_legacy_css_warn_and_append(
             inserts=inserts,
         )
         # Pre-seed same contrib key to force append on second call
-        target_map = inserts.setdefault("static/css/briefcase.css", {}).setdefault(
+        target_map = inserts.setdefault("static/css/style.css", {}).setdefault(
             "css", {}
         )
         key = "pkg 1.0 (legacy static CSS: one.css)"
@@ -56,8 +56,9 @@ def test_handle_legacy_css_warn_and_append(
     )
 
     # Content appended
-    out = inserts["static/css/briefcase.css"]["css"][key]
-    assert "h1 { x:1; }" in out and "/*extra*/" in out
+    out = inserts["static/css/style.css"]["css"][key]
+    assert "h1 { x:1; }" in out
+    assert "/*extra*/" in out
 
 
 def test_handle_legacy_css_non_utf8_raise(build_command, tmp_path):

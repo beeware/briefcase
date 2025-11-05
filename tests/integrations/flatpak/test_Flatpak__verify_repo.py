@@ -6,7 +6,7 @@ from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_verify_repo(flatpak, tool_debug_mode):
     """A Flatpak repo can be verified."""
     # Enable verbose tool logging

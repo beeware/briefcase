@@ -6,7 +6,7 @@ from briefcase.commands.create import cookiecutter_cache_path
 
 
 @pytest.mark.parametrize(
-    "template, cache_dir",
+    ("template", "cache_dir"),
     [
         # Git/GitHub URLs
         ("https://github.com/beeware/template.git", "template"),

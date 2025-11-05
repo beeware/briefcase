@@ -298,7 +298,7 @@ def test_invalid_app_version():
 
 
 @pytest.mark.parametrize(
-    "name, module_name",
+    ("name", "module_name"),
     [
         ("myapp", "myapp"),
         ("my-app", "my_app"),
@@ -318,7 +318,7 @@ def test_module_name(name, module_name):
 
 
 @pytest.mark.parametrize(
-    "bundle, package_name",
+    ("bundle", "package_name"),
     [
         ("com.example", "com.example"),
         ("com.ex-ample", "com.ex_ample"),
@@ -338,7 +338,7 @@ def test_package_name(bundle, package_name):
 
 
 @pytest.mark.parametrize(
-    "app_name, bundle_name",
+    ("app_name", "bundle_name"),
     [
         ("my-app", "my-app"),
         ("my_app", "my-app"),
@@ -358,7 +358,7 @@ def test_bundle_name(app_name, bundle_name):
 
 
 @pytest.mark.parametrize(
-    "app_name, bundle_name",
+    ("app_name", "bundle_name"),
     [
         ("my-app", "my-app"),
         ("my_app", "my-app"),
@@ -414,3 +414,28 @@ def test_no_source_for_app():
             sources=["src/something", "src/other"],
             license={"file": "LICENSE"},
         )
+
+
+@pytest.mark.parametrize(
+    ("install_launcher", "console_app", "expected"),
+    [
+        (True, False, True),
+        (False, False, False),
+        (None, False, True),
+        #
+        (True, True, True),
+        (False, True, False),
+        (None, True, False),
+    ],
+)
+def test_install_launcher(install_launcher, console_app, expected):
+    config = AppConfig(
+        app_name="my-app",
+        version="1.2.3",
+        bundle="org.beeware",
+        description="A simple app",
+        license={"file": "LICENSE"},
+        install_launcher=install_launcher,
+        console_app=console_app,
+    )
+    assert config.install_launcher == expected

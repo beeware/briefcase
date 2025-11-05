@@ -113,7 +113,7 @@ def validate_document_type_config(document_type_id, document_type):
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide an extension."
-        )
+        ) from None
 
     try:
         if not isinstance(document_type["icon"], str):
@@ -123,7 +123,7 @@ def validate_document_type_config(document_type_id, document_type):
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not define an icon."
-        )
+        ) from None
 
     try:
         if not isinstance(document_type["description"], str):
@@ -133,18 +133,18 @@ def validate_document_type_config(document_type_id, document_type):
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide a description."
-        )
+        ) from None
 
     try:
         validate_url(document_type["url"])
     except KeyError:
         raise BriefcaseConfigError(
             f"Document type {document_type_id!r} does not provide a URL."
-        )
+        ) from None
     except ValueError as e:
         raise BriefcaseConfigError(
             f"The URL associated with document type {document_type_id!r} is invalid: {e}"
-        )
+        ) from None
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
@@ -174,7 +174,8 @@ a single value should be provided.
         else:
             uti = None
 
-        # If an UTI is provided in LSItemContentTypes, that takes precedence over a MIME type
+        # If an UTI is provided in LSItemContentTypes,
+        # that takes precedence over a MIME type
         if is_uti_core_type(uti) or ((uti := mime_type_to_uti(mime_type)) is not None):
             macOS.setdefault("is_core_type", True)
             macOS.setdefault("LSItemContentTypes", [uti])
@@ -191,15 +192,89 @@ a single value should be provided.
         pass
 
 
+def validate_install_options_config(config):
+    """Validate that a install options are valid and complete, and convert to a dict.
+
+    The dict format is required because Cookiecutter doesn't allow passing a list as a
+    context value; you have to use the reliable iteration order of a dict instead.
+    """
+    install_options = {}
+    known_names = set()
+    if config:
+        for i, config_item in enumerate(config):
+            try:
+                name = config_item["name"]
+                if not isinstance(name, str):
+                    raise BriefcaseConfigError(
+                        f"Name for install option {i} is not a string."
+                    )
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {i} does not define a `name`."
+                ) from None
+
+            # Options must be valid Python identifiers
+            if not name.isidentifier():
+                raise BriefcaseConfigError(
+                    f"{name!r} cannot be used as an install option name, "
+                    "as it is not a valid Python identifier."
+                )
+
+            # Option names may be coerced into upper case; and there are
+            # a small number of reserved identifiers.
+            if name.upper() in {"ALLUSERS"}:
+                raise BriefcaseConfigError(
+                    f"{name!r} is a reserved install option identifier."
+                )
+
+            option = {}
+            if name.upper() in known_names:
+                raise BriefcaseConfigError(
+                    f"Install option names must be unique. The name {name!r}, "
+                    f"used by install option {i}, has already been defined."
+                )
+
+            # install_options needs to retain the original name, but we need names to be
+            # case-unique as well, so we track a separate set of known upper case names.
+            known_names.add(name.upper())
+            install_options[name] = option
+
+            try:
+                # Options must have a string title.
+                option["title"] = config_item["title"]
+                if not isinstance(option["title"], str):
+                    raise BriefcaseConfigError(
+                        f"Title for install option {name!r} is not a string."
+                    )
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {name!r} does not provide a title."
+                ) from None
+
+            try:
+                # Options must have a string title.
+                option["description"] = config_item["description"]
+                if not isinstance(option["description"], str):
+                    raise BriefcaseConfigError(
+                        f"Description for install option {name!r} is not a string."
+                    )
+            except KeyError:
+                raise BriefcaseConfigError(
+                    f"Install option {name!r} does not provide a description."
+                ) from None
+
+            # Options are booleans, and are False by default
+            option["default"] = bool(config_item.get("default", False))
+
+    return install_options
+
+
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 
 
 def is_valid_bundle_identifier(bundle):
-    # Ensure the bundle identifier follows the basi
-    if not VALID_BUNDLE_RE.match(bundle):
-        return False
-
-    return True
+    """Check if the bundle identifier follows the basic reversed domain name pattern."""
+    return VALID_BUNDLE_RE.match(bundle) is not None
 
 
 # This is the canonical definition from PEP440, modified to include named groups
@@ -349,6 +424,7 @@ class AppConfig(BaseConfig):
         requires=None,
         icon=None,
         document_type=None,
+        install_option=None,
         permission=None,
         template=None,
         template_branch=None,
@@ -360,6 +436,7 @@ class AppConfig(BaseConfig):
         requirement_installer_args: list[str] | None = None,
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
+        install_launcher: bool | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -394,6 +471,9 @@ class AppConfig(BaseConfig):
         )
         self.external_package_path = external_package_path
         self.external_package_executable_path = external_package_executable_path
+        self.install_launcher = (
+            install_launcher if (install_launcher is not None) else (not console_app)
+        )
 
         self.test_mode: bool = False
 
@@ -416,6 +496,8 @@ class AppConfig(BaseConfig):
 
         for document_type_id, document_type in self.document_types.items():
             validate_document_type_config(document_type_id, document_type)
+
+        self.install_options = validate_install_options_config(install_option)
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
@@ -660,7 +742,7 @@ def parse_config(config_file, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
-    for name, config in [("project", global_config)] + list(all_apps.items()):
+    for name, config in [("project", global_config), *all_apps.items()]:
         if isinstance(config.get("license"), str):
             section_name = "the Project" if name == "project" else f"{name!r}"
             console.warning(

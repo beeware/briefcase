@@ -133,7 +133,7 @@ def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "plugin_declaration, expected_env",
+    ("plugin_declaration", "expected_env"),
     [
         # No environment variables
         (

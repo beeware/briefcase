@@ -8,7 +8,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 @pytest.mark.parametrize(
-    "device_output, expected_datetime",
+    ("device_output", "expected_datetime"),
     [
         ("2023-07-12 09:28:04", datetime(2023, 7, 12, 9, 28, 4)),
         ("2023-07-12 09:28:04\n", datetime(2023, 7, 12, 9, 28, 4)),
@@ -32,7 +32,7 @@ def test_datetime_failure_call(adb):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Error obtaining device date/time.",
+        match=r"Error obtaining device date/time\.",
     ):
         adb.datetime()
 
@@ -43,6 +43,6 @@ def test_datetime_failure_bad_value(adb):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Error obtaining device date/time.",
+        match=r"Error obtaining device date/time\.",
     ):
         adb.datetime()

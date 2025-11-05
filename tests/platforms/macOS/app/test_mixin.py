@@ -29,7 +29,7 @@ def test_unsupported_host_os(create_command, host_os):
 
     with pytest.raises(
         UnsupportedHostError,
-        match="macOS applications can only be built on macOS.",
+        match=r"macOS applications can only be built on macOS\.",
     ):
         create_command()
 

@@ -45,7 +45,7 @@ def test_verify(build_command, monkeypatch):
     assert isinstance(build_command.tools.visualstudio, VisualStudio)
 
 
-@pytest.mark.parametrize("tool_debug_mode", (True, False))
+@pytest.mark.parametrize("tool_debug_mode", [True, False])
 def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
     """The solution will be compiled when the project is built."""
     # Enable verbose tool logging

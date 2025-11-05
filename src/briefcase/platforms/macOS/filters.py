@@ -56,8 +56,8 @@ class XcodeBuildFilter:
         r"set via user default \(DVTEnableCoreDevice=disabled\)"
     )
 
-    # Xcode 14 generates the following warning when there is a passcode protected device
-    # attached to your computer, even if you're not doing anything to target that device:
+    # Xcode 14 generates the following warning when there is a passcode-protected device
+    # attached to your computer, even if you're not doing anything to target it:
     # ---------------------------------------------------------------------
     # 2023-09-27 08:38:11.865 xcodebuild[41087:25901835]  DTDKRemoteDeviceConnection:
     #   Failed to start remote service "com.apple.mobile.notification_proxy" on device.

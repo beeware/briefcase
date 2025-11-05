@@ -8,7 +8,7 @@ from briefcase.console import LogLevel
 from briefcase.integrations import subprocess
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_sub(mock_sub):
     # also mock cleanup for stream output testing
     mock_sub.cleanup = mock.MagicMock()
@@ -88,7 +88,7 @@ def test_process_exit_with_queued_output(
     mock_sub.cleanup.assert_called_once_with("testing", streaming_process)
 
 
-@pytest.mark.parametrize("stop_func_ret_val", (True, False))
+@pytest.mark.parametrize("stop_func_ret_val", [True, False])
 def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, sleep_zero, capsys):
     """All output is printed whether stop_func aborts streaming or not."""
     mock_sub.stream_output(

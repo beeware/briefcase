@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Collection
 from datetime import date, datetime
 from pathlib import Path
 
@@ -96,7 +97,7 @@ class CreateCommand(BaseCommand):
         )
 
     # app properties that won't be exposed to the context
-    hidden_app_properties = {"permission"}
+    hidden_app_properties: Collection[str] = {"permission"}
 
     @property
     def app_template_url(self) -> str:
@@ -105,7 +106,10 @@ class CreateCommand(BaseCommand):
 
     def support_package_filename(self, support_revision: str) -> str:
         """The query arguments to use in a support package query request."""
-        return f"Python-{self.python_version_tag}-{self.platform}-support.b{support_revision}.tar.gz"
+        return (
+            f"Python-{self.python_version_tag}-{self.platform}"
+            f"-support.b{support_revision}.tar.gz"
+        )
 
     def support_package_url(self, support_revision: str) -> str:
         """The URL of the support package to use for apps of this type."""
@@ -240,7 +244,8 @@ class CreateCommand(BaseCommand):
                 # Ensure the output format is in the case we expect
                 "format": self.output_format.lower(),
                 # Properties of the generating environment
-                # The full Python version string, including minor and dev/a/b/c suffixes (e.g., 3.11.0rc2)
+                # The full Python version string, including minor and dev/a/b/c suffixes
+                # (e.g., 3.11.0rc2)
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
@@ -360,7 +365,7 @@ class CreateCommand(BaseCommand):
                             platform=self.platform,
                             host_arch=self.tools.host_arch,
                             is_32bit=self.tools.is_32bit_python,
-                        )
+                        ) from None
 
                 support_package_url = self.support_package_url(support_revision)
                 custom_support_package = False
@@ -599,8 +604,8 @@ class CreateCommand(BaseCommand):
             ``app_packages`` path.
         :param install_hint: Additional hint information to provide in the exception
             message if the pip install call fails.
-        :param pip_kwargs: Any additional keyword arguments to pass to ``subprocess.run``
-            when invoking pip.
+        :param pip_kwargs: Any additional keyword arguments to pass to
+            ``subprocess.run`` when invoking pip.
         """
         try:
             self.tools[app].app_context.run(
@@ -807,7 +812,8 @@ class CreateCommand(BaseCommand):
                         source_filename = f"{source}-{variant}-{size}{target.suffix}"
                     except KeyError:
                         self.console.info(
-                            f"Unknown variant {variant!r} for {size}px {role}; using default"
+                            f"Unknown variant {variant!r} for {size}px {role}; "
+                            f"using default"
                         )
                         return
 
@@ -938,9 +944,16 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
-        # External apps (apps that define 'external_package_path') need the packaging metadata
-        # from the template, but not the app content, dependencies, support package etc.
+        # External apps (apps that define 'external_package_path') need the packaging
+        # metadata from the template, but not the app content, dependencies, support
+        # package etc. App *resources* are installed, because they might be required for
+        # the installer.
         if app.external_package_path:
+            self.console.info(
+                "Installing application resources...", prefix=app.app_name
+            )
+            self.install_app_resources(app=app)
+
             self.console.info("Removing generated app content...", prefix=app.app_name)
             self.tools.shutil.rmtree(self.bundle_package_path(app))
 
@@ -1016,7 +1029,7 @@ class CreateCommand(BaseCommand):
             except KeyError:
                 raise BriefcaseCommandError(
                     f"App '{app_name}' does not exist in this project."
-                )
+                ) from None
         elif app:
             apps_to_create = {app.app_name: app}
         else:
@@ -1044,11 +1057,32 @@ def _has_url(requirement):
     return any(
         f"{scheme}:" in requirement
         for scheme in (
-            ["http", "https", "file", "ftp"]
-            + ["git+file", "git+https", "git+ssh", "git+http", "git+git", "git"]
-            + ["hg+file", "hg+http", "hg+https", "hg+ssh", "hg+static-http"]
-            + ["svn", "svn+svn", "svn+http", "svn+https", "svn+ssh"]
-            + ["bzr+http", "bzr+https", "bzr+ssh", "bzr+sftp", "bzr+ftp", "bzr+lp"]
+            "http",
+            "https",
+            "file",
+            "ftp",
+            "git+file",
+            "git+https",
+            "git+ssh",
+            "git+http",
+            "git+git",
+            "git",
+            "hg+file",
+            "hg+http",
+            "hg+https",
+            "hg+ssh",
+            "hg+static-http",
+            "svn",
+            "svn+svn",
+            "svn+http",
+            "svn+https",
+            "svn+ssh",
+            "bzr+http",
+            "bzr+https",
+            "bzr+ssh",
+            "bzr+sftp",
+            "bzr+ftp",
+            "bzr+lp",
         )
     )
 

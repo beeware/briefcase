@@ -42,7 +42,7 @@ def parse_freedesktop_os_release(content):
                     raise ParseError(
                         "Failed to parse output of FreeDesktop os-release file; "
                         f"Line {line_number}: {e}"
-                    )
+                    ) from e
             values[name] = val
         else:
             raise ParseError(
@@ -73,7 +73,7 @@ class LinuxMixin:
         elif self.tools.is_32bit_python and self.tools.host_arch == "x86_64":
             python_download_arch = "i686"
 
-        version, datestamp = support_revision.split("+")
+        _version, datestamp = support_revision.split("+")
         return (
             "https://github.com/astral-sh/python-build-standalone/releases/download/"
             f"{datestamp}/"

@@ -46,9 +46,9 @@ def test_process_wheel(build_command, tmp_path):
     inserts = {}
     build_command._process_wheel(wheelfile=wheel_filename, inserts=inserts)
 
-    # Legacy CSS should be collected into the briefcase.css "css" insert slot
+    # Legacy CSS should be collected into the style.css "css" insert slot
     assert inserts == {
-        "static/css/briefcase.css": {
+        "static/css/style.css": {
             "css": {
                 "dummy 1.2.3 (legacy static CSS: first.css)": (
                     "span {\n  font-color: red;\n  font-size: larger\n}\n"
@@ -92,7 +92,7 @@ def test_process_wheel_deploy_inserts(build_command, tmp_path):
         extra_content=[
             ("dummy/deploy/inserts/index.html~header", "<script>alert('hi')</script>"),
             (
-                "dummy/deploy/inserts/static/css/briefcase.css~CSS",
+                "dummy/deploy/inserts/static/css/style.css~CSS",
                 "body { margin: 0; }",
             ),
         ],
@@ -108,9 +108,9 @@ def test_process_wheel_deploy_inserts(build_command, tmp_path):
     assert any("<script>" in v for v in contribs.values())
 
     # The CSS insert exists
-    assert "static/css/briefcase.css" in inserts
-    assert "CSS" in inserts["static/css/briefcase.css"]
-    css_contribs = inserts["static/css/briefcase.css"]["CSS"]
+    assert "static/css/style.css" in inserts
+    assert "CSS" in inserts["static/css/style.css"]
+    css_contribs = inserts["static/css/style.css"]["CSS"]
     assert any("body { margin: 0; }" in v for v in css_contribs.values())
 
 

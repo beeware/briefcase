@@ -25,7 +25,7 @@ def test_no_requires_python(base_command, my_app):
 
 @pytest.mark.parametrize(
     "requires_python",
-    (
+    [
         "!= 3.2",
         ">= 3.2",
         "> 3.2",
@@ -34,7 +34,7 @@ def test_no_requires_python(base_command, my_app):
         "~= {current}",
         "<= {current}",
         "< 3.100",
-    ),
+    ],
 )
 def test_requires_python_met(base_command, my_app, requires_python):
     """Validation passes if requires-python specifies a version compatible with the

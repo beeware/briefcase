@@ -31,7 +31,7 @@ def test_unsupported_os(mock_tools):
 
 
 @pytest.mark.parametrize(
-    "logging_level, handler_expected",
+    ("logging_level", "handler_expected"),
     [
         (LogLevel.DEEP_DEBUG, True),
         (LogLevel.DEBUG, False),

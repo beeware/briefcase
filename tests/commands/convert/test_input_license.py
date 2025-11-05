@@ -9,7 +9,7 @@ from ...utils import PartialMatchString
 
 @pytest.mark.parametrize("license_file_name", ["LICENSE", "LICENCE"])
 @pytest.mark.parametrize(
-    "license_text, license_id",
+    ("license_text", "license_id"),
     [
         ("MIT", "MIT"),
         ("MIT license", "MIT"),
@@ -65,7 +65,7 @@ def test_get_license_from_file(
 
 
 @pytest.mark.parametrize(
-    "license_text, license_id",
+    ("license_text", "license_id"),
     [
         ("MIT", "MIT"),
         ("MIT license", "MIT"),
@@ -123,7 +123,7 @@ def test_get_license_from_pep621_license_file(
 
 
 @pytest.mark.parametrize(
-    "license_text, license_id",
+    ("license_text", "license_id"),
     [
         ("MIT", "MIT"),
         ("MIT license", "MIT"),

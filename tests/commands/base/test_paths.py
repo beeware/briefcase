@@ -113,7 +113,7 @@ def templated_path_test(
 
 @pytest.mark.skipif(platform.system() != "Darwin", reason="macOS specific tests")
 @pytest.mark.parametrize(
-    "data_path, environ_path, expected_data_path",
+    ("data_path", "environ_path", "expected_data_path"),
     [
         (  # All default values
             None,
@@ -157,7 +157,7 @@ def test_macOS_paths(
 
 @pytest.mark.skipif(platform.system() != "Windows", reason="Windows specific tests")
 @pytest.mark.parametrize(
-    "data_path, environ_path, expected_data_path",
+    ("data_path", "environ_path", "expected_data_path"),
     [
         (  # All default values
             None,
@@ -201,7 +201,7 @@ def test_windows_paths(
 
 @pytest.mark.skipif(platform.system() != "Linux", reason="Linux specific tests")
 @pytest.mark.parametrize(
-    "data_path, environ_path, expected_data_path",
+    ("data_path", "environ_path", "expected_data_path"),
     [
         (  # All default values
             None,

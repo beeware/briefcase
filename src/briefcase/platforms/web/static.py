@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 import webbrowser
+from collections.abc import Collection
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
@@ -75,12 +76,6 @@ class StaticWebMixin:
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
 
-    def output_format_template_context(self, app: AppConfig):
-        """Add style framework details to the app template."""
-        return {
-            "style_framework": getattr(app, "style_framework", "None"),
-        }
-
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):
     description = "Update an existing static web project."
@@ -144,28 +139,32 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             slot = re.escape(insert)
 
             # Build the compiled patterns directly once per slot
-            compiled_markers = [
-                (
-                    re.compile(
-                        rf"(^[ \t]*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
-                        flags=re.MULTILINE | re.DOTALL,
-                    ),
-                    r"{indent}<!--@@ {insert}:start @@-->\n{content}{indent}<!--@@ {insert}:end @@-->",
-                    "html",
+            html_marker = (
+                re.compile(
+                    rf"(^[ \t]*)<!--@@ {slot}:start @@-->.*?<!--@@ {slot}:end @@-->",
+                    flags=re.MULTILINE | re.DOTALL,
                 ),
                 (
-                    re.compile(
-                        rf"(^[ \t]*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
-                        flags=re.MULTILINE | re.DOTALL,
-                    ),
-                    r"{indent}/*@@ {insert}:start @@*/\n{content}{indent}/*@@ {insert}:end @@*/",
-                    "css",
+                    r"{indent}<!--@@ {insert}:start @@-->\n"
+                    r"{content}{indent}<!--@@ {insert}:end @@-->"
                 ),
-            ]
+                "html",
+            )
+            css_marker = (
+                re.compile(
+                    rf"(^[ \t]*)/\*@@ {slot}:start @@\*/.*?/\*@@ {slot}:end @@\*/",
+                    flags=re.MULTILINE | re.DOTALL,
+                ),
+                (
+                    r"{indent}/*@@ {insert}:start @@*/\n"
+                    r"{content}{indent}/*@@ {insert}:end @@*/"
+                ),
+                "css",
+            )
 
             # Apply all matching marker styles
             any_match = False
-            for pattern, repl_tmpl, kind in compiled_markers:
+            for pattern, repl_tmpl, kind in [html_marker, css_marker]:
                 # Search for pattern within file.
                 pattern_found = pattern.search(file_text)
                 if pattern_found:
@@ -252,7 +251,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         package_key: str,
         inserts: dict[str, dict[str, dict[str, str]]],
     ) -> None:
-        """Handle legacy CSS under /static/*.css and add to briefcase.css.
+        """Handle legacy CSS under /static/*.css and add to style.css.
 
         Emits a deprecation warning for every legacy CSS file discovered.
 
@@ -264,7 +263,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """
         # Warn on every legacy usage
         self.console.warning(
-            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} detected.\n"
+            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} "
+            f"detected.\n"
             "     Static file handling has been deprecated; this file should be "
             "converted into an insert."
         )
@@ -274,11 +274,11 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         rel_inside = "/".join(path.parts[2:])
         contrib_key = f"{package_key} (legacy static CSS: {rel_inside})"
 
-        # Add CSS content to briefcase.css insert slot
-        target = "static/css/briefcase.css"
+        # Add CSS content to style.css insert slot
+        target = "static/css/style.css"
         insert = "css"
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-        if contrib_key in pkg_map and pkg_map[contrib_key]:
+        if pkg_map.get(contrib_key):
             pkg_map[contrib_key] += "\n" + css_text
         else:
             pkg_map[contrib_key] = css_text
@@ -303,7 +303,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         if not rel_inside or rel_inside.endswith("/"):
             self.console.warning(
-                f"    {path}: skipping; not a valid insert file (empty path or directory)."
+                f"    {path}: skipping; "
+                f"not a valid insert file (empty path or directory)."
             )
             return
 
@@ -313,7 +314,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
             )
             return
 
-        # Preserve any '~' that might exist in the target path by splitting from the right
+        # Preserve any '~' that might exist in the target path
         target, insert = rel_inside.rsplit("~", 1)
         self.console.info(f"    {path}: Adding {insert} insert for {target}")
 
@@ -321,7 +322,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         contrib_key = f"{package_key} (deploy insert: {rel_inside} from {path})"
         pkg_map = inserts.setdefault(target, {}).setdefault(insert, {})
-        if contrib_key in pkg_map and pkg_map[contrib_key]:
+        if pkg_map.get(contrib_key):
             pkg_map[contrib_key] += "\n" + text
         else:
             pkg_map[contrib_key] = text
@@ -334,7 +335,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         """Process a wheel to collect insert and style content.
 
         Scans the wheel for:
-        * Legacy CSS - .css files under /static/ added to briefcase.css.
+        * Legacy CSS - .css files under /static/ added to style.css.
         * Deploy inserts - files under /deploy/inserts/<target>~<insert>.
 
         :param wheelfile: Path to the wheel file.
@@ -409,7 +410,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 # Gather implementation from config.toml
                 implementation = config_data.get("implementation", None)
 
-                # Currently, only pyscript is supported. Warn if another implementation is found,
+                # Currently, only pyscript is supported.
+                # Warn if another implementation is found,
                 # but fail safe to using pyscript with a warning.
                 if implementation is None:
                     self.console.warning(
@@ -417,8 +419,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     )
                 elif implementation != "pyscript":
                     self.console.warning(
-                        "At present, 'pyscript' is the only supported web implementation. "
-                        "This project may not work correctly."
+                        "At present, 'pyscript' is the only supported web "
+                        "implementation. This project may not work correctly."
                     )
 
                 # Get pyscript version from config.toml. Use default if not present.
@@ -437,8 +439,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     ) from e
                 except (KeyError, FileNotFoundError):
                     self.console.info(
-                        f"Pyscript configuration file not found in {config_package_list[0]}. "
-                        "Using default configuration."
+                        f"Pyscript configuration file not found in "
+                        f"{config_package_list[0]}. Using default configuration."
                     )
                     pyscript_config = {}
 
@@ -667,8 +669,8 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             except OSError as e:
                 if e.errno in (errno.EADDRINUSE, errno.ENOSR):
                     self.console.warning(
-                        f"Using a system-allocated port since port {port} is already in use. "
-                        "Use -p/--port to manually specify a port."
+                        f"Using a system-allocated port since port {port} is already "
+                        f"in use. Use -p/--port to manually specify a port."
                     )
                     httpd = LocalHTTPServer(
                         self.project_path(app),
@@ -700,11 +702,13 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
         except PermissionError as e:
             if port < 1024:
                 raise BriefcaseCommandError(
-                    "Unable to start web server; Permission denied. Try using a port > 1023."
+                    "Unable to start web server; Permission denied. "
+                    "Try using a port > 1023."
                 ) from e
             else:
                 raise BriefcaseCommandError(
-                    "Unable to start web server; Permission denied. Did you specify a valid host and port?"
+                    "Unable to start web server; Permission denied. "
+                    "Did you specify a valid host and port?"
                 ) from e
         except OSError as e:
             if e.errno in (errno.EADDRNOTAVAIL, errno.ENOSTR):
@@ -728,7 +732,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
             # Not sure why, but this is needed to mollify coverage for the
             # "test_cleanup_server_error" case. Without this pass, a missing branch
             # is reported for the "if httpd: -> exit" branch
-            pass
+            pass  # noqa: PIE790 (unnecessary pass)
 
         return {}
 
@@ -764,7 +768,7 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     description = "Publish a static web app."
-    publication_channels = ["s3"]
+    publication_channels: Collection[str] = ["s3"]
     default_publication_channel = "s3"
 
 
@@ -786,7 +790,10 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
             dest="isolated",
             action="store_false",
             default=True,
-            help="Run without creating an isolated environment (not recommended for web).",
+            help=(
+                "Run without creating an isolated environment "
+                "(not recommended for web)."
+            ),
         )
 
     def run_dev_app(self, app: AppConfig, **options):

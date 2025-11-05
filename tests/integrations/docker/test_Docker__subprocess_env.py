@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "env, subprocess_env",
+    ("env", "subprocess_env"),
     [
         (None, {"DOCKER_CLI_HINTS": "false"}),
         ({}, {"DOCKER_CLI_HINTS": "false"}),

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import shlex
 from abc import ABC, abstractmethod
+from collections.abc import Collection
 from pathlib import Path
 from typing import TypeVar
 from urllib.parse import urlparse
@@ -32,7 +33,7 @@ class LinuxDeployBase(ABC):
     # because verification only requires downloading and permission checks, not
     # execution. The commands where the LinuxDeploy tool is actually used do the
     # additional check to ensure that if we're on macOS, we're also using Docker.
-    supported_host_os = {"Darwin", "Linux"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux"}
 
     @property
     @abstractmethod

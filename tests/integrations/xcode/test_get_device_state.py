@@ -31,7 +31,7 @@ def test_simctl_missing(mock_tools):
         cmd=["xcrun", "simctl", "list", "-j"], returncode=1
     )
 
-    with pytest.raises(BriefcaseCommandError, match="Unable to run xcrun simctl."):
+    with pytest.raises(BriefcaseCommandError, match=r"Unable to run xcrun simctl\."):
         get_device_state(mock_tools, "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D")
 
 

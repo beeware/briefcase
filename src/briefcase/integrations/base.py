@@ -8,7 +8,7 @@ import shutil
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
@@ -57,7 +57,7 @@ class Tool(ABC):
 
     name: str
     full_name: str
-    supported_host_os: set[str] = {"Darwin", "Linux", "Windows"}
+    supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
 
     def __init__(self, tools: ToolCache, **kwargs):
         self.tools = tools

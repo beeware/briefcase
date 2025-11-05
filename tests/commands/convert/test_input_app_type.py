@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "input, result",
+    ("input", "result"),
     [
         # A GUI app
         (["1"], False),
@@ -22,7 +22,7 @@ def test_app_type(convert_command, input, result):
 
 
 @pytest.mark.parametrize(
-    "override, result",
+    ("override", "result"),
     [
         # Console is any spelling generates a console app
         ("console", True),
