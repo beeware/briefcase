@@ -263,7 +263,7 @@ def test_invalid_jdk_version(mock_tools, host_os, java_home, tmp_path, capsys):
 
     # Warning is shown for invalid JAVA_HOME
     output = capsys.readouterr()
-    assert "WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
+    assert "WARNING: JAVA_HOME does not point to Java 17" in output.out
     assert output.out.endswith("****\n")
     assert output.err == ""
 
@@ -504,7 +504,7 @@ def test_successful_jdk_download(
     # Console output contains a warning about the bad JDK location
     output = capsys.readouterr()
     assert output.err == ""
-    assert "** WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
+    assert "** WARNING: JAVA_HOME does not point to Java 17" in output.out
 
     # Download was invoked
     mock_tools.file.download.assert_called_with(

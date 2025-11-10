@@ -265,7 +265,6 @@ ignore = [
 # E501: line too long, to be fixed in future changes
 "tests/*" = ["E501"]
 "src/briefcase/bootstraps/*" = ["E501"]
-"src/briefcase/commands/*" = ["E501"]
 "src/briefcase/platforms/*" = ["E501"]
 
 [tool.setuptools_scm]

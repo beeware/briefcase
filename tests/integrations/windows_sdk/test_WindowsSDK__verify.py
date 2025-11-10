@@ -324,12 +324,14 @@ def test_winsdk_invalid_install_from_reg(
     error_text = (
         "Unable to locate a suitable Windows SDK v85.0 installation.\n"
         "\n"
-        "Ensure at least v85.0.1.0 is installed and the components below are included:\n"
+        "Ensure at least v85.0.1.0 is installed\n"
+        "and the components below are included:\n"
         "\n"
         "    * Windows SDK Signing Tools for Desktop Apps\n"
         "    * Windows SDK for UWP Managed Apps\n"
         "\n"
-        "See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ to install the SDK.\n"
+        "See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/\n"
+        "to install the SDK.\n"
     )
     with pytest.raises(BriefcaseCommandError, match=re.escape(error_text)):
         WindowsSDK.verify(mock_tools)

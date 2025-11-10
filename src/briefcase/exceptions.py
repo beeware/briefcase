@@ -200,45 +200,33 @@ class MissingAppMetadata(BriefcaseCommandError):
         super().__init__(f"Unable to find {str(app_bundle_path / 'briefcase.toml')!r}")
 
 
-class MissingSupportPackage(BriefcaseCommandError):
-    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
-        self.python_version_tag = python_version_tag
-        self.platform = platform
-        self.host_arch = host_arch
-        self.is_32bit = is_32bit
+class MissingPlatformSupport(BriefcaseCommandError):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit, item):
         platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
-            f"""\
-Unable to download {platform_name} support package for Python \
-{self.python_version_tag} on {self.host_arch}.
-
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch} \
-is not yet
-supported on {platform_name}. You will need to:
-    * Use an older version of Python; or
-    * Compile your own custom support package.
-"""
+            f"Unable to download {platform_name} {item} for Python "
+            f"{python_version_tag} on {host_arch}."
+            f"\n\n"
+            f"This is likely because either Python {python_version_tag} and/or "
+            f"{host_arch} is not yet supported on {platform_name}."
+            f"\n\n"
+            f"You will need to:\n"
+            f"* Use an older version of Python; or\n"
+            f"* Compile your own {item}."
         )
 
 
-class MissingStubBinary(BriefcaseCommandError):
+class MissingSupportPackage(MissingPlatformSupport):
     def __init__(self, python_version_tag, platform, host_arch, is_32bit):
-        self.python_version_tag = python_version_tag
-        self.platform = platform
-        self.host_arch = host_arch
-        self.is_32bit = is_32bit
-        platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
-            f"""\
-Unable to download {platform_name} stub binary for Python {self.python_version_tag} on \
-{self.host_arch}.
+            python_version_tag, platform, host_arch, is_32bit, "support package"
+        )
 
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch} \
-is not yet
-supported on {platform_name}. You will need to:
-    * Use an older version of Python; or
-    * Compile your own stub binary.
-"""
+
+class MissingStubBinary(MissingPlatformSupport):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
+        super().__init__(
+            python_version_tag, platform, host_arch, is_32bit, "stub binary"
         )
 
 
