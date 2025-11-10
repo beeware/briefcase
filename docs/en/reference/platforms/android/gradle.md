@@ -239,14 +239,30 @@ A property whose sub-properties define the platform-specific permissions that wi
 
 For example, specifying:
 
-```python
-permission."android.permission.HIGH_SAMPLING_RATE_SENSORS" = true
+```toml
+permission."android.permission.HIGH_SAMPLING_RATE_SENSORS" = {}
 ```
 
 will result in an `AndroidManifest.xml` declaration of:
 
 ```xml
 <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS">
+```
+
+Using a dictionary as a value allows you to specify additional attributes that detail, for example, the API version or combined constraints.
+
+For example, specifying:
+
+```toml
+permission."android.permission.BLUETOOTH_ADMIN" = {"android:maxSdkVersion"= "30"}
+permission."android.permission.BLUETOOTH_SCAN" = {"android:usesPermissionFlags"= "neverForLocation"}
+```
+
+will result in an `AndroidManifest.xml` declaration of:
+
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>
 ```
 
 ### `target_os_version`
@@ -270,6 +286,7 @@ If you want to manually specify a version code by defining `version_code` in you
 
 Briefcase cross platform permissions map to `<uses-permission>` declarations in the app's `AppManifest.xml`:
 
+* [`permission.bluetooth`][permissionbluetooth]: `android.permission.BLUETOOTH` and other (see below for details)
 * [`permission.camera`][permissioncamera]: `android.permission.CAMERA`
 * [`permission.microphone`][permissioncamera]: `android.permission.RECORD_AUDIO`
 * [`permission.coarse_location`][permissioncoarse_location]: `android.permission.ACCESS_COARSE_LOCATION`
@@ -278,6 +295,17 @@ Briefcase cross platform permissions map to `<uses-permission>` declarations in 
 * [`permission.photo_library`][permissionphoto_library]: `android.permission.READ_MEDIA_VISUAL_USER_SELECTED`
 
 Every application will be automatically granted the `android.permission.INTERNET` and `android.permission.NETWORK_STATE` permissions.
+
+Specifying a [`permission.bluetooth`][permissionbluetooth] permission will result in the following `<uses-permission>` declarations in the app's `AppManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="30"/>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>
+<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>
+```
 
 Specifying a [`permission.camera`][permissioncamera] permission will result in the following non-required [`feature`][] definitions being implicitly added to your app:
 

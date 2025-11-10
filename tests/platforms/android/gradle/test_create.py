@@ -449,6 +449,62 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
                 "features": {},
             },
         ),
+        # Bluetooth permissions WITH coarse location permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+                "coarse_location": "I need to know roughly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {},
+                    "android.permission.INTERNET": {},
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Bluetooth permissions WITH fine location permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {},
+                    "android.permission.INTERNET": {},
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
         # Override and augment by cross-platform definitions
         (
             {

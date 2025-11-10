@@ -270,6 +270,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         # The collection of info.plist entries
         info = {}
 
+        if x_permissions["bluetooth"]:
+            info["NSBluetoothAlwaysUsageDescription"] = x_permissions["bluetooth"]
         if x_permissions["camera"]:
             info["NSCameraUsageDescription"] = x_permissions["camera"]
         if x_permissions["microphone"]:

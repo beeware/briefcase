@@ -377,6 +377,9 @@ in the macOS configuration section of your pyproject.toml.
             "com.apple.security.cs.disable-library-validation": True,
         }
 
+        if cross_platform["bluetooth"]:
+            entitlements["com.apple.security.device.bluetooth"] = True
+            info["NSBluetoothAlwaysUsageDescription"] = cross_platform["bluetooth"]
         if cross_platform["camera"]:
             entitlements["com.apple.security.device.camera"] = True
             info["NSCameraUsageDescription"] = cross_platform["camera"]

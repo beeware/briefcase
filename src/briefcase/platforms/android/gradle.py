@@ -279,11 +279,19 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             permissions["android.permission.ACCESS_FINE_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
+            # We're good with the location. So we can also use BLUETOOTH_SCAN.
+            bt_scan_perm = permissions.get("android.permission.BLUETOOTH_SCAN")
+            if bt_scan_perm:
+                bt_scan_perm.pop("android:usesPermissionFlags", None)
 
         if x_permissions["coarse_location"]:
             permissions["android.permission.ACCESS_COARSE_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
+            # We're good with the location. So we can also use BLUETOOTH_SCAN.
+            bt_scan_perm = permissions.get("android.permission.BLUETOOTH_SCAN")
+            if bt_scan_perm:
+                bt_scan_perm.pop("android:usesPermissionFlags", None)
 
         if x_permissions["background_location"]:
             permissions["android.permission.ACCESS_BACKGROUND_LOCATION"] = {}
