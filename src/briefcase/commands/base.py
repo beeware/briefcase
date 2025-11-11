@@ -1038,7 +1038,10 @@ any compatibility problems, and then add the compatibility declaration.
             const="pdb",
             choices=debugger_names,
             metavar="DEBUGGER",
-            help=f"{context_label} the app with the specified debugger. One of %(choices)s (default: %(const)s)",
+            help=(
+                f"{context_label} the app with the specified debugger. "
+                f"One of %(choices)s (default: %(const)s)"
+            ),
         )
 
         if run_cmd:
