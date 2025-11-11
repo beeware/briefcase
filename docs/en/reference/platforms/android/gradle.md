@@ -301,7 +301,7 @@ Specifying a [`permission.bluetooth`][permissionbluetooth] permission will resul
 * `android.permission.ACCESS_COARSE_LOCATION`, with an attribute declaration of `android:maxSdkVersion="30"`. If `permission.coarse_location` is defined, the attribute declaration will be omitted
 * `android.permission.ACCESS_FINE_LOCATION`, with an attribute declaration of `android:maxSdkVersion="30"`. If `permission.coarse_location` is defined, the attribute declaration will be omitted
 * `android.permission.BLUETOOTH`, with an attribute declaration of `android:maxSdkVersion="30"`
-* `android.permission.BLUETOOTH_ADMIN", with an attribute declaration of `android:maxSdkVersion="30"`
+* `android.permission.BLUETOOTH_ADMIN"`, with an attribute declaration of `android:maxSdkVersion="30"`
 * `android.permission.BLUETOOTH_CONNECT`
 * `android.permission.BLUETOOTH_SCAN`, with an attribute declaration of `android:usesPermissionFlags="neverForLocation"`. If `permission.fine_location` or `permission.coarse_location` is defined, the attribute declaration will be omitted.
 
