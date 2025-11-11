@@ -224,7 +224,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         extract_sources = app.test_sources or []
 
         # In debug mode extract all source packages so that the debugger can get the source code
-        # at runtime (eg. via 'll' in pdb).
+        # at runtime. This is necessary for setting breakpoints in VSCode or when using 'll' in pdb.
         if app.debugger:
             extract_sources.extend(app.sources)
 
