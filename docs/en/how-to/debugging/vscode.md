@@ -59,7 +59,7 @@ Running the app in debug mode will automatically start the `debugpy` debugger an
             "connect": {
                 "host": "localhost",
                 "port": 5678
-            }
+            },
             "justMyCode": false
         }
     ]
