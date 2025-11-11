@@ -298,14 +298,12 @@ Every application will be automatically granted the `android.permission.INTERNET
 
 Specifying a [`permission.bluetooth`][permissionbluetooth] permission will result in the following `<uses-permission>` declarations in the app's `AppManifest.xml`:
 
-```xml
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="30"/>
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>
-<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
-<uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
-<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>
-```
+* `android.permission.ACCESS_COARSE_LOCATION`, with an attribute declaration of `android:maxSdkVersion="30"`. If `permission.coarse_location` is defined, the attribute declaration will be omitted
+* `android.permission.ACCESS_FINE_LOCATION`, with an attribute declaration of `android:maxSdkVersion="30"`. If `permission.coarse_location` is defined, the attribute declaration will be omitted
+* `android.permission.BLUETOOTH`, with an attribute declaration of `android:maxSdkVersion="30"`
+* `android.permission.BLUETOOTH_ADMIN", with an attribute declaration of `android:maxSdkVersion="30"`
+* `android.permission.BLUETOOTH_CONNECT`
+* `android.permission.BLUETOOTH_SCAN`, with an attribute declaration of `android:usesPermissionFlags="neverForLocation"`. If `permission.fine_location` or `permission.coarse_location` is defined, the attribute declaration will be omitted.
 
 Specifying a [`permission.camera`][permissioncamera] permission will result in the following non-required [`feature`][] definitions being implicitly added to your app:
 
