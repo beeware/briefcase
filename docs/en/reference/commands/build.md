@@ -105,7 +105,7 @@ Currently the following debuggers are supported:
 
 If calling only `--debug` without selecting a debugger explicitly, `pdb` is used as default.
 
-This is an **experimental** new feature, that is currently only supported on Windows and macOS.
+This is an **experimental** new feature, that is currently only supported on Windows, macOS and iOS.
 
 This option may slow down the app a little bit.
 

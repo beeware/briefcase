@@ -8,7 +8,7 @@ Debugging a development app is quite easy. Just add `breakpoint()` inside your c
 
 ## Bundled App
 
-It is also possible to debug a bundled app. This is currently still an **experimental feature** that is only supported on Windows and macOS.
+It is also possible to debug a bundled app. This is currently still an **experimental feature** that is only supported on Windows, macOS and iOS.
 
 To debug a bundled app, at first you have to add `breakpoint()` somewhere in your code, where the debugger should halt.
 
