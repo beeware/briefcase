@@ -202,6 +202,10 @@ class MissingAppMetadata(BriefcaseCommandError):
 
 class MissingPlatformSupport(BriefcaseCommandError):
     def __init__(self, python_version_tag, platform, host_arch, is_32bit, item):
+        self.python_version_tag = python_version_tag
+        self.platform = platform
+        self.host_arch = host_arch
+        self.is_32bit = is_32bit
         platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
             f"Unable to download {platform_name} {item} for Python "
