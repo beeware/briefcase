@@ -256,16 +256,16 @@ extend-select = [
     "SIM",    # flake8-simplify
 ]
 
-# Below is a list of ignored rules.  Many (if not all) of these have been disabled
-# to facilitate a smooth transition from tools like black and isort to ruff, where
-# instances of these errors were caught.  Many if not all of these are candidates
-# for future fixes throughout the project.
 ignore = [
-    "E501",    # line length
     "SIM105",  # use `contextlib.suppress` (too opinionated)
     "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# E501: line too long, to be fixed in future changes
+"tests/*" = ["E501"]
+"src/briefcase/bootstraps/*" = ["E501"]
+"src/briefcase/platforms/*" = ["E501"]
 
 [tool.setuptools_scm]
 # To enable SCM versioning, we need an empty tool configuration for setuptools_scm

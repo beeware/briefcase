@@ -238,7 +238,10 @@ class File(Tool):
                 # attempt exceeds 20 redirects, Briefcase probably needs to re-evaluate
                 # the URLs it is using for that download and ideally find a starting
                 # point that won't have so many redirects.
-                hint = "exceeded redirects when downloading the file.\n\nPlease report this as a bug to Briefcase."
+                hint = (
+                    "exceeded redirects when downloading the file.\n\n"
+                    "Please report this as a bug to Briefcase."
+                )
             elif isinstance(e, httpx.DecodingError):
                 hint = "the server sent a malformed response."
             elif isinstance(e, httpx.ConnectError):
