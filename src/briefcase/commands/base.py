@@ -22,6 +22,8 @@ from packaging.specifiers import InvalidSpecifier, Specifier
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
+from briefcase.debuggers import get_debugger, get_debuggers
+
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
@@ -136,6 +138,8 @@ class BaseCommand(ABC):
     output_format: str
     # supports passing extra command line arguments to subprocess
     allows_passthrough = False
+    # supports remote debugging
+    supports_debugger = False
     # if specified for a platform, then any template for that platform must declare
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
@@ -685,7 +689,14 @@ a custom location for Briefcase's tools.
         """
         return
 
-    def finalize(self, app: AppConfig | None = None, test_mode: bool = False):
+    def finalize(
+        self,
+        app: AppConfig | None = None,
+        test_mode: bool = False,
+        debugger: str | None = None,
+        debugger_host: str | None = None,
+        debugger_port: int | None = None,
+    ):
         """Finalize Briefcase configuration.
 
         This will:
@@ -693,11 +704,16 @@ a custom location for Briefcase's tools.
         1. Ensure that the host has been verified
         2. Ensure that the platform tools have been verified
         3. Ensure that app configurations have been finalized.
+        4. Ensure that the debugger is configured.
 
         App finalization will only occur once per invocation.
 
         :param app: If provided, the specific app configuration
             to finalize. By default, all apps will be finalized.
+        :param test_mode: Specify if the app is running in test mode
+        :param debugger: The debugger that should be used
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
         """
         self.verify_host()
         self.verify_tools()
@@ -705,6 +721,11 @@ a custom location for Briefcase's tools.
         apps = self.apps.values() if app is None else [app]
         for app in apps:
             if hasattr(app, "__draft__"):
+                if debugger and debugger != "":
+                    app.debugger = get_debugger(debugger)
+                    app.debugger_host = debugger_host
+                    app.debugger_port = debugger_port
+
                 app.test_mode = test_mode
                 self.finalize_app_config(app)
                 delattr(app, "__draft__")
@@ -997,6 +1018,46 @@ any compatibility problems, and then add the compatibility declaration.
             action="store_true",
             help=f"{context_label} the app in test mode",
         )
+
+    def _add_debug_options(self, parser, context_label, run_cmd: bool = False):
+        """Internal utility method for adding common debug-related options.
+
+        :param parser: The parser to which options should be added.
+        :param context_label: Label text for commands; the capitalized action being
+            performed (e.g., "Build", "Run",...)
+        """
+        debuggers = get_debuggers()
+        debugger_names = list(reversed(debuggers.keys()))
+
+        parser.add_argument(
+            "--debug",
+            dest="debugger",
+            nargs="?",
+            default=None,
+            const="pdb",
+            choices=debugger_names,
+            metavar="DEBUGGER",
+            help=(
+                f"{context_label} the app with the specified debugger. "
+                f"One of %(choices)s (default: %(const)s)"
+            ),
+        )
+
+        if run_cmd:
+            parser.add_argument(
+                "--debugger-host",
+                default="localhost",
+                help="The host on which to run the debug server (default: %(default)s)",
+                required=False,
+            )
+            parser.add_argument(
+                "-dp",
+                "--debugger-port",
+                default=5678,
+                type=int,
+                help="The port on which to run the debug server (default: %(default)s)",
+                required=False,
+            )
 
     def add_options(self, parser):
         """Add any options that this command needs to parse from the command line.

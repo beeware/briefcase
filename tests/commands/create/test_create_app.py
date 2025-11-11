@@ -18,7 +18,7 @@ def test_create_app(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -59,7 +59,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -194,7 +194,7 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
