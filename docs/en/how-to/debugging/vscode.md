@@ -30,7 +30,7 @@ For more details about the VS Code configurations in the `.vscode/launch.json` f
 
 ## Bundled App
 
-It is also possible to debug a bundled app. This is currently still an **experimental feature** that is only supported on Windows and macOS.
+It is also possible to debug a bundled app. This is currently still an **experimental feature** that is only supported on Windows, macOS and iOS.
 
 To debug a bundled app a piece of the debugger has to be embedded into your app. This is done via:
 
