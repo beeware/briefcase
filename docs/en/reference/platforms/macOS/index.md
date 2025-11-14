@@ -218,13 +218,11 @@ For more details on macOS document type declarations, see the following web page
 
 ## Permissions
 
-### `macOS`
-
 Briefcase cross platform permissions map to a combination of [`info`][] and [`entitlement`][] keys:
 
-- [`permission.microphone`][permissionmicrophone]: an [`info`][] entry for `NSMicrophoneUsageDescription`; and an [`entitlement`][] of `com.apple.security.device.audio-input`
 - [`permission.bluetooth`][permissionbluetooth]: an [`info`][] entry for `NSBluetoothAlwaysUsageDescription`; and an [`entitlement`][] of `com.apple.security.device.bluetooth`
 - [`permission.camera`][permissioncamera]: an [`info`][] entry for `NSCameraUsageDescription`; and an [`entitlement`][] of `com.apple.security.device.camera`
+- [`permission.microphone`][permissionmicrophone]: an [`info`][] entry for `NSMicrophoneUsageDescription`; and an [`entitlement`][] of `com.apple.security.device.audio-input`
 - [`permission.coarse_location`][permissioncoarse_location]: an [`info`][] entry for `NSLocationUsageDescription` (ignored if [`permission.background_location`][permissionbackground_location] or [`permission.fine_location`][permissionfine_location] is defined); plus an entitlement of `com.apple.security.personal-information.location`
 - [`permission.fine_location`][permissionfine_location]: an [`info`][] entry for `NSLocationUsageDescription`(ignored if [`permission.background_location`][permissionbackground_location] is defined); plus an [`entitlement`][] of `com.apple.security.personal-information.location`
 - [`permission.background_location`][permissionbackground_location]: an [`info`][] entry for `NSLocationUsageDescription`; plus an [`entitlement`][] of `com.apple.security.personal-information.location`
