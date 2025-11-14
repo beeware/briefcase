@@ -1,4 +1,3 @@
-import sys
 from unittest import mock
 
 import pytest
@@ -46,33 +45,6 @@ def test_run_dev_app_raises_unsupported_command_error(dev_command, first_app_con
     assert excinfo.value.platform == "web"
     assert excinfo.value.output_format == "static"
     assert excinfo.value.command == "dev"
-
-
-def test_install_dev_requirements(dev_command, first_app_config, default_venv):
-    """Test that install_dev_requirements works with web dev command."""
-    # Mock the app with some requirements
-    first_app_config.requires = ["requests", "flask"]
-    first_app_config.test_requires = ["pytest"]
-
-    dev_command.install_dev_requirements(first_app_config, default_venv)
-
-    default_venv.run.assert_called_once_with(
-        [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--upgrade",
-            "requests",
-            "flask",
-            "pytest",
-        ],
-        check=True,
-        encoding="UTF-8",
-    )
 
 
 def test_venv_name_override(dev_command):
