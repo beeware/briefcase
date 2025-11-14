@@ -379,6 +379,10 @@ Applications may also need to declare the permissions they require. Permissions 
 
 Briefcase maintains a set of cross-platform permissions:
 
+#### `permission.bluetooth`
+
+Permission to connect to an external device via Bluetooth.
+
 #### `permission.camera`
 
 Permission to access the camera to take photos or video.
