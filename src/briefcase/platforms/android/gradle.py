@@ -220,20 +220,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
-        # Extract test packages, to enable features like test discovery and assertion rewriting.
-        extract_sources = app.test_sources or []
-
-        # In debug mode extract all source packages so that the debugger can get the source code
-        # at runtime. This is necessary for setting breakpoints in VSCode or when using 'll' in pdb.
-        if app.debugger:
-            extract_sources.extend(app.sources)
-
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
-            "extract_packages": ", ".join(
-                [f'"{name}"' for path in extract_sources if (name := Path(path).name)]
-            ),
             "build_gradle_dependencies": {"implementation": dependencies},
         }
 
@@ -310,6 +299,11 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     def metadata_resource_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
+    def metadata_extract_packages_path(self, app: AppConfig):
+        return self.bundle_path(app) / self.path_index(
+            app, "metadata_extract_packages_path"
+        )
+
     def update_app_metadata(self, app: AppConfig):
         with (
             self.console.wait_bar("Setting main module..."),
@@ -324,6 +318,23 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 </resources>
 """
             )
+
+        with (
+            self.console.wait_bar("Setting packages to extract..."),
+            self.metadata_extract_packages_path(app).open("w", encoding="utf-8") as f,
+        ):
+            if app.debugger:
+                # In debug mode extract all source packages so that the debugger can get the source code
+                # at runtime. This is necessary for setting breakpoints in VSCode.
+                extract_packages = ["*"]
+            else:
+                # Extract test packages, to enable features like test discovery and assertion rewriting.
+                extract_sources = app.test_sources or []
+                extract_packages = [
+                    name for path in extract_sources if (name := Path(path).name)
+                ]
+
+            f.write("\n".join(extract_packages))
 
     def build_app(self, app: AppConfig, **kwargs):
         """Build an application.

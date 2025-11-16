@@ -50,6 +50,7 @@ def first_app_generated(first_app_config, tmp_path):
 app_packages_path="app_packages"
 support_path="support"
 metadata_resource_path="res/briefcase.xml"
+metadata_extract_packages_path = "app/extract-packages.txt"
 """,
     )
 
@@ -63,5 +64,17 @@ metadata_resource_path="res/briefcase.xml"
         / "res"
         / "briefcase.xml",
         """<resources></resources>""",
+    )
+
+    create_file(
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "android"
+        / "gradle"
+        / "app"
+        / "extract-packages.txt",
+        "something-to-be-overwritten",
     )
     return first_app_config

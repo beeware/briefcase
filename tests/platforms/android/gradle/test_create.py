@@ -154,60 +154,6 @@ def test_build_gradle_dependencies(
     ) == has_warning
 
 
-extract_packages_params = [
-    ([], ""),
-    ([""], ""),
-    (["one"], '"one"'),
-    (["one/two"], '"two"'),
-    (["one//two"], '"two"'),
-    (["one/two/three"], '"three"'),
-    (["one", "two"], '"one", "two"'),
-    (["one", "two", "three"], '"one", "two", "three"'),
-    (["one/two", "three/four"], '"two", "four"'),
-    (["/leading"], '"leading"'),
-    (["/leading/two"], '"two"'),
-    (["/leading/two/three"], '"three"'),
-    (["trailing/"], '"trailing"'),
-    (["trailing//"], '"trailing"'),
-    (["trailing/two/"], '"two"'),
-]
-
-# Handle differences in UNC path parsing (https://github.com/python/cpython/pull/100351).
-extract_packages_params += [
-    (
-        ["//leading"],
-        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else '"leading"',
-    ),
-    (
-        ["//leading/two"],
-        "" if sys.platform == "win32" else '"two"',
-    ),
-    (["//leading/two/three"], '"three"'),
-    (["//leading/two/three/four"], '"four"'),
-]
-
-if sys.platform == "win32":
-    extract_packages_params += [
-        ([path.replace("/", "\\") for path in test_sources], expected)
-        for test_sources, expected in extract_packages_params
-    ]
-
-
-@pytest.mark.parametrize(("test_sources", "expected"), extract_packages_params)
-def test_extract_packages(create_command, first_app_config, test_sources, expected):
-    first_app_config.test_sources = test_sources
-    context = create_command.output_format_template_context(first_app_config)
-    assert context["extract_packages"] == expected
-
-
-def test_extract_packages_debugger(create_command, first_app_config, dummy_debugger):
-    first_app_config.test_sources = ["one", "two", "three"]
-    first_app_config.sources = ["four", "five", "six"]
-    first_app_config.debugger = dummy_debugger
-    context = create_command.output_format_template_context(first_app_config)
-    assert context["extract_packages"] == '"one", "two", "three", "four", "five", "six"'
-
-
 @pytest.mark.parametrize(
     ("permissions", "features", "context"),
     [
