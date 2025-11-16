@@ -324,8 +324,8 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
             self.metadata_extract_packages_path(app).open("w", encoding="utf-8") as f,
         ):
             if app.debugger:
-                # In debug mode extract all source packages so that the debugger can get the source code
-                # at runtime. This is necessary for setting breakpoints in VSCode.
+                # In debug mode include the .py files and extract all of them so that the debugger can get
+                # the source code at runtime. This is e.g. necessary for setting breakpoints in VS Code.
                 extract_packages = ["*"]
             else:
                 # Extract test packages, to enable features like test discovery and assertion rewriting.
