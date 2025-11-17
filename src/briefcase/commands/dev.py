@@ -78,10 +78,10 @@ class DevCommand(RunAppMixin, BaseCommand):
         )
 
     def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
-        """Install the requirements for the app dev. Local dependencies are editable
-        installed.
+        """Install the requirements for the app dev.
 
-        This will always include test requirements, if specified.
+        This will always include test requirements, if specified. Local dependencies are
+        installed editable.
 
         :param app: The config object for the app
         :param venv: The context object used to run commands inside the virtual
@@ -97,7 +97,10 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         sorted_requires = []
         for req in requires:
-            if _is_local_path(req):
+            # Any requirement that is a local path, but *not* a reference to an archive
+            # file (zip, whl, etc), can be installed editable. If in doubt, install
+            # non-editable.
+            if _is_local_path(req) and not _is_archive(req):
                 sorted_requires.extend(["-e", req])
             else:
                 sorted_requires.append(req)
@@ -296,3 +299,15 @@ class DevCommand(RunAppMixin, BaseCommand):
                     passthrough=[] if passthrough is None else passthrough,
                     **options,
                 )
+
+
+def _is_archive(filename):
+    """Determine if the file is an archive file.
+
+    :param filename: The path to check
+    :returns: True if the file is an archive.
+    """
+    return any(
+        filename.endswith(ext)
+        for ext in [".tar.gz", ".tar.bz2", ".tar", ".zip", ".whl"]
+    )

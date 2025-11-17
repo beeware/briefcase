@@ -46,41 +46,72 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
     )
 
 
-def test_install_requirements_path_formats(dev_command, first_app):
+@pytest.mark.parametrize(
+    ("requirement", "editable"),
+    (
+        [
+            # Relative paths and single level
+            ("./current-dir", True),
+            ("../parent-dir", True),
+            # Relative paths and multiple levels
+            ("../../grandparent/package", True),
+            ("./deeply/nested/package", True),
+            ("../sibling/package", True),
+            # Simple relative paths
+            ("folder/package", True),
+            ("src/mypackage", True),
+            # Absolute paths
+            ("/absolute/path", True),
+            # SCM URLs (should NOT get -e for now):
+            ("git+https://github.com/user/repo.git", False),
+            ("git+ssh://git@github.com/user/repo.git", False),
+            ("hg+https://bitbucket.org/user/repo", False),
+            ("git+https://github.com/user/repo.git@1.2.3", False),
+            ("SomeProject@git+https://github.com/user/repo.git", False),
+            ("SomeProject@git+https://github.com/user/repo.git@branch", False),
+            (
+                "SomeProject@git+https://github.com/user/repo.git#subdirectory=sub_dir",
+                False,
+            ),
+            # Archives (should NOT get -e):
+            ("./local/package.tar.gz", False),
+            ("./local/package.zip", False),
+            ("./local/package.whl", False),
+            ("./local/package.tar.bz2", False),
+            ("./local/package.tar", False),
+            # Archives specified by URL
+            ("https://github.com/user/repo/archive/main.tar.gz", False),
+            ("SomeProject@https://github.com/user/repo/archive/main.tar.gz", False),
+            ("https://files.pythonhosted.org/packages/.../package-1.0.tar.gz", False),
+            # Regular packages (should NOT get -e):
+            ("package1", False),
+            ("package2==1.2.3", False),
+            ("package3 == 2.3.4", False),
+            ("package4 >= 3.4.5", False),
+        ]
+        + (
+            [
+                # Windows paths. Windows honors unix-style paths, but on Unix,
+                # windows-style paths appear as package names, so we only test
+                # this option on Windows.
+                ("folder\\windows", True),
+                (".\\windows\\current", True),
+                ("..\\windows\\parent", True),
+                ("C:\\absolute\\windows", True),
+            ]
+            if sys.platform == "win32"
+            else []
+        )
+    ),
+)
+def test_install_requirements_path_formats(
+    dev_command,
+    first_app,
+    requirement,
+    editable,
+):
     """Test possible path formats that pip supports for editable installation."""
-    first_app.requires = [
-        # Relative paths and single level
-        "./current-dir",
-        "../parent-dir",
-        # Relative paths and multiple levels
-        "../../grandparent/package",
-        "./deeply/nested/package",
-        "../sibling/package",
-        # Simple relative paths
-        "folder/package",
-        "src/mypackage",
-        # Absolute paths
-        "/absolute/path",
-        # Windows paths
-        "folder\\windows",
-        ".\\windows\\current",
-        "..\\windows\\parent",
-        "C:\\absolute\\windows",
-        # SCM URLs (should NOT get -e for now):
-        "git+https://github.com/user/repo.git",
-        "git+ssh://git@github.com/user/repo.git",
-        "hg+https://bitbucket.org/user/repo",
-        # Tarballs (should NOT get -e):
-        "./local/package.tar.gz",
-        "./local/package.zip",
-        "./local/package.whl",
-        "./local/package.tar.bz2",
-        "./local/package.tar",
-        "https://github.com/user/repo/archive/main.tar.gz",
-        "https://files.pythonhosted.org/packages/.../package-1.0.tar.gz",
-        # Regular packages (should NOT get -e):
-        "package1",
-    ]
+    first_app.requires = [requirement]
 
     mock_venv = MagicMock()
     dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
@@ -95,41 +126,10 @@ def test_install_requirements_path_formats(dev_command, first_app):
             "pip",
             "install",
             "--upgrade",
-            "-e",
-            "./current-dir",
-            "-e",
-            "../parent-dir",
-            "-e",
-            "../../grandparent/package",
-            "-e",
-            "./deeply/nested/package",
-            "-e",
-            "../sibling/package",
-            "-e",
-            "folder/package",
-            "-e",
-            "src/mypackage",
-            "-e",
-            "/absolute/path",
-            "-e",
-            "folder\\windows",
-            "-e",
-            ".\\windows\\current",
-            "-e",
-            "..\\windows\\parent",
-            "-e",
-            "C:\\absolute\\windows",
-            "git+https://github.com/user/repo.git",
-            "git+ssh://git@github.com/user/repo.git",
-            "hg+https://bitbucket.org/user/repo",
-            "./local/package.tar.gz",
-            "./local/package.zip",
-            "./local/package.whl",
-            "./local/package.tar.bz2",
-            "./local/package.tar",
-            "https://github.com/user/repo/archive/main.tar.gz",
-            "https://files.pythonhosted.org/packages/.../package-1.0.tar.gz",
-            "package1",
+        ]
+        + (["-e"] if editable else [])
+        + [
+            requirement,
         ],
         check=True,
         encoding="UTF-8",
