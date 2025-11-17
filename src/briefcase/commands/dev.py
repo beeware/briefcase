@@ -95,15 +95,15 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("No application requirements")
             return
 
-        sorted_requires = []
+        require_args = []
         for req in requires:
             # Any requirement that is a local path, but *not* a reference to an archive
             # file (zip, whl, etc), can be installed editable. If in doubt, install
             # non-editable.
             if _is_local_path(req) and not _is_archive(req):
-                sorted_requires.extend(["-e", req])
+                require_args.extend(["-e", req])
             else:
-                sorted_requires.append(req)
+                require_args.append(req)
 
         with self.console.wait_bar("Installing dev requirements..."):
             try:
@@ -118,7 +118,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                         "install",
                         "--upgrade",
                         *(["-vv"] if self.console.is_deep_debug else []),
-                        *sorted_requires,
+                        *require_args,
                         *app.requirement_installer_args,
                     ],
                     check=True,
