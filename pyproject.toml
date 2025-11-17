@@ -95,7 +95,7 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.3.0",
+    "pre-commit == 4.4.0",
 ]
 
 setuptools-scm = [
@@ -111,10 +111,10 @@ tox-uv = [
 ]
 
 dev = [
-    "coverage[toml] == 7.11.0",
+    "coverage[toml] == 7.11.3",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.4.5",
-    "pytest == 8.4.2",
+    "pytest == 9.0.1",
     "pytest-xdist == 3.8.0",
     {include-group = "pre-commit"},
     {include-group = "setuptools-scm"},
@@ -143,6 +143,10 @@ Toga = "briefcase.bootstraps.toga:TogaGuiBootstrap"
 Console = "briefcase.bootstraps.console:ConsoleBootstrap"
 PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
 Pygame = "briefcase.bootstraps.pygame:PygameGuiBootstrap"
+
+[project.entry-points."briefcase.debuggers"]
+pdb = "briefcase.debuggers.pdb:PdbDebugger"
+debugpy = "briefcase.debuggers.debugpy:DebugpyDebugger"
 
 [project.entry-points."briefcase.platforms"]
 android = "briefcase.platforms.android"
@@ -256,16 +260,16 @@ extend-select = [
     "SIM",    # flake8-simplify
 ]
 
-# Below is a list of ignored rules.  Many (if not all) of these have been disabled
-# to facilitate a smooth transition from tools like black and isort to ruff, where
-# instances of these errors were caught.  Many if not all of these are candidates
-# for future fixes throughout the project.
 ignore = [
-    "E501",    # line length
     "SIM105",  # use `contextlib.suppress` (too opinionated)
     "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# E501: line too long, to be fixed in future changes
+"tests/*" = ["E501"]
+"src/briefcase/bootstraps/*" = ["E501"]
+"src/briefcase/platforms/*" = ["E501"]
 
 [tool.setuptools_scm]
 # To enable SCM versioning, we need an empty tool configuration for setuptools_scm

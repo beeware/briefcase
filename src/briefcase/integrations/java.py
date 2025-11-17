@@ -19,8 +19,8 @@ class JDK(ManagedTool):
 
     # Latest OpenJDK as of January 2025: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.15"
-    JDK_BUILD = "6"
+    JDK_RELEASE = "17.0.17"
+    JDK_BUILD = "10"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
@@ -117,7 +117,7 @@ class JDK(ManagedTool):
                 else:
                     install_message = f"""
 *************************************************************************
-** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK                  **
+** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK            **
 *************************************************************************
 
     Android requires a Java {cls.JDK_MAJOR_VER} JDK, but the location pointed to by the
@@ -244,12 +244,16 @@ class JDK(ManagedTool):
             if not java.exists():
                 if install:
                     tools.console.info(
-                        f"A Java {cls.JDK_MAJOR_VER} JDK was not found; downloading and installing...",
+                        (
+                            f"A Java {cls.JDK_MAJOR_VER} JDK was not found; "
+                            "downloading and installing..."
+                        ),
                         prefix=cls.name,
                     )
                     tools.console.info(
                         f"To use an existing JDK {cls.JDK_MAJOR_VER} instance, "
-                        f"specify its root directory path in the JAVA_HOME environment variable."
+                        f"specify its root directory path in the JAVA_HOME environment "
+                        f"variable."
                     )
                     tools.console.info()
                     java.install()

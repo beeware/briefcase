@@ -69,8 +69,8 @@ class UnsupportedCommandError(BriefcaseError):
 
     def __str__(self):
         return (
-            f"The {self.command} command for the {self.platform} {self.output_format} format "
-            "has not been implemented (yet!)."
+            f"The {self.command} command for the {self.platform} {self.output_format} "
+            f"format has not been implemented (yet!)."
         )
 
 
@@ -133,11 +133,12 @@ class IncompatibleToolError(BriefcaseCommandError):
     def __init__(self, tool: str, env_var: str):
         self.tool = tool
         super().__init__(
-            msg=f"""\
-Briefcase cannot install {tool} on this machine.
-
-Install {tool} manually and specify the installation directory in the {env_var} environment variable.
-            """
+            msg=(
+                f"Briefcase cannot install {tool} on this machine."
+                f"\n\n"
+                f"Install {tool} manually and specify the installation "
+                f"directory in the {env_var} environment variable."
+            )
         )
 
 
@@ -157,7 +158,8 @@ class InvalidTemplateBranch(BriefcaseCommandError):
         self.template_repo = template_repo
         self.branch = branch
         super().__init__(
-            f"Could not find a branch named {branch!r} in template repository {template_repo!r}."
+            f"Could not find a branch named {branch!r} "
+            f"in template repository {template_repo!r}."
         )
 
 
@@ -165,7 +167,8 @@ class InvalidTemplateRepository(BriefcaseCommandError):
     def __init__(self, template):
         self.template = template
         super().__init__(
-            f"Unable to clone application template; is the template path {template!r} correct?"
+            f"Unable to clone application template; "
+            f"is the template path {template!r} correct?"
         )
 
 
@@ -197,41 +200,37 @@ class MissingAppMetadata(BriefcaseCommandError):
         super().__init__(f"Unable to find {str(app_bundle_path / 'briefcase.toml')!r}")
 
 
-class MissingSupportPackage(BriefcaseCommandError):
-    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
+class MissingPlatformSupport(BriefcaseCommandError):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit, item):
         self.python_version_tag = python_version_tag
         self.platform = platform
         self.host_arch = host_arch
         self.is_32bit = is_32bit
         platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
-            f"""\
-Unable to download {platform_name} support package for Python {self.python_version_tag} on {self.host_arch}.
-
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
-supported on {platform_name}. You will need to:
-    * Use an older version of Python; or
-    * Compile your own custom support package.
-"""
+            f"Unable to download {platform_name} {item} for Python "
+            f"{python_version_tag} on {host_arch}."
+            f"\n\n"
+            f"This is likely because either Python {python_version_tag} and/or "
+            f"{host_arch} is not yet supported on {platform_name}."
+            f"\n\n"
+            f"You will need to:\n"
+            f"* Use an older version of Python; or\n"
+            f"* Compile your own {item}."
         )
 
 
-class MissingStubBinary(BriefcaseCommandError):
+class MissingSupportPackage(MissingPlatformSupport):
     def __init__(self, python_version_tag, platform, host_arch, is_32bit):
-        self.python_version_tag = python_version_tag
-        self.platform = platform
-        self.host_arch = host_arch
-        self.is_32bit = is_32bit
-        platform_name = f"{'32 bit ' if is_32bit else ''}{platform}"
         super().__init__(
-            f"""\
-Unable to download {platform_name} stub binary for Python {self.python_version_tag} on {self.host_arch}.
+            python_version_tag, platform, host_arch, is_32bit, "support package"
+        )
 
-This is likely because either Python {self.python_version_tag} and/or {self.host_arch} is not yet
-supported on {platform_name}. You will need to:
-    * Use an older version of Python; or
-    * Compile your own stub binary.
-"""
+
+class MissingStubBinary(MissingPlatformSupport):
+    def __init__(self, python_version_tag, platform, host_arch, is_32bit):
+        super().__init__(
+            python_version_tag, platform, host_arch, is_32bit, "stub binary"
         )
 
 

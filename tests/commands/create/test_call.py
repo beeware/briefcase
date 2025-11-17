@@ -39,7 +39,7 @@ def test_create(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
         # Create the second app
@@ -48,7 +48,7 @@ def test_create(tracking_create_command, tmp_path):
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
-        ("requirements", "second", False),
+        ("requirements", "second", False, False),
         ("resources", "second"),
         ("cleanup", "second"),
     ]
@@ -80,7 +80,7 @@ def test_create_single(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -119,7 +119,7 @@ def test_create_app_single(tracking_create_command, app_flags):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -184,7 +184,7 @@ def test_create_app_all_flags(tracking_create_command):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]

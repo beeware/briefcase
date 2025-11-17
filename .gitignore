@@ -9,6 +9,7 @@ comment.md
 /dist
 /build
 automation/build
+debugger/build
 docs/_build/
 distribute-*
 .DS_Store

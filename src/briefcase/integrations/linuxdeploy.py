@@ -291,7 +291,8 @@ class LinuxDeployLocalFilePlugin(LinuxDeployPluginBase, Tool):
             )
         except OSError as e:
             raise BriefcaseCommandError(
-                f"Could not locate linuxdeploy plugin {self.local_path / self.file_name}. "
+                f"Could not locate linuxdeploy plugin "
+                f"{self.local_path / self.file_name}. "
                 "Is the path correct?"
             ) from e
 

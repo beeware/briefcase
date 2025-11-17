@@ -73,6 +73,24 @@ def create_command(dummy_console, tmp_path, first_app_templated):
                 },
             },
         ),
+        # Bluetooth permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device.",
+            },
+            {},
+            {},
+            {
+                "info": {
+                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                },
+                "entitlements": {
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    "com.apple.security.cs.disable-library-validation": True,
+                    "com.apple.security.device.bluetooth": True,
+                },
+            },
+        ),
         # Camera permissions
         (
             {

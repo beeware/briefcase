@@ -192,6 +192,7 @@ class CreateCommand(BaseCommand):
         return {
             key: app.permission.pop(key, None)
             for key in [
+                "bluetooth",
                 "camera",
                 "microphone",
                 "coarse_location",
@@ -693,6 +694,9 @@ class CreateCommand(BaseCommand):
         requires = app.requires.copy() if app.requires else []
         if app.test_mode and app.test_requires:
             requires.extend(app.test_requires)
+
+        if app.debugger:
+            requires.append(app.debugger.debugger_support_pkg)
 
         try:
             requirements_path = self.app_requirements_path(app)

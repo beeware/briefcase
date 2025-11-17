@@ -14,6 +14,9 @@
         - [Packaging external apps](how-to/building/external-apps.md)
     - Testing apps
         - [Testing Linux Apps with Docker](how-to/testing/x11passthrough.md)
+    - Debugging apps
+        - [Debug via PDB](how-to/debugging/pdb.md)
+        - [Debug via VS Code](how-to/debugging/vscode.md)
     - Publishing your app
         - ./how-to/publishing/*
     - [Contributing to Briefcase](how-to/contribute/index.md)

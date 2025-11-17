@@ -408,6 +408,18 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
                 }
             },
         ),
+        # Bluetooth permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device.",
+            },
+            {},
+            {
+                "info": {
+                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                },
+            },
+        ),
         # Camera permissions
         (
             {

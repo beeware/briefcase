@@ -10,6 +10,7 @@ import tomli_w
 import briefcase
 from briefcase.commands.create import _is_local_path
 from briefcase.console import LogLevel
+from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import Subprocess
 
@@ -1092,3 +1093,58 @@ def test_app_packages_only_test_requires_test_mode(
     # Original app definitions haven't changed
     assert myapp.requires is None
     assert myapp.test_requires == ["pytest", "pytest-tldr"]
+
+
+class DummyDebugger(BaseDebugger):
+    @property
+    def name(self) -> str:
+        return "dummy"
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        raise NotImplementedError
+
+    @property
+    def debugger_support_pkg(self) -> str:
+        """Get the name of the debugger support package."""
+        return "briefcase-dummy-debugger-support"
+
+
+def test_app_packages_debugger(
+    create_command,
+    myapp,
+    bundle_path,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If an app has debug requirements and we're in debug mode, they are installed."""
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    myapp.debugger = DummyDebugger()
+
+    create_command.install_app_requirements(myapp)
+
+    # A request was made to install requirements
+    create_command.tools[myapp].app_context.run.assert_called_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--upgrade",
+            "--no-user",
+            f"--target={app_packages_path}",
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+            "briefcase-dummy-debugger-support",
+        ],
+        check=True,
+        encoding="UTF-8",
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]

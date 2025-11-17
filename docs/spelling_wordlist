@@ -24,6 +24,7 @@ beeware
 BeeWare
 BeeWare's
 blobless
+breakpoint
 Bugfix
 Bugfixes
 ce
@@ -44,6 +45,7 @@ CTRL
 customizations
 datetime
 DBus
+debugpy
 dev
 dialogs
 Diataxis
@@ -121,6 +123,7 @@ OSX
 passthrough
 Passthrough
 pbb
+PDB
 PFX
 phablet
 PID
@@ -133,6 +136,7 @@ precompiled
 proxied
 Proxied
 proxying
+programmatically
 PRs
 PursuedPyBear
 px
@@ -153,6 +157,7 @@ pytest
 RCEdit
 README
 RedHat
+REPL
 ReST
 reStructuredText
 RGB
