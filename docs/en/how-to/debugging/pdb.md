@@ -1,34 +1,48 @@
 # Debug via PDB   { #debug-pdb }
 
-It is possible to debug a Briefcase app via [PDB](https://docs.python.org/3/library/pdb.html) at different stages in your development process. You can debug a development app via `briefcase dev`, but also a bundled app that is built via `briefcase build` and run via `briefcase run`.
+You can use [PDB](https://docs.python.org/3/library/pdb.html) to debug a development app via `briefcase dev`, or a bundled app that is built via `briefcase build` and run via `briefcase run` - including mobile apps.
 
 ## Development
 
-Debugging a development app is quite easy. Just add `breakpoint()` inside your code and start the app via `briefcase dev`. When the breakpoint is hit, the PDB console opens in your terminal and you can debug your app.
+To debug an app in development mode, add `breakpoint()` to your code somewhere that will be executed, and start the app with `briefcase dev`. When the breakpoint is reached, the PDB console will open in your terminal and you can debug your app.
 
 ## Bundled App
 
-It is also possible to debug a bundled app. This is currently still an **experimental feature** that is only supported on Windows, macOS and iOS.
+/// warning | Note
 
-To debug a bundled app, at first you have to add `breakpoint()` somewhere in your code, where the debugger should halt.
+This is currently an **experimental feature** that is only supported on Windows, macOS and iOS.
 
-Then you have to built your app with the debugger embedded into your app. This is done via:
+///
+
+To debug a bundled app, add `breakpoint()` somewhere in your code where the debugger should halt.
+
+Your app must then be modified to include a bootstrap that will connect to the VS Code debugger. This is done by passing the `--debug debugpy` option to `briefcase build`:
 
 ```console
 $ briefcase build --debug pdb
 ```
 
-This will build your app in debug mode and add [`remote-pdb`](https://pypi.org/project/remote-pdb/) together with a package that automatically starts `remote-pdb` on startup of your bundled app.
+To build a mobile app, include the platform name in the `build` command - for example:
 
-Then it is time to run your app. You can do this via:
+```console
+$ briefcase build iOS --debug pdb
+```
+
+This will build your app in debug mode, adding [`remote-pdb`](https://pypi.org/project/remote-pdb/), and a package that automatically starts `remote-pdb` on startup of your bundled app.
+
+You can then run your app in debug mode:
 
 ```console
 $ briefcase run --debug pdb
 ```
 
-Running the app in debug mode will automatically start the `remote-pdb` debugger and wait for incoming connections. By default, it will listen on `localhost` and port `5678`.
+To run a mobile app, include the platform name in the `run` command - for example:
 
-In a separate terminal on your host system, connect to your bundled app:
+```console
+$ briefcase run iOS --debug pdb
+```
+
+Running the app in debug mode will automatically start the `remote-pdb` debugger and wait for incoming connections. By default, it will listen on `localhost` and port `5678`. In a separate terminal on your host system, connect to your bundled app:
 
 /// tab | macOS
 
@@ -48,13 +62,13 @@ $ nc localhost 5678
 
 /// tab | Windows
 
-To connect to your application, you need access to `telnet`. That is not activated by default, but can be activated by running the following command with admin rights
+To connect to your application, you need access to `telnet`. `telnet` is not enabled by default; it can be activated by running the following command with admin rights:
 
 ```console
 $ dism /online /Enable-Feature /FeatureName:TelnetClient
 ```
 
-Then you can start the connection via
+You can then start the connection with:
 
 ```console
 $ telnet localhost 5678
@@ -62,6 +76,4 @@ $ telnet localhost 5678
 
 ///
 
-The app will start after the connection is established.
-
-For more information, see [here][run-debug].
+The app will start after the connection is established. When a breakpoint is reached, the PDB prompt will be displayed, allowing you to interact with the app.
