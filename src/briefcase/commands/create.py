@@ -1101,13 +1101,7 @@ def _is_local_path(reference):
     if os.altsep:
         separators.append(os.altsep)
 
-    extensions = [".tar.gz", ".tar.bz2", ".tar", ".zip", ".whl"]
-
-    return (
-        any(sep in reference for sep in separators)
-        and (not _has_url(reference))
-        and (not any(reference.endswith(ext) for ext in extensions))
-    )
+    return any(sep in reference for sep in separators) and (not _has_url(reference))
 
 
 relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")

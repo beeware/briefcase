@@ -810,13 +810,6 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
         (">", "asdf/xcvb", True),
         (">", "asdf>xcvb", True),
         (">", "asdf+xcvb", False),
-        (None, "git+https://github.com/user/repo.git", False),
-        (None, "git+ssh://git@github.com/user/repo.git", False),
-        (None, "./package.tar.gz", False),
-        (None, "folder/package.zip", False),
-        (None, "../package.whl", False),
-        (None, "/absolute/package.tar.bz2", False),
-        (None, "C://Windows//package.tar", False),
     ],
 )
 def test__is_local_path_altsep_respected(
