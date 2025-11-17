@@ -1,3 +1,5 @@
+import json
+import platform
 import subprocess
 import time
 from unittest import mock
@@ -46,6 +48,9 @@ def test_device_option(run_command):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "appname": None,
     }
     assert overrides == {}
@@ -1564,6 +1569,167 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     # Log stream monitoring was started
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
+        popen=log_stream_process,
+        clean_filter=macOS_log_clean_filter,
+        clean_output=True,
+        stop_func=mock.ANY,
+        log_stream=True,
+    )
+
+
+@pytest.mark.usefixtures("sleep_zero")
+def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debugger):
+    """An iOS App can be started in debug mode."""
+    # A valid target device will be selected.
+    run_command.select_target_device = mock.MagicMock(
+        return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
+    )
+
+    # Simulator is already booted
+    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
+
+    # Mock a process ID for the app
+    run_command.tools.subprocess.check_output.return_value = (
+        "com.example.first-app: 1234\n"
+    )
+
+    # Mock the uninstall, install, and log stream Popen processes
+    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    uninstall_popen.__enter__.return_value = uninstall_popen
+    uninstall_popen.poll.side_effect = [None, None, 0]
+    install_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    install_popen.__enter__.return_value = install_popen
+    install_popen.poll.side_effect = [None, None, 0]
+    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    run_command.tools.subprocess.Popen.side_effect = [
+        uninstall_popen,
+        install_popen,
+        log_stream_process,
+    ]
+
+    first_app_generated.debugger = dummy_debugger
+    first_app_generated.debugger_host = "somehost"
+    first_app_generated.debugger_port = 9999
+
+    # Run the app
+    run_command.run_app(first_app_generated, passthrough=[])
+
+    # Sleep four times for uninstall/install and once for log stream start
+    assert time.sleep.call_count == 4 + 1
+
+    # Set the environment variables for the debugger and launch the app
+    run_command.tools.subprocess.check_output.assert_has_calls(
+        [
+            # Set the environment variables for the debugger
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "launchctl",
+                    "setenv",
+                    "BRIEFCASE_DEBUGGER",
+                    json.dumps(
+                        {
+                            "debugger": "dummy",
+                            "host": "somehost",
+                            "port": 9999,
+                            "host_os": platform.system(),
+                            "app_path_mappings": {
+                                "device_sys_path_regex": "app$",
+                                "device_subfolders": ["first_app"],
+                                "host_folders": [
+                                    str(tmp_path / "base_path/src/first_app")
+                                ],
+                            },
+                            "app_packages_path_mappings": {
+                                "sys_path_regex": "app_packages$",
+                                "host_folder": str(
+                                    tmp_path
+                                    / "base_path/build/first-app/ios/xcode/app_packages.iphonesimulator"
+                                ),
+                            },
+                        }
+                    ),
+                ],
+            ),
+            # Launch the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+            ),
+            # Remove the environment variables for the debugger
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "launchctl",
+                    "unsetenv",
+                    "BRIEFCASE_DEBUGGER",
+                ],
+            ),
+        ]
+    )
+
+    # Start the uninstall, install, and log stream
+    run_command.tools.subprocess.Popen.assert_has_calls(
+        [
+            # Uninstall the old app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "com.example.first-app",
+                ],
+            ),
+            # Install the new app
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    tmp_path
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                ],
+            ),
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "log",
+                    "stream",
+                    "--style",
+                    "compact",
+                    "--predicate",
+                    'senderImagePath ENDSWITH "/First App"'
+                    ' OR (processImagePath ENDSWITH "/First App"'
+                    ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                    ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                    ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))',
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            ),
+        ]
+    )
+
+    # Log stream monitoring was started
+    run_command._stream_app_logs.assert_called_with(
+        first_app_generated,
         popen=log_stream_process,
         clean_filter=macOS_log_clean_filter,
         clean_output=True,
