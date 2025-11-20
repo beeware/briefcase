@@ -191,7 +191,7 @@ A Boolean describing the initial value of the option in the GUI. If not provided
 
 ### Using installer options
 
-When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable. For example, if your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `INSTALLDIR` and `ALLUSERS` environment variables will also be set. `INSTALLDIR` will be set to the location where the app has been installed; `ALLUSERS` its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
+When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable. For example, if your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
 
 ## Platform quirks
 
