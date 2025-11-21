@@ -111,20 +111,23 @@ tox-uv = [
 ]
 
 dev = [
+    {include-group = "pre-commit"},
+    {include-group = "setuptools-scm"},
+    {include-group = "tox-uv"},
+]
+
+test = [
     "coverage[toml] == 7.11.3",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.4.5",
     "pytest == 9.0.1",
     "pytest-xdist == 3.8.0",
-    {include-group = "pre-commit"},
     {include-group = "setuptools-scm"},
-    {include-group = "tox-uv"},
 ]
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
 docs = [
     "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
-    {include-group = "setuptools-scm"}
 ]
 
 [project.urls]

@@ -22,9 +22,10 @@ pdb = ["remote-pdb>=2.1.0,<3.0.0"]
 debugpy = ["debugpy>=1.8.17,<2.0.0"]
 
 [dependency-groups]
-dev = [
-    "pytest == 8.4.1",
-    "coverage[toml] == 7.10.2",
+test = [
+    "coverage[toml] == 7.11.3",
+    "pytest == 9.0.1",
+    "pytest-xdist == 3.8.0",
 ]
 
 [tool.coverage.run]
