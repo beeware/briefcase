@@ -153,17 +153,17 @@ def test_no_args_one_app(dev_command, first_app):
 
 
 def test_no_args_two_apps(dev_command, first_app, second_app):
-    """If there are two apps and no explicit app provided, an error is raised."""
+    """If there are two apps and --no-input is provided, an error is raised."""
     # Add two apps
     dev_command.apps = {
         "first": first_app,
         "second": second_app,
     }
 
-    # Configure no command line options
-    options, _ = dev_command.parse_options([])
+    # Simulate --no-input on the command line
+    options, _ = dev_command.parse_options(["--no-input"])
 
-    # Invoking the run command raises an error
+    # In non-interactive mode, invoking the run command raises an error
     with pytest.raises(BriefcaseCommandError):
         dev_command(**options)
 
