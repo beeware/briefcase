@@ -257,10 +257,33 @@ class DevCommand(RunAppMixin, BaseCommand):
                 ) from e
 
         else:
-            raise BriefcaseCommandError(
-                "Project specifies more than one application; "
-                "use --app to specify which one to start."
+            # Multiple apps, and no explicit --app was provided.
+            # If --no-input was passed, do not prompt - raise error.
+            if not self.console.input_enabled:
+                raise BriefcaseCommandError(
+                    "Project specifies more than one application; "
+                    "use --app to specify which one to start."
+                )
+
+            # Build mapping for {app_name: formal_name} for selection menu.
+            app_options = {
+                app_name: app_config.formal_name
+                for app_name, app_config in self.apps.items()
+            }
+
+            # Default app is the first listed in the config file
+            default_app_name = next(iter(self.apps.keys()))
+
+            # Display interactive menu to select the app
+            selected_app_name = self.console.selection_question(
+                description="Your project defines multiple applications",
+                intro="Which application would you like to start?",
+                options=app_options,
+                default=default_app_name,
             )
+
+            # Use the selected app
+            app = self.apps[selected_app_name]
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
