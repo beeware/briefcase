@@ -167,8 +167,39 @@ def test_no_args_two_apps(dev_command, first_app, second_app):
     with pytest.raises(BriefcaseCommandError):
         dev_command(**options)
 
-    # Finalization will not occur.
+    # Finalization will not occur
     assert dev_command.actions == []
+
+
+def test_no_args_two_apps_interactive(dev_command, first_app, second_app, monkeypatch):
+    """If there are two apps and input is enabled, the user is prompted to pick one."""
+    # Add two apps
+    dev_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Interactive mode
+    dev_command.console.input_enabled = True
+
+    # Fake the user selecting "second"
+    def fake_selection_question(**kwargs):
+        return "second"
+
+    monkeypatch.setattr(
+        dev_command.console,
+        "selection_question",
+        fake_selection_question,
+    )
+
+    # No flags on the command line
+    options, _ = dev_command.parse_options([])
+
+    # This should follow the multi-app selection path and run without error.
+    dev_command(**options)
+
+    # The command should perform some actions in interactive mode.
+    assert dev_command.actions != []
 
 
 def test_with_arg_one_app(dev_command, first_app):
