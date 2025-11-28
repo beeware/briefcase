@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import platform
 import sys
@@ -9,6 +10,8 @@ from unittest import mock
 import httpx
 import pytest
 
+from briefcase.console import LogLevel
+from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.java import JDK
@@ -89,6 +92,9 @@ def test_device_option(run_command):
         "update_stub": False,
         "no_update": False,
         "test_mode": False,
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
@@ -114,6 +120,9 @@ def test_extra_emulator_args_option(run_command):
         "update_stub": False,
         "no_update": False,
         "test_mode": False,
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "passthrough": [],
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
@@ -137,6 +146,9 @@ def test_shutdown_on_exit_option(run_command):
         "update_stub": False,
         "no_update": False,
         "test_mode": False,
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
@@ -163,6 +175,9 @@ def test_forward_ports_option(run_command):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
         "forward_ports": [80, 81],
@@ -188,6 +203,9 @@ def test_reverse_ports_option(run_command):
         "no_update": False,
         "test_mode": False,
         "passthrough": [],
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
         "forward_ports": None,
@@ -247,6 +265,8 @@ def test_run_existing_device(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
+        debugger_host=None,
+        debugger_port=None,
         passthrough=[],
     )
 
@@ -273,6 +293,7 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
+        {},
     )
 
     run_command.tools.mock_adb.forward_remove.assert_not_called()
@@ -323,6 +344,8 @@ def test_run_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -346,6 +369,7 @@ def test_run_with_passthrough(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         ["foo", "--bar"],
+        {},
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -395,6 +419,7 @@ def test_run_forward_reverse_ports(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
+        {},
     )
 
     assert run_command.tools.mock_adb.forward_remove.mock_calls == [
@@ -424,6 +449,8 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
+        debugger_host=None,
+        debugger_port=None,
         passthrough=[],
     )
 
@@ -476,6 +503,8 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
         run_command.run_app(
             first_app_config,
             device_or_avd="exampleDevice",
+            debugger_host=None,
+            debugger_port=None,
             passthrough=[],
         )
 
@@ -513,7 +542,9 @@ def test_run_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
-    run_command.run_app(first_app_config, passthrough=[])
+    run_command.run_app(
+        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+    )
 
     # A new emulator was created
     run_command.tools.android_sdk.create_emulator.assert_called_once_with()
@@ -542,6 +573,7 @@ def test_run_created_emulator(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
+        {},
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
@@ -575,7 +607,9 @@ def test_run_idle_device(run_command, first_app_config):
     run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
-    run_command.run_app(first_app_config, passthrough=[])
+    run_command.run_app(
+        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
+    )
 
     # No attempt was made to create a new emulator
     run_command.tools.android_sdk.create_emulator.assert_not_called()
@@ -603,6 +637,7 @@ def test_run_idle_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
+        {},
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
@@ -680,6 +715,8 @@ def test_run_test_mode(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
+        debugger_host=None,
+        debugger_port=None,
         passthrough=[],
         shutdown_on_exit=True,
     )
@@ -704,6 +741,7 @@ def test_run_test_mode(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
+        {},
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -753,6 +791,8 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
+        debugger_host=None,
+        debugger_port=None,
         passthrough=["foo", "--bar"],
         shutdown_on_exit=True,
     )
@@ -777,6 +817,7 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         ["foo", "--bar"],
+        {},
     )
 
     run_command.tools.mock_adb.pidof.assert_called_once_with(
@@ -821,6 +862,8 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     # Invoke run_app
     run_command.run_app(
         first_app_config,
+        debugger_host=None,
+        debugger_port=None,
         passthrough=[],
         extra_emulator_args=["-no-window", "-no-audio"],
         shutdown_on_exit=True,
@@ -854,6 +897,7 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
         "org.beeware.android.MainActivity",
         [],
+        {},
     )
 
     run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
@@ -869,3 +913,155 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
 
     # The emulator was killed at the end of the test
     run_command.tools.mock_adb.kill.assert_called_once_with()
+
+
+class ServerDebugger(BaseDebugger):
+    @property
+    def name(self) -> str:
+        return "dummy"
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        return DebuggerConnectionMode.SERVER
+
+    @property
+    def debugger_support_pkg(self) -> str:
+        raise NotImplementedError
+
+
+class ClientDebugger(BaseDebugger):
+    @property
+    def name(self) -> str:
+        return "dummy"
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        return DebuggerConnectionMode.CLIENT
+
+    @property
+    def debugger_support_pkg(self) -> str:
+        raise NotImplementedError
+
+
+@pytest.mark.parametrize(
+    "debugger",
+    [
+        ServerDebugger(),
+        ClientDebugger(),
+    ],
+)
+def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
+    """An app can be run in debug mode."""
+    run_command.console.verbosity = LogLevel.DEBUG
+
+    # Set up device selection to return a running physical device.
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=("exampleDevice", "ExampleDevice", None)
+    )
+
+    # Set up the log streamer to return a known stream
+    log_popen = mock.MagicMock()
+    run_command.tools.mock_adb.logcat.return_value = log_popen
+
+    # To satisfy coverage, the stop function must be invoked at least once
+    # when invoking stream_output.
+    def mock_stream_output(app, stop_func, **kwargs):
+        stop_func()
+
+    run_command._stream_app_logs.side_effect = mock_stream_output
+
+    # Set up app config to have a `-` in the `bundle`, to ensure it gets
+    # normalized into a `_` via `package_name`.
+    first_app_config.bundle = "com.ex-ample"
+
+    # Set up the debugger
+    first_app_config.debugger = debugger
+    first_app_config.debugger_host = "somehost"
+    first_app_config.debugger_port = 9999
+
+    # Invoke run_app with args.
+    run_command.run_app(
+        first_app_config,
+        device_or_avd="exampleDevice",
+        passthrough=[],
+    )
+
+    # select_target_device was invoked with a specific device
+    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
+        "exampleDevice"
+    )
+
+    # The ADB wrapper is created
+    run_command.tools.android_sdk.adb.assert_called_once_with(device="exampleDevice")
+
+    # The adb wrapper is invoked with the expected arguments
+    run_command.tools.mock_adb.install_apk.assert_called_once_with(
+        run_command.binary_path(first_app_config)
+    )
+    run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+    )
+
+    run_command.tools.mock_adb.start_app.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        "org.beeware.android.MainActivity",
+        [],
+        {
+            "BRIEFCASE_DEBUG": "1",
+            "BRIEFCASE_DEBUGGER": json.dumps(
+                {
+                    "debugger": "dummy",
+                    "host": "somehost",
+                    "port": 9999,
+                    "host_os": platform.system(),
+                    "app_path_mappings": {
+                        "device_sys_path_regex": "app$",
+                        "device_subfolders": ["first_app"],
+                        "host_folders": [str(tmp_path / "base_path/src/first_app")],
+                    },
+                    "app_packages_path_mappings": {
+                        "sys_path_regex": "requirements$",
+                        "host_folder": str(
+                            tmp_path
+                            / "base_path/build/first-app/android/gradle/app/build/python/pip/debug/common"
+                        ),
+                    },
+                }
+            ),
+        },
+    )
+
+    run_command.tools.mock_adb.pidof.assert_called_once_with(
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
+        quiet=2,
+    )
+    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
+
+    if isinstance(debugger, ServerDebugger):
+        run_command.tools.mock_adb.forward.assert_called_once_with(
+            9999,
+            9999,
+        )
+        run_command.tools.mock_adb.forward_remove.assert_called_once_with(
+            9999,
+        )
+    elif isinstance(debugger, ClientDebugger):
+        run_command.tools.mock_adb.reverse.assert_called_once_with(
+            9999,
+            9999,
+        )
+        run_command.tools.mock_adb.reverse_remove.assert_called_once_with(
+            9999,
+        )
+
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_config,
+        popen=log_popen,
+        clean_filter=android_log_clean_filter,
+        clean_output=False,
+        stop_func=mock.ANY,
+        log_stream=True,
+    )
+
+    # The emulator was not killed at the end of the test
+    run_command.tools.mock_adb.kill.assert_not_called()
