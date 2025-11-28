@@ -1,0 +1,1 @@
+Windows MSI installers can now include user-configurable options as part of the uninstall process.

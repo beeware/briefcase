@@ -1287,7 +1287,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # Branch does not exist.
             raise InvalidTemplateBranch(template, branch) from e
         except cookiecutter_exceptions.UndefinedVariableInTemplate as e:
-            raise BriefcaseConfigError(e.message) from e
+            raise BriefcaseConfigError(f"{e.message}: {e.error}") from e
 
     def generate_template(
         self,
