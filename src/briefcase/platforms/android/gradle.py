@@ -325,10 +325,8 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     def metadata_resource_path(self, app: AppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
-    def metadata_extract_packages_path(self, app: AppConfig):
-        return self.bundle_path(app) / self.path_index(
-            app, "metadata_extract_packages_path"
-        )
+    def extract_packages_path(self, app: AppConfig):
+        return self.bundle_path(app) / self.path_index(app, "extract_packages_path")
 
     def update_app_metadata(self, app: AppConfig):
         with (
@@ -347,7 +345,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
         with (
             self.console.wait_bar("Setting packages to extract..."),
-            self.metadata_extract_packages_path(app).open("w", encoding="utf-8") as f,
+            self.extract_packages_path(app).open("w", encoding="utf-8") as f,
         ):
             if app.debugger:
                 # In debug mode include the .py files and extract all of them so that the debugger can get

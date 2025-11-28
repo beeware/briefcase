@@ -50,7 +50,7 @@ def first_app_generated(first_app_config, tmp_path):
 app_packages_path="app_packages"
 support_path="support"
 metadata_resource_path="res/briefcase.xml"
-metadata_extract_packages_path = "app/extract-packages.txt"
+extract_packages_path = "app/extract-packages.txt"
 """,
     )
 
