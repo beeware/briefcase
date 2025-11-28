@@ -236,15 +236,33 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         """
         # Default permissions for all Android apps
         permissions = {
-            "android.permission.INTERNET": True,
-            "android.permission.ACCESS_NETWORK_STATE": True,
+            "android.permission.INTERNET": {},
+            "android.permission.ACCESS_NETWORK_STATE": {},
         }
 
         # Default feature usage for all Android apps
         features = {}
 
+        if x_permissions["bluetooth"]:
+            permissions["android.permission.ACCESS_COARSE_LOCATION"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.ACCESS_FINE_LOCATION"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.BLUETOOTH"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.BLUETOOTH_ADMIN"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.BLUETOOTH_CONNECT"] = {}
+            permissions["android.permission.BLUETOOTH_SCAN"] = {
+                "android:usesPermissionFlags": "neverForLocation"
+            }
+
         if x_permissions["camera"]:
-            permissions["android.permission.CAMERA"] = True
+            permissions["android.permission.CAMERA"] = {}
             features["android.hardware.camera"] = False
             features["android.hardware.camera.any"] = False
             features["android.hardware.camera.front"] = False
@@ -252,25 +270,33 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             features["android.hardware.camera.autofocus"] = False
 
         if x_permissions["microphone"]:
-            permissions["android.permission.RECORD_AUDIO"] = True
+            permissions["android.permission.RECORD_AUDIO"] = {}
 
         if x_permissions["fine_location"]:
-            permissions["android.permission.ACCESS_FINE_LOCATION"] = True
+            permissions["android.permission.ACCESS_FINE_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
+            # We're good with the location. So we can also use BLUETOOTH_SCAN.
+            bt_scan_perm = permissions.get("android.permission.BLUETOOTH_SCAN")
+            if bt_scan_perm:
+                bt_scan_perm.pop("android:usesPermissionFlags", None)
 
         if x_permissions["coarse_location"]:
-            permissions["android.permission.ACCESS_COARSE_LOCATION"] = True
+            permissions["android.permission.ACCESS_COARSE_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
+            # We're good with the location. So we can also use BLUETOOTH_SCAN.
+            bt_scan_perm = permissions.get("android.permission.BLUETOOTH_SCAN")
+            if bt_scan_perm:
+                bt_scan_perm.pop("android:usesPermissionFlags", None)
 
         if x_permissions["background_location"]:
-            permissions["android.permission.ACCESS_BACKGROUND_LOCATION"] = True
+            permissions["android.permission.ACCESS_BACKGROUND_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
 
         if x_permissions["photo_library"]:
-            permissions["android.permission.READ_MEDIA_VISUAL_USER_SELECTED"] = True
+            permissions["android.permission.READ_MEDIA_VISUAL_USER_SELECTED"] = {}
 
         # Override any permission and entitlement definitions
         # with the platform-specific definitions

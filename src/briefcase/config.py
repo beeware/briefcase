@@ -581,6 +581,11 @@ class AppConfig(BaseConfig):
         `module_name`."""
         return self.bundle.replace("-", "_")
 
+    @property
+    def dist_info_name(self):
+        """The name of the .dist-info directory for the app."""
+        return f"{self.module_name}.dist-info"
+
     def PYTHONPATH(self):
         """The PYTHONPATH modifications needed to run this app."""
         paths = []

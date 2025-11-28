@@ -496,7 +496,7 @@
 - When using the Windows Store version of Python, Briefcase now ensures the cache directory is created in `%LOCALAPPDATA%` instead of the sandboxed location enforced for Windows Store apps. ([#922](https://github.com/beeware/briefcase/issues/922))
 - An Android application that successfully starts, but fails quickly, no longer stalls the launch process. ([#936](https://github.com/beeware/briefcase/issues/936))
 - The required Visual Studio Code components are now included in verification errors for Visual Studio Apps. ([#939](https://github.com/beeware/briefcase/issues/939))
-- It is now possible to specify app configurations for macOS XCode and Windows VisualStudio projects. Previously, these sections of configuration files would be ignored due to a case discrepancy. ([#952](https://github.com/beeware/briefcase/pull/952))
+- It is now possible to specify app configurations for macOS XCode and Windows Visual Studio projects. Previously, these sections of configuration files would be ignored due to a case discrepancy. ([#952](https://github.com/beeware/briefcase/pull/952))
 - Development mode now starts apps in PEP540 UTF-8 mode, for consistency with the stub apps. ([#985](https://github.com/beeware/briefcase/pull/985))
 - Local file references in requirements no longer break AppImage builds. ([#992](https://github.com/beeware/briefcase/issues/992))
 - On macOS, Rosetta is now installed automatically if needed. ([#1000](https://github.com/beeware/briefcase/issues/1000))

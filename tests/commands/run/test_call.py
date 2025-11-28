@@ -78,22 +78,56 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
     ]
 
 
-def test_no_args_two_apps(run_command, first_app, second_app):
-    """If there are two apps and no explicit app is started, an error is raised."""
+def test_no_args_two_apps(run_command, first_app, second_app, monkeypatch):
+    """If there are two apps and input is enabled, the user is prompted to pick one."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
         "second": second_app,
     }
 
-    # Configure no command line options
+    # Interactive mode
+    run_command.console.input_enabled = True
+
+    # Fake the user selecting "second"
+    def fake_selection_question(**kwargs):
+        return "second"
+
+    monkeypatch.setattr(
+        run_command.console,
+        "selection_question",
+        fake_selection_question,
+    )
+
+    # No flags on the command line
     options, _ = run_command.parse_options([])
 
-    # Invoking the run command raises an error
-    with pytest.raises(BriefcaseCommandError):
+    # This should follow the multi-app selection path and run without error.
+    run_command(**options)
+
+    # The command should perform some actions in interactive mode.
+    assert run_command.actions != []
+
+
+def test_no_args_two_apps_non_interactive(run_command, first_app, second_app):
+    """If there are two apps and --no-input is provided, an error is raised."""
+    # Add two apps
+    run_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Simulate --no-input on the command line
+    options, _ = run_command.parse_options(["--no-input"])
+
+    # In non-interactive mode, invoking the run command raises an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Project specifies more than one application",
+    ):
         run_command(**options)
 
-    # No verification actions will be performed
+    # Finalization will not occur.
     assert run_command.actions == []
 
 

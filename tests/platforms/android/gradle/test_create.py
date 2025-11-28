@@ -163,8 +163,8 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
                 },
                 "features": {},
             },
@@ -172,16 +172,16 @@ def test_build_gradle_dependencies(
         # Only custom permissions
         (
             {
-                "android.permission.READ_CONTACTS": True,
+                "android.permission.READ_CONTACTS": {},
             },
             {
                 "android.hardware.bluetooth": True,
             },
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.READ_CONTACTS": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.READ_CONTACTS": {},
                 },
                 "features": {
                     "android.hardware.bluetooth": True,
@@ -196,9 +196,9 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.CAMERA": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.CAMERA": {},
                 },
                 "features": {
                     "android.hardware.camera": False,
@@ -217,9 +217,9 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.RECORD_AUDIO": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.RECORD_AUDIO": {},
                 },
                 "features": {},
             },
@@ -232,9 +232,9 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -250,9 +250,9 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -268,9 +268,9 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -287,10 +287,10 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -307,10 +307,10 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -327,10 +327,10 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -348,11 +348,11 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -368,11 +368,95 @@ def test_build_gradle_dependencies(
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.READ_MEDIA_VISUAL_USER_SELECTED": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.READ_MEDIA_VISUAL_USER_SELECTED": {},
                 },
                 "features": {},
+            },
+        ),
+        # Bluetooth permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_FINE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {
+                        "android:usesPermissionFlags": "neverForLocation"
+                    },
+                    "android.permission.INTERNET": {},
+                },
+                "features": {},
+            },
+        ),
+        # Bluetooth permissions WITH coarse location permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+                "coarse_location": "I need to know roughly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {},
+                    "android.permission.INTERNET": {},
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Bluetooth permissions WITH fine location permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {},
+                    "android.permission.INTERNET": {},
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
             },
         ),
         # Override and augment by cross-platform definitions
@@ -380,7 +464,7 @@ def test_build_gradle_dependencies(
             {
                 "camera": "I need to see you",
                 "android.permission.CAMERA": False,
-                "android.permission.READ_CONTACTS": True,
+                "android.permission.READ_CONTACTS": {},
             },
             {
                 "android.hardware.camera.external": True,
@@ -388,10 +472,10 @@ def test_build_gradle_dependencies(
             },
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
                     "android.permission.CAMERA": False,
-                    "android.permission.READ_CONTACTS": True,
+                    "android.permission.READ_CONTACTS": {},
                 },
                 "features": {
                     "android.hardware.camera": False,

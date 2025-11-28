@@ -121,6 +121,7 @@ The minimum iOS version that the app will support. This controls the value of `I
 
 Briefcase cross-platform permissions map to the following [`info`][] keys:
 
+* [`permission.bluetooth`][permissionbluetooth]: `NSBluetoothAlwaysUsageDescription`
 * [`permission.camera`][permissioncamera]: `NSCameraUsageDescription`
 * [`permission.microphone`][permissionmicrophone]: `NSMicrophoneUsageDescription`
 * [`permission.coarse_location`][permissioncoarse_location]:

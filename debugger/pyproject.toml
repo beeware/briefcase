@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml and ../pyproject.toml
     "setuptools==80.9.0",
-    "setuptools_scm==8.3.1",
+    "setuptools_scm==9.2.2",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -22,9 +22,10 @@ pdb = ["remote-pdb>=2.1.0,<3.0.0"]
 debugpy = ["debugpy>=1.8.17,<2.0.0"]
 
 [dependency-groups]
-dev = [
-    "pytest == 8.4.1",
-    "coverage[toml] == 7.10.2",
+test = [
+    "coverage[toml] == 7.12.0",
+    "pytest == 9.0.1",
+    "pytest-xdist == 3.8.0",
 ]
 
 [tool.coverage.run]
