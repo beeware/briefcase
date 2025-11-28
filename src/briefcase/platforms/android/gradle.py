@@ -73,7 +73,7 @@ def android_log_clean_filter(line):
 class GradleMixin:
     output_format = "gradle"
     platform = "android"
-    platform_target_version = "0.3.15"
+    platform_target_version = "0.3.26"
 
     @property
     def packaging_formats(self):
