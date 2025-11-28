@@ -1,0 +1,1 @@
+The obligations of a "well behaved" MSI-packaged application in ensuring a clean registry have been documented.
