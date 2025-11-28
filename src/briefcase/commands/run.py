@@ -357,8 +357,11 @@ class RunCommand(RunAppMixin, BaseCommand):
 
             # Display interactive menu to select the app
             selected_app_name = self.console.selection_question(
-                description="Your project defines multiple applications",
-                intro="Which application would you like to start?",
+                description="Start app",
+                intro=(
+                    "Your project defines multiple applications. "
+                    "Which application would you like to start?"
+                ),
                 options=app_options,
                 default=default_app_name,
             )
