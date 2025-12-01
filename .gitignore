@@ -18,7 +18,7 @@ distribute-*
 .coverage
 .coverage.*
 coverage.xml
-*venv*
+venv*
 .vscode/
 .eggs/
 .tox/
