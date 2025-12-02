@@ -5,48 +5,68 @@ from unittest import mock
 import pytest
 
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.integrations.virtual_environment import VenvContext
-from briefcase.platforms.linux.system import LinuxSystemDevCommand
+from briefcase.platforms.linux.system import (
+    LinuxSystemDevCommand,
+    LinuxSystemMostlyPassiveMixin,
+)
+
+from .test_run import mock_linux_env
 
 
 @pytest.fixture
-def dev_command(dummy_console, tmp_path):
+def dev_command(monkeypatch, dummy_console, first_app, tmp_path):
     command = LinuxSystemDevCommand(
         console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
+        apps={"app": first_app},
     )
+
+    # Default to running on Linux
+    command.tools.host_os = "Linux"
+
+    # Set the host architecture for test purposes.
+    command.tools.host_arch = "wonky"
+
+    # Mock the existence of a valid system Python
+    monkeypatch.setattr(
+        LinuxSystemMostlyPassiveMixin, "verify_system_python", mock.MagicMock()
+    )
+
+    mock_linux_env(command, tmp_path, monkeypatch)
+
+    (tmp_path / "base_path/src").mkdir(parents=True)
+
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command._stream_app_logs = mock.MagicMock()
     return command
 
 
-@pytest.fixture
-def default_env() -> VenvContext:
-    """Create a venv mock for tests that require a venv parameter."""
-    mock_venv = mock.MagicMock(spec=VenvContext)
-    mock_venv.run.return_value = mock.MagicMock()
-    mock_venv.check_output.return_value = ""
-    mock_venv.Popen.return_value = mock.MagicMock()
-    mock_venv.executable = "/mock/venv/bin/python"
-    return mock_venv
-
-
-def test_dev_system_app_starts(dev_command, first_app_config, tmp_path, default_env):
+def test_dev_system_app_starts(dev_command, first_app, tmp_path):
     """A Linux system app can be started in development mode."""
     log_popen = mock.MagicMock()
-    default_env.Popen.return_value = log_popen
+    dev_command.tools.subprocess.Popen.return_value = log_popen
 
-    dev_command.run_dev_app(first_app_config, env={}, venv=default_env, passthrough=[])
+    dev_command.verify_system_packages = mock.MagicMock()
 
-    popen_args, popen_kwargs = default_env.Popen.call_args
+    # Parse the command line
+    dev_command.parse_options([])
+
+    # The command runs without error
+    dev_command()
+
+    # System packages were verified
+    dev_command.verify_system_packages.assert_called_once_with(first_app)
+
+    # The app was started with streamed logs
+    popen_args, popen_kwargs = dev_command.tools.subprocess.Popen.call_args
 
     # Check Python executable
     assert popen_args[0][0] == sys.executable
     # Check that module name is in the inline Python command
     assert "run_module" in popen_args[0][2]
-    assert first_app_config.module_name in popen_args[0][2]
+    assert first_app.module_name in popen_args[0][2]
 
     assert popen_kwargs["cwd"] == tmp_path / "home"
     assert popen_kwargs["encoding"] == "UTF-8"
@@ -55,7 +75,7 @@ def test_dev_system_app_starts(dev_command, first_app_config, tmp_path, default_
     assert popen_kwargs["bufsize"] == 1
 
     dev_command._stream_app_logs.assert_called_once_with(
-        first_app_config,
+        first_app,
         popen=log_popen,
         clean_output=False,
     )

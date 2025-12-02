@@ -915,7 +915,7 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
                 )
 
 
-class LinuxSystemDevCommand(LinuxMixin, DevCommand):
+class LinuxSystemDevCommand(LinuxSystemMostlyPassiveMixin, DevCommand):
     description = "Run a Linux system app in development mode"
     output_format = "system"
     supported_host_os: Collection[str] = {"Linux"}
