@@ -173,7 +173,7 @@ Installer and uninstaller options are defined using a TOML array of tables. Up t
 
 ### `install_option.name` / `uninstall_option.name`
 
-An identifier for the option. This name must be a valid Python identifier; the list of options specified for an app must be unique when converted into upper case (i.e., you cannot have `value` and `VALUE` in the same configuration). Names mus be unique across both `install_options` *and* `uninstall_options`
+An identifier for the option. This name must be a valid Python identifier; the list of options specified for an app must be unique when converted into upper case (i.e., you cannot have `value` and `VALUE` in the same configuration). Names must be unique across both `install_options` *and* `uninstall_options`.
 
 ### `install_option.title` / `uninstall_option.title`
 
@@ -187,13 +187,11 @@ A longer description of the purpose of the option, as a string.
 
 A Boolean describing the initial value of the option in the GUI. If not provided, defaults to `False`.
 
-### Using installer options
+### Using options
 
-When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable. For example, if your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
+When an installer option is defined, the value of the option will be made available to the post-install or pre-uninstall script as an environment variable. For example, if you define an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected.
 
-### Using uninstaller options
-
-Uninstaller options are handled in a similar way to installer options, but they are provided to the pre-uninstall script. An uninstall option of `foo` will result in an environment variable named `UNINSTALL_FOO` being defined.
+In the post-install script, the `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
 
 If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 
