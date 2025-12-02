@@ -135,7 +135,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
 
         :param app: The app configuration to finalize.
         """
-        self.console.info(
+        self.console.verbose(
             "Finalizing application configuration...", prefix=app.app_name
         )
         freedesktop_info = self.platform_freedesktop_info(app)
@@ -147,7 +147,7 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             app.target_vendor_base,
         ) = self.vendor_details(freedesktop_info)
 
-        self.console.info(
+        self.console.verbose(
             f"Targeting {app.target_vendor}:{app.target_codename} "
             f"(Vendor base {app.target_vendor_base})"
         )
@@ -211,13 +211,12 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         ]:
             merge_config(app, config)
 
-        with self.console.wait_bar("Determining glibc version..."):
-            app.glibc_version = self.target_glibc_version(app)
-        self.console.info(f"Targeting glibc {app.glibc_version}")
+        app.glibc_version = self.target_glibc_version(app)
+        self.console.verbose(f"Targeting glibc {app.glibc_version}")
 
         app.python_version_tag = self.app_python_version_tag(app)
 
-        self.console.info(f"Targeting Python{app.python_version_tag}")
+        self.console.verbose(f"Targeting Python{app.python_version_tag}")
 
 
 class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
@@ -329,35 +328,36 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         we can use os.confstr().
         """
         if self.use_docker:
-            try:
-                output = self.tools.docker.check_output(
-                    ["ldd", "--version"],
-                    image_tag=app.target_image,
-                )
-                # On Debian/Ubuntu, ldd --version will give you output of the form:
-                #
-                #     ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31
-                #     Copyright (C) 2020 Free Software Foundation, Inc.
-                #     ...
-                #
-                # Other platforms produce output of the form:
-                #
-                #     ldd (GNU libc) 2.36
-                #     Copyright (C) 2020 Free Software Foundation, Inc.
-                #     ...
-                #
-                # Note that the exact text will vary version to version.
-                # Look for the "2.NN" pattern.
-                if match := re.search(r"\d\.\d+", output):
-                    target_glibc = match.group(0)
-                else:
-                    raise BriefcaseCommandError(
-                        "Unable to parse glibc dependency version from version string."
+            with self.console.wait_bar("Determining glibc version..."):
+                try:
+                    output = self.tools.docker.check_output(
+                        ["ldd", "--version"],
+                        image_tag=app.target_image,
                     )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    "Unable to determine glibc dependency version."
-                ) from e
+                    # On Debian/Ubuntu, ldd --version will give you output of the form:
+                    #
+                    #     ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31
+                    #     Copyright (C) 2020 Free Software Foundation, Inc.
+                    #     ...
+                    #
+                    # Other platforms produce output of the form:
+                    #
+                    #     ldd (GNU libc) 2.36
+                    #     Copyright (C) 2020 Free Software Foundation, Inc.
+                    #     ...
+                    #
+                    # Note that the exact text will vary version to version.
+                    # Look for the "2.NN" pattern.
+                    if match := re.search(r"\d\.\d+", output):
+                        target_glibc = match.group(0)
+                    else:
+                        raise BriefcaseCommandError(
+                            "Unable to parse glibc dependency version from version string."
+                        )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        "Unable to determine glibc dependency version."
+                    ) from e
 
         else:
             target_glibc = super().target_glibc_version(app)
