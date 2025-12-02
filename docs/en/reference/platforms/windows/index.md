@@ -165,33 +165,35 @@ Briefcase will attempt to convert your [`version`][] into a valid MSI value by e
 
 However, if you need to override this default value, you can define [`version_triple`][] in your app settings. If provided, this value will be used in the MSI configuration file instead of the auto-generated value.
 
-## Installer options
+## Installer/uninstaller options
 
-Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors.
+Windows MSI installers are able to present a panel of optional features to the user as part of the installation or uninstallation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors, or by a [pre-uninstall script][pre_uninstall_script] to perform additional uninstallation behaviors.
 
-Installer options are defined using a TOML array of tables - each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]`, which must define the following keys:
+Installer and uninstaller options are defined using a TOML array of tables. Up to 4 installer options and 4 uninstaller options can be defined. Each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]` or `[[ toga.briefcase.app.<app name>.uninstall_option ]]`, which must define the following keys:
 
-### `install_option.name`
+### `install_option.name` / `uninstall_option.name`
 
-An identifier for the option. This name must be a valid Python identifier; the list of
-options specified for an app must be unique when converted into upper case (i.e., you
-cannot have `value` and `VALUE` in the same configuration).
+An identifier for the option. This name must be a valid Python identifier; the list of options specified for an app must be unique when converted into upper case (i.e., you cannot have `value` and `VALUE` in the same configuration). Names must be unique across both `install_options` *and* `uninstall_options`.
 
-### `install_option.title`
+### `install_option.title` / `uninstall_option.title`
 
 A short human-readable label describing the option, as a string.
 
-### `install_option.description`
+### `install_option.description` / `uninstall_option.description`
 
 A longer description of the purpose of the option, as a string.
 
-### `install_option.default`
+### `install_option.default` / `uninstall_option.default`
 
 A Boolean describing the initial value of the option in the GUI. If not provided, defaults to `False`.
 
-### Using installer options
+### Using options
 
-When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable. For example, if your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
+When an installer option is defined, the value of the option will be made available to the post-install or pre-uninstall script as an environment variable. For example, if you define an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected.
+
+In the post-install script, the `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
+
+If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 
 ## Platform quirks
 

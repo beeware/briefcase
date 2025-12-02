@@ -31,12 +31,12 @@ def option_config():
 
 def test_no_install_options():
     """An config can have no install options."""
-    assert validate_install_options_config(None) == {}
+    assert validate_install_options_config(None, "mystery") == {}
 
 
 def test_install_options(option_config):
     """A config can provide installer options."""
-    install_options = validate_install_options_config(option_config)
+    install_options = validate_install_options_config(option_config, "mystery")
 
     assert install_options == {
         "first": {
@@ -63,9 +63,9 @@ def test_missing_name(option_config):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Install option 1 does not define a `name`",
+        match=r"Mystery option 1 does not define a `name`",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 def test_non_string(option_config):
@@ -74,9 +74,9 @@ def test_non_string(option_config):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Name for install option 1 is not a string",
+        match=r"Name for mystery option 1 is not a string",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 @pytest.mark.parametrize(
@@ -92,9 +92,9 @@ def test_identifier_name(option_config, name):
     option_config[1]["name"] = name
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"' cannot be used as an install option name",
+        match=r"' cannot be used as an mystery option name",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 @pytest.mark.parametrize(
@@ -110,9 +110,9 @@ def test_keyword_name(option_config, name):
     option_config[1]["name"] = name
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"' is a reserved install option identifier",
+        match=r"' is a reserved mystery option identifier",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 @pytest.mark.parametrize(
@@ -128,9 +128,9 @@ def test_unique_name(option_config, name):
     option_config[2]["name"] = name
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Install option names must be unique.",
+        match=r"Mystery option names must be unique.",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 def test_missing_title(option_config):
@@ -138,9 +138,9 @@ def test_missing_title(option_config):
     del option_config[1]["title"]
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Install option 'second' does not provide a title.",
+        match=r"Mystery option 'second' does not provide a title.",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 def test_non_string_title(option_config):
@@ -149,9 +149,9 @@ def test_non_string_title(option_config):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Title for install option 'second' is not a string.",
+        match=r"Title for mystery option 'second' is not a string.",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 def test_missing_description(option_config):
@@ -159,9 +159,9 @@ def test_missing_description(option_config):
     del option_config[1]["description"]
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Install option 'second' does not provide a description.",
+        match=r"Mystery option 'second' does not provide a description.",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
 
 
 def test_non_string_description(option_config):
@@ -169,6 +169,46 @@ def test_non_string_description(option_config):
     option_config[1]["description"] = 42
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Description for install option 'second' is not a string.",
+        match=r"Description for mystery option 'second' is not a string.",
     ):
-        validate_install_options_config(option_config)
+        validate_install_options_config(option_config, "mystery")
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "first",
+        "FiRsT",
+        "FIRST",
+    ],
+)
+def test_duplicated_name(option_config, name):
+    """Option names must be unique against other option types."""
+    # Parse mystery options
+    mystery_options = validate_install_options_config(option_config, "mystery")
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"Science option names must be unique.*"
+            r"already used as an mystery option"
+        ),
+    ):
+        validate_install_options_config(
+            [
+                {
+                    "name": "other",
+                    "title": "Other option",
+                    "description": "Do the other thing",
+                    "default": True,
+                },
+                {
+                    "name": name,
+                    "title": "Second option",
+                    "description": "Do the second thing",
+                    "default": False,
+                },
+            ],
+            "science",
+            mystery=mystery_options,
+        )

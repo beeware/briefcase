@@ -46,6 +46,7 @@ def full_context():
         "requests": {},
         "document_types": {},
         "install_options": {},
+        "uninstall_options": {},
         "license": {"file": "LICENSE"},
         "requirement_installer_args": [],
         "external_package_path": None,
