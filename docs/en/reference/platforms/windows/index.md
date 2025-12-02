@@ -195,7 +195,7 @@ When an installer option is defined, the value of the option will be made availa
 
 Uninstaller options are handled in a similar way to installer options, but they are provided to the pre-uninstall script. An uninstall option of `foo` will result in an environment variable named `UNINSTALL_FOO` being defined.
 
-If a user uninstalls software through the normal Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually. This is a quirk of the Windows uninstall tooling.
+If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 
 ## Platform quirks
 
