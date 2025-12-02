@@ -332,9 +332,9 @@ Briefcase is able to use third-party packages in Android apps. As long as the pa
 
 If the package is pure Python (i.e., it does not contain a binary library), that's all you need to do. To check whether a package is pure Python, look at the PyPI downloads page for the project; if the wheels provided are have a `-py3-none-any.whl` suffix, then they are pure Python wheels. If the wheels have version and platform-specific extensions (e.g., `-cp311-cp311-macosx_11_0_universal2.whl`), then the wheel contains a binary component.
 
-If the package contains a binary component, that wheel needs to be compiled for Android. PyPI allows projects to upload Android-compatible wheels (identified by suffixes like `-cp314-cp314-android_24_arm64.whl`). However, at this time, most projects do not provide Android-compatible wheels.
+If the package contains a binary component, that wheel needs to be compiled for Android. PyPI allows projects to upload Android-compatible wheels (identified by suffixes like `-cp314-cp314-android_24_arm64_v8a.whl`). However, at this time, most projects do not provide Android-compatible wheels.
 
-This is expected to improve over time. In the mean time, Briefcase uses a [secondary repository](https://chaquo.com/pypi-13.1/) to provide pre-compiled Android wheels. This repository is maintained by the BeeWare project, and as a result, it does not have binary wheels for *every* package that is available on PyPI, or even every *version* of every package that is on PyPI. If you see any of the following messages when building an app for a mobile platform, then the package (or this version of it) probably isn't supported yet:
+This is expected to improve over time. In the meantime, Briefcase uses a [secondary repository](https://chaquo.com/pypi-13.1/) to provide pre-compiled Android wheels. This repository is maintained by the BeeWare project, and as a result, it does not have binary wheels for *every* package that is available on PyPI, or even every *version* of every package that is on PyPI. If you see any of the following messages when building an app for Android, then the package (or this version of it) probably isn't supported yet:
 
 * "Could not find a version that satisfies the requirement"
 * "No matching distributions available for your environment"
