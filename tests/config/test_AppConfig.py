@@ -459,3 +459,44 @@ def test_install_launcher(install_launcher, console_app, expected):
         console_app=console_app,
     )
     assert config.install_launcher == expected
+
+
+def test_non_unique_uninstall_options():
+    """Installer and Uninstaller options must not overlap."""
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"Uininstall option names must be unique. "
+            r"The name 'first' is already used as an install option."
+        ),
+    ):
+        AppConfig(
+            app_name="myapp",
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=["src/myapp"],
+            license={"file": "LICENSE"},
+            install_option=[
+                {
+                    "name": "first",
+                    "title": "First option",
+                    "description": "Do the first thing",
+                    "default": True,
+                },
+                {
+                    "name": "second",
+                    "title": "Second option",
+                    "description": "Do the second thing",
+                    "default": False,
+                },
+            ],
+            uninstall_option=[
+                {
+                    "name": "first",
+                    "title": "First option",
+                    "description": "Do the first thing",
+                    "default": True,
+                },
+            ],
+        )

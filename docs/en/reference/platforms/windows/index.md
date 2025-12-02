@@ -173,7 +173,7 @@ Installer and uninstaller options are defined using a TOML array of tables. Up t
 
 ### `install_option.name` / `uninstall_option.name`
 
-An identifier for the option. This name must be a valid Python identifier; the list of options specified for an app must be unique when converted into upper case (i.e., you cannot have `value` and `VALUE` in the same configuration).
+An identifier for the option. This name must be a valid Python identifier; the list of options specified for an app must be unique when converted into upper case (i.e., you cannot have `value` and `VALUE` in the same configuration). Names mus be unique across both `install_options` *and* `uninstall_options`
 
 ### `install_option.title` / `uninstall_option.title`
 

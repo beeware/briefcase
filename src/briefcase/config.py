@@ -197,17 +197,21 @@ a single value should be provided.
         pass
 
 
-def validate_install_options_config(config, opt_type):
-    """Validate that install options are valid and complete, and convert to a dict.
+def validate_install_options_config(config, opt_type, **others):
+    """Validate that install/uninstall options are valid and complete, and convert to a
+    dict.
 
     The dict format is required because Cookiecutter doesn't allow passing a list as a
     context value; you have to use the reliable iteration order of a dict instead.
 
-    :param config: The table form of install options
+    :param config: The table form of options
     :param opt_type: The label of the option type being parsed ("install" or
         "uninstall")
+    :param others: A dictionary of other parsed option types. The keys are
+        the option types, and the values are the dictionary of parse options. Options
+        in `config` must be unique against these keys.
     """
-    install_options = {}
+    options = {}
     known_names = set()
     if config:
         for i, config_item in enumerate(config):
@@ -240,13 +244,21 @@ def validate_install_options_config(config, opt_type):
             if name.upper() in known_names:
                 raise BriefcaseConfigError(
                     f"{opt_type.title()} option names must be unique. The name "
-                    f"{name!r}, used by install option {i}, has already been defined."
+                    f"{name!r}, used by {opt_type} option {i}, has already "
+                    "been defined."
                 )
+            else:
+                for other_type, other_options in others.items():
+                    if name.upper() in {n.upper() for n in other_options}:
+                        raise BriefcaseConfigError(
+                            f"{opt_type.title()} option names must be unique. The name "
+                            f"{name!r} is already used as an {other_type} option."
+                        )
 
-            # install_options needs to retain the original name, but we need names to be
+            # options needs to retain the original name, but we need names to be
             # case-unique as well, so we track a separate set of known upper case names.
             known_names.add(name.upper())
-            install_options[name] = option
+            options[name] = option
 
             try:
                 # Options must have a string title.
@@ -276,7 +288,7 @@ def validate_install_options_config(config, opt_type):
             # Options are booleans, and are False by default
             option["default"] = bool(config_item.get("default", False))
 
-    return install_options
+    return options
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
@@ -520,7 +532,9 @@ class AppConfig(BaseConfig):
             install_option, "install"
         )
         self.uninstall_options = validate_install_options_config(
-            uninstall_option, "uininstall"
+            uninstall_option,
+            "uininstall",
+            install=self.install_options,
         )
 
         # Version number is PEP440 compliant:

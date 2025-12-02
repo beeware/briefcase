@@ -172,3 +172,43 @@ def test_non_string_description(option_config):
         match=r"Description for mystery option 'second' is not a string.",
     ):
         validate_install_options_config(option_config, "mystery")
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "first",
+        "FiRsT",
+        "FIRST",
+    ],
+)
+def test_duplicated_name(option_config, name):
+    """Option names must be unique against other option types."""
+    # Parse mystery options
+    mystery_options = validate_install_options_config(option_config, "mystery")
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"Science option names must be unique.*"
+            r"already used as an mystery option"
+        ),
+    ):
+        validate_install_options_config(
+            [
+                {
+                    "name": "other",
+                    "title": "Other option",
+                    "description": "Do the other thing",
+                    "default": True,
+                },
+                {
+                    "name": name,
+                    "title": "Second option",
+                    "description": "Do the second thing",
+                    "default": False,
+                },
+            ],
+            "science",
+            mystery=mystery_options,
+        )
