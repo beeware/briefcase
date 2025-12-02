@@ -548,6 +548,8 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
     def verify_system_packages(self, app: AppConfig):
         """Verify that the required system packages are installed.
 
+        Verifies both `system_requires` and `system_runtime_requires`.
+
         :param app: The app being built.
         """
         (
@@ -576,7 +578,12 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         # Run a check for each package listed in the app's system_requires,
         # plus the baseline system packages that are required.
         missing = set()
-        for package in base_system_packages + getattr(app, "system_requires", []):
+        verified = set()
+        for package in (
+            base_system_packages
+            + getattr(app, "system_requires", [])
+            + getattr(app, "system_runtime_requires", [])
+        ):
             # Look for tuples in the package list. If there's a tuple, we're looking
             # for the first name in the tuple on the installed list, but we install
             # the package using the second name. This is to handle `build-essential`
@@ -587,10 +594,14 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
             else:
                 installed = provided_by = package
 
-            try:
-                self.tools.subprocess.check_output([*system_verify, installed], quiet=1)
-            except subprocess.CalledProcessError:
-                missing.add(provided_by)
+            if installed not in verified:
+                verified.add(installed)
+                try:
+                    self.tools.subprocess.check_output(
+                        [*system_verify, installed], quiet=1
+                    )
+                except subprocess.CalledProcessError:
+                    missing.add(provided_by)
 
         # If any required packages are missing, raise an error.
         if missing:

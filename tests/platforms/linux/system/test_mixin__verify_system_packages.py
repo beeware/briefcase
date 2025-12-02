@@ -174,6 +174,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
 
     # Add some system requirements.
     first_app_config.system_requires = ["first", "second", "third"]
+    first_app_config.system_runtime_requires = ["first", "other", "compiler"]
 
     # Mock the effect of checking requirements that are all present
     build_command.tools.subprocess.check_output.return_value = "installed"
@@ -181,9 +182,11 @@ def test_packages_installed(build_command, first_app_config, capsys):
     # Verify the requirements. This will raise an error.
     build_command.verify_system_packages(first_app_config)
 
+    # All requirement are checked, but `first` and `compiler` are only verified once
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["check", "compiler"], quiet=1),
         call(["check", "first"], quiet=1),
         call(["check", "second"], quiet=1),
         call(["check", "third"], quiet=1),
+        call(["check", "other"], quiet=1),
     ]
