@@ -250,6 +250,75 @@ class Console:
         """Export the text of the entire log; the log is also cleared."""
         return self._log_impl.export_text()
 
+    @staticmethod
+    def warning_banner(
+        message: str,
+        title: str = "",
+        width=80,
+        border_char="*",
+        padding=2,
+    ) -> str:
+        """Format warning banner message inside an asterisk border box.
+
+        :param message: The message to format inside the box.
+        :type message: str
+        :param title: The title of the box. If provided, appears centered at the top.
+        :type title: str, optional
+        :param width: The total width of the box in characters. Defaults to 80.
+        :type width: int, optional
+        :param border_char: Character to use for the box border. Defaults to "*".
+        :type border_char: str, optional
+        :param padding: Number of spaces between the border and text content. Defaults
+            to 2.
+        :type padding: int, optional
+        :return: The formatted message enclosed in a bordered box.
+        :rtype: str
+        """
+
+        if not message:
+            return ""
+
+        # Create border line
+        border_line = border_char * width
+        # create lines array with opening line of the box
+        lines = [border_line]
+
+        # if title exists, format title in the box
+        if title:
+            # Wrap the title to lines to fit the width of the box
+            wrapped_title_lines = textwrap.wrap(
+                title.strip(),
+                width=width - (padding * 2) - 4,
+            )
+
+            # width of title line inside the box
+            inner_width = width - (padding * 2)
+
+            for line in wrapped_title_lines:
+                # Center each line within the available space
+                padded_line = line.center(inner_width)
+                # add line to the box
+                lines.append(f"**{padded_line}**")
+
+            # closing line of title in the box
+            lines.append(border_line)
+
+        # split the message into paragraphs
+        paragraphs = message.split("\n")
+        for paragraph in paragraphs:
+            if paragraph.strip():  # Non-empty paragraph
+                # Wrap paragraph to lines to fit the width of the box
+                wrapped_lines = textwrap.wrap(paragraph, width=width)
+                lines.extend(wrapped_lines)
+            else:  # Empty paragraph (preserve blank lines)
+                lines.append("")
+
+        # closing line of message
+        lines.append(border_line)
+
+        # merge lines into a single string and return
+        return "\n".join(lines)
+
     #################################################################
     # Logging controls
     #################################################################

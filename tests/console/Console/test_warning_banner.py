@@ -1,4 +1,4 @@
-from briefcase.utils import format_message_to_asterisk_box
+from briefcase.console import Console
 
 name = "Anton"
 issue_idx = 2559
@@ -17,14 +17,14 @@ source_title = (
 
 def test_format_message_to_asterisk_box_empty_string_title():
     # Test with empty message and title
-    msg = format_message_to_asterisk_box("")
+    msg = Console.warning_banner("")
 
     assert msg == ""
 
 
 def test_format_message_to_asterisk_box_width_80_default():
     # Test with width 80: default
-    msg = format_message_to_asterisk_box(
+    msg = Console.warning_banner(
         source_msg,
         title=source_title,
     )
@@ -43,9 +43,9 @@ project, and I'm excited to contribute to it.
     assert msg == output_msg_width_80_default
 
 
-def test_format_message_to_asterisk_box_width_40_default():
+def test_format_message_to_asterisk_box_width_40():
     # Test with width 40: very narrow
-    msg = format_message_to_asterisk_box(
+    msg = Console.warning_banner(
         source_msg,
         title=source_title,
         width=40,
@@ -68,7 +68,7 @@ and I'm excited to contribute to it.
 
 def test_format_message_to_asterisk_box_empty_title():
     # Test with width 80: default
-    msg = format_message_to_asterisk_box(
+    msg = Console.warning_banner(
         source_msg,
     )
     output_msg_width_80_default = (
