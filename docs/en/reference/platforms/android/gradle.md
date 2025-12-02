@@ -336,15 +336,10 @@ If the package contains a binary component, that wheel needs to be compiled for 
 
 This is expected to improve over time. In the mean time, Briefcase uses a [secondary repository](https://chaquo.com/pypi-13.1/) to provide pre-compiled Android wheels. This repository is maintained by the BeeWare project, and as a result, it does not have binary wheels for *every* package that is available on PyPI, or even every *version* of every package that is on PyPI. If you see any of the following messages when building an app for a mobile platform, then the package (or this version of it) probably isn't supported yet:
 
-* The error ["Chaquopy cannot compile native code"](https://chaquo.com/chaquopy/doc/current/faq.html#chaquopy-cannot-compile-native-code)
-* A reference to downloading a `.tar.gz` version of the package
-* A reference to `Building wheels for collected packages: <package>`
+* "Could not find a version that satisfies the requirement"
+* "No matching distributions available for your environment"
 
-It is *usually* possible to compile any binary package wheels for Android, depending on the requirements of the package itself. If the package has a dependency on other binary libraries (e.g., something like `libjpeg` that isn't written in Python), those libraries will need to be compiled for Android as well. However, if the library requires build tools that don't support Android, such as a compiler that can't target Android, or a PEP517 build system that doesn't support cross-compilation, it may not be possible to build an Android wheel.
-
-The recommended way to build Android-compatible wheels is to use [cibuildwheel](https://cibuildwheel.pypa.io/en/stable/platforms/#android). Despite the name, the tool is not limited to CI environments; it can be run locally on macOS and Linux machines. Many projects already use cibuildwheel to manage publication of binary wheels. For those projects, it may be possible to generate Android wheels by invoking `cibuildwheel --platform=android`. Some modifications of the cibuildwheel configuration may be necessary to provide Android-specific customizations.
-
-The [Chaquopy repository](https://github.com/chaquo/chaquopy/blob/master/server/pypi/README.md) also contains tools to assist with cross-compiling Android binary wheels. This project is mostly of historical significance; the BeeWare and Chaquopy teams are now focused on contributing Android support upstream, rather than maintaining independent packaging efforts. If you would like a project to officially support Android, you should open a feature request with that project requesting Android support, and consider providing a PR to contribute that support.
+For advice on how to deal with this situation, see the [Chaquopy FAQ](https://chaquo.com/chaquopy/doc/current/faq.html#faq-pip).
 
 ### Signing of `briefcase package` artefacts
 
