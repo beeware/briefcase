@@ -1,0 +1,55 @@
+[build-system]
+requires = [
+    # keep versions in sync with automation/pyproject.toml and ../pyproject.toml
+    "setuptools==80.9.0",
+    "setuptools_scm==9.2.2",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "briefcase-debugger"
+description = "A Briefcase plugin adding remote debugging support for PDB and Visual Studio Code."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+dependencies = [
+    # see "pdb" or "debugpy" optional dependencies below
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+pdb = ["remote-pdb>=2.1.0,<3.0.0"]
+debugpy = ["debugpy>=1.8.17,<2.0.0"]
+
+[dependency-groups]
+test = [
+    "coverage[toml] == 7.12.0",
+    "pytest == 9.0.1",
+    "pytest-xdist == 3.8.0",
+]
+
+[tool.coverage.run]
+parallel = true
+branch = true
+relative_files = true
+source_pkgs = ["briefcase_debugger"]
+
+[tool.coverage.paths]
+source = [
+    "src",
+    "**/site-packages",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+skip_empty = true
+precision = 1
+
+[tool.ruff.lint]
+ignore = [
+    "T20",    # flake8-print (useful for briefcase, but not in the debugger)
+]
+
+[tool.setuptools_scm]
+root = "../"

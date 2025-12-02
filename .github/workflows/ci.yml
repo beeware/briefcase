@@ -11,9 +11,9 @@ on:
         default: "false"
         type: string
     outputs:
-      artifact-name:
-        description: "Name of the uploaded artifact; use for artifact retrieval."
-        value: ${{ jobs.package.outputs.artifact-name }}
+      artifact-basename:
+        description: "Base name of the uploaded artifacts; use for artifact retrieval."
+        value: ${{ jobs.package.outputs.artifact-basename }}
 
 # Cancel active CI runs for a PR before starting another run
 concurrency:
@@ -46,19 +46,16 @@ jobs:
       id-token: write
       contents: read
       attestations: write
+    strategy:
+      matrix:
+        subdir:
+        - ""  # root briefcase package
+        - "debugger"
+        - "automation"
     uses: beeware/.github/.github/workflows/python-package-create.yml@main
     with:
+      build-subdirectory: ${{ matrix.subdir }}
       attest: ${{ inputs.attest-package }}
-
-  package-automation:
-    name: Package Automation
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
-    with:
-      build-subdirectory: "automation"
 
   unit-tests:
     name: Unit tests
@@ -83,26 +80,27 @@ jobs:
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v6.0.0
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6.0.0
+      uses: actions/setup-python@v6.1.0
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
 
     - name: Get Packages
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact@v6.0.0
       with:
-        name: ${{ needs.package.outputs.artifact-name }}
+        pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
+        merge-multiple: true
         path: dist
 
     - name: Install Tox
       run: python -m pip install --group tox-uv
 
-    - name: Test
+    - name: Test Briefcase
       id: test
       run: |
         RUNNER_OS=$(cut -d- -f1 <<< ${{ matrix.platform }})
@@ -112,7 +110,7 @@ jobs:
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       with:
         name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
         path: ".coverage.*"
@@ -125,6 +123,10 @@ jobs:
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
 
+    - name: Test Debugger
+      run: |
+          tox -e py-debugger --installpkg dist/briefcase_debugger-*.whl
+
   coverage:
     name: Project coverage
     runs-on: ubuntu-24.04
@@ -132,12 +134,12 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v6.0.0
       with:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v6.0.0
+      uses: actions/setup-python@v6.1.0
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
@@ -147,7 +149,7 @@ jobs:
       run: python -m pip install --group tox-uv
 
     - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact@v6.0.0
       with:
         pattern: coverage-data-*
         merge-multiple: true
@@ -165,14 +167,14 @@ jobs:
 
     - name: Upload Project Coverage HTML Report
       if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       with:
         name: html-coverage-report-project
         path: htmlcov
 
   verify-projects:
     name: Verify project
-    needs: [ package, package-automation, unit-tests ]
+    needs: [ package, unit-tests ]
     uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
       runner-os: ${{ matrix.runner-os }}
@@ -185,7 +187,7 @@ jobs:
 
   verify-apps:
     name: Build app
-    needs: [ package, package-automation, unit-tests ]
+    needs: [ package, unit-tests ]
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support

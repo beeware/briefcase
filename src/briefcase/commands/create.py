@@ -106,7 +106,10 @@ class CreateCommand(BaseCommand):
 
     def support_package_filename(self, support_revision: str) -> str:
         """The query arguments to use in a support package query request."""
-        return f"Python-{self.python_version_tag}-{self.platform}-support.b{support_revision}.tar.gz"
+        return (
+            f"Python-{self.python_version_tag}-{self.platform}"
+            f"-support.b{support_revision}.tar.gz"
+        )
 
     def support_package_url(self, support_revision: str) -> str:
         """The URL of the support package to use for apps of this type."""
@@ -189,6 +192,7 @@ class CreateCommand(BaseCommand):
         return {
             key: app.permission.pop(key, None)
             for key in [
+                "bluetooth",
                 "camera",
                 "microphone",
                 "coarse_location",
@@ -600,8 +604,8 @@ class CreateCommand(BaseCommand):
             ``app_packages`` path.
         :param install_hint: Additional hint information to provide in the exception
             message if the pip install call fails.
-        :param pip_kwargs: Any additional keyword arguments to pass to ``subprocess.run``
-            when invoking pip.
+        :param pip_kwargs: Any additional keyword arguments to pass to
+            ``subprocess.run`` when invoking pip.
         """
         try:
             self.tools[app].app_context.run(
@@ -690,6 +694,9 @@ class CreateCommand(BaseCommand):
         requires = app.requires.copy() if app.requires else []
         if app.test_mode and app.test_requires:
             requires.extend(app.test_requires)
+
+        if app.debugger:
+            requires.append(app.debugger.debugger_support_pkg)
 
         try:
             requirements_path = self.app_requirements_path(app)
@@ -808,7 +815,8 @@ class CreateCommand(BaseCommand):
                         source_filename = f"{source}-{variant}-{size}{target.suffix}"
                     except KeyError:
                         self.console.info(
-                            f"Unknown variant {variant!r} for {size}px {role}; using default"
+                            f"Unknown variant {variant!r} for {size}px {role}; "
+                            f"using default"
                         )
                         return
 

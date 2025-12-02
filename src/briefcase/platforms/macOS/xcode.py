@@ -55,10 +55,12 @@ class macOSXcodeOpenCommand(macOSXcodeMixin, OpenCommand):
 
 class macOSXcodeUpdateCommand(macOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing macOS Xcode project."
+    supports_debugger = True
 
 
 class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
     description = "Build a macOS Xcode project."
+    supports_debugger = True
 
     def build_app(self, app: BaseConfig, **kwargs):
         """Build the Xcode project for the application.
@@ -95,6 +97,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
 
 class macOSXcodeRunCommand(macOSRunMixin, macOSXcodeMixin, RunCommand):
     description = "Run a macOS app."
+    supports_debugger = True
 
 
 class macOSXcodeDevCommand(macOSXcodeMixin, DevCommand):

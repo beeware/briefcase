@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import plistlib
 import subprocess
 import time
@@ -19,6 +20,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
@@ -270,6 +272,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         # The collection of info.plist entries
         info = {}
 
+        if x_permissions["bluetooth"]:
+            info["NSBluetoothAlwaysUsageDescription"] = x_permissions["bluetooth"]
         if x_permissions["camera"]:
             info["NSCameraUsageDescription"] = x_permissions["camera"]
         if x_permissions["microphone"]:
@@ -436,6 +440,7 @@ version of {ios_min_version}.
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing iOS Xcode project."
+    supports_debugger = True
 
 
 class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
@@ -444,6 +449,7 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
 
 class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
+    supports_debugger = True
 
     def info_plist_path(self, app: AppConfig):
         """Obtain the path to the application's plist file.
@@ -505,6 +511,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
 
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
+    supports_debugger = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -512,6 +519,21 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # External service APIs.
         # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
+
+    def debugger_app_packages_path_mapping(
+        self, app: AppConfig
+    ) -> AppPackagesPathMappings:
+        """Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=str(
+                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
+            ),
+        )
 
     def run_app(
         self,
@@ -541,7 +563,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             label = "app"
 
         self.console.info(
-            f"Starting {label} on an {device} running iOS {iOS_version} (device UDID {udid})",
+            (
+                f"Starting {label} on an {device} running iOS {iOS_version} "
+                f"(device UDID {udid})"
+            ),
             prefix=app.app_name,
         )
 
@@ -664,48 +689,98 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Wait for the log stream start up
         time.sleep(0.25)
 
-        try:
-            self.console.info(f"Starting {label}...", prefix=app.app_name)
-            with self.console.wait_bar(f"Launching {label}..."):
-                output = self.tools.subprocess.check_output(
-                    [
-                        "xcrun",
-                        "simctl",
-                        "launch",
-                        udid,
-                        app.bundle_identifier,
-                        *passthrough,
-                    ]
+        # Add additional environment variables
+        env = {}
+        if app.debugger:
+            env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
+
+        # Set additional environment variables while the app is running (no-op if no environment variables are set).
+        with self.setup_env(env, udid):
+            try:
+                self.console.info(f"Starting {label}...", prefix=app.app_name)
+                with self.console.wait_bar(f"Launching {label}..."):
+                    output = self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "launch",
+                            udid,
+                            app.bundle_identifier,
+                            *passthrough,
+                        ]
+                    )
+                    try:
+                        app_pid = int(output.split(":")[1].strip())
+                    except (IndexError, ValueError) as e:
+                        raise BriefcaseCommandError(
+                            f"Unable to determine PID of {label} {app.app_name}."
+                        ) from e
+
+                # Start streaming logs for the app.
+                self.console.info(
+                    "Following simulator log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
                 )
-                try:
-                    app_pid = int(output.split(":")[1].strip())
-                except (IndexError, ValueError) as e:
-                    raise BriefcaseCommandError(
-                        f"Unable to determine PID of {label} {app.app_name}."
-                    ) from e
 
-            # Start streaming logs for the app.
-            self.console.info(
-                "Following simulator log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
-            )
-
-            # Stream the app logs,
-            self._stream_app_logs(
-                app,
-                popen=simulator_log_popen,
-                clean_filter=macOS_log_clean_filter,
-                clean_output=True,
-                stop_func=lambda: is_process_dead(app_pid),
-                log_stream=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to launch {label} {app.app_name}."
-            ) from e
+                # Stream the app logs,
+                self._stream_app_logs(
+                    app,
+                    popen=simulator_log_popen,
+                    clean_filter=macOS_log_clean_filter,
+                    clean_output=True,
+                    stop_func=lambda: is_process_dead(app_pid),
+                    log_stream=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to launch {label} {app.app_name}."
+                ) from e
 
         # Preserve the device selection as state.
         return {"udid": udid}
+
+    @contextlib.contextmanager
+    def setup_env(
+        self,
+        env: dict[str, str] | None,
+        udid: str,
+    ):
+        """Context manager to set up the environment for the command."""
+        if env:
+            with self.console.wait_bar("Setting environment variables in simulator..."):
+                for env_key, env_value in env.items():
+                    self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "setenv",
+                            f"{env_key}",
+                            f"{env_value}",
+                        ]
+                    )
+
+            yield
+
+            with self.console.wait_bar(
+                "Removing environment variables from simulator..."
+            ):
+                for env_key in env:
+                    self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "unsetenv",
+                            f"{env_key}",
+                        ]
+                    )
+        else:
+            yield  # no-op if no environment variables are set
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):

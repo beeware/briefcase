@@ -98,6 +98,29 @@ Run the app in test mode in the bundled app environment. Running `run --test` wi
 
 Prevent the automated update and build of app code that is performed when specifying by the `--test` option.
 
+## `--debug <debugger>`   { #run-debug }
+
+Run the app in debug mode.
+
+Currently the following debuggers are supported:
+
+- `pdb`: This is used for debugging via console (see [Debug via PDB][debug-pdb])
+- `debugpy`: This is used for debugging via VS Code (see [Debug via VS Code][debug-vscode])
+
+If calling only `--debug` without selecting a debugger explicitly, `pdb` is used as default.
+
+This is an **experimental** new feature, that is currently only supported on Windows, macOS and iOS.
+
+The selected debugger in `run --debug <debugger>` has to match the selected debugger in `build --debug <debugger>`.
+
+## `--debugger-host <host>`
+
+Specifies the host of the socket connection for the debugger. This option is only used when the `--debug <debugger>` option is specified. The default value is `localhost`.
+
+## `--debugger-port <port>`
+
+Specifies the port of the socket connection for the debugger. This option is only used when the `--debug <debugger>` option is specified. The default value is `5678`.
+
 ## Passthrough arguments
 
 If you want to pass any arguments to your app's command line, you can specify them using the `--` marker to separate Briefcase's arguments from your app's arguments. For example:

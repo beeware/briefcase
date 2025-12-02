@@ -63,7 +63,7 @@ def parse_cmdline(args, console: Console | None = None):
 
     description_max_pad_len = max(len(cmd.command) for cmd in COMMANDS) + 2
     command_description_list = "\n".join(
-        f"  {cmd.command}{' ' * (description_max_pad_len - len(cmd.command))}{cmd.description}"
+        f"  {cmd.command:<{description_max_pad_len}}{cmd.description}"
         for cmd in COMMANDS
     )
 

@@ -13,6 +13,7 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
@@ -108,7 +109,8 @@ def validate_document_type_config(document_type_id, document_type):
             and document_type["extension"].isalnum()
         ):
             raise BriefcaseConfigError(
-                f"The extension provided for document type {document_type_id!r} is not alphanumeric."
+                f"The extension provided for document type "
+                f"{document_type_id!r} is not alphanumeric."
             )
     except KeyError:
         raise BriefcaseConfigError(
@@ -118,7 +120,8 @@ def validate_document_type_config(document_type_id, document_type):
     try:
         if not isinstance(document_type["icon"], str):
             raise BriefcaseConfigError(
-                f"The icon definition associated with document type {document_type_id!r} is not a string."
+                f"The icon definition associated with document type "
+                f"{document_type_id!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
@@ -128,7 +131,8 @@ def validate_document_type_config(document_type_id, document_type):
     try:
         if not isinstance(document_type["description"], str):
             raise BriefcaseConfigError(
-                f"The description associated with document type {document_type_id!r} is not a string."
+                f"The description associated with document type "
+                f"{document_type_id!r} is not a string."
             )
     except KeyError:
         raise BriefcaseConfigError(
@@ -143,7 +147,8 @@ def validate_document_type_config(document_type_id, document_type):
         ) from None
     except ValueError as e:
         raise BriefcaseConfigError(
-            f"The URL associated with document type {document_type_id!r} is invalid: {e}"
+            f"The URL associated with document type {document_type_id!r} "
+            f"is invalid: {e}"
         ) from None
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
@@ -334,7 +339,8 @@ def parse_boolean(value: str) -> bool:
         return False
     else:
         raise ValueError(
-            f"Invalid boolean value: {value!r}. Expected one of {truth_vals | false_vals}"
+            f"Invalid boolean value: {value!r}. "
+            f"Expected one of {truth_vals | false_vals}"
         )
 
 
@@ -436,6 +442,7 @@ class AppConfig(BaseConfig):
         requirement_installer_args: list[str] | None = None,
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
+        install_launcher: bool | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -470,24 +477,34 @@ class AppConfig(BaseConfig):
         )
         self.external_package_path = external_package_path
         self.external_package_executable_path = external_package_executable_path
+        self.install_launcher = (
+            install_launcher if (install_launcher is not None) else (not console_app)
+        )
 
         self.test_mode: bool = False
 
+        self.debugger: BaseDebugger | None = None
+        self.debugger_host: str | None = None  # only for run command
+        self.debugger_port: int | None = None  # only for run command
+
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                f"{self.app_name!r} is not a valid app name.\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and 'while'.\n"
-                "They must also be PEP508 compliant (i.e., they can only include letters,\n"
-                "numbers, '-' and '_'; must start with a letter; and cannot end with '-' or '_')."
+                f"{self.app_name!r} is not a valid app name."
+                f"\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and "
+                "'while'. They must also be PEP508 compliant (i.e., they can only "
+                "include letters, numbers, '-' and '_'; must start with a letter; "
+                "and cannot end with '-' or '_')."
             )
 
         if not is_valid_bundle_identifier(self.bundle):
             raise BriefcaseConfigError(
-                f"{self.bundle!r} is not a valid bundle identifier.\n\n"
-                "The bundle should be a reversed domain name. It must contain at least 2\n"
-                "dot-separated sections; each section may only include letters, numbers,\n"
-                "and hyphens; and each section may not contain any reserved words (like\n"
-                "'switch', or 'while')."
+                f"{self.bundle!r} is not a valid bundle identifier."
+                f"\n\n"
+                "The bundle should be a reversed domain name. It must contain at least "
+                "2 dot-separated sections; each section may only include letters, "
+                "numbers, and hyphens; and each section may not contain any reserved "
+                "words (like 'switch', or 'while')."
             )
 
         for document_type_id, document_type in self.document_types.items():
@@ -498,7 +515,8 @@ class AppConfig(BaseConfig):
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
             raise BriefcaseConfigError(
-                f"Version number for {self.app_name!r} ({self.version}) is not valid.\n\n"
+                f"Version number for {self.app_name!r} ({self.version}) is not valid."
+                f"\n\n"
                 "Version numbers must be PEP440 compliant; "
                 "see https://www.python.org/dev/peps/pep-0440/ for details."
             )
@@ -562,6 +580,11 @@ class AppConfig(BaseConfig):
         that can be used a namespace identifier on Python or Java, similar to
         `module_name`."""
         return self.bundle.replace("-", "_")
+
+    @property
+    def dist_info_name(self):
+        """The name of the .dist-info directory for the app."""
+        return f"{self.module_name}.dist-info"
 
     def PYTHONPATH(self):
         """The PYTHONPATH modifications needed to run this app."""

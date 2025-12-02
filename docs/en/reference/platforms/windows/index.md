@@ -130,14 +130,17 @@ pre-uninstall scripts. Defaults to `_installer`.
 
 ### `post_install_script`
 
-A path, relative to the project root, to a Windows `.bat` file that will be executed
-after the installer content has been unpacked. Only used for MSI packaging.
+/// note | Only used for MSI packaging
+///
+
+A path, relative to the project root, to a Windows `.bat` file that will be executed during installation, after the installer content has been unpacked. Its working directory will be the installed location.
 
 ### `pre_uninstall_script`
 
-A path, relative to the project root, to a Windows `.bat` file that will be executed
-before the installed content is removed by uninstalling the app. Only used for MSI
-packaging.
+/// note | Only used for MSI packaging
+///
+
+A path, relative to the project root, to a Windows `.bat` file that will be executed during uninstallation, before the installed content is removed. Its working directory will be the installed location.
 
 ### `system_installer`
 
@@ -164,7 +167,7 @@ However, if you need to override this default value, you can define [`version_tr
 
 ## Installer options
 
-Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a post-install script to perform additional installation behaviors.
+Windows MSI installers are able to present a panel of optional features to the user as part of the installation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors.
 
 Installer options are defined using a TOML array of tables - each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]`, which must define the following keys:
 
@@ -188,7 +191,7 @@ A Boolean describing the initial value of the option in the GUI. If not provided
 
 ### Using installer options
 
-When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable whose name is the capitalized version of the option name. If your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
+When an installer option is defined, the value of the option will be made available to the post-install script as an environment variable. For example, if your installer defines an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected. The `ALLUSERS` environment variable will also be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user.
 
 ## Platform quirks
 
@@ -205,3 +208,13 @@ Using the `--adhoc-sign` option on Windows results in no signing being performed
 ### Tkinter is not available
 
 Briefcase uses the official [Python.org Windows Embeddable package](https://docs.python.org/3/using/windows.html#windows-embeddable) to provide Python binaries for the Windows app. This embeddable distribution is missing some standard library modules that would be part of a normal Python.org install - most notably `tkinter`. This is due to the difficulty in distributing the Tk libraries needed by Tkinter in a way that is compatible with the Windows embedded binary format.
+
+### Maintaining a clean registry with MSI installers
+
+If you are using an MSI installer, it is important to ensure that you leave installed artefacts in a "clean" state - especially if you are using a post-install or pre-uninstall script.
+
+The MSI installer format can be thought of as managing a database - the MSI file describes a "transaction" of files that will be installed; when an app is uninstalled, that transaction is reverted, and all the installed files are removed. The transaction is tracked using the system registry. In most simple cases, running an MSI uninstaller will remove all the registry keys that were added by the MSI installer. However, there are some cases where this will not happen.
+
+If you write files into the application folder, or you use a post-install or pre-uninstall script that modifies files in the application folder, you must ensure that everything that is installed by the MSI can be removed by the MSI on uninstallation. If the uninstallation process cannot remove files or directories that were originally added by the installer - either because the files have been removed, or because a folder isn't empty - then registry entries tied to that installer will remain in the registry after completion of the installation.
+
+For example, consider an installer that creates a `data` folder in the app, containing 2 files `a.dat` and `b.dat`. The MSI installer has a post-installation script that deletes `b.dat`, and adds `c.dat`. When the uninstallation process is executed, registry entries for `data/b.dat` and `data` will remain in the registry. A well-behaved app should *not* delete content that the MSI app installed; and it should not leave content in locations that would prevent the MSI from removing content that the MSI installed.

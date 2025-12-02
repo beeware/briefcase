@@ -442,7 +442,10 @@ class Console:
 
         with command.console.wait_bar("Saving log...", transient=True):
             self.to_console()
-            log_filename = f"briefcase.{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}.{command.command}.log"
+            log_filename = (
+                f"briefcase.{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}."
+                f"{command.command}.log"
+            )
             log_filepath = command.base_path / self.LOG_DIR / log_filename
             try:
                 log_filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -487,9 +490,13 @@ class Console:
                     except Exception:
                         self.error(traceback.format_exc())
 
-        # Capture env vars removing any potentially sensitive information
         sanitized_env_vars = "\n".join(
-            f"\t{env_var}={value if not SENSITIVE_SETTING_RE.search(env_var) else '********************'}"
+            f"\t{env_var}="
+            + (
+                value
+                if not SENSITIVE_SETTING_RE.search(env_var)
+                else "********************"
+            )
             for env_var, value in sorted(command.tools.os.environ.items())
         )
 
@@ -515,12 +522,11 @@ class Console:
             # replace line breaks with spaces
             # (use chr(10) since '\n' isn't allowed in f-strings...)
             f"Python version:  {sys.version.replace(chr(10), ' ')}\n"
-            # sys.real_prefix was used in older versions of virtualenv.
             # sys.base_prefix is always the python exe's original site-specific
             #     directory (e.g. /usr/local).
             # sys.prefix is updated (from base_prefix's value) to the virtual env's
             #     site-specific directory.
-            f"Virtual env:     {hasattr(sys, 'real_prefix') or sys.base_prefix != sys.prefix}\n"
+            f"Virtual env:     {sys.base_prefix != sys.prefix}\n"
             # for conda, prefix and base_prefix are likely the same
             # but contain a conda-meta dir.
             f"Conda env:       {(Path(sys.prefix) / 'conda-meta').exists()}\n"
@@ -603,7 +609,8 @@ class Console:
         :param message: text explaining what is being awaited; should end in '...'
         :param done_message: text appended to the message after exiting
         :param transient: if True, remove bar and message from screen after exiting;
-            if False (default), the message will remain on the screen without pulsing bar.
+            if False (default), the message will remain on the screen without pulsing
+            bar.
         :param markup: whether to interpret Rich styling markup in the message; if True,
             the message must already be escaped; defaults False.
         :returns:  Keep-alive spinner to notify user Briefcase is still waiting
@@ -868,7 +875,8 @@ class Console:
         :param description: A short description of the question being asked. This text
             is used in prompts and a header bar prefacing the question.
         :param intro: An introductory paragraph explaining the question being asked.
-        :param default: The default value if the user hits enter without typing anything.
+        :param default: The default value if the user hits enter without typing
+            anything.
         :param validator: (optional) A validator function; accepts a single input (the
             candidate response), returns True if the answer is valid, or raises
             ValueError() with a debugging message if the candidate value isn't valid.

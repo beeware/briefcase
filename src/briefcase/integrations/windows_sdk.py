@@ -131,7 +131,8 @@ WindowsSDKVersion: {environ_sdk_version}
                         # Append missing "servicing" revision to registry version
                         reg_version = f"{reg_version}.0"
                         tools.console.debug(
-                            f"Evaluating Registry SDK version '{reg_version}' at {sdk_dir}"
+                            f"Evaluating Registry SDK version '{reg_version}' "
+                            f"at {sdk_dir}"
                         )
                         yield sdk_dir, reg_version
 
@@ -139,7 +140,8 @@ WindowsSDKVersion: {environ_sdk_version}
                     for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
                         if sdk_version != reg_version:
                             tools.console.debug(
-                                f"Evaluating Registry SDK Bin version '{sdk_version}' at {sdk_dir}"
+                                f"Evaluating Registry SDK Bin version '{sdk_version}' "
+                                f"at {sdk_dir}"
                             )
                             yield sdk_dir, sdk_version
             except FileNotFoundError:
@@ -149,7 +151,8 @@ WindowsSDKVersion: {environ_sdk_version}
             if sdk_dir.is_dir():
                 for sdk_version in cls._sdk_versions_from_bin(sdk_dir):
                     tools.console.debug(
-                        f"Evaluating Default Bin SDK version '{sdk_version}' at {sdk_dir}"
+                        f"Evaluating Default Bin SDK version '{sdk_version}' "
+                        f"at {sdk_dir}"
                     )
                     yield sdk_dir, sdk_version
 
@@ -219,9 +222,11 @@ WindowsSDKVersion: {environ_sdk_version}
                 f"""\
 Unable to locate a suitable Windows SDK v{cls.SDK_VERSION} installation.
 
-Ensure at least v{cls.SDK_VERSION}.{cls.SDK_MIN_VERSION}.0 is installed and the components below are included:
+Ensure at least v{cls.SDK_VERSION}.{cls.SDK_MIN_VERSION}.0 is installed
+and the components below are included:
 {cls.SDK_REQUIRED_COMPONENTS}
-See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/ to install the SDK.
+See https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/
+to install the SDK.
 """
             )
 

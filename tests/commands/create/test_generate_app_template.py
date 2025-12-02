@@ -31,6 +31,9 @@ def full_context():
         "sources": ["src/my_app"],
         "test_sources": None,
         "test_requires": None,
+        "debugger": None,
+        "debugger_host": None,
+        "debugger_port": None,
         "url": "https://example.com",
         "author": "First Last",
         "author_email": "first@example.com",
@@ -47,6 +50,7 @@ def full_context():
         "requirement_installer_args": [],
         "external_package_path": None,
         "external_package_executable_path": None,
+        "install_launcher": True,
         "test_mode": False,
         # Properties of the generating environment
         "python_version": platform.python_version(),

@@ -51,7 +51,15 @@ class DummyBuildCommand(BuildCommand):
         self.actions.append(("verify-app-tools", app.app_name))
 
     def build_app(self, app, **kwargs):
-        self.actions.append(("build", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "build",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to build_app()
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
@@ -65,12 +73,28 @@ class DummyBuildCommand(BuildCommand):
     # they were invoked, rather than instantiating a Create/Update command.
     # This is for testing purposes.
     def create_command(self, app, **kwargs):
-        self.actions.append(("create", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "create",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to create_app()
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
-        self.actions.append(("update", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "update",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to update_app()
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)

@@ -248,7 +248,10 @@ def test_support_package_url_with_unsupported_platform(
     )
 
     # The unknown platform should cause a missing support package error
-    with pytest.raises(MissingSupportPackage):
+    with pytest.raises(
+        MissingSupportPackage,
+        match=r"Unable to download Tester support package for Python 3.X on gothic",
+    ):
         create_command.install_app_support_package(myapp)
 
     # However, there will have been a download attempt
@@ -489,7 +492,10 @@ def test_no_support_revision(create_command, myapp, no_support_revision_index):
     create_command.tools.file.download = mock.MagicMock()
 
     # An error is raised when attempting to install the support package
-    with pytest.raises(MissingSupportPackage):
+    with pytest.raises(
+        MissingSupportPackage,
+        match=r"Unable to download Tester support package for Python 3.X on gothic",
+    ):
         create_command.install_app_support_package(myapp)
 
     # No download attempt is made.

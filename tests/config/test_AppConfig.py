@@ -338,6 +338,26 @@ def test_package_name(bundle, package_name):
 
 
 @pytest.mark.parametrize(
+    ("app_name", "dist_info_name"),
+    [
+        ("my-app", "my_app.dist-info"),
+        ("my_app", "my_app.dist-info"),
+    ],
+)
+def test_dist_info_name(app_name, dist_info_name):
+    config = AppConfig(
+        app_name=app_name,
+        version="1.2.3",
+        bundle="com.example",
+        description="A simple app",
+        sources=["src/my_app"],
+        license={"file": "LICENSE"},
+    )
+
+    assert config.dist_info_name == dist_info_name
+
+
+@pytest.mark.parametrize(
     ("app_name", "bundle_name"),
     [
         ("my-app", "my-app"),
@@ -414,3 +434,28 @@ def test_no_source_for_app():
             sources=["src/something", "src/other"],
             license={"file": "LICENSE"},
         )
+
+
+@pytest.mark.parametrize(
+    ("install_launcher", "console_app", "expected"),
+    [
+        (True, False, True),
+        (False, False, False),
+        (None, False, True),
+        #
+        (True, True, True),
+        (False, True, False),
+        (None, True, False),
+    ],
+)
+def test_install_launcher(install_launcher, console_app, expected):
+    config = AppConfig(
+        app_name="my-app",
+        version="1.2.3",
+        bundle="org.beeware",
+        description="A simple app",
+        license={"file": "LICENSE"},
+        install_launcher=install_launcher,
+        console_app=console_app,
+    )
+    assert config.install_launcher == expected
