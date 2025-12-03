@@ -1,6 +1,6 @@
 # Contributing code to Briefcase  { #contribute }
 
-If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues). If you want to contribute code, please [fork the code](https://github.com/beeware/briefcase/fork) and [submit a pull request](https://github.com/beeware/briefcase/pulls).
+Is there a feature you'd like to see in Briefcase? Have you found a bug that you'd like to fix? Or are you just looking for a challenge to exercise your Python skills? Here's how to get involved!
 
 ## Prerequisites  { #dev-environment-prereqs }
 
@@ -407,7 +407,7 @@ You'll still get a coverage report when running a part of the test suite -but th
 
 ### Run the test suite for a specific Python version  { #test-py-version }
 
-By default `tox -e py` will run using whatever interpreter resolves as `python` on your machine. If you have multiple Python versions installed, and want to test a specific Python version from the versions you have installed, you can specify a specific Python version to use. For example, to run the test suite on Python 3.10, run:
+By default `tox -e py` will run using whatever interpreter resolves as `python3` on your machine. If you have multiple Python versions installed, and want to test a specific Python version from the versions you have installed, you can specify a specific Python version to use. For example, to run the test suite on Python 3.10, run:
 
 /// tab | macOS
 
@@ -437,7 +437,7 @@ A [subset of tests][test-subset] can be run by adding `--` and a test specificat
 
 ### Run the test suite without coverage (fast)
 
-By default, `tox` will run the pytest suite in single threaded mode. You can speed up the execution of the test suite by running the test suite in parallel. This mode does not produce coverage files due to complexities in capturing coverage within spawned processes. To run a single python version in "fast" mode, run:
+By default, `tox` will run the `pytest` suite in single threaded mode. You can speed up the execution of the test suite by running the test suite in parallel. This mode does not produce coverage files due to complexities in capturing coverage within spawned processes. To run a single python version in "fast" mode, run:
 
 /// tab | macOS
 
@@ -780,10 +780,10 @@ The corresponding change note would read something like:
 
 Some PRs will introduce multiple features and fix multiple bugs, or introduce multiple backwards incompatible changes. In that case, the PR may have multiple change note files. If you need to associate two fragment types with the same ID, you can append a numerical suffix. For example, if PR 789 added a feature described by ticket 123, closed a bug described by ticket 234, and also made two backwards incompatible changes, you might have 4 change note files:
 
-- `123.feature.rst`
-- `234.bugfix.rst`
-- `789.removal.1.rst`
-- `789.removal.2.rst`
+- `123.feature.md`
+- `234.bugfix.md`
+- `789.removal.1.md`
+- `789.removal.2.md`
 
 For more information about `towncrier` and fragment types see [News Fragments](https://towncrier.readthedocs.io/en/stable/tutorial.html#creating-news-fragments). You can also see existing examples of news fragments in the `changes` directory of the Briefcase repository. If this folder is empty, it's likely because Briefcase has recently published a new release; change note files are deleted and combined to update the [release notes][release-history] with each release. You can look at that file to see the style of comment that is required; you can look at [recently merged PRs](https://github.com/beeware/briefcase/pulls?q=is%3Apr+is%3Amerged) to see how to format your change notes.
 
