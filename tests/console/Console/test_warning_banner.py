@@ -1,5 +1,3 @@
-from briefcase.console import Console
-
 name = "Anton"
 issue_idx = 2559
 
@@ -15,22 +13,19 @@ source_title = (
 )
 
 
-def test_format_message_to_asterisk_box_empty_string_title():
+def test_format_message_to_asterisk_box_empty_string_title(console):
     # Test with empty message and title
-    msg = Console.warning_banner("")
-
+    msg = console.warning_banner("")
     assert msg == ""
 
 
-def test_format_message_to_asterisk_box_width_80_default():
+def test_format_message_to_asterisk_box_width_80_default(console):
     # Test with width 80: default
-    msg = Console.warning_banner(
+    msg = console.warning_banner(
         source_msg,
         title=source_title,
     )
-    output_msg_width_80_default = (
-        "*" * 79
-        + """*
+    output_msg_width_80_default = """********************************************************************************
 **  INFO: I TRIED TO SOLVE THIS ISSUE #2559. IT SEEMED TO ME RATHER SIMPLE,   **
 **                       BUT I GOT VERY GOOD EXPERIENCE                       **
 ********************************************************************************
@@ -39,13 +34,12 @@ Hi there! My name is Anton, and I'm a Python developer.
 This is my very first experience in open source development. I like your
 project, and I'm excited to contribute to it.
 ********************************************************************************"""
-    )
     assert msg == output_msg_width_80_default
 
 
-def test_format_message_to_asterisk_box_width_40():
+def test_format_message_to_asterisk_box_width_40(console):
     # Test with width 40: very narrow
-    msg = Console.warning_banner(
+    msg = console.warning_banner(
         source_msg,
         title=source_title,
         width=40,
@@ -66,18 +60,15 @@ and I'm excited to contribute to it.
     assert msg == output_msg_width_40
 
 
-def test_format_message_to_asterisk_box_empty_title():
+def test_format_message_to_asterisk_box_empty_title(console):
     # Test with width 80: default
-    msg = Console.warning_banner(
+    msg = console.warning_banner(
         source_msg,
     )
-    output_msg_width_80_default = (
-        "*" * 79
-        + """*
+    output_msg_width_80_default = """********************************************************************************
 Hi there! My name is Anton, and I'm a Python developer.
 
 This is my very first experience in open source development. I like your
 project, and I'm excited to contribute to it.
 ********************************************************************************"""
-    )
     assert msg == output_msg_width_80_default

@@ -250,8 +250,8 @@ class Console:
         """Export the text of the entire log; the log is also cleared."""
         return self._log_impl.export_text()
 
-    @staticmethod
     def warning_banner(
+        self,
         message: str,
         title: str = "",
         width=80,
