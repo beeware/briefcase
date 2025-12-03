@@ -72,7 +72,7 @@ Invoke checks and tests by running:
 /// tab | macOS
 
 ```console
-(.venv) $ tox p
+(.venv) $ tox
 ```
 
 ///
@@ -80,7 +80,7 @@ Invoke checks and tests by running:
 /// tab | Linux
 
 ```console
-(.venv) $ tox p
+(.venv) $ tox
 ```
 
 ///
@@ -88,7 +88,7 @@ Invoke checks and tests by running:
 /// tab | Windows
 
 ```doscon
-(.venv) C:\...>tox p
+(.venv) C:\...>tox
 ```
 
 ///
