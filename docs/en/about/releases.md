@@ -1,5 +1,43 @@
 # Release History
 
+<!-- towncrier release notes start -->
+
+## 0.3.26 (2025-12-04)
+
+### Features
+
+* When a project specifies a dependency using a local file path, `briefcase dev` now installs that dependency in editable mode. This means changes in the local project will be immediately reflected in the development environment, without needing to reinstall the package. ([#2334](https://github.com/beeware/briefcase/issues/2334))
+* The `build` and `run` commands for Windows, macOS and iOS now have a `--debug` option for integration with PDB and Visual Studio Code. ([#2147](https://github.com/beeware/briefcase/issues/2147), [#2352](https://github.com/beeware/briefcase/issues/2352))
+* Windows MSI installers can now include post-install and pre-uninstall scripts, including selection of optional features as part of the install and uninstall process. ([#2191](https://github.com/beeware/briefcase/issues/2191), [#2573](https://github.com/beeware/briefcase/issues/2573))
+* Windows MSI installers now display and ask for acceptance of the project's license as part of the install process. ([#2191](https://github.com/beeware/briefcase/issues/2191))
+* Briefcase's web backend now gives full control of the PyScript and GUI toolkit configuration to the Python packages that are installed in the app. ([#2337](https://github.com/beeware/briefcase/issues/2337))
+* `briefcase dev` no longer overwrites explicitly set environment variables. ([#2497](https://github.com/beeware/briefcase/issues/2497))
+* Briefcase now has a cross-platform representation of Bluetooth permissions. ([#2522](https://github.com/beeware/briefcase/issues/2522))
+* When packaging an app in MSI format, creation of Start menu shortcuts can now be disabled with the `install_launcher` setting. ([#2534](https://github.com/beeware/briefcase/issues/2534))
+* Windows MSI installers now provide the option for users to configure the install directory for apps. ([#2553](https://github.com/beeware/briefcase/issues/2553))
+* When a project defines multiple applications, `briefcase dev`and `briefcase run` now display an interactive menu allowing the user to select which application to start. ([#2574](https://github.com/beeware/briefcase/issues/2574))
+* Briefcase now has the ability to manage virtual environments as part of a development environment. This feature is only used as part of the in-progress dev command for the web environment, but opens up opportunities for better environment isolation in the future. ([#2334](https://github.com/beeware/briefcase/issues/2334))
+
+### Bugfixes
+
+* The docs checks in `tox` now work if there are spaces in the path. ([#2477](https://github.com/beeware/briefcase/issues/2477))
+* The system Python version check now works on Gentoo Linux. ([#2490](https://github.com/beeware/briefcase/issues/2490))
+* Developer mode is now able to track the need to install requirements on a per-environment basis. ([#2495](https://github.com/beeware/briefcase/issues/2495))
+* Permission disabling is now handled correctly ([#2522](https://github.com/beeware/briefcase/issues/2522))
+
+### Backward Incompatible Changes
+
+* Java JDK 17.0.17+10 is now used to package Android apps. Use `briefcase upgrade java` to update your Briefcase-installed JDK instance to this version. ([#2529](https://github.com/beeware/briefcase/issues/2529))
+
+### Documentation
+
+* Briefcase's documentation was migrated to Markdown format. ([#2502](https://github.com/beeware/briefcase/issues/2502))
+* The obligations of a "well behaved" MSI-packaged application in ensuring a clean registry have been documented. ([#2554](https://github.com/beeware/briefcase/issues/2554))
+
+### Misc
+
+* [#2381](https://github.com/beeware/briefcase/issues/2381), [#2384](https://github.com/beeware/briefcase/issues/2384), [#2457](https://github.com/beeware/briefcase/issues/2457), [#2459](https://github.com/beeware/briefcase/issues/2459), [#2460](https://github.com/beeware/briefcase/issues/2460), [#2461](https://github.com/beeware/briefcase/issues/2461), [#2462](https://github.com/beeware/briefcase/issues/2462), [#2466](https://github.com/beeware/briefcase/issues/2466), [#2467](https://github.com/beeware/briefcase/issues/2467), [#2468](https://github.com/beeware/briefcase/issues/2468), [#2469](https://github.com/beeware/briefcase/issues/2469), [#2470](https://github.com/beeware/briefcase/issues/2470), [#2471](https://github.com/beeware/briefcase/issues/2471), [#2478](https://github.com/beeware/briefcase/issues/2478), [#2479](https://github.com/beeware/briefcase/issues/2479), [#2481](https://github.com/beeware/briefcase/issues/2481), [#2482](https://github.com/beeware/briefcase/issues/2482), [#2484](https://github.com/beeware/briefcase/issues/2484), [#2485](https://github.com/beeware/briefcase/issues/2485), [#2487](https://github.com/beeware/briefcase/issues/2487), [#2492](https://github.com/beeware/briefcase/issues/2492), [#2493](https://github.com/beeware/briefcase/issues/2493), [#2499](https://github.com/beeware/briefcase/issues/2499), [#2500](https://github.com/beeware/briefcase/issues/2500), [#2504](https://github.com/beeware/briefcase/issues/2504), [#2505](https://github.com/beeware/briefcase/issues/2505), [#2506](https://github.com/beeware/briefcase/issues/2506), [#2507](https://github.com/beeware/briefcase/issues/2507), [#2508](https://github.com/beeware/briefcase/issues/2508), [#2509](https://github.com/beeware/briefcase/issues/2509), [#2511](https://github.com/beeware/briefcase/issues/2511), [#2512](https://github.com/beeware/briefcase/issues/2512), [#2517](https://github.com/beeware/briefcase/issues/2517), [#2518](https://github.com/beeware/briefcase/issues/2518), [#2519](https://github.com/beeware/briefcase/issues/2519), [#2520](https://github.com/beeware/briefcase/issues/2520), [#2520](https://github.com/beeware/briefcase/issues/2520), [#2521](https://github.com/beeware/briefcase/issues/2521), [#2523](https://github.com/beeware/briefcase/issues/2523), [#2524](https://github.com/beeware/briefcase/issues/2524), [#2526](https://github.com/beeware/briefcase/issues/2526), [#2528](https://github.com/beeware/briefcase/issues/2528), [#2533](https://github.com/beeware/briefcase/issues/2533), [#2535](https://github.com/beeware/briefcase/issues/2535), [#2536](https://github.com/beeware/briefcase/issues/2536), [#2537](https://github.com/beeware/briefcase/issues/2537), [#2538](https://github.com/beeware/briefcase/issues/2538), [#2539](https://github.com/beeware/briefcase/issues/2539), [#2540](https://github.com/beeware/briefcase/issues/2540), [#2541](https://github.com/beeware/briefcase/issues/2541), [#2542](https://github.com/beeware/briefcase/issues/2542), [#2544](https://github.com/beeware/briefcase/issues/2544), [#2548](https://github.com/beeware/briefcase/issues/2548), [#2549](https://github.com/beeware/briefcase/issues/2549), [#2550](https://github.com/beeware/briefcase/issues/2550), [#2551](https://github.com/beeware/briefcase/issues/2551), [#2552](https://github.com/beeware/briefcase/issues/2552), [#2555](https://github.com/beeware/briefcase/issues/2555), [#2556](https://github.com/beeware/briefcase/issues/2556), [#2557](https://github.com/beeware/briefcase/issues/2557), [#2558](https://github.com/beeware/briefcase/issues/2558), [#2564](https://github.com/beeware/briefcase/issues/2564), [#2565](https://github.com/beeware/briefcase/issues/2565), [#2566](https://github.com/beeware/briefcase/issues/2566), [#2568](https://github.com/beeware/briefcase/issues/2568), [#2568](https://github.com/beeware/briefcase/issues/2568), [#2569](https://github.com/beeware/briefcase/issues/2569), [#2570](https://github.com/beeware/briefcase/issues/2570), [#2571](https://github.com/beeware/briefcase/issues/2571), [#2572](https://github.com/beeware/briefcase/issues/2572), [#2576](https://github.com/beeware/briefcase/issues/2576), [#2577](https://github.com/beeware/briefcase/issues/2577), [#2585](https://github.com/beeware/briefcase/issues/2585), [#2586](https://github.com/beeware/briefcase/issues/2586), [#2589](https://github.com/beeware/briefcase/issues/2589), [#2590](https://github.com/beeware/briefcase/issues/2590)
+
 ## 0.3.25 (2025-08-26)
 
 ### Features
