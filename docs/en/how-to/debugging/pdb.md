@@ -10,7 +10,7 @@ To debug an app in development mode, add `breakpoint()` to your code somewhere t
 
 /// warning | Note
 
-This is currently an **experimental feature** that is only supported on Windows, macOS and iOS.
+This is currently an **experimental feature** that is only supported on Windows, macOS, iOS and Android.
 
 ///
 
