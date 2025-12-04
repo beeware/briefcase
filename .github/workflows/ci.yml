@@ -172,30 +172,30 @@ jobs:
         name: html-coverage-report-project
         path: htmlcov
 
-  # verify-projects:
-  #   name: Verify project
-  #   needs: [ package, unit-tests ]
-  #   uses: beeware/.github/.github/workflows/app-create-verify.yml@main
-  #   with:
-  #     runner-os: ${{ matrix.runner-os }}
-  #     framework: ${{ matrix.framework }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       framework: [ "toga", "pyside6", "pygame", "console" ]
-  #       runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+  verify-projects:
+    name: Verify project
+    needs: [ package, unit-tests ]
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    with:
+      runner-os: ${{ matrix.runner-os }}
+      framework: ${{ matrix.framework }}
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [ "toga", "pyside6", "pygame", "console" ]
+        runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
 
-  # verify-apps:
-  #   name: Build app
-  #   needs: [ package, unit-tests ]
-  #   uses: beeware/.github/.github/workflows/app-build-verify.yml@main
-  #   with:
-  #     # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
-  #     python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
-  #     runner-os: ${{ matrix.runner-os }}
-  #     framework: ${{ matrix.framework }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       framework: [ "toga", "pyside6", "pygame", "console" ]
-  #       runner-os: [ "macos-15-intel", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+  verify-apps:
+    name: Build app
+    needs: [ package, unit-tests ]
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    with:
+      # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
+      python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
+      runner-os: ${{ matrix.runner-os }}
+      framework: ${{ matrix.framework }}
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [ "toga", "pyside6", "pygame", "console" ]
+        runner-os: [ "macos-15-intel", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
