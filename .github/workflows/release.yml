@@ -41,7 +41,7 @@ jobs:
       - name: Get packages
         uses: actions/download-artifact@v6.0.0
         with:
-          pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
+          pattern: ${{ format('{0}*', needs.ci.outputs.artifact-basename) }}
           merge-multiple: true
           path: dist
 
