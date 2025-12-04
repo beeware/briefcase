@@ -197,13 +197,21 @@ a single value should be provided.
         pass
 
 
-def validate_install_options_config(config):
-    """Validate that a install options are valid and complete, and convert to a dict.
+def validate_install_options_config(config, opt_type, **others):
+    """Validate that install/uninstall options are valid and complete, and convert to a
+    dict.
 
     The dict format is required because Cookiecutter doesn't allow passing a list as a
     context value; you have to use the reliable iteration order of a dict instead.
+
+    :param config: The table form of options
+    :param opt_type: The label of the option type being parsed ("install" or
+        "uninstall")
+    :param others: A dictionary of other parsed option types. The keys are
+        the option types, and the values are the dictionary of parse options. Options
+        in `config` must be unique against these keys.
     """
-    install_options = {}
+    options = {}
     known_names = set()
     if config:
         for i, config_item in enumerate(config):
@@ -211,17 +219,17 @@ def validate_install_options_config(config):
                 name = config_item["name"]
                 if not isinstance(name, str):
                     raise BriefcaseConfigError(
-                        f"Name for install option {i} is not a string."
+                        f"Name for {opt_type} option {i} is not a string."
                     )
             except KeyError:
                 raise BriefcaseConfigError(
-                    f"Install option {i} does not define a `name`."
+                    f"{opt_type.title()} option {i} does not define a `name`."
                 ) from None
 
             # Options must be valid Python identifiers
             if not name.isidentifier():
                 raise BriefcaseConfigError(
-                    f"{name!r} cannot be used as an install option name, "
+                    f"{name!r} cannot be used as an {opt_type} option name, "
                     "as it is not a valid Python identifier."
                 )
 
@@ -229,31 +237,39 @@ def validate_install_options_config(config):
             # a small number of reserved identifiers.
             if name.upper() in {"ALLUSERS"}:
                 raise BriefcaseConfigError(
-                    f"{name!r} is a reserved install option identifier."
+                    f"{name!r} is a reserved {opt_type} option identifier."
                 )
 
             option = {}
             if name.upper() in known_names:
                 raise BriefcaseConfigError(
-                    f"Install option names must be unique. The name {name!r}, "
-                    f"used by install option {i}, has already been defined."
+                    f"{opt_type.title()} option names must be unique. The name "
+                    f"{name!r}, used by {opt_type} option {i}, has already "
+                    "been defined."
                 )
+            else:
+                for other_type, other_options in others.items():
+                    if name.upper() in {n.upper() for n in other_options}:
+                        raise BriefcaseConfigError(
+                            f"{opt_type.title()} option names must be unique. The name "
+                            f"{name!r} is already used as an {other_type} option."
+                        )
 
-            # install_options needs to retain the original name, but we need names to be
+            # options needs to retain the original name, but we need names to be
             # case-unique as well, so we track a separate set of known upper case names.
             known_names.add(name.upper())
-            install_options[name] = option
+            options[name] = option
 
             try:
                 # Options must have a string title.
                 option["title"] = config_item["title"]
                 if not isinstance(option["title"], str):
                     raise BriefcaseConfigError(
-                        f"Title for install option {name!r} is not a string."
+                        f"Title for {opt_type} option {name!r} is not a string."
                     )
             except KeyError:
                 raise BriefcaseConfigError(
-                    f"Install option {name!r} does not provide a title."
+                    f"{opt_type.title()} option {name!r} does not provide a title."
                 ) from None
 
             try:
@@ -261,17 +277,18 @@ def validate_install_options_config(config):
                 option["description"] = config_item["description"]
                 if not isinstance(option["description"], str):
                     raise BriefcaseConfigError(
-                        f"Description for install option {name!r} is not a string."
+                        f"Description for {opt_type} option {name!r} is not a string."
                     )
             except KeyError:
                 raise BriefcaseConfigError(
-                    f"Install option {name!r} does not provide a description."
+                    f"{opt_type.title()} option {name!r} does not provide "
+                    "a description."
                 ) from None
 
             # Options are booleans, and are False by default
             option["default"] = bool(config_item.get("default", False))
 
-    return install_options
+    return options
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
@@ -431,6 +448,7 @@ class AppConfig(BaseConfig):
         icon=None,
         document_type=None,
         install_option=None,
+        uninstall_option=None,
         permission=None,
         template=None,
         template_branch=None,
@@ -510,7 +528,14 @@ class AppConfig(BaseConfig):
         for document_type_id, document_type in self.document_types.items():
             validate_document_type_config(document_type_id, document_type)
 
-        self.install_options = validate_install_options_config(install_option)
+        self.install_options = validate_install_options_config(
+            install_option, "install"
+        )
+        self.uninstall_options = validate_install_options_config(
+            uninstall_option,
+            "uininstall",
+            install=self.install_options,
+        )
 
         # Version number is PEP440 compliant:
         if not is_pep440_canonical_version(self.version):
