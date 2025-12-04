@@ -46,7 +46,7 @@ jobs:
           path: dist
 
       - name: Purge non-release packages
-        run: rm -rf dist/x-*
+        run: rm -rf dist/x_*
 
       - name: Install packages
         run: pip install dist/*.whl
