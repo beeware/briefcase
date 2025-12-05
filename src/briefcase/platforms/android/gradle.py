@@ -349,8 +349,8 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
         ):
             if app.debugger:
                 # In debug mode include the .py files and extract all of them so
-                # that the debugger can get the source code at runtime. This is e.g.
-                # necessary for setting breakpoints in VS Code.
+                # that the debugger can get the source code at runtime. This is
+                # e.g. necessary for setting breakpoints in VS Code.
                 extract_packages = ["*"]
             else:
                 # Extract test packages, to enable features like test discovery and
