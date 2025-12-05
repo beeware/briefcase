@@ -265,8 +265,6 @@ def test_run_existing_device(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        debugger_host=None,
-        debugger_port=None,
         passthrough=[],
     )
 
@@ -344,8 +342,6 @@ def test_run_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
     )
 
@@ -449,8 +445,6 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        debugger_host=None,
-        debugger_port=None,
         passthrough=[],
     )
 
@@ -503,8 +497,6 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
         run_command.run_app(
             first_app_config,
             device_or_avd="exampleDevice",
-            debugger_host=None,
-            debugger_port=None,
             passthrough=[],
         )
 
@@ -542,9 +534,7 @@ def test_run_created_emulator(run_command, first_app_config):
     run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
-    run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # A new emulator was created
     run_command.tools.android_sdk.create_emulator.assert_called_once_with()
@@ -607,9 +597,7 @@ def test_run_idle_device(run_command, first_app_config):
     run_command.tools.mock_adb.logcat.return_value = log_popen
 
     # Invoke run_app
-    run_command.run_app(
-        first_app_config, debugger_host=None, debugger_port=None, passthrough=[]
-    )
+    run_command.run_app(first_app_config, passthrough=[])
 
     # No attempt was made to create a new emulator
     run_command.tools.android_sdk.create_emulator.assert_not_called()
@@ -715,8 +703,6 @@ def test_run_test_mode(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        debugger_host=None,
-        debugger_port=None,
         passthrough=[],
         shutdown_on_exit=True,
     )
@@ -791,8 +777,6 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         device_or_avd="exampleDevice",
-        debugger_host=None,
-        debugger_port=None,
         passthrough=["foo", "--bar"],
         shutdown_on_exit=True,
     )
@@ -862,8 +846,6 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     # Invoke run_app
     run_command.run_app(
         first_app_config,
-        debugger_host=None,
-        debugger_port=None,
         passthrough=[],
         extra_emulator_args=["-no-window", "-no-audio"],
         shutdown_on_exit=True,
