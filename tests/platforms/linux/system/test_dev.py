@@ -5,10 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.linux.system import (
-    LinuxSystemDevCommand,
-    LinuxSystemMostlyPassiveMixin,
-)
+from briefcase.platforms.linux.system import LinuxSystemDevCommand
 
 from .test_run import mock_linux_env
 
@@ -27,11 +24,6 @@ def dev_command(monkeypatch, dummy_console, first_app, tmp_path):
 
     # Set the host architecture for test purposes.
     command.tools.host_arch = "wonky"
-
-    # Mock the existence of a valid system Python
-    monkeypatch.setattr(
-        LinuxSystemMostlyPassiveMixin, "verify_system_python", mock.MagicMock()
-    )
 
     mock_linux_env(command, tmp_path, monkeypatch)
 
@@ -56,7 +48,7 @@ def test_dev_system_app_starts(dev_command, first_app, tmp_path):
     # The command runs without error
     dev_command()
 
-    # System packages were verified
+    # Running dev will create the dev environment; this will verify system packages.
     dev_command.verify_system_packages.assert_called_once_with(first_app)
 
     # The app was started with streamed logs

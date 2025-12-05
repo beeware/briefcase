@@ -21,6 +21,7 @@ from briefcase.config import AppConfig, merge_config
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
+from briefcase.integrations.virtual_environment import VenvContext
 from briefcase.platforms.linux import (
     ARCH,
     DEBIAN,
@@ -33,50 +34,12 @@ from briefcase.platforms.linux import (
 )
 
 
-class LinuxSystemPassiveMixin(LinuxMixin):
-    # The Passive mixin honors the Docker options, but doesn't try to verify
-    # Docker exists. It is used by commands that are "passive" from the
-    # perspective of the build system (e.g., Run).
+class LinuxSystemMixin(LinuxMixin):
+    # The base mixin for system packages. It only supports native Linux usage, not usage
+    # through Docker.
     output_format = "system"
-    supported_host_os: Collection[str] = {"Darwin", "Linux"}
-    supported_host_os_reason = (
-        "Linux system projects can only be built on Linux, or on macOS using Docker."
-    )
+    supported_host_os: Collection[str] = {"Linux"}
     supports_external_packaging = True
-
-    @property
-    def use_docker(self):
-        # The system backend doesn't have a literal "--use-docker" option, but
-        # `use_docker` is a useful flag for shared logic purposes, so evaluate
-        # what "use docker" means in terms of target_image.
-        return bool(self.target_image)
-
-    def add_options(self, parser):
-        super().add_options(parser)
-        parser.add_argument(
-            "--target",
-            dest="target",
-            help=(
-                "Docker base image tag for the distribution to target for the build "
-                "(e.g., `ubuntu:jammy`)"
-            ),
-            required=False,
-        )
-        parser.add_argument(
-            "--Xdocker-build",
-            action="append",
-            dest="extra_docker_build_args",
-            help="Additional arguments to use when building the Docker image",
-            required=False,
-        )
-
-    def parse_options(self, extra):
-        """Extract the target_image option."""
-        options, overrides = super().parse_options(extra)
-        self.target_image = options.pop("target")
-        self.extra_docker_build_args = options.pop("extra_docker_build_args")
-
-        return options, overrides
 
     def build_path(self, app):
         # Override the default build path to use the vendor name,
@@ -102,138 +65,6 @@ class LinuxSystemPassiveMixin(LinuxMixin):
             return f"fc{app.target_codename}"
         else:
             return f"el{app.target_codename}"
-
-    def target_glibc_version(self, app):
-        target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
-        return target_glibc
-
-    def app_python_version_tag(self, app):
-        # Use the version of Python that was used to run Briefcase.
-        return self.python_version_tag
-
-    def platform_freedesktop_info(self, app):
-        try:
-            freedesktop_info = self.tools.platform.freedesktop_os_release()
-
-        except OSError as e:
-            raise BriefcaseCommandError(
-                "Could not find the /etc/os-release file. "
-                "Is this a FreeDesktop-compliant Linux distribution?"
-            ) from e
-
-        return freedesktop_info
-
-    def finalize_app_config(self, app: AppConfig):
-        """Finalize app configuration.
-
-        Linux .deb app configurations are deeper than other platforms, because they need
-        to include components that are dependent on the target vendor and codename.
-        Those properties are extracted from command-line options.
-
-        The final app configuration merges the target-specific configuration into the
-        generic "linux.deb" app configuration, as well as setting the Python version.
-
-        :param app: The app configuration to finalize.
-        """
-        self.console.verbose(
-            "Finalizing application configuration...", prefix=app.app_name
-        )
-        freedesktop_info = self.platform_freedesktop_info(app)
-
-        # Process the FreeDesktop content to give the vendor, codename and vendor base.
-        (
-            app.target_vendor,
-            app.target_codename,
-            app.target_vendor_base,
-        ) = self.vendor_details(freedesktop_info)
-
-        self.console.verbose(
-            f"Targeting {app.target_vendor}:{app.target_codename} "
-            f"(Vendor base {app.target_vendor_base})"
-        )
-
-        if not self.use_docker:
-            app.target_image = f"{app.target_vendor}:{app.target_codename}"
-        else:
-            if app.external_package_path:
-                raise BriefcaseCommandError(
-                    "Briefcase can't currently use Docker to package "
-                    "external apps as Linux system packages."
-                )
-
-            # If we're building for Arch, and Docker does user mapping, we can't build,
-            # because Arch won't let makepkg run as root. Docker on macOS *does* map the
-            # user, but introducing a step-down user doesn't alter behavior, so we can
-            # allow it.
-            if (
-                app.target_vendor_base == ARCH
-                and self.tools.docker.is_user_mapped
-                and self.tools.host_os != "Darwin"
-            ):
-                raise BriefcaseCommandError(
-                    """\
-Briefcase cannot use this Docker installation to target Arch Linux since the
-tools to build packages for Arch cannot be run as root.
-
-The Docker available to Briefcase requires the use of the root user in
-containers to maintain accurate file permissions of the build artefacts.
-
-This most likely means you're using Docker Desktop or rootless Docker.
-
-Install Docker Engine and try again or run Briefcase on an Arch host system.
-"""
-                )
-
-        # Merge target-specific configuration items into the app config This
-        # means:
-        # * merging app.linux.debian into app, overwriting anything global
-        # * merging app.linux.ubuntu into app, overwriting anything vendor-base
-        #   specific
-        # * merging app.linux.ubuntu.focal into app, overwriting anything vendor
-        #   specific
-        # The vendor base config (e.g., redhat). The vendor base might not
-        # be known, so fall back to an empty vendor config.
-        if app.target_vendor_base:
-            vendor_base_config = getattr(app, app.target_vendor_base, {})
-        else:
-            vendor_base_config = {}
-        vendor_config = getattr(app, app.target_vendor, {})
-        try:
-            codename_config = vendor_config[app.target_codename]
-        except KeyError:
-            codename_config = {}
-
-        # Copy all the specific configurations to the app config
-        for config in [
-            vendor_base_config,
-            vendor_config,
-            codename_config,
-        ]:
-            merge_config(app, config)
-
-        app.glibc_version = self.target_glibc_version(app)
-        self.console.verbose(f"Targeting glibc {app.glibc_version}")
-
-        app.python_version_tag = self.app_python_version_tag(app)
-
-        self.console.verbose(f"Targeting Python{app.python_version_tag}")
-
-
-class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
-    # The Mostly Passive mixin verifies that Docker exists and can be run, but
-    # doesn't require that we're actually in a Linux environment.
-
-    def app_python_version_tag(self, app: AppConfig):
-        if self.use_docker:
-            # If we're running in Docker, we can't know the Python3 version
-            # before rolling out the template; so we fall back to "3". Later,
-            # once we have a container in which we can run Python, this will be
-            # updated to the actual Python version as part of the
-            # `verify_python` app check.
-            python_version_tag = "3"
-        else:
-            python_version_tag = super().app_python_version_tag(app)
-        return python_version_tag
 
     def _build_env_abi(self, app: AppConfig):
         """Retrieves the ABI the packaging system is targeting in the build env.
@@ -322,171 +153,93 @@ class LinuxSystemMostlyPassiveMixin(LinuxSystemPassiveMixin):
         return self.dist_path / self.distribution_filename(app)
 
     def target_glibc_version(self, app):
-        """Determine the glibc version.
-
-        If running in Docker, this is done by interrogating libc.so.6; outside docker,
-        we can use os.confstr().
-        """
-        if self.use_docker:
-            with self.console.wait_bar("Determining glibc version..."):
-                try:
-                    output = self.tools.docker.check_output(
-                        ["ldd", "--version"],
-                        image_tag=app.target_image,
-                    )
-                    # On Debian/Ubuntu, ldd --version will give you output of the form:
-                    #
-                    #     ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31
-                    #     Copyright (C) 2020 Free Software Foundation, Inc.
-                    #     ...
-                    #
-                    # Other platforms produce output of the form:
-                    #
-                    #     ldd (GNU libc) 2.36
-                    #     Copyright (C) 2020 Free Software Foundation, Inc.
-                    #     ...
-                    #
-                    # Note that the exact text will vary version to version.
-                    # Look for the "2.NN" pattern.
-                    if match := re.search(r"\d\.\d+", output):
-                        target_glibc = match.group(0)
-                    else:
-                        raise BriefcaseCommandError(
-                            "Unable to parse glibc dependency version from version string."
-                        )
-                except subprocess.CalledProcessError as e:
-                    raise BriefcaseCommandError(
-                        "Unable to determine glibc dependency version."
-                    ) from e
-
-        else:
-            target_glibc = super().target_glibc_version(app)
-
+        target_glibc = self.tools.os.confstr("CS_GNU_LIBC_VERSION").split()[1]
         return target_glibc
 
-    def platform_freedesktop_info(self, app: AppConfig):
-        if self.use_docker:
-            # Preserve the target image on the command line as the app's target
-            app.target_image = self.target_image
+    def app_python_version_tag(self, app):
+        # Use the version of Python that was used to run Briefcase.
+        return self.python_version_tag
 
-            # Extract release information from the image.
-            with self.console.wait_bar(
-                f"Checking Docker target image {app.target_image}..."
-            ):
-                output = self.tools.docker.check_output(
-                    ["cat", "/etc/os-release"],
-                    image_tag=app.target_image,
-                )
-                freedesktop_info = parse_freedesktop_os_release(output)
-        else:
-            freedesktop_info = super().platform_freedesktop_info(app)
+    def platform_freedesktop_info(self, app):
+        try:
+            freedesktop_info = self.tools.platform.freedesktop_os_release()
+
+        except OSError as e:
+            raise BriefcaseCommandError(
+                "Could not find the /etc/os-release file. "
+                "Is this a FreeDesktop-compliant Linux distribution?"
+            ) from e
 
         return freedesktop_info
 
-    def docker_image_tag(self, app: AppConfig):
-        """The Docker image tag for an app."""
-        return (
-            f"briefcase/{app.bundle_identifier.lower()}:"
-            f"{app.target_vendor}-{app.target_codename}"
+    def _finalize_target_image(self, app: AppConfig):
+        app.target_image = f"{app.target_vendor}:{app.target_codename}"
+
+    def finalize_app_config(self, app: AppConfig):
+        """Finalize app configuration.
+
+        Linux .deb app configurations are deeper than other platforms, because they need
+        to include components that are dependent on the target vendor and codename.
+        Those properties are extracted from command-line options.
+
+        The final app configuration merges the target-specific configuration into the
+        generic "linux.deb" app configuration, as well as setting the Python version.
+
+        :param app: The app configuration to finalize.
+        """
+        self.console.verbose(
+            "Finalizing application configuration...", prefix=app.app_name
+        )
+        freedesktop_info = self.platform_freedesktop_info(app)
+
+        # Process the FreeDesktop content to give the vendor, codename and vendor base.
+        (
+            app.target_vendor,
+            app.target_codename,
+            app.target_vendor_base,
+        ) = self.vendor_details(freedesktop_info)
+
+        self.console.verbose(
+            f"Targeting {app.target_vendor}:{app.target_codename} "
+            f"(Vendor base {app.target_vendor_base})"
         )
 
-    def verify_tools(self):
-        """If we're using Docker, verify that it is available."""
-        super().verify_tools()
-        if self.use_docker:
-            Docker.verify(tools=self.tools, image_tag=self.target_image)
+        # Finalize the target image being used by the app
+        self._finalize_target_image(app)
 
-    def clone_options(self, command):
-        """Clone the target_image option."""
-        super().clone_options(command)
-        self.target_image = command.target_image
-        self.extra_docker_build_args = command.extra_docker_build_args
+        # Merge target-specific configuration items into the app config This
+        # means:
+        # * merging app.linux.debian into app, overwriting anything global
+        # * merging app.linux.ubuntu into app, overwriting anything vendor-base
+        #   specific
+        # * merging app.linux.ubuntu.focal into app, overwriting anything vendor
+        #   specific
+        # The vendor base config (e.g., redhat). The vendor base might not
+        # be known, so fall back to an empty vendor config.
+        if app.target_vendor_base:
+            vendor_base_config = getattr(app, app.target_vendor_base, {})
+        else:
+            vendor_base_config = {}
+        vendor_config = getattr(app, app.target_vendor, {})
+        try:
+            codename_config = vendor_config[app.target_codename]
+        except KeyError:
+            codename_config = {}
 
-    def verify_docker_python(self, app: AppConfig):
-        """Verify that the version of Python being used to build the app in Docker is
-        compatible with the version being used to run Briefcase.
+        # Copy all the specific configurations to the app config
+        for config in [
+            vendor_base_config,
+            vendor_config,
+            codename_config,
+        ]:
+            merge_config(app, config)
 
-        Will raise an exception if the Python version is fundamentally
-        incompatible (i.e., if Briefcase doesn't support it); any other version
-        discrepancy will log a warning, but continue.
+        app.glibc_version = self.target_glibc_version(app)
+        self.console.verbose(f"Targeting glibc {app.glibc_version}")
 
-        Requires that the app tools have been verified.
+        app.python_version_tag = self.app_python_version_tag(app)
 
-        As a side effect of verifying Python, the `python_version_tag` will be
-        updated to reflect the *actual* python version, not just a generic "3".
-
-        :param app: The application being built
-        """
-        output = self.tools[app].app_context.check_output(
-            [
-                f"python{app.python_version_tag}",
-                "-c",
-                (
-                    "import sys; "
-                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-                ),
-            ]
-        )
-        # Update the python version tag with the *actual* python version.
-        app.python_version_tag = output.split("\n")[0]
-        target_python_version = tuple(int(v) for v in app.python_version_tag.split("."))
-
-        if target_python_version < self.briefcase_required_python_version:
-            briefcase_min_version = ".".join(
-                str(v) for v in self.briefcase_required_python_version
-            )
-            raise BriefcaseCommandError(
-                f"The system python3 version provided by {app.target_image} "
-                f"is {app.python_version_tag}; Briefcase requires a "
-                f"minimum Python3 version of {briefcase_min_version}."
-            )
-        elif target_python_version != (
-            self.tools.sys.version_info.major,
-            self.tools.sys.version_info.minor,
-        ):
-            self.console.warning(
-                f"""
-*************************************************************************
-** WARNING: Python version mismatch!                                   **
-*************************************************************************
-
-    The system python3 provided by {app.target_image} is {app.python_version_tag}.
-    This is not the same as your local system ({self.python_version_tag}).
-
-    Ensure you have tested for Python version compatibility before
-    releasing this app.
-
-*************************************************************************
-"""
-            )
-
-    def verify_system_python(self):
-        """Verify that the Python being used to run Briefcase is the default system
-        python.
-
-        Will raise an exception if the system Python isn't an obvious Python3, or the
-        Briefcase Python isn't the same version as the system Python.
-
-        Requires that the app tools have been verified.
-        """
-        system_python_bin = Path("/usr/bin/python3")
-        if not system_python_bin.exists():
-            raise BriefcaseCommandError(
-                "Can't determine the system python version "
-                "('/usr/bin/python3' does not exist)"
-            )
-
-        running_version = self.tools.sys.version
-        system_version = self.tools.subprocess.check_output(
-            [system_python_bin, "-c", "import sys; print(sys.version)"]
-        ).strip()
-
-        if system_version != running_version:
-            raise BriefcaseCommandError(
-                f"The version of Python being used to run Briefcase "
-                f"({running_version!r}) is not the system python3 "
-                f"({system_version!r})."
-            )
+        self.console.verbose(f"Targeting Python{app.python_version_tag}")
 
     def _system_requirement_tools(self, app: AppConfig):
         """Utility method returning the packages and tools needed to verify system
@@ -615,6 +368,268 @@ to install the missing dependencies, and re-run Briefcase.
 """
             )
 
+
+class LinuxSystemDockerMixin(LinuxSystemMixin):
+    # Add options to allow the use of Docker.
+    supported_host_os: Collection[str] = {"Darwin", "Linux"}
+    supported_host_os_reason = (
+        "Linux system projects can only be built on Linux, or on macOS using Docker."
+    )
+
+    @property
+    def use_docker(self):
+        # The system backend doesn't have a literal "--use-docker" option, but
+        # `use_docker` is a useful flag for shared logic purposes, so evaluate
+        # what "use docker" means in terms of target_image.
+        return bool(self.target_image)
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "--target",
+            dest="target",
+            help=(
+                "Docker base image tag for the distribution to target for the build "
+                "(e.g., `ubuntu:jammy`)"
+            ),
+            required=False,
+        )
+        parser.add_argument(
+            "--Xdocker-build",
+            action="append",
+            dest="extra_docker_build_args",
+            help="Additional arguments to use when building the Docker image",
+            required=False,
+        )
+
+    def parse_options(self, extra):
+        """Extract the target_image option."""
+        options, overrides = super().parse_options(extra)
+        self.target_image = options.pop("target")
+        self.extra_docker_build_args = options.pop("extra_docker_build_args")
+
+        return options, overrides
+
+    def app_python_version_tag(self, app: AppConfig):
+        if self.use_docker:
+            # If we're running in Docker, we can't know the Python3 version
+            # before rolling out the template; so we fall back to "3". Later,
+            # once we have a container in which we can run Python, this will be
+            # updated to the actual Python version as part of the
+            # `verify_python` app check.
+            python_version_tag = "3"
+        else:
+            python_version_tag = super().app_python_version_tag(app)
+        return python_version_tag
+
+    def _finalize_target_image(self, app):
+        if self.use_docker:
+            # If we're using Docker, the target image is set by the --target command
+            # line argument
+            if app.external_package_path:
+                raise BriefcaseCommandError(
+                    "Briefcase can't currently use Docker to package "
+                    "external apps as Linux system packages."
+                )
+
+            # If we're building for Arch, and Docker does user mapping, we can't build,
+            # because Arch won't let makepkg run as root. Docker on macOS *does* map the
+            # user, but introducing a step-down user doesn't alter behavior, so we can
+            # allow it.
+            if (
+                app.target_vendor_base == ARCH
+                and self.tools.docker.is_user_mapped
+                and self.tools.host_os != "Darwin"
+            ):
+                raise BriefcaseCommandError(
+                    """\
+Briefcase cannot use this Docker installation to target Arch Linux since the
+tools to build packages for Arch cannot be run as root.
+
+The Docker available to Briefcase requires the use of the root user in
+containers to maintain accurate file permissions of the build artefacts.
+
+This most likely means you're using Docker Desktop or rootless Docker.
+
+Install Docker Engine and try again or run Briefcase on an Arch host system.
+"""
+                )
+        else:
+            super()._finalize_target_image(app)
+
+    def target_glibc_version(self, app):
+        """Determine the glibc version.
+
+        If running in Docker, this is done by interrogating libc.so.6; outside docker,
+        we can use os.confstr().
+        """
+        if self.use_docker:
+            with self.console.wait_bar("Determining glibc version..."):
+                try:
+                    output = self.tools.docker.check_output(
+                        ["ldd", "--version"],
+                        image_tag=app.target_image,
+                    )
+                    # On Debian/Ubuntu, ldd --version will give you output of the form:
+                    #
+                    #     ldd (Ubuntu GLIBC 2.31-0ubuntu9.9) 2.31
+                    #     Copyright (C) 2020 Free Software Foundation, Inc.
+                    #     ...
+                    #
+                    # Other platforms produce output of the form:
+                    #
+                    #     ldd (GNU libc) 2.36
+                    #     Copyright (C) 2020 Free Software Foundation, Inc.
+                    #     ...
+                    #
+                    # Note that the exact text will vary version to version.
+                    # Look for the "2.NN" pattern.
+                    if match := re.search(r"\d\.\d+", output):
+                        target_glibc = match.group(0)
+                    else:
+                        raise BriefcaseCommandError(
+                            "Unable to parse glibc dependency version from version string."
+                        )
+                except subprocess.CalledProcessError as e:
+                    raise BriefcaseCommandError(
+                        "Unable to determine glibc dependency version."
+                    ) from e
+
+        else:
+            target_glibc = super().target_glibc_version(app)
+
+        return target_glibc
+
+    def platform_freedesktop_info(self, app: AppConfig):
+        if self.use_docker:
+            # Preserve the target image on the command line as the app's target
+            app.target_image = self.target_image
+
+            # Extract release information from the image.
+            with self.console.wait_bar(
+                f"Checking Docker target image {app.target_image}..."
+            ):
+                output = self.tools.docker.check_output(
+                    ["cat", "/etc/os-release"],
+                    image_tag=app.target_image,
+                )
+                freedesktop_info = parse_freedesktop_os_release(output)
+        else:
+            freedesktop_info = super().platform_freedesktop_info(app)
+
+        return freedesktop_info
+
+    def docker_image_tag(self, app: AppConfig):
+        """The Docker image tag for an app."""
+        return (
+            f"briefcase/{app.bundle_identifier.lower()}:"
+            f"{app.target_vendor}-{app.target_codename}"
+        )
+
+    def verify_host(self):
+        """If we're *not* using Docker, verify that we're actually on Linux."""
+        super().verify_host()
+        if not self.use_docker and self.tools.host_os != "Linux":
+            raise UnsupportedHostError(self.supported_host_os_reason)
+
+    def verify_tools(self):
+        """If we're using Docker, verify that it is available."""
+        super().verify_tools()
+        if self.use_docker:
+            Docker.verify(tools=self.tools, image_tag=self.target_image)
+
+    def clone_options(self, command):
+        """Clone the target_image option."""
+        super().clone_options(command)
+        self.target_image = command.target_image
+        self.extra_docker_build_args = command.extra_docker_build_args
+
+    def verify_docker_python(self, app: AppConfig):
+        """Verify that the version of Python being used to build the app in Docker is
+        compatible with the version being used to run Briefcase.
+
+        Will raise an exception if the Python version is fundamentally
+        incompatible (i.e., if Briefcase doesn't support it); any other version
+        discrepancy will log a warning, but continue.
+
+        Requires that the app tools have been verified.
+
+        As a side effect of verifying Python, the `python_version_tag` will be
+        updated to reflect the *actual* python version, not just a generic "3".
+
+        :param app: The application being built
+        """
+        output = self.tools[app].app_context.check_output(
+            [
+                f"python{app.python_version_tag}",
+                "-c",
+                (
+                    "import sys; "
+                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+                ),
+            ]
+        )
+        # Update the python version tag with the *actual* python version.
+        app.python_version_tag = output.split("\n")[0]
+        target_python_version = tuple(int(v) for v in app.python_version_tag.split("."))
+
+        if target_python_version < self.briefcase_required_python_version:
+            briefcase_min_version = ".".join(
+                str(v) for v in self.briefcase_required_python_version
+            )
+            raise BriefcaseCommandError(
+                f"The system python3 version provided by {app.target_image} "
+                f"is {app.python_version_tag}; Briefcase requires a "
+                f"minimum Python3 version of {briefcase_min_version}."
+            )
+        elif target_python_version != (
+            self.tools.sys.version_info.major,
+            self.tools.sys.version_info.minor,
+        ):
+            self.console.warning(
+                f"""
+*************************************************************************
+** WARNING: Python version mismatch!                                   **
+*************************************************************************
+
+    The system python3 provided by {app.target_image} is {app.python_version_tag}.
+    This is not the same as your local system ({self.python_version_tag}).
+
+    Ensure you have tested for Python version compatibility before
+    releasing this app.
+
+*************************************************************************
+"""
+            )
+
+    def verify_system_python(self):
+        """Verify that the Python being used to run Briefcase is the default system
+        python.
+
+        Will raise an exception if the system Python isn't an obvious Python3, or the
+        Briefcase Python isn't the same version as the system Python.
+
+        Requires that the app tools have been verified.
+        """
+        system_python_bin = Path("/usr/bin/python3")
+        if not system_python_bin.exists():
+            raise BriefcaseCommandError(
+                "Can't determine the system python version "
+                "('/usr/bin/python3' does not exist)"
+            )
+
+        running_version = self.tools.sys.version
+        system_version = self.tools.subprocess.check_output(
+            [system_python_bin, "-c", "import sys; print(sys.version)"]
+        ).strip()
+
+        if system_version != running_version:
+            raise BriefcaseCommandError(
+                f"The version of Python being used to run Briefcase "
+                f"({running_version!r}) is not the system python3 "
+                f"({system_version!r})."
+            )
+
     def verify_app_tools(self, app: AppConfig):
         """Verify App environment is prepared and available.
 
@@ -659,15 +674,9 @@ to install the missing dependencies, and re-run Briefcase.
         super().verify_app_tools(app)
 
 
-class LinuxSystemMixin(LinuxSystemMostlyPassiveMixin):
-    def verify_host(self):
-        """If we're *not* using Docker, verify that we're actually on Linux."""
-        super().verify_host()
-        if not self.use_docker and self.tools.host_os != "Linux":
-            raise UnsupportedHostError(self.supported_host_os_reason)
-
-
-class LinuxSystemCreateCommand(LinuxSystemMixin, LocalRequirementsMixin, CreateCommand):
+class LinuxSystemCreateCommand(
+    LinuxSystemDockerMixin, LocalRequirementsMixin, CreateCommand
+):
     description = "Create and populate a Linux system project."
 
     def output_format_template_context(self, app: AppConfig):
@@ -709,13 +718,13 @@ class LinuxSystemUpdateCommand(LinuxSystemCreateCommand, UpdateCommand):
     description = "Update an existing Linux system project."
 
 
-class LinuxSystemOpenCommand(LinuxSystemMostlyPassiveMixin, DockerOpenCommand):
+class LinuxSystemOpenCommand(LinuxSystemDockerMixin, DockerOpenCommand):
     description = (
         "Open a shell in a Docker container for an existing Linux system project."
     )
 
 
-class LinuxSystemBuildCommand(LinuxSystemMixin, BuildCommand):
+class LinuxSystemBuildCommand(LinuxSystemDockerMixin, BuildCommand):
     description = "Build a Linux system project."
 
     def build_app(self, app: AppConfig, **kwargs):
@@ -864,7 +873,7 @@ no extension).
             self.tools.subprocess.check_output(["strip", self.binary_path(app)])
 
 
-class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
+class LinuxSystemRunCommand(LinuxSystemDockerMixin, RunCommand):
     description = "Run a Linux system project."
     supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux system projects can only be executed on Linux."
@@ -915,11 +924,20 @@ class LinuxSystemRunCommand(LinuxSystemMixin, RunCommand):
                 )
 
 
-class LinuxSystemDevCommand(LinuxSystemMostlyPassiveMixin, DevCommand):
+class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
     description = "Run a Linux system app in development mode"
-    output_format = "system"
-    supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Linux system dev mode is only supported on Linux."
+
+    def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
+        """Install the requirements into the dev environment.
+
+        This also verifies that the system packages have been installed. This is to
+        ensure that any dependencies exist before installing wheels that might need to
+        be compiled (e.g., PyGOobject requires compiler tooling and system GTK
+        packages).
+        """
+        self.verify_system_packages(app)
+        super().install_dev_requirements(app, venv, **options)
 
 
 def debian_multiline_description(description):
@@ -935,7 +953,7 @@ def debian_multiline_description(description):
     return "\n ".join(line for line in description.split("\n") if line.strip() != "")
 
 
-class LinuxSystemPackageCommand(LinuxSystemMixin, PackageCommand):
+class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
     description = "Package a Linux system project."
 
     @property
@@ -1351,7 +1369,7 @@ no extension).
             )
 
 
-class LinuxSystemPublishCommand(LinuxSystemMixin, PublishCommand):
+class LinuxSystemPublishCommand(LinuxSystemDockerMixin, PublishCommand):
     description = "Publish a Linux system project."
 
 
