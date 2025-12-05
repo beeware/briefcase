@@ -779,22 +779,13 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
     def venv_name(self) -> str:
         """Returns the name of the virtual environment directory.
 
+        The web environment uses a different development venv a web deployment has
+        different requirements to a desktop deployment. The name is the same as the
+        desktop deployment, but with `.web` appended.
+
         :returns: Name for virtual environment directory
         """
-        return "dev-web"
-
-    def add_options(self, parser):
-        super().add_options(parser)
-        parser.add_argument(
-            "--no-isolation",
-            dest="isolated",
-            action="store_false",
-            default=True,
-            help=(
-                "Run without creating an isolated environment "
-                "(not recommended for web)."
-            ),
-        )
+        return f"{DevCommand.venv_name.fget(self)}.web"
 
     def run_dev_app(self, app: AppConfig, **options):
         raise UnsupportedCommandError(

@@ -213,6 +213,7 @@ def dev_run_parameters(command):
     [
         *[(c, "app", o, ov) for c, o, ov in dev_run_parameters("dev")],
         ("dev --no-run", "app", {"run_app": False}, {}),
+        ("dev --no-isolation", "app", {"isolated": False}, {}),
         ("dev macOS", "app", {}, {}),
         ("dev macOS Xcode", "Xcode", {}, {}),
     ],
@@ -238,6 +239,7 @@ def test_dev_command(
     assert cmd.console.verbosity == LogLevel.INFO
     assert options == {
         "appname": None,
+        "isolated": True,
         "update_requirements": False,
         "run_app": True,
         "test_mode": False,
@@ -250,6 +252,7 @@ def test_dev_command(
 @pytest.mark.parametrize(
     ("cmdline", "expected_output_format", "expected_options", "expected_overrides"),
     [
+        ("dev web", "static", {}, {}),
         ("dev web --no-isolation", "static", {"isolated": False}, {}),
     ],
 )

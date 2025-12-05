@@ -1,3 +1,4 @@
+import importlib.machinery
 from unittest import mock
 
 import pytest
@@ -47,6 +48,13 @@ def test_run_dev_app_raises_unsupported_command_error(dev_command, first_app_con
     assert excinfo.value.command == "dev"
 
 
-def test_venv_name_override(dev_command):
-    """StaticWebDevCommand overrides venv_name to 'dev-web'."""
-    assert dev_command.venv_name == "dev-web"
+def test_venv_name_override(monkeypatch, dev_command):
+    """StaticWebDevCommand overrides venv_name to 'dev.*.web'."""
+    # Set up some fake platform details
+    monkeypatch.setattr(
+        importlib.machinery,
+        "EXTENSION_SUFFIXES",
+        [".cpython-3X-gothic.so", ".cpython-abi3.so", ".so"],
+    )
+
+    assert dev_command.venv_name == "dev.cpython-3X-gothic.web"
