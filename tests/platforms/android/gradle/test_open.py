@@ -39,9 +39,9 @@ def open_command(dummy_console, tmp_path, first_app_config):
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
     command.tools.file.download = MagicMock(spec_set=File.download)
 
-    # Mock all apps as targeting version 0.3.15
+    # Mock all apps as targeting version 0.3.27
     command._briefcase_toml = defaultdict(
-        lambda: {"briefcase": {"target_version": "0.3.15"}}
+        lambda: {"briefcase": {"target_version": "0.3.27"}}
     )
 
     # Mock some OS calls needed to make the tools appear to exist
