@@ -182,7 +182,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
     # Verify the requirements. This will raise an error.
     build_command.verify_system_packages(first_app_config)
 
-    # All requirement are checked, but `first` and `compiler` are only verified once
+    # All requirements are checked, but `first` and `compiler` are only verified once
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["check", "compiler"], quiet=1),
         call(["check", "first"], quiet=1),
