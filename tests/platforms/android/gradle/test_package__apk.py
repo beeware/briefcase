@@ -23,7 +23,7 @@ def test_unsupported_template_version(package_command, first_app_generated):
     package_command.verify_app = MagicMock(wraps=package_command.verify_app)
 
     package_command._briefcase_toml.update(
-        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+        {first_app_generated: {"briefcase": {"target_version": "0.3.16"}}}
     )
 
     with pytest.raises(

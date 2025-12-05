@@ -40,7 +40,7 @@ To start a debug session, open the debug view in VS Code using the sidebar, sele
 
 /// warning | Experimental feature
 
-This is currently an **experimental feature** that is only supported on Windows, macOS and iOS.
+This is currently an **experimental feature** that is only supported on Windows, macOS, iOS and Android.
 
 ///
 
