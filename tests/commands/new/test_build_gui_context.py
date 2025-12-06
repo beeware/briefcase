@@ -431,18 +431,8 @@ system_requires = [
 ]
 
 system_runtime_requires = [
-    "libdbus-1-3",
-    "libegl1",
-    "libfontconfig1",
-    "libgl1",
-    "libglib2.0-dev",
-    "libx11-xcb1",
-    "libxcb-cursor0",
-    "libxcb-icccm4",
-    "libxcb-image0",
-    "libxcb-keysyms1",
-    "libxcb-shape0",
-    "libxkbcommon-x11-0",
+    "libqt6dbus6",
+    "libqt6gui6",
 ]
 """,
         "pyproject_table_linux_system_rhel": """\
