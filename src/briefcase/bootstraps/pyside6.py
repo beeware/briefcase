@@ -95,7 +95,7 @@ system_runtime_requires = [
     "libfontconfig1",
     "libsm6",
     "libice6",
-    "libglib2.0-0",
+    "libglib2.0-0t64",
     "libgl1",
     "libegl1",
     "libdbus-1-3",
