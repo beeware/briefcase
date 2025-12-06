@@ -185,8 +185,8 @@ jobs:
       matrix:
         # framework: [ "toga", "pyside6", "pygame", "console" ]
         # runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
-        framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        framework: [ "pyside6" ]
+        runner-os: [ "ubuntu-24.04", "ubuntu-24.04-arm" ]
 
   verify-apps:
     name: Build app

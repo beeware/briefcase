@@ -79,29 +79,11 @@ system_requires = [
 ]
 
 system_runtime_requires = [
+    "libdbus-1-3",
     "libegl1",
     "libfontconfig1",
     "libgl1",
-    "libglib2.0-0t64",
-    "libx11-xcb1",
-    "libxcb-cursor0",
-    "libxcb-icccm4",
-    "libxcb-image0",
-    "libxcb-keysyms1",
-    "libxcb-shape0",
-    "libxkbcommon-x11-0",
-]
-
-# Bookworm uses an older name for libglib2.0-0
-[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.system.debian.bookworm]
-system_requires = [
-]
-
-system_runtime_requires = [
-    "libegl1",
-    "libfontconfig1",
-    "libgl1",
-    "libglib2.0-0",
+    "libglib2.0-dev",
     "libx11-xcb1",
     "libxcb-cursor0",
     "libxcb-icccm4",
