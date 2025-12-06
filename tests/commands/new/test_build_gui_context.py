@@ -434,6 +434,7 @@ system_runtime_requires = [
     "libegl1",
     "libfontconfig1",
     "libgl1",
+    "libglib2.0-0t64",
     "libx11-xcb1",
     "libxcb-cursor0",
     "libxcb-icccm4",
