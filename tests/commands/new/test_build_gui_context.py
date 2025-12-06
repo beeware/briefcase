@@ -433,6 +433,7 @@ system_requires = [
 system_runtime_requires = [
     "libqt6dbus6",
     "libqt6gui6",
+    "libxcb-cursor0",
 ]
 """,
         "pyproject_table_linux_system_rhel": """\
