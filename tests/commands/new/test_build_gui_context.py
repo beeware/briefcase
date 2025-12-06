@@ -431,6 +431,15 @@ system_requires = [
 ]
 
 system_runtime_requires = [
+    "libgl1",
+    "libqt6dbus6",
+    "libqt6gui6t64",
+    "libxcb-cursor0",
+]
+
+[tool.briefcase.app.{{ cookiecutter.app_name|escape_non_ascii }}.linux.system.debian.bookworm]
+system_runtime_requires = [
+    "libgl1",
     "libqt6dbus6",
     "libqt6gui6",
     "libxcb-cursor0",
