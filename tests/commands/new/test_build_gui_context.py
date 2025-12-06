@@ -432,6 +432,7 @@ system_requires = [
 
 system_runtime_requires = [
     "libegl1",
+    "libfontconfig1",
     "libgl1",
     "libx11-xcb1",
     "libxcb-cursor0",
