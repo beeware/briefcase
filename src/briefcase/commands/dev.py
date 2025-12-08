@@ -234,8 +234,8 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         The environment name is platform and Python version specific, so
         that multiple OSes and Python versions can share a `.briefcase`
-        folder. The name is based on the binary wheel name that the platform
-        uses (e.g., cpython-313-darwin).
+        folder. The name is based on the extension module filename that the 
+        platform uses (e.g., cpython-313-darwin).
 
         :returns: Name for virtual environment directory
         """
