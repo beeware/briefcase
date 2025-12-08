@@ -24,7 +24,7 @@ debugpy = ["debugpy>=1.8.17,<2.0.0"]
 [dependency-groups]
 test = [
     "coverage[toml] == 7.12.0",
-    "pytest == 9.0.1",
+    "pytest == 9.0.2",
     "pytest-xdist == 3.8.0",
 ]
 
