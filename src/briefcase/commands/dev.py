@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.machinery
 import os
 import subprocess
 import sys
@@ -62,6 +63,15 @@ class DevCommand(RunAppMixin, BaseCommand):
             "--update-requirements",
             action="store_true",
             help="Update requirements for the app",
+        )
+        parser.add_argument(
+            "--no-isolation",
+            dest="isolated",
+            action="store_false",
+            help=(
+                "Run without creating an isolated environment "
+                "(not recommended for web)."
+            ),
         )
         parser.add_argument(
             "--no-run",
@@ -222,9 +232,15 @@ class DevCommand(RunAppMixin, BaseCommand):
     def venv_name(self) -> str:
         """Returns the name of the virtual environment directory.
 
+        The environment name is platform and Python version specific, so
+        that multiple OSes and Python versions can share a `.briefcase`
+        folder. The name is based on the extension module filename that the
+        platform uses (e.g., cpython-313-darwin).
+
         :returns: Name for virtual environment directory
         """
-        return "dev"
+        ext = importlib.machinery.EXTENSION_SUFFIXES[0].split(".")[1]
+        return f"dev.{ext}"
 
     def venv_path(self, appname: str) -> Path:
         """Return the path for the app's virtual environment.
@@ -240,6 +256,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         update_requirements: bool | None = False,
         run_app: bool | None = True,
         test_mode: bool | None = False,
+        isolated: bool | None = True,
         passthrough: list[str] | None = None,
         **options,
     ):
@@ -300,7 +317,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         with self.tools.virtual_environment.create(
             venv_path=self.venv_path(app.app_name),
-            isolated=options.get("isolated", False),
+            isolated=isolated,
             recreate=update_requirements,
         ) as venv:
             if venv.created:
