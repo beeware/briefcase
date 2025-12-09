@@ -1,0 +1,1 @@
+Runtime requirements for Debian apps using PySide6 have been simplified. If you have an existing project, it may be possible to simplify your runtime requirements to only include `libgl1`, `libqt6dbus6`, `libqt6gui6`, and `libxcb-cursor0`.

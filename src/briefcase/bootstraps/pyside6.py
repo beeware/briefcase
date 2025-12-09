@@ -79,14 +79,10 @@ system_requires = [
 ]
 
 system_runtime_requires = [
-    "libx11-xcb1",
-    "libxkbcommon-x11-0",
-    "libxcb-image0",
-    "libxcb-shape0",
-    "libxcb-icccm4",
-    "libxcb-keysyms1",
     "libgl1",
-    "libegl1",
+    "libqt6dbus6",
+    "libqt6gui6",
+    "libxcb-cursor0",
 ]
 """
 

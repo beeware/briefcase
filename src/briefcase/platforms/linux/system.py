@@ -241,6 +241,56 @@ class LinuxSystemMixin(LinuxMixin):
 
         self.console.verbose(f"Targeting Python{app.python_version_tag}")
 
+    def _deb_devirtualize(self, package: str) -> str:
+        """Convert a debian virtual package into a "real" package.
+
+        Debian has the concept of "virtual" packages, where you can install one target,
+        but another package is installed in practice, and the explicitly requested
+        package is never shown in the installed list.
+
+        A virtual package is identified as a package that defines a single `Reverse
+        Provides` definition (although there may be multiple versions of that single
+        package name), and doesn't have any `Provides` definitions. (e.g., `make`
+        reverse-provides `make-guile`; but actually provides `make`, so it's not a
+        virtual package; `mail-transport-agent` returns multiple *different*
+        reverse-provides, so it can't be devirtualized).
+
+        :param package: The possibly virtualized package name
+        :returns: The devirtualized package name, or `None` if the package isn't
+            a virtual package
+        """
+        devirtualized = None
+        try:
+            pkg_detail = self.tools.subprocess.check_output(
+                ["apt-cache", "showpkg", package], quiet=1
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"""Unable to check apt-cache package record for {package!r}"""
+            ) from e
+        else:
+            candidates = None
+            for line in pkg_detail.split("\n"):
+                if line == "Provides: ":
+                    # If we hit a Provides line, start gathering package names
+                    candidates = set()
+                elif line == "Reverse Provides: ":
+                    # Reverse Provides are listed after Provides. If the named package
+                    # provides anything, it's not virtual, so reset the candidate list.
+                    if candidates:
+                        return None
+                    else:
+                        candidates = set()
+                elif candidates is not None and line:
+                    # Store the first part of the package name.
+                    candidates.add(line.split(" ")[0])
+
+            # If we've found exactly one candidate name, that's our actual package.
+            if candidates is not None and len(candidates) == 1:
+                devirtualized = next(iter(candidates))
+
+        return devirtualized
+
     def _system_requirement_tools(self, app: AppConfig):
         """Utility method returning the packages and tools needed to verify system
         requirements.
@@ -263,6 +313,7 @@ class LinuxSystemMixin(LinuxMixin):
                 ("make", "build-essential"),
             ]
             system_verify = ["dpkg", "-s"]
+            system_devirtualize = self._deb_devirtualize
             system_installer = ["apt", "install"]
         elif app.target_vendor_base == RHEL:
             base_system_packages = [
@@ -272,6 +323,7 @@ class LinuxSystemMixin(LinuxMixin):
                 "pkgconf-pkg-config",
             ]
             system_verify = ["rpm", "-q"]
+            system_devirtualize = None
             system_installer = ["dnf", "install"]
         elif app.target_vendor_base == SUSE:
             base_system_packages = [
@@ -279,6 +331,7 @@ class LinuxSystemMixin(LinuxMixin):
                 "patterns-devel-base-devel_basis",
             ]
             system_verify = ["rpm", "-q", "--whatprovides"]
+            system_devirtualize = None
             system_installer = ["zypper", "install"]
         elif app.target_vendor_base == ARCH:
             base_system_packages = [
@@ -286,14 +339,17 @@ class LinuxSystemMixin(LinuxMixin):
                 "base-devel",
             ]
             system_verify = ["pacman", "-Q"]
+            system_devirtualize = None
             system_installer = ["pacman", "-Syu"]
         else:
             base_system_packages = None
             system_verify = None
+            system_devirtualize = None
             system_installer = None
 
         return (
             base_system_packages,
+            system_devirtualize,
             system_verify,
             system_installer,
         )
@@ -307,6 +363,7 @@ class LinuxSystemMixin(LinuxMixin):
         """
         (
             base_system_packages,
+            system_devirtualize,
             system_verify,
             system_installer,
         ) = self._system_requirement_tools(app)
@@ -354,7 +411,21 @@ class LinuxSystemMixin(LinuxMixin):
                         [*system_verify, installed], quiet=1
                     )
                 except subprocess.CalledProcessError:
-                    missing.add(provided_by)
+                    # If the system uses devirtualization, try a devirtualized name
+                    if system_devirtualize:
+                        if devirtualized := system_devirtualize(installed):
+                            try:
+                                self.tools.subprocess.check_output(
+                                    [*system_verify, devirtualized], quiet=1
+                                )
+                            except subprocess.CalledProcessError:
+                                # Couldn't check devirtualized
+                                missing.add(provided_by)
+                        else:
+                            # package isn't devirtualized
+                            missing.add(provided_by)
+                    else:
+                        missing.add(provided_by)
 
         # If any required packages are missing, raise an error.
         if missing:
@@ -969,7 +1040,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
         }[app.packaging_format]
 
         if not self.tools.shutil.which(executable_name):
-            if install_cmd := self._system_requirement_tools(app)[2]:
+            if install_cmd := self._system_requirement_tools(app)[3]:
                 raise BriefcaseCommandError(
                     f"Can't find the {tool_name} tools. "
                     f"Try running `sudo {' '.join(install_cmd)} {package_name}`."
