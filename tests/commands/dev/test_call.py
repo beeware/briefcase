@@ -4,7 +4,7 @@ import pytest
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.virtual_environment import VenvContext
 
 
@@ -363,6 +363,56 @@ def test_create_venv(dev_command, first_app):
     # Environment was created on first use
     assert first_venv.created
 
+    # No clean calls were made.
+    first_venv.clean.assert_not_called()
+
+
+def test_create_venv_requirements_failure(dev_command, first_app):
+    """If requirements can't be installed, the venv is cleaned up."""
+    # Add a single app
+    dev_command.apps = {
+        "first": first_app,
+    }
+
+    # Mock a failure in the installation of development requirements
+    dev_command.install_dev_requirements = mock.MagicMock(
+        side_effect=RequirementsInstallError()
+    )
+
+    # Configure no command line options
+    options, _ = dev_command.parse_options([])
+
+    # Run the run command; it will raise an error
+    with pytest.raises(
+        RequirementsInstallError,
+        match=r"Unable to install requirements\.",
+    ):
+        dev_command(**options)
+
+    # An isolated venv was created
+    first_venv = dev_command.venvs[("first", True)]
+
+    # The right sequence of things will be done
+    assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Virtual environment context is acquired
+        ("virtual-environment", "first", True, False),
+        # No further actions are recorded due to the requirements failure.
+    ]
+
+    # Environment was created on first use
+    assert first_venv.created
+
+    # Clean was called to destroy the failed environment
+    first_venv.clean.assert_called_once_with()
+
 
 def test_non_isolated(dev_command, first_app):
     """If run in non-isolated mode, a no-op venv is created on first run."""
@@ -471,6 +521,56 @@ def test_update_requirements(dev_command, first_app):
 
     # Environment was recreated
     assert first_venv.created
+
+    # A clean call will have been made internally, but that's not tracked
+    # by the mock. No *additional* clean calls were made.
+    first_venv.clean.assert_not_called()
+
+
+def test_install_requirements_failure(dev_command, first_app):
+    """If the installation of requirements fails, the dev environment is cleaned."""
+    # Add a single app
+    dev_command.apps = {
+        "first": first_app,
+    }
+    # Simulate that the venv already exists (installed app)
+    first_venv = dev_command.simulate_existing_venv("first")
+
+    # Mock a failure in the installation of development requirements
+    dev_command.install_dev_requirements = mock.MagicMock(
+        side_effect=RequirementsInstallError()
+    )
+
+    # Configure a requirements update
+    options, _ = dev_command.parse_options(["-r"])
+
+    # Run the run command; it will raise an error
+    with pytest.raises(
+        RequirementsInstallError,
+        match=r"Unable to install requirements\.",
+    ):
+        dev_command(**options)
+
+    # The right sequence of things will be done
+    assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Virtual environment context is acquired with recreate=True
+        ("virtual-environment", "first", True, True),
+        # But installing requirements fails.
+    ]
+
+    # Environment was recreated
+    assert first_venv.created
+
+    # Clean was called as a result of the failure.
+    first_venv.clean.assert_called_once_with()
 
 
 def test_run_uninstalled(dev_command, first_app_uninstalled):
