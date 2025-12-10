@@ -435,6 +435,12 @@ system_runtime_requires = [
     "libqt6dbus6",
     "libqt6gui6",
     "libxcb-cursor0",
+    # The following packages are explicit dependencies on recent Debian-based
+    # distros, but not on Ubuntu 22.04.
+    "libxcb-icccm4",
+    "libxcb-keysyms1",
+    "libxcb-shape0",
+    "libxkbcommon-x11-0",
 ]
 """,
         "pyproject_table_linux_system_rhel": """\
