@@ -65,7 +65,7 @@ def test_dev_system_app_starts(dev_command, first_app, tmp_path):
     assert (
         Path(popen_args[0][0])
         .parts[-3]
-        .startswith("dev.cp-" if sys.platform == "win32" else "dev.cpython-")
+        .startswith("dev.cp3" if sys.platform == "win32" else "dev.cpython-3")
     )
     assert Path(popen_args[0][0]).parts[-2] == (
         "Scripts" if sys.platform == "win32" else "bin"
