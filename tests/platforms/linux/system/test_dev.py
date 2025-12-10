@@ -62,7 +62,11 @@ def test_dev_system_app_starts(dev_command, first_app, tmp_path):
         Path(popen_args[0][0]).parent.parent.parent
         == dev_command.base_path / ".briefcase/first-app"
     )
-    assert Path(popen_args[0][0]).parts[-3].startswith("dev.cpython-")
+    assert (
+        Path(popen_args[0][0])
+        .parts[-3]
+        .startswith("dev.cp-" if sys.platform == "win32" else "dev.cpython-")
+    )
     assert Path(popen_args[0][0]).parts[-2] == (
         "Scripts" if sys.platform == "win32" else "bin"
     )
