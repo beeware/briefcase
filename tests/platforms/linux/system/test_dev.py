@@ -1,5 +1,6 @@
 import subprocess
 import sys
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -54,8 +55,18 @@ def test_dev_system_app_starts(dev_command, first_app, tmp_path):
     # The app was started with streamed logs
     popen_args, popen_kwargs = dev_command.tools.subprocess.Popen.call_args
 
-    # Check Python executable
-    assert popen_args[0][0] == sys.executable
+    # Check Python executable isn't the system executable.
+    # It should be a venv in the base path.
+    assert popen_args[0][0] != sys.executable
+    assert (
+        Path(popen_args[0][0]).parent.parent.parent
+        == dev_command.base_path / ".briefcase/first-app"
+    )
+    assert Path(popen_args[0][0]).parts[-3].startswith("dev.cpython-")
+    assert Path(popen_args[0][0]).parts[-2] == (
+        "Scripts" if sys.platform == "win32" else "bin"
+    )
+
     # Check that module name is in the inline Python command
     assert "run_module" in popen_args[0][2]
     assert first_app.module_name in popen_args[0][2]

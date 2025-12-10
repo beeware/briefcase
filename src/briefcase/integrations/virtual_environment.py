@@ -172,15 +172,14 @@ class VenvEnvironment:
         self.venv_context = VenvContext(tools=self.tools, venv_path=self.path)
 
     def __enter__(self):
-        rel_venv_path = self.path.relative_to(Path.cwd())
         if self.recreate:
             with self.tools.console.wait_bar(
-                f"Recreating virtual environment at {rel_venv_path}..."
+                f"Recreating virtual environment ({self.path.name})..."
             ):
                 self.venv_context.recreate()
         elif not self.venv_context.exists():
             with self.tools.console.wait_bar(
-                f"Creating virtual environment at {rel_venv_path}..."
+                f"Creating virtual environment ({self.path.name})..."
             ):
                 self.venv_context.create()
 
