@@ -220,6 +220,8 @@ A path, relative to the directory where the `pyproject.toml` file is located, to
 
 A longer description of the purpose of the application. This description can be multiple paragraphs, if necessary. The long description *must not* be a copy of the [`description`][], or include the [`description`][] as the first line of the [`long_description`][].
 
+#### `min_os_version`
+
 A string describing the minimum OS version that the generated app will support. This value is only used on platforms that have a clear mechanism for specifying OS version compatibility; on the platforms where it *is* used, the interpretation of the value is platform specific. Refer to individual platform guides for details on how the provided value is interpreted.
 
 #### `requirement_installer_args`
