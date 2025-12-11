@@ -59,10 +59,14 @@ class VenvContext:
                 f"Failed to create virtual environment at {self.venv_path}"
             ) from e
 
-    def recreate(self) -> None:
-        """Remove and re-create the virtual environment."""
+    def clean(self) -> None:
+        """Remove the virtual environment."""
         if self.exists():
             shutil.rmtree(self.venv_path)
+
+    def recreate(self) -> None:
+        """Remove and re-create the virtual environment."""
+        self.clean()
         self.create()
 
     def update_core_tools(self) -> None:
@@ -168,15 +172,14 @@ class VenvEnvironment:
         self.venv_context = VenvContext(tools=self.tools, venv_path=self.path)
 
     def __enter__(self):
-        rel_venv_path = self.path.relative_to(Path.cwd())
         if self.recreate:
             with self.tools.console.wait_bar(
-                f"Recreating virtual environment at {rel_venv_path}..."
+                f"Recreating virtual environment ({self.path.name})..."
             ):
                 self.venv_context.recreate()
         elif not self.venv_context.exists():
             with self.tools.console.wait_bar(
-                f"Creating virtual environment at {rel_venv_path}..."
+                f"Creating virtual environment ({self.path.name})..."
             ):
                 self.venv_context.create()
 
@@ -226,14 +229,19 @@ class NoOpVenvContext:
             self.marker_path.write_text(sys.executable, encoding="utf-8")
             self.created = True
 
-    def recreate(self):
+    def clean(self) -> None:
+        """Remove the virtual environment marker."""
+        if self.marker_path.exists():
+            self.marker_path.unlink()
+
+    def recreate(self) -> None:
         """Recreate the no-op environment.
 
         Since the no-op environment always exists, this essentially amounts to ensuring
         that the created flag is set.
         """
+        self.clean()
         self.create()
-        self.created = True
 
     def run(self, args: SubprocessArgsT, **kwargs) -> subprocess.CompletedProcess:
         """Run command through native subprocess."""

@@ -431,26 +431,16 @@ system_requires = [
 ]
 
 system_runtime_requires = [
-    # Derived from https://doc.qt.io/qt-6/linux-requirements.html
-    "libxext6",
-    "libxrender1",
-    "libx11-xcb1",
-    "libxkbcommon-x11-0",
-    "libxcb-image0",
+    "libgl1",
+    "libqt6dbus6",
+    "libqt6gui6",
     "libxcb-cursor0",
-    "libxcb-shape0",
-    "libxcb-randr0",
-    "libxcb-xfixes0",
-    "libxcb-sync1",
+    # The following packages are explicit dependencies on recent Debian-based
+    # distros, but not on Ubuntu 22.04.
     "libxcb-icccm4",
     "libxcb-keysyms1",
-    "libfontconfig1",
-    "libsm6",
-    "libice6",
-    "libglib2.0-0",
-    "libgl1",
-    "libegl1",
-    "libdbus-1-3",
+    "libxcb-shape0",
+    "libxkbcommon-x11-0",
 ]
 """,
         "pyproject_table_linux_system_rhel": """\

@@ -315,6 +315,9 @@ class DevCommand(RunAppMixin, BaseCommand):
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
 
+        if isolated:
+            self.console.info("Activating dev environment...", prefix=app.app_name)
+
         with self.tools.virtual_environment.create(
             venv_path=self.venv_path(app.app_name),
             isolated=isolated,
@@ -322,7 +325,14 @@ class DevCommand(RunAppMixin, BaseCommand):
         ) as venv:
             if venv.created:
                 self.console.info("Installing requirements...", prefix=app.app_name)
-                self.install_dev_requirements(app, venv, **options)
+                try:
+                    self.install_dev_requirements(app, venv, **options)
+                except Exception:
+                    # If any problem occurs during installing requirements, remove the
+                    # venv; it will need to be re-created on the next run.
+                    venv.clean()
+                    raise
+
                 write_dist_info(
                     app,
                     self.app_module_path(app).parent / app.dist_info_name,
