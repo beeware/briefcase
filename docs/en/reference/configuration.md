@@ -86,6 +86,17 @@ Examples of valid version strings:
 - `1.2.3rc7` - A release candidate
 - `1.2.3.post8` - A post-release
 
+#### `license`
+Briefcase expects [PEP 621](https://peps.python.org/pep-0621/) license metadata and will use the `text` or `file` value as the project’s license.
+  ```toml
+  [project]
+  license = { text = "BSD-3-Clause" }
+  # or
+  license = { file = "LICENSE" }
+  # equivalent TOML syntax:
+  license.file = "LICENSE"
+  ```
+
 ### Optional values
 
 #### `author`
@@ -484,14 +495,6 @@ The following PEP621 project metadata keys will be used by Briefcase if they are
 - `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages defined in the [`requires`][] setting at the `[tool.briefcase]` level will be appended to the packages defined with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to [`test_requires`][]., As with `dependencies`/[`requires`][], this is a cumulative setting.
-- `text` in a `[project.license]` section will be mapped to [`license`][]. Briefcase expects [PEP 621](https://peps.python.org/pep-0621/) license metadata and will use the `text` or `file` value as the project’s license.
-  ```toml
-  [project]
-  license = { text = "BSD-3-Clause" }
-  # or
-  license = { file = "LICENSE" }
-  # equivalent TOML syntax:
-  license.file = "LICENSE"
-  ```
+- `text` in a `[project.license]` section will be mapped to [`license`][].
 - `homepage` in a `[project.urls]` section will be mapped to [`url`][].
 - `requires-python` will be used to validate the running Python interpreter's version against the requirement.
