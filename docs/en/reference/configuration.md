@@ -86,6 +86,17 @@ Examples of valid version strings:
 - `1.2.3rc7` - A release candidate
 - `1.2.3.post8` - A post-release
 
+#### `license`
+Briefcase expects [PEP 621](https://peps.python.org/pep-0621/) license metadata and will use the `text` or `file` value as the project’s license.
+  ```toml
+  [project]
+  license = { text = "BSD-3-Clause" }
+  # or
+  license = { file = "LICENSE" }
+  # equivalent TOML syntax:
+  license.file = "LICENSE"
+  ```
+
 ### Optional values
 
 #### `author`
