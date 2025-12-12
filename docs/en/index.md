@@ -47,4 +47,4 @@ If you have any concerns about this code of conduct, or you wish to report a vio
 
 ### Contributing
 
-If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues). If you want to contribute code, please follow the [Briefcase code contribution guide][contribute]. For documentation contributions, follow the [Briefcase docs contribution guide][contribute-docs].
+If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues). If you want to contribute to Briefcase, you can read through the [Briefcase contribution guides](how-to/contribute/index.md).

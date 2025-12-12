@@ -31,8 +31,7 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
 ## [Contributing to Briefcase](contribute/index.md)
 
-* [Contributing code to Briefcase](contribute/code.md) - The process to follow to contribute to Briefcase source code.
-* [Contributing to the documentation](contribute/docs.md) - The process to follow to contribute to Briefcase documentation.
+* [Contributing to Briefcase](contribute/index.md) - The many ways you can contribute to Briefcase, including what you can do and how to do it.
 
 ## Internal How-to guides
 
