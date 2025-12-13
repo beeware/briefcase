@@ -37,7 +37,7 @@ def test_unsupported_template_version(build_command, first_app_generated):
     build_command.verify_app = MagicMock(wraps=build_command.verify_app)
 
     build_command._briefcase_toml.update(
-        {first_app_generated: {"briefcase": {"target_epoch": "0.3.16"}}}
+        {first_app_generated: {"briefcase": {"target_version": "0.3.16"}}}
     )
 
     with pytest.raises(
@@ -115,6 +115,18 @@ def test_build_app(
             + "\n"
         )
 
+    with (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "android"
+        / "gradle"
+        / "app"
+        / "extract-packages.txt"
+    ).open(encoding="utf-8") as f:
+        assert f.read() == ""
+
 
 @pytest.mark.parametrize(
     ("host_os", "gradlew_name", "debug_mode"),
@@ -135,6 +147,7 @@ def test_build_app_test_mode(
 ):
     """The app can be built in test mode, invoking gradle and rewriting app metadata."""
     first_app_generated.test_mode = True
+    first_app_generated.test_sources = ["my_test_package"]
 
     # Mock out `host_os` so we can validate which name is used for gradlew.
     build_command.tools.host_os = host_os
@@ -183,6 +196,97 @@ def test_build_app_test_mode(
             )
             + "\n"
         )
+
+    with (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "android"
+        / "gradle"
+        / "app"
+        / "extract-packages.txt"
+    ).open(encoding="utf-8") as f:
+        assert f.read() == "my_test_package"
+
+
+extract_packages_params = [
+    ([], ""),
+    ([""], ""),
+    (["one"], "one"),
+    (["one/two"], "two"),
+    (["one//two"], "two"),
+    (["one/two/three"], "three"),
+    (["one", "two"], "one\ntwo"),
+    (["one", "two", "three"], "one\ntwo\nthree"),
+    (["one/two", "three/four"], "two\nfour"),
+    (["/leading"], "leading"),
+    (["/leading/two"], "two"),
+    (["/leading/two/three"], "three"),
+    (["trailing/"], "trailing"),
+    (["trailing//"], "trailing"),
+    (["trailing/two/"], "two"),
+]
+
+# Handle differences in UNC path parsing (https://github.com/python/cpython/pull/100351).
+extract_packages_params += [
+    (
+        ["//leading"],
+        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else "leading",
+    ),
+    (
+        ["//leading/two"],
+        "" if sys.platform == "win32" else "two",
+    ),
+    (["//leading/two/three"], "three"),
+    (["//leading/two/three/four"], "four"),
+]
+
+if sys.platform == "win32":
+    extract_packages_params += [
+        ([path.replace("/", "\\") for path in test_sources], expected)
+        for test_sources, expected in extract_packages_params
+    ]
+
+
+@pytest.mark.parametrize(("test_sources", "expected"), extract_packages_params)
+def test_extract_packages(
+    build_command, first_app_generated, test_sources, expected, tmp_path
+):
+    first_app_generated.test_sources = test_sources
+    build_command.update_app_metadata(first_app_generated)
+
+    with (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "android"
+        / "gradle"
+        / "app"
+        / "extract-packages.txt"
+    ).open(encoding="utf-8") as f:
+        assert f.read() == expected
+
+
+def test_extract_packages_debugger(
+    build_command, first_app_generated, dummy_debugger, tmp_path
+):
+    first_app_generated.test_sources = ["one", "two", "three"]
+    first_app_generated.debugger = dummy_debugger
+    build_command.update_app_metadata(first_app_generated)
+
+    with (
+        tmp_path
+        / "base_path"
+        / "build"
+        / "first-app"
+        / "android"
+        / "gradle"
+        / "app"
+        / "extract-packages.txt"
+    ).open(encoding="utf-8") as f:
+        assert f.read() == "*"
 
 
 def test_print_gradle_errors(build_command, first_app_generated):

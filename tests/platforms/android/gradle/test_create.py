@@ -38,7 +38,7 @@ def test_unsupported_template_version(create_command, first_app_config):
     create_command.verify_app = MagicMock(wraps=create_command.verify_app)
 
     create_command._briefcase_toml.update(
-        {first_app_config: {"briefcase": {"target_epoch": "0.3.16"}}}
+        {first_app_config: {"briefcase": {"target_version": "0.3.16"}}}
     )
 
     with pytest.raises(
@@ -152,52 +152,6 @@ def test_build_gradle_dependencies(
         "** WARNING: App does not define build_gradle_dependencies              **"
         in capsys.readouterr().out
     ) == has_warning
-
-
-extract_packages_params = [
-    ([], ""),
-    ([""], ""),
-    (["one"], '"one"'),
-    (["one/two"], '"two"'),
-    (["one//two"], '"two"'),
-    (["one/two/three"], '"three"'),
-    (["one", "two"], '"one", "two"'),
-    (["one", "two", "three"], '"one", "two", "three"'),
-    (["one/two", "three/four"], '"two", "four"'),
-    (["/leading"], '"leading"'),
-    (["/leading/two"], '"two"'),
-    (["/leading/two/three"], '"three"'),
-    (["trailing/"], '"trailing"'),
-    (["trailing//"], '"trailing"'),
-    (["trailing/two/"], '"two"'),
-]
-
-# Handle differences in UNC path parsing (https://github.com/python/cpython/pull/100351).
-extract_packages_params += [
-    (
-        ["//leading"],
-        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else '"leading"',
-    ),
-    (
-        ["//leading/two"],
-        "" if sys.platform == "win32" else '"two"',
-    ),
-    (["//leading/two/three"], '"three"'),
-    (["//leading/two/three/four"], '"four"'),
-]
-
-if sys.platform == "win32":
-    extract_packages_params += [
-        ([path.replace("/", "\\") for path in test_sources], expected)
-        for test_sources, expected in extract_packages_params
-    ]
-
-
-@pytest.mark.parametrize(("test_sources", "expected"), extract_packages_params)
-def test_extract_packages(create_command, first_app_config, test_sources, expected):
-    first_app_config.test_sources = test_sources
-    context = create_command.output_format_template_context(first_app_config)
-    assert context["extract_packages"] == expected
 
 
 @pytest.mark.parametrize(
