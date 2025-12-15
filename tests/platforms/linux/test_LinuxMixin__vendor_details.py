@@ -10,6 +10,7 @@ from .os_release import OS_RELEASE
     [
         ("archlinux:latest", "arch", "rolling", "arch"),
         ("manjaro/base:latest", "manjaro", "rolling", "arch"),
+        ("cachyos:rolling", "cachyos", "rolling", "arch"),
         ("fedora:37", "fedora", "37", "rhel"),
         ("rhel/ubi8:8.7", "rhel", "8", "rhel"),
         ("almalinux:9.1", "almalinux", "9", "rhel"),
