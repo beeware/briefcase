@@ -112,7 +112,7 @@ class LinuxMixin:
             vendor_base = DEBIAN
         elif vendor == RHEL or vendor == "fedora" or RHEL in id_like:
             vendor_base = RHEL
-        elif vendor == ARCH or vendor == "CachyOS" or ARCH in id_like:
+        elif vendor == ARCH or vendor == "cachyos" or ARCH in id_like:
             vendor_base = ARCH
         elif vendor == SUSE or SUSE in id_like:
             vendor_base = SUSE
