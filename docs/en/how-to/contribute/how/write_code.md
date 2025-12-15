@@ -27,4 +27,3 @@ This is some additional Briefcase testing content
 Once you have everything working, you can [submit a pull request](submit_pr.md) with your changes.
 
 {% endblock %}
-
