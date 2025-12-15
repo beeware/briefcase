@@ -1,5 +1,3 @@
-# Writing, running, and testing code
-
 {% extends "contribute/how/write\_code.md" %}
 
 {% block front\_matter %}
