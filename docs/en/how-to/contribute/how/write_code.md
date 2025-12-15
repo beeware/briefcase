@@ -8,6 +8,8 @@ To begin working on code, ensure you have a [development environment](dev_enviro
 
 
 
+{% block end\_matter %}
+
 {% block testing\_additional %}
 
 \### Briefcase specific content
@@ -19,8 +21,6 @@ This is some additional Briefcase testing content
 {% endblock %}
 
 
-
-{% block end\_matter %}
 
 Once you have everything working, you can [submit a pull request](submit_pr.md) with your changes.
 
