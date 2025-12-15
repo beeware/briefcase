@@ -79,27 +79,24 @@ def test_requires_python_invalid_specifier(base_command, my_app):
         base_command.verify_required_python(my_app)
 
 
-@mock.patch("platform.python_version")
-def test_requires_python_met_specifier_set(python_version_mock, base_command, my_app):
-    python_version_mock.return_value = "3.14.0"
+def test_requires_python_met_specifier_set(monkeypatch, base_command, my_app):
+    monkeypatch.setattr(platform, "python_version", mock.Mock(return_value="3.14.0"))
 
     base_command.global_config = _get_global_config(requires_python=">=3.14,<4.0")
     base_command.verify_required_python(my_app)
 
 
-@mock.patch("platform.python_version")
-def test_requires_python_unmet_specifier_set(python_version_mock, base_command, my_app):
-    python_version_mock.return_value = "3.13.0"
+def test_requires_python_unmet_specifier_set(monkeypatch, base_command, my_app):
+    monkeypatch.setattr(platform, "python_version", mock.Mock(return_value="3.13.0"))
 
     base_command.global_config = _get_global_config(requires_python=">=3.14,<4.0")
     with pytest.raises(UnsupportedPythonVersion):
         base_command.verify_required_python(my_app)
 
 
-@mock.patch("platform.python_version")
-def test_requires_python_prerelease(python_version_mock, base_command, my_app):
-    """Verify that pre-release Python versions are included in matches."""
-    python_version_mock.return_value = "3.14.0a0"
+def test_requires_python_prerelease(monkeypatch, base_command, my_app):
+    """Pre-release Python versions are included in matches."""
+    monkeypatch.setattr(platform, "python_version", mock.Mock(return_value="3.14.0a0"))
 
     base_command.global_config = _get_global_config(requires_python=">=3.12")
     base_command.verify_required_python(my_app)

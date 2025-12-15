@@ -27,7 +27,7 @@ from briefcase.debuggers import get_debugger, get_debuggers
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib  # pragma: no cover:
+    import tomli as tomllib
 
 import briefcase
 from briefcase import __version__
