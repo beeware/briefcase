@@ -1,6 +1,6 @@
-{% extends "contribute/how/write\_code.md" %}
+{% extends "contribute/how/write_code.md" %}
 
-{% block front\_matter %}
+{% block front_matter %}
 
 To begin working on code, ensure you have a [development environment](dev_environment.md) set up, and you are [working on a branch](branches.md)
 
@@ -8,11 +8,9 @@ To begin working on code, ensure you have a [development environment](dev_enviro
 
 
 
-{% block end\_matter %}
+{% block testing_additional %}
 
-{% block testing\_additional %}
-
-\### Briefcase specific content
+## Briefcase-specific content
 
 
 
@@ -21,6 +19,8 @@ This is some additional Briefcase testing content
 {% endblock %}
 
 
+
+{% block end_matter %}
 
 Once you have everything working, you can [submit a pull request](submit_pr.md) with your changes.
 
