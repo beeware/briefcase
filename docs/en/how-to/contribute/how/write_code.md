@@ -1,3 +1,5 @@
+#Writing, running, and testing code
+
 {% extends "contribute/how/write_code.md" %}
 
 {% block front_matter %}
@@ -6,19 +8,13 @@ To begin working on code, ensure you have a [development environment](dev_enviro
 
 {% endblock %}
 
-
-
 {% block testing_additional %}
 
-## Briefcase-specific content
-
-
+### Briefcase-specific content
 
 This is some additional Briefcase testing content
 
 {% endblock %}
-
-
 
 {% block end_matter %}
 
