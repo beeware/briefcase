@@ -1,4 +1,4 @@
-#Writing, running, and testing code
+# Writing, running, and testing code
 
 {% extends "contribute/how/write_code.md" %}
 
