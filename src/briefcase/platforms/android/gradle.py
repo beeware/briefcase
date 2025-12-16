@@ -407,7 +407,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 device_or_avd = configured
 
         if isinstance(device_or_avd, str):
-            device_or_avd = device_or_avd.strip()
+            device_or_avd = device_or_avd
 
         try:
             device, name, avd = self.tools.android_sdk.select_target_device(

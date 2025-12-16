@@ -921,7 +921,7 @@ connection.
         """
 
         # Allow "?" to force interactive selection, even if a value was provided
-        if isinstance(device_or_avd, str) and device_or_avd.strip() == "?":
+        if device_or_avd == "?":
             device_or_avd = None
 
         # If the device_or_avd starts with "{", it's a definition for a new
