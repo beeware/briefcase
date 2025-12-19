@@ -127,7 +127,7 @@ test = [
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
 docs = [
-    "beeware-docs-tools @ git+https://github.com/HalfWhitt/beeware-docs-tools@hyphens",
+    "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
 ]
 
 [project.urls]
