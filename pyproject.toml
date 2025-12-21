@@ -95,7 +95,7 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.5.0",
+    "pre-commit == 4.5.1",
 ]
 
 setuptools-scm = [
