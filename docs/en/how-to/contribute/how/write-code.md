@@ -1,10 +1,10 @@
 # Writing, running, and testing code
 
-{% extends "contribute/how/write_code.md" %}
+{% extends "contribute/how/write-code.md" %}
 
 {% block front_matter %}
 
-To begin working on code, ensure you have a [development environment](dev_environment.md) set up, and you are [working on a branch](branches.md)
+To begin working on code, ensure you have a [development environment](dev-environment.md) set up, and you are [working on a branch](branches.md)
 
 {% endblock %}
 
@@ -89,6 +89,6 @@ Once the necessary support is available in Briefcase itself, the template change
 
 {% block end_matter %}
 
-Once you have everything working, you can [submit a pull request](submit_pr.md) with your changes.
+Once you have everything working, you can [submit a pull request](submit-pr.md) with your changes.
 
 {% endblock %}

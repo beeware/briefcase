@@ -14,7 +14,7 @@ repos:
       - id: docformatter
         args: [--in-place, --black]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.8
+    rev: v0.14.10
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -25,3 +25,4 @@ repos:
     - id: codespell
       # remove toml extra once Python 3.10 is no longer supported
       additional_dependencies: ['.[toml]']
+      args: ["--skip=CODE_OF_CONDUCT.md"]

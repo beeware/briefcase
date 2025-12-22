@@ -18,7 +18,7 @@ from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
-from packaging.specifiers import InvalidSpecifier, Specifier
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
@@ -812,7 +812,7 @@ any compatibility problems, and then add the compatibility declaration.
             return
 
         try:
-            spec = Specifier(requires_python)
+            spec = SpecifierSet(requires_python)
         except InvalidSpecifier as e:
             raise BriefcaseConfigError(
                 f"Invalid requires-python in pyproject.toml: {e}"

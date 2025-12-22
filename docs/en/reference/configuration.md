@@ -68,6 +68,18 @@ This section can contain additional layers. for example, an app targeting the Li
 
 A reverse-domain name that can be used to identify resources for the application e.g., `com.example`. The bundle identifier will be combined with the app name to produce a unique application identifier - e.g., if the bundle identifier is `com.example` and the app name is `myapp`, the application will be identified as `com.example.myapp`.
 
+#### `license`
+
+A [PEP 621](https://peps.python.org/pep-0621/) license specification for the project. The `license` must be specified by referring to a file:
+```toml
+license.file = "LICENSE"
+```
+
+or by providing text that describes the license (either as an SPDX specifier, or the literal text of the license):
+```toml
+license.text = "BSD-3-Clause"
+```
+
 #### `project_name`
 
 The project is the collection of all applications that are described by the briefcase configuration. For projects with a single app, this may be the same as the formal name of the solitary packaged app.
