@@ -266,7 +266,8 @@ class Console:
         :return: The formatted message enclosed in a bordered box.
         """
 
-        if not message:
+        # If message and title are both empty, return empty string
+        if not message and not title:
             return ""
 
         # Create border line
@@ -296,18 +297,20 @@ class Console:
             # closing line of title in the box
             lines.append(border_line)
 
-        # split the message into paragraphs
-        paragraphs = message.split("\n")
-        for paragraph in paragraphs:
-            if paragraph.strip():  # Non-empty paragraph
-                # Wrap paragraph to lines to fit the width of the box
-                wrapped_lines = textwrap.wrap(paragraph, width=width)
-                lines.extend(wrapped_lines)
-            else:  # Empty paragraph (preserve blank lines)
-                lines.append("")
+        # If message is not empty, add it to the box
+        if message:
+            # split the message into paragraphs
+            paragraphs = message.split("\n")
+            for paragraph in paragraphs:
+                if paragraph.strip():  # Non-empty paragraph
+                    # Wrap paragraph to lines to fit the width of the box
+                    wrapped_lines = textwrap.wrap(paragraph, width=width)
+                    lines.extend(wrapped_lines)
+                else:  # Empty paragraph (preserve blank lines)
+                    lines.append("")
 
-        # closing line of message
-        lines.append(border_line)
+            # closing line of message
+            lines.append(border_line)
 
         # merge lines into a single string and return
         return "\n".join(lines)
