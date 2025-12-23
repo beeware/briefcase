@@ -257,7 +257,10 @@ class Console:
         width: int = 80,
         border_char: str = "*",
     ) -> str:
-        """Format warning banner message inside an asterisk border box.
+        """Format warning banner message inside an asterisk border box. It is possible
+        to input title/message as multiline or single string. To manually split the
+        message into paragraphs, use the "\\n" character. If you need empty lines, use
+        the "\\n\\n" sequence.
 
         :param message: The message to format inside the box.
         :param title: The title of the box. If provided, appears centered at the top.
@@ -270,6 +273,15 @@ class Console:
         if not message and not title:
             return ""
 
+        def dedent_and_split(text):
+            """Dedent and split text into paragraphs by manual line breaks."""
+            # Remove common leading whitespace
+            text = textwrap.dedent(text).strip()
+            # replace line breaks with spaces
+            text = text.replace("\n", " ")
+            # split the message into paragraphs by manual line breaks
+            return text.split("\\n")
+
         # Create border line
         border_line = border_char * width
         # create lines array with opening line of the box
@@ -277,32 +289,39 @@ class Console:
 
         # if title exists, format title in the box
         if title:
-            # Wrap the title to lines to fit the width of the box
-            wrapped_title_lines = textwrap.wrap(
-                title.strip(),
-                # width of title line inside the box
-                # minus the padding=1*2 and the border=2*2
-                width=width - 6,
-            )
-
             # width of title line inside the box
             inner_width = width - 4
 
-            for line in wrapped_title_lines:
-                # Center each line within the available space
-                padded_line = line.center(inner_width)
-                # add line to the box
-                lines.append(f"{border_char * 2}{padded_line}{border_char * 2}")
+            # spilt title into paragraphs
+            paragraphs = dedent_and_split(title)
+
+            for paragraph in paragraphs:
+                paragraph = paragraph.strip()
+                if paragraph:  # Non-empty paragraph
+                    # Wrap paragraph to lines to fit the width of the box
+                    wrapped_title_lines = textwrap.wrap(paragraph, width=width - 6)
+
+                    for line in wrapped_title_lines:
+                        # Center each line within the available space
+                        padded_line = line.center(inner_width)
+                        # add line to the box
+                        lines.append(f"{border_char * 2}{padded_line}{border_char * 2}")
+                else:  # Empty paragraph (preserve blank lines)
+                    lines.append(
+                        f"{border_char * 2}{''.center(inner_width)}{border_char * 2}"
+                    )
 
             # closing line of title in the box
             lines.append(border_line)
 
         # If message is not empty, add it to the box
         if message:
-            # split the message into paragraphs
-            paragraphs = message.split("\n")
+            # spilt message into paragraphs
+            paragraphs = dedent_and_split(message)
+
             for paragraph in paragraphs:
-                if paragraph.strip():  # Non-empty paragraph
+                paragraph = paragraph.strip()
+                if paragraph:  # Non-empty paragraph
                     # Wrap paragraph to lines to fit the width of the box
                     wrapped_lines = textwrap.wrap(paragraph, width=width)
                     lines.extend(wrapped_lines)
