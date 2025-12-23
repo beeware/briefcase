@@ -34,6 +34,8 @@ Hi there! My name is Anton, and I'm a Python developer.
 This is my very first experience in open source development. I like your
 project, and I'm excited to contribute to it.
 ********************************************************************************"""
+    # print(msg)
+    # print(output_msg_width_80_default)
     assert msg == output_msg_width_80_default
 
 
@@ -45,10 +47,10 @@ def test_format_message_to_asterisk_box_width_40(console):
         width=40,
     )
     output_msg_width_40 = """****************************************
-**    INFO: I TRIED TO SOLVE THIS     **
-**    ISSUE #2559. IT SEEMED TO ME    **
-**   RATHER SIMPLE, BUT I GOT VERY    **
-**          GOOD EXPERIENCE           **
+** INFO: I TRIED TO SOLVE THIS ISSUE  **
+**   #2559. IT SEEMED TO ME RATHER    **
+**    SIMPLE, BUT I GOT VERY GOOD     **
+**             EXPERIENCE             **
 ****************************************
 Hi there! My name is Anton, and I'm a
 Python developer.
@@ -57,6 +59,8 @@ This is my very first experience in open
 source development. I like your project,
 and I'm excited to contribute to it.
 ****************************************"""
+    # print(msg)
+    # print(output_msg_width_40)
     assert msg == output_msg_width_40
 
 
