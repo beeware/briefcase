@@ -179,13 +179,20 @@ __width
 ****************************************\
 """,
         ),
-        # (
-        #     "Test 9: Message and title lengths equal to box width",
-        #     5,
-        #     5,
-        #     40,
-        #     "",
-        # ),
+        (
+            "Test 11: Invalid input types",
+            5,
+            5,
+            40,
+            "",
+        ),
+        (
+            "Test 12: Invalid input types",
+            "5",
+            "5",
+            "40",
+            "",
+        ),
     ],
 )
 def test_warning_banner(console, test_name, message, title, width, expected):

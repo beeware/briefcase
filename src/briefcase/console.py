@@ -269,8 +269,9 @@ class Console:
         :return: The formatted message enclosed in a bordered box.
         """
 
-        # If message and title are both empty, return empty string
-        if not message and not title:
+        # If message and title are both empty or width is not an integer,
+        # return empty string
+        if not any((message, title)) or not isinstance(width, int):
             return ""
 
         def dedent_and_split(text):
@@ -289,6 +290,9 @@ class Console:
 
         # if title exists, format title in the box
         if title:
+            if not isinstance(title, str):
+                return ""
+
             # width of title line inside the box
             inner_width = width - 4
 
@@ -316,6 +320,9 @@ class Console:
 
         # If message is not empty, add it to the box
         if message:
+            if not isinstance(message, str):
+                return ""
+
             # spilt message into paragraphs
             paragraphs = dedent_and_split(message)
 
