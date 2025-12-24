@@ -10,13 +10,13 @@ To debug an app in development mode, add `breakpoint()` to your code somewhere t
 
 /// warning | Note
 
-This is currently an **experimental feature** that is only supported on Windows, macOS and iOS.
+This is currently an **experimental feature** that is only supported on Windows, macOS, iOS and Android.
 
 ///
 
 To debug a bundled app, add `breakpoint()` somewhere in your code where the debugger should halt.
 
-Your app must then be modified to include a bootstrap that will connect to the VS Code debugger. This is done by passing the `--debug debugpy` option to `briefcase build`:
+Your app must then be modified to include a bootstrap that will connect to the VS Code debugger. This is done by passing the `--debug pdb` option to `briefcase build`:
 
 ```console
 $ briefcase build --debug pdb
