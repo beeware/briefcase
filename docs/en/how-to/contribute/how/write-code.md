@@ -32,7 +32,7 @@ Wizard templates are used when creating a new project with `briefcase new`. Brie
 
 To test a modified wizard template:
 
-1. Fork and clone the wizard template repository you are working on.
+1. Fork and clone the [wizard template repository]("https://github.com/beeware/briefcase-template") you are working on.
 2. Make your changes in a local branch.
 3. Run `briefcase new`, specifying the custom template repository and branch:
 
@@ -43,7 +43,7 @@ To test a modified wizard template:
     Alternatively, you can push your changes to GitHub, and then point Briefcase at the GitHub repository and branch for your template fork:
 
      ```bash
-     briefcase new --template <template-repository-url> --template-branch <branch-name>
+     briefcase new --template "https://github.com/<your-github-username>/briefcase-template" --template-branch my-template-changes
      ```
 
 #### Testing platform template changes
@@ -52,7 +52,7 @@ Platform-specific templates are used when deploying a project to a specific plat
 
 Briefcase supports using a local copy of a template using the [`template`][] and [`template_branch`][] options. To test a modified platform template:
 
-1. Fork and clone the platform template repository you are working on.
+1. Fork and clone the platform template repository you are working on (e.g., [this template]("https://github.com/beeware/briefcase-macOS-app-template") for macOS apps).
 2. Make your changes in a local branch.
 3. Open the project’s `pyproject.toml` file.
 4. In the platform-specific configuration section, set the template to use when creating the app. During initial development, it will be easiest to point at a local checkout of the template:
@@ -66,7 +66,7 @@ Briefcase supports using a local copy of a template using the [`template`][] and
 
     ```toml
     [tool.briefcase.<platform>]
-    template = "https://github.com/your-username/briefcase-<platform>-app-template"
+    template = "https://github.com/<your-github-username>/briefcase-<platform>-app-template"
     template_branch = "my-template-changes"
     ```
 
@@ -74,15 +74,15 @@ Briefcase supports using a local copy of a template using the [`template`][] and
 
 In some cases, changes to a template may depend on corresponding changes in Briefcase itself. For example, if you add a new context variable, or modify the behavior of Briefcase to change how a template variable is constructed, you may require both a Briefcase *and* template change.
 
-This situation then causes problems during testing, because Briefcase's tests won't pass with an old template; and tests for the template won't pass with an old version of Briefcase.
+This situation then causes problems during testing, because Briefcase's tests won't pass with an old template, and tests for the template won't pass with an old version of Briefcase.
 
 To work around this situation, pull requests on Briefcase's template repositories support a syntax for pointing at a specific version of Briefcase. Once you've made changes locally to both Briefcase and the affected template, and you're satisfied that they work, push the changes for both to Briefcase, and open a pull request on each repository.
 
 In the PR description for *Briefcase*, provide details of the template branch that is required for testing. If the template changes are needed for the Briefcase tests to pass, flag this fact in the PR description; this lets reviewers know that the process of merging the PR will be more complicated.
 
-In the PR description for the *template*, include the following two lines (updating as necessary to include your own GitHub username and branch name):
+In the PR description for the *template*, include the following two lines:
 ```
-briefcase-repo: https://github.com/<github username>/briefcase.git
+briefcase-repo: https://github.com/<your-github-username>/briefcase
 briefcase-ref: my-template-changes
 ```
 This directs the template tests to use a branch of Briefcase for testing. This should allow the template tests to pass. The person reviewing your PR will review both the Briefcase *and* template changes together. If approved, the template change will be merged, and tests on Briefcase will then be re-run. This provides a final confirmation that the template and Briefcase are compatible.
