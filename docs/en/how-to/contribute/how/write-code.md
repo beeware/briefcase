@@ -10,8 +10,9 @@ To begin working on code, ensure you have a [development environment](dev-enviro
 
 {% block testing_additional %}
 
-### Templates used by Briefcase at runtime
-Briefcase uses templates at runtime to generate the files and project structure for applications. When a contributor runs commands such as `briefcase new`, `briefcase create`, or `briefcase build`, Briefcase selects and renders one or more templates to produce platform-specific project scaffolding.
+### Changing Briefcase templates
+
+Briefcase uses templates at runtime to generate the files and project structure for applications. When a contributor runs commands such as `briefcase new` or `briefcase create`, Briefcase selects and renders one or more templates to produce platform-specific project scaffolding.
 
 These templates are maintained separately from Briefcase's core code, which allows template development and testing to evolve independently of Briefcase releases.
 
@@ -21,15 +22,13 @@ Broadly, Briefcase works with two categories of templates:
   These templates are used during `briefcase new` to generate the initial project layout, including files such as `pyproject.toml`, application metadata, and basic source structure.
 
 * **Platform-specific templates**
-  These templates are used during `briefcase create` and later stages to generate platform-dependent project files (for example, macOS, Windows, Linux, Android, or iOS). Each platform has its own template repository that defines how the application is structured and built on that platform.
+  These templates are used during `briefcase create` and later stages to generate platform-dependent project files (for example, to produce a macOS app or iOS XCode project). Each platform has its own template repository that defines how the application is structured and built on that platform.
 
-When contributing changes to templates, it is often necessary to test those changes locally before they are merged. The following sections describe how to configure Briefcase to use modified template repositories and branches for testing purposes.
+When contributing changes to templates, you need to be able to test those changes locally. Briefcase has features to make this testing possible.
 
-### Testing wizard template changes
+#### Testing wizard template changes
 
-Wizard templates are used when creating a new project with `briefcase new`. If you are making changes to a wizard template, it is usually necessary to test those changes locally before submitting them for review.
-
-Briefcase allows contributors to specify a custom wizard template repository and branch when creating a new project. This makes it possible to test template changes without modifying Briefcase's core code.
+Wizard templates are used when creating a new project with `briefcase new`. Briefcase allows a user to specify a custom wizard template repository and branch when creating a new project. This makes it possible to test template changes without modifying Briefcase's core code.
 
 To test a modified wizard template:
 
@@ -37,53 +36,56 @@ To test a modified wizard template:
 2. Make your changes in a local branch.
 3. Run `briefcase new`, specifying the custom template repository and branch:
 
-```bash
-briefcase new \
-  --template <template-repository-url> \
-  --template-branch <branch-name>
-```
+    ```bash
+    briefcase new --template ../../../path/to/template-repo-checkout
+    ```
 
-### Testing platform template changes
+    Alternatively, you can push your changes to GitHub, and then point Briefcase at the GitHub repository and branch for your template fork:
 
-Platform-specific templates are used after a project has been created, during commands such as `briefcase create`, `briefcase build`, `briefcase run`, and `briefcase package`. These templates define how an application is structured, configured, and built for a specific platform (such as macOS, Windows, Linux, Android, or iOS).
+     ```bash
+     briefcase new --template <template-repository-url> --template-branch <branch-name>
+     ```
 
-When modifying a platform template, contributors typically need to test those changes against a local project without modifying Briefcase's core code.
+#### Testing platform template changes
 
-Briefcase supports this by allowing projects to explicitly specify which platform template repository and branch should be used.
+Platform-specific templates are used when deploying a project to a specific platform. This will usually happen when you invoke `briefcase create`, but it can also happen as a result of calling `briefcase build`, `briefcase run`, or `briefcase package` if `briefcase create` hasn't been invoked. These templates define how an application is structured, configured, and built for a specific platform.
 
-The `template` configuration option specifies the Git repository containing the platform template.
-The `template_branch` configuration option specifies the branch of that repository that Briefcase should use when rendering the template.
-
-To test a modified platform template:
+Briefcase supports using a local copy of a template using the [`template`][] and [`template_branch`][] options. To test a modified platform template:
 
 1. Fork and clone the platform template repository you are working on.
 2. Make your changes in a local branch.
 3. Open the project’s `pyproject.toml` file.
-4. In the platform-specific configuration section, set the template repository and branch. For example:
+4. In the platform-specific configuration section, set the template to use when creating the app. During initial development, it will be easiest to point at a local checkout of the template:
 
-```toml
-[tool.briefcase.<platform>]
-template = "https://github.com/your-username/briefcase-<platform>-app-template"
-template_branch = "my-template-changes"
+    ```toml
+    [tool.briefcase.<platform>]
+    template = "../../../path/to/briefcase-<platform>-app-template"
+    ```
+
+    However, you can can also push your changes to your GitHub repository, and configure your Briefcase project to point at that repository and branch:
+
+    ```toml
+    [tool.briefcase.<platform>]
+    template = "https://github.com/your-username/briefcase-<platform>-app-template"
+    template_branch = "my-template-changes"
+    ```
+
+#### Template changes that require Briefcase changes
+
+In some cases, changes to a template may depend on corresponding changes in Briefcase itself. For example, if you add a new context variable, or modify the behavior of Briefcase to change how a template variable is constructed, you may require both a Briefcase *and* template change.
+
+This situation then causes problems during testing, because Briefcase's tests won't pass with an old template; and tests for the template won't pass with an old version of Briefcase.
+
+To work around this situation, pull requests on Briefcase's template repositories support a syntax for pointing at a specific version of Briefcase. Once you've made changes locally to both Briefcase and the affected template, and you're satisfied that they work, push the changes for both to Briefcase, and open a pull request on each repository.
+
+In the PR description for *Briefcase*, provide details of the template branch that is required for testing. If the template changes are needed for the Briefcase tests to pass, flag this fact in the PR description; this lets reviewers know that the process of merging the PR will be more complicated.
+
+In the PR description for the *template*, include the following two lines (updating as necessary to include your own GitHub username and branch name):
 ```
-
-### When template changes also require Briefcase changes
-
-In some cases, changes to a template may depend on corresponding changes in Briefcase's core code. This can occur when a template requires new context variables, additional configuration options, or updated behavior that is not yet supported by the current version of Briefcase.
-
-For testing purposes, Briefcase provides mechanisms to point a project at a modified version of the Briefcase codebase (for example, by specifying an alternate Briefcase repository and reference). This allows contributors to validate template changes that depend on unreleased Briefcase functionality before those changes are merged.
-
-When this happens, template changes cannot be tested in isolation. Instead, both the template and the Briefcase code need to be tested together to ensure they work correctly.
-
-A common approach in these situations is to:
-
-1. Create a branch containing the required changes in the Briefcase repository.
-2. Create a corresponding branch in the template repository that depends on those changes.
-3. Configure the test project to use both the modified Briefcase code and the modified template when testing.
-
-When submitting pull requests, it is important to clearly link the related Briefcase and template changes so reviewers understand the dependency between them. This helps ensure that the changes are reviewed and merged in the correct order.
-
-Once the necessary support is available in Briefcase itself, the template changes can be tested independently using the standard template configuration options described above.
+briefcase-repo: https://github.com/<github username>/briefcase.git
+briefcase-ref: my-template-changes
+```
+This directs the template tests to use a branch of Briefcase for testing. This should allow the template tests to pass. The person reviewing your PR will review both the Briefcase *and* template changes together. If approved, the template change will be merged, and tests on Briefcase will then be re-run. This provides a final confirmation that the template and Briefcase are compatible.
 
 {% endblock %}
 
