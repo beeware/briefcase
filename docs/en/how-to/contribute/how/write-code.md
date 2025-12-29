@@ -32,12 +32,12 @@ Wizard templates are used when creating a new project with `briefcase new`. Brie
 
 To test a modified wizard template:
 
-1. Fork and clone the [wizard template repository]("https://github.com/beeware/briefcase-template") you are working on.
+1. Fork and clone the [wizard template repository](https://github.com/beeware/briefcase-template) you are working on.
 2. Make your changes in a local branch.
 3. Run `briefcase new`, specifying the custom template repository and branch:
 
     ```bash
-    briefcase new --template ../../../path/to/template-repo-checkout
+    briefcase new --template ../../../path/to/briefcase-template
     ```
 
     Alternatively, you can push your changes to GitHub, and then point Briefcase at the GitHub repository and branch for your template fork:
@@ -52,7 +52,7 @@ Platform-specific templates are used when deploying a project to a specific plat
 
 Briefcase supports using a local copy of a template using the [`template`][] and [`template_branch`][] options. To test a modified platform template:
 
-1. Fork and clone the platform template repository you are working on (e.g., [this template]("https://github.com/beeware/briefcase-macOS-app-template") for macOS apps).
+1. Fork and clone the platform template repository you are working on (e.g., [this template](https://github.com/beeware/briefcase-macOS-app-template) for macOS apps).
 2. Make your changes in a local branch.
 3. Open the project’s `pyproject.toml` file.
 4. In the platform-specific configuration section, set the template to use when creating the app. During initial development, it will be easiest to point at a local checkout of the template:
