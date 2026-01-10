@@ -60,3 +60,12 @@ Perform the bare minimum signing that will result in a app that can run on your 
 ### `-i <identity>` / `--identity <identity>`
 
 The [code signing identity][how-to] to use when signing the app.
+
+* **On macOS:** A 40-character hex string (SHA-1 thumbprint), the full name of the certificate (e.g., `Developer ID Application: Jane Smith (ABC12345DE)`), or `-` for an ad-hoc signature.
+
+* **On Windows:** The thumbprint or subject name of a certificate in the user's certificate store.
+
+See the platform-specific guides for instructions on how to obtain a signing identity:
+
+* [How to package a macOS app for distribution](../../how-to/code-signing/macOS.md)
+* [How to package a Windows app for distribution](../../how-to/code-signing/windows.md)
