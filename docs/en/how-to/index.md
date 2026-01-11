@@ -2,7 +2,7 @@
 
 How-to guides are recipes that take the user through steps in key subjects. They are more advanced than tutorials and assume a lot more about what the user already knows than tutorials do, and unlike documents in the tutorial they can stand alone.
 
-## Obtaining a Code Signing identity
+## Obtaining a Code Signing identity { #obtain-code-signing-identity }
 
 * [Android](code-signing/android.md) - One way to sign your app where the Google Play Store maintains the authoritative key for your app.
 * [macOS](code-signing/macOS.md) - How to generate a macOS code signing identity, which is required to distribute your application.
