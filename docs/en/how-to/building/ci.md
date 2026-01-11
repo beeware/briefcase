@@ -62,7 +62,7 @@ This workflow should be saved in to a file at `.github/workflows/ci.yml` in your
 
 ## Limitations of Uploaded Artefacts
 
-The artefacts produced and uploaded by this workflow will not be signed; therefore, when the app is executed locally, some platforms may show a disconcerting warning about the security of the app or prevent the app from running altogether. See more information about code signing in the [identity guides][obtaining-a-code-signing-identity].
+The artefacts produced and uploaded by this workflow will not be signed; therefore, when the app is executed locally, some platforms may show a disconcerting warning about the security of the app or prevent the app from running altogether. See more information about code signing in the [identity guides][obtain-code-signing-identity].
 
 ## Workflow File Contents
 
