@@ -124,7 +124,11 @@ A short, one-line description of the purpose of the application.
 
 A list of paths, relative to the `pyproject.toml` file, where source code for the application can be found. The contents of any named files or folders will be copied into the application bundle. Parent directories in any named path will not be included. For example, if you specify `src/myapp` as a source, the contents of the `myapp` folder will be copied into the application bundle; the `src` directory will not be reproduced.
 
+App startup invokes the module `<app_name>`. Therefore the sources must include at least one Python file (or one folder containing an `__main__.py`) with the same name as the app.
+
 Unlike most other keys in a configuration file, [`sources`][] is a *cumulative* setting. If an application defines sources at the global level, application level, *and* platform level, the final set of sources will be the *concatenation* of sources from all levels, starting from least to most specific.
+
+If directories with the same name are present, their contents are merged. Directories listed earlier in the concatenated list are copied first; files from later directories will overwrite files with the same names.
 
 The only time `sources` is *not* required is if you are is [packaging an external application][packaging-external-apps]. If you are packaging an external application, `external_package_path` must be defined, and `sources` *must not* be defined.
 
@@ -385,7 +389,11 @@ See [`requires`][] for examples.
 
 A list of paths, relative to the `pyproject.toml` file, where test code for the application can be found. The contents of any named files or folders will be copied into the application bundle. Parent directories in any named path will not be included. For example, if you specify `src/myapp` as a source, the contents of the `myapp` folder will be copied into the application bundle; the `src` directory will not be reproduced.
 
+Test startup invokes the module `tests.<app_name>`. Therefore the tests sources must include at least one `tests` directory containing a Python file with the same name as the app.
+
 As with [`sources`][], [`test_sources`][] is a *cumulative* setting. If an application defines sources at the global level, application level, *and* platform level, the final set of sources will be the *concatenation* of test sources from all levels, starting from least to most specific.
+
+If directories with the same name are present, their contents are merged. Directories listed earlier in the concatenated list are copied first; files from later directories will overwrite files with the same names.
 
 ## Permissions
 

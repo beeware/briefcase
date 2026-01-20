@@ -748,7 +748,7 @@ class CreateCommand(BaseCommand):
                     if not original.exists():
                         raise MissingAppSources(src)
                     elif original.is_dir():
-                        self.tools.shutil.copytree(original, target)
+                        self.tools.shutil.copytree(original, target, dirs_exist_ok=True)
                     else:
                         self.tools.shutil.copy(original, target)
         else:

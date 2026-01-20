@@ -640,6 +640,114 @@ def test_only_test_sources_test_mode(
     assert myapp.test_sources == ["tests", "othertests"]
 
 
+def test_source_dir_merge(
+    create_command,
+    myapp,
+    tmp_path,
+    app_path,
+    app_requirements_path_index,
+):
+    """If multiple sources define directories with the same name, their contents are
+    merged with later files overwriting earlier ones."""
+    # Create the mock sources with two source directories and two test directories
+    # lib /
+    #   a.py
+    #   b.py
+    # srcdir /
+    #   lib /
+    #     b.py  (different content)
+    #     c.py
+    # tests /
+    #   test_a.py
+    #   test_b.py
+    # testdir /
+    #   tests /
+    #     test_b.py  (different content)
+    #     test_c.py
+    create_file(
+        tmp_path / "base_path/lib/a.py",
+        "# a from lib\n",
+    )
+    create_file(
+        tmp_path / "base_path/lib/b.py",
+        "# b from lib\n",
+    )
+    create_file(
+        tmp_path / "base_path/srcdir/lib/b.py",
+        "# b from srcdir\n",
+    )
+    create_file(
+        tmp_path / "base_path/srcdir/lib/c.py",
+        "# c from srcdir\n",
+    )
+    create_file(
+        tmp_path / "base_path/tests/test_a.py",
+        "# test_a from tests\n",
+    )
+    create_file(
+        tmp_path / "base_path/tests/test_b.py",
+        "# test_b from tests\n",
+    )
+    create_file(
+        tmp_path / "base_path/testdir/tests/test_b.py",
+        "# test_b from testdir\n",
+    )
+    create_file(
+        tmp_path / "base_path/testdir/tests/test_c.py",
+        "# test_c from testdir\n",
+    )
+
+    # Set the app definition with two sources and two test sources
+    myapp.sources = ["lib", "srcdir/lib"]
+    myapp.test_sources = ["tests", "testdir/tests"]
+    myapp.test_mode = True
+
+    create_command.install_app_code(myapp)
+
+    # The lib directory exists
+    assert (app_path / "lib").exists()
+
+    # a.py from lib (not overwritten)
+    assert (app_path / "lib/a.py").exists()
+    with (app_path / "lib/a.py").open(encoding="utf-8") as f:
+        assert f.read() == "# a from lib\n"
+
+    # b.py from srcdir (overwrote lib)
+    assert (app_path / "lib/b.py").exists()
+    with (app_path / "lib/b.py").open(encoding="utf-8") as f:
+        assert f.read() == "# b from srcdir\n"
+
+    # c.py from srcdir
+    assert (app_path / "lib/c.py").exists()
+    with (app_path / "lib/c.py").open(encoding="utf-8") as f:
+        assert f.read() == "# c from srcdir\n"
+
+    # The tests directory exists
+    assert (app_path / "tests").exists()
+
+    # test_a.py from tests (not overwritten)
+    assert (app_path / "tests/test_a.py").exists()
+    with (app_path / "tests/test_a.py").open(encoding="utf-8") as f:
+        assert f.read() == "# test_a from tests\n"
+
+    # test_b.py from testdir (overwrote tests)
+    assert (app_path / "tests/test_b.py").exists()
+    with (app_path / "tests/test_b.py").open(encoding="utf-8") as f:
+        assert f.read() == "# test_b from testdir\n"
+
+    # test_c.py from testdir
+    assert (app_path / "tests/test_c.py").exists()
+    with (app_path / "tests/test_c.py").open(encoding="utf-8") as f:
+        assert f.read() == "# test_c from testdir\n"
+
+    # Metadata has been created
+    assert_dist_info(app_path)
+
+    # Original app definitions haven't changed
+    assert myapp.sources == ["lib", "srcdir/lib"]
+    assert myapp.test_sources == ["tests", "testdir/tests"]
+
+
 def test_dist_info_with_missing_optional_fields(
     create_command,
     myapp,
