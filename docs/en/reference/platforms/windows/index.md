@@ -191,7 +191,7 @@ A Boolean describing the initial value of the option in the GUI. If not provided
 
 When an installer option is defined, the value of the option will be made available to the post-install or pre-uninstall script as an environment variable. For example, if you define an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected.
 
-In the post-install script, the `ALLUSERS` environment variable will be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user. The `MSI_PATH` environment variable will be set to the path of the MSI file.
+In the post-install script, the `ALLUSERS` environment variable will be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user. The `INSTALLER_PATH` environment variable will be set to the path of the MSI file.
 
 If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 
