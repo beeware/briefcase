@@ -412,6 +412,12 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
         parser.add_argument(
+            "--reset-permissions",
+            action="store_true",
+            help="Reset app permissions before launching the app",
+            required=False,
+        )
+        parser.add_argument(
             "--forward-port",
             action="append",
             dest="forward_ports",
@@ -447,6 +453,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         device_or_avd=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
+        reset_permissions=False,
         forward_ports: list[int] | None = None,
         reverse_ports: list[int] | None = None,
         **kwargs,
@@ -459,6 +466,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
+        :param reset_permissions: Should app permissions be reset before launch?
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """
@@ -508,6 +516,11 @@ class GradleRunCommand(GradleMixin, RunCommand):
             # Install the latest APK file onto the device.
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
+
+            if reset_permissions:
+                # Reset app permissions to ensure a reproducible starting state.
+                with self.console.wait_bar("Resetting app permissions..."):
+                    adb.reset_permissions(package)
 
             forward_ports = forward_ports or []
             reverse_ports = reverse_ports or []

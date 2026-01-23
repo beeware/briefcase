@@ -153,6 +153,10 @@ The device or emulator to target. Can be specified as:
 
 Instruct Briefcase to shut down the emulator when the run finishes. This is especially useful if you are running in headless mode, as the emulator will continue to run in the background, but there will be no visual manifestation that it is running. It may also be useful as a cleanup mechanism when running in a CI configuration.
 
+#### `--reset-permissions`
+
+Reset all runtime permissions of the running app before starting it. This is useful in tests to get a reproducible starting state when the permission handling should also be tested.
+
 #### `--forward-port=<port>`
 
 Forward a port via ADB from the host to the Android device. This is useful when a network service is running on the Android app that you want to connect to from the host.
