@@ -640,16 +640,18 @@ def test_only_test_sources_test_mode(
     assert myapp.test_sources == ["tests", "othertests"]
 
 
-def test_source_dir_merge(
+def test_source_dir_merge_and_file_overwrite(
     create_command,
     myapp,
     tmp_path,
     app_path,
     app_requirements_path_index,
 ):
-    """If multiple sources define directories with the same name, their contents are
-    merged with later files overwriting earlier ones."""
+    """If multiple sources define directories or files with the same name, directories
+    are merged and files are overwritten, with later files overwriting earlier ones."""
     # Create the mock sources with two source directories and two test directories
+    # top.py
+    # test_top.py
     # lib /
     #   a.py
     #   b.py
@@ -657,6 +659,7 @@ def test_source_dir_merge(
     #   lib /
     #     b.py  (different content)
     #     c.py
+    #   top.py (different content)
     # tests /
     #   test_a.py
     #   test_b.py
@@ -664,6 +667,15 @@ def test_source_dir_merge(
     #   tests /
     #     test_b.py  (different content)
     #     test_c.py
+    #   test_top.py (different content)
+    create_file(
+        tmp_path / "base_path/top.py",
+        "# top\n",
+    )
+    create_file(
+        tmp_path / "base_path/test_top.py",
+        "# test_top\n",
+    )
     create_file(
         tmp_path / "base_path/lib/a.py",
         "# a from lib\n",
@@ -681,6 +693,10 @@ def test_source_dir_merge(
         "# c from srcdir\n",
     )
     create_file(
+        tmp_path / "base_path/srcdir/top.py",
+        "# top from srcdir\n",
+    )
+    create_file(
         tmp_path / "base_path/tests/test_a.py",
         "# test_a from tests\n",
     )
@@ -696,10 +712,19 @@ def test_source_dir_merge(
         tmp_path / "base_path/testdir/tests/test_c.py",
         "# test_c from testdir\n",
     )
+    create_file(
+        tmp_path / "base_path/testdir/test_top.py",
+        "# test_top from testdir\n",
+    )
 
-    # Set the app definition with two sources and two test sources
-    myapp.sources = ["lib", "srcdir/lib"]
-    myapp.test_sources = ["tests", "testdir/tests"]
+    # Set the app definition with two sources and two test sources, and two top-level files with the same name
+    myapp.sources = ["lib", "srcdir/lib", "top.py", "srcdir/top.py"]
+    myapp.test_sources = [
+        "tests",
+        "testdir/tests",
+        "test_top.py",
+        "testdir/test_top.py",
+    ]
     myapp.test_mode = True
 
     create_command.install_app_code(myapp)
@@ -722,6 +747,11 @@ def test_source_dir_merge(
     with (app_path / "lib/c.py").open(encoding="utf-8") as f:
         assert f.read() == "# c from srcdir\n"
 
+    # top.py from srcdir (overwrites file from root)
+    assert (app_path / "top.py").exists()
+    with (app_path / "top.py").open(encoding="utf-8") as f:
+        assert f.read() == "# top from srcdir\n"
+
     # The tests directory exists
     assert (app_path / "tests").exists()
 
@@ -740,12 +770,22 @@ def test_source_dir_merge(
     with (app_path / "tests/test_c.py").open(encoding="utf-8") as f:
         assert f.read() == "# test_c from testdir\n"
 
+    # test_top.py from testdir (overwrites file from root)
+    assert (app_path / "test_top.py").exists()
+    with (app_path / "test_top.py").open(encoding="utf-8") as f:
+        assert f.read() == "# test_top from testdir\n"
+
     # Metadata has been created
     assert_dist_info(app_path)
 
     # Original app definitions haven't changed
-    assert myapp.sources == ["lib", "srcdir/lib"]
-    assert myapp.test_sources == ["tests", "testdir/tests"]
+    assert myapp.sources == ["lib", "srcdir/lib", "top.py", "srcdir/top.py"]
+    assert myapp.test_sources == [
+        "tests",
+        "testdir/tests",
+        "test_top.py",
+        "testdir/test_top.py",
+    ]
 
 
 def test_dist_info_with_missing_optional_fields(
