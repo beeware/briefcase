@@ -1523,7 +1523,7 @@ class ADB:
                 f"Unable to force stop app {package} on {self.device}"
             ) from e
 
-    def reset_permissions(self, package: str):
+    def reset_permissions(self, package: str) -> None:
         """Reset all runtime permissions for an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
