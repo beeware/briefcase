@@ -164,7 +164,7 @@ def test_question_sequence_none(new_command):
 
     # Prime answers for all the questions.
     new_command.console.values = [
-        "5",  # None
+        "6",  # None
     ]
 
     bootstrap = new_command.create_bootstrap(
@@ -180,6 +180,23 @@ def test_question_sequence_none(new_command):
         "app_name": "myapplication",
         "author": "Grace Hopper",
     }
+
+
+def test_question_sequence_other_frameworks_aborts(new_command):
+    """Selecting 'Other frameworks…' shows guidance and aborts cleanly."""
+
+    new_command.console.values = [
+        "5",  # Other frameworks
+    ]
+
+    with pytest.raises(briefcase.commands.new.BriefcaseCommandError):
+        new_command.create_bootstrap(
+            context={
+                "app_name": "myapplication",
+                "author": "Grace Hopper",
+            },
+            project_overrides={},
+        )
 
 
 def test_question_sequence_with_overrides(
@@ -235,7 +252,7 @@ def test_question_sequence_with_bad_bootstrap_override(
 
     # Prime a bad answer for the bootstrap question
     new_command.console.values = [
-        "6",  # None
+        "7",  # None
     ]
 
     class GuiBootstrap:
