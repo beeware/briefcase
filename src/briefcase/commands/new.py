@@ -73,6 +73,8 @@ class NewCommand(BaseCommand):
     output_format = ""
     description = "Create a new Briefcase project."
 
+    OTHER_FRAMEWORKS = "Other frameworks (select to see options)"
+
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
         raise NotImplementedError()
@@ -464,6 +466,12 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("bootstrap", None),
         )
 
+        if selected_bootstrap == self.OTHER_FRAMEWORKS:
+            self._show_other_frameworks_message()
+            raise BriefcaseCommandError(
+                "Install a community GUI bootstrap plugin and re-run `briefcase new`."
+            )
+
         bootstrap_class = bootstraps[selected_bootstrap]
 
         return bootstrap_class(console=self.console, context=context)
@@ -491,31 +499,46 @@ class NewCommand(BaseCommand):
 
         return gui_context
 
-    def _gui_bootstrap_choices(self, bootstraps):
+    def _gui_bootstrap_choices(self, bootstraps) -> dict[str, str]:
         """Construct the list of available GUI bootstraps to display to the user."""
-        # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
+        none_bootstrap = ordered.pop("None")
+
         # Ensure the first 3 options are: Toga, PySide6, Pygame
-        ordered.move_to_end("Pygame", last=False)
-        ordered.move_to_end("PySide6", last=False)
-        ordered.move_to_end("Toga", last=False)
+        for name in reversed(("Toga", "PySide6", "Pygame")):
+            ordered.move_to_end(name, last=False)
 
-        # Option None should always be last
-        ordered.move_to_end("None")
+        # Insert "Other frameworks..." as second-to-last
+        ordered[self.OTHER_FRAMEWORKS] = None
 
-        # Construct the bootstrap options as they should be presented to users.
-        # The name of the bootstrap is its registered entry point name. Along with the
-        # bootstrap's name, a short message important to a user's choice can be shown
-        # also; for instance, several show "does not support iOS/Android deployment".
+        # Re-insert None as the final option
+        ordered["None"] = none_bootstrap
+
         bootstrap_choices = {}
         max_len = max(map(len, ordered))
         for name, klass in ordered.items():
-            if annotation := getattr(klass, "display_name_annotation", ""):
-                annotation = f"{' ' * (max_len - len(name))} ({annotation})"
-            bootstrap_choices[name] = f"{name}{annotation or ''}"
+            annotation = ""
+            if klass is not None and (
+                ann := getattr(klass, "display_name_annotation", "")
+            ):
+                annotation = f"{' ' * (max_len - len(name))} ({ann})"
+            bootstrap_choices[name] = f"{name}{annotation}"
 
         return bootstrap_choices
+
+    def _show_other_frameworks_message(self) -> None:
+        self.console.warning()
+        self.console.warning(
+            self.console.textwrap(
+                "GUI frameworks provided by community plugins are not maintained by "
+                "Briefcase."
+            )
+        )
+        self.console.info()
+        self.console.info(
+            "Install a community GUI framework of choice, then re-run `briefcase new`."
+        )
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""
