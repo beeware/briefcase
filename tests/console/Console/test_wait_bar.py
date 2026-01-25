@@ -19,7 +19,7 @@ def test_wait_bar_done_message_non_interactive(non_interactive_console, capsys):
         pass
 
     assert capsys.readouterr().out == (
-        "Wait message... started\nWait message... finished\n\n"
+        "Wait message... started\nWait message... finished\n"
     )
 
 
@@ -47,7 +47,7 @@ def test_wait_bar_done_message_nested_non_interactive(non_interactive_console, c
         "Wait message 1... started\n"
         "Wait message 2... started\n"
         "Wait message 2... finished\n"
-        "Wait message 1... finished\n\n"
+        "Wait message 1... finished\n"
     )
     assert capsys.readouterr().out == expected
 
@@ -72,10 +72,10 @@ def test_wait_bar_transient_interactive(console, message, transient, output, cap
 @pytest.mark.parametrize(
     ("message", "transient", "output"),
     [
-        ("Wait message...", False, "Wait message... started\nWait message... done\n\n"),
-        ("", False, "\n"),
-        ("Wait message...", True, "Wait message... started\nWait message... done\n\n"),
-        ("", True, "\n"),
+        ("Wait message...", False, "Wait message... started\nWait message... done\n"),
+        ("", False, ""),
+        ("Wait message...", True, "Wait message... started\nWait message... done\n"),
+        ("", True, ""),
     ],
 )
 def test_wait_bar_transient_non_interactive(
@@ -135,10 +135,10 @@ def test_wait_bar_transient_nested_interactive(
                 "Wait message 1... started\n"
                 "Wait message 2... started\n"
                 "Wait message 2... done\n"
-                "Wait message 1... done\n\n"
+                "Wait message 1... done\n"
             ),
         ),
-        ("", "", False, "\n"),
+        ("", "", False, ""),
         (
             "Wait message 1...",
             "Wait message 2...",
@@ -147,10 +147,10 @@ def test_wait_bar_transient_nested_interactive(
                 "Wait message 1... started\n"
                 "Wait message 2... started\n"
                 "Wait message 2... done\n"
-                "Wait message 1... done\n\n"
+                "Wait message 1... done\n"
             ),
         ),
-        ("", "", True, "\n"),
+        ("", "", True, ""),
     ],
 )
 def test_wait_bar_transient_nested_non_interactive(
@@ -204,15 +204,15 @@ def test_wait_bar_keyboard_interrupt_interactive(
         (
             "Wait message...",
             False,
-            "Wait message... started\nWait message... aborted\n\n",
+            "Wait message... started\nWait message... aborted\n",
         ),
-        ("", False, "\n"),
+        ("", False, ""),
         (
             "Wait message...",
             True,
-            "Wait message... started\nWait message... aborted\n\n",
+            "Wait message... started\nWait message... aborted\n",
         ),
-        ("", True, "\n"),
+        ("", True, ""),
     ],
 )
 def test_wait_bar_keyboard_interrupt_non_interactive(
@@ -278,10 +278,10 @@ def test_wait_bar_keyboard_interrupt_nested_interactive(
                 "Wait message 1... started\n"
                 "Wait message 2... started\n"
                 "Wait message 2... aborted\n"
-                "Wait message 1... aborted\n\n"
+                "Wait message 1... aborted\n"
             ),
         ),
-        ("", "", False, "\n"),
+        ("", "", False, ""),
         (
             "Wait message 1...",
             "Wait message 2...",
@@ -290,10 +290,10 @@ def test_wait_bar_keyboard_interrupt_nested_interactive(
                 "Wait message 1... started\n"
                 "Wait message 2... started\n"
                 "Wait message 2... aborted\n"
-                "Wait message 1... aborted\n\n"
+                "Wait message 1... aborted\n"
             ),
         ),
-        ("", "", True, "\n"),
+        ("", "", True, ""),
     ],
 )
 def test_wait_bar_keyboard_interrupt_nested_non_interactive(
@@ -354,6 +354,6 @@ def test_wait_bar_alive_messages_interactive(
                 keep_alive.update()
 
         assert capsys.readouterr().out.endswith(
-            "... still waiting\n... still waiting\ntask done\n\n"
+            "... still waiting\n... still waiting\ntask done\n"
         )
         assert capsys.readouterr().out == ""
