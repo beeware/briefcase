@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml and ../pyproject.toml
-    "setuptools==80.9.0",
+    "setuptools==80.10.1",
     "setuptools_scm==9.2.2",
 ]
 build-backend = "setuptools.build_meta"
@@ -23,7 +23,7 @@ debugpy = ["debugpy>=1.8.17,<2.0.0"]
 
 [dependency-groups]
 test = [
-    "coverage[toml] == 7.13.1",
+    "coverage[toml] == 7.13.2",
     "pytest == 9.0.2",
     "pytest-xdist == 3.8.0",
 ]

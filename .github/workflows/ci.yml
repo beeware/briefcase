@@ -80,12 +80,12 @@ jobs:
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.1
+      uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6.1.0
+      uses: actions/setup-python@v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
@@ -134,12 +134,12 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.1
+      uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v6.1.0
+      uses: actions/setup-python@v6.2.0
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
