@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import argparse
 from abc import abstractmethod
 
 from briefcase.config import AppConfig
+from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
 
@@ -10,6 +12,16 @@ from .base import BaseCommand, full_options
 class OpenCommand(BaseCommand):
     command = "open"
     description = "Open an app in the build tool for the target platform."
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to open (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
+        )
 
     @abstractmethod
     def project_path(self, app: AppConfig):
@@ -47,17 +59,28 @@ class OpenCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         **options,
     ):
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app)
-
-        if app:
-            state = self.open_app(app, **options)
+        if app_name:
+            try:
+                apps_to_open = {app_name: self.apps[app_name]}
+            except KeyError:
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                ) from None
+        elif app:
+            apps_to_open = {app.app_name: app}
         else:
-            state = None
-            for _, app in sorted(self.apps.items()):
-                state = self.open_app(app, **full_options(state, options))
+            apps_to_open = self.apps
+
+        # Now finalize ONLY the relevant app(s)
+        self.finalize(
+            next(iter(apps_to_open.values())) if len(apps_to_open) == 1 else None
+        )
+
+        state = None
+        for _, app_obj in sorted(apps_to_open.items()):
+            state = self.open_app(app_obj, **full_options(state, options))
 
         return state
