@@ -5,6 +5,7 @@ import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
 from importlib.metadata import entry_points
+from typing import ClassVar
 
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
@@ -74,6 +75,23 @@ class NewCommand(BaseCommand):
     description = "Create a new Briefcase project."
 
     OTHER_FRAMEWORKS = "Other frameworks (select to see options)"
+
+    KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
+        {
+            "bootstrap_key": "PursuedPyBear",
+            "display_name": "PursuedPyBear",
+            "package": "ppb",
+            "description": (
+                '"Unbearably fun game development". Education-friendly toolkit.'
+            ),
+        },
+        {
+            "bootstrap_key": "pygame-ce",
+            "display_name": "pygame-ce",
+            "package": "pygame-ce",
+            "description": "Community edition fork of pygame.",
+        },
+    ]
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
