@@ -62,6 +62,10 @@ class OpenCommand(BaseCommand):
         app_name: str | None = None,
         **options,
     ):
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(app)
+
         if app_name:
             try:
                 apps_to_open = {app_name: self.apps[app_name]}
@@ -73,11 +77,6 @@ class OpenCommand(BaseCommand):
             apps_to_open = {app.app_name: app}
         else:
             apps_to_open = self.apps
-
-        # Now finalize ONLY the relevant app(s)
-        self.finalize(
-            next(iter(apps_to_open.values())) if len(apps_to_open) == 1 else None
-        )
 
         state = None
         for _, app_obj in sorted(apps_to_open.items()):

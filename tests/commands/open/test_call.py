@@ -96,8 +96,9 @@ def test_open_app_name(open_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
-        # App config has been finalized for the specified app
+        # App config has been finalized for all apps
         ("finalize-app-config", "first"),
+        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified
