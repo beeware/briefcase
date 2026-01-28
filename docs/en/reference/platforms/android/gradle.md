@@ -149,6 +149,13 @@ The device or emulator to target. Can be specified as:
 
   If any of these attributes are *not* specified, they will fall back to reasonable defaults.
 
+
+#### `--Xemulator=<value>`
+
+A configuration argument to be passed to the emulator on startup. For example, to start the emulator in "headless" mode (i.e., without a display window), specify `--Xemulator=-no-window`. See [the Android documentation](https://developer.android.com/studio/run/emulator-commandline) for details on the full list of options that can be provided.
+
+You may specify multiple `--Xemulator` arguments; each one specifies a single argument to pass to the emulator, in the order they are specified.
+
 #### `--shutdown-on-exit`
 
 Instruct Briefcase to shut down the emulator when the run finishes. This is especially useful if you are running in headless mode, as the emulator will continue to run in the background, but there will be no visual manifestation that it is running. It may also be useful as a cleanup mechanism when running in a CI configuration.
