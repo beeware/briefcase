@@ -182,11 +182,12 @@ def test_question_sequence_none(new_command):
     }
 
 
-def test_question_sequence_other_frameworks_aborts(new_command):
+def test_question_sequence_other_frameworks_aborts(new_command, capsys):
     """Selecting 'Other frameworks…' shows guidance and aborts cleanly."""
 
     new_command.console.values = [
-        "5",  # Other frameworks
+        "5",  # Other frameworks (main menu)
+        "1",  # PursuedPyBear (submenu)
     ]
 
     with pytest.raises(briefcase.commands.new.BriefcaseCommandError):
@@ -197,6 +198,48 @@ def test_question_sequence_other_frameworks_aborts(new_command):
             },
             project_overrides={},
         )
+
+    out = capsys.readouterr().out
+    assert "python -m pip install ppb" in out
+
+
+def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypatch):
+    """Installed community bootstraps are not shown in the submenu."""
+    from briefcase.bootstraps import BaseGuiBootstrap
+
+    class DummyBootstrap(BaseGuiBootstrap):
+        fields = ()
+
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        lambda: {
+            "Toga": DummyBootstrap,
+            "PySide6": DummyBootstrap,
+            "Pygame": DummyBootstrap,
+            "Console": DummyBootstrap,
+            "PursuedPyBear": DummyBootstrap,  # installed community bootstrap
+            "None": DummyBootstrap,
+        },
+    )
+
+    new_command.console.values = [
+        "6",  # Other frameworks (main menu)
+        "1",  # pick whatever is now first in submenu (likely pygame-ce)
+    ]
+
+    with pytest.raises(briefcase.commands.new.BriefcaseCommandError):
+        new_command.create_bootstrap(
+            context={"app_name": "myapplication", "author": "Grace Hopper"},
+            project_overrides={},
+        )
+
+    out = capsys.readouterr().out
+
+    _, submenu = out.split("-- Community GUI Framework", 1)
+
+    assert "1) pygame-ce" in submenu
+    assert "PursuedPyBear" not in submenu
 
 
 def test_question_sequence_with_overrides(

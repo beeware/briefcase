@@ -78,7 +78,7 @@ class NewCommand(BaseCommand):
 
     KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
         {
-            "bootstrap_key": "PursuedPyBear",
+            "entry_point": "ppb",
             "display_name": "PursuedPyBear",
             "package": "ppb",
             "description": (
@@ -86,7 +86,7 @@ class NewCommand(BaseCommand):
             ),
         },
         {
-            "bootstrap_key": "pygame-ce",
+            "entry_point": "pygame_ce",
             "display_name": "pygame-ce",
             "package": "pygame-ce",
             "description": "Community edition fork of pygame.",
@@ -485,7 +485,7 @@ class NewCommand(BaseCommand):
         )
 
         if selected_bootstrap == self.OTHER_FRAMEWORKS:
-            self._show_other_frameworks_message()
+            self._show_other_frameworks_menu(bootstraps)
             raise BriefcaseCommandError(
                 "Install a community GUI bootstrap plugin and re-run `briefcase new`."
             )
@@ -545,18 +545,69 @@ class NewCommand(BaseCommand):
 
         return bootstrap_choices
 
-    def _show_other_frameworks_message(self) -> None:
+    def _show_other_frameworks_menu(
+        self, bootstraps: dict[str, type[BaseGuiBootstrap]]
+    ) -> None:
+        """Show a submenu of known community bootstraps and display install
+        instructions."""
+        installed = set(bootstraps.keys())
+
+        available = [
+            plugin
+            for plugin in self.KNOWN_COMMUNITY_BOOTSTRAPS
+            if plugin["entry_point"] not in installed
+        ]
+
         self.console.warning()
         self.console.warning(
             self.console.textwrap(
-                "GUI frameworks provided by community plugins are not maintained by "
-                "Briefcase."
+                "GUI frameworks listed here are "
+                "provided by third-party plugins and are"
+                "not maintained by Briefcase."
             )
         )
-        self.console.info()
-        self.console.info(
-            "Install a community GUI framework of choice, then re-run `briefcase new`."
+
+        if not available:
+            self.console.info()
+            self.console.info(
+                "No additional community GUI bootstraps "
+                "are currently available to install."
+            )
+            self.console.info(
+                "Browse options at https://beeware.org/bee/briefcase-bootstraps"
+            )
+            return
+
+        options = {
+            plugin["entry_point"]: (
+                f"{plugin['display_name']} — {plugin['description']}"
+                if plugin.get("description")
+                else plugin["display_name"]
+            )
+            for plugin in available
+        }
+
+        chosen = self.console.selection_question(
+            intro=(
+                "Select a community GUI bootstrap to see installation instructions.\n"
+                "\n"
+                "Installed bootstraps are not shown."
+            ),
+            description="Community GUI Framework",
+            default=next(iter(options.keys())),
+            options=options,
         )
+
+        package = next(
+            plugin["package"] for plugin in available if plugin["entry_point"] == chosen
+        )
+
+        self.console.info()
+        self.console.info("To install this bootstrap plugin, run:")
+        self.console.info()
+        self.console.info(f"    python -m pip install {package}")
+        self.console.info()
+        self.console.info("Then re-run `briefcase new` and select the framework.")
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""
