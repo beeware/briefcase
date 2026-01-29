@@ -265,6 +265,55 @@ def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypat
     assert "PursuedPyBear" not in out
 
 
+def test_other_frameworks_no_available_plugins(
+    new_command,
+    capsys,
+    monkeypatch,
+    mock_builtin_bootstraps,
+):
+    """If no community GUI bootstraps are available, show guidance and abort."""
+    from briefcase.commands.new import BriefcaseCommandError
+
+    # Simulate that all known community bootstraps are already installed
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        lambda: {
+            **mock_builtin_bootstraps,
+            "pygame_ce": EmptyBootstrap,
+        },
+    )
+
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
+    new_command.console.values = [
+        str(other_index),  # Select "Other frameworks"
+    ]
+
+    with pytest.raises(BriefcaseCommandError) as excinfo:
+        new_command.create_bootstrap(
+            context={"app_name": "myapplication", "author": "Grace Hopper"},
+            project_overrides={},
+        )
+
+    out = capsys.readouterr().out
+
+    # Informational output
+    assert (
+        "No additional community GUI bootstraps are currently available to install."
+        in out
+    )
+    assert "Browse options at https://beeware.org/bee/briefcase-bootstraps" in out
+    assert "python -m pip install" not in out
+
+    # Abort guidance
+    assert "Re-run `briefcase new` and select an installed GUI framework." in str(
+        excinfo.value
+    )
+
+
 def test_question_sequence_with_overrides(
     new_command,
     mock_builtin_bootstraps,
