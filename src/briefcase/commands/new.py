@@ -76,6 +76,9 @@ class NewCommand(BaseCommand):
 
     OTHER_FRAMEWORKS = "Other frameworks (select to see options)"
 
+    # Community GUI bootstraps that are known to Briefcase.
+    # A bootstrap is only considered "installed" if it exposes a
+    # `briefcase.bootstraps` entry point.
     KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
         {
             "entry_point": "ppb",
@@ -607,7 +610,6 @@ class NewCommand(BaseCommand):
         self.console.info()
         self.console.info(f"    python -m pip install {package}")
         self.console.info()
-        self.console.info("Then re-run `briefcase new` and select the framework.")
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""
