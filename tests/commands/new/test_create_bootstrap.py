@@ -190,9 +190,15 @@ def test_question_sequence_none(new_command):
 def test_question_sequence_other_frameworks_aborts(new_command, capsys):
     """Selecting 'Other frameworks…' shows guidance and aborts cleanly."""
 
+    # Determine the menu index for the sentinel entry, since installed
+    # GUI bootstraps can change menu ordering.
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
     new_command.console.values = [
-        "5",  # Other frameworks (main menu)
-        "1",  # PursuedPyBear (submenu)
+        str(other_index),  # Other frameworks (main menu)
+        "1",  # Select first community option
     ]
 
     with pytest.raises(briefcase.commands.new.BriefcaseCommandError):
@@ -205,7 +211,7 @@ def test_question_sequence_other_frameworks_aborts(new_command, capsys):
         )
 
     out = capsys.readouterr().out
-    assert "python -m pip install ppb" in out
+    assert "python -m pip install" in out
 
 
 def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypatch):
