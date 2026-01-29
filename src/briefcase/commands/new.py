@@ -81,14 +81,6 @@ class NewCommand(BaseCommand):
     # `briefcase.bootstraps` entry point.
     KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
         {
-            "entry_point": "ppb",
-            "display_name": "PursuedPyBear",
-            "package": "ppb",
-            "description": (
-                '"Unbearably fun game development". Education-friendly toolkit.'
-            ),
-        },
-        {
             "entry_point": "pygame_ce",
             "display_name": "pygame-ce",
             "package": "pygame-ce",
@@ -551,7 +543,7 @@ class NewCommand(BaseCommand):
     def _show_other_frameworks_menu(
         self, bootstraps: dict[str, type[BaseGuiBootstrap]]
     ) -> None:
-        """Show a submenu of known community bootstraps and display install
+        """Show a submenu of known community bootstraps and display installation
         instructions."""
         installed = set(bootstraps.keys())
 
@@ -579,7 +571,9 @@ class NewCommand(BaseCommand):
             self.console.info(
                 "Browse options at https://beeware.org/bee/briefcase-bootstraps"
             )
-            return
+            raise BriefcaseCommandError(
+                "Re-run `briefcase new` and select an installed GUI framework."
+            )
 
         options = {
             plugin["entry_point"]: (
