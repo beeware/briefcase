@@ -162,9 +162,14 @@ def test_question_sequence_pygame(new_command):
 def test_question_sequence_none(new_command):
     """If no bootstrap is selected, the empty bootstrap is used."""
 
-    # Prime answers for all the questions.
+    # Determine the menu index for "None" dynamically, since installed GUI
+    # bootstraps can change the menu ordering.
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    none_index = list(choices.keys()).index("None") + 1
+
     new_command.console.values = [
-        "6",  # None
+        str(none_index),  # None
     ]
 
     bootstrap = new_command.create_bootstrap(
@@ -175,7 +180,7 @@ def test_question_sequence_none(new_command):
         project_overrides={},
     )
 
-    assert isinstance(bootstrap, BaseGuiBootstrap)
+    assert isinstance(bootstrap, EmptyBootstrap)
     assert bootstrap.context == {
         "app_name": "myapplication",
         "author": "Grace Hopper",

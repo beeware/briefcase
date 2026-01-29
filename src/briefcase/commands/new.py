@@ -562,7 +562,7 @@ class NewCommand(BaseCommand):
         self.console.warning(
             self.console.textwrap(
                 "GUI frameworks listed here are "
-                "provided by third-party plugins and are"
+                "provided by third-party plugins and are "
                 "not maintained by Briefcase."
             )
         )
