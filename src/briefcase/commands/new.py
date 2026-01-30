@@ -5,6 +5,7 @@ import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
 from importlib.metadata import entry_points
+from typing import ClassVar
 
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
@@ -72,6 +73,20 @@ class NewCommand(BaseCommand):
     platform = "all"
     output_format = ""
     description = "Create a new Briefcase project."
+
+    OTHER_FRAMEWORKS = "Other frameworks (select to see options)"
+
+    # Community GUI bootstraps that are known to Briefcase.
+    # A bootstrap is only considered "installed" if it exposes a
+    # `briefcase.bootstraps` entry point.
+    KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
+        {
+            "entry_point": "pygame_ce",
+            "display_name": "pygame-ce",
+            "package": "pygame-ce",
+            "description": "Community edition fork of pygame.",
+        },
+    ]
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
@@ -464,6 +479,12 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("bootstrap", None),
         )
 
+        if selected_bootstrap == self.OTHER_FRAMEWORKS:
+            self._show_other_frameworks_menu(bootstraps)
+            raise BriefcaseCommandError(
+                "Install a community GUI bootstrap plugin and re-run `briefcase new`."
+            )
+
         bootstrap_class = bootstraps[selected_bootstrap]
 
         return bootstrap_class(console=self.console, context=context)
@@ -491,31 +512,98 @@ class NewCommand(BaseCommand):
 
         return gui_context
 
-    def _gui_bootstrap_choices(self, bootstraps):
+    def _gui_bootstrap_choices(self, bootstraps) -> dict[str, str]:
         """Construct the list of available GUI bootstraps to display to the user."""
-        # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
+        none_bootstrap = ordered.pop("None")
+
         # Ensure the first 3 options are: Toga, PySide6, Pygame
-        ordered.move_to_end("Pygame", last=False)
-        ordered.move_to_end("PySide6", last=False)
-        ordered.move_to_end("Toga", last=False)
+        for name in reversed(("Toga", "PySide6", "Pygame")):
+            ordered.move_to_end(name, last=False)
 
-        # Option None should always be last
-        ordered.move_to_end("None")
+        # Insert "Other frameworks..." as second-to-last
+        ordered[self.OTHER_FRAMEWORKS] = None
 
-        # Construct the bootstrap options as they should be presented to users.
-        # The name of the bootstrap is its registered entry point name. Along with the
-        # bootstrap's name, a short message important to a user's choice can be shown
-        # also; for instance, several show "does not support iOS/Android deployment".
+        # Re-insert None as the final option
+        ordered["None"] = none_bootstrap
+
         bootstrap_choices = {}
         max_len = max(map(len, ordered))
         for name, klass in ordered.items():
-            if annotation := getattr(klass, "display_name_annotation", ""):
-                annotation = f"{' ' * (max_len - len(name))} ({annotation})"
-            bootstrap_choices[name] = f"{name}{annotation or ''}"
+            annotation = ""
+            if klass is not None and (
+                ann := getattr(klass, "display_name_annotation", "")
+            ):
+                annotation = f"{' ' * (max_len - len(name))} ({ann})"
+            bootstrap_choices[name] = f"{name}{annotation}"
 
         return bootstrap_choices
+
+    def _show_other_frameworks_menu(
+        self, bootstraps: dict[str, type[BaseGuiBootstrap]]
+    ) -> None:
+        """Show a submenu of known community bootstraps and display installation
+        instructions."""
+        installed = set(bootstraps.keys())
+
+        available = [
+            plugin
+            for plugin in self.KNOWN_COMMUNITY_BOOTSTRAPS
+            if plugin["entry_point"] not in installed
+        ]
+
+        self.console.warning()
+        self.console.warning(
+            self.console.textwrap(
+                "GUI frameworks listed here are "
+                "provided by third-party plugins and are "
+                "not maintained by Briefcase."
+            )
+        )
+
+        if not available:
+            self.console.info()
+            self.console.info(
+                "No additional community GUI bootstraps "
+                "are currently available to install."
+            )
+            self.console.info(
+                "Browse options at https://beeware.org/bee/briefcase-bootstraps"
+            )
+            raise BriefcaseCommandError(
+                "Re-run `briefcase new` and select an installed GUI framework."
+            )
+
+        options = {
+            plugin["entry_point"]: (
+                f"{plugin['display_name']} — {plugin['description']}"
+                if plugin.get("description")
+                else plugin["display_name"]
+            )
+            for plugin in available
+        }
+
+        chosen = self.console.selection_question(
+            intro=(
+                "Select a community GUI bootstrap to see installation instructions.\n"
+                "\n"
+                "Installed bootstraps are not shown."
+            ),
+            description="Community GUI Framework",
+            default=next(iter(options.keys())),
+            options=options,
+        )
+
+        package = next(
+            plugin["package"] for plugin in available if plugin["entry_point"] == chosen
+        )
+
+        self.console.info()
+        self.console.info("To install this bootstrap plugin, run:")
+        self.console.info()
+        self.console.info(f"    python -m pip install {package}")
+        self.console.info()
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""
