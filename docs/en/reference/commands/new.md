@@ -38,7 +38,6 @@ The following third-party bootstraps are known to exist:
 
 | Bootstrap     | Package name | Description                                                                                                                            |
 |---------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| PursuedPyBear | ppb          | "Unbearably fun game development". A game toolkit with a focus on being education friendly and exposing an idiomatic Python interface. |
 | Pygame-ce     | pygame-ce    | A fork of pygame, the classic library for making games in Python.                                                                      |
 
 To add a third-party bootstrap, `pip install` the named package into the virtual environment that contains Briefcase, then run `briefcase new`. The new bootstrap option should be added to the list of GUI toolkits.
