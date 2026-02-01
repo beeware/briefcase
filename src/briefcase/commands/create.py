@@ -1022,10 +1022,6 @@ class CreateCommand(BaseCommand):
         app_name: str | None = None,
         **options,
     ) -> dict | None:
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app)
-
         if app_name:
             try:
                 apps_to_create = {app_name: self.apps[app_name]}
@@ -1037,6 +1033,10 @@ class CreateCommand(BaseCommand):
             apps_to_create = {app.app_name: app}
         else:
             apps_to_create = self.apps
+
+        # Confirm host compatibility, that all required tools are available,
+        # and finalize configurations for the apps that will be created.
+        self.finalize(apps=apps_to_create.values())
 
         state = None
         for _, app_obj in sorted(apps_to_create.items()):
