@@ -164,7 +164,7 @@ Instruct Briefcase to shut down the emulator when the run finishes. This is espe
 
 Revoke a runtime permission of the running app before starting it. This is useful in tests to get a reproducible starting state when the permission handling should also be tested.
 
-For example to revoke the bluetooth scan permission, specify `--revoke-permission=android.permission.BLUETOOTH_SCAN`. A full list of available permissions is defined in the [Android documentation](https://developer.android.com/reference/android/Manifest.permission). Only the ones that are marked as `Protection level: dangerous` are relevant.
+For example to revoke the Bluetooth scan permission, specify `--revoke-permission=android.permission.BLUETOOTH_SCAN`. A full list of available permissions is defined in the [Android documentation](https://developer.android.com/reference/android/Manifest.permission). Only the ones that are marked as `Protection level: dangerous` are relevant.
 
 You may specify multiple `--revoke-permission` arguments; each one specifies one permission.
 
