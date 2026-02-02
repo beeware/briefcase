@@ -1,18 +1,15 @@
 import pytest
 
-name = "Anton"
-issue_idx = 2559
-
-source_msg = f"""\
-            Hi there! My name is {name}, and I'm a Python developer.\\n\\n
+source_msg = """\
+            Hi there! My name is Anton, and I'm a Python developer.\\n\\n
             This is my very first
             experience in open source
             development.
             I like your project, and I'm excited to contribute to it.\
 """
 
-source_title = f"""\
-                \\nINFO: I TRIED TO SOLVE THIS ISSUE #{issue_idx}.\\n\\n
+source_title = """\
+                INFO: I TRIED TO SOLVE THIS ISSUE #2559.\\n\\n
                 IT SEEMED TO ME RATHER SIMPLE,
                 BUT I GOT VERY GOOD EXPERIENCE\
 """
@@ -30,7 +27,6 @@ source_title = f"""\
             80,
             """\
 ********************************************************************************
-**                                                                            **
 **                  INFO: I TRIED TO SOLVE THIS ISSUE #2559.                  **
 **                                                                            **
 **       IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE        **
@@ -49,7 +45,6 @@ project, and I'm excited to contribute to it.
             40,
             """\
 ****************************************
-**                                    **
 ** INFO: I TRIED TO SOLVE THIS ISSUE  **
 **               #2559.               **
 **                                    **
@@ -86,7 +81,6 @@ project, and I'm excited to contribute to it.
             60,
             """\
 ************************************************************
-**                                                        **
 **        INFO: I TRIED TO SOLVE THIS ISSUE #2559.        **
 **                                                        **
 **   IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD   **
@@ -106,7 +100,6 @@ I like your project, and I'm excited to contribute to it.
             30,
             """\
 ******************************
-**                          **
 **  INFO: I TRIED TO SOLVE  **
 **    THIS ISSUE #2559.     **
 **                          **
@@ -132,7 +125,6 @@ contribute to it.
             80,
             """\
 ********************************************************************************
-**                                                                            **
 **                  INFO: I TRIED TO SOLVE THIS ISSUE #2559.                  **
 **                                                                            **
 **       IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE        **
@@ -180,17 +172,24 @@ __width
 ****************************************\
 """,
         ),
-        # Test 11: Invalid input types
+        # Test 11: Invalid input type of message
         (
-            5,
-            5,
+            777,
+            "title",
             40,
             "",
         ),
-        # Test 12: Invalid input types
+        # Test 12: Invalid input type of title
         (
-            "5",
-            "5",
+            "message",
+            777,
+            40,
+            "",
+        ),
+        # Test 13: Invalid input type of width
+        (
+            "message",
+            "title",
             "40",
             "",
         ),
@@ -208,6 +207,7 @@ __width
         "test-10",
         "test-11",
         "test-12",
+        "test-13",
     ],
 )
 def test_warning_banner(console, message, title, width, expected):

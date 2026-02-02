@@ -320,6 +320,8 @@ class Console:
 
         # If message is not empty, add it to the box
         if message:
+            if not isinstance(message, str):
+                return ""
             # spilt message into paragraphs
             paragraphs = dedent_and_split(message)
 
