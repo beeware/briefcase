@@ -279,7 +279,7 @@ class Console:
         def dedent_and_split(text):
             """Dedent and split text into paragraphs by manual line breaks."""
             # Remove common leading whitespace
-            text = textwrap.dedent(text).strip()
+            text = textwrap.dedent(text).strip().strip("\n")
             # replace line breaks with spaces
             text = text.replace("\n", " ")
             # split the message into paragraphs by manual line breaks
