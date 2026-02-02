@@ -19,11 +19,12 @@ source_title = f"""\
 
 
 @pytest.mark.parametrize(
-    ("test_name", "message", "title", "width", "expected"),
+    ("message", "title", "width", "expected"),
     [
-        ("Test 1: Empty message and title", "", "", 80, ""),
+        # Test 1: Empty message and title
+        ("", "", 80, ""),
+        # Test 2: Default width (80) with title and message
         (
-            "Test 2: Default width (80) with title and message",
             source_msg,
             source_title,
             80,
@@ -41,8 +42,8 @@ project, and I'm excited to contribute to it.
 ********************************************************************************\
 """,
         ),
+        # Test 3: Narrow width (40) with title and message
         (
-            "Test 3: Narrow width (40) with title and message",
             source_msg,
             source_title,
             40,
@@ -64,8 +65,8 @@ and I'm excited to contribute to it.
 ****************************************\
 """,
         ),
+        # Test 4: Default width (80) without title
         (
-            "Test 4: Default width (80) without title",
             source_msg,
             None,
             80,
@@ -78,8 +79,8 @@ project, and I'm excited to contribute to it.
 ********************************************************************************\
 """,
         ),
+        # Test 5: Custom width (60) with title and message
         (
-            "Test 5: Custom width (60) with title and message",
             source_msg,
             source_title,
             60,
@@ -98,8 +99,8 @@ I like your project, and I'm excited to contribute to it.
 ************************************************************\
 """,
         ),
+        # Test 6: Very narrow width (30) with title and message
         (
-            "Test 6: Very narrow width (30) with title and message",
             source_msg,
             source_title,
             30,
@@ -124,8 +125,8 @@ contribute to it.
 ******************************\
 """,
         ),
+        # Test 7: Message with only title (empty message)
         (
-            "Test 7: Message with only title (empty message)",
             "",
             source_title,
             80,
@@ -138,8 +139,8 @@ contribute to it.
 ********************************************************************************\
 """,
         ),
+        # Test 8: Very short message with title
         (
-            "Test 8: Very short message with title",
             "Short message",
             "Short title",
             80,
@@ -151,8 +152,8 @@ Short message
 ********************************************************************************\
 """,
         ),
+        # Test 9: Message and title lengths equal to box width
         (
-            "Test 9: Message and title lengths equal to box width",
             "Length of message is equal to box _width",
             "Length of title is e-l to box w-th",
             40,
@@ -164,8 +165,8 @@ Length of message is equal to box _width
 ****************************************\
 """,
         ),
+        # Test 10: Message and title lengths longer +1 symbol to box width
         (
-            "Test 10: Message and title lengths longer +1 symbol to box width",
             "Length of message is equal to box __width",
             "Length of title is e-l to box _w-th",
             40,
@@ -179,34 +180,39 @@ __width
 ****************************************\
 """,
         ),
+        # Test 11: Invalid input types
         (
-            "Test 11: Invalid input types",
             5,
             5,
             40,
             "",
         ),
+        # Test 12: Invalid input types
         (
-            "Test 12: Invalid input types",
             "5",
             "5",
             "40",
             "",
         ),
     ],
+    ids=[
+        "test-1",
+        "test-2",
+        "test-3",
+        "test-4",
+        "test-5",
+        "test-6",
+        "test-7",
+        "test-8",
+        "test-9",
+        "test-10",
+        "test-11",
+        "test-12",
+    ],
 )
-def test_warning_banner(console, test_name, message, title, width, expected):
+def test_warning_banner(console, message, title, width, expected):
     """Test warning_banner with various inputs."""
-    if title is None:
-        msg = console.warning_banner(message, width=width)
-    else:
-        msg = console.warning_banner(message, title=title, width=width)
 
-    # # Debug output if needed
-    # print('\n\n' + test_name)
-    # print("Generated:")
-    # print(msg)
-    # print("Expected:")
-    # print(expected)
+    msg = console.warning_banner(message, title=title, width=width)
 
     assert msg == expected
