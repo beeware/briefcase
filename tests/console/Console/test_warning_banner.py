@@ -18,9 +18,7 @@ source_title = """\
 @pytest.mark.parametrize(
     ("message", "title", "width", "expected"),
     [
-        # Test 1: Empty message and title
-        ("", "", 80, ""),
-        # Test 2: Default width (80) with title and message
+        # Default width (80) with title and message
         (
             source_msg,
             source_title,
@@ -38,7 +36,7 @@ project, and I'm excited to contribute to it.
 ********************************************************************************\
 """,
         ),
-        # Test 3: Narrow width (40) with title and message
+        # Narrow width (40) with title and message
         (
             source_msg,
             source_title,
@@ -60,7 +58,7 @@ and I'm excited to contribute to it.
 ****************************************\
 """,
         ),
-        # Test 4: Default width (80) without title
+        # Default width (80) without title
         (
             source_msg,
             None,
@@ -74,7 +72,7 @@ project, and I'm excited to contribute to it.
 ********************************************************************************\
 """,
         ),
-        # Test 5: Custom width (60) with title and message
+        # Custom width (60) with title and message
         (
             source_msg,
             source_title,
@@ -93,7 +91,7 @@ I like your project, and I'm excited to contribute to it.
 ************************************************************\
 """,
         ),
-        # Test 6: Very narrow width (30) with title and message
+        # Very narrow width (30) with title and message
         (
             source_msg,
             source_title,
@@ -118,7 +116,7 @@ contribute to it.
 ******************************\
 """,
         ),
-        # Test 7: Message with only title (empty message)
+        # Message with only title (empty message)
         (
             "",
             source_title,
@@ -131,7 +129,7 @@ contribute to it.
 ********************************************************************************\
 """,
         ),
-        # Test 8: Very short message with title
+        # Very short message with title
         (
             "Short message",
             "Short title",
@@ -144,7 +142,7 @@ Short message
 ********************************************************************************\
 """,
         ),
-        # Test 9: Message and title lengths equal to box width
+        # Message and title lengths equal to box width
         (
             "Length of message is equal to box _width",
             "Length of title is e-l to box w-th",
@@ -157,7 +155,7 @@ Length of message is equal to box _width
 ****************************************\
 """,
         ),
-        # Test 10: Message and title lengths longer +1 symbol to box width
+        # Message and title lengths longer +1 symbol to box width
         (
             "Length of message is equal to box __width",
             "Length of title is e-l to box _w-th",
@@ -172,42 +170,6 @@ __width
 ****************************************\
 """,
         ),
-        # Test 11: Invalid input type of message
-        (
-            777,
-            "title",
-            40,
-            "",
-        ),
-        # Test 12: Invalid input type of title
-        (
-            "message",
-            777,
-            40,
-            "",
-        ),
-        # Test 13: Invalid input type of width
-        (
-            "message",
-            "title",
-            "40",
-            "",
-        ),
-    ],
-    ids=[
-        "test-1",
-        "test-2",
-        "test-3",
-        "test-4",
-        "test-5",
-        "test-6",
-        "test-7",
-        "test-8",
-        "test-9",
-        "test-10",
-        "test-11",
-        "test-12",
-        "test-13",
     ],
 )
 def test_warning_banner(console, message, title, width, expected):
@@ -216,3 +178,21 @@ def test_warning_banner(console, message, title, width, expected):
     msg = console.warning_banner(message, title=title, width=width)
 
     assert msg == expected
+
+
+@pytest.mark.parametrize(
+    ("message", "title", "width", "expected_error"),
+    [
+        ("", "", 80, "Message or title must be provided"),
+        ("message", "title", "80", "Width must be an integer"),
+        (777, "title", 80, "Message must be a string"),
+        ("message", 777, 80, "Title must be a string"),
+    ],
+)
+def test_warning_banner_with_invalid_inputs(
+    console, message, title, width, expected_error
+):
+    """Test warning_banner with various invalid inputs."""
+
+    with pytest.raises((ValueError, TypeError), match=expected_error):
+        console.warning_banner(message, title=title, width=width)
