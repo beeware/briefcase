@@ -250,6 +250,16 @@ class Console:
         """Export the text of the entire log; the log is also cleared."""
         return self._log_impl.export_text()
 
+    @staticmethod
+    def _dedent_and_split(text):
+        """Dedent and split text into paragraphs by manual line breaks."""
+        # Remove common leading whitespace
+        text = textwrap.dedent(text).strip().strip("\n")
+        # replace line breaks with spaces
+        text = text.replace("\n", " ")
+        # split the message into paragraphs by manual line breaks
+        return text.split("\\n")
+
     def warning_banner(
         self,
         message: str,
@@ -276,15 +286,6 @@ class Console:
         if not isinstance(width, int):
             raise TypeError("Width must be an integer")
 
-        def dedent_and_split(text):
-            """Dedent and split text into paragraphs by manual line breaks."""
-            # Remove common leading whitespace
-            text = textwrap.dedent(text).strip().strip("\n")
-            # replace line breaks with spaces
-            text = text.replace("\n", " ")
-            # split the message into paragraphs by manual line breaks
-            return text.split("\\n")
-
         # Create border line
         border_line = border_char * width
         # create lines array with opening line of the box
@@ -300,7 +301,7 @@ class Console:
             inner_width = width - 4
 
             # spilt title into paragraphs
-            paragraphs = dedent_and_split(title)
+            paragraphs = Console._dedent_and_split(title)
 
             for paragraph in paragraphs:
                 paragraph = paragraph.strip()
@@ -327,7 +328,7 @@ class Console:
             if not isinstance(message, str):
                 raise TypeError("Message must be a string")
             # spilt message into paragraphs
-            paragraphs = dedent_and_split(message)
+            paragraphs = Console._dedent_and_split(message)
 
             for paragraph in paragraphs:
                 paragraph = paragraph.strip()
