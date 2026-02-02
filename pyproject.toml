@@ -103,7 +103,7 @@ setuptools-scm = [
 ]
 
 towncrier = [
-    "towncrier==25.8.0",
+    "towncrier == 25.8.0",
 ]
 
 tox-uv = [
@@ -127,7 +127,9 @@ test = [
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
 docs = [
-    "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
+    # TODO: Restore main branch before final.
+#    "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
+    "beeware-docs-tools @ git+https://github.com/kattni/beeware-docs-tools@tooling/website-mkdocs-migration",
 ]
 
 [project.urls]
