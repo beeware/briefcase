@@ -689,32 +689,35 @@ a custom location for Briefcase's tools.
         """
         return
 
-    from collections.abc import Iterable
-
     def finalize(
         self,
-        apps: AppConfig | Iterable[AppConfig] | None = None,
+        apps: Iterable[AppConfig],
         test_mode: bool = False,
         debugger: str | None = None,
         debugger_host: str | None = None,
         debugger_port: int | None = None,
     ):
-        """Finalize Briefcase configuration."""
+        """Finalize Briefcase configuration.
+
+        This will:
+
+        1. Ensure that the host has been verified
+        2. Ensure that the platform tools have been verified
+        3. Ensure that app configurations have been finalized.
+        4. Ensure that the debugger is configured.
+
+        App finalization will only occur once per invocation.
+
+        :param apps: The app configuration(s) to finalize.
+        :param test_mode: Specify if the app is running in test mode
+        :param debugger: The debugger that should be used
+        :param debugger_host: The host to use for the debugger
+        :param debugger_port: The port to use for the debugger
+        """
         self.verify_host()
         self.verify_tools()
 
-        # Normalize apps input:
-        # - None => finalize all apps in the project
-        # - AppConfig => finalize just that app
-        # - Iterable => finalize those apps (possibly empty)
-        if apps is None:
-            apps_to_finalize = list(self.apps.values())
-        elif isinstance(apps, AppConfig):
-            apps_to_finalize = [apps]
-        else:
-            apps_to_finalize = list(apps)
-
-        for app in apps_to_finalize:
+        for app in apps:
             if hasattr(app, "__draft__"):
                 if debugger and debugger != "":
                     app.debugger = get_debugger(debugger)
@@ -726,7 +729,9 @@ a custom location for Briefcase's tools.
                 delattr(app, "__draft__")
 
                 if app.external_package_path:
+                    # Package path is defined
                     if app.sources is not None:
+                        # sources is not defined
                         raise BriefcaseConfigError(
                             f"{app.app_name!r} is declared as an external app, "
                             f"but also defines 'sources'. "
@@ -734,11 +739,13 @@ a custom location for Briefcase's tools.
                             f"cannot define sources."
                         )
                 elif app.sources is None:
+                    # Neither sources nor package_path is defined
                     raise BriefcaseConfigError(
                         f"{app.app_name!r} does not define either 'sources' or "
                         f"'external_package_path'."
                     )
                 else:
+                    # sources is defined, package_path is not
                     if app.external_package_executable_path:
                         raise BriefcaseConfigError(
                             f"{app.app_name!r} defines "
