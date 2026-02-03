@@ -220,7 +220,7 @@ requires = [
     "std-nslog~=1.0.3",
 ]
 """,
-        "pyproject_table_android": """\
+        "pyproject_table_android": '''\
 requires = [
     "toga-android~=0.5.0",
 ]
@@ -233,8 +233,15 @@ build_gradle_dependencies = [
     # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for MapView
     # "org.osmdroid:osmdroid-android:6.1.20",
+    # Needed for WebView
+    # "androidx.webkit:webkit:1.15.0",
 ]
-""",
+
+# Needed for WebView
+# build_gradle_extra_content="""
+# chaquopy.defaultConfig.staticProxy("toga_android.widgets.internal.webview")
+# """
+''',
         "pyproject_table_web": """\
 requires = [
     "toga-web~=0.5.0",
