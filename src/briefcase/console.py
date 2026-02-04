@@ -262,22 +262,23 @@ class Console:
 
     def warning_banner(
         self,
+        title: str,
         message: str,
-        title: str = "",
         width: int = 80,
-        border_char: str = "*",
     ) -> str:
         """Format warning banner message inside an asterisk border box. It is possible
         to input title/message as multiline or single string. To manually split the
         message into paragraphs, use the "\\n" character. If you need empty lines, use
         the "\\n\\n" sequence.
 
-        :param message: The message to format inside the box.
         :param title: The title of the box. If provided, appears centered at the top.
+        :param message: The message to format inside the box.
         :param width: The total width of the box in characters. Defaults to 80.
         :param border_char: Character to use for the box border. Defaults to "*".
         :return: The formatted message enclosed in a bordered box.
         """
+
+        border_char = "*"
 
         # If message and title are both empty rase ValueError
         if not any((message, title)):

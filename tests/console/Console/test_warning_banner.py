@@ -175,7 +175,7 @@ __width
 def test_warning_banner(console, message, title, width, expected):
     """Test warning_banner with various inputs."""
 
-    msg = console.warning_banner(message, title=title, width=width)
+    msg = console.warning_banner(message=message, title=title, width=width)
 
     assert msg == expected
 
@@ -195,4 +195,4 @@ def test_warning_banner_with_invalid_inputs(
     """Test warning_banner with various invalid inputs."""
 
     with pytest.raises((ValueError, TypeError), match=expected_error):
-        console.warning_banner(message, title=title, width=width)
+        console.warning_banner(message=message, title=title, width=width)
