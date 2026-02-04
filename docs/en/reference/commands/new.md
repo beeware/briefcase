@@ -36,8 +36,9 @@ When you run new project wizard, you are asked to select a GUI toolkit. Briefcas
 
 The following third-party bootstraps are known to exist:
 
-| Bootstrap     | Package name | Description                                                                                                                            |
-|---------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| Pygame-ce     | pygame-ce    | A fork of pygame, the classic library for making games in Python.                                                                      |
+| Bootstrap  | Package name  | Description                                                                                          |
+|------------|---------------|------------------------------------------------------------------------------------------------------|
+| Positron   | toga-positron | A Toga base for apps whose GUI is provided by a web view (i.e., Electron-like apps, but for Python). |
+| Pygame-ce  | pygame-ce     | A fork of pygame, the classic library for making games in Python.                                    |
 
 To add a third-party bootstrap, `pip install` the named package into the virtual environment that contains Briefcase, then run `briefcase new`. The new bootstrap option should be added to the list of GUI toolkits.
