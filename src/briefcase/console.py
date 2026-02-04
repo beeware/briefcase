@@ -343,8 +343,8 @@ class Console:
             # closing line of message
             lines.append(border_line)
 
-        # merge lines into a single string and return
-        return "\n".join(lines)
+        # merge lines into a single string and send warning to console
+        self.warning("\n".join(lines))
 
     #################################################################
     # Logging controls

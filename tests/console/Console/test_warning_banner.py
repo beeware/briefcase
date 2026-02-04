@@ -172,12 +172,15 @@ __width
         ),
     ],
 )
-def test_warning_banner(console, message, title, width, expected):
+def test_warning_banner(console, message, title, width, expected, capsys):
     """Test warning_banner with various inputs."""
 
-    msg = console.warning_banner(message=message, title=title, width=width)
+    # call the function
+    console.warning_banner(message=message, title=title, width=width)
+    # capture console output
+    output = capsys.readouterr().out
 
-    assert msg == expected
+    assert expected + "\n" == output
 
 
 @pytest.mark.parametrize(
