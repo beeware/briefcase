@@ -82,7 +82,7 @@ class NewCommand(BaseCommand):
     KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
         {
             "entry_point": "pygame_ce",
-            "display_name": "pygame-ce",
+            "display_name": "Pygame-ce",
             "package": "pygame-ce",
             "description": "Community edition fork of pygame.",
         },
