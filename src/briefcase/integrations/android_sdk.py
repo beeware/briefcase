@@ -204,27 +204,22 @@ class AndroidSDK(ManagedTool):
 
         if android_home:
             if android_sdk_root and android_sdk_root != android_home:
-                tools.console.warning(
+                tools.console.warning_banner(
+                    """
+    WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent
+""",
                     f"""
-*************************************************************************
-** WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
-*************************************************************************
-
     The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set
-    to different paths:
-
-        ANDROID_HOME:     {android_home}
-        ANDROID_SDK_ROOT: {android_sdk_root}
-
+    to different paths:\\n\\n
+        ANDROID_HOME:     {android_home}\\n
+        ANDROID_SDK_ROOT: {android_sdk_root}\\n\\n
     Briefcase will ignore ANDROID_SDK_ROOT and only use the path
-    specified by ANDROID_HOME.
+    specified by ANDROID_HOME.\\n\\n
 
     You should update your environment configuration to either not set
     ANDROID_SDK_ROOT, or set both environment variables to the same
     path.
-
-*************************************************************************
-"""
+""",
                 )
             sdk_root = android_home
             sdk_source = "ANDROID_HOME"
