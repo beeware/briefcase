@@ -183,10 +183,6 @@ class PackageCommand(BaseCommand):
         update: bool = False,
         **options,
     ) -> dict | None:
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app)
-
         if app_name:
             try:
                 apps_to_package = {app_name: self.apps[app_name]}
@@ -198,6 +194,10 @@ class PackageCommand(BaseCommand):
             apps_to_package = {app.app_name: app}
         else:
             apps_to_package = self.apps
+
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(apps=self.apps.values())
 
         state = None
         for _, app_obj in sorted(apps_to_package.items()):

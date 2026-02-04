@@ -606,7 +606,7 @@ To run your application, type:
     ):
         # Confirm host compatibility, and that all required tools are available.
         # There are no apps, so finalize() is called with an empty list.
-        self.finalize([])
+        self.finalize(apps=[])
 
         return self.new_app(
             template=template,

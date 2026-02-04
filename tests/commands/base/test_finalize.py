@@ -44,7 +44,7 @@ def base_command(dummy_console, tmp_path, first_app, second_app):
 
 def test_finalize_all(base_command, first_app, second_app):
     "A call to finalize verifies host, tools, and finalized all app configs"
-    base_command.finalize()
+    base_command.finalize(apps=base_command.apps.values())
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -64,8 +64,8 @@ def test_finalize_all(base_command, first_app, second_app):
 
 
 def test_finalize_single(base_command, first_app, second_app):
-    "A call to finalize verifies host, tools, and finalized all app configs"
-    base_command.finalize(first_app)
+    "A call to finalize verifies host, tools, and finalizes a single app config"
+    base_command.finalize(apps=[first_app])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -88,8 +88,8 @@ def test_finalize_all_repeat(base_command, first_app, second_app):
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app configs, each command will
     # have it's own tools verified.
-    base_command.finalize()
-    base_command.finalize()
+    base_command.finalize(apps=base_command.apps.values())
+    base_command.finalize(apps=base_command.apps.values())
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -119,8 +119,8 @@ def test_finalize_single_repeat(base_command, first_app, second_app):
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app config, each command will
     # have it's own tools verified.
-    base_command.finalize(first_app)
-    base_command.finalize(first_app)
+    base_command.finalize(apps=[first_app])
+    base_command.finalize(apps=[first_app])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -149,7 +149,7 @@ def test_external_and_internal(base_command, first_app):
         BriefcaseConfigError,
         match=r"'first' is declared as an external app, but also defines 'sources'",
     ):
-        base_command.finalize(first_app)
+        base_command.finalize(apps=[first_app])
 
 
 def test_not_external_or_internal(base_command, first_app):
@@ -161,7 +161,7 @@ def test_not_external_or_internal(base_command, first_app):
         BriefcaseConfigError,
         match=r"'first' does not define either 'sources' or 'external_package_path'.",
     ):
-        base_command.finalize(first_app)
+        base_command.finalize(apps=[first_app])
 
 
 def test_binary_path_internal_app(base_command, first_app):
@@ -176,4 +176,4 @@ def test_binary_path_internal_app(base_command, first_app):
             r"but not 'external_package_path'"
         ),
     ):
-        base_command.finalize(first_app)
+        base_command.finalize(apps=[first_app])

@@ -106,10 +106,6 @@ class UpdateCommand(CreateCommand):
         debugger: str | None = None,
         **options,
     ) -> dict | None:
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app, test_mode, debugger)
-
         if app_name:
             try:
                 apps_to_update = {app_name: self.apps[app_name]}
@@ -121,6 +117,14 @@ class UpdateCommand(CreateCommand):
             apps_to_update = {app.app_name: app}
         else:
             apps_to_update = self.apps
+
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(
+            apps=apps_to_update.values(),
+            test_mode=test_mode,
+            debugger=debugger,
+        )
 
         state = None
         for _, app_obj in sorted(apps_to_update.items()):

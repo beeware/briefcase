@@ -307,7 +307,10 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, test_mode)
+        self.finalize(
+            apps=[app],
+            test_mode=test_mode,
+        )
 
         self.verify_app(app)
 
