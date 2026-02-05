@@ -70,7 +70,6 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified for app
