@@ -53,7 +53,11 @@ def test_new_app(
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
     bootstrap.post_generate = mock.MagicMock()
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
+
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -69,8 +73,13 @@ def test_new_app(
     new_command.new_app(project_overrides={})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template is updated
@@ -116,7 +125,10 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -138,8 +150,13 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
         new_command.new_app(project_overrides={})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # The cookiecutter cache is updated once
@@ -186,7 +203,11 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
+
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -210,8 +231,13 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     new_command.new_app(project_overrides={})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template is updated
@@ -282,13 +308,18 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
+
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
             "pyproject_requires": "toga",
         }
     )
+
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -298,8 +329,13 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     new_command.new_app(template="https://example.com/other.git", project_overrides={})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template is updated
@@ -340,13 +376,18 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
+
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
             "pyproject_requires": "toga",
         }
     )
+
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -366,7 +407,12 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
 
     # App context is constructed
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command.select_bootstrap.assert_called_once_with({})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template is updated
@@ -407,14 +453,21 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
+
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
+
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
             "pyproject_requires": "toga",
         }
     )
+
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -433,8 +486,13 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
         )
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template is updated
@@ -476,13 +534,17 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
             "pyproject_requires": "toga",
         }
     )
+
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="https://example.com/other.git"
     )
@@ -492,8 +554,13 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
     new_command.new_app(template_branch="experimental", project_overrides={})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template is updated
@@ -539,13 +606,17 @@ def test_new_app_unused_project_overrides(
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
             "pyproject_requires": "toga",
         }
     )
+
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
@@ -555,10 +626,14 @@ def test_new_app_unused_project_overrides(
     new_command.new_app(project_overrides={"unused": "override"})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({"unused": "override"})
     new_command.build_app_context.assert_called_once_with({"unused": "override"})
-    new_command.create_bootstrap.assert_called_once_with(
-        app_context, {"unused": "override"}
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
     )
+
     new_command.build_gui_context.assert_called_once_with(
         bootstrap, {"unused": "override"}
     )
@@ -610,13 +685,17 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
     bootstrap = BaseGuiBootstrap(new_command.console, {})
-    new_command.create_bootstrap = mock.MagicMock(return_value=bootstrap)
+    new_command.select_bootstrap = mock.MagicMock(
+        return_value=("Toga", {"Toga": BaseGuiBootstrap})
+    )
+    new_command._instantiate_bootstrap = mock.MagicMock(return_value=bootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
             "pyproject_requires": "toga",
         }
     )
+
     new_command.update_cookiecutter_cache = mock.MagicMock(
         return_value="~/.cookiecutters/briefcase-template"
     )
@@ -628,8 +707,13 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
         new_command.new_app(project_overrides={})
 
     # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
     new_command.build_app_context.assert_called_once_with({})
-    new_command.create_bootstrap.assert_called_once_with(app_context, {})
+    new_command._instantiate_bootstrap.assert_called_once_with(
+        "Toga",
+        {"Toga": BaseGuiBootstrap},
+        app_context,
+    )
     new_command.build_gui_context.assert_called_once_with(bootstrap, {})
 
     # Template won't be updated or unrolled

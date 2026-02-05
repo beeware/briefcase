@@ -453,15 +453,12 @@ class NewCommand(BaseCommand):
             "license": project_license,
         }
 
-    def create_bootstrap(
+    def select_bootstrap(
         self,
-        context: dict[str, str],
         project_overrides: dict[str, str],
-    ) -> BaseGuiBootstrap:
-        """Select and instantiate a bootstrap for the new project.
-
-        :returns: An instance of the GUI bootstrap that the user has selected.
-        """
+    ) -> tuple[str, dict[str, type[BaseGuiBootstrap]]]:
+        """Ask the GUI framework question and return the selection plus bootstrap
+        registry."""
         bootstraps = get_gui_bootstraps()
         bootstrap_options = self._gui_bootstrap_choices(bootstraps)
 
@@ -485,9 +482,29 @@ class NewCommand(BaseCommand):
                 "Install a community GUI bootstrap plugin and re-run `briefcase new`."
             )
 
-        bootstrap_class = bootstraps[selected_bootstrap]
+        return selected_bootstrap, bootstraps
 
+    def _instantiate_bootstrap(
+        self,
+        selected_bootstrap: str,
+        bootstraps: dict[str, type[BaseGuiBootstrap]],
+        context: dict[str, str],
+    ) -> BaseGuiBootstrap:
+        """Instantiate the selected GUI bootstrap."""
+        bootstrap_class = bootstraps[selected_bootstrap]
         return bootstrap_class(console=self.console, context=context)
+
+    def create_bootstrap(
+        self,
+        context: dict[str, str],
+        project_overrides: dict[str, str],
+    ) -> BaseGuiBootstrap:
+        """Select and instantiate a bootstrap for the new project.
+
+        :returns: An instance of the GUI bootstrap that the user has selected.
+        """
+        selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
+        return self._instantiate_bootstrap(selected_bootstrap, bootstraps, context)
 
     def build_gui_context(
         self,
@@ -629,8 +646,12 @@ class NewCommand(BaseCommand):
         self.console.prompt()
         self.console.prompt("Let's build a new Briefcase app!")
 
+        # Ensure we always have a dict before popping keys
+        project_overrides = project_overrides or {}
+
+        selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
         context = self.build_app_context(project_overrides)
-        bootstrap = self.create_bootstrap(context, project_overrides)
+        bootstrap = self._instantiate_bootstrap(selected_bootstrap, bootstraps, context)
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
         self.console.divider()  # close the prompting section of output
