@@ -539,13 +539,28 @@ class NewCommand(BaseCommand):
 
     def _gui_bootstrap_choices(self, bootstraps) -> dict[str, str]:
         """Construct the list of available GUI bootstraps to display to the user."""
-        ordered = OrderedDict(sorted(bootstraps.items()))
+        preferred_order = [
+            "Toga",
+            "PySide6",
+            "Pygame",
+            "Console",
+        ]
 
-        none_bootstrap = ordered.pop("None")
+        # Start with all available bootstrap names (sorted for stability).
+        remaining = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 3 options are: Toga, PySide6, Pygame
-        for name in reversed(("Toga", "PySide6", "Pygame")):
-            ordered.move_to_end(name, last=False)
+        # Pull out the None option so we can force it to the end.
+        none_bootstrap = remaining.pop("None")
+
+        ordered: OrderedDict[str, type[BaseGuiBootstrap] | None] = OrderedDict()
+
+        # Add preferred items in explicit order, if present.
+        for name in preferred_order:
+            if name in remaining:
+                ordered[name] = remaining.pop(name)
+
+        # Add everything else (still sorted because remaining started sorted).
+        ordered.update(remaining)
 
         # Insert "Other frameworks..." as second-to-last
         ordered[self.OTHER_FRAMEWORKS] = None
