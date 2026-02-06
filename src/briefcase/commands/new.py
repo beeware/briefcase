@@ -478,9 +478,6 @@ class NewCommand(BaseCommand):
 
         if selected_bootstrap == self.OTHER_FRAMEWORKS:
             self._show_other_frameworks_menu(bootstraps)
-            raise BriefcaseCommandError(
-                "Install a community GUI bootstrap plugin and re-run `briefcase new`."
-            )
 
         return selected_bootstrap, bootstraps
 
@@ -570,27 +567,24 @@ class NewCommand(BaseCommand):
             if plugin["entry_point"] not in installed
         ]
 
-        self.console.warning()
-        self.console.warning(
-            self.console.textwrap(
-                "GUI frameworks listed here are "
-                "provided by third-party plugins and are "
-                "not maintained by Briefcase."
-            )
+        intro = (
+            "GUI frameworks listed here are "
+            "provided by third-party plugins and are "
+            "not maintained by Briefcase."
         )
 
         if not available:
-            self.console.info()
-            self.console.info(
-                "No additional community GUI bootstraps "
-                "are currently available to install."
+            self.console.warning(
+                self.console.textwrap(
+                    "\n" + intro + "\n\n" + "No additional community GUI bootstraps "
+                    "are currently available to install.\n"
+                    + "Browse options at https://beeware.org/bee/briefcase-bootstraps\n\n"
+                    + "Re-run `briefcase new` and select an installed GUI framework."
+                )
             )
-            self.console.info(
-                "Browse options at https://beeware.org/bee/briefcase-bootstraps"
-            )
-            raise BriefcaseCommandError(
-                "Re-run `briefcase new` and select an installed GUI framework."
-            )
+            raise SystemExit(0)
+
+        self.console.warning(self.console.textwrap("\n" + intro + "\n"))
 
         options = {
             plugin["entry_point"]: (
@@ -603,8 +597,7 @@ class NewCommand(BaseCommand):
 
         chosen = self.console.selection_question(
             intro=(
-                "Select a community GUI bootstrap to see installation instructions.\n"
-                "\n"
+                "Select a community GUI bootstrap to see installation instructions.\n\n"
                 "Installed bootstraps are not shown."
             ),
             description="Community GUI Framework",
@@ -612,15 +605,22 @@ class NewCommand(BaseCommand):
             options=options,
         )
 
-        package = next(
-            plugin["package"] for plugin in available if plugin["entry_point"] == chosen
+        selected = next(
+            plugin for plugin in available if plugin["entry_point"] == chosen
         )
+        display_name = selected["display_name"]
+        package = selected["package"]
 
-        self.console.info()
-        self.console.info("To install this bootstrap plugin, run:")
-        self.console.info()
-        self.console.info(f"    python -m pip install {package}")
-        self.console.info()
+        self.console.warning(
+            self.console.textwrap(
+                "\n"
+                f"{display_name} is provided by a community plugin.\n"
+                "To use this, run:\n\n"
+                f"    python -m pip install {package}\n\n"
+                "then re-run `briefcase new`."
+            )
+        )
+        raise SystemExit(0)
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""

@@ -187,11 +187,23 @@ def test_question_sequence_none(new_command):
     }
 
 
-def test_question_sequence_other_frameworks_aborts(new_command, capsys):
+def test_question_sequence_other_frameworks_aborts(new_command, capsys, monkeypatch):
     """Selecting 'Other frameworks…' shows guidance and aborts cleanly."""
+    # Ensure there is at least one community plugin available in the submenu.
+    monkeypatch.setattr(
+        type(new_command),
+        "KNOWN_COMMUNITY_BOOTSTRAPS",
+        [
+            {
+                "display_name": "Fake Framework",
+                "entry_point": "fake_framework",
+                "package": "fake-framework",
+                "description": "A fake community framework.",
+            }
+        ],
+        raising=False,
+    )
 
-    # Determine the menu index for the sentinel entry, since installed
-    # GUI bootstraps can change menu ordering.
     bootstraps = briefcase.commands.new.get_gui_bootstraps()
     choices = new_command._gui_bootstrap_choices(bootstraps)
     other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
@@ -201,17 +213,19 @@ def test_question_sequence_other_frameworks_aborts(new_command, capsys):
         "1",  # Select first community option
     ]
 
-    with pytest.raises(briefcase.commands.new.BriefcaseCommandError):
+    with pytest.raises(SystemExit) as excinfo:
         new_command.create_bootstrap(
-            context={
-                "app_name": "myapplication",
-                "author": "Grace Hopper",
-            },
+            context={"app_name": "myapplication", "author": "Grace Hopper"},
             project_overrides={},
         )
 
+    assert excinfo.value.code == 0
+
     out = capsys.readouterr().out
-    assert "python -m pip install" in out
+    assert "-- Community GUI Framework" in out
+    assert "Fake Framework" in out
+    assert "python -m pip install fake-framework" in out
+    assert "then re-run `briefcase new`" in out
 
 
 def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypatch):
@@ -252,11 +266,13 @@ def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypat
         "1",  # Select first visible community option
     ]
 
-    with pytest.raises(briefcase.commands.new.BriefcaseCommandError):
+    with pytest.raises(SystemExit) as excinfo:
         new_command.create_bootstrap(
             context={"app_name": "myapplication", "author": "Grace Hopper"},
             project_overrides={},
         )
+
+    assert excinfo.value.code == 0
 
     out = capsys.readouterr().out
 
@@ -271,9 +287,7 @@ def test_other_frameworks_no_available_plugins(
     monkeypatch,
     mock_builtin_bootstraps,
 ):
-    """If no community GUI bootstraps are available, show guidance and abort."""
-    from briefcase.commands.new import BriefcaseCommandError
-
+    """If no community GUI bootstraps are available, show guidance and exit cleanly."""
     # Simulate that all known community bootstraps are already installed
     monkeypatch.setattr(
         briefcase.commands.new,
@@ -292,26 +306,22 @@ def test_other_frameworks_no_available_plugins(
         str(other_index),  # Select "Other frameworks"
     ]
 
-    with pytest.raises(BriefcaseCommandError) as excinfo:
+    with pytest.raises(SystemExit) as excinfo:
         new_command.create_bootstrap(
             context={"app_name": "myapplication", "author": "Grace Hopper"},
             project_overrides={},
         )
 
-    out = capsys.readouterr().out
+    assert excinfo.value.code == 0
 
-    # Informational output
+    out = capsys.readouterr().out
+    assert "GUI frameworks listed here are provided by third-party plugins" in out
     assert (
         "No additional community GUI bootstraps are currently available to install."
         in out
     )
     assert "Browse options at https://beeware.org/bee/briefcase-bootstraps" in out
-    assert "python -m pip install" not in out
-
-    # Abort guidance
-    assert "Re-run `briefcase new` and select an installed GUI framework." in str(
-        excinfo.value
-    )
+    assert "Re-run `briefcase new`" in out
 
 
 def test_question_sequence_with_overrides(
