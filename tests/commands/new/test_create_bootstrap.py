@@ -230,7 +230,6 @@ def test_question_sequence_other_frameworks_aborts(new_command, capsys, monkeypa
 
 def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypatch):
     """Installed community bootstraps are not shown in the submenu."""
-    from briefcase.bootstraps import BaseGuiBootstrap
 
     class DummyBootstrap(BaseGuiBootstrap):
         fields = ()
@@ -277,7 +276,7 @@ def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypat
     out = capsys.readouterr().out
 
     assert "Community GUI Framework" in out
-    assert "pygame-ce" in out
+    assert "Pygame-ce" in out
     assert "PursuedPyBear" not in out
 
 
@@ -295,6 +294,7 @@ def test_other_frameworks_no_available_plugins(
         lambda: {
             **mock_builtin_bootstraps,
             "pygame_ce": EmptyBootstrap,
+            "Toga Positron (Django server)": EmptyBootstrap,
         },
     )
 

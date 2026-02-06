@@ -79,7 +79,18 @@ class NewCommand(BaseCommand):
     # Community GUI bootstraps that are known to Briefcase.
     # A bootstrap is only considered "installed" if it exposes a
     # `briefcase.bootstraps` entry point.
-    KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, str]]] = [
+    KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[list[dict[str, object]]] = [
+        {
+            "entry_point": [
+                "Toga Positron (Django server)",
+                "Toga Positron (Site-specific browser)",
+                "Toga Positron (Static server)",
+            ],
+            "display_name": "Positron",
+            "package": "toga-positron",
+            "description": "A Toga base for apps whose GUI is provided by a web view "
+            "(i.e., Electron-like apps, but for Python).",
+        },
         {
             "entry_point": "pygame_ce",
             "display_name": "Pygame-ce",
@@ -561,10 +572,16 @@ class NewCommand(BaseCommand):
         instructions."""
         installed = set(bootstraps.keys())
 
+        def entry_point_names(plugin: dict[str, object]) -> list[str]:
+            entry_point = plugin["entry_point"]
+            if isinstance(entry_point, str):
+                return [entry_point]
+            return list(entry_point)
+
         available = [
             plugin
             for plugin in self.KNOWN_COMMUNITY_BOOTSTRAPS
-            if plugin["entry_point"] not in installed
+            if not any(name in installed for name in entry_point_names(plugin))
         ]
 
         intro = (
@@ -586,8 +603,10 @@ class NewCommand(BaseCommand):
 
         self.console.warning(self.console.textwrap("\n" + intro + "\n"))
 
+        # Use the package name as the option key so each plugin appears once, even if it
+        # provides multiple bootstraps (e.g., toga-positron).
         options = {
-            plugin["entry_point"]: (
+            plugin["package"]: (
                 f"{plugin['display_name']} — {plugin['description']}"
                 if plugin.get("description")
                 else plugin["display_name"]
@@ -605,9 +624,7 @@ class NewCommand(BaseCommand):
             options=options,
         )
 
-        selected = next(
-            plugin for plugin in available if plugin["entry_point"] == chosen
-        )
+        selected = next(plugin for plugin in available if plugin["package"] == chosen)
         display_name = selected["display_name"]
         package = selected["package"]
 
