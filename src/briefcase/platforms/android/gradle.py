@@ -413,9 +413,10 @@ class GradleRunCommand(GradleMixin, RunCommand):
         )
         parser.add_argument(
             "--revoke-permission",
+            metavar="PERMISSION",
             action="append",
             dest="revoke_permissions",
-            help="Revoke specified app permissions before launching the app",
+            help="Revoke specified permission before launching the app",
             required=False,
         )
         parser.add_argument(
