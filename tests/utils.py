@@ -252,7 +252,7 @@ def installed_package_content(
             (f"{package}/__init__.py", ""),
             (f"{package}/app.py", "# This is the app"),
         ]
-        + (extra_content if extra_content else [])
+        + (extra_content or [])
         + distinfo_metadata(package=package, version=version, tag=tag)
     )
 

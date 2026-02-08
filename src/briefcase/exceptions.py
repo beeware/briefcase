@@ -106,7 +106,7 @@ class NetworkFailure(BriefcaseCommandError):
 
     def __init__(self, action, hint=None):
         self.action = action
-        self.hint = hint if hint else self.DEFAULT_HINT
+        self.hint = hint or self.DEFAULT_HINT
         super().__init__(msg=f"Unable to {action}; {self.hint}")
 
 

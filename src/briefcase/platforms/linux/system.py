@@ -1060,7 +1060,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
                 RHEL: "rpm",
                 ARCH: "pkg",
                 SUSE: "rpm",
-            }.get(app.target_vendor_base, None)
+            }.get(app.target_vendor_base)
 
         if app.packaging_format is None:
             raise BriefcaseCommandError(

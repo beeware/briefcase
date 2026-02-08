@@ -271,7 +271,7 @@ class CreateCommand(BaseCommand):
         output_path.mkdir(parents=True, exist_ok=True)
 
         self.generate_template(
-            template=app.template if app.template else self.app_template_url,
+            template=app.template or self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
@@ -672,7 +672,7 @@ class CreateCommand(BaseCommand):
                         + self._pip_requires(app, requires)
                     ),
                     install_hint=install_hint,
-                    **(pip_kwargs if pip_kwargs else {}),
+                    **(pip_kwargs or {}),
                 )
         else:
             self.console.info("No application requirements.")
