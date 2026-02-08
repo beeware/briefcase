@@ -98,7 +98,7 @@ def test_device_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
-        "reset_permissions": False,
+        "revoke_permissions": None,
         "forward_ports": None,
         "reverse_ports": None,
     }
@@ -127,7 +127,7 @@ def test_extra_emulator_args_option(run_command):
         "passthrough": [],
         "extra_emulator_args": ["-no-window", "-no-audio"],
         "shutdown_on_exit": False,
-        "reset_permissions": False,
+        "revoke_permissions": None,
         "forward_ports": None,
         "reverse_ports": None,
     }
@@ -154,16 +154,21 @@ def test_shutdown_on_exit_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": True,
-        "reset_permissions": False,
+        "revoke_permissions": None,
         "forward_ports": None,
         "reverse_ports": None,
     }
     assert overrides == {}
 
 
-def test_reset_permissions_option(run_command):
-    """The --reset-permissions option can be parsed."""
-    options, overrides = run_command.parse_options(["--reset-permissions"])
+def test_revoke_permission_option(run_command):
+    """The --revoke-permission option can be parsed."""
+    options, overrides = run_command.parse_options(
+        [
+            "--revoke-permission=android.permission.BLUETOOTH_SCAN",
+            "--revoke-permission=android.permission.BLUETOOTH_CONNECT",
+        ]
+    )
 
     assert options == {
         "device_or_avd": None,
@@ -181,7 +186,10 @@ def test_reset_permissions_option(run_command):
         "passthrough": [],
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
-        "reset_permissions": True,
+        "revoke_permissions": [
+            "android.permission.BLUETOOTH_SCAN",
+            "android.permission.BLUETOOTH_CONNECT",
+        ],
         "forward_ports": None,
         "reverse_ports": None,
     }
@@ -210,7 +218,7 @@ def test_forward_ports_option(run_command):
         "debugger_port": 5678,
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
-        "reset_permissions": False,
+        "revoke_permissions": None,
         "forward_ports": [80, 81],
         "reverse_ports": None,
     }
@@ -239,7 +247,7 @@ def test_reverse_ports_option(run_command):
         "debugger_port": 5678,
         "extra_emulator_args": None,
         "shutdown_on_exit": False,
-        "reset_permissions": False,
+        "revoke_permissions": None,
         "forward_ports": None,
         "reverse_ports": [78, 79],
     }
@@ -316,7 +324,7 @@ def test_run_existing_device(run_command, first_app_config):
         f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
 
-    run_command.tools.mock_adb.reset_permissions.assert_not_called()
+    run_command.tools.mock_adb.revoke_permission.assert_not_called()
 
     run_command.tools.mock_adb.forward.assert_not_called()
     run_command.tools.mock_adb.reverse.assert_not_called()
@@ -462,8 +470,8 @@ def test_run_forward_reverse_ports(run_command, first_app_config):
     ]
 
 
-def test_run_reset_permissions(run_command, first_app_config):
-    """An app can be run with resetting permissions."""
+def test_run_revoke_permissions(run_command, first_app_config):
+    """An app can be run with revoking permissions."""
     # Set up device selection to return a running physical device.
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
@@ -473,11 +481,21 @@ def test_run_reset_permissions(run_command, first_app_config):
     run_command.run_app(
         first_app_config,
         passthrough=[],
-        reset_permissions=True,
+        revoke_permissions=[
+            "android.permission.BLUETOOTH_SCAN",
+            "android.permission.BLUETOOTH_CONNECT",
+        ],
     )
 
-    assert run_command.tools.mock_adb.reset_permissions.mock_calls == [
-        mock.call(f"{first_app_config.package_name}.{first_app_config.module_name}"),
+    assert run_command.tools.mock_adb.revoke_permission.mock_calls == [
+        mock.call(
+            f"{first_app_config.package_name}.{first_app_config.module_name}",
+            "android.permission.BLUETOOTH_SCAN",
+        ),
+        mock.call(
+            f"{first_app_config.package_name}.{first_app_config.module_name}",
+            "android.permission.BLUETOOTH_CONNECT",
+        ),
     ]
 
     run_command.tools.mock_adb.start_app.assert_called_once_with(

@@ -160,9 +160,13 @@ You may specify multiple `--Xemulator` arguments; each one specifies a single ar
 
 Instruct Briefcase to shut down the emulator when the run finishes. This is especially useful if you are running in headless mode, as the emulator will continue to run in the background, but there will be no visual manifestation that it is running. It may also be useful as a cleanup mechanism when running in a CI configuration.
 
-#### `--reset-permissions`
+#### `--revoke-permission=<permission>`
 
-Reset all runtime permissions of the running app before starting it. This is useful in tests to get a reproducible starting state when the permission handling should also be tested.
+Revoke a runtime permission of the running app before starting it. This is useful in tests to get a reproducible starting state when the permission handling should also be tested.
+
+For example to revoke the Bluetooth scan permission, specify `--revoke-permission=android.permission.BLUETOOTH_SCAN`. A full list of available permissions is defined in the [Android documentation](https://developer.android.com/reference/android/Manifest.permission). Only the ones that are marked as `Protection level: dangerous` are relevant.
+
+You may specify multiple `--revoke-permission` arguments; each one specifies one permission.
 
 #### `--forward-port=<port>`
 
