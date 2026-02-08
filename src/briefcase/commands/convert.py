@@ -745,9 +745,7 @@ class ConvertCommand(NewCommand):
 
         # Create the project files
         self.generate_template(
-            template=(
-                template or "https://github.com/beeware/briefcase-template"
-            ),
+            template=(template or "https://github.com/beeware/briefcase-template"),
             branch=template_branch,
             output_path=tmp_path,
             extra_context=context,
