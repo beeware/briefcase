@@ -276,3 +276,12 @@ requirement_installer_args = ["--find-links", "<path-to-wheel-folder>"]
 ```
 
 to your `pyproject.toml`. This will instruct Briefcase to search that folder for compatible wheels during the installation process.
+
+### Liquid Glass (macOS 26 Tahoe) and PyQt6 / PySide6
+
+The Qt developers have been working hard on adopting [Liquid Glass using Qt native styles](https://www.qt.io/blog/qt-on-macos-26-tahoe). However, some bugs do remain. If you find that your application looks bad on macOS 26, you can enable compatibility mode and revert to the style of earlier macOS releases. In your `pyproject.toml` macOS section, you can enable the `UIDesignRequiresCompatibility` key:
+
+```toml
+[tool.briefcase.app.<appname>.macOS]
+info."UIDesignRequiresCompatibility" = true
+```
