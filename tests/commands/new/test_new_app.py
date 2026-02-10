@@ -24,6 +24,21 @@ def new_command(dummy_console, tmp_path):
     )
 
 
+def test_gui_bootstrap_choices_skips_missing_preferred(new_command):
+    """Preferred bootstraps that aren't available should be ignored."""
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+
+    # Force the `if name in remaining:` false branch
+    bootstraps.pop("Pygame", None)
+
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    names = list(choices.keys())
+
+    assert "Pygame" not in names
+    assert names[-2] == new_command.OTHER_FRAMEWORKS
+    assert names[-1] == "None"
+
+
 @pytest.mark.parametrize(
     ("briefcase_version", "expected_branch"),
     [
