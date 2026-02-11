@@ -14,7 +14,7 @@ def integrations_modules() -> set[str]:
     return {
         module.name
         for module in pkgutil.iter_modules(briefcase.integrations.__path__)
-        if module.name != {"base"}
+        if module.name != "base"
     }
 
 
