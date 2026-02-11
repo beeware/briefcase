@@ -193,9 +193,7 @@ class ToolCache(Mapping):
         """
         self.console = console
         self.base_path = Path(base_path)
-        self.home_path = Path(
-            os.path.expanduser(home_path if home_path else Path.home())
-        )
+        self.home_path = Path(os.path.expanduser(home_path or Path.home()))
 
         self.host_arch = self.platform.machine()
         self.host_os = self.platform.system()

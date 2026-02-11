@@ -72,7 +72,7 @@ def make_class_name(formal_name):
     class_name = "".join(
         ch
         for ch in unicodedata.normalize("NFKC", formal_name)
-        if unicodedata.category(ch) in xid_continue or ch in {"_"}
+        if unicodedata.category(ch) in xid_continue or ch == "_"
     )
 
     # If the first character isn't in the 'start' character set,
@@ -235,7 +235,7 @@ def validate_install_options_config(config, opt_type, **others):
 
             # Option names may be coerced into upper case; and there are
             # a small number of reserved identifiers.
-            if name.upper() in {"ALLUSERS"}:
+            if name.upper() == "ALLUSERS":
                 raise BriefcaseConfigError(
                     f"{name!r} is a reserved {opt_type} option identifier."
                 )

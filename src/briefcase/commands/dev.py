@@ -98,7 +98,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             environment.
         """
 
-        requires = app.requires if app.requires else []
+        requires = app.requires or []
         if app.test_requires:
             requires.extend(app.test_requires)
         if not requires:
