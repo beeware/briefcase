@@ -798,7 +798,7 @@ To run your application, type:
     ):
         # Confirm host compatibility, and that all required tools are available.
         # There are no apps, so finalize() will be a no op on app configurations.
-        self.finalize()
+        self.finalize(apps=[])
 
         self.validate_pyproject_file()
 

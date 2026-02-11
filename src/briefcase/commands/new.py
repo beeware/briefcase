@@ -605,8 +605,8 @@ To run your application, type:
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.
-        # There are no apps, so finalize() will be a no op on app configurations.
-        self.finalize()
+        # There are no apps, so finalize() is called with an empty list.
+        self.finalize(apps=[])
 
         return self.new_app(
             template=template,

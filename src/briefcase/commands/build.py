@@ -138,10 +138,6 @@ class BuildCommand(BaseCommand):
                     "Cannot specify both --update-stub and --no-update"
                 )
 
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app, test_mode, debugger)
-
         if app_name:
             try:
                 apps_to_build = {app_name: self.apps[app_name]}
@@ -153,6 +149,14 @@ class BuildCommand(BaseCommand):
             apps_to_build = {app.app_name: app}
         else:
             apps_to_build = self.apps
+
+        # Confirm host compatibility, that all required tools are available,
+        # and that the app configuration is finalized.
+        self.finalize(
+            apps=apps_to_build.values(),
+            test_mode=test_mode,
+            debugger=debugger,
+        )
 
         state = None
         for _, app_obj in sorted(apps_to_build.items()):

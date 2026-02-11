@@ -1394,9 +1394,8 @@ def test_build_app_single(build_command, first_app, second_app, app_flags):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
-        # App configs have been finalized
+        # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
@@ -1472,9 +1471,8 @@ def test_build_app_all_flags(build_command, first_app, second_app):
         ("verify-host",),
         # Tools are verified
         ("verify-tools",),
-        # App configs have been finalized
+        # Selected app config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # First app is updated with all update flags
         (
             "update",

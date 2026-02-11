@@ -11,7 +11,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -691,7 +691,7 @@ a custom location for Briefcase's tools.
 
     def finalize(
         self,
-        app: AppConfig | None = None,
+        apps: Iterable[AppConfig],
         test_mode: bool = False,
         debugger: str | None = None,
         debugger_host: str | None = None,
@@ -708,8 +708,7 @@ a custom location for Briefcase's tools.
 
         App finalization will only occur once per invocation.
 
-        :param app: If provided, the specific app configuration
-            to finalize. By default, all apps will be finalized.
+        :param apps: The app configuration(s) to finalize.
         :param test_mode: Specify if the app is running in test mode
         :param debugger: The debugger that should be used
         :param debugger_host: The host to use for the debugger
@@ -718,7 +717,6 @@ a custom location for Briefcase's tools.
         self.verify_host()
         self.verify_tools()
 
-        apps = self.apps.values() if app is None else [app]
         for app in apps:
             if hasattr(app, "__draft__"):
                 if debugger and debugger != "":

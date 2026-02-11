@@ -62,7 +62,7 @@ class PublishCommand(BaseCommand):
     ):
         # Confirm host compatibility, that all required tools are available,
         # and that all app configurations are finalized.
-        self.finalize()
+        self.finalize(apps=self.apps.values())
 
         # Check the apps have been built first.
         for app_name, app in self.apps.items():
