@@ -1,2 +1,0 @@
-Add minimal configuration example to the external app packaging HOWTO
-and clarify where `briefcase package` should be run from.
