@@ -10,6 +10,27 @@ Briefcase refers to this mode of Briefcase usage as packaging an "external app".
 
 The process of configuring an external app is mostly the same as a normal Briefcase app, with one important difference: you do *not* define a [`sources`][] entry, but instead define an [`external_package_path`][]. This should be the content produced by your build tool that you want to distribute to end users.
 
+The following would be a minimal `pyproject.toml` configuration for an external app called "Hello World":
+
+    [tool.briefcase]
+    project_name = "Hello World"
+    bundle = "com.example"
+
+    [tool.briefcase.app.helloworld]
+    formal_name = "Hello World"
+    version = "0.0.1"
+
+    [tool.briefcase.app.helloworld.macOS]
+    external_package_path = "..."
+
+    [tool.briefcase.app.helloworld.linux]
+    external_package_path = "..."
+
+    [tool.briefcase.app.helloworld.windows]
+    external_package_path = "..."
+
+The required format for [`external_package_path`][] is different on each platform.
+
 ### macOS
 
 On macOS, the [`external_package_path`][] should be the location of the `.app` bundle that you want to distribute to users. The configured [`formal_name`][] must match the name of the app bundle (e.g., `Hello World.app` should use a formal name of `Hello World`); the [`app_name`][] will be used for the shortcut installed in `/usr/local/bin` when creating a [console app][cli-apps].
