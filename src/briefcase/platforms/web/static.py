@@ -213,8 +213,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         body_insert = "body-python"
 
         # PyScript definitions for insertion:
-        head_content = dedent(
-            f"""\
+        head_content = dedent(f"""\
             <script type="module">
                 // Hide the splash screen when the page is ready.
                 import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
@@ -225,18 +224,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
-            """
-        )
-        body_content = dedent(
-            f"""\
+            """)
+        body_content = dedent(f"""\
             <script type="py" async="false" config="pyscript.toml">
                 import runpy
                 result = runpy.run_module(
                     "{app.app_name}", run_name="__main__", alter_sys=True
                 )
             </script>
-            """
-        )
+            """)
 
         pkg_map_head = inserts.setdefault(target, {}).setdefault(head_insert, {})
         pkg_map_head[package_key] = head_content
@@ -264,7 +260,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Warn on every legacy usage
         self.console.warning(
             f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} "
-            f"detected.\n"
+            "detected.\n"
             "     Static file handling has been deprecated; this file should be "
             "converted into an insert."
         )
@@ -304,7 +300,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         if not rel_inside or rel_inside.endswith("/"):
             self.console.warning(
                 f"    {path}: skipping; "
-                f"not a valid insert file (empty path or directory)."
+                "not a valid insert file (empty path or directory)."
             )
             return
 
@@ -439,7 +435,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     ) from e
                 except (KeyError, FileNotFoundError):
                     self.console.info(
-                        f"Pyscript configuration file not found in "
+                        "Pyscript configuration file not found in "
                         f"{config_package_list[0]}. Using default configuration."
                     )
                     pyscript_config = {}
@@ -670,7 +666,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                 if e.errno in (errno.EADDRINUSE, errno.ENOSR):
                     self.console.warning(
                         f"Using a system-allocated port since port {port} is already "
-                        f"in use. Use -p/--port to manually specify a port."
+                        "in use. Use -p/--port to manually specify a port."
                     )
                     httpd = LocalHTTPServer(
                         self.project_path(app),

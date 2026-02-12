@@ -95,8 +95,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     def finalize_app_config(self, app: AppConfig):
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
-            self.console.warning(
-                """\
+            self.console.warning("""\
 *************************************************************************
 ** WARNING: Building a Local AppImage!                                 **
 *************************************************************************
@@ -106,11 +105,9 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     Any `manylinux` setting will be ignored.
 
 *************************************************************************
-"""
-            )
+""")
 
-        self.console.warning(
-            """\
+        self.console.warning("""\
 *************************************************************************
 ** WARNING: Use of AppImage is not recommended!                        **
 *************************************************************************
@@ -124,8 +121,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     distribution.
 
 *************************************************************************
-"""
-        )
+""")
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
@@ -228,8 +224,7 @@ class LinuxAppImageCreateCommand(
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning(
-            """
+        self.console.warning("""
 *************************************************************************
 ** WARNING: Support package update may be imperfect                    **
 *************************************************************************
@@ -244,8 +239,7 @@ class LinuxAppImageCreateCommand(
     perform a clean app build before release.
 
 *************************************************************************
-"""
-        )
+""")
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
