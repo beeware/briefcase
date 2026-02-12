@@ -1239,8 +1239,8 @@ password:
                                             "architecture", "unknown architecture"
                                         )
                                     }]
-    {issue.get("message")}
-    {issue.get("docUrl", "(No additional help available)")}"""
+      {issue.get("message")}
+      {issue.get("docUrl", "(No additional help available)")}"""
                                     for issue in response.get("issues", [])
                                 )
                             )
