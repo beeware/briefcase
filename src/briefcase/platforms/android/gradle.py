@@ -465,7 +465,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
-        :param revoke_permissions: A list of permissions to revoke before launching the app.
+        :param revoke_permissions: A list of permissions to revoke before launching
+            the app.
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """
@@ -517,7 +518,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 adb.install_apk(self.binary_path(app))
 
             if revoke_permissions:
-                # Revoke specified app permissions to ensure a reproducible starting state.
+                # Revoke specified app permissions to ensure a reproducible
+                # starting state.
                 with self.console.wait_bar("Revoking app permissions..."):
                     for permission in revoke_permissions:
                         self.console.info(

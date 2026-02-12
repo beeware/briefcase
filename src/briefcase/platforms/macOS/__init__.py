@@ -686,7 +686,8 @@ In future, you could specify this signing identity by using:
 
 or
 
-    $ briefcase {self.command} macOS {self.output_format} {ident_option} "{identity_name}" ...
+    $ briefcase {self.command} macOS {self.output_format}
+    {ident_option} "{identity_name}" ...
 
 """)
 
@@ -1020,7 +1021,8 @@ This can take some time - in some cases, hours.
 
 If notarization is interrupted, you can resume by running:
 
-    briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
+    briefcase package macOS {self.output_format} {format_args}
+    {identity_args} --resume {submission_id}
 
 """)
 
@@ -1232,7 +1234,8 @@ password:
                                 f"Notarization was rejected: {summary}\n"
                                 + "\n".join(
                                     f"""
-    * ({issue.get("severity", "?")}) {issue.get("path")} [{issue.get("architecture", "unknown architecture")}]
+    * ({issue.get("severity", "?")}) {issue.get("path")}
+        [{issue.get("architecture", "unknown architecture")}]
       {issue.get("message")}
       {issue.get("docUrl", "(No additional help available)")}"""
                                     for issue in response.get("issues", [])

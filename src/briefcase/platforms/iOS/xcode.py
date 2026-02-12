@@ -692,7 +692,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         if app.debugger:
             env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
 
-        # Set additional environment variables while the app is running (no-op if no environment variables are set).
+        # Set additional environment variables while the app is running
+        # (no-op if no environment variables are set).
         with self.setup_env(env, udid):
             try:
                 self.console.info(f"Starting {label}...", prefix=app.app_name)
