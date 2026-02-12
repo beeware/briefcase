@@ -1234,10 +1234,13 @@ password:
                                 f"Notarization was rejected: {summary}\n"
                                 + "\n".join(
                                     f"""
-    * ({issue.get("severity", "?")}) {issue.get("path")} [
-    {issue.get("architecture", "unknown architecture")}]
-      {issue.get("message")}
-      {issue.get("docUrl", "(No additional help available)")}"""
+* ({issue.get("severity", "?")}) {issue.get("path")} [{
+                                        issue.get(
+                                            "architecture", "unknown architecture"
+                                        )
+                                    }]
+    {issue.get("message")}
+    {issue.get("docUrl", "(No additional help available)")}"""
                                     for issue in response.get("issues", [])
                                 )
                             )
