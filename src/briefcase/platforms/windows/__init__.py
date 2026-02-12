@@ -73,8 +73,7 @@ class WindowsMixin:
         if self.tools.host_arch != "AMD64":
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:
-                    self.console.warning(
-                        f"""
+                    self.console.warning(f"""
 *************************************************************************
 ** WARNING: Possible architecture mismatch                             **
 *************************************************************************
@@ -86,24 +85,21 @@ You are responsible for ensuring that the content of external_package_path
 is compatible with x86-64.
 
 *************************************************************************
-"""
-                    )
+""")
             else:
                 raise UnsupportedHostError(
-                    f"Windows applications cannot be built on an "
+                    "Windows applications cannot be built on an "
                     f"{self.tools.host_arch} machine."
                 )
 
         # 64bit Python is required to ensure 64bit wheels are installed/created
         # for the app
         if self.tools.is_32bit_python:
-            raise UnsupportedHostError(
-                """\
+            raise UnsupportedHostError("""\
 Windows applications cannot be built using a 32bit version of Python.
 
 Install a 64bit version of Python and run Briefcase again.
-"""
-            )
+""")
 
 
 class WindowsCreateCommand(CreateCommand):
@@ -113,7 +109,7 @@ class WindowsCreateCommand(CreateCommand):
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)
         return (
-            f"https://www.python.org/ftp/python/"
+            "https://www.python.org/ftp/python/"
             f"{self.python_version_tag}.{micro}/"
             f"{self.support_package_filename(support_revision)}"
         )
@@ -185,8 +181,7 @@ class WindowsCreateCommand(CreateCommand):
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning(
-            """
+        self.console.warning("""
 *************************************************************************
 ** WARNING: Support package update may be imperfect                    **
 *************************************************************************
@@ -201,8 +196,7 @@ class WindowsCreateCommand(CreateCommand):
     perform a clean app build before release.
 
 *************************************************************************
-"""
-        )
+""")
 
     def install_license(self, app: AppConfig):
         """Install the license for the project as RTF content.
@@ -237,36 +231,32 @@ class WindowsCreateCommand(CreateCommand):
                     )
             else:
                 raise BriefcaseCommandError(
-                    f"Your `pyproject.toml` specifies a license file of "
+                    "Your `pyproject.toml` specifies a license file of "
                     f"{str(license_file.relative_to(self.base_path))!r}.\n"
-                    f"However, this file does not exist."
-                    f"\n\n"
+                    "However, this file does not exist."
+                    "\n\n"
                     "Ensure you have correctly spelled the filename in your "
                     "`license.file` setting."
                 )
         elif license_text := app.license.get("text"):
             if len(license_text.splitlines()) <= 1:
-                self.console.warning(
-                    """
+                self.console.warning("""
 Your app specifies a license using `license.text`, but the value doesn't appear
 to be a full license. Briefcase will generate a `LICENSE.rtf` file for your
 project; you should ensure that the contents of this file is adequate.
-"""
-                )
+""")
             installed_license.write_text(
                 txt_to_rtf(license_text),
                 encoding="utf-8",
             )
         else:
-            raise BriefcaseCommandError(
-                """\
+            raise BriefcaseCommandError("""\
 Your project does not contain a `license` definition.
 
 Create a file named `LICENSE` in the same directory as your `pyproject.toml`
 with your app's licensing terms, and set `license.file = 'LICENSE'` in your
 app's configuration.
-"""
-            )
+""")
 
     def install_app_resources(self, app: AppConfig):
         """Install Windows-specific app resources.
@@ -467,7 +457,7 @@ class WindowsPackageCommand(PackageCommand):
         if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
             raise BriefcaseCommandError(
                 f"Codesigning identify {identity!r} must be a "
-                f"certificate SHA-1 thumbprint."
+                "certificate SHA-1 thumbprint."
             )
 
         sign_command = [
@@ -536,8 +526,7 @@ class WindowsPackageCommand(PackageCommand):
             sign_app = True
         else:
             sign_app = False
-            self.console.warning(
-                """
+            self.console.warning("""
 *************************************************************************
 ** WARNING: No signing identity provided                               **
 *************************************************************************
@@ -547,8 +536,7 @@ class WindowsPackageCommand(PackageCommand):
     use `--adhoc-sign`.
 
 *************************************************************************
-"""
-            )
+""")
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)

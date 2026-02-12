@@ -97,16 +97,14 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
                     # is not currently signed
                     if "error: 0x00000057" not in e.stdout:
                         self.tools.subprocess.output_error(e)
-                        raise BriefcaseCommandError(
-                            f"""\
+                        raise BriefcaseCommandError(f"""\
 Failed to remove any existing digital signatures from the stub app.
 
 Recreating the app layout may also help resolve this issue:
 
     $ briefcase create {self.platform} {self.output_format}
 
-"""
-                        ) from e
+""") from e
 
         with self.console.wait_bar("Setting stub app details..."):
             try:
@@ -144,14 +142,12 @@ Recreating the app layout may also help resolve this issue:
                     cwd=self.bundle_path(app),
                 )
             except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"""\
+                raise BriefcaseCommandError(f"""\
 Unable to update details on stub app for {app.app_name}.
 
 This may be caused by a virus scanner misidentifying the Briefcase build as malicious
 activity. Try disabling your virus checker, and re-run briefcase build.
-"""
-                ) from e
+""") from e
 
 
 class WindowsAppRunCommand(WindowsAppMixin, WindowsRunCommand):
