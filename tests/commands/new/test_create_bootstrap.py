@@ -162,9 +162,14 @@ def test_question_sequence_pygame(new_command):
 def test_question_sequence_none(new_command):
     """If no bootstrap is selected, the empty bootstrap is used."""
 
-    # Prime answers for all the questions.
+    # Determine the menu index for "None" dynamically, since installed GUI
+    # bootstraps can change the menu ordering.
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    none_index = list(choices.keys()).index("None") + 1
+
     new_command.console.values = [
-        "5",  # None
+        str(none_index),  # None
     ]
 
     bootstrap = new_command.create_bootstrap(
@@ -175,11 +180,148 @@ def test_question_sequence_none(new_command):
         project_overrides={},
     )
 
-    assert isinstance(bootstrap, BaseGuiBootstrap)
+    assert isinstance(bootstrap, EmptyBootstrap)
     assert bootstrap.context == {
         "app_name": "myapplication",
         "author": "Grace Hopper",
     }
+
+
+def test_question_sequence_other_frameworks_aborts(new_command, capsys, monkeypatch):
+    """Selecting 'Other frameworks…' shows guidance and aborts cleanly."""
+    # Ensure there is at least one community plugin available in the submenu.
+    monkeypatch.setattr(
+        type(new_command),
+        "KNOWN_COMMUNITY_BOOTSTRAPS",
+        [
+            {
+                "display_name": "Fake Framework",
+                "entry_point": "fake_framework",
+                "package": "fake-framework",
+                "description": "A fake community framework.",
+            }
+        ],
+        raising=False,
+    )
+
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
+    new_command.console.values = [
+        str(other_index),  # Other frameworks (main menu)
+        "1",  # Select first community option
+    ]
+
+    with pytest.raises(SystemExit) as excinfo:
+        new_command.create_bootstrap(
+            context={"app_name": "myapplication", "author": "Grace Hopper"},
+            project_overrides={},
+        )
+
+    assert excinfo.value.code == 0
+
+    out = capsys.readouterr().out
+    assert "-- Community GUI Framework" in out
+    assert "Fake Framework" in out
+    assert "python -m pip install fake-framework" in out
+    assert "then re-run `briefcase new`" in out
+
+
+def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypatch):
+    """Installed community bootstraps are not shown in the submenu."""
+
+    class DummyBootstrap(BaseGuiBootstrap):
+        fields = ()
+
+    class DummyEntryPoint:
+        def __init__(self, name):
+            self.name = name
+
+        def load(self):
+            return DummyBootstrap
+
+    # Wrap real entry points so built-ins remain available. Simulate PPB as
+    # installed, but ensure pygame-ce remains available in the community menu.
+    real_entry_points = briefcase.commands.new.entry_points
+
+    def patched_entry_points(*, group):
+        eps = list(real_entry_points(group=group))
+        if group == "briefcase.bootstraps":
+            eps = [ep for ep in eps if ep.name != "pygame_ce"]
+            eps.append(DummyEntryPoint("ppb"))
+        return eps
+
+    monkeypatch.setattr(briefcase.commands.new, "entry_points", patched_entry_points)
+
+    # Determine the menu index for the sentinel entry, since installed GUI
+    # bootstraps can change the menu ordering.
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
+    new_command.console.values = [
+        str(other_index),  # Other frameworks (main menu)
+        "1",  # Select first visible community option
+    ]
+
+    with pytest.raises(SystemExit) as excinfo:
+        new_command.create_bootstrap(
+            context={"app_name": "myapplication", "author": "Grace Hopper"},
+            project_overrides={},
+        )
+
+    assert excinfo.value.code == 0
+
+    out = capsys.readouterr().out
+
+    assert "Community GUI Framework" in out
+    assert "Pygame-ce" in out
+    assert "PursuedPyBear" not in out
+
+
+def test_other_frameworks_no_available_plugins(
+    new_command,
+    capsys,
+    monkeypatch,
+    mock_builtin_bootstraps,
+):
+    """If no community GUI bootstraps are available, show guidance and exit cleanly."""
+    # Simulate that all known community bootstraps are already installed
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        lambda: {
+            **mock_builtin_bootstraps,
+            "pygame_ce": EmptyBootstrap,
+            "Toga Positron (Django server)": EmptyBootstrap,
+        },
+    )
+
+    bootstraps = briefcase.commands.new.get_gui_bootstraps()
+    choices = new_command._gui_bootstrap_choices(bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
+    new_command.console.values = [
+        str(other_index),  # Select "Other frameworks"
+    ]
+
+    with pytest.raises(SystemExit) as excinfo:
+        new_command.create_bootstrap(
+            context={"app_name": "myapplication", "author": "Grace Hopper"},
+            project_overrides={},
+        )
+
+    assert excinfo.value.code == 0
+
+    out = capsys.readouterr().out
+    assert "GUI frameworks listed here are provided by third-party plugins" in out
+    assert (
+        "No additional community GUI bootstraps are currently available to install."
+        in out
+    )
+    assert "Browse options at https://beeware.org/bee/briefcase-bootstraps" in out
+    assert "Re-run `briefcase new`" in out
 
 
 def test_question_sequence_with_overrides(
@@ -235,7 +377,7 @@ def test_question_sequence_with_bad_bootstrap_override(
 
     # Prime a bad answer for the bootstrap question
     new_command.console.values = [
-        "6",  # None
+        "7",  # None
     ]
 
     class GuiBootstrap:
