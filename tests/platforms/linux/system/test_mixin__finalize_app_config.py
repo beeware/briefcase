@@ -79,7 +79,8 @@ def test_nodocker_non_freedesktop(create_command, first_app_config, tmp_path):
     # Finalize the app config
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Could not find the /etc/os-release file. Is this a FreeDesktop-compliant Linux distribution\?",
+        match=r"Could not find the /etc/os-release file. Is this a "
+        r"FreeDesktop-compliant Linux distribution\?",
     ):
         create_command.finalize_app_config(first_app_config)
 
@@ -170,7 +171,8 @@ def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_
 def test_properties(create_command, first_app_config):
     """The final app config is the result of merging target properties, plus other
     derived properties."""
-    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    # Run this test as "docker"; however, the things we're testing
+    # aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -246,7 +248,8 @@ def test_properties(create_command, first_app_config):
 
 def test_properties_unknown_basevendor(create_command, first_app_config):
     """If the base vendor can't be identified, the merge still succeeds."""
-    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    # Run this test as "docker"; however, the things we're testing
+    # aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -307,7 +310,8 @@ def test_properties_unknown_basevendor(create_command, first_app_config):
 
 def test_properties_no_basevendor_config(create_command, first_app_config):
     """If there's no basevendor config, the merge still succeeds."""
-    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    # Run this test as "docker"; however, the things we're testing
+    # aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -369,7 +373,8 @@ def test_properties_no_basevendor_config(create_command, first_app_config):
 
 def test_properties_no_vendor(create_command, first_app_config):
     """If there's no vendor-specific config, the merge succeeds."""
-    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    # Run this test as "docker"; however, the things we're testing
+    # aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -421,7 +426,8 @@ def test_properties_no_vendor(create_command, first_app_config):
 
 def test_properties_no_version(create_command, first_app_config):
     """If there's no version-specific config, the merge succeeds."""
-    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    # Run this test as "docker"; however, the things we're testing
+    # aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")
@@ -519,7 +525,8 @@ def test_passive_mixin(dummy_console, first_app_config, tmp_path):
 def test_cascading_distribution_properties(create_command, first_app_config):
     """Properties should be cascading/accumulating, and vendor-level properties should
     overwrite os-level ones when in a dictionary."""
-    # Run this test as "docker"; however, the things we're testing aren't docker specific.
+    # Run this test as "docker"; however, the things we're testing
+    # aren't docker specific.
     create_command.target_image = "somevendor:surprising"
     create_command.tools.docker = MagicMock()
     create_command.target_glibc_version = MagicMock(return_value="2.42")

@@ -133,7 +133,8 @@ def test_unable_to_start(adb):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to start com.example.sample.package/com.example.sample.activity on exampleDevice",
+        match=r"Unable to start "
+        r"com.example.sample.package/com.example.sample.activity on exampleDevice",
     ):
         adb.start_app(
             "com.example.sample.package", "com.example.sample.activity", [], {}

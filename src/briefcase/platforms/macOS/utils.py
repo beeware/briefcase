@@ -274,9 +274,10 @@ class AppPackagesMergeMixin:
                                     f"between sources; ignoring "
                                     f"{source_app_packages.suffix[1:]} version. "
                                     f"This is usually safe if the file content is not "
-                                    f"used at runtime. See "
-                                    f"https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels "
-                                    f"for more details."
+                                    f"used at runtime. See https://briefcase."
+                                    f"readthedocs.io/en/stable/reference/platforms/"
+                                    f"macOS/index.html#inconsistent-content-in-non-"
+                                    f"universal-wheels for more details."
                                 )
                         else:
                             # The file doesn't exist yet; copy it as is (including

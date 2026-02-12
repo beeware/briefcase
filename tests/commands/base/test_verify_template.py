@@ -38,6 +38,7 @@ def test_platform_version_incompatible(base_command, my_app, template_version):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The app template used to generate this app is not compatible with this version\nof Briefcase\.",
+        match=r"The app template used to generate this app is not compatible "
+        r"with this version\nof Briefcase\.",
     ):
         base_command.verify_app_template(my_app)

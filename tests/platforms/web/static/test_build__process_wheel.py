@@ -129,10 +129,12 @@ def test_process_wheel_legacy_css_warn_once(build_command, tmp_path, capsys):
 
     output = capsys.readouterr().out
     assert (
-        "dummy-1.2.3-py3-none-any.whl: legacy '/static' CSS file dummy/static/one.css detected."
+        "dummy-1.2.3-py3-none-any.whl: legacy '/static' CSS file "
+        "dummy/static/one.css detected."
         in output
     )
     assert (
-        "dummy-1.2.3-py3-none-any.whl: legacy '/static' CSS file dummy/static/two.css detected."
+        "dummy-1.2.3-py3-none-any.whl: legacy '/static' CSS file "
+        "dummy/static/two.css detected."
         in output
     )

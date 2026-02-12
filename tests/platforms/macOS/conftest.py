@@ -76,7 +76,8 @@ entitlements_path="Entitlements.plist"
         """<?xml?>\n<installer-script></installer-script>""",
     )
 
-    # Create the XCframework Info.plist file, with a deliberately weird min macOS version
+    # Create the XCframework Info.plist file, with a deliberately weird
+    # min macOS version
     create_plist_file(
         (
             tmp_path

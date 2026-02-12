@@ -559,7 +559,8 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
                         target_glibc = match.group(0)
                     else:
                         raise BriefcaseCommandError(
-                            "Unable to parse glibc dependency version from version string."
+                            "Unable to parse glibc dependency version "
+                            "from version string."
                         )
                 except subprocess.CalledProcessError as e:
                     raise BriefcaseCommandError(
@@ -1216,8 +1217,10 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
                         "%global __brp_check_rpaths %{nil}",
                         # Disable all the auto-detection that tries to magically
                         # determine requirements from the binaries
-                        f"%global __requires_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
-                        f"%global __provides_exclude_from ^%{{_libdir}}/{app.app_name}/.*$",
+                        f"%global __requires_exclude_from "
+                        f"^%{{_libdir}}/{app.app_name}/.*$",
+                        f"%global __provides_exclude_from "
+                        f"^%{{_libdir}}/{app.app_name}/.*$",
                         # Disable debug processing.
                         "%global _enable_debug_package 0",
                         "%global debug_package %{nil}",

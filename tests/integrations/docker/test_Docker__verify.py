@@ -198,7 +198,8 @@ Client:
 Server:
 ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
 
-Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
+Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: \
+dial unix /var/run/docker.sock: connect: permission denied
 errors pretty printing info"""
 
     mock_tools.subprocess.check_output.side_effect = [
@@ -224,7 +225,8 @@ Client:
  Debug Mode: false
 
 Server:
-ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
+ERROR: Error response from daemon: \
+dial unix docker.raw.sock: connect: connection refused
 errors pretty printing info
 """,  # this is the error shown on mac
         """
@@ -232,7 +234,8 @@ Client:
  Debug Mode: false
 
 Server:
-ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+ERROR: Cannot connect to the Docker daemon at \
+unix:///var/run/docker.sock. Is the docker daemon running?
 errors pretty printing info""",  # this is the error show on linux
     ],
 )
@@ -284,7 +287,8 @@ def test_buildx_plugin_not_installed(mock_tools):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Docker is installed and available for use but the buildx plugin\nis not installed",
+        match="Docker is installed and available for use but the buildx "
+        r"plugin\nis not installed",
     ):
         Docker.verify(mock_tools)
 

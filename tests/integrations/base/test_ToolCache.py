@@ -21,7 +21,7 @@ def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
     # Tools that are intentionally not annotated in ToolCache.
     tools_unannotated = {"cookiecutter"}
-    # Tool names to exclude from the dynamic annotation checks; they are manually checked.
+    # Tool names to exclude from dynamic annotation checks; manually checked.
     tool_names_skip_dynamic_check = {
         "app_context",  # Tested by the Docker module
         "git",  # An external API, not a Briefcase Tool

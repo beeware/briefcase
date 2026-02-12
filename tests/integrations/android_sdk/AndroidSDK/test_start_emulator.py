@@ -382,7 +382,7 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
         "\n",  # gets in to emulator has_booted() if block
         "\n",  # enters has_booted() while loop
         "\n",  # one loop waiting for simulator to finish booting
-        "1\n",  # successful boot...except poll() will return non-None first raising failure
+        "1\n",  # successful boot...except poll() returns non-None first raising failure
     ]
 
     # poll() on the process returns failure during simulator boot

@@ -46,7 +46,8 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
         ),
         # macOS App log
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) Hello World!",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) Hello "
+            "World!",
             ("Hello World!", True),
         ),
         # Empty macOS App log
@@ -56,20 +57,24 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
         ),
         # iOS App log (old style .so libraries)
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) Hello World!",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-312-iphonesimulator.so) Hello World!",
             ("Hello World!", True),
         ),
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.so) Hello World!",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-38-iphonesimulator.so) Hello World!",
             ("Hello World!", True),
         ),
         # iOS App log (old style .dylib libraries)
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) Hello World!",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-312-iphonesimulator.dylib) Hello World!",
             ("Hello World!", True),
         ),
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.dylib) Hello World!",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-38-iphonesimulator.dylib) Hello World!",
             ("Hello World!", True),
         ),
         # iOS App log
@@ -79,20 +84,24 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
         ),
         # Empty iOS App log (old style .so binaries)
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) ",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-312-iphonesimulator.so) ",
             ("", True),
         ),
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.so) ",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-38-iphonesimulator.so) ",
             ("", True),
         ),
         # Empty iOS App log (old style .dylib binaries)
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) ",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-312-iphonesimulator.dylib) ",
             ("", True),
         ),
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-38-iphonesimulator.dylib) ",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-38-iphonesimulator.dylib) ",
             ("", True),
         ),
         # Empty iOS App log
@@ -107,18 +116,21 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
         ),
         # Log content that contains square brackets
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) Test [1/5] ... OK",
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) Test "
+            "[1/5] ... OK",
             ("Test [1/5] ... OK", True),
         ),
         # Log content that contains `.so`
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) "
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-312-iphonesimulator.so) "
             "A problem (foo.so) try to avoid it",
             ("A problem (foo.so) try to avoid it", True),
         ),
         # Log content that contains `.dylib`
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) "
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] "
+            "(_ctypes.cpython-312-iphonesimulator.dylib) "
             "A problem (foo.dylib) try to avoid it",
             ("A problem (foo.dylib) try to avoid it", True),
         ),

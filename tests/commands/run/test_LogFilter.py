@@ -255,6 +255,7 @@ def test_log_filter(
         assert log_filter.returncode is None
         assert not terminated
     else:
-        # The success/failure condition was detected, and the termination condition was processed
+        # The success/failure condition was detected, and the termination
+        # condition was processed
         assert log_filter.returncode == returncode
         assert terminated

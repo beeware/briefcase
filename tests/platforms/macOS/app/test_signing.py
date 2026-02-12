@@ -102,8 +102,10 @@ def test_explicit_app_identity_checksum(dummy_command):
     """If the user nominates an app identity by checksum, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+        "Example Corp Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+        "(BXAH5H869S)",
     }
 
     # The identity will be the one the user specified as an option.
@@ -122,8 +124,10 @@ def test_explicit_app_identity_name(dummy_command):
     """If the user nominates an app identity by name, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+        "Example Corp Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+        "(BXAH5H869S)",
     }
 
     # The identity will be the one the user specified as an option.
@@ -142,8 +146,10 @@ def test_invalid_app_identity_name(dummy_command):
     """If the user nominates an app identity by name, it is used."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+        "Example Corp Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+        "(BXAH5H869S)",
     }
 
     # The identity will be the one the user specified as an option.
@@ -159,7 +165,8 @@ def test_implied_app_identity(dummy_command):
     option."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+        "(BXAH5H869S)",
     }
 
     # Return option 2
@@ -198,8 +205,10 @@ def test_select_app_identity(dummy_command):
     """The user can select from a list of app identities."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+        "Example Corp Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+        "(BXAH5H869S)",
     }
 
     # Return option 3
@@ -221,8 +230,10 @@ def test_select_app_identity_no_adhoc(dummy_command):
     """Adhoc identities can be excluded from the list of options."""
     # get_identities will return some options.
     dummy_command.get_identities.return_value = {
-        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+        "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+        "Example Corp Ltd (Z2K4383DLE)",
+        "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+        "(BXAH5H869S)",
     }
 
     # Return option 2
@@ -244,17 +255,24 @@ def test_select_app_identity_no_adhoc(dummy_command):
 
 def test_select_installer_identity(dummy_command):
     """The user can select from a list of installer identities."""
-    # get_identities is invoked twice - once with app identities, and once with all identities.
+    # get_identities is invoked twice - once with app identities, and once
+        # with all identities.
     dummy_command.get_identities.side_effect = [
         {
-            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (Z2K4383DLE)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+            "(BXAH5H869S)",
         },
         {
-            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-            "4C1067833814CE4738EBD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
-            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
-            "8903EC63C238B04C138EBD6F067833814CE47CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (Z2K4383DLE)",
+            "4C1067833814CE4738EBD6F8903EC63C238B0CA3": "Developer ID Installer: "
+            "Example Corp Ltd (Z2K4383DLE)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+            "(BXAH5H869S)",
+            "8903EC63C238B04C138EBD6F067833814CE47CA3": "Developer ID Installer: "
+            "Example Corp Ltd (Z2K4383DLE)",
         },
     ]
 
@@ -281,26 +299,36 @@ def test_select_installer_identity(dummy_command):
 def test_installer_identity_matching_app(dummy_command):
     """The list of possible installer identities includes non-app identities from the
     same team."""
-    # get_identities is invoked twice - once with app identities, and once with all identities.
+    # get_identities is invoked twice - once with app identities, and once
+        # with all identities.
     dummy_command.get_identities.side_effect = [
         {
-            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
-            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (Z2K4383DLE)",
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (83DLEZ2K43)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+            "(BXAH5H869S)",
         },
         {
             # The app identity that will be selected
-            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (Z2K4383DLE)",
             # A different app identity
-            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (83DLEZ2K43)",
             # An installer identity that doesn't match the selected app identity
-            "1067833814CE4738EB4CD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (83DLEZ2K43)",
+            "1067833814CE4738EB4CD6F8903EC63C238B0CA3": "Developer ID Installer: "
+            "Example Corp Ltd (83DLEZ2K43)",
             # An installer identity that *does* match the selected app identity
-            "4C1067833814CE4738EBD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+            "4C1067833814CE4738EBD6F8903EC63C238B0CA3": "Developer ID Installer: "
+            "Example Corp Ltd (Z2K4383DLE)",
             # A different app identity
-            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+            "(BXAH5H869S)",
             # Another installer identity that match the selected app identity
-            "8903EC63C238B04C138EBD6F067833814CE47CA3": "Developer ID Installer: Example Corp Ltd (Z2K4383DLE)",
+            "8903EC63C238B04C138EBD6F067833814CE47CA3": "Developer ID Installer: "
+            "Example Corp Ltd (Z2K4383DLE)",
         },
     ]
 
@@ -328,22 +356,30 @@ def test_installer_identity_matching_app(dummy_command):
 def test_installer_identity_no_match(dummy_command):
     """The list of possible installer identities includes non-app identities from the
     same team."""
-    # get_identities is invoked twice - once with app identities, and once with all identities.
+    # get_identities is invoked twice - once with app identities, and once
+        # with all identities.
     dummy_command.get_identities.side_effect = [
         {
-            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
-            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
-            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (Z2K4383DLE)",
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (83DLEZ2K43)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+            "(BXAH5H869S)",
         },
         {
             # The app identity that will be selected
-            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (Z2K4383DLE)",
+            "38EBD6F8903EC63C238B04C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (Z2K4383DLE)",
             # A different app identity
-            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: Example Corp Ltd (83DLEZ2K43)",
+            "EBD6F8903EC63C238B0384C1067833814CE47CA3": "Developer ID Application: "
+            "Example Corp Ltd (83DLEZ2K43)",
             # An installer identity that doesn't match the selected app identity
-            "1067833814CE4738EB4CD6F8903EC63C238B0CA3": "Developer ID Installer: Example Corp Ltd (83DLEZ2K43)",
+            "1067833814CE4738EB4CD6F8903EC63C238B0CA3": "Developer ID Installer: "
+            "Example Corp Ltd (83DLEZ2K43)",
             # A different app identity
-            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith (BXAH5H869S)",
+            "11E77FB58F13F6108B38110D5D92233C58ED38C5": "iPhone Developer: Jane Smith "
+            "(BXAH5H869S)",
         },
     ]
 

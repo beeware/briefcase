@@ -427,7 +427,8 @@ def test_connection_error(mock_tools):
     # Keep using the fixture though, so that it still gets cleaned up after the test
     mock_tools.httpx = mock.Mock(wraps=httpx)
 
-    # Failure leads to filename never being read, so the error message will use the full URL
+    # Failure leads to filename never being read, so the error message will
+    # use the full URL
     # rather than the filename
     with pytest.raises(NetworkFailure, match=f"Unable to download {url}"):
         mock_tools.file.download(

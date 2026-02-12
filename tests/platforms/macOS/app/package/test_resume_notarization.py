@@ -294,7 +294,8 @@ def test_resume_notarize_pkg(
         "distribution file",
     )
 
-    # 2 calls are made to determine identity - the app identity, then the installer identity.
+    # 2 calls are made to determine identity - the app identity,
+    # then the installer identity.
     package_command.select_identity.side_effect = [
         sekrit_identity,
         sekrit_installer_identity,
@@ -343,7 +344,8 @@ def test_resume_notarize_pkg(
         submission_id=submission_id,
     )
 
-    # Identity selection excluded adhoc identities, but also confirmed notarization identity
+    # Identity selection excluded adhoc identities, but also confirmed
+    # notarization identity
     assert package_command.select_identity.mock_calls == [
         mock.call(
             identity=sekrit_identity.id,

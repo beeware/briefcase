@@ -111,7 +111,8 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
                 "PYTHONPATH": str(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
-                    / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/wonky-iphonesimulator"
+                    / "Python.xcframework/ios-arm64_x86_64-simulator/"
+                    "platform-config/wonky-iphonesimulator"
                 ),
                 "PIP_REQUIRE_VIRTUALENV": None,
             },
@@ -416,7 +417,9 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": (
+                        "I need to connect to bluetooth device."
+                    )
                 },
             },
         ),
@@ -447,39 +450,47 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
         # Coarse location permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
+                "coarse_location": ("I need to know roughly where you are"),
             },
             {},
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
                 }
             },
         ),
         # Fine location permissions
         (
             {
-                "fine_location": "I need to know exactly where you are",
+                "fine_location": ("I need to know exactly where you are"),
             },
             {},
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 }
             },
         ),
         # Background location permissions
         (
             {
-                "background_location": "I always need to know where you are",
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {
                 "info": {
-                    "NSLocationWhenInUseUsageDescription": "I always need to know where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -487,15 +498,19 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
         # Coarse location background permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
-                "background_location": "I always need to know where you are",
+                "coarse_location": ("I need to know roughly where you are"),
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -503,15 +518,19 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
         # Fine location background permissions
         (
             {
-                "fine_location": "I need to know exactly where you are",
-                "background_location": "I always need to know where you are",
+                "fine_location": ("I need to know exactly where you are"),
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -519,30 +538,36 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
         # Coarse and fine location permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
-                "fine_location": "I need to know exactly where you are",
+                "coarse_location": ("I need to know roughly where you are"),
+                "fine_location": ("I need to know exactly where you are"),
             },
             {},
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 }
             },
         ),
         # Coarse and fine background location permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
-                "fine_location": "I need to know exactly where you are",
-                "background_location": "I always need to know where you are",
+                "coarse_location": ("I need to know roughly where you are"),
+                "fine_location": ("I need to know exactly where you are"),
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -602,11 +627,13 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel
     mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
     create_command.tools[first_app_generated].app_context = mock_app_context
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a RequirementsInstallError
+    # with an install hint
     with pytest.raises(
         RequirementsInstallError,
         match=(
-            r"This may be because the `iphoneos` wheels that are available are not compatible\n"
+            r"This may be because the `iphoneos` wheels that are available "
+            r"are not compatible\n"
             r"with a minimum iOS version of 15.4."
         ),
     ):
@@ -637,12 +664,14 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulato
     ]
     create_command.tools[first_app_generated].app_context = mock_app_context
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a RequirementsInstallError
+    # with an install hint
     with pytest.raises(
         RequirementsInstallError,
         match=(
             r"This may indicate that an `iphoneos` wheel could be found, but an\n"
-            r"`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
+            r"`iphonesimulator` wheel could not be found; or that the "
+            r"`iphonesimulator`\n"
             r"binary wheels that are available are not compatible with a minimum iOS\n"
             r"version of 15.4.\n"
         ),

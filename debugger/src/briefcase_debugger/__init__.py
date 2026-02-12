@@ -16,7 +16,8 @@ def start_remote_debugger():
         if config_str is None:
             if verbose:
                 print(
-                    "No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting."
+                    "No 'BRIEFCASE_DEBUGGER' environment variable found. "
+                    "Debugger not starting."
                 )
             return  # If BRIEFCASE_DEBUGGER is not set, this packages does nothing...
 

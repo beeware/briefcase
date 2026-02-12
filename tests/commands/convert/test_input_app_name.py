@@ -20,7 +20,8 @@ def test_no_pep621_data(convert_command, monkeypatch):
 
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString(
-            "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
+            "Based on your PEP508 formatted directory name, "
+            "we suggest an app name of 'test-app-name'"
         ),
         description="App Name",
         default="test-app-name",
@@ -54,7 +55,8 @@ def test_invalid_hint_app_name(convert_command, monkeypatch):
 
     mock_text_question.assert_called_once_with(
         intro=NoMatchString(
-            "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
+            "Based on your PEP508 formatted directory name, "
+            "we suggest an app name of 'test-app-name'"
         ),
         description="App Name",
         default="hello-world",
@@ -72,7 +74,8 @@ def test_hint_is_canonicalized(convert_command, monkeypatch):
 
     mock_text_question.assert_called_once_with(
         intro=PartialMatchString(
-            "Based on your PEP508 formatted directory name, we suggest an app name of 'test-app-name'"
+            "Based on your PEP508 formatted directory name, "
+            "we suggest an app name of 'test-app-name'"
         ),
         description="App Name",
         default="test-app-name",

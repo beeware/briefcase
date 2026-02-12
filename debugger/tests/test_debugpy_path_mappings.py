@@ -61,7 +61,8 @@ def test_mappings_none(monkeypatch):
             ],
             id="windows",
         ),
-        # Windows with `app_packages_path_mappings` (currently not used by briefcase, but principally possible)
+        # Windows with `app_packages_path_mappings`
+        # (currently not used by briefcase, but principally possible)
         pytest.param(
             "nt",
             AppPathMappings(
@@ -101,16 +102,24 @@ def test_mappings_none(monkeypatch):
             ),
             None,
             [
-                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13",
-                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13/lib-dynload",
-                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app",
-                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages",
-                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app_packages",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app"
+                "/Contents/Frameworks/Python.framework/Versions/3.13/lib/python3.13",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app"
+                "/Contents/Frameworks/Python.framework/Versions/3.13"
+                "/lib/python3.13/lib-dynload",
+                "/PROJECT_ROOT/build/helloworld/macos/app/"
+                "Hello World.app/Contents/Resources/app",
+                "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app"
+                "/Contents/Frameworks/Python.framework/Versions/3.13"
+                "/lib/python3.13/site-packages",
+                "/PROJECT_ROOT/build/helloworld/macos/app/"
+                "Hello World.app/Contents/Resources/app_packages",
             ],
             [
                 (
                     "/PROJECT_ROOT/src/helloworld",
-                    "/PROJECT_ROOT/build/helloworld/macos/app/Hello World.app/Contents/Resources/app/helloworld",
+                    "/PROJECT_ROOT/build/helloworld/macos/app/"
+                    "Hello World.app/Contents/Resources/app/helloworld",
                 )
             ],
             id="macos",
@@ -128,20 +137,29 @@ def test_mappings_none(monkeypatch):
                 host_folder="/APP_PACKAGES_PATH/app_packages.iphonesimulator",
             ),
             [
-                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13",
-                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13/lib-dynload",
-                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app",
-                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13/site-packages",
-                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app_packages",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                "/Application/RANDOM_NUMBER/Hello World.app/python/lib/python3.13",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                "/Application/RANDOM_NUMBER/Hello World.app/python/lib"
+                "/python3.13/lib-dynload",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                "/Application/RANDOM_NUMBER/Hello World.app/app",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                "/Application/RANDOM_NUMBER/Hello World.app/python/lib"
+                "/python3.13/site-packages",
+                "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                "/Application/RANDOM_NUMBER/Hello World.app/app_packages",
             ],
             [
                 (
                     "/PROJECT_ROOT/src/helloworld",
-                    "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app/helloworld",
+                    "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                    "/Application/RANDOM_NUMBER/Hello World.app/app/helloworld",
                 ),
                 (
                     "/APP_PACKAGES_PATH/app_packages.iphonesimulator",
-                    "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle/Application/RANDOM_NUMBER/Hello World.app/app_packages",
+                    "CoreSimulator/Devices/RANDOM_NUMBER/data/Containers/Bundle"
+                    "/Application/RANDOM_NUMBER/Hello World.app/app_packages",
                 ),
             ],
             id="ios",

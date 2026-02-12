@@ -16,7 +16,8 @@ def mock_tools(mock_tools, tmp_path) -> ToolCache:
     # Mock stdlib subprocess module
     mock_tools.subprocess._subprocess = MagicMock(spec_set=subprocess)
 
-    # Reset `os` mock without `spec` so tests can run on Windows where os.getuid doesn't exist.
+    # Reset `os` mock without `spec` so tests can run on Windows where
+    # os.getuid doesn't exist.
     mock_tools.os = MagicMock()
     # Mock user and group IDs for docker image
     mock_tools.os.getuid.return_value = "37"

@@ -111,7 +111,8 @@ def test_x11_is_display_tcp(
     ("is_socket_outcomes", "is_tcp_outcomes", "expected_display_num"),
     [
         ([False], [False], 50),
-        # Due to short-circuiting, only the first iterator is consumed if it returns False
+        # Due to short-circuiting, only the first iterator is consumed if it
+        # returns False
         ([True, False], [False], 51),
         ([True, True, False, True, False], [False, False, False], 52),
         ([True] * 248 + [False, False], [True, False], 299),
@@ -365,9 +366,11 @@ def test_x11_write_xauth_success(mock_tools, tmp_path, sub_check_output_kw):
                     "-",
                 ],
                 input=(
-                    "ffff 0007 6a757069746572 0000  0012 4d49542d4d414749432d434f4f4b49452d31 "
+                    "ffff 0007 6a757069746572 0000  "
+                    "0012 4d49542d4d414749432d434f4f4b49452d31 "
                     "0010 fa4b61837675f1581427e0c937701439\n"
-                    "ffff 0007 6a757069746572 0000  0012 4d49542d4d414749432d434f4f4b49452d31 "
+                    "ffff 0007 6a757069746572 0000  "
+                    "0012 4d49542d4d414749432d434f4f4b49452d31 "
                     "0010 fa4b61837675f1581427e0c937701439"
                 ),
                 **sub_check_output_kw,
@@ -477,7 +480,8 @@ def test_x11_passthrough_missing_DISPLAY(mock_tools, DISPLAY):
     with (
         pytest.raises(
             BriefcaseCommandError,
-            match="The DISPLAY environment variable must be set to run an app in Docker",
+            match="The DISPLAY environment variable must be set to run "
+            "an app in Docker",
         ),
         mock_tools.docker.x11_passthrough({}),
     ):
@@ -594,7 +598,8 @@ def test_x11_passthrough_xauth_fails(mock_tools, in_kwargs, out_kwargs, capsys):
     assert capsys.readouterr().out == (
         "An X11 authentication database could not be created for the display.\n"
         "\n"
-        "Briefcase will proceed, but if access to the display is rejected, this may be why.\n"
+        "Briefcase will proceed, but if access to the display is rejected, "
+        "this may be why.\n"
     )
 
 

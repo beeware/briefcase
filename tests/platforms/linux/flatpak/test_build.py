@@ -57,6 +57,7 @@ def test_missing_runtime_config(build_command, first_app_config):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",
+        match="Briefcase configuration error: The App does not "
+        "specify the Flatpak runtime to use",
     ):
         build_command.build_app(first_app_config)

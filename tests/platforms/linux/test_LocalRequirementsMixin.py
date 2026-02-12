@@ -218,6 +218,9 @@ def test_install_app_requirements_no_docker(
     )
 
     # pip was invoked natively
+    app_packages = (
+        tmp_path / "base_path/build/first-app/tester/dummy/path/to/app_packages"
+    )
     no_docker_create_command.tools[
         first_app_config
     ].app_context.run.assert_called_once_with(
@@ -232,7 +235,7 @@ def test_install_app_requirements_no_docker(
             "--disable-pip-version-check",
             "--upgrade",
             "--no-user",
-            f"--target={tmp_path / 'base_path/build/first-app/tester/dummy/path/to/app_packages'}",
+            f"--target={app_packages}",
             "foo==1.2.3",
             "bar>=4.5",
         ],
@@ -403,7 +406,8 @@ def test_install_app_requirements_with_bad_local(
     # pip was *not* invoked inside docker.
     create_command.tools.subprocess.run.assert_not_called()
 
-    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    # The local requirements path exists, and is empty. It has been
+    # purged, but not refilled.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert len(list(local_requirements_path.iterdir())) == 0
@@ -435,7 +439,8 @@ def test_install_app_requirements_with_missing_local_build(
     # pip was *not* invoked inside docker.
     create_command.tools.subprocess.run.assert_not_called()
 
-    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    # The local requirements path exists, and is empty. It has been
+    # purged, but not refilled.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert len(list(local_requirements_path.iterdir())) == 0
@@ -473,7 +478,8 @@ def test_install_app_requirements_with_bad_local_file(
     # pip was *not* invoked inside docker.
     create_command.tools.subprocess.run.assert_not_called()
 
-    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    # The local requirements path exists, and is empty. It has been
+    # purged, but not refilled.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert len(list(local_requirements_path.iterdir())) == 0

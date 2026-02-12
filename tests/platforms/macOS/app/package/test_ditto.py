@@ -36,8 +36,9 @@ def test_ditto(
 
     # The archive contains the app as the only top level element.
     with ZipFile(archive_path) as archive:
-        # zip file can include a “__MACOSX” folder for each document that contains information about
-        # the file useful for Finder and will not be in the unzipped set of files
+        # zip file can include a "__MACOSX" folder for each document that
+        # contains information about the file useful for Finder and will
+        # not be in the unzipped set of files
         archived_files = [
             fn for fn in archive.namelist() if not fn.startswith("__MACOSX/")
         ]
@@ -54,7 +55,8 @@ def test_ditto(
             "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/",
             "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/Extras",
             "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/libs/",
-            "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/libs/extras.dylib",
+            "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/libs/ext"
+            "ras.dylib",
             "First App.app/Contents/Frameworks/Extras.framework/Versions/Current",
             "First App.app/Contents/Info.plist",
             "First App.app/Contents/MacOS/",
@@ -64,7 +66,8 @@ def test_ditto(
             "First App.app/Contents/Resources/app_packages/Extras.app/",
             "First App.app/Contents/Resources/app_packages/Extras.app/Contents/",
             "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/",
-            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/Extras",
+            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/MacOS/"
+            "Extras",
             "First App.app/Contents/Resources/app_packages/first.other",
             "First App.app/Contents/Resources/app_packages/first_dylib.dylib",
             "First App.app/Contents/Resources/app_packages/first_so.so",
@@ -72,7 +75,8 @@ def test_ditto(
             "First App.app/Contents/Resources/app_packages/second.other",
             "First App.app/Contents/Resources/app_packages/special.binary",
             "First App.app/Contents/Resources/app_packages/subfolder/",
-            "First App.app/Contents/Resources/app_packages/subfolder/second_dylib.dylib",
+            "First App.app/Contents/Resources/app_packages/subfolder/second_dylib.dyl"
+            "ib",
             "First App.app/Contents/Resources/app_packages/subfolder/second_so.so",
             "First App.app/Contents/Resources/app_packages/unknown.binary",
         ]

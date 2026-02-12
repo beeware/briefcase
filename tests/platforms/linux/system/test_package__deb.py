@@ -254,7 +254,8 @@ def test_deb_package_no_long_description(package_command, first_app_deb, tmp_pat
     # Packaging the app will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"App configuration does not define `long_description`. Debian projects require a long description.",
+        match=r"App configuration does not define `long_description`. "
+        r"Debian projects require a long description.",
     ):
         package_command.package_app(first_app_deb)
 

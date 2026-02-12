@@ -83,7 +83,8 @@ def test_finalize_single(base_command, first_app, second_app):
 
 
 def test_finalize_all_repeat(base_command, first_app, second_app):
-    "Multiple calls to finalize verifies host & tools multiple times, but only once on config"
+    """Multiple calls to finalize verifies host & tools multiple times, but
+    only once on config."""
     # Finalize apps twice. This is an approximation of what happens
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app configs, each command will
@@ -113,7 +114,8 @@ def test_finalize_all_repeat(base_command, first_app, second_app):
 
 
 def test_finalize_single_repeat(base_command, first_app, second_app):
-    "Multiple calls to finalize verifies host & tools multiple times, but finalizes app config once"
+    """Multiple calls to finalize verifies host & tools multiple times, but
+    finalizes app config once."""
 
     # Finalize app twice. This is an approximation of what happens
     # when a command chain is executed; create, update, build and run will

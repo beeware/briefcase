@@ -41,7 +41,8 @@ def test_unsupported_host_os_with_docker(create_command, host_os, tmp_path):
 
     with pytest.raises(
         UnsupportedHostError,
-        match=r"Linux system projects can only be built on Linux, or on macOS using Docker\.",
+        match=r"Linux system projects can only be built on Linux, "
+        r"or on macOS using Docker\.",
     ):
         create_command()
 
@@ -54,7 +55,8 @@ def test_unsupported_host_os_without_docker(create_command, host_os, tmp_path):
 
     with pytest.raises(
         UnsupportedHostError,
-        match=r"Linux system projects can only be built on Linux, or on macOS using Docker\.",
+        match=r"Linux system projects can only be built on Linux, "
+        r"or on macOS using Docker\.",
     ):
         create_command()
 
@@ -130,7 +132,8 @@ def test_output_format_template_context(
 
 def test_output_format_template_context_no_docker(create_command, first_app_config):
     """If not using Docker, `use_non_root_user` default in template is used."""
-    # Mock the host to Linux to avoid flagging any "always use non-root user on macOS" logic.
+    # Mock the host to Linux to avoid flagging any "always use non-root user
+    # on macOS" logic.
     create_command.tools.host_os = "Linux"
 
     # Add some properties defined in config finalization

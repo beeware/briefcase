@@ -21,7 +21,8 @@ def test_unsupported_abi(mock_tools, android_sdk, host_os, host_arch):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=f"The Android emulator does not currently support {host_os} {host_arch} hardware",
+        match=f"The Android emulator does not currently support "
+        f"{host_os} {host_arch} hardware",
     ):
         android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 
@@ -127,7 +128,8 @@ def test_problem_downloading_system_image(mock_tools, android_sdk):
     # Attempt to verify the system image
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Error while installing the 'system-images;android-31;default;x86_64' Android system image\.",
+        match=r"Error while installing the "
+        r"'system-images;android-31;default;x86_64' Android system image\.",
     ):
         android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 

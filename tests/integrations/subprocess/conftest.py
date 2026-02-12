@@ -6,7 +6,8 @@ import pytest
 
 from briefcase.integrations.subprocess import Subprocess
 
-# hardcoded here since subprocess will only include these constants if Python is literally on Windows
+# hardcoded here since subprocess will only include these constants if
+# Python is literally on Windows
 CREATE_NO_WINDOW = 0x8000000
 CREATE_NEW_PROCESS_GROUP = 0x200
 

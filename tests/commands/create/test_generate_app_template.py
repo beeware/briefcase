@@ -753,5 +753,6 @@ def test_cookiecutter_undefined_variable_in_template(
         BriefcaseConfigError,
         match=f"Briefcase configuration error: {cookiecutter_exception_message}",
     ):
-        # Generating the template with an undefined cookiecutter variable generates an error
+        # Generating the template with an undefined cookiecutter variable
+        # generates an error
         create_command.generate_app_template(myapp)

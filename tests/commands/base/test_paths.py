@@ -43,7 +43,8 @@ def test_data_path_creation_failure(dummy_console, tmp_path, monkeypatch):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Failed to create the Briefcase directory to store tools and support files:",
+        match=r"Failed to create the Briefcase directory "
+        r"to store tools and support files:",
     ):
         DummyCommand(console=dummy_console, data_path=data_path)
 

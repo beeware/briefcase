@@ -93,7 +93,8 @@ def test_older_sdk_error(mock_tools, adb):
     mock_tools.subprocess.check_output.return_value = "\n".join(
         [
             "Performing Push Install",
-            "C:/.../app-debug.apk: 1 file pushed, 0 skipped. 5.5 MB/s (33125287 bytes in 5.768s)",
+            "C:/.../app-debug.apk: 1 file pushed, 0 skipped. "
+            "5.5 MB/s (33125287 bytes in 5.768s)",
             "         pkg: /data/local/tmp/app-debug.apk",
             "Failure [INSTALL_FAILED_OLDER_SDK]",
         ]

@@ -41,7 +41,8 @@ def setup_winsdk_install(
     """Create a mock Windows SDK for the version and arch.
 
     :param base_path: base path to create the SDK in; should be pytest's tmp_path.
-    :param version: SDK version triple, e.g. 1.2.3. The created directory path will include
+    :param version: SDK version triple, e.g. 1.2.3. The created directory path
+        will include
         a servicing version of 0, e.g. base_path/win_sdk/1.2.3.0.
     :param arch: The architecture for the SDK, e.g. amd64 or arm64.
     :param skip_bins: Do not create mock binaries in `bin` directory.
@@ -158,7 +159,8 @@ def test_winsdk_invalid_env_vars(mock_tools, mock_winreg, tmp_path, monkeypatch)
     # Fail validation for missing install from env vars
     with pytest.raises(
         BriefcaseCommandError,
-        match="The 'WindowsSDKDir' and 'WindowsSDKVersion' environment variables do not point",
+        match="The 'WindowsSDKDir' and 'WindowsSDKVersion' environment "
+        "variables do not point",
     ):
         WindowsSDK.verify(mock_tools)
 
@@ -239,7 +241,8 @@ def test_winsdk_nonlatest_install_from_reg(
     expected_output = (
         "\n"
         "[Windows SDK] Finding Suitable Installation...\n"
-        f"Evaluating Registry SDK version '85.0.9.0' at {tmp_path / 'invalid' / 'win_sdk'}\n"
+        f"Evaluating Registry SDK version '85.0.9.0' at "
+        f"{tmp_path / 'invalid' / 'win_sdk'}\n"
         f"Evaluating Registry SDK version '85.0.8.0' at {tmp_path / 'win_sdk'}\n"
         f"Using Windows SDK v85.0.8.0 at {tmp_path / 'win_sdk'}\n"
     )
@@ -257,9 +260,11 @@ def test_winsdk_nonlatest_install_from_reg(
         ([("invalid_1", "85.0.1")], []),
         # One invalid registry install with missing SDK version; no additional installs
         ([("invalid_1", "")], []),
-        # One invalid registry install but directory key lookup fails; no additional installs
+        # One invalid registry install but directory key lookup fails; no
+        # additional installs
         ([("invalid_1", "85.0.1"), (FileNotFoundError, "")], []),
-        # One invalid registry install but version key lookup fails; no additional installs
+        # One invalid registry install but version key lookup fails; no
+        # additional installs
         ([("invalid_1", "85.0.1"), ("invalid_1", FileNotFoundError)], []),
         # Multiple invalid registry installs; no additional installs
         ([("invalid_1", "85.0.1"), ("invalid_2", "85.0.2")], []),
@@ -384,7 +389,8 @@ def test_winsdk_valid_install_from_default_dir(
     expected_output = (
         "\n"
         "[Windows SDK] Finding Suitable Installation...\n"
-        f"Evaluating Default Bin SDK version '86.0.7.0' at {tmp_path / 'invalid' / 'win_sdk'}\n"
+        f"Evaluating Default Bin SDK version '86.0.7.0' at "
+        f"{tmp_path / 'invalid' / 'win_sdk'}\n"
         f"Evaluating Default Bin SDK version '86.0.8.0' at {tmp_path / 'win_sdk'}\n"
         f"Using Windows SDK v86.0.8.0 at {tmp_path / 'win_sdk'}\n"
     )
@@ -437,7 +443,9 @@ def test_winsdk_invalid_install_from_default_dir(
     expected_output = (
         "\n"
         "[Windows SDK] Finding Suitable Installation...\n"
-        f"Evaluating Default Bin SDK version '87.0.7.0' at {tmp_path / 'invalid_1' / 'win_sdk'}\n"
-        f"Evaluating Default Bin SDK version '87.0.8.0' at {tmp_path / 'invalid_2' / 'win_sdk'}\n"
+        f"Evaluating Default Bin SDK version '87.0.7.0' at "
+        f"{tmp_path / 'invalid_1' / 'win_sdk'}\n"
+        f"Evaluating Default Bin SDK version '87.0.8.0' at "
+        f"{tmp_path / 'invalid_2' / 'win_sdk'}\n"
     )
     assert capsys.readouterr().out == expected_output

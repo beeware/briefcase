@@ -101,7 +101,8 @@ def test_single_iOS_runtime(mock_tools, simulator):
         "iOS 13.2": {
             "20C5B052-F47A-4816-8584-9F1500B50477": "iPad Pro (9.7-inch)",
             "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 11",
-            "314E772A-8034-44B4-9B28-3EE80C958F0A": "iPad Pro (12.9-inch) (3rd generation)",
+            "314E772A-8034-44B4-9B28-3EE80C958F0A": "iPad Pro (12.9-inch) "
+            "(3rd generation)",
             "36E4663B-A10F-470F-94E8-05C3DC692AC9": "iPad Pro (11-inch)",
             "5497F9B2-F4F3-454A-A9DD-993DF44EBB63": "iPhone 8 Plus",
             "939B1EF6-C25A-4056-B61F-20A2835E89D6": "iPad (7th generation)",
@@ -155,7 +156,8 @@ def test_multiple_iOS_runtime(mock_tools, simulator):
         "iOS 13.2": {
             "20C5B052-F47A-4816-8584-9F1500B50477": "iPad Pro (9.7-inch)",
             "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 11",
-            "314E772A-8034-44B4-9B28-3EE80C958F0A": "iPad Pro (12.9-inch) (3rd generation)",
+            "314E772A-8034-44B4-9B28-3EE80C958F0A": "iPad Pro (12.9-inch) "
+            "(3rd generation)",
             "36E4663B-A10F-470F-94E8-05C3DC692AC9": "iPad Pro (11-inch)",
             "5497F9B2-F4F3-454A-A9DD-993DF44EBB63": "iPhone 8 Plus",
             "939B1EF6-C25A-4056-B61F-20A2835E89D6": "iPad (7th generation)",
@@ -178,7 +180,8 @@ def test_multiple_iOS_runtime(mock_tools, simulator):
             "CC954566-F315-4692-A754-DECDF72967CD": "iPhone 5",
             "D7BBAD14-38FD-48F5-ACFD-B1193F829216": "iPhone 6",
             "DA9B9F49-A070-4FD7-A6BF-8F49DC72194E": "iPhone 6s Plus",
-            "E582FF8E-A5DC-4985-B6C8-8D6B1795DF62": "iPad Pro (12.9-inch) (2nd generation)",
+            "E582FF8E-A5DC-4985-B6C8-8D6B1795DF62": "iPad Pro (12.9-inch) "
+            "(2nd generation)",
             "E956D6AE-29F5-4780-A02A-D3426B7B4018": "iPad Pro (12.9 inch)",
             "F9A6C462-9A4A-438A-B541-848F0E6DBE5A": "iPhone 6s",
         },
@@ -235,7 +238,8 @@ def test_alternate_format(mock_tools, simulator):
             "9F055949-5DF2-40D8-A955-A8517F213E24": "iPhone 8 Plus",
             "A1970E36-8906-48FF-8B3C-819A0A88D9D6": "iPhone 6 Plus",
             "A604E87D-B2BF-4190-B974-C29FC40A6F15": "iPhone 7 Plus",
-            "AAF12280-0DC2-472F-87C5-2F141A6F0C55": "iPad Pro (12.9-inch) (2nd generation)",
+            "AAF12280-0DC2-472F-87C5-2F141A6F0C55": "iPad Pro (12.9-inch) "
+            "(2nd generation)",
             "AC8D34EB-F42D-4518-A09C-3C3AD7FCAC8C": "iPhone SE",
             "C4DE0942-3A85-4091-98CC-C4A90E2D07C3": "iPhone X",
             "C8E5AD6A-B7EB-480F-89E8-341FD45AAFFC": "iPad Air",
@@ -248,7 +252,8 @@ def test_alternate_format(mock_tools, simulator):
             "04325672-C35F-4E5E-BD08-EAC478B7165C": "iPhone XS",
             "28F0335D-1B4D-4493-A5C5-4E86E2916178": "iPhone 6",
             "28F16D36-8878-489F-A8CF-33E7037D252B": "iPad Pro (9.7-inch)",
-            "512E11C5-5654-4F10-98D7-F75C50DF5DB7": "iPad Pro (12.9-inch) (3rd generation)",
+            "512E11C5-5654-4F10-98D7-F75C50DF5DB7": "iPad Pro (12.9-inch) "
+            "(3rd generation)",
             "53D7FAF6-83D7-415D-A3B4-20A9D8C37C44": "iPhone 5s",
             "5EF8EAA5-9D63-4F53-8896-57F9D59DECF9": "iPhone 6s",
             "61D96B3A-3747-41AC-92F7-2177E467A196": "iPad Pro (10.5-inch)",
@@ -266,7 +271,8 @@ def test_alternate_format(mock_tools, simulator):
             "D637BC6D-A53F-4E78-BDA7-FA0D59303350": "iPad Pro (11-inch)",
             "DC08D810-B9AD-4423-972E-3EE8949BC1F2": "iPad Air",
             "DEE6AF0E-596D-4713-8B57-8C77D45EED80": "iPad Air 2",
-            "F022D86A-E404-46C0-98B2-9AB63AD7008B": "iPad Pro (12.9-inch) (2nd generation)",
+            "F022D86A-E404-46C0-98B2-9AB63AD7008B": "iPad Pro (12.9-inch) "
+            "(2nd generation)",
             "F7EF0E11-864C-42A2-8D80-4DBE78AFD86B": "iPhone 6 Plus",
         },
     }

@@ -165,14 +165,18 @@ existing-key-2 = 2
                     "     -------------------------------------------------->",
                     '    <script type="module">',
                     "        // Hide the splash screen when the page is ready.",
-                    '        import { hooks } from "https://pyscript.net/releases/2024.11.1/core.js";',
+                    '        import { hooks } from "https://pyscript.net/releases/202'
+                    '4.11.1/core.js";',
                     "        hooks.main.onReady.add(() => {",
-                    '            document.getElementById("briefcase-splash").classList.add("hidden");',
+                    '            document.getElementById("briefcase-splash").classLis'
+                    't.add("hidden");',
                     "        });",
                     "    </script>",
                     "",
-                    '    <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">',
-                    '    <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>',
+                    '    <link rel="stylesheet" href="https://pyscript.net/releases/2'
+                    '024.11.1/core.css">',
+                    '    <script type="module" src="https://pyscript.net/releases/202'
+                    '4.11.1/core.js"></script>',
                     "    <!--@@ head-python:end @@-->",
                     "  </head>",
                     "  <body>",
@@ -212,8 +216,10 @@ existing-key-2 = 2
                     "#pyconsole {",
                     "  display: None;",
                     "}",
-                    "/*******************************************************************",
-                    "******************** Wheel contributed styles ********************/",
+                    "/***************************************************************"
+                    "****",
+                    "******************** Wheel contributed styles "
+                    "********************/",
                     "/*@@ css:start @@*/",
                     "/**************************************************",
                     " * dependency 1.2.3 (legacy static CSS: style.css)",
@@ -303,7 +309,10 @@ def test_build_app_invalid_extra_pyscript_toml_content(
     # Building the web app raises an error
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: Extra pyscript.toml content isn't valid TOML: Expected",
+        match=(
+            r"Briefcase configuration error: Extra pyscript.toml "
+            r"content isn't valid TOML: Expected"
+        ),
     ):
         build_command.build_app(first_app_generated)
 
@@ -466,8 +475,10 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     "#pyconsole {",
                     "  display: None;",
                     "}",
-                    "/*******************************************************************",
-                    "******************** Wheel contributed styles ********************/",
+                    "/***************************************************************"
+                    "****",
+                    "******************** Wheel contributed styles "
+                    "********************/",
                     "/*@@ css:start @@*/",
                     "/**************************************************",
                     " * first_app 1.2.3 (legacy static CSS: style.css)",

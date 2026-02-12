@@ -44,7 +44,8 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             ("Python app launched & stored in Android Activity class", True),
         ),
         (
-            "\x1b[32mI/python.stdout: Python app launched & stored in Android Activity class\x1b[0m",
+            "\x1b[32mI/python.stdout: Python app launched & stored in "
+            "Android Activity class\x1b[0m",
             ("Python app launched & stored in Android Activity class", True),
         ),
         (
@@ -68,7 +69,8 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
         ),
         (
-            "\x1b[32mI/python.stderr: test_case (tests.foobar.test_other.TestOtherMethods)\x1b[0m",
+            "\x1b[32mI/python.stderr: test_case "
+            "(tests.foobar.test_other.TestOtherMethods)\x1b[0m",
             ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
         ),
         (

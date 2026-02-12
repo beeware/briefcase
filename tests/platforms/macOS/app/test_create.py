@@ -82,7 +82,9 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": (
+                        "I need to connect to bluetooth device."
+                    )
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -136,7 +138,8 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know roughly where you are",
+                    "NSLocationUsageDescription": "I need to know roughly where you "
+                    "are",
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -154,7 +157,8 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": "I need to know exactly where you "
+                    "are",
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -229,7 +233,8 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": "I need to know exactly where you "
+                    "are",
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -345,7 +350,8 @@ def test_generate_app_template_formal_name_mismatch(
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"The app bundle referenced by external_package_path \(Unexpected Name.app\)\n"
+            r"The app bundle referenced by external_package_path "
+            r"\(Unexpected Name.app\)\n"
             r"does not match the formal name of the app \('First App'\)."
         ),
     ):
@@ -1041,6 +1047,9 @@ def test_install_app_packages_non_universal(
     create_command.find_binary_packages.assert_not_called()
 
     # One request was made to install requirements
+    app_packages = (
+        bundle_path / "First App.app" / "Contents" / "Resources" / "app_packages"
+    )
     assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
         mock.call(
             [
@@ -1054,7 +1063,7 @@ def test_install_app_packages_non_universal(
                 "--disable-pip-version-check",
                 "--upgrade",
                 "--no-user",
-                f"--target={bundle_path / 'First App.app' / 'Contents' / 'Resources' / 'app_packages'}",
+                f"--target={app_packages}",
                 "--only-binary",
                 ":all:",
                 "--platform",
@@ -1194,7 +1203,8 @@ def test_install_support_package(
                 ),
                 ("Python.xcframework/Info.plist", "this is the xcframework"),
                 (
-                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python",
+                    "Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/"
+                    "Current/Python",
                     "this is the library",
                 ),
             ],
@@ -1220,7 +1230,8 @@ def test_install_support_package(
     assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
     assert (
         bundle_path
-        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"
+        / "support/Python.xcframework/macos-arm64_x86_64/"
+        "Python.framework/Versions/Current/Python"
     ).is_file()
     assert (
         bundle_path
@@ -1258,7 +1269,8 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
     create_command.tools[first_app_templated].app_context = mock_app_context
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a
+    # RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
         match=r"x86_64 wheel that is compatible with a minimum\nmacOS version of 12.0",
@@ -1295,7 +1307,8 @@ def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
         CalledProcessError(returncode=1, cmd="pip"),
     ]
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a
+    # RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
         match=r"arm64 wheel that is compatible with a minimum\nmacOS version of 12.0",

@@ -9,7 +9,8 @@ import pytest
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.visualstudio import VisualStudio
 
-MSBUILD_OUTPUT = """Microsoft (R) Build Engine version 17.2.1+52cd2da31 for .NET Framework
+MSBUILD_OUTPUT = """\
+Microsoft (R) Build Engine version 17.2.1+52cd2da31 for .NET Framework
 Copyright (C) Microsoft Corporation. All rights reserved.
 
 17.2.1.25201
@@ -259,7 +260,8 @@ def test_vswhere_bad_executable(mock_tools, vswhere_path):
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
+        match=r"Visual Studio appears to exist, but Briefcase "
+        r"can't retrieve installation metadata.",
     ):
         VisualStudio.verify(mock_tools)
 
@@ -287,7 +289,8 @@ def test_vswhere_bad_content(mock_tools, vswhere_path):
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
+        match=r"Visual Studio appears to exist, but Briefcase "
+        r"can't retrieve installation metadata.",
     ):
         VisualStudio.verify(mock_tools)
 
@@ -307,16 +310,19 @@ def test_vswhere_bad_content(mock_tools, vswhere_path):
 def test_vswhere_non_list_content(mock_tools, vswhere_path):
     """If VSWhere can be executed, but the outermost content isn't a list, an error is
     raised."""
-    # MSBuild is not on the path, and vswhere returns JSON content, but not in the format expected
+    # MSBuild is not on the path, and vswhere returns JSON content, but not in
+    # the format expected
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
-        '{"problem": "JSON but not a list"}',  # vswhere returns JSON content, but not as a list.
+        # vswhere returns JSON content, but not as a list.
+        '{"problem": "JSON but not a list"}',
     ]
 
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
+        match=r"Visual Studio appears to exist, but Briefcase "
+        r"can't retrieve installation metadata.",
     ):
         VisualStudio.verify(mock_tools)
 
@@ -336,7 +342,8 @@ def test_vswhere_non_list_content(mock_tools, vswhere_path):
 def test_vswhere_empty_list_content(mock_tools, vswhere_path):
     """If VSWhere can be executed, but the outermost content is an empty list, an error
     is raised."""
-    # MSBuild is not on the path, and vswhere returns JSON content, but not in the format expected
+    # MSBuild is not on the path, and vswhere returns JSON content, but not in
+    # the format expected
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         "[]",  # vswhere returns empty list JSON content
@@ -345,7 +352,8 @@ def test_vswhere_empty_list_content(mock_tools, vswhere_path):
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.",
+        match=r"Visual Studio appears to exist, but Briefcase "
+        r"can't retrieve installation metadata.",
     ):
         VisualStudio.verify(mock_tools)
 
@@ -365,7 +373,8 @@ def test_vswhere_empty_list_content(mock_tools, vswhere_path):
 def test_vswhere_msbuild_not_installed(mock_tools, tmp_path, vswhere_path):
     """If VSWhere can be executed, but it doesn't point at an MSBuild executable, an
     error is raised."""
-    # MSBuild is not on the path; vswhere a valid location, but there's no MSBuild there.
+    # MSBuild is not on the path; vswhere a valid location, but there's no
+    # MSBuild there.
     mock_tools.subprocess.check_output.side_effect = [
         FileNotFoundError,  # MSBuild not on path
         json.dumps(

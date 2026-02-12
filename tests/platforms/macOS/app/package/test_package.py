@@ -369,7 +369,8 @@ def test_adhoc_sign(
 def test_notarize_adhoc_signed(package_command, first_app_with_binaries):
     """A macOS App cannot be notarized if ad-hoc signing is requested."""
 
-    # Package the app without code signing. Use the base command's interface to ensure
+    # Package the app without code signing. Use the base command's interface
+    # to ensure
     # the full cleanup process is tested.
     with pytest.raises(
         BriefcaseCommandError,
@@ -399,7 +400,8 @@ def test_notarize_adhoc_signed_via_prompt(
 
     package_command.select_identity.return_value = adhoc_identity
 
-    # Package the app without code signing. Use the base command's interface to ensure the full
+    # Package the app without code signing. Use the base command's interface
+    # to ensure the full
     # cleanup process is tested.
     with pytest.raises(
         BriefcaseCommandError,

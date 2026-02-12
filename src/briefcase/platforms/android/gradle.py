@@ -45,7 +45,8 @@ def safe_formal_name(name):
 # Matches zero or more ANSI control chars wrapping the message for when
 # the Android emulator is printing in color.
 ANDROID_LOG_PREFIX_REGEX = re.compile(
-    rf"(?:{ANSI_ESC_SEQ_RE_DEF})*[A-Z]/(?P<tag>.*?): (?P<content>.*?(?=\x1B|$))(?:{ANSI_ESC_SEQ_RE_DEF})*"
+    rf"(?:{ANSI_ESC_SEQ_RE_DEF})*[A-Z]/(?P<tag>.*?): "
+    rf"(?P<content>.*?(?=\x1B|$))(?:{ANSI_ESC_SEQ_RE_DEF})*"
 )
 
 
@@ -466,9 +467,11 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         :param device_or_avd: The device to target. If ``None``, the user will
             be asked to re-run the command selecting a specific device.
-        :param extra_emulator_args: Any additional arguments to pass to the emulator.
+        :param extra_emulator_args: Any additional arguments to pass to the
+            emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
-        :param revoke_permissions: A list of permissions to revoke before launching the app.
+        :param revoke_permissions: A list of permissions to revoke before
+            launching the app.
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """
@@ -520,7 +523,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
                 adb.install_apk(self.binary_path(app))
 
             if revoke_permissions:
-                # Revoke specified app permissions to ensure a reproducible starting state.
+                # Revoke specified app permissions to ensure a reproducible
+                # starting state.
                 with self.console.wait_bar("Revoking app permissions..."):
                     for permission in revoke_permissions:
                         self.console.info(
