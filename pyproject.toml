@@ -270,8 +270,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # E501: line too long, to be fixed in future changes
-"tests/config/*" = ["E501"]
-"tests/console/*" = ["E501"]
 "tests/integrations/*" = ["E501"]
 "tests/platforms/*" = ["E501"]
 
