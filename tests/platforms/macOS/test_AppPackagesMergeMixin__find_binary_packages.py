@@ -49,18 +49,55 @@ def test_find_binary_packages(dummy_command, tmp_path):
         version="9.9.9",
         tag="macOS_13_arm64",
     )
+    # Packages with multiple binary tags (see #2690)
+    # Multiple tags, where universal2 duplicates explicit tagging
+    create_installed_package(
+        tmp_path / "app-packages",
+        "multi-tagged-binary-package-1",
+        version="3.4.7",
+        tag=["macOS_11_x86-64", "macOS_11_arm64"],
+    )
+    # Universal2 even though it isn't tagged as such
+    create_installed_package(
+        tmp_path / "app-packages",
+        "multi-tagged-binary-package-2",
+        version="3.4.8",
+        tag=["macOS_11_x86-64", "macOS_11_arm64"],
+    )
+    # Multiple tagged, but not a universal pair
+    create_installed_package(
+        tmp_path / "app-packages",
+        "multi-tagged-binary-package-3",
+        version="3.4.9",
+        tag=["macOS_11_arm64", "macOS_11_ppc"],
+    )
+    # Multiple tagged, includes universal and host, but *not* other
+    create_installed_package(
+        tmp_path / "app-packages",
+        "multi-tagged-binary-package-4",
+        version="3.4.10",
+        tag=["macOS_11_arm64", "macOS_11_universal2"],
+    )
+    # Multiple tagged, includes universal and other, but *not* host
+    create_installed_package(
+        tmp_path / "app-packages",
+        "multi-tagged-binary-package-5",
+        version="3.4.11",
+        tag=["macOS_11_x86_64", "macOS_11_universal2"],
+    )
 
     binary_packages = dummy_command.find_binary_packages(
         tmp_path / "app-packages",
         universal_suffix="_universal2",
+        other_suffix="_x86-64",
     )
 
     # Binary wheels are discovered. We don't care about the order they are returned in,
     # just that they're all found.
-    assert len(binary_packages) == 2
     assert set(binary_packages) == {
         ("binary-package-1", "3.4.5"),
         ("binary-package-2", "3.4.6"),
+        ("multi-tagged-binary-package-3", "3.4.9"),
     }
 
 

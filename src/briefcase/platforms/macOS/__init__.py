@@ -267,13 +267,6 @@ macOS version of {macOS_min_version} is not available.
 """,
             )
 
-            # Find all the packages with binary components.
-            # We can ignore any -universal2 packages; they're already fat.
-            binary_packages = self.find_binary_packages(
-                host_app_packages_path,
-                universal_suffix="_universal2",
-            )
-
             # Install dependencies for the architecture that isn't the host architecture
             other_arch = {
                 "arm64": "x86_64",
@@ -288,6 +281,13 @@ macOS version of {macOS_min_version} is not available.
                 self.tools.shutil.rmtree(other_app_packages_path)
             self.tools.os.mkdir(other_app_packages_path)
 
+            # Find all the packages with binary components.
+            # We can ignore any -universal2 packages; they're already fat.
+            binary_packages = self.find_binary_packages(
+                host_app_packages_path,
+                universal_suffix="_universal2",
+                other_suffix=f"_{other_arch}",
+            )
             if binary_packages:
                 with self.console.wait_bar(
                     f"Installing binary app requirements for {other_arch}..."
