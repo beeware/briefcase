@@ -4,7 +4,11 @@ import re
 import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
-from importlib.metadata import entry_points
+from importlib.metadata import (
+    PackageNotFoundError,
+    entry_points,
+    version,
+)
 from typing import ClassVar
 
 from briefcase.bootstraps import BaseGuiBootstrap
@@ -14,7 +18,10 @@ from briefcase.config import (
     make_class_name,
     validate_url,
 )
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseWarning,
+)
 from briefcase.integrations.git import Git
 
 from .base import BaseCommand
@@ -33,12 +40,19 @@ LICENSE_OPTIONS = {
 DEFAULT_LICENSE = "BSD-3-Clause"
 
 
-def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
-    """Loads built-in and third-party GUI bootstraps."""
-    return {
-        entry_point.name: entry_point.load()
-        for entry_point in entry_points(group="briefcase.bootstraps")
-    }
+def get_gui_bootstrap_entry_points():
+    """Return GUI bootstrap entry points without importing them."""
+    return {ep.name: ep for ep in entry_points(group="briefcase.bootstraps")}
+
+
+def is_package_installed(dist_name: str) -> bool:
+    """Return True if the distribution package is installed."""
+    try:
+        version(dist_name)
+    except PackageNotFoundError:
+        return False
+    else:
+        return True
 
 
 def parse_project_overrides(project_overrides: list[str]) -> dict[str, str]:
@@ -465,15 +479,12 @@ class NewCommand(BaseCommand):
         }
 
     def select_bootstrap(
-        self,
-        project_overrides: dict[str, str],
-    ) -> tuple[str, dict[str, type[BaseGuiBootstrap]]]:
-        """Ask the GUI framework question and return the selection plus bootstrap
-        registry."""
-        bootstraps = get_gui_bootstraps()
-        bootstrap_options = self._gui_bootstrap_choices(bootstraps)
+        self, project_overrides: dict[str, str]
+    ) -> type[BaseGuiBootstrap]:
+        eps_by_name = get_gui_bootstrap_entry_points()
+        bootstrap_options = self._gui_bootstrap_choices(list(eps_by_name.keys()))
 
-        selected_bootstrap = self.console.selection_question(
+        selected = self.console.selection_question(
             intro=(
                 "What GUI toolkit do you want to use for this project?\n"
                 "\n"
@@ -487,32 +498,18 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("bootstrap", None),
         )
 
-        if selected_bootstrap == self.OTHER_FRAMEWORKS:
-            self._show_other_frameworks_menu(bootstraps)
+        if selected == self.OTHER_FRAMEWORKS:
+            self._show_other_frameworks_menu()
+            # Prevent falling through and loading a non-entry-point value
+            # if _show_other_frameworks_menu() behavior changes.
+            raise BriefcaseWarning(
+                1,
+                self.console.textwrap(
+                    "Re-run `briefcase new` and select an installed GUI framework."
+                ),
+            )
 
-        return selected_bootstrap, bootstraps
-
-    def _instantiate_bootstrap(
-        self,
-        selected_bootstrap: str,
-        bootstraps: dict[str, type[BaseGuiBootstrap]],
-        context: dict[str, str],
-    ) -> BaseGuiBootstrap:
-        """Instantiate the selected GUI bootstrap."""
-        bootstrap_class = bootstraps[selected_bootstrap]
-        return bootstrap_class(console=self.console, context=context)
-
-    def create_bootstrap(
-        self,
-        context: dict[str, str],
-        project_overrides: dict[str, str],
-    ) -> BaseGuiBootstrap:
-        """Select and instantiate a bootstrap for the new project.
-
-        :returns: An instance of the GUI bootstrap that the user has selected.
-        """
-        selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
-        return self._instantiate_bootstrap(selected_bootstrap, bootstraps, context)
+        return eps_by_name[selected].load()
 
     def build_gui_context(
         self,
@@ -681,9 +678,9 @@ class NewCommand(BaseCommand):
         # Ensure we always have a dict before popping keys
         project_overrides = project_overrides or {}
 
-        selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
+        bootstrap_class = self.select_bootstrap(project_overrides)
         context = self.build_app_context(project_overrides)
-        bootstrap = self._instantiate_bootstrap(selected_bootstrap, bootstraps, context)
+        bootstrap = bootstrap_class(console=self.console, context=context)
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
         self.console.divider()  # close the prompting section of output
