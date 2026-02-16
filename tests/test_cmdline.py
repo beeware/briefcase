@@ -116,7 +116,10 @@ def test_unknown_command():
             {},
         ),
         (
-            "new --template=path/to/template --template-branch=experiment -C version=\\'1.2.3\\' -C other=42",
+            (
+                "new --template=path/to/template --template-branch=experiment -C"
+                " version=\\'1.2.3\\' -C other=42"
+            ),
             {
                 "template": "path/to/template",
                 "template_branch": "experiment",
@@ -155,7 +158,10 @@ def test_new_command(macOS_console, cmdline, expected_options, expected_override
             {},
         ),
         (
-            "convert --template=path/to/template --template-branch=experiment -C version=\\'1.2.3\\' -C other=42",
+            (
+                "convert --template=path/to/template --template-branch=experiment -C"
+                " version=\\'1.2.3\\' -C other=42"
+            ),
             {
                 "template": "path/to/template",
                 "template_branch": "experiment",
@@ -545,7 +551,10 @@ def test_command_explicit_unsupported_format(monkeypatch, macOS_console):
 
     with pytest.raises(
         UnsupportedCommandError,
-        match=r"The create command for the macOS homebrew format has not been implemented \(yet!\).",
+        match=(
+            r"The create command for the macOS homebrew format has not been implemented"
+            r" \(yet!\)."
+        ),
     ):
         do_cmdline_parse("create macOS homebrew", macOS_console)
 

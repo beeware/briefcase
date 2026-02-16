@@ -20,7 +20,10 @@ from ...utils import PartialMatchString
         # Includes some extra text to ensure it doesn't get caught as MIT because of
         # perMITted
         (
-            "Redistribution and use in source and binary forms, with or without modification, are permitted",
+            (
+                "Redistribution and use in source and binary forms, with or without"
+                " modification, are permitted"
+            ),
             "BSD-3-Clause",
         ),
         ("GPLv2", "GPL-2.0"),
@@ -76,7 +79,10 @@ def test_get_license_from_file(
         # Includes some extra text to ensure it doesn't get caught as MIT because of
         # perMITted
         (
-            "Redistribution and use in source and binary forms, with or without modification, are permitted",
+            (
+                "Redistribution and use in source and binary forms, with or without"
+                " modification, are permitted"
+            ),
             "BSD-3-Clause",
         ),
         ("GPLv2", "GPL-2.0"),
