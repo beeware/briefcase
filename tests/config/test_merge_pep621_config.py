@@ -79,7 +79,8 @@ def test_missing_subkeys():
 
 
 def test_specified_license_file():
-    "The license file is included in the briefcase config if specified in the PEP621 config"
+    """The license file is included in the briefcase config if specified in the PEP621
+    config."""
     briefcase_config = {"key": "value"}
 
     merge_pep621_config(
@@ -290,7 +291,8 @@ def test_dependencies_with_requires():
 
 
 def test_no_test_dependencies():
-    "If the global config doesn't specify test dependencies, test_requires are used as is"
+    """If the global config doesn't specify test dependencies,test_requires are used as
+    is."""
     briefcase_config = {"key": "value", "test_requires": ["first", "second"]}
 
     merge_pep621_config(
@@ -320,7 +322,8 @@ def test_optional_non_test_dependencies():
 
 
 def test_test_dependencies_without_requires():
-    "If the global config doesn't specify test requirements, test dependencies are used as is"
+    """If the global config doesn't specify test requirements, test " "dependencies are
+    used as is."""
     briefcase_config = {"key": "value"}
 
     merge_pep621_config(
