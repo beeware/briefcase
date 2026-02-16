@@ -136,18 +136,14 @@ with the operation of macOS code signing."""
             ]
             if cleanup:
                 self.tools.shutil.rmtree(self.bundle_path(app))
-                msg.append(
-                    f"""
+                msg.append(f"""
 Move your project to a location that is not synchronized with iCloud,
-and re-run `briefcase {self.command}`."""
-                )
+and re-run `briefcase {self.command}`.""")
             else:
                 bundle_path = self.bundle_path(app).relative_to(self.base_path)
-                msg.append(
-                    f"""
+                msg.append(f"""
 Delete the {bundle_path} folder, move your project to location
-that is not synchronized with iCloud, and re-run `briefcase {self.command}`."""
-                )
+that is not synchronized with iCloud, and re-run `briefcase {self.command}`.""")
             raise BriefcaseCommandError("\n".join(msg))
 
 
@@ -218,7 +214,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
 
         if Version(macOS_min_version) < Version(support_min_version):
             raise BriefcaseCommandError(
-                f"Your macOS app specifies a minimum macOS version of "
+                "Your macOS app specifies a minimum macOS version of "
                 f"{macOS_min_version}, but the support package only supports "
                 f"{support_min_version}"
             )
@@ -522,9 +518,11 @@ class macOSRunMixin:
                 "--style",
                 "compact",
                 "--predicate",
-                f'senderImagePath=="{sender}"'
-                f' OR (processImagePath=="{sender}"'
-                ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+                (
+                    f'senderImagePath=="{sender}"'
+                    f' OR (processImagePath=="{sender}"'
+                    ' AND senderImagePath=="/usr/lib/libffi.dylib")'
+                ),
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -558,7 +556,7 @@ class macOSRunMixin:
             if app_pid is None:
                 raise BriefcaseCommandError(
                     f"Unable to find process for app {app.app_name} "
-                    f"to start log streaming."
+                    "to start log streaming."
                 )
 
             # Stream the app logs.
@@ -643,7 +641,7 @@ class macOSSigningMixin:
 
             if not identities:
                 raise BriefcaseCommandError(
-                    f"No installer signing identities for team "
+                    "No installer signing identities for team "
                     f"{app_identity.team_id} could be found."
                 )
         else:
@@ -674,17 +672,14 @@ class macOSSigningMixin:
         )
         identity_name = identities[identity]
         if identity == "-":
-            self.console.info(
-                f"""
+            self.console.info(f"""
 In future, you could specify this signing identity by using:
 
     $ briefcase {self.command} macOS {self.output_format} --adhoc-sign ...
 
-"""
-            )
+""")
         else:
-            self.console.info(
-                f"""
+            self.console.info(f"""
 In future, you could specify this signing identity by using:
 
     $ briefcase {self.command} macOS {self.output_format} {ident_option} {identity} ...
@@ -693,8 +688,7 @@ or
 
     $ briefcase {self.command} macOS {self.output_format} {ident_option} "{identity_name}" ...
 
-"""
-            )
+""")  # noqa: E501
 
         return SigningIdentity(id=identity, name=identity_name)
 
@@ -743,7 +737,7 @@ or
                 # We should not be signing this in the first place
                 self.console.verbose(
                     f"... {Path(path).relative_to(self.base_path)} "
-                    f"does not require a signature"
+                    "does not require a signature"
                 )
                 return
             else:
@@ -1020,8 +1014,7 @@ class macOSPackageMixin(macOSSigningMixin):
         # Submit the app for notarization
         submission_id = self.submit_notarization(app, identity=notarization_identity)
 
-        self.console.warning(
-            f"""
+        self.console.warning(f"""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
@@ -1029,8 +1022,7 @@ If notarization is interrupted, you can resume by running:
 
     briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
 
-"""
-        )
+""")  # noqa: E501
 
         self.finalize_notarization(
             app,
@@ -1064,18 +1056,15 @@ If notarization is interrupted, you can resume by running:
             while not submission_id:
                 if store_credentials:
                     if not self.console.input_enabled:
-                        raise BriefcaseCommandError(
-                            f"""
+                        raise BriefcaseCommandError(f"""
 The keychain does not contain credentials for the profile {identity.profile}.
 You can store these credentials by invoking:
 
     $ xcrun notarytool store-credentials --team-id {identity.team_id} {identity.profile}
 
-"""
-                        )
+""")
 
-                    self.console.warning(
-                        """
+                    self.console.warning("""
 The notarization process uses credentials stored on your system Keychain.
 You need to do this once for each signing certificate you use.
 
@@ -1090,8 +1079,7 @@ password:
      name is only there so you can identify passwords. 'Briefcase' would be
      one possible name.
   4. Record the password somewhere safe.
-"""
-                    )
+""")
                     try:
                         self.tools.subprocess.run(
                             [
@@ -1107,7 +1095,7 @@ password:
                         )
                     except subprocess.CalledProcessError as e:
                         raise BriefcaseCommandError(
-                            f"Unable to store credentials for team ID "
+                            "Unable to store credentials for team ID "
                             f"{identity.team_id}."
                         ) from e
 
@@ -1142,7 +1130,7 @@ password:
                         self.tools.subprocess.output_error(e)
                         raise BriefcaseCommandError(
                             f"Unable to submit {filename.relative_to(self.base_path)} "
-                            f"for notarization."
+                            "for notarization."
                         ) from e
         finally:
             # If we're using .zip packaging, the archive is temporary and isn't used for
@@ -1246,7 +1234,7 @@ password:
                                     f"""
     * ({issue.get("severity", "?")}) {issue.get("path")} [{issue.get("architecture", "unknown architecture")}]
       {issue.get("message")}
-      {issue.get("docUrl", "(No additional help available)")}"""
+      {issue.get("docUrl", "(No additional help available)")}"""  # noqa: E501
                                     for issue in response.get("issues", [])
                                 )
                             )
@@ -1274,7 +1262,7 @@ password:
             try:
                 self.console.info()
                 self.console.info(
-                    f"Stapling notarization onto "
+                    "Stapling notarization onto "
                     f"{filename.relative_to(self.base_path)}..."
                 )
                 self.tools.subprocess.run(
@@ -1283,7 +1271,7 @@ password:
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to staple notarization onto "
+                    "Unable to staple notarization onto "
                     f"{filename.relative_to(self.base_path)}"
                 ) from e
 
@@ -1369,8 +1357,7 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.console.warning(
-                """
+            self.console.warning("""
 *************************************************************************
 ** WARNING: Signing with an ad-hoc identity                            **
 *************************************************************************
@@ -1386,8 +1373,7 @@ password:
 
 *************************************************************************
 
-"""
-            )
+""")
             self.console.info("Signing app with ad-hoc identity...")
         else:
             # If we're signing, and notarization isn't explicitly disabled,
@@ -1485,14 +1471,12 @@ password:
                     installer_path / "resources/LICENSE",
                 )
             else:
-                raise BriefcaseCommandError(
-                    """\
+                raise BriefcaseCommandError("""\
 Your project does not contain a LICENSE file.
 
 Create a file named `LICENSE` in the same directory as your `pyproject.toml`
 with your app's licensing terms.
-"""
-                )
+""")
 
         # pkgbuild's default behavior is to make "relocatable" installs, which means
         # that if you've ever run the app, the installer will default to updating *that*
@@ -1625,7 +1609,7 @@ with your app's licensing terms.
                 if not icon_filename.exists():
                     self.console.warning(
                         f"Can't find {app.installer_icon}.icns "
-                        f"to use as DMG installer icon"
+                        "to use as DMG installer icon"
                     )
                     raise AttributeError()
             except AttributeError:
@@ -1635,7 +1619,7 @@ with your app's licensing terms.
                     if not icon_filename.exists():
                         self.console.warning(
                             f"Can't find {app.icon}.icns "
-                            f"to use as fallback DMG installer icon"
+                            "to use as fallback DMG installer icon"
                         )
                         icon_filename = None
                 else:
@@ -1652,7 +1636,7 @@ with your app's licensing terms.
                 else:
                     self.console.warning(
                         f"Can't find {app.installer_background}.png "
-                        f"to use as DMG background"
+                        "to use as DMG background"
                     )
             except AttributeError:
                 # No installer background image provided

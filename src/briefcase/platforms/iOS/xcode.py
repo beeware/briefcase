@@ -58,8 +58,7 @@ class iOSXcodePassiveMixin(iOSMixin):
     def distribution_path(self, app):
         # This path won't ever be *generated*, as distribution artefacts
         # can't be generated on iOS.
-        raise NoDistributionArtefact(
-            """
+        raise NoDistributionArtefact("""
 *************************************************************************
 ** WARNING: No distributable artefact has been generated               **
 *************************************************************************
@@ -76,8 +75,7 @@ class iOSXcodePassiveMixin(iOSMixin):
         https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
 
 *************************************************************************
-"""
-        )
+""")
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
@@ -94,9 +92,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             "-d",
             "--device",
             dest="udid",
-            help="The device to target; either a UDID, "
-            'a device name ("iPhone 11"), '
-            'or a device name and OS version ("iPhone 11::iOS 13.3")',
+            help=(
+                "The device to target; either a UDID, "
+                'a device name ("iPhone 11"), '
+                'or a device name and OS version ("iPhone 11::iOS 13.3")'
+            ),
             required=False,
         )
 
@@ -239,8 +239,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         device = devices[udid]
 
-        self.console.info(
-            f"""
+        self.console.info(f"""
 In the future, you could specify this device by running:
 
     $ briefcase {self.command} iOS -d "{device}::{iOS_tag}"
@@ -248,8 +247,7 @@ In the future, you could specify this device by running:
 or:
 
     $ briefcase {self.command} iOS -d {udid}
-"""
-        )
+""")
 
         # iOS_tag will be of the form "iOS 15.5"
         # Drop the "iOS" prefix when reporting the version.
@@ -675,11 +673,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--style",
                 "compact",
                 "--predicate",
-                f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))',
+                (
+                    f'senderImagePath ENDSWITH "/{app.formal_name}"'
+                    f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                    ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                    ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                    ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))'
+                ),
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -694,7 +694,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         if app.debugger:
             env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
 
-        # Set additional environment variables while the app is running (no-op if no environment variables are set).
+        # Set additional environment variables while the app is running
+        # (no-op if no environment variables are set).
         with self.setup_env(env, udid):
             try:
                 self.console.info(f"Starting {label}...", prefix=app.app_name)

@@ -270,13 +270,13 @@ class AppPackagesMergeMixin:
                                 or Path(relative_path.parts[0]).suffix == ".dist-info"
                             ):
                                 self.console.warning(
-                                    f"{relative_path} has different content "
-                                    f"between sources; ignoring "
-                                    f"{source_app_packages.suffix[1:]} version. "
-                                    f"This is usually safe if the file content is not "
-                                    f"used at runtime. See "
-                                    f"https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels "
-                                    f"for more details."
+                                    f"{relative_path} has different content between"
+                                    " sources; ignoring"
+                                    f" {source_app_packages.suffix[1:]} version. This"
+                                    " is usually safe if the file content is not used"
+                                    " at runtime. See"
+                                    " https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels"
+                                    " for more details."
                                 )
                         else:
                             # The file doesn't exist yet; copy it as is (including
@@ -337,8 +337,9 @@ def is_uti_core_type(uti: str) -> bool:  # pragma: no-cover-if-not-macos
     plist = plistlib.loads(plist_data)
     return uti in {
         type_declaration["UTTypeIdentifier"]
-        for type_declaration in plist["UTExportedTypeDeclarations"]
-        + plist["UTImportedTypeDeclarations"]
+        for type_declaration in (
+            plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
+        )
     }
 
 
