@@ -13,6 +13,8 @@ if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
 else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
+from packaging.version import VERSION_PATTERN
+
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
@@ -301,11 +303,8 @@ def is_valid_bundle_identifier(bundle):
 
 # This is the canonical definition from PEP440, modified to include named groups
 PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
-    r"^((?P<epoch>[1-9][0-9]*)!)?"
-    r"(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)"
-    r"((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?"
-    r"(\.post(?P<post>0|[1-9][0-9]*))?"
-    r"(\.dev(?P<dev>0|[1-9][0-9]*))?$"
+    r"^\s*" + VERSION_PATTERN + r"\s*$",
+    re.VERBOSE | re.IGNORECASE,
 )
 
 
@@ -325,21 +324,18 @@ def parsed_version(version):
     :param version: The parsed version string
     """
     groupdict = PEP440_CANONICAL_VERSION_PATTERN_RE.match(version).groupdict()
-
+    version_dict = {}
     # Convert dot separated string of integers to tuple of integers
-    groupdict["release"] = tuple(int(p) for p in groupdict.pop("release").split("."))
+    version_dict["release"] = tuple(int(p) for p in groupdict.pop("release").split("."))
 
-    # Convert strings to values
-    for key in ("epoch", "pre_value", "post", "dev"):
-        try:
-            groupdict[key] = int(groupdict[key])
-        except TypeError:
-            pass
+    version_dict["epoch"] = int(groupdict["epoch"]) if groupdict["epoch"] else None
+    version_dict["pre"] = (
+        (groupdict["pre_l"], int(groupdict["pre_n"])) if groupdict["pre_l"] else None
+    )
+    version_dict["post"] = int(groupdict["post_n2"]) if groupdict["post_n2"] else None
+    version_dict["dev"] = int(groupdict["dev_n"]) if groupdict["dev_n"] else None
 
-    tag = groupdict.pop("pre_tag")
-    value = groupdict.pop("pre_value")
-    groupdict["pre"] = (tag, value) if tag is not None else None
-    return SimpleNamespace(**groupdict)
+    return SimpleNamespace(**version_dict)
 
 
 def parse_boolean(value: str) -> bool:
