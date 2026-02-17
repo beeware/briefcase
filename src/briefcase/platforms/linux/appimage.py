@@ -301,7 +301,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             try:
                 # For some reason, the version has to be passed in as an
                 # environment variable, *not* in the configuration.
-                env["LINUXDEPLOY_OUTPUT_VERSION"] = app.version
+                env["LINUXDEPLOY_OUTPUT_VERSION"] = str(app.version)
                 # The internals of the binary aren't inherently visible, so
                 # there's no need to package copyright files. These files
                 # appear to be missing by default in the OS dev packages anyway,

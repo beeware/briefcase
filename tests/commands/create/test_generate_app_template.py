@@ -7,6 +7,7 @@ from unittest import mock
 import pytest
 from cookiecutter import exceptions as cookiecutter_exceptions
 from git import exc as git_exceptions
+from packaging.version import Version
 
 import briefcase
 from briefcase.exceptions import (
@@ -25,7 +26,7 @@ def full_context():
         "formal_name": "My App",
         "bundle": "com.example",
         "bundle_identifier": "com.example.my-app",
-        "version": "1.2.3",
+        "version": Version("1.2.3"),
         "description": "This is a simple app",
         "long_description": None,
         "sources": ["src/my_app"],

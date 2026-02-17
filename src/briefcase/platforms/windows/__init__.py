@@ -8,7 +8,7 @@ from pathlib import Path, PurePath
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import AppConfig, parsed_version
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
@@ -149,9 +149,8 @@ class WindowsCreateCommand(CreateCommand):
         try:
             version_triple = app.version_triple
         except AttributeError:
-            parsed = parsed_version(app.version)
             version_triple = ".".join(
-                ([str(v) for v in parsed.release] + ["0", "0"])[:3]
+                ([str(v) for v in app.version.release] + ["0", "0"])[:3]
             )
 
         # The application needs a unique GUID.

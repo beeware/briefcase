@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from packaging.version import Version
 
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux.flatpak import LinuxFlatpakPackageCommand
@@ -31,7 +32,7 @@ def test_package(package_command, first_app_config, tmp_path):
         repo_url="https://example.com/flatpak/repo",
         bundle_identifier="com.example.first-app",
         app_name="first-app",
-        version="0.0.1",
+        version=Version("0.0.1"),
         build_path=tmp_path / "base_path/build/first-app/linux/flatpak",
         output_path=tmp_path / "base_path/dist/First_App-0.0.1-gothic.flatpak",
     )

@@ -5,8 +5,9 @@ import keyword
 import re
 import sys
 import unicodedata
-from types import SimpleNamespace
 from urllib.parse import urlparse
+
+from packaging.version import InvalidVersion, Version
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -299,49 +300,6 @@ def is_valid_bundle_identifier(bundle):
     return VALID_BUNDLE_RE.match(bundle) is not None
 
 
-# This is the canonical definition from PEP440, modified to include named groups
-PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
-    r"^((?P<epoch>[1-9][0-9]*)!)?"
-    r"(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)"
-    r"((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?"
-    r"(\.post(?P<post>0|[1-9][0-9]*))?"
-    r"(\.dev(?P<dev>0|[1-9][0-9]*))?$"
-)
-
-
-def is_pep440_canonical_version(version):
-    """Determine if the string describes a valid PEP440 canonical version specifier.
-
-    This implementation comes directly from PEP440 itself.
-
-    :returns: True if the version string is valid; false otherwise.
-    """
-    return PEP440_CANONICAL_VERSION_PATTERN_RE.match(version) is not None
-
-
-def parsed_version(version):
-    """Return a parsed version string.
-
-    :param version: The parsed version string
-    """
-    groupdict = PEP440_CANONICAL_VERSION_PATTERN_RE.match(version).groupdict()
-
-    # Convert dot separated string of integers to tuple of integers
-    groupdict["release"] = tuple(int(p) for p in groupdict.pop("release").split("."))
-
-    # Convert strings to values
-    for key in ("epoch", "pre_value", "post", "dev"):
-        try:
-            groupdict[key] = int(groupdict[key])
-        except TypeError:
-            pass
-
-    tag = groupdict.pop("pre_tag")
-    value = groupdict.pop("pre_value")
-    groupdict["pre"] = (tag, value) if tag is not None else None
-    return SimpleNamespace(**groupdict)
-
-
 def parse_boolean(value: str) -> bool:
     """Takes a string value and attempts to convert to a boolean value."""
 
@@ -420,12 +378,14 @@ class GlobalConfig(BaseConfig):
         self.requires_python = requires_python
 
         # Version number is PEP440 compliant:
-        if not is_pep440_canonical_version(self.version):
+        try:
+            self.version = Version(version)
+        except InvalidVersion:
             raise BriefcaseConfigError(
                 f"Version number ({self.version}) is not valid.\n\n"
                 "Version numbers must be PEP440 compliant; "
                 "see https://www.python.org/dev/peps/pep-0440/ for details."
-            )
+            ) from None
 
     def __repr__(self):
         return f"<{self.project_name} v{self.version} GlobalConfig>"
@@ -537,14 +497,20 @@ class AppConfig(BaseConfig):
             install=self.install_options,
         )
 
-        # Version number is PEP440 compliant:
-        if not is_pep440_canonical_version(self.version):
+        # Version number is PEP440 compliant.
+        try:
+            # If input is already a version object (can happen by copying), use as-is
+            if isinstance(version, Version):
+                self.version = version
+            else:
+                self.version = Version(version)
+        except InvalidVersion:
             raise BriefcaseConfigError(
                 f"Version number for {self.app_name!r} ({self.version}) is not valid."
                 f"\n\n"
                 "Version numbers must be PEP440 compliant; "
                 "see https://www.python.org/dev/peps/pep-0440/ for details."
-            )
+            ) from None
 
         if self.sources:
             # Sources list doesn't include any duplicates

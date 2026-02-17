@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+from packaging.version import Version
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseConfigError
@@ -19,7 +20,7 @@ def test_minimal_AppConfig():
 
     # The basic properties have been set.
     assert config.app_name == "myapp"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.requires is None
@@ -62,7 +63,7 @@ def test_minimal_external_AppConfig():
 
     # The basic properties have been set.
     assert config.app_name == "myapp"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.requires is None
@@ -119,7 +120,7 @@ def test_extra_attrs():
 
     # The basic properties have been set.
     assert config.app_name == "myapp"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.long_description == "A longer description\nof the app"

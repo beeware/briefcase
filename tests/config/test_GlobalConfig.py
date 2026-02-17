@@ -1,4 +1,5 @@
 import pytest
+from packaging.version import Version
 
 from briefcase.config import GlobalConfig
 from briefcase.exceptions import BriefcaseConfigError
@@ -15,7 +16,7 @@ def test_minimal_GlobalConfig():
 
     # The basic properties have been set.
     assert config.project_name == "My Project"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
 
     assert repr(config) == "<My Project v1.2.3 GlobalConfig>"
@@ -37,7 +38,7 @@ def test_extra_attrs():
 
     # The basic properties have been set.
     assert config.project_name == "My Project"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.url == "https://example.com"
     assert config.author == "Jane Smith"
