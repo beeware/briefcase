@@ -11,12 +11,12 @@ Briefcase currently has support for:
 - macOS (producing DMG files, or raw .app files)
 - Linux (producing system packages, AppImage files or Flatpaks)
 - Windows (producing MSI installers)
-- iOS (producing XCode projects)
+- iOS (producing Xcode projects)
 - Android (producing Gradle projects)
 
 Support for other some other operating systems (e.g., tvOS, watchOS, WearOS, and the web) are on our road map.
 
-Briefcase's platform support is built on a plugin system, so if you want to add support for a custom platform, you can do so; or, you can contribute the backend to Briefcase itself.
+Briefcase's platform support is built on a [plugin system][platform-interface], so if you want to add support for a custom platform, you can do so; or, you can contribute the backend to Briefcase itself.
 
 ## How do I detect if my app is running in a Briefcase-packaged container?
 

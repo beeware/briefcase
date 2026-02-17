@@ -22,7 +22,7 @@ Broadly, Briefcase works with two categories of templates:
   These templates are used during `briefcase new` to generate the initial project layout, including files such as `pyproject.toml`, application metadata, and basic source structure.
 
 * **Platform-specific templates**
-  These templates are used during `briefcase create` and later stages to generate platform-dependent project files (for example, to produce a macOS app or iOS XCode project). Each platform has its own template repository that defines how the application is structured and built on that platform.
+  These templates are used during `briefcase create` and later stages to generate platform-dependent project files (for example, to produce a macOS app or iOS Xcode project). Each platform has its own template repository that defines how the application is structured and built on that platform.
 
 When contributing changes to templates, you need to be able to test those changes locally. Briefcase has features to make this testing possible.
 

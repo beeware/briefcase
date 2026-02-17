@@ -5,7 +5,7 @@ Briefcase is a tool for converting a Python project into a standalone native app
 - macOS, as a standalone .app
 - Windows, as an MSI installer
 - Linux, as a native system package
-- iOS, as an XCode project
+- iOS, as an Xcode project
 - Android, as a Gradle project
 - the Web, as a static website using PyScript for client-side Python
 

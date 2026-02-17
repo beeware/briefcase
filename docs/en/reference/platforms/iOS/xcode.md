@@ -1,4 +1,4 @@
-# iOS XCode project
+# iOS Xcode project
 
 <table class="host-platform-support-table">
 <colgroup>
@@ -50,7 +50,7 @@
 </tbody>
 </table>
 
-When generating an iOS project, Briefcase produces an XCode project.
+When generating an iOS project, Briefcase produces an Xcode project.
 
 ## Icon format
 
@@ -200,10 +200,10 @@ This will find and purge all `.a` content in your app's dependencies. You can ad
 
 Briefcase provides support for deployment to simulated iOS devices through the command line.
 
-If you want to deploy to a physical iOS device, you will need need to use XCode through the following steps:
+If you want to deploy to a physical iOS device, you will need need to use Xcode through the following steps:
 
-1. Run `briefcase open ios` in the command line. This will open your application in XCode.
-2.  Setup your Apple Developer account with your certificate in XCode.
+1. Run `briefcase open ios` in the command line. This will open your application in Xcode.
+2.  Setup your Apple Developer account with your certificate in Xcode.
 3. In the project navigator, select your application at the top level (the root of the project).
 4.  Select the *Signing and Capabilities* tab in the editor area.
 5. Select your Apple Developer team or individual account from the *Team* drop-down.

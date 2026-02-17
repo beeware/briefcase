@@ -44,13 +44,13 @@ The procedure for cutting a new release is as follows:
 
     - `briefcase-template`
     - `briefcase-macOS-app-template`
-    - `briefcase-macOS-XCode-template`
+    - `briefcase-macOS-Xcode-template`
     - `briefcase-windows-app-template`
     - `briefcase-windows-VisualStudio-template`
     - `briefcase-linux-appimage-template`
     - `briefcase-linux-flatpak-template`
     - `briefcase-linux-system-template`
-    - `briefcase-iOS-XCode-template`
+    - `briefcase-iOS-Xcode-template`
     - `briefcase-android-gradle-template`
     - `briefcase-web-static-template`
 
