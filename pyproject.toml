@@ -270,23 +270,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # E501: line too long, to be fixed in future changes
-"tests/integrations/android_sdk/*" = ["E501"]
-"tests/integrations/cookieCutter/*" = ["E501"]
-"tests/integrations/flatpak/*" = ["E501"]
-"tests/integrations/git/*" = ["E501"]
-"tests/integrations/java/*" = ["E501"]
-"tests/integrations/linuxdeploy/*" = ["E501"]
-"tests/integrations/rcedit/*" = ["E501"]
-"tests/integrations/subprocess/*" = ["E501"]
-"tests/integrations/visualstudio/*" = ["E501"]
-"tests/integrations/windows_sdk/*" = ["E501"]
-"tests/integrations/xcode/*" = ["E501"]
-"tests/platforms/android/*" = ["E501"]
-"tests/platforms/iOS/*" = ["E501"]
-"tests/platforms/linux/*" = ["E501"]
-"tests/platforms/macOS/*" = ["E501"]
-"tests/platforms/web/*" = ["E501"]
-"tests/platforms/windows/*" = ["E501"]
+"tests/integrations/*" = ["E501"]
+"tests/platforms/*" = ["E501"]
 
 
 [tool.rumdl]
