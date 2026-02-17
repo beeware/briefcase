@@ -11,7 +11,7 @@ Briefcase currently has support for:
 - macOS (producing DMG files, or raw .app files)
 - Linux (producing system packages, AppImage files or Flatpaks)
 - Windows (producing MSI installers)
-- iOS (producing XCode projects)
+- iOS (producing Xcode projects)
 - Android (producing Gradle projects)
 
 Support for other some other operating systems (e.g., tvOS, watchOS, WearOS, and the web) are on our road map.
