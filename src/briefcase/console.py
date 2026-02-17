@@ -94,7 +94,6 @@ def format_message_box(message: str, title: str | None = None) -> str:
     return "\n".join(lines)
 
 
-
 class RichConsoleHighlighter(RegexHighlighter):
     """Custom Rich highlighter for printing to the console.
 
