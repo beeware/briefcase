@@ -36,6 +36,15 @@ For example, the `pdb` debugger is implemented using the following configuration
 pdb = "briefcase.debuggers.pdb:PdbDebugger"
 ```
 
+The `debugger_support_pkg` package will be installed into the runtime environment for an app. It is responsible for triggering debugger behavior on any process started in the environment. Depending on the `connection_mode`, this means either waiting for an incoming debugger connection (in the case of a `SERVER`), or a initiating a debugger connection (in the case of `CLIENT`). A debugger should be started if the runtime environment contains the `BRIEFCASE_DEBUGGER` environment variable; the value of that variable will be a JSON-encoded dictionary of configuration parameters:
+
+- `debugger` - The identifying name of the debugger being registered (e.g., `pdb`)
+- `host` - The name of the host where the debugger is running
+- `port` - The port where the debugger is running
+- `host_os` - The value of [`platform.system()`][platform.system] on the machine where the debugger is running
+- `app_path_mappings` - A mapping between application code paths in the app, and the source files on the development machine
+- `app_packages_path_mappings` - A mapping between code paths for app dependencies, and original versions installed on the development machine
+
 ## `briefcase.platforms` and `briefcase.formats.*` { #platform-interface }
 
 Each command implemented by Briefcase is specialized by a platform and output format. This implementation is defined using a pair of plugins - a `briefcase.platforms` definition describing a platform, and a `briefcase.format.<platform>` definition that defines the output formats for that platform.
