@@ -132,28 +132,36 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
     ("stderr_string", "error_message"),
     [
         pytest.param(
-            "\n    stderr: '\nfatal: could not clone repository"
-            " 'https://example.com' \n'",
+            (
+                "\n    stderr: '\nfatal: could not clone repository"
+                " 'https://example.com' \n'"
+            ),
             "Could not clone repository 'https://example.com'.",
             id="tailing-whitespace-no-caps-no-period",
         ),
         pytest.param(
-            "\n    stderr: '\nfatal: Could not read from remote repository.\n\nPlease"
-            " make sure you have the correct access rights\nand the repository"
-            " exists. \n'",
+            (
+                """\n    stderr: '\nfatal: Could not read from remote repository.
+                \n\nPlease"""
+                " make sure you have the correct access rights\nand the repository"
+                " exists. \n'"
+            ),
             "Could not read from remote repository.\n\nPlease make sure "
             "you have the correct access rights\nand the repository exists.",
             id="tailing-whitespace-has-caps-has-period",
         ),
         pytest.param(
-            "\n    stderr: '\nfatal: unable to access 'https://example.com/': "
-            "OpenSSL/3.2.2: error:0A000438:SSL routines::tlsv1 alert internal error'",
+            (
+                "\n    stderr: '\nfatal: unable to access 'https://example.com/': "
+                "OpenSSL/3.2.2: error:0A000438:SSL routines::tlsv1 alert internal"
+                "error'"
+            ),
             "Unable to access 'https://example.com/': OpenSSL/3.2.2: "
             "error:0A000438:SSL routines::tlsv1 alert internal error.",
             id="no-tailing-whitespace-no-caps-no-period",
         ),
         pytest.param(
-            "\n stderr: 'Mysterious git clone edge case with no fatal error.",
+            ("\n stderr: 'Mysterious git clone edge case with no fatal error."),
             "This may be because your computer is offline",
             id="fallback-hint",
         ),

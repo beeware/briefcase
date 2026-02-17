@@ -322,7 +322,7 @@ def test_optional_non_test_dependencies():
 
 
 def test_test_dependencies_without_requires():
-    """If the global config doesn't specify test requirements, test " "dependencies are
+    """If the global config doesn't specify test requirements, test dependencies are
     used as is."""
     briefcase_config = {"key": "value"}
 

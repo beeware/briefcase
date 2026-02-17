@@ -36,8 +36,8 @@ def test_list_tools(upgrade_command, mock_tool_registry, capsys):
         tools=upgrade_command.tools, install=False
     )
 
-    assert (
-        capsys.readouterr().out == "\n"
+    assert capsys.readouterr().out == (
+        "\n"
         "[upgrade] Briefcase is managing the following tools:\n"
         " - Managed Dummy Tool 1 (managed_1)\n"
         " - Managed Dummy Tool 2 (managed_2)\n"
@@ -63,8 +63,8 @@ def test_list_specific_tools(upgrade_command, mock_tool_registry, capsys):
         tools=upgrade_command.tools, install=False
     )
 
-    assert (
-        capsys.readouterr().out == "\n"
+    assert capsys.readouterr().out == (
+        "\n"
         "[upgrade] Briefcase is managing the following tools:\n"
         " - Managed Dummy Tool 1 (managed_1)\n"
         " - Managed Dummy Tool 2 (managed_2)\n"
@@ -115,8 +115,8 @@ def test_upgrade_tools(upgrade_command, mock_tool_registry, capsys):
         "install",
     ]
 
-    assert (
-        capsys.readouterr().out == "\n"
+    assert capsys.readouterr().out == (
+        "\n"
         "[upgrade] Briefcase will upgrade the following tools:\n"
         " - Managed Dummy Tool 1 (managed_1)\n"
         " - Managed Dummy Tool 2 (managed_2)\n"
@@ -160,8 +160,8 @@ def test_upgrade_specific_tools(upgrade_command, mock_tool_registry, capsys):
         "install",
     ]
 
-    assert (
-        capsys.readouterr().out == "\n"
+    assert capsys.readouterr().out == (
+        "\n"
         "[upgrade] Briefcase will upgrade the following tools:\n"
         " - Managed Dummy Tool 1 (managed_1)\n"
         " - Managed Dummy Tool 2 (managed_2)\n"
@@ -257,9 +257,8 @@ def test_upgrade_mixed_tools(upgrade_command, mock_tool_registry, capsys):
         "install",
     ]
 
-    assert (
-        capsys.readouterr().out
-        == "Briefcase is not managing not_installed, unmanaged, unmanaged_managed.\n"
+    assert capsys.readouterr().out == (
+        "Briefcase is not managing not_installed, unmanaged, unmanaged_managed.\n"
         "\n"
         "[upgrade] Briefcase will upgrade the following tools:\n"
         " - Managed Dummy Tool 1 (managed_1)\n"

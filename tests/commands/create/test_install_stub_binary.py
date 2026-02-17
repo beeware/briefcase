@@ -264,8 +264,12 @@ def test_install_custom_stub_binary_url(
 
     # Confirm the right file was unpacked
     create_command.tools.shutil.unpack_archive.assert_called_with(
-        filename=tmp_path
-        / "data/stub/986428ef9d5a1852fc15d4367f19aa328ad530686056e9d83cdde03407c0bceb/My-Stub.zip",  # noqa: E501
+        filename=(
+            tmp_path
+            / "data/stub"
+            / "986428ef9d5a1852fc15d4367f19aa328ad530686056e9d83cdde03407c0bceb"
+            / "My-Stub.zip"
+        ),
         extract_dir=tmp_path / "base_path/build/my-app/tester/dummy",
     )
 
