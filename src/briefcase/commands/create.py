@@ -243,6 +243,8 @@ class CreateCommand(BaseCommand):
             {
                 # Ensure the output format is in the case we expect
                 "format": self.output_format.lower(),
+                # Ensure the version number is in string form
+                "version": str(app.version),
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes
                 # (e.g., 3.11.0rc2)
