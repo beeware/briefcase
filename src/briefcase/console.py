@@ -55,6 +55,46 @@ def sanitize_text(text: str) -> str:
     return ANSI_ESCAPE_RE.sub("", strip_control_codes(text))
 
 
+def format_message_box(message: str, title: str | None = None) -> str:
+    """Format a boxed message for console output.
+
+    The box uses ``*`` borders sized to ``MAX_TEXT_WIDTH`` and wraps content lines to
+    fit inside a 4-space indented body.
+
+    :param message: The message body to display in the box.
+    :param title: Optional title line displayed near the top of the box.
+    :returns: The formatted boxed message.
+    """
+    box_width = MAX_TEXT_WIDTH
+    border = "*" * box_width
+    content_width = box_width - 8
+    title_width = box_width - 6
+
+    lines = [border]
+    if title:
+        lines.append(f"** {title:<{title_width}} **")
+        lines.append(border)
+
+    lines.append("")
+
+    for paragraph in textwrap.dedent(message).strip().splitlines():
+        if paragraph:
+            lines.extend(
+                textwrap.wrap(
+                    paragraph,
+                    width=content_width,
+                    initial_indent="    ",
+                    subsequent_indent="    ",
+                )
+            )
+        else:
+            lines.append("")
+
+    lines.extend(["", border])
+    return "\n".join(lines)
+
+
+
 class RichConsoleHighlighter(RegexHighlighter):
     """Custom Rich highlighter for printing to the console.
 

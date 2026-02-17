@@ -5,6 +5,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from briefcase.console import format_message_box
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -115,42 +116,34 @@ class JDK(ManagedTool):
                 if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
                     java = JDK(tools, java_home=Path(java_home))
                 else:
-                    install_message = f"""
-*************************************************************************
-** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK            **
-*************************************************************************
-
-    Android requires a Java {cls.JDK_MAJOR_VER} JDK, but the location pointed to by the
-    JAVA_HOME environment variable:
-
-    {java_home}
-
-    isn't a Java {cls.JDK_MAJOR_VER} JDK (it appears to be Java {version_str}).
-
-    Briefcase will proceed using its own JDK instance.
-
-*************************************************************************
-"""
+                    install_message = format_message_box(
+                        message=(
+                            f"Android requires a Java {cls.JDK_MAJOR_VER} JDK, but "
+                            "the location pointed to by the JAVA_HOME environment "
+                            f"variable:\n\n{java_home}\n\nisn't a Java "
+                            f"{cls.JDK_MAJOR_VER} JDK (it appears to be Java "
+                            f"{version_str}).\n\nBriefcase will proceed using its "
+                            "own JDK instance."
+                        ),
+                        title=(
+                            "WARNING: JAVA_HOME does not point to a Java "
+                            f"{cls.JDK_MAJOR_VER} JDK"
+                        ),
+                    )
 
             except OSError:
-                install_message = f"""
-*************************************************************************
-** WARNING: JAVA_HOME does not point to a JDK                          **
-*************************************************************************
-
-    The location pointed to by the JAVA_HOME environment variable:
-
-    {java_home}
-
-    does not appear to be a JDK. It may be a Java Runtime Environment.
-
-    If JAVA_HOME is a JDK, ensure it is the root directory of the JDK
-    instance such that $JAVA_HOME/bin/javac is a valid filepath.
-
-    Briefcase will proceed using its own JDK instance.
-
-*************************************************************************
-"""
+                install_message = format_message_box(
+                    message=(
+                        "The location pointed to by the JAVA_HOME environment "
+                        f"variable:\n\n{java_home}\n\ndoes not appear to be a "
+                        "JDK. It may be a Java Runtime Environment.\n\nIf JAVA_HOME "
+                        "is a JDK, ensure it is the root directory of the JDK "
+                        "instance such that $JAVA_HOME/bin/javac is a valid "
+                        "filepath.\n\nBriefcase will proceed using its own JDK "
+                        "instance."
+                    ),
+                    title="WARNING: JAVA_HOME does not point to a JDK",
+                )
 
             except subprocess.CalledProcessError:
                 install_message = f"""
