@@ -485,7 +485,7 @@ def test_install_app_requirements_with_bad_local_file(
 
     # An attempt was made to copy the package
     create_command.tools.shutil.copy.assert_called_once_with(
-        str(tmp_path / "local/missing-2.3.4.tar.gz"),
+        tmp_path / "local/missing-2.3.4.tar.gz",
         tmp_path / "base_path/build/first-app/tester/dummy/_requirements",
     )
 
