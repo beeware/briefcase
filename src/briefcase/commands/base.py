@@ -689,6 +689,28 @@ a custom location for Briefcase's tools.
         """
         return
 
+    def resolve_apps(
+        self,
+        app: AppConfig | None = None,
+        app_name: str | None = None,
+    ) -> dict[str, AppConfig]:
+        """Resolve which apps to operate on.
+
+        :param app: An explicit app config to use.
+        :param app_name: The name of the app to look up in the project.
+        :returns: A dict of app name to AppConfig for the selected apps.
+        """
+        if app_name:
+            if not (app_obj := self.apps.get(app_name)):
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+            return {app_name: app_obj}
+        elif app:
+            return {app.app_name: app}
+        else:
+            return self.apps
+
     def finalize(
         self,
         apps: Iterable[AppConfig],

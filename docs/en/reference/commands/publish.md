@@ -2,7 +2,7 @@
 
 **COMING SOON**
 
-Uploads your application to a publication channel. By default, targets the current platform's default output format, using that format's default publication channel.
+Uploads your application to a [publication channel][publication-channel-interface]. By default, targets the current platform's default output format.
 
 You may need to provide additional configuration details (e.g., authentication credentials), depending on the publication channel selected.
 
@@ -30,6 +30,10 @@ $ briefcase publish <platform> <output format>
 
 The following options can be provided at the command line.
 
+### `-a <app name>` / `--app <app name>`
+
+Publish a specific application target in your project. This argument is only required if your project contains more than one application target. The app name specified should be the machine-readable package name for the app.
+
 ### `-c <channel>` / `--channel <channel>`
 
-Nominate a publication channel to use.
+Nominate a [publication channel][publication-channel-interface] to use.

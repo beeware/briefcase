@@ -70,3 +70,34 @@ macOS = "briefcase.platforms.macOS"
 [project.entry-points."briefcase.formats.macOS"]
 xcode = "briefcase.platforms.macOS.xcode"
 ```
+
+## `briefcase.publication_channels.*` { #publication-channel-interface }
+
+Briefcase provides a plugin interface that enables publishing apps to distribution channels (e.g., the iOS App Store or Google Play Store) via `briefcase publish`.
+
+/// note | Note
+There are currently no working publication channels available — neither shipped with Briefcase nor provided by third-party packages. The built-in channels for the iOS App Store ([#2697](https://github.com/beeware/briefcase/issues/2697)) and Google Play Store ([#2698](https://github.com/beeware/briefcase/issues/2698)) are placeholders that raise an error when invoked.
+///
+
+Publication channel entry points are scoped by platform and output format. To add a custom publication channel plugin, add a `[project.entry-points."briefcase.publication_channels.<platform>.<format>"]` section to your `pyproject.toml` file; each name/value pair under that section will be interpreted as a publication channel. The name of each setting is the identifier used to select the channel with `--channel` on the command line. The value is a string identifying a class that implements the `briefcase.publication_channels.base.BasePublicationChannel` abstract base class.
+
+A `BasePublicationChannel` subclass must implement:
+
+- `name` - an abstract `str` property returning the human-readable name of the channel.
+- `publish_app(app, command, **options)` - an abstract method that performs the actual publication. `app` is the `AppConfig` for the application being published; `command` satisfies the `PublishCommandAPI` protocol (see below).
+
+The `PublishCommandAPI` protocol (`briefcase.publication_channels.base.PublishCommandAPI`) defines the stable API surface that plugins can rely on from the `command` parameter:
+
+- `console` - the console object for user interaction
+- `tools` - the tool registry
+- `dist_path` - the path to the distribution output directory
+- `distribution_path(app)` - returns the path to the distributable artefact for the given app
+
+If only one channel is registered for a platform/format combination, it is selected automatically. If multiple channels are available, the user must specify `--channel` on the command line.
+
+For example, the iOS App Store channel is implemented using the following configuration:
+
+```toml
+[project.entry-points."briefcase.publication_channels.ios.xcode"]
+appstore = "briefcase.publication_channels.appstore:AppStorePublicationChannel"
+```
