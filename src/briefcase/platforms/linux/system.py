@@ -113,7 +113,7 @@ class LinuxSystemMixin(LinuxMixin):
     def distribution_filename(self, app: AppConfig) -> str:
         if app.packaging_format == "deb":
             return (
-                f"{app.app_name}"
+                f"{app.bundle_name}"
                 f"_{app.version}"
                 f"-{getattr(app, 'revision', 1)}"
                 f"~{app.target_vendor}"
@@ -369,7 +369,8 @@ class LinuxSystemMixin(LinuxMixin):
         ) = self._system_requirement_tools(app)
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
-            self.console.warning("""
+            self.console.warning(
+                """
 *************************************************************************
 ** WARNING: Can't verify system packages                               **
 *************************************************************************
@@ -380,7 +381,8 @@ class LinuxSystemMixin(LinuxMixin):
     `system_requires` setting have been installed.
 
 *************************************************************************
-""")
+"""
+            )
             return
 
         # Run a check for each package listed in the app's system_requires,
@@ -427,13 +429,15 @@ class LinuxSystemMixin(LinuxMixin):
 
         # If any required packages are missing, raise an error.
         if missing:
-            raise BriefcaseCommandError(f"""\
+            raise BriefcaseCommandError(
+                f"""\
 Unable to build {app.app_name} due to missing system dependencies. Run:
 
     sudo {" ".join(system_installer)} {" ".join(sorted(missing))}
 
 to install the missing dependencies, and re-run Briefcase.
-""")
+"""
+            )
 
 
 class LinuxSystemDockerMixin(LinuxSystemMixin):
@@ -508,7 +512,8 @@ class LinuxSystemDockerMixin(LinuxSystemMixin):
                 and self.tools.docker.is_user_mapped
                 and self.tools.host_os != "Darwin"
             ):
-                raise BriefcaseCommandError("""\
+                raise BriefcaseCommandError(
+                    """\
 Briefcase cannot use this Docker installation to target Arch Linux since the
 tools to build packages for Arch cannot be run as root.
 
@@ -518,7 +523,8 @@ containers to maintain accurate file permissions of the build artefacts.
 This most likely means you're using Docker Desktop or rootless Docker.
 
 Install Docker Engine and try again or run Briefcase on an Arch host system.
-""")
+"""
+                )
         else:
             super()._finalize_target_image(app)
 
@@ -652,7 +658,8 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             self.tools.sys.version_info.major,
             self.tools.sys.version_info.minor,
         ):
-            self.console.warning(f"""
+            self.console.warning(
+                f"""
 *************************************************************************
 ** WARNING: Python version mismatch!                                   **
 *************************************************************************
@@ -664,7 +671,8 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
     releasing this app.
 
 *************************************************************************
-""")
+"""
+            )
 
     def verify_system_python(self):
         """Verify that the Python being used to run Briefcase is the default system
@@ -835,41 +843,49 @@ class LinuxSystemBuildCommand(LinuxSystemDockerMixin, BuildCommand):
                     self.tools.shutil.copy(license_file, doc_folder / "copyright")
                 else:
                     _relative_license_path = license_file.relative_to(self.base_path)
-                    raise BriefcaseCommandError(f"""\
+                    raise BriefcaseCommandError(
+                        f"""\
 Your `pyproject.toml` specifies a license file of {str(_relative_license_path)!r}.
 However, this file does not exist.
 
 Ensure you have correctly spelled the filename in your `license.file` setting.
 
-""")
+"""
+                    )
             elif license_text := app.license.get("text"):
                 (doc_folder / "copyright").write_text(license_text, encoding="utf-8")
                 if len(license_text.splitlines()) <= 1:
-                    self.console.warning("""
+                    self.console.warning(
+                        """
 Your app specifies a license using `license.text`, but the value doesn't appear to be a
 full license. Briefcase will generate a `copyright` file for your project; you should
 ensure that the contents of this file is adequate.
-""")
+"""
+                    )
             else:
-                raise BriefcaseCommandError("""\
+                raise BriefcaseCommandError(
+                    """\
 Your project does not contain a LICENSE definition.
 
 Create a file named `LICENSE` in the same directory as your `pyproject.toml`
 with your app's licensing terms, and set `license.file = 'LICENSE'` in your
 app's configuration.
-""")
+"""
+                )
 
         with self.console.wait_bar("Installing changelog..."):
             changelog = find_changelog_filename(self.base_path)
 
             if changelog is None:
-                raise BriefcaseCommandError("""\
+                raise BriefcaseCommandError(
+                    """\
 Your project does not contain a changelog file with a known file name. You
 must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
-""")
+"""
+                )
 
             changelog_source = self.base_path / changelog
 
@@ -1107,7 +1123,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
                 f.write(
                     "\n".join(
                         [
-                            f"Package: {app.app_name}",
+                            f"Package: {app.bundle_name}",
                             f"Version: {app.version}",
                             f"Architecture: {self.deb_abi(app)}",
                             f"Maintainer: {app.author} <{app.author_email}>",
@@ -1268,13 +1284,15 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
             changelog = find_changelog_filename(self.base_path)
 
             if changelog is None:
-                raise BriefcaseCommandError("""\
+                raise BriefcaseCommandError(
+                    """\
 Your project does not contain a changelog file with a known file name. You
 must provide a changelog file in the same directory as your `pyproject.toml`,
 with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
 'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
 no extension).
-""")
+"""
+                )
 
             # Write the changelog content
             f.write((self.base_path / changelog).read_text(encoding="utf-8"))
