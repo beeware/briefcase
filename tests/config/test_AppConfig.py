@@ -500,3 +500,28 @@ def test_non_unique_uninstall_options():
                 },
             ],
         )
+
+
+def test_capitalization():
+    """Capitalization is prohibited and normalized out in some properties."""
+    config = AppConfig(
+        app_name="MyApp",
+        version="1.2.3",
+        bundle="Org.Beeware",
+        description="A simple app",
+        sources=["src/MyApp", "somewhere/else/interesting", "local_app"],
+        license={"file": "LICENSE"},
+    )
+
+    # The basic properties have been set.
+    assert config.app_name == "MyApp"
+    assert config.bundle == "org.beeware"
+
+    # Derived properties have been set.
+    assert config.bundle_name == "myapp"
+    assert config.bundle_identifier == "org.beeware.myapp"
+    assert config.formal_name == "MyApp"
+    assert config.class_name == "MyApp"
+
+    # The object has a meaningful REPL
+    assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"

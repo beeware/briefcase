@@ -470,7 +470,7 @@ class AppConfig(BaseConfig):
 
         self.app_name = app_name
         self.version = version
-        self.bundle = bundle
+        self.bundle = bundle.lower()
         # Description can only be a single line. Ignore everything else.
         self.description = description.split("\n")[0]
         self.sources = sources
@@ -581,7 +581,7 @@ class AppConfig(BaseConfig):
         This is derived from the app name, but:
         * all `_` have been replaced with `-`.
         """
-        return self.app_name.replace("_", "-")
+        return self.app_name.replace("_", "-").lower()
 
     @property
     def bundle_identifier(self):
