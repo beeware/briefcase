@@ -83,6 +83,16 @@ class BriefcaseConfigError(BriefcaseError):
         return f"Briefcase configuration error: {self.msg}"
 
 
+class InvalidVersionError(BriefcaseConfigError):
+    def __init__(self, msg):
+        super().__init__(
+            f"{msg}\n\n"
+            "Version numbers must be PEP440 compliant; see "
+            "https://packaging.python.org/en/latest/specifications/version-specifiers/"
+            " for details."
+        )
+
+
 class UnsupportedHostError(BriefcaseError):
     def __init__(self, reason):
         super().__init__(error_code=110, skip_logfile=True)

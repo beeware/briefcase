@@ -6,6 +6,8 @@ from packaging.version import Version
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
+from .test_GlobalConfig import VALID_VERSIONS
+
 
 def test_minimal_AppConfig():
     """A simple config can be defined."""
@@ -269,18 +271,18 @@ def test_invalid_bundle_identifier(bundle):
         )
 
 
-def test_valid_app_version():
-    try:
-        AppConfig(
-            app_name="myapp",
-            version="1.2.3",
-            bundle="org.beeware",
-            description="A simple app",
-            sources=["src/myapp"],
-            license={"file": "LICENSE"},
-        )
-    except BriefcaseConfigError:
-        pytest.fail("1.2.3 should be a valid version number")
+@pytest.mark.parametrize(("input", "expected"), VALID_VERSIONS)
+def test_valid_app_version(input, expected):
+    config = AppConfig(
+        app_name="myapp",
+        version=input,
+        bundle="org.beeware",
+        description="A simple app",
+        sources=["src/myapp"],
+        license={"file": "LICENSE"},
+    )
+
+    assert config.version == Version(expected)
 
 
 def test_invalid_app_version():

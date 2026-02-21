@@ -18,7 +18,7 @@ from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
-from .exceptions import BriefcaseConfigError
+from .exceptions import BriefcaseConfigError, InvalidVersionError
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
 # re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
@@ -377,14 +377,16 @@ class GlobalConfig(BaseConfig):
         self.license = license
         self.requires_python = requires_python
 
-        # Version number is PEP440 compliant:
+        # Version number is compliant with PEP440 (and related updates) compliant:
         try:
-            self.version = Version(version)
+            # If input is already a version object (can happen by copying), use as-is
+            if isinstance(version, Version):
+                self.version = version
+            else:
+                self.version = Version(version)
         except InvalidVersion:
-            raise BriefcaseConfigError(
-                f"Version number ({self.version}) is not valid.\n\n"
-                "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details."
+            raise InvalidVersionError(
+                f"Version number ({self.version}) is not valid."
             ) from None
 
     def __repr__(self):
@@ -497,7 +499,7 @@ class AppConfig(BaseConfig):
             install=self.install_options,
         )
 
-        # Version number is PEP440 compliant.
+        # Version number is compliant with PEP440 (and related updates):
         try:
             # If input is already a version object (can happen by copying), use as-is
             if isinstance(version, Version):
@@ -505,11 +507,8 @@ class AppConfig(BaseConfig):
             else:
                 self.version = Version(version)
         except InvalidVersion:
-            raise BriefcaseConfigError(
+            raise InvalidVersionError(
                 f"Version number for {self.app_name!r} ({self.version}) is not valid."
-                f"\n\n"
-                "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details."
             ) from None
 
         if self.sources:
