@@ -282,7 +282,10 @@ def test_valid_app_version(input, expected):
         license={"file": "LICENSE"},
     )
 
+    # Version is parsed as an equivalent Version object
     assert config.version == Version(expected)
+    # Serialized output of parsed Version matches the expected value
+    assert str(config.version) == expected
 
 
 def test_invalid_app_version():
