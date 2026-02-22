@@ -377,7 +377,7 @@ class GlobalConfig(BaseConfig):
         self.license = license
         self.requires_python = requires_python
 
-        # Version number is compliant with PEP440 (and related updates) compliant:
+        # Version number is compliant with PEP440 (and related updates):
         try:
             # If input is already a version object (can happen by copying), use as-is
             if isinstance(version, Version):
