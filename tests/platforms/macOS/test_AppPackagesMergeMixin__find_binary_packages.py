@@ -55,7 +55,7 @@ def test_find_binary_packages(dummy_command, tmp_path):
         tmp_path / "app-packages",
         "multi-tagged-binary-package-1",
         version="3.4.7",
-        tag=["macOS_11_x86-64", "macOS_11_arm64"],
+        tag=["macOS_11_x86-64", "macOS_11_arm64", "macOS_11_universal2"],
     )
     # Universal2 even though it isn't tagged as such
     create_installed_package(
