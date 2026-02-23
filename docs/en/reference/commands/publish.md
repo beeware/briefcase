@@ -1,7 +1,5 @@
 # publish
 
-**COMING SOON**
-
 Uploads your application to a [publication channel][publication-channel-interface]. By default, targets the current platform's default output format.
 
 You may need to provide additional configuration details (e.g., authentication credentials), depending on the publication channel selected.
