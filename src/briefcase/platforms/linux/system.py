@@ -113,7 +113,7 @@ class LinuxSystemMixin(LinuxMixin):
     def distribution_filename(self, app: AppConfig) -> str:
         if app.packaging_format == "deb":
             return (
-                f"{app.app_name}"
+                f"{app.bundle_name}"
                 f"_{app.version}"
                 f"-{getattr(app, 'revision', 1)}"
                 f"~{app.target_vendor}"
@@ -1107,7 +1107,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
                 f.write(
                     "\n".join(
                         [
-                            f"Package: {app.app_name}",
+                            f"Package: {app.bundle_name}",
                             f"Version: {app.version}",
                             f"Architecture: {self.deb_abi(app)}",
                             f"Maintainer: {app.author} <{app.author_email}>",

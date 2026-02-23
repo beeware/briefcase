@@ -1,5 +1,6 @@
 import pytest
 
+from briefcase.config import AppConfig
 from briefcase.platforms.linux.system import LinuxSystemCreateCommand
 
 from ....utils import create_file
@@ -59,3 +60,41 @@ def first_app(first_app_config, tmp_path):
     (lib_dir / "app_packages/secondlib/second_b.so").touch()
 
     return first_app_config
+
+
+@pytest.fixture
+def underscore_app(tmp_path):
+    """A fixture for an app with an underscore in the name, rolled out on disk."""
+    app_config = AppConfig(
+        app_name="underscore_app",
+        project_name="Underscore Project",
+        formal_name="Underscore App",
+        author="Megacorp",
+        author_email="maintainer@example.com",
+        url="https://example.com/underscore_app",
+        bundle="com.example",
+        version="0.0.1",
+        description="The first simple app \\ demonstration",
+        sources=["src/underscore_app"],
+        license={"file": "LICENSE"},
+    )
+
+    # Specify a system python app for a dummy vendor
+    app_config.target_vendor = "somevendor"
+    app_config.target_codename = "surprising"
+    app_config.target_vendor_base = "basevendor"
+
+    # Targeted Python version
+    app_config.python_version_tag = "3"
+
+    # Some project-level files.
+    create_file(tmp_path / "base_path/LICENSE", "Underscore App License")
+    create_file(tmp_path / "base_path/CHANGELOG", "Underscore App Changelog")
+
+    # Make it look like the template has been generated
+    bundle_dir = tmp_path / "base_path/build/underscore_app/somevendor/surprising"
+
+    lib_dir = bundle_dir / "underscore_app-0.0.1/usr/lib/underscore_app"
+    (lib_dir / "app").mkdir(parents=True, exist_ok=True)
+
+    return app_config
