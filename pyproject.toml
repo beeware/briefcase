@@ -199,11 +199,11 @@ static = "briefcase.platforms.web.static"
 app = "briefcase.platforms.windows.app"
 visualstudio = "briefcase.platforms.windows.visualstudio"
 
-[project.entry-points."briefcase.publication_channels.iOS.Xcode"]
-appstore = "briefcase.publication_channels.appstore:AppStorePublicationChannel"
+[project.entry-points."briefcase.channels.iOS.Xcode"]
+appstore = "briefcase.channels.appstore:AppStorePublicationChannel"
 
-[project.entry-points."briefcase.publication_channels.android.gradle"]
-playstore = "briefcase.publication_channels.playstore:PlayStorePublicationChannel"
+[project.entry-points."briefcase.channels.android.gradle"]
+playstore = "briefcase.channels.playstore:PlayStorePublicationChannel"
 
 [tool.coverage.run]
 plugins = ["coverage_conditional_plugin"]

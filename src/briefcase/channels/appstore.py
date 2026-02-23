@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from briefcase.channels.base import BasePublicationChannel
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.publication_channels.base import BasePublicationChannel
 
 if TYPE_CHECKING:
+    from briefcase.channels.base import PublishCommandAPI
     from briefcase.config import AppConfig
-    from briefcase.publication_channels.base import PublishCommandAPI
 
 
 class AppStorePublicationChannel(BasePublicationChannel):

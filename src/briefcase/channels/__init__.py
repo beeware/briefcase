@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from importlib.metadata import entry_points
 
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.publication_channels.base import (
+from briefcase.channels.base import (
     BasePublicationChannel,
     PublishCommandAPI,  # noqa: F401
 )
+from briefcase.exceptions import BriefcaseCommandError
 
 
 def get_publication_channels(
@@ -21,9 +21,7 @@ def get_publication_channels(
     """
     return {
         ep.name: ep.load()
-        for ep in entry_points(
-            group=f"briefcase.publication_channels.{platform}.{output_format}"
-        )
+        for ep in entry_points(group=f"briefcase.channels.{platform}.{output_format}")
     }
 
 

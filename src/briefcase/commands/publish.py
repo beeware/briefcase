@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import argparse
 
+from briefcase.channels import get_publication_channels
+from briefcase.channels.base import BasePublicationChannel
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.publication_channels import get_publication_channels
-from briefcase.publication_channels.base import BasePublicationChannel
 
 from .base import BaseCommand, full_options
 

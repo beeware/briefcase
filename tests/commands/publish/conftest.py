@@ -1,9 +1,9 @@
 import pytest
 
+from briefcase.channels.base import BasePublicationChannel
 from briefcase.commands import PublishCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
-from briefcase.publication_channels.base import BasePublicationChannel
 
 from ...utils import create_file
 

@@ -1,16 +1,16 @@
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
-from briefcase.publication_channels import (
+from briefcase.channels import (
     get_publication_channel,
     get_publication_channels,
 )
-from briefcase.publication_channels.appstore import AppStorePublicationChannel
-from briefcase.publication_channels.base import (
+from briefcase.channels.appstore import AppStorePublicationChannel
+from briefcase.channels.base import (
     BasePublicationChannel,
     PublishCommandAPI,
 )
-from briefcase.publication_channels.playstore import PlayStorePublicationChannel
+from briefcase.channels.playstore import PlayStorePublicationChannel
+from briefcase.exceptions import BriefcaseCommandError
 
 
 def test_publish_command_api_is_runtime_checkable():
@@ -69,27 +69,47 @@ def test_placeholder_channel_raises(channel_class, match):
         channel.publish_app(app=None, command=None)
 
 
-def test_get_publication_channels_discovery():
+@pytest.mark.parametrize(
+    ("platform", "output_format", "channel", "channel_class"),
+    [
+        ("iOS", "Xcode", "appstore", AppStorePublicationChannel),
+        ("android", "gradle", "playstore", PlayStorePublicationChannel),
+    ],
+)
+def test_get_publication_channels_discovery(
+    platform,
+    output_format,
+    channel,
+    channel_class,
+):
     """Built-in channels are discovered via entry points."""
-    ios_channels = get_publication_channels("ios", "xcode")
-    assert ios_channels["appstore"] is AppStorePublicationChannel
-
-    android_channels = get_publication_channels("android", "gradle")
-    assert android_channels["playstore"] is PlayStorePublicationChannel
+    channels = get_publication_channels(platform, output_format)
+    assert channels[channel] is channel_class
 
 
 def test_get_publication_channel():
     """A channel can be retrieved by name."""
     assert isinstance(
-        get_publication_channel("appstore", "ios", "xcode"),
+        get_publication_channel("appstore", "iOS", "Xcode"),
         AppStorePublicationChannel,
     )
 
 
-def test_get_publication_channel_unknown():
+@pytest.mark.parametrize(
+    ("platform", "output_format", "channel"),
+    [
+        # Completely unknown
+        ("flat", "wrapped", "something"),
+        # Known platform, but unknown format
+        ("iOS", "Xcode", "something"),
+        # Known format on a different platform
+        ("iOS", "Xcode", "playstore"),
+    ],
+)
+def test_get_publication_channel_unknown(platform, output_format, channel):
     """Requesting an unknown channel raises an error."""
     with pytest.raises(
         BriefcaseCommandError,
-        match="Unknown publication channel: unknown",
+        match=f"Unknown publication channel: {channel}",
     ):
-        get_publication_channel("unknown", "ios", "xcode")
+        get_publication_channel(channel, platform, output_format)
