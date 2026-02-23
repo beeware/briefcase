@@ -94,16 +94,7 @@ class PublishCommand(BaseCommand):
         # and that all app configurations are finalized.
         self.finalize(apps=apps_to_publish.values())
 
-        # Check the apps have been built first.
-        for app_name_key, app_obj in apps_to_publish.items():
-            binary_file = self.binary_path(app_obj)
-            if not binary_file.exists():
-                raise BriefcaseCommandError(
-                    f"Application {app_name_key} has not been built. "
-                    "Build (and test!) the app before publishing."
-                )
-
-        # Then publish them all to the selected channel.
+        # Publish all apps to the selected channel.
         state = None
         for _, app_obj in sorted(apps_to_publish.items()):
             state = self._publish_app(

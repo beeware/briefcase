@@ -203,7 +203,7 @@ def test_publish_app_invalid(publish_command, first_app, second_app):
 
 
 def test_non_existent(publish_command, first_app_config, second_app):
-    """Requesting a publish of a non-existent app raises an error."""
+    """Publishing an app that hasn't been created cascades through packaging."""
     # Add two apps; use the "config only" version of the first app.
     publish_command.apps = {
         "first": first_app_config,
@@ -212,11 +212,8 @@ def test_non_existent(publish_command, first_app_config, second_app):
 
     options, _ = publish_command.parse_options(["-c", "s3"])
 
-    # Invoking the publish command raises an error
-    with pytest.raises(BriefcaseCommandError):
-        publish_command(**options)
+    publish_command(**options)
 
-    # Only verification will be performed
     assert publish_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -225,13 +222,20 @@ def test_non_existent(publish_command, first_app_config, second_app):
         # App configs have been finalized
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
+        # First app: no distribution artefact, so package is triggered
+        ("package", "first", {}),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("publish", "first", "s3", {"package_state": "first"}),
+        # Second app publishes normally (has distribution artefact)
+        ("verify-app-template", "second"),
+        ("verify-app-tools", "second"),
+        ("publish", "second", "s3", {"publish_state": "first"}),
     ]
 
 
 def test_unbuilt(publish_command, first_app_unbuilt, second_app):
-    """Requesting a publish of an app that has been created, but not built, raises an
-    error."""
-    # Add two apps; use the "config only" version of the first app.
+    """Publishing an unbuilt app cascades through packaging."""
     publish_command.apps = {
         "first": first_app_unbuilt,
         "second": second_app,
@@ -239,11 +243,8 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
 
     options, _ = publish_command.parse_options(["-c", "s3"])
 
-    # Invoking the publish command raises an error
-    with pytest.raises(BriefcaseCommandError):
-        publish_command(**options)
+    publish_command(**options)
 
-    # Only verification will be performed
     assert publish_command.actions == [
         # Host OS is verified
         ("verify-host",),
@@ -252,4 +253,13 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
         # App configs have been finalized
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
+        # First app: no distribution artefact, so package is triggered first
+        ("package", "first", {}),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("publish", "first", "s3", {"package_state": "first"}),
+        # Second app publishes normally (has distribution artefact)
+        ("verify-app-template", "second"),
+        ("verify-app-tools", "second"),
+        ("publish", "second", "s3", {"publish_state": "first"}),
     ]
