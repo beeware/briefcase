@@ -171,7 +171,7 @@ windows = "briefcase.platforms.windows"
 gradle = "briefcase.platforms.android.gradle"
 
 [project.entry-points."briefcase.formats.iOS"]
-xcode = "briefcase.platforms.iOS.xcode"
+Xcode = "briefcase.platforms.iOS.xcode"
 
 [project.entry-points."briefcase.formats.linux"]
 appimage = "briefcase.platforms.linux.appimage"
@@ -181,13 +181,13 @@ system = "briefcase.platforms.linux.system"
 
 [project.entry-points."briefcase.formats.macOS"]
 app = "briefcase.platforms.macOS.app"
-xcode = "briefcase.platforms.macOS.xcode"
+Xcode = "briefcase.platforms.macOS.xcode"
 
 # [project.entry-points."briefcase.formats.tvOS"]
-# xcode = "briefcase.platforms.tvOS.xcode"
+# Xcode = "briefcase.platforms.tvOS.xcode"
 
 # [project.entry-points."briefcase.formats.watchOS"]
-# xcode = "briefcase.platforms.watchOS.xcode"
+# Xcode = "briefcase.platforms.watchOS.xcode"
 
 # [project.entry-points."briefcase.formats.wearos"]
 # gradle = "briefcase.platforms.wearos.gradle"
@@ -199,7 +199,7 @@ static = "briefcase.platforms.web.static"
 app = "briefcase.platforms.windows.app"
 visualstudio = "briefcase.platforms.windows.visualstudio"
 
-[project.entry-points."briefcase.publication_channels.ios.xcode"]
+[project.entry-points."briefcase.publication_channels.iOS.Xcode"]
 appstore = "briefcase.publication_channels.appstore:AppStorePublicationChannel"
 
 [project.entry-points."briefcase.publication_channels.android.gradle"]

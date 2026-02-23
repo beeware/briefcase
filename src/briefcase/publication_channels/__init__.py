@@ -15,8 +15,8 @@ def get_publication_channels(
 ) -> dict[str, type[BasePublicationChannel]]:
     """Load built-in and third-party publication channels for a platform/format.
 
-    :param platform: The target platform (e.g., "ios")
-    :param output_format: The output format (e.g., "xcode")
+    :param platform: The target platform (e.g., "iOS")
+    :param output_format: The output format (e.g., "Xcode")
     :returns: A dict mapping channel names to channel classes.
     """
     return {
