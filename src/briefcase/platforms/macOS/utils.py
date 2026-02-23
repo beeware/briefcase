@@ -62,11 +62,15 @@ class AppPackagesMergeMixin:
         self,
         install_path: Path,
         universal_suffix: str | None = None,
+        other_suffix: str | None = None,
     ) -> list[tuple[str, str]]:
         """Find the packages that have been installed that have binary components.
 
         :param install_path: The path into which packages have been installed.
         :param universal_suffix: The tag suffix that indicates a universal wheel.
+        :param other_suffix: The tag suffix for the *other* architecture. Presence of
+            this architecture implies a universal wheel, even if it isn't tagged as
+            such.
         :returns: A list of (package name, version) tuples, describing the packages that
             are in the install path that are non-universal and non-pure.
         """
@@ -78,7 +82,7 @@ class AppPackagesMergeMixin:
             with (distinfo / "WHEEL").open("r", encoding="utf-8") as f:
                 wheel_data = email.message_from_string(f.read())
                 is_purelib = wheel_data.get("Root-Is-Purelib", "false") == "true"
-                tag = wheel_data["Tag"]
+                tags = wheel_data.get_all("Tag")
 
             # If the wheel is pure, it's not a binary package
             if is_purelib:
@@ -86,7 +90,12 @@ class AppPackagesMergeMixin:
 
             # If the tag ends with the universal tag, the binary package can be used on
             # all targets and doesn't need additional processing.
-            if universal_suffix and tag.endswith(universal_suffix):
+            if universal_suffix and any(tag.endswith(universal_suffix) for tag in tags):
+                continue
+
+            # If the wheel is tagged with the *other* architecture, it's a universal
+            # wheel even though it isn't tagged as such
+            if other_suffix and any(tag.endswith(other_suffix) for tag in tags):
                 continue
 
             # The wheel is a single platform binary wheel.
