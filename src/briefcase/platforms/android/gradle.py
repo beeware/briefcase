@@ -17,7 +17,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig, parsed_version
+from briefcase.config import AppConfig
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
@@ -176,9 +176,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         try:
             version_code = app.version_code
         except AttributeError:
-            parsed = parsed_version(app.version)
-
-            v = ([*parsed.release, 0, 0])[:3]  # version triple
+            v = ([*app.version.release, 0, 0])[:3]  # version triple
             build = int(getattr(app, "build", "0"))
             version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
 

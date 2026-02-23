@@ -4,6 +4,8 @@ import subprocess
 from collections.abc import Collection
 from pathlib import Path
 
+from packaging.version import Version
+
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import SubprocessArgT
@@ -297,7 +299,7 @@ flatpak run {bundle_identifier}
         repo_url: str,
         bundle_identifier: str,
         app_name: str,
-        version: str,
+        version: Version,
         build_path: Path,
         output_path: Path,
     ):
@@ -328,7 +330,7 @@ flatpak run {bundle_identifier}
                     "repo",
                     output_path,
                     bundle_identifier,
-                    version,
+                    str(version),
                 ]
                 + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,

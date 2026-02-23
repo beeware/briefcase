@@ -1296,9 +1296,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
+        briefcase_version = Version(briefcase.__version__)
         if branch is None:
-            template_branch = f"v{version.base_version}"
+            template_branch = f"v{briefcase_version.base_version}"
         else:
             template_branch = branch
 
@@ -1310,7 +1310,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             {
                 "template_source": template,
                 "template_branch": template_branch,
-                "briefcase_version": str(version),
+                "briefcase_version": str(briefcase_version),
             }
         )
 
@@ -1328,7 +1328,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
             # and the user didn't explicitly specify which branch to use.
-            if version.dev is None or branch is not None:
+            if briefcase_version.dev is None or branch is not None:
                 raise
 
             # Development branches can use the main template.

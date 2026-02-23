@@ -2,6 +2,7 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
+from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.android.gradle import GradleCreateCommand
@@ -88,7 +89,7 @@ def test_support_package_filename(create_command):
 )
 def test_version_code(create_command, first_app_config, version, build, version_code):
     """Validate that create adds version_code to the template context."""
-    first_app_config.version = version
+    first_app_config.version = Version(version)
     if build:
         first_app_config.build = build
     context = create_command.output_format_template_context(first_app_config)

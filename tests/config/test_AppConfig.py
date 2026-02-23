@@ -1,9 +1,12 @@
 import sys
 
 import pytest
+from packaging.version import Version
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseConfigError
+
+from .test_GlobalConfig import VALID_VERSIONS
 
 
 def test_minimal_AppConfig():
@@ -19,7 +22,7 @@ def test_minimal_AppConfig():
 
     # The basic properties have been set.
     assert config.app_name == "myapp"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.requires is None
@@ -62,7 +65,7 @@ def test_minimal_external_AppConfig():
 
     # The basic properties have been set.
     assert config.app_name == "myapp"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.requires is None
@@ -119,7 +122,7 @@ def test_extra_attrs():
 
     # The basic properties have been set.
     assert config.app_name == "myapp"
-    assert config.version == "1.2.3"
+    assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
     assert config.description == "A simple app"
     assert config.long_description == "A longer description\nof the app"
@@ -268,18 +271,21 @@ def test_invalid_bundle_identifier(bundle):
         )
 
 
-def test_valid_app_version():
-    try:
-        AppConfig(
-            app_name="myapp",
-            version="1.2.3",
-            bundle="org.beeware",
-            description="A simple app",
-            sources=["src/myapp"],
-            license={"file": "LICENSE"},
-        )
-    except BriefcaseConfigError:
-        pytest.fail("1.2.3 should be a valid version number")
+@pytest.mark.parametrize(("input", "expected"), VALID_VERSIONS)
+def test_valid_app_version(input, expected):
+    config = AppConfig(
+        app_name="myapp",
+        version=input,
+        bundle="org.beeware",
+        description="A simple app",
+        sources=["src/myapp"],
+        license={"file": "LICENSE"},
+    )
+
+    # Version is parsed as an equivalent Version object
+    assert config.version == Version(expected)
+    # Serialized output of parsed Version matches the expected value
+    assert str(config.version) == expected
 
 
 def test_invalid_app_version():
