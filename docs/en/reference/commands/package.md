@@ -42,7 +42,7 @@ Run a specific application target in your project. This argument is only require
 
 ### `-u` / `--update`
 
-Update and recompile the application's code before running. Equivalent to running:
+Update and recompile the application's code before packaging. Equivalent to running:
 
 ```console
 $ briefcase update

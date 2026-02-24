@@ -150,7 +150,7 @@ class PackageCommand(BaseCommand):
             "-u",
             "--update",
             action="store_true",
-            help="Update the app before building",
+            help="Update the app before packaging",
         )
         parser.add_argument(
             "-p",

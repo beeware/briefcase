@@ -32,6 +32,20 @@ The following options can be provided at the command line.
 
 Publish a specific application target in your project. This argument is only required if your project contains more than one application target. The app name specified should be the machine-readable package name for the app.
 
+### `-u` / `--update`
+
+Update and recompile the application's code before publication. Equivalent to running:
+
+```console
+$ briefcase update
+$ briefcase package
+$ briefcase publish
+```
+
+### `-p <format>`, `--packaging-format <format>`
+
+The format to use for packaging. The available packaging formats are platform dependent.
+
 ### `-c <channel>` / `--channel <channel>`
 
 Nominate a [publication channel][publication-channel-interface] to use.

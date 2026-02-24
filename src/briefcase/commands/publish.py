@@ -14,6 +14,14 @@ class PublishCommand(BaseCommand):
     command = "publish"
     description = "Publish an app to a distribution channel."
 
+    @property
+    def packaging_formats(self):
+        return [self.output_format]
+
+    @property
+    def default_packaging_format(self):
+        return self.output_format
+
     def _get_channels(self) -> dict[str, type[BasePublicationChannel]]:
         """Discover available publication channels for this platform/format."""
         return get_publication_channels(self.platform, self.output_format)
@@ -29,6 +37,21 @@ class PublishCommand(BaseCommand):
             help="Name of the app to publish (if multiple apps exist in the project)",
             default=argparse.SUPPRESS,
         )
+
+        parser.add_argument(
+            "-u",
+            "--update",
+            action="store_true",
+            help="Update the app before publishing",
+        )
+        parser.add_argument(
+            "-p",
+            "--packaging-format",
+            dest="packaging_format",
+            help="Packaging format to publish",
+            default=self.default_packaging_format,
+            choices=self.packaging_formats,
+        )
         parser.add_argument(
             "-c",
             "--channel",
@@ -40,18 +63,25 @@ class PublishCommand(BaseCommand):
     def _publish_app(
         self,
         app: AppConfig,
+        update: bool,
+        packaging_format: str,
         channel: BasePublicationChannel,
         **options,
     ) -> dict | None:
         """Internal method to publish a single app.
 
         :param app: The application to publish
+        :param update: Should the application be updated (and rebuilt) first?
+        :param packaging_format: The format of the packaging artefact to create.
         :param channel: The resolved BasePublicationChannel instance
         """
         state = None
 
-        if not self.distribution_path(app).exists():
-            state = self.package_command(app, **options)
+        # Annotate the packaging format onto the app
+        app.packaging_format = packaging_format
+
+        if update or not self.distribution_path(app).exists():
+            state = self.package_command(app, update=update, **options)
 
         self.verify_app(app)
 
@@ -63,6 +93,8 @@ class PublishCommand(BaseCommand):
         self,
         app: AppConfig | None = None,
         app_name: str | None = None,
+        update: bool | None = False,
+        packaging_format: str | None = None,
         channel: str | None = None,
         **options,
     ) -> dict | None:
@@ -98,7 +130,11 @@ class PublishCommand(BaseCommand):
         state = None
         for _, app_obj in sorted(apps_to_publish.items()):
             state = self._publish_app(
-                app_obj, channel=resolved_channel, **full_options(state, options)
+                app_obj,
+                update=update,
+                packaging_format=packaging_format or self.default_packaging_format,
+                channel=resolved_channel,
+                **full_options(state, options),
             )
 
         return state

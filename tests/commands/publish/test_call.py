@@ -75,6 +75,24 @@ def test_publish_triggers_package(publish_command, first_app_unpackaged):
     assert ("package", "first") in [a[:2] for a in publish_command.actions]
 
 
+def test_publish_with_update(publish_command, first_app):
+    """An app update can be forced before publication."""
+    publish_command._get_channels = lambda: {"only": _make_channel_class("only")}
+    publish_command.apps = {"first": first_app}
+
+    publish_command(update=True, channel=None)
+
+    assert publish_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("package", "first", {"update": True}),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("publish", "first", "only", {"package_state": "first"}),
+    ]
+
+
 def test_publish(publish_command, first_app, second_app):
     """If there are multiple apps, publish all of them."""
     # Add two apps
@@ -223,7 +241,7 @@ def test_non_existent(publish_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First app: no distribution artefact, so package is triggered
-        ("package", "first", {}),
+        ("package", "first", {"update": False}),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("publish", "first", "s3", {"package_state": "first"}),
@@ -254,7 +272,7 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First app: no distribution artefact, so package is triggered first
-        ("package", "first", {}),
+        ("package", "first", {"update": False}),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("publish", "first", "s3", {"package_state": "first"}),
