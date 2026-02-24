@@ -73,11 +73,9 @@ xcode = "briefcase.platforms.macOS.xcode"
 
 ## `briefcase.channels.*` { #publication-channel-interface }
 
-Briefcase provides a plugin interface that enables publishing apps to distribution channels (e.g., the iOS App Store or Google Play Store) via `briefcase publish`.
+Briefcase provides a plugin interface that enables publishing apps to distribution channels (e.g., the iOS App Store or Google Play Store) via the [publish][publish] command.
 
-/// note | Note
-There are currently no working publication channels available — neither shipped with Briefcase nor provided by third-party packages. The built-in channels for the iOS App Store ([#2697](https://github.com/beeware/briefcase/issues/2697)) and Google Play Store ([#2698](https://github.com/beeware/briefcase/issues/2698)) are placeholders that raise an error when invoked.
-///
+--8<-- "_snippets/no-channels-note.md"
 
 Publication channel entry points are scoped by platform and output format. To add a custom publication channel plugin, add a `[project.entry-points."briefcase.channels.<platform>.<format>"]` section to your `pyproject.toml` file; each name/value pair under that section will be interpreted as a publication channel. The name of each setting is the identifier used to select the channel with `--channel` on the command line. The value is a string identifying a class that implements the `briefcase.channels.base.BasePublicationChannel` abstract base class.
 

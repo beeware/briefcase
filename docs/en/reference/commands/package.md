@@ -32,6 +32,8 @@ Building installers for some platforms depends on the build tools for the platfo
 
 ///
 
+Once packaging is complete, the artefact can be distributed to a store or channel. See the [publish][publish] command and the platform-specific publishing guides for [Android](../../how-to/publishing/android.md), [iOS](../../how-to/publishing/iOS.md), and [macOS](../../how-to/publishing/macOS.md).
+
 ## Options
 
 The following options can be provided at the command line.

@@ -49,3 +49,9 @@ The format to use for packaging. The available packaging formats are platform de
 ### `-c <channel>` / `--channel <channel>`
 
 Nominate a [publication channel][publication-channel-interface] to use.
+
+--8<-- "_snippets/no-channels-note.md"
+
+## Platform guides
+
+For platform-specific publishing workflows, see the how-to guides for [Android](../../how-to/publishing/android.md), [iOS](../../how-to/publishing/iOS.md), and [macOS](../../how-to/publishing/macOS.md).
