@@ -621,7 +621,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
-    description = "Create an Android App Bundle and APK in release mode."
+    description = "Create a release artefact from an Android Gradle project."
 
     def package_app(self, app: AppConfig, **kwargs):
         """Package the app for distribution.
@@ -654,7 +654,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):
-    description = "Publish an Android APK."
+    description = "Publish an Android Gradle project."
 
 
 # Declare the briefcase command bindings

@@ -1,10 +1,32 @@
 import pytest
 
+from briefcase.channels.base import BasePublicationChannel
 from briefcase.commands import PublishCommand
 from briefcase.commands.base import full_options
 from briefcase.config import AppConfig
 
 from ...utils import create_file
+
+
+class DummyPublicationChannel(BasePublicationChannel):
+    """A publication channel that records calls on the command's action list."""
+
+    @property
+    def name(self):
+        return self._name
+
+    def publish_app(self, app, command, **options):
+        command.actions.append(("publish", app.app_name, self._name, options.copy()))
+        return {"publish_state": app.app_name}
+
+
+def _make_channel_class(channel_name):
+    """Create a DummyPublicationChannel subclass with the given name."""
+    return type(
+        f"Dummy_{channel_name}",
+        (DummyPublicationChannel,),
+        {"_name": channel_name},
+    )
 
 
 class DummyPublishCommand(PublishCommand):
@@ -30,6 +52,9 @@ class DummyPublishCommand(PublishCommand):
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}.bin"
 
+    def distribution_path(self, app):
+        return self.dist_path / f"{app.app_name}.pkg"
+
     def verify_host(self):
         super().verify_host()
         self.actions.append(("verify-host",))
@@ -50,21 +75,22 @@ class DummyPublishCommand(PublishCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    @property
-    def publication_channels(self):
-        return ["s3", "alternative"]
-
-    @property
-    def default_publication_channel(self):
-        return "s3"
-
-    def publish_app(self, app, channel, **kwargs):
-        self.actions.append(("publish", app.app_name, channel, kwargs.copy()))
-        return full_options({"publish_state": app.app_name}, kwargs)
+    def _get_channels(self):
+        return {
+            "s3": _make_channel_class("s3"),
+            "alternative": _make_channel_class("alternative"),
+        }
 
     # These commands override the default behavior, simply tracking that
-    # they were invoked, rather than instantiating a Create/Update/Build command.
+    # they were invoked, rather than instantiating a Create/Update/Build/Package command.
     # This is for testing purposes.
+    def package_command(self, app, **kwargs):
+        self.actions.append(("package", app.app_name, kwargs.copy()))
+        # Remove arguments consumed by the underlying call to package_app()
+        kwargs.pop("update", None)
+        kwargs.pop("packaging_format", None)
+        return full_options({"package_state": app.app_name}, kwargs)
+
     def create_command(self, app, **kwargs):
         self.actions.append(("create", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
@@ -125,15 +151,27 @@ def first_app_unbuilt(first_app_config, tmp_path):
 
 
 @pytest.fixture
-def first_app(first_app_unbuilt, tmp_path):
-    # The same fixture as first_app_config,
-    # but ensures that the binary for the app exists
+def first_app_unpackaged(first_app_unbuilt, tmp_path):
+    # The same fixture as first_app_unbuilt,
+    # but ensures that the binary exists (no distribution artefact)
     create_file(
         tmp_path / "base_path/build/first/tester/dummy/first.bin",
         "first.bin",
     )
 
     return first_app_unbuilt
+
+
+@pytest.fixture
+def first_app(first_app_unpackaged, tmp_path):
+    # The same fixture as first_app_unpackaged,
+    # but ensures that the distribution artefact also exists
+    create_file(
+        tmp_path / "base_path/dist/first.pkg",
+        "first.pkg",
+    )
+
+    return first_app_unpackaged
 
 
 @pytest.fixture
@@ -151,7 +189,7 @@ def second_app_config():
 @pytest.fixture
 def second_app(second_app_config, tmp_path):
     # The same fixture as second_app_config,
-    # but ensures that the binary for the app exists
+    # but ensures that the binary and distribution artefact exist
     create_file(
         tmp_path
         / "base_path"
@@ -165,6 +203,10 @@ def second_app(second_app_config, tmp_path):
     create_file(
         tmp_path / "base_path/build/second/tester/dummy/second.bin",
         "second.bin",
+    )
+    create_file(
+        tmp_path / "base_path/dist/second.pkg",
+        "second.pkg",
     )
 
     return second_app_config

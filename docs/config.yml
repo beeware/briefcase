@@ -4,6 +4,7 @@ copyright: © Russell Keith-Magee
 not_in_nav: |
   /index.md
   /reference/platforms/linux/docker_build_options.md
+  /_snippets/*
 
 validation:
   omitted_files: warn
