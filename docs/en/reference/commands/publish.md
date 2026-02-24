@@ -50,7 +50,7 @@ The format to use for packaging. The available packaging formats are platform de
 
 Nominate a [publication channel][publication-channel-interface] to use.
 
---8<-- "_snippets/no-channels-note.md"
+--8<-- "_snippets/available-channels.md"
 
 ## Platform guides
 

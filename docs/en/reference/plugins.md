@@ -75,7 +75,7 @@ xcode = "briefcase.platforms.macOS.xcode"
 
 Briefcase provides a plugin interface that enables publishing apps to distribution channels (e.g., the iOS App Store or Google Play Store) via the [publish][publish] command.
 
---8<-- "_snippets/no-channels-note.md"
+--8<-- "_snippets/available-channels.md"
 
 Publication channel entry points are scoped by platform and output format. To add a custom publication channel plugin, add a `[project.entry-points."briefcase.channels.<platform>.<format>"]` section to your `pyproject.toml` file; each name/value pair under that section will be interpreted as a publication channel. The name of each setting is the identifier used to select the channel with `--channel` on the command line. The value is a string identifying a class that implements the `briefcase.channels.base.BasePublicationChannel` abstract base class.
 
