@@ -510,7 +510,9 @@ class macOSRunMixin:
         # as the process will generate lots of system-level messages.
         # We can't filter on *just* the senderImagePath, because other
         # apps will generate log messages that would be caught by the filter.
-        sender = os.fsdecode(self.binary_path(app) / "Contents/MacOS" / app.formal_name)
+        sender = os.fsdecode(
+            self.binary_path(app) / "Contents/MacOS" / app.formal_name
+        ).replace('"', '\\"')
         log_popen = self.tools.subprocess.Popen(
             [
                 "log",
