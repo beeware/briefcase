@@ -1,0 +1,1 @@
+Briefcase now supports license files with names "LICENCE", "LICENSE" and "COPYING" with the extensions ".rst", ".md" and ".txt".
