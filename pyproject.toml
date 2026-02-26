@@ -127,9 +127,7 @@ test = [
 # Docs are always built on a specific Python version; see RTD and tox config files,
 # and the docs contribution guide.
 docs = [
-    # TODO: Restore main branch before final.
-#    "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
-    "beeware-docs-tools @ git+https://github.com/kattni/beeware-docs-tools@tooling/website-mkdocs-migration",
+    "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
 ]
 
 [project.urls]
