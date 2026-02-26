@@ -82,7 +82,10 @@ class PublishCommand(BaseCommand):
 
         if update or not self.distribution_path(app).exists():
             state = self.package_command(
-                app, update=update, packaging_format=packaging_format, **options
+                app,
+                update=update,
+                packaging_format=packaging_format,
+                **options,
             )
 
         self.verify_app(app)

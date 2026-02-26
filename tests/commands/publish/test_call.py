@@ -221,7 +221,8 @@ def test_publish_app_invalid(publish_command, first_app, second_app):
 
 
 def test_publish_passes_packaging_format_to_package(
-    publish_command, first_app_unpackaged
+    publish_command,
+    first_app_unpackaged,
 ):
     """packaging_format is forwarded to package_command when packaging is triggered."""
     publish_command._get_channels = lambda: {"only": _make_channel_class("only")}
