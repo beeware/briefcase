@@ -336,6 +336,12 @@ type = [
     { directory = "misc", name = "Misc", showcontent = false },
 ]
 
+[tool.ty.rules]
+unresolved-attribute = "warn"
+invalid-argument-type = "warn"
+invalid-return-type = "warn"
+unresolved-import = "ignore"
+
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
 # the way to make case-sensitive skips of words etc

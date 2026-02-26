@@ -34,6 +34,25 @@ jobs:
     with:
       pre-commit-source: "--group pre-commit"
 
+  ty:
+    name: Type check
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6.0.2
+
+    - name: Set up Python
+      uses: actions/setup-python@v6.2.0
+      with:
+        python-version: "3.13"
+
+    - name: Install Tox
+      run: python -m pip install --group tox-uv
+
+    - name: Type check
+      run: tox -e ty
+
   towncrier:
     name: Check towncrier
     uses: beeware/.github/.github/workflows/towncrier-run.yml@main
