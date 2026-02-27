@@ -86,7 +86,7 @@ def test_publish_with_update(publish_command, first_app):
         ("verify-host",),
         ("verify-tools",),
         ("finalize-app-config", "first"),
-        ("package", "first", {"update": True}),
+        ("package", "first", {"update": True, "packaging_format": "Dummy"}),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("publish", "first", "only", {"package_state": "first"}),
@@ -220,6 +220,23 @@ def test_publish_app_invalid(publish_command, first_app, second_app):
         publish_command(**options)
 
 
+def test_publish_passes_packaging_format_to_package(
+    publish_command,
+    first_app_unpackaged,
+):
+    """packaging_format is forwarded to package_command when packaging is triggered."""
+    publish_command._get_channels = lambda: {"only": _make_channel_class("only")}
+    publish_command.apps = {"first": first_app_unpackaged}
+
+    publish_command(channel=None)
+
+    # Find the package action and verify packaging_format was passed
+    package_actions = [a for a in publish_command.actions if a[0] == "package"]
+    assert len(package_actions) == 1
+    assert "packaging_format" in package_actions[0][2]
+    assert package_actions[0][2]["packaging_format"] == "Dummy"
+
+
 def test_non_existent(publish_command, first_app_config, second_app):
     """Publishing an app that hasn't been created cascades through packaging."""
     # Add two apps; use the "config only" version of the first app.
@@ -241,7 +258,7 @@ def test_non_existent(publish_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First app: no distribution artefact, so package is triggered
-        ("package", "first", {"update": False}),
+        ("package", "first", {"update": False, "packaging_format": "Dummy"}),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("publish", "first", "s3", {"package_state": "first"}),
@@ -272,7 +289,7 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First app: no distribution artefact, so package is triggered first
-        ("package", "first", {"update": False}),
+        ("package", "first", {"update": False, "packaging_format": "Dummy"}),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("publish", "first", "s3", {"package_state": "first"}),
