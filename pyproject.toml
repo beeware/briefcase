@@ -115,6 +115,10 @@ tox-uv = [
     "tox-uv == 1.29.0",
 ]
 
+ty = [
+    "ty == 0.0.18",
+]
+
 dev = [
     {include-group = "pre-commit"},
     {include-group = "setuptools-scm"},
