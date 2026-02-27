@@ -115,6 +115,10 @@ tox-uv = [
     "tox-uv == 1.29.0",
 ]
 
+ty = [
+    "ty == 0.0.18",
+]
+
 dev = [
     {include-group = "pre-commit"},
     {include-group = "setuptools-scm"},
@@ -335,6 +339,12 @@ type = [
     { directory = "doc", name = "Documentation", showcontent = true },
     { directory = "misc", name = "Misc", showcontent = false },
 ]
+
+[tool.ty.rules]
+unresolved-attribute = "warn"
+invalid-argument-type = "warn"
+invalid-return-type = "warn"
+unresolved-import = "ignore"
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
