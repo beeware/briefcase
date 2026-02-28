@@ -75,9 +75,9 @@ def test_new_repo_template_mkdir_interrupt(base_command, mock_git):
     """A really early interrupt will occur before the template dir is created."""
     base_command.tools.git = mock_git
 
-    # We don't have a convenient point to insert a KeyboardInterrupt *before* creating the
-    # directory, so we fake the effect - make the side effect of the clone deletion of
-    # the entire folder; then raise the KeyboardInterrupt.
+    # We don't have a convenient point to insert a KeyboardInterrupt *before* creating
+    # the directory, so we fake the effect - make the side effect of the clone deletion
+    # of the entire folder; then raise the KeyboardInterrupt.
     def clone_failure(to_path, **kwargs):
         shutil.rmtree(to_path)
         raise KeyboardInterrupt()
@@ -107,7 +107,8 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"Unable to clone repository 'https://example.com/magic/special-template.git'"
+            r"Unable to clone repository"
+            r" 'https://example.com/magic/special-template.git'"
         ),
     ):
         base_command.update_cookiecutter_cache(
@@ -131,34 +132,36 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
     ("stderr_string", "error_message"),
     [
         pytest.param(
-            "\n    stderr: '\nfatal: could not clone repository 'https://example.com' \n'",
+            (
+                "\n    stderr: '\nfatal: could not clone repository"
+                " 'https://example.com' \n'"
+            ),
             "Could not clone repository 'https://example.com'.",
             id="tailing-whitespace-no-caps-no-period",
         ),
         pytest.param(
             (
-                "\n    stderr: '\nfatal: Could not read from remote repository.\n\n"
-                "Please make sure you have the correct access rights\nand the repository exists. \n'"
+                "\n    stderr: '\nfatal: Could not read from remote repository."
+                "\n\nPlease"
+                " make sure you have the correct access rights\nand the repository"
+                " exists. \n'"
             ),
-            (
-                "Could not read from remote repository.\n\nPlease make sure "
-                "you have the correct access rights\nand the repository exists."
-            ),
+            "Could not read from remote repository.\n\nPlease make sure "
+            "you have the correct access rights\nand the repository exists.",
             id="tailing-whitespace-has-caps-has-period",
         ),
         pytest.param(
             (
                 "\n    stderr: '\nfatal: unable to access 'https://example.com/': "
-                "OpenSSL/3.2.2: error:0A000438:SSL routines::tlsv1 alert internal error'"
+                "OpenSSL/3.2.2: error:0A000438:SSL routines::tlsv1 alert internal "
+                "error'"
             ),
-            (
-                "Unable to access 'https://example.com/': OpenSSL/3.2.2: "
-                "error:0A000438:SSL routines::tlsv1 alert internal error."
-            ),
+            "Unable to access 'https://example.com/': OpenSSL/3.2.2: "
+            "error:0A000438:SSL routines::tlsv1 alert internal error.",
             id="no-tailing-whitespace-no-caps-no-period",
         ),
         pytest.param(
-            "\n stderr: 'Mysterious git clone edge case with no fatal error.",
+            ("\n stderr: 'Mysterious git clone edge case with no fatal error."),
             "This may be because your computer is offline",
             id="fallback-hint",
         ),
@@ -179,8 +182,12 @@ def test_repo_clone_error(stderr_string, error_message, base_command, mock_git):
 
     with pytest.raises(
         BriefcaseCommandError,
-        # The error message should not retain the "fatal:" prefix; it isn't useful information to the user.
-        match=f"Unable to clone repository '{re.escape(repository)}'.\n\n?(?<!fatal: ){re.escape(error_message)}",
+        # The error message should not retain the "fatal:" prefix; it isn't useful
+        # information to the user.
+        match=(
+            f"Unable to clone repository '{re.escape(repository)}'.\n\n?(?<!fatal:"
+            f" ){re.escape(error_message)}"
+        ),
     ):
         base_command.update_cookiecutter_cache(
             template=repository,

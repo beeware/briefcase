@@ -21,8 +21,9 @@ def test_update(capsys, monkeypatch, dummy_console):
         keep_alive.update()
         keep_alive.update()
 
-    assert capsys.readouterr().out == (
-        "... still waiting\n... still waiting\n... still waiting\n"
+    assert (
+        capsys.readouterr().out
+        == "... still waiting\n... still waiting\n... still waiting\n"
     )
 
 

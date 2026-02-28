@@ -38,7 +38,8 @@ def test_toga_bootstrap(new_command):
     )
 
     assert context == {
-        "app_source": '''\
+        "app_source": (
+            '''\
 import toga
 from toga.style.pack import COLUMN, ROW
 
@@ -60,14 +61,18 @@ class {{ cookiecutter.class_name }}(toga.App):
 
 def main():
     return {{ cookiecutter.class_name }}()
-''',
-        "app_start_source": """\
+'''
+        ),
+        "app_start_source": (
+            """\
 from {{ cookiecutter.module_name }}.app import main
 
 if __name__ == "__main__":
     main().main_loop()
-""",
-        "pyproject_table_briefcase_app_extra_content": """
+"""
+        ),
+        "pyproject_table_briefcase_app_extra_content": (
+            """
 requires = [
 ]
 test_requires = [
@@ -75,15 +80,19 @@ test_requires = [
     "pytest",
 {% endif %}
 ]
-""",
-        "pyproject_table_macOS": """\
+"""
+        ),
+        "pyproject_table_macOS": (
+            """\
 universal_build = true
 requires = [
     "toga-cocoa~=0.5.0",
     "std-nslog~=1.0.3",
 ]
-""",
-        "pyproject_table_linux": """\
+"""
+        ),
+        "pyproject_table_linux": (
+            """\
 requires = [
     "toga-gtk~=0.5.0",
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
@@ -91,8 +100,10 @@ requires = [
     # older) releases, you can remove this version pin. See beeware/toga#3143.
     "pygobject < 3.52.1",
 ]
-""",
-        "pyproject_table_linux_system_debian": """\
+"""
+        ),
+        "pyproject_table_linux_system_debian": (
+            """\
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
@@ -117,8 +128,10 @@ system_runtime_requires = [
     # Note: Debian 11 requires gir1.2-webkit2-4.0 instead
     # "gir1.2-webkit2-4.1",
 ]
-""",
-        "pyproject_table_linux_system_rhel": """\
+"""
+        ),
+        "pyproject_table_linux_system_rhel": (
+            """\
 system_requires = [
     # Needed to compile pycairo wheel
     "cairo-gobject-devel",
@@ -136,8 +149,10 @@ system_runtime_requires = [
     # Needed to provide WebKit2 at runtime
     # "webkit2gtk3",
 ]
-""",
-        "pyproject_table_linux_system_suse": """\
+"""
+        ),
+        "pyproject_table_linux_system_suse": (
+            """\
 system_requires = [
     # Needed to compile pycairo wheel
     "cairo-devel",
@@ -155,8 +170,10 @@ system_runtime_requires = [
     # Needed to provide WebKit2 at runtime
     # "libwebkit2gtk3", "typelib(WebKit2)",
 ]
-""",
-        "pyproject_table_linux_system_arch": """\
+"""
+        ),
+        "pyproject_table_linux_system_arch": (
+            """\
 system_requires = [
     # Needed to compile pycairo wheel
     "cairo",
@@ -182,8 +199,10 @@ system_runtime_requires = [
     # Needed to provide WebKit2 at runtime
     # "webkit2gtk",
 ]
-""",
-        "pyproject_table_linux_appimage": """\
+"""
+        ),
+        "pyproject_table_linux_appimage": (
+            """\
 manylinux = "manylinux_2_28"
 
 system_requires = [
@@ -203,24 +222,32 @@ system_requires = [
 linuxdeploy_plugins = [
     "DEPLOY_GTK_VERSION=3 gtk",
 ]
-""",
-        "pyproject_table_linux_flatpak": """\
+"""
+        ),
+        "pyproject_table_linux_flatpak": (
+            """\
 flatpak_runtime = "org.gnome.Platform"
 flatpak_runtime_version = "48"
 flatpak_sdk = "org.gnome.Sdk"
-""",
-        "pyproject_table_windows": """\
+"""
+        ),
+        "pyproject_table_windows": (
+            """\
 requires = [
     "toga-winforms~=0.5.0",
 ]
-""",
-        "pyproject_table_iOS": """\
+"""
+        ),
+        "pyproject_table_iOS": (
+            """\
 requires = [
     "toga-iOS~=0.5.0",
     "std-nslog~=1.0.3",
 ]
-""",
-        "pyproject_table_android": '''\
+"""
+        ),
+        "pyproject_table_android": (
+            '''\
 requires = [
     "toga-android~=0.5.0",
 ]
@@ -241,12 +268,15 @@ build_gradle_dependencies = [
 # build_gradle_extra_content="""
 # chaquopy.defaultConfig.staticProxy("toga_android.widgets.internal.webview")
 # """
-''',
-        "pyproject_table_web": """\
+'''
+        ),
+        "pyproject_table_web": (
+            """\
 requires = [
     "toga-web~=0.5.0",
 ]
-""",
+"""
+        ),
     }
 
 
@@ -266,19 +296,24 @@ def test_console_bootstrap(new_command):
 
     assert context == {
         "console_app": True,
-        "app_source": """\
+        "app_source": (
+            """\
 
 def main():
     # Your app logic goes here
     print("Hello, World.")
-""",
-        "app_start_source": """\
+"""
+        ),
+        "app_start_source": (
+            """\
 from {{ cookiecutter.module_name }}.app import main
 
 if __name__ == "__main__":
     main()
-""",
-        "pyproject_table_briefcase_app_extra_content": """
+"""
+        ),
+        "pyproject_table_briefcase_app_extra_content": (
+            """
 requires = [
     # Add your cross-platform app requirements here
 ]
@@ -287,19 +322,25 @@ test_requires = [
     "pytest",
 {% endif %}
 ]
-""",
-        "pyproject_table_macOS": """\
+"""
+        ),
+        "pyproject_table_macOS": (
+            """\
 universal_build = true
 requires = [
     # Add your macOS-specific app requirements here
 ]
-""",
-        "pyproject_table_linux": """\
+"""
+        ),
+        "pyproject_table_linux": (
+            """\
 requires = [
     # Add your Linux-specific app requirements here
 ]
-""",
-        "pyproject_table_linux_system_debian": """\
+"""
+        ),
+        "pyproject_table_linux_system_debian": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -307,8 +348,10 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_system_rhel": """\
+"""
+        ),
+        "pyproject_table_linux_system_rhel": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -316,8 +359,10 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_system_suse": """\
+"""
+        ),
+        "pyproject_table_linux_system_suse": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -325,8 +370,10 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_system_arch": """\
+"""
+        ),
+        "pyproject_table_linux_system_arch": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -334,26 +381,37 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_flatpak": """\
+"""
+        ),
+        "pyproject_table_linux_flatpak": (
+            """\
 flatpak_runtime = "org.freedesktop.Platform"
 flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
-""",
-        "pyproject_table_windows": """\
+"""
+        ),
+        "pyproject_table_windows": (
+            """\
 requires = [
     # Add your Windows-specific app requirements here
 ]
-""",
-        "pyproject_table_iOS": """\
+"""
+        ),
+        "pyproject_table_iOS": (
+            """\
 supported = false
-""",
-        "pyproject_table_android": """\
+"""
+        ),
+        "pyproject_table_android": (
+            """\
 supported = false
-""",
-        "pyproject_table_web": """\
+"""
+        ),
+        "pyproject_table_web": (
+            """\
 supported = false
-""",
+"""
+        ),
     }
 
 
@@ -372,7 +430,8 @@ def test_pyside6_bootstrap(new_command):
     )
 
     assert context == {
-        "app_source": """\
+        "app_source": (
+            """\
 import importlib.metadata
 import sys
 
@@ -409,8 +468,10 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     main_window = {{ cookiecutter.class_name }}()
     sys.exit(app.exec())
-""",
-        "pyproject_table_briefcase_app_extra_content": """
+"""
+        ),
+        "pyproject_table_briefcase_app_extra_content": (
+            """
 requires = [
     "PySide6-Essentials~=6.8",
     # "PySide6-Addons~=6.8",
@@ -420,20 +481,26 @@ test_requires = [
     "pytest",
 {% endif %}
 ]
-""",
-        "pyproject_table_macOS": """\
+"""
+        ),
+        "pyproject_table_macOS": (
+            """\
 universal_build = true
 # As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
 min_os_version = "12.0"
 requires = [
     "std-nslog~=1.0.3",
 ]
-""",
-        "pyproject_table_linux": """\
+"""
+        ),
+        "pyproject_table_linux": (
+            """\
 requires = [
 ]
-""",
-        "pyproject_table_linux_system_debian": """\
+"""
+        ),
+        "pyproject_table_linux_system_debian": (
+            """\
 system_requires = [
 ]
 
@@ -449,16 +516,20 @@ system_runtime_requires = [
     "libxcb-shape0",
     "libxkbcommon-x11-0",
 ]
-""",
-        "pyproject_table_linux_system_rhel": """\
+"""
+        ),
+        "pyproject_table_linux_system_rhel": (
+            """\
 system_requires = [
 ]
 
 system_runtime_requires = [
     "qt6-qtbase-gui",
 ]
-""",
-        "pyproject_table_linux_system_suse": """\
+"""
+        ),
+        "pyproject_table_linux_system_suse": (
+            """\
 system_requires = [
 ]
 
@@ -466,16 +537,20 @@ system_runtime_requires = [
     "libgthread-2_0-0",
     "libQt6Gui6",
 ]
-""",
-        "pyproject_table_linux_system_arch": """\
+"""
+        ),
+        "pyproject_table_linux_system_arch": (
+            """\
 system_requires = [
 ]
 
 system_runtime_requires = [
     "qt6-base",
 ]
-""",
-        "pyproject_table_linux_appimage": """\
+"""
+        ),
+        "pyproject_table_linux_appimage": (
+            """\
 manylinux = "manylinux_2_28"
 
 system_requires = [
@@ -484,25 +559,36 @@ system_requires = [
 
 linuxdeploy_plugins = [
 ]
-""",
-        "pyproject_table_linux_flatpak": """\
+"""
+        ),
+        "pyproject_table_linux_flatpak": (
+            """\
 flatpak_runtime = "org.kde.Platform"
 flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
-""",
-        "pyproject_table_windows": """\
+"""
+        ),
+        "pyproject_table_windows": (
+            """\
 requires = [
 ]
-""",
-        "pyproject_table_iOS": """\
+"""
+        ),
+        "pyproject_table_iOS": (
+            """\
 supported = false
-""",
-        "pyproject_table_android": """\
+"""
+        ),
+        "pyproject_table_android": (
+            """\
 supported = false
-""",
-        "pyproject_table_web": """\
+"""
+        ),
+        "pyproject_table_web": (
+            """\
 supported = false
-""",
+"""
+        ),
     }
 
 
@@ -521,7 +607,8 @@ def test_pygame_bootstrap(new_command):
     )
 
     assert context == {
-        "app_source": """\
+        "app_source": (
+            """\
 import importlib.metadata
 import os
 import sys
@@ -565,8 +652,10 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
-""",
-        "pyproject_table_briefcase_app_extra_content": """
+"""
+        ),
+        "pyproject_table_briefcase_app_extra_content": (
+            """
 requires = [
     "pygame~=2.6",
 ]
@@ -575,46 +664,60 @@ test_requires = [
     "pytest",
 {% endif %}
 ]
-""",
-        "pyproject_table_macOS": """\
+"""
+        ),
+        "pyproject_table_macOS": (
+            """\
 universal_build = true
 requires = [
     "std-nslog~=1.0.3",
 ]
-""",
-        "pyproject_table_linux": """\
+"""
+        ),
+        "pyproject_table_linux": (
+            """\
 requires = [
 ]
-""",
-        "pyproject_table_linux_system_debian": """\
+"""
+        ),
+        "pyproject_table_linux_system_debian": (
+            """\
 system_requires = [
 ]
 
 system_runtime_requires = [
 ]
-""",
-        "pyproject_table_linux_system_rhel": """\
+"""
+        ),
+        "pyproject_table_linux_system_rhel": (
+            """\
 system_requires = [
 ]
 
 system_runtime_requires = [
 ]
-""",
-        "pyproject_table_linux_system_suse": """\
+"""
+        ),
+        "pyproject_table_linux_system_suse": (
+            """\
 system_requires = [
 ]
 
 system_runtime_requires = [
 ]
-""",
-        "pyproject_table_linux_system_arch": """\
+"""
+        ),
+        "pyproject_table_linux_system_arch": (
+            """\
 system_requires = [
 ]
 
 system_runtime_requires = [
 ]
-""",
-        "pyproject_table_linux_appimage": """\
+"""
+        ),
+        "pyproject_table_linux_appimage": (
+            """\
 manylinux = "manylinux_2_28"
 
 system_requires = [
@@ -622,25 +725,36 @@ system_requires = [
 
 linuxdeploy_plugins = [
 ]
-""",
-        "pyproject_table_linux_flatpak": """\
+"""
+        ),
+        "pyproject_table_linux_flatpak": (
+            """\
 flatpak_runtime = "org.freedesktop.Platform"
 flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
-""",
-        "pyproject_table_windows": """\
+"""
+        ),
+        "pyproject_table_windows": (
+            """\
 requires = [
 ]
-""",
-        "pyproject_table_iOS": """\
+"""
+        ),
+        "pyproject_table_iOS": (
+            """\
 supported = false
-""",
-        "pyproject_table_android": """\
+"""
+        ),
+        "pyproject_table_android": (
+            """\
 supported = false
-""",
-        "pyproject_table_web": """\
+"""
+        ),
+        "pyproject_table_web": (
+            """\
 supported = false
-""",
+"""
+        ),
     }
 
 
@@ -659,38 +773,49 @@ def test_no_bootstrap(new_command):
     )
 
     assert context == {
-        "app_source": """\
+        "app_source": (
+            """\
 
 def main():
     # Your app logic goes here
     print("Hello, World.")
-""",
-        "app_start_source": """\
+"""
+        ),
+        "app_start_source": (
+            """\
 from {{ cookiecutter.module_name }}.app import main
 
 if __name__ == "__main__":
     main()
-""",
-        "pyproject_table_briefcase_app_extra_content": """
+"""
+        ),
+        "pyproject_table_briefcase_app_extra_content": (
+            """
 requires = [
     # Add your cross-platform app requirements here
 ]
 test_requires = [
     # Add your cross-platform test requirements here
 ]
-""",
-        "pyproject_table_macOS": """\
+"""
+        ),
+        "pyproject_table_macOS": (
+            """\
 universal_build = true
 requires = [
     # Add your macOS-specific app requirements here
 ]
-""",
-        "pyproject_table_linux": """\
+"""
+        ),
+        "pyproject_table_linux": (
+            """\
 requires = [
     # Add your Linux-specific app requirements here
 ]
-""",
-        "pyproject_table_linux_system_debian": """\
+"""
+        ),
+        "pyproject_table_linux_system_debian": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -698,8 +823,10 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_system_rhel": """\
+"""
+        ),
+        "pyproject_table_linux_system_rhel": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -707,8 +834,10 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_system_suse": """\
+"""
+        ),
+        "pyproject_table_linux_system_suse": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -716,8 +845,10 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_system_arch": """\
+"""
+        ),
+        "pyproject_table_linux_system_arch": (
+            """\
 system_requires = [
     # Add any system packages needed at build the app here
 ]
@@ -725,32 +856,43 @@ system_requires = [
 system_runtime_requires = [
     # Add any system packages needed at runtime here
 ]
-""",
-        "pyproject_table_linux_flatpak": """\
+"""
+        ),
+        "pyproject_table_linux_flatpak": (
+            """\
 flatpak_runtime = "org.freedesktop.Platform"
 flatpak_runtime_version = "25.08"
 flatpak_sdk = "org.freedesktop.Sdk"
-""",
-        "pyproject_table_windows": """\
+"""
+        ),
+        "pyproject_table_windows": (
+            """\
 requires = [
     # Add your Windows-specific app requirements here
 ]
-""",
-        "pyproject_table_iOS": """\
+"""
+        ),
+        "pyproject_table_iOS": (
+            """\
 requires = [
     # Add your iOS-specific app requirements here
 ]
-""",
-        "pyproject_table_android": """\
+"""
+        ),
+        "pyproject_table_android": (
+            """\
 requires = [
     # Add your Android-specific app requirements here
 ]
-""",
-        "pyproject_table_web": """\
+"""
+        ),
+        "pyproject_table_web": (
+            """\
 requires = [
     # Add your web-specific app requirements here
 ]
-""",
+"""
+        ),
     }
 
 

@@ -172,10 +172,9 @@ def test_dev_test_mode_with_args(dev_command, first_app, is_console_app, tmp_pat
             sys.executable,
             "-c",
             (
-                "import runpy, sys;"
-                "sys.path.pop(0);"
-                "sys.argv.extend(['foo', 'bar', '--whiz']);"
-                'runpy.run_module("tests.first", run_name="__main__", alter_sys=True)'
+                "import runpy, sys;sys.path.pop(0);sys.argv.extend(['foo', 'bar',"
+                ' \'--whiz\']);runpy.run_module("tests.first", run_name="__main__",'
+                " alter_sys=True)"
             ),
         ],
         env={

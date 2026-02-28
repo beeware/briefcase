@@ -49,7 +49,11 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
+        (
+            f"The directory {bundle_path.relative_to(base_path)} already exists;"
+            " overwrite"
+            " [y/N]? "
+        ),
     ]
 
     # The right sequence of things will be done
@@ -85,7 +89,11 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
+        (
+            f"The directory {bundle_path.relative_to(base_path)} already exists;"
+            " overwrite"
+            " [y/N]? "
+        ),
     ]
 
     # No app creation actions will be performed
@@ -113,7 +121,11 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
+        (
+            f"The directory {bundle_path.relative_to(base_path)} already exists;"
+            " overwrite"
+            " [y/N]? "
+        ),
     ]
 
     # And no actions were necessary
