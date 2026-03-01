@@ -84,7 +84,7 @@ dependencies = [
     # has a runtime warning about the use of chardet 6+, which our test suite turns into
     # a full error. Requests has already increased the pin; the next requests release
     # should remove the need for this pin.
-    "chardet < 6.0",
+    "chardet < 7.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
