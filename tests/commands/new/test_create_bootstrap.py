@@ -5,13 +5,21 @@ import pytest
 
 import briefcase.commands.new
 from briefcase.bootstraps import (
-    BaseGuiBootstrap,
     ConsoleBootstrap,
     EmptyBootstrap,
     PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
+from briefcase.exceptions import BriefcaseWarning
+
+
+class FakeEntryPoint:
+    def __init__(self, obj):
+        self._obj = obj
+
+    def load(self):
+        return self._obj
 
 
 @pytest.fixture
@@ -23,6 +31,17 @@ def mock_builtin_bootstraps():
         "PySide6": PySide6GuiBootstrap,
         "Pygame": PygameGuiBootstrap,
     }
+
+
+@pytest.fixture
+def patched_entry_points(mock_builtin_bootstraps, monkeypatch):
+    eps = {name: FakeEntryPoint(cls) for name, cls in mock_builtin_bootstraps.items()}
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstrap_entry_points",
+        lambda: eps,
+    )
+    return eps
 
 
 def test_question_sequence_bootstrap_context(
@@ -41,287 +60,218 @@ def test_question_sequence_bootstrap_context(
             nonlocal passed_context
             passed_context = context.copy()
 
+    eps = {
+        **{name: FakeEntryPoint(cls) for name, cls in mock_builtin_bootstraps.items()},
+        "Custom GUI": FakeEntryPoint(GuiBootstrap),
+    }
+
     monkeypatch.setattr(
         briefcase.commands.new,
-        "get_gui_bootstraps",
-        MagicMock(
-            return_value={
-                **mock_builtin_bootstraps,
-                "Custom GUI": GuiBootstrap,
-            },
-        ),
+        "get_gui_bootstrap_entry_points",
+        MagicMock(return_value=eps),
     )
 
-    new_command.console.input_enabled = False
-
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={
-            "bootstrap": "Custom GUI",
-        },
-    )
-
-    assert isinstance(bootstrap, GuiBootstrap)
-    assert passed_context == {
+    app_context = {
         "app_name": "myapplication",
         "author": "Grace Hopper",
     }
+
+    # override selects Custom GUI without requiring user input
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "Custom GUI"}
+    )
+
+    bootstrap = bootstrap_class(console=new_command.console, context=app_context)
+
+    assert isinstance(bootstrap, GuiBootstrap)
+    assert passed_context == app_context
 
 
 def test_question_sequence_toga(new_command):
     """The Toga bootstrap can be selected."""
 
-    new_command.console.values = [
-        "1",  # Toga GUI toolkit
-    ]
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={},
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "Toga"}
     )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, TogaGuiBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
 
 
 def test_question_sequence_console(new_command):
     """A console bootstrap can be constructed."""
 
-    new_command.console.values = [
-        "4",  # Console app
-    ]
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={},
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "Console"}
     )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, ConsoleBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
 
 
 def test_question_sequence_pyside6(new_command):
-    """A Pyside6 bootstrap can be created."""
+    """A PySide6 bootstrap can be created."""
 
-    new_command.console.values = [
-        "2",  # PySide6 GUI toolkit
-    ]
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={},
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "PySide6"}
     )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, PySide6GuiBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
 
 
 def test_question_sequence_pygame(new_command):
     """A Pygame bootstrap can be constructed."""
 
-    new_command.console.values = [
-        "3",  # Pygame GUI toolkit
-    ]
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={},
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "Pygame"}
     )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, PygameGuiBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
 
 
 def test_question_sequence_none(new_command):
     """If no bootstrap is selected, the empty bootstrap is used."""
 
-    # Determine the menu index for "None" dynamically, since installed GUI
-    # bootstraps can change the menu ordering.
-    bootstraps = briefcase.commands.new.get_gui_bootstraps()
-    choices = new_command._gui_bootstrap_choices(bootstraps)
-    none_index = list(choices.keys()).index("None") + 1
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
 
-    new_command.console.values = [
-        str(none_index),  # None
-    ]
-
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={},
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "None"}
     )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, EmptyBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
 
 
-def test_question_sequence_other_frameworks_aborts(new_command, capsys, monkeypatch):
+def test_question_sequence_other_frameworks_aborts(
+    new_command,
+    patched_entry_points,
+    capsys,
+    monkeypatch,
+):
     """Selecting 'Other frameworks…' shows guidance and aborts cleanly."""
-    # Ensure there is at least one community plugin available in the submenu.
     monkeypatch.setattr(
         type(new_command),
-        "KNOWN_COMMUNITY_BOOTSTRAPS",
+        "KNOWN_COMMUNITY_PLUGINS",
         [
             {
-                "display_name": "Fake Framework",
-                "entry_point": "fake_framework",
                 "package": "fake-framework",
+                "display_name": "Fake Framework",
                 "description": "A fake community framework.",
             }
         ],
         raising=False,
     )
+    monkeypatch.setattr(briefcase.commands.new, "is_package_installed", lambda _: False)
 
-    bootstraps = briefcase.commands.new.get_gui_bootstraps()
-    choices = new_command._gui_bootstrap_choices(bootstraps)
+    choices = new_command._gui_bootstrap_choices(list(patched_entry_points.keys()))
     other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
 
-    new_command.console.values = [
-        str(other_index),  # Other frameworks (main menu)
-        "1",  # Select first community option
-    ]
+    new_command.console.values = [str(other_index), "1"]
 
-    with pytest.raises(SystemExit) as excinfo:
-        new_command.create_bootstrap(
-            context={"app_name": "myapplication", "author": "Grace Hopper"},
-            project_overrides={},
-        )
-
-    assert excinfo.value.code == 0
+    with pytest.raises(BriefcaseWarning) as excinfo:
+        new_command.select_bootstrap(project_overrides={})
 
     out = capsys.readouterr().out
-    assert "-- Community GUI Framework" in out
+    assert "Community GUI Framework" in out
     assert "Fake Framework" in out
-    assert "python -m pip install fake-framework" in out
-    assert "then re-run `briefcase new`" in out
+
+    # Guidance text is in the exception message.
+    msg = str(excinfo.value)
+    assert "python -m pip install fake-framework" in msg
+    assert "then re-run `briefcase new`" in msg
 
 
-def test_other_frameworks_hides_installed_plugins(new_command, capsys, monkeypatch):
-    """Installed community bootstraps are not shown in the submenu."""
+def test_other_frameworks_hides_installed_plugins(
+    new_command,
+    patched_entry_points,
+    capsys,
+    monkeypatch,
+):
+    """Installed community plugins are not shown in the submenu."""
+    monkeypatch.setattr(
+        type(new_command),
+        "KNOWN_COMMUNITY_PLUGINS",
+        [
+            {"package": "toga-positron", "display_name": "Positron"},
+            {"package": "pygame-ce", "display_name": "Pygame-ce"},
+        ],
+        raising=False,
+    )
 
-    class DummyBootstrap(BaseGuiBootstrap):
-        fields = ()
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "is_package_installed",
+        lambda package: package == "toga-positron",
+    )
 
-    class DummyEntryPoint:
-        def __init__(self, name):
-            self.name = name
-
-        def load(self):
-            return DummyBootstrap
-
-    # Wrap real entry points so built-ins remain available. Simulate PPB as
-    # installed, but ensure pygame-ce remains available in the community menu.
-    real_entry_points = briefcase.commands.new.entry_points
-
-    def patched_entry_points(*, group):
-        eps = list(real_entry_points(group=group))
-        if group == "briefcase.bootstraps":
-            eps = [ep for ep in eps if ep.name != "pygame_ce"]
-            eps.append(DummyEntryPoint("ppb"))
-        return eps
-
-    monkeypatch.setattr(briefcase.commands.new, "entry_points", patched_entry_points)
-
-    # Determine the menu index for the sentinel entry, since installed GUI
-    # bootstraps can change the menu ordering.
-    bootstraps = briefcase.commands.new.get_gui_bootstraps()
-    choices = new_command._gui_bootstrap_choices(bootstraps)
+    choices = new_command._gui_bootstrap_choices(list(patched_entry_points.keys()))
     other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
 
-    new_command.console.values = [
-        str(other_index),  # Other frameworks (main menu)
-        "1",  # Select first visible community option
-    ]
+    new_command.console.values = [str(other_index), "1"]
 
-    with pytest.raises(SystemExit) as excinfo:
-        new_command.create_bootstrap(
-            context={"app_name": "myapplication", "author": "Grace Hopper"},
-            project_overrides={},
-        )
-
-    assert excinfo.value.code == 0
+    with pytest.raises(BriefcaseWarning):
+        new_command.select_bootstrap(project_overrides={})
 
     out = capsys.readouterr().out
-
     assert "Community GUI Framework" in out
     assert "Pygame-ce" in out
-    assert "PursuedPyBear" not in out
+    assert "Positron" not in out
 
 
 def test_other_frameworks_no_available_plugins(
     new_command,
+    patched_entry_points,
     capsys,
     monkeypatch,
-    mock_builtin_bootstraps,
 ):
-    """If no community GUI bootstraps are available, show guidance and exit cleanly."""
-    # Simulate that all known community bootstraps are already installed
+    """If no community GUI plugins are available, show guidance and abort."""
     monkeypatch.setattr(
-        briefcase.commands.new,
-        "get_gui_bootstraps",
-        lambda: {
-            **mock_builtin_bootstraps,
-            "pygame_ce": EmptyBootstrap,
-            "Toga Positron (Django server)": EmptyBootstrap,
-        },
+        type(new_command),
+        "KNOWN_COMMUNITY_PLUGINS",
+        [
+            {"package": "toga-positron", "display_name": "Positron"},
+            {"package": "pygame-ce", "display_name": "Pygame-ce"},
+        ],
+        raising=False,
     )
+    monkeypatch.setattr(briefcase.commands.new, "is_package_installed", lambda _: True)
 
-    bootstraps = briefcase.commands.new.get_gui_bootstraps()
-    choices = new_command._gui_bootstrap_choices(bootstraps)
+    choices = new_command._gui_bootstrap_choices(list(patched_entry_points.keys()))
     other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
 
-    new_command.console.values = [
-        str(other_index),  # Select "Other frameworks"
-    ]
+    new_command.console.values = [str(other_index)]
 
-    with pytest.raises(SystemExit) as excinfo:
-        new_command.create_bootstrap(
-            context={"app_name": "myapplication", "author": "Grace Hopper"},
-            project_overrides={},
-        )
-
-    assert excinfo.value.code == 0
+    with pytest.raises(BriefcaseWarning) as excinfo:
+        new_command.select_bootstrap(project_overrides={})
 
     out = capsys.readouterr().out
-    assert "GUI frameworks listed here are provided by third-party plugins" in out
+
+    assert "-- GUI Framework" in out
+    assert "Other frameworks (select to see options)" in out
+
+    msg = str(excinfo.value)
+    assert "GUI frameworks listed here are provided by third-party plugins" in msg
     assert (
         "No additional community GUI bootstraps are currently available to install."
-        in out
+        in msg
     )
-    assert "Browse options at https://beeware.org/bee/briefcase-bootstraps" in out
-    assert "Re-run `briefcase new`" in out
+    assert "Browse options at https://beeware.org/bee/briefcase-bootstraps" in msg
+    assert "Re-run `briefcase new`" in msg
 
 
 def test_question_sequence_with_overrides(
@@ -331,41 +281,32 @@ def test_question_sequence_with_overrides(
 ):
     """The answer to the bootstrap question can be overridden."""
 
-    # Prime answers for none of the questions.
-    new_command.console.values = []
-
     class GuiBootstrap:
         fields: Collection[str] = []
 
         def __init__(self, console, context):
             self.context = context.copy()
 
+    eps = {
+        **{name: FakeEntryPoint(cls) for name, cls in mock_builtin_bootstraps.items()},
+        "Custom GUI": FakeEntryPoint(GuiBootstrap),
+    }
+
     monkeypatch.setattr(
         briefcase.commands.new,
-        "get_gui_bootstraps",
-        MagicMock(
-            return_value={
-                **mock_builtin_bootstraps,
-                "Custom GUI": GuiBootstrap,
-            },
-        ),
+        "get_gui_bootstrap_entry_points",
+        MagicMock(return_value=eps),
     )
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={
-            "bootstrap": "Custom GUI",
-        },
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
+
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "Custom GUI"}
     )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, GuiBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
 
 
 def test_question_sequence_with_bad_bootstrap_override(
@@ -375,45 +316,38 @@ def test_question_sequence_with_bad_bootstrap_override(
 ):
     """A bad override for the bootstrap uses user input instead."""
 
-    # Prime a bad answer for the bootstrap question
-    new_command.console.values = [
-        "7",  # None
-    ]
-
     class GuiBootstrap:
-        # if this custom bootstrap is chosen, the lack of
-        # requires() would cause an error
+        # If this custom bootstrap is chosen, the lack of requires() would cause an error
         fields: Collection[str] = ["requires"]
 
         def __init__(self, console, context):
             pass
 
+    eps = {
+        **{name: FakeEntryPoint(cls) for name, cls in mock_builtin_bootstraps.items()},
+        "Custom GUI": FakeEntryPoint(GuiBootstrap),
+    }
+
     monkeypatch.setattr(
         briefcase.commands.new,
-        "get_gui_bootstraps",
-        MagicMock(
-            return_value={
-                **mock_builtin_bootstraps,
-                "Custom GUI": GuiBootstrap,
-            },
-        ),
+        "get_gui_bootstrap_entry_points",
+        MagicMock(return_value=eps),
     )
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={
-            "bootstrap": "BAD i don't exist GUI",
-        },
-    )
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
 
-    assert isinstance(bootstrap, BaseGuiBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    # Simulate user selecting Toga from the menu after bad override.
+    choices = new_command._gui_bootstrap_choices(list(eps.keys()))
+    toga_index = list(choices.keys()).index("Toga") + 1
+    new_command.console.values = [str(toga_index)]
+
+    bootstrap_class = new_command.select_bootstrap(
+        project_overrides={"bootstrap": "BAD i don't exist GUI"}
+    )
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
+
+    assert isinstance(bootstrap, TogaGuiBootstrap)
+    assert bootstrap.context == context
 
 
 def test_question_sequence_with_no_user_input(new_command):
@@ -421,16 +355,10 @@ def test_question_sequence_with_no_user_input(new_command):
 
     new_command.console.input_enabled = False
 
-    bootstrap = new_command.create_bootstrap(
-        context={
-            "app_name": "myapplication",
-            "author": "Grace Hopper",
-        },
-        project_overrides={},
-    )
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
+
+    bootstrap_class = new_command.select_bootstrap(project_overrides={})
+    bootstrap = bootstrap_class(console=new_command.console, context=context)
 
     assert isinstance(bootstrap, TogaGuiBootstrap)
-    assert bootstrap.context == {
-        "app_name": "myapplication",
-        "author": "Grace Hopper",
-    }
+    assert bootstrap.context == context
