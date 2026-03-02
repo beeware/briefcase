@@ -6,6 +6,7 @@ from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.main import cookiecutter
 
 import briefcase
+import briefcase.commands.new as new_mod
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.commands import NewCommand
 from briefcase.exceptions import (
@@ -39,6 +40,29 @@ def test_gui_bootstrap_choices_skips_missing_preferred(new_command):
     assert "Pygame" not in ordered_names
     assert ordered_names[-2] == new_command.OTHER_FRAMEWORKS
     assert ordered_names[-1] == "None"
+
+
+def test_gui_bootstrap_choices_without_none(new_command):
+    """If None isn't available, it should not be added to GUI bootstrap choices."""
+    choices = new_command._gui_bootstrap_choices(
+        ["Toga", "Zebra", new_command.OTHER_FRAMEWORKS]
+    )
+    ordered_names = list(choices.keys())
+
+    assert ordered_names[-1] == new_command.OTHER_FRAMEWORKS
+    assert "None" not in ordered_names
+
+
+def test_is_package_installed(monkeypatch):
+    """Distribution presence checks return True/False as appropriate."""
+    monkeypatch.setattr(new_mod, "version", lambda _name: "1.2.3")
+    assert new_mod.is_package_installed("some-package") is True
+
+    def missing(_name):
+        raise new_mod.PackageNotFoundError
+
+    monkeypatch.setattr(new_mod, "version", missing)
+    assert new_mod.is_package_installed("does-not-exist") is False
 
 
 @pytest.mark.parametrize(
