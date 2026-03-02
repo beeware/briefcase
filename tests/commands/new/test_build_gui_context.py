@@ -1,9 +1,5 @@
 from collections.abc import Collection
-from unittest.mock import MagicMock
 
-import pytest
-
-import briefcase.commands.new
 from briefcase.bootstraps import (
     ConsoleBootstrap,
     EmptyBootstrap,
@@ -11,16 +7,6 @@ from briefcase.bootstraps import (
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
-
-
-@pytest.fixture
-def mock_builtin_bootstraps():
-    return {
-        "Toga": TogaGuiBootstrap,
-        "Console": ConsoleBootstrap,
-        "PySide6": PySide6GuiBootstrap,
-        "Pygame": PygameGuiBootstrap,
-    }
 
 
 def test_toga_bootstrap(new_command):
@@ -754,12 +740,8 @@ requires = [
     }
 
 
-def test_custom_bootstrap(
-    new_command,
-    mock_builtin_bootstraps,
-    monkeypatch,
-):
-    """A context is create for a custom bootstrap."""
+def test_custom_bootstrap(new_command):
+    """A context is created for a custom bootstrap."""
 
     class GuiBootstrap:
         fields: Collection[str] = ["requires", "platform"]
@@ -779,17 +761,6 @@ def test_custom_bootstrap(
 
         def platform(self):
             return "bsd"
-
-    monkeypatch.setattr(
-        briefcase.commands.new,
-        "get_gui_bootstraps",
-        MagicMock(
-            return_value={
-                **mock_builtin_bootstraps,
-                "Custom GUI": GuiBootstrap,
-            },
-        ),
-    )
 
     context = new_command.build_gui_context(
         GuiBootstrap(
