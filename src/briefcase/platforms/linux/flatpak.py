@@ -68,40 +68,34 @@ class LinuxFlatpakMixin(LinuxMixin):
         try:
             return app.flatpak_runtime
         except AttributeError as e:
-            raise BriefcaseConfigError(
-                """\
+            raise BriefcaseConfigError("""\
 The App does not specify the Flatpak runtime to use.
 
 Your application configuration must provide values for
 `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
-"""
-            ) from e
+""") from e
 
     def flatpak_runtime_version(self, app):
         try:
             return app.flatpak_runtime_version
         except AttributeError as e:
-            raise BriefcaseConfigError(
-                """\
+            raise BriefcaseConfigError("""\
 The App does not specify the version of the Flatpak runtime to use.
 
 Your application configuration must provide values for
 `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
-"""
-            ) from e
+""") from e
 
     def flatpak_sdk(self, app):
         try:
             return app.flatpak_sdk
         except AttributeError as e:
-            raise BriefcaseConfigError(
-                """\
+            raise BriefcaseConfigError("""\
 The App does not specify the Flatpak SDK to use.
 
 Your application configuration must provide values for
 `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
-"""
-            ) from e
+""") from e
 
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):

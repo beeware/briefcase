@@ -98,7 +98,7 @@ Prevent the automated update of app code that is performed when specifying by th
 
 Install the selected debugger into the bundled app.
 
-Currently the following debuggers are supported:
+Briefcase provides a [plugin interface][debugger-interface] that allows third-party debugger integrations. Currently the following debuggers are supported:
 
 - `pdb`: This is used for debugging via console (see [Debug via PDB][debug-pdb])
 - `debugpy`: This is used for debugging via VS Code (see [Debug via VS Code][debug-vscode])

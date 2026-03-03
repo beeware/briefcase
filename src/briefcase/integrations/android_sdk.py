@@ -1523,17 +1523,20 @@ class ADB:
                 f"Unable to force stop app {package} on {self.device}"
             ) from e
 
-    def reset_permissions(self, package: str) -> None:
-        """Reset all runtime permissions for an app, specified as a package name.
+    def revoke_permission(self, package: str, permission: str) -> None:
+        """Revoke a runtime permission for an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
+        :param permission: The name of the Android permission to revoke,
+            e.g., android.permission.BLUETOOTH_SCAN.
         :returns: `None` on success; raises an exception on failure.
         """
         try:
-            self.run("shell", "pm", "reset-permissions", "-p", package)
+            self.run("shell", "pm", "revoke", package, permission)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                f"Unable to reset permissions for app {package} on {self.device}"
+                f"Unable to revoke permission {permission}"
+                f"for app {package} on {self.device}"
             ) from e
 
     def start_app(

@@ -184,7 +184,6 @@ def test_update_app_single(update_command, first_app, second_app, app_flags):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # Update the app
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
@@ -260,7 +259,6 @@ def test_update_app_all_flags(update_command, first_app, second_app):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # Update the app
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),

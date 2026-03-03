@@ -156,12 +156,21 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
         self.tools.os.mkdir(local_requirements_path)
 
         # Iterate over every requirement, looking for local references
+        localized_requires = []
         for requirement in requires:
             if _is_local_path(requirement):
-                if Path(requirement).is_dir():
+                parts = requirement.rsplit("[", 1)
+                req_name = parts[0]
+                try:
+                    extras = f"[{parts[1]}"
+                except IndexError:
+                    extras = ""
+
+                local_req = (self.base_path / req_name).resolve()
+                if local_req.is_dir():
                     # Requirement is a filesystem reference
-                    # Build an sdist for the local requirement
-                    with self.console.wait_bar(f"Building sdist for {requirement}..."):
+                    # Build a wheel for the local requirement
+                    with self.console.wait_bar(f"Building wheels for {req_name}..."):
                         try:
                             self.tools.subprocess.check_output(
                                 [
@@ -170,56 +179,56 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                                     "utf8",
                                     "-m",
                                     "build",
-                                    "--sdist",
+                                    "--wheel",
                                     "--outdir",
                                     local_requirements_path,
-                                    requirement,
+                                    local_req,
                                 ],
                                 encoding="UTF-8",
                             )
+
+                            # The newest file in the directory will be the wheel that
+                            # was just created.
+                            newest_file = max(
+                                (
+                                    f
+                                    for f in self.local_requirements_path(app).iterdir()
+                                    if f.is_file()
+                                ),
+                                key=lambda f: f.stat().st_mtime,
+                            )
+
+                            localized_requires.append(str(newest_file) + extras)
+
                         except subprocess.CalledProcessError as e:
                             raise BriefcaseCommandError(
-                                f"Unable to build sdist for {requirement}"
+                                f"Unable to build wheel for {requirement}"
                             ) from e
                 else:
                     try:
                         # Requirement is an existing sdist or wheel file.
-                        self.tools.shutil.copy(requirement, local_requirements_path)
+                        self.tools.shutil.copy(local_req, local_requirements_path)
+
+                        # The requirement must be re-written as a local file reference
+                        localized_requires.append(
+                            str(self.local_requirements_path(app) / local_req.name)
+                            + extras
+                        )
+
                     except OSError as e:
                         raise BriefcaseCommandError(
                             f"Unable to find local requirement {requirement}"
                         ) from e
+            else:
+                # The requirement can be used as-is
+                localized_requires.append(requirement)
 
         # Continue with the default app requirement handling.
         return super()._install_app_requirements(
             app,
-            requires=requires,
+            requires=localized_requires,
             app_packages_path=app_packages_path,
         )
-
-    def _pip_requires(self, app: AppConfig, requires: list[str]):
-        """Convert the requirements list to an .deb project compatible format.
-
-        Any local file requirements are converted into a reference to the file generated
-        by _install_app_requirements().
-
-        :param app: The app configuration
-        :param requires: The user-specified list of app requirements
-        :returns: The final list of requirement arguments to pass to pip
-        """
-        # Copy all the requirements that are non-local
-        final = [
-            requirement
-            for requirement in super()._pip_requires(app, requires)
-            if not _is_local_path(requirement)
-        ]
-
-        # Add in any local packages.
-        # The sort is needed to ensure testing consistency
-        for filename in sorted(self.local_requirements_path(app).iterdir()):
-            final.append(filename)
-
-        return final
 
 
 class DockerOpenCommand(OpenCommand):  # pragma: no-cover-if-is-windows

@@ -4,7 +4,6 @@ import argparse
 from abc import abstractmethod
 
 from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
 
@@ -62,21 +61,11 @@ class OpenCommand(BaseCommand):
         app_name: str | None = None,
         **options,
     ):
+        apps_to_open = self.resolve_apps(app=app, app_name=app_name)
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
-
-        if app_name:
-            try:
-                apps_to_open = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_open = {app.app_name: app}
-        else:
-            apps_to_open = self.apps
+        self.finalize(apps=apps_to_open.values())
 
         state = None
         for _, app_obj in sorted(apps_to_open.items()):

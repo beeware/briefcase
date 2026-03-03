@@ -243,6 +243,8 @@ class CreateCommand(BaseCommand):
             {
                 # Ensure the output format is in the case we expect
                 "format": self.output_format.lower(),
+                # Ensure the version number is in string form
+                "version": str(app.version),
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes
                 # (e.g., 3.11.0rc2)
@@ -271,7 +273,7 @@ class CreateCommand(BaseCommand):
         output_path.mkdir(parents=True, exist_ok=True)
 
         self.generate_template(
-            template=app.template if app.template else self.app_template_url,
+            template=app.template or self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
@@ -672,7 +674,7 @@ class CreateCommand(BaseCommand):
                         + self._pip_requires(app, requires)
                     ),
                     install_hint=install_hint,
-                    **(pip_kwargs if pip_kwargs else {}),
+                    **(pip_kwargs or {}),
                 )
         else:
             self.console.info("No application requirements.")
@@ -1022,21 +1024,11 @@ class CreateCommand(BaseCommand):
         app_name: str | None = None,
         **options,
     ) -> dict | None:
-        # Confirm host compatibility, that all required tools are available,
-        # and that the app configuration is finalized.
-        self.finalize(app)
+        apps_to_create = self.resolve_apps(app=app, app_name=app_name)
 
-        if app_name:
-            try:
-                apps_to_create = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_create = {app.app_name: app}
-        else:
-            apps_to_create = self.apps
+        # Confirm host compatibility, that all required tools are available,
+        # and finalize configurations for the apps that will be created.
+        self.finalize(apps=apps_to_create.values())
 
         state = None
         for _, app_obj in sorted(apps_to_create.items()):

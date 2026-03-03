@@ -98,7 +98,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             environment.
         """
 
-        requires = app.requires if app.requires else []
+        requires = app.requires or []
         if app.test_requires:
             requires.extend(app.test_requires)
         if not requires:
@@ -307,7 +307,10 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, test_mode)
+        self.finalize(
+            apps=[app],
+            test_mode=test_mode,
+        )
 
         self.verify_app(app)
 

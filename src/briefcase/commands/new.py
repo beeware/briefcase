@@ -662,11 +662,7 @@ class NewCommand(BaseCommand):
 
         # Create the project files
         self.generate_template(
-            template=(
-                template
-                if template
-                else "https://github.com/beeware/briefcase-template"
-            ),
+            template=(template or "https://github.com/beeware/briefcase-template"),
             branch=template_branch,
             output_path=self.base_path,
             extra_context=context,
@@ -705,8 +701,8 @@ To run your application, type:
         **options,
     ):
         # Confirm host compatibility, and that all required tools are available.
-        # There are no apps, so finalize() will be a no op on app configurations.
-        self.finalize()
+        # There are no apps, so finalize() is called with an empty list.
+        self.finalize(apps=[])
 
         return self.new_app(
             template=template,

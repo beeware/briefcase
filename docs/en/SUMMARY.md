@@ -71,7 +71,7 @@
     - [Platform support](reference/platforms/index.md)
         - [macOS](reference/platforms/macOS/index.md)
             - [.app bundle](reference/platforms/macOS/app.md)
-            - [macOS XCode project](reference/platforms/macOS/xcode.md)
+            - [macOS Xcode project](reference/platforms/macOS/xcode.md)
         - [Windows](reference/platforms/windows/index.md)
             - [Windows App folder](reference/platforms/windows/app.md)
             - [Visual Studio project](reference/platforms/windows/visualstudio.md)
@@ -80,7 +80,7 @@
             - [Flatpak](reference/platforms/linux/flatpak.md)
             - [AppImage](reference/platforms/linux/appimage.md)
         - iOS
-            - [iOS XCode project](reference/platforms/iOS/xcode.md)
+            - [iOS Xcode project](reference/platforms/iOS/xcode.md)
         - Android
             - [Gradle project](reference/platforms/android/gradle.md)
         - Web

@@ -745,11 +745,7 @@ class ConvertCommand(NewCommand):
 
         # Create the project files
         self.generate_template(
-            template=(
-                template
-                if template
-                else "https://github.com/beeware/briefcase-template"
-            ),
+            template=(template or "https://github.com/beeware/briefcase-template"),
             branch=template_branch,
             output_path=tmp_path,
             extra_context=context,
@@ -798,7 +794,7 @@ To run your application, type:
     ):
         # Confirm host compatibility, and that all required tools are available.
         # There are no apps, so finalize() will be a no op on app configurations.
-        self.finalize()
+        self.finalize(apps=[])
 
         self.validate_pyproject_file()
 

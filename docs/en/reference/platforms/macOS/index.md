@@ -53,13 +53,13 @@
 Briefcase supports two output formats for macOS apps:
 
 - An [.app bundle][app-bundle] with a pre-compiled binary; and
-- An [macOS XCode project][macos-xcode-project] which can be used to build an app with a customized binary.
+- An [macOS Xcode project][macos-xcode-project] which can be used to build an app with a customized binary.
 
 The default output format for macOS is an [.app bundle][app-bundle].
 
 Both output formats support packaging as a macOS DMG, PKG or as a standalone signed app bundle. By default, apps will be both signed and notarized when they are packaged.
 
-Configuration options between the [.app bundle][app-bundle] and [macOS XCode project][macos-xcode-project] formats are identical.
+Configuration options between the [.app bundle][app-bundle] and [macOS Xcode project][macos-xcode-project] formats are identical.
 
 ## Prerequisites  { #macos-prerequisites }
 
@@ -276,3 +276,15 @@ requirement_installer_args = ["--find-links", "<path-to-wheel-folder>"]
 ```
 
 to your `pyproject.toml`. This will instruct Briefcase to search that folder for compatible wheels during the installation process.
+
+### Adapting to Liquid Glass (macOS 26 Tahoe)
+
+macOS 26 (Tahoe) introduced the "Liquid Glass" style to macOS apps. The stub executable used by Briefcase has been compiled with Liquid Glass styling enabled; however, at this time, most GUI toolkits (including [Toga](https://github.com/beeware/toga/issues/4188) and [Qt](https://www.qt.io/blog/qt-on-macos-26-tahoe)) are known to have some bugs with Liquid Glass adoption.
+
+If you find that your application looks bad on macOS 26, you can enable compatibility mode and revert to the style of earlier macOS releases. To enable compatibility mode, add the following to the macOS section of your `pyproject.toml` configuration:
+
+```toml
+info."UIDesignRequiresCompatibility" = true
+```
+
+Once you've made this change, re-run `briefcase create` for your application.

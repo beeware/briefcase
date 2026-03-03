@@ -11,7 +11,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -689,9 +689,31 @@ a custom location for Briefcase's tools.
         """
         return
 
-    def finalize(
+    def resolve_apps(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
+    ) -> dict[str, AppConfig]:
+        """Resolve which apps to operate on.
+
+        :param app: An explicit app config to use.
+        :param app_name: The name of the app to look up in the project.
+        :returns: A dict of app name to AppConfig for the selected apps.
+        """
+        if app_name:
+            if not (app_obj := self.apps.get(app_name)):
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+            return {app_name: app_obj}
+        elif app:
+            return {app.app_name: app}
+        else:
+            return self.apps
+
+    def finalize(
+        self,
+        apps: Iterable[AppConfig],
         test_mode: bool = False,
         debugger: str | None = None,
         debugger_host: str | None = None,
@@ -708,8 +730,7 @@ a custom location for Briefcase's tools.
 
         App finalization will only occur once per invocation.
 
-        :param app: If provided, the specific app configuration
-            to finalize. By default, all apps will be finalized.
+        :param apps: The app configuration(s) to finalize.
         :param test_mode: Specify if the app is running in test mode
         :param debugger: The debugger that should be used
         :param debugger_host: The host to use for the debugger
@@ -718,7 +739,6 @@ a custom location for Briefcase's tools.
         self.verify_host()
         self.verify_tools()
 
-        apps = self.apps.values() if app is None else [app]
         for app in apps:
             if hasattr(app, "__draft__"):
                 if debugger and debugger != "":
@@ -1298,9 +1318,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
+        briefcase_version = Version(briefcase.__version__)
         if branch is None:
-            template_branch = f"v{version.base_version}"
+            template_branch = f"v{briefcase_version.base_version}"
         else:
             template_branch = branch
 
@@ -1312,7 +1332,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             {
                 "template_source": template,
                 "template_branch": template_branch,
-                "briefcase_version": str(version),
+                "briefcase_version": str(briefcase_version),
             }
         )
 
@@ -1330,7 +1350,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
             # and the user didn't explicitly specify which branch to use.
-            if version.dev is None or branch is not None:
+            if briefcase_version.dev is None or branch is not None:
                 raise
 
             # Development branches can use the main template.

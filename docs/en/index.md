@@ -5,7 +5,7 @@ Briefcase is a tool for converting a Python project into a standalone native app
 - macOS, as a standalone .app
 - Windows, as an MSI installer
 - Linux, as a native system package
-- iOS, as an XCode project
+- iOS, as an Xcode project
 - Android, as a Gradle project
 - the Web, as a static website using PyScript for client-side Python
 
@@ -41,7 +41,7 @@ Briefcase is part of the [BeeWare suite](https://beeware.org). You can talk to t
 
 ### Code of Conduct
 
-The BeeWare community has a strict [Code of Conduct](https://beeware.org/community/behavior/code-of-conduct/). All users and developers are expected to adhere to this code.
+The BeeWare community has a strict [Code of Conduct](https://beeware.org/community/code-of-conduct/). All users and developers are expected to adhere to this code.
 
 If you have any concerns about this code of conduct, or you wish to report a violation of this code, please contact the project founder [Russell Keith-Magee](mailto:russell@keith-magee.com).
 
