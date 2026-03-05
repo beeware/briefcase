@@ -58,7 +58,9 @@ def full_context():
         "host_arch": "gothic",
         "briefcase_version": briefcase.__version__,
         # Properties of the template
-        "template_source": "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        "template_source": (
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git"
+        ),
         "template_branch": f"v{briefcase.__version__}",
         # Fields generated from other properties
         "module_name": "my_app",
@@ -753,5 +755,6 @@ def test_cookiecutter_undefined_variable_in_template(
         BriefcaseConfigError,
         match=f"Briefcase configuration error: {cookiecutter_exception_message}",
     ):
-        # Generating the template with an undefined cookiecutter variable generates an error
+        # Generating the template with an undefined cookiecutter variable generates
+        # an error
         create_command.generate_app_template(myapp)

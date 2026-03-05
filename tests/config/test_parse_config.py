@@ -22,13 +22,11 @@ def test_invalid_toml():
 
 def test_no_briefcase_section():
     """If the config file doesn't contain a briefcase tool section, raise an error."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.section]
         name="value"
         number=42
-        """
-    )
+        """)
 
     with pytest.raises(BriefcaseConfigError, match=r"No tool\.briefcase section"):
         parse_config(
@@ -41,13 +39,11 @@ def test_no_briefcase_section():
 
 def test_no_apps():
     """If the config file doesn't contain at least one briefcase app, raise an error."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         name="value"
         number=42
-        """
-    )
+        """)
 
     with pytest.raises(BriefcaseConfigError, match="No Briefcase apps defined"):
         parse_config(
@@ -60,15 +56,13 @@ def test_no_apps():
 
 def test_single_minimal_app():
     """A single app can be defined, but can exist without any app attributes."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 42
         license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
-        """
-    )
+        """)
 
     global_options, apps = parse_config(
         config_file,
@@ -93,8 +87,7 @@ def test_single_minimal_app():
 
 def test_multiple_minimal_apps():
     """The configuration can contain multiple apps without an explicit tool header."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase.app.first]
         number=37
         license.file = "LICENSE"
@@ -103,8 +96,7 @@ def test_multiple_minimal_apps():
         app_name="my_app"
         number=42
         license.file = "LICENSE.txt"
-        """
-    )
+        """)
 
     global_options, apps = parse_config(
         config_file,
@@ -130,8 +122,7 @@ def test_multiple_minimal_apps():
 
 def test_platform_override():
     """An app can define platform settings that override base settings."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -152,8 +143,7 @@ def test_platform_override():
         [tool.briefcase.app.other_app.macOS]
         value = 4
         platformvalue = "other macos platform"
-        """
-    )
+        """)
 
     global_options, apps = parse_config(
         config_file,
@@ -196,8 +186,7 @@ def test_platform_override():
 
 def test_platform_override_ordering():
     """The order of platform processing doesn't affect output."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -218,8 +207,7 @@ def test_platform_override_ordering():
         [tool.briefcase.app.other_app.macOS]
         value = 4
         platformvalue = "other macos platform"
-        """
-    )
+        """)
 
     global_options, apps = parse_config(
         config_file,
@@ -262,8 +250,7 @@ def test_platform_override_ordering():
 
 def test_format_override():
     """An app can define format settings that override base and platform settings."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -300,8 +287,7 @@ def test_format_override():
         [tool.briefcase.app.other_app.macOS.app]
         value = 41
         formatvalue = "other macos app format"
-        """
-    )
+        """)
 
     global_options, apps = parse_config(
         config_file,
@@ -345,8 +331,7 @@ def test_format_override():
 
 def test_format_override_ordering():
     """The order of format processing doesn't affect output."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         basevalue = "the base"
@@ -383,8 +368,7 @@ def test_format_override_ordering():
         [tool.briefcase.app.other_app.macOS.Xcode]
         value = 41
         formatvalue = "other macos app format"
-        """
-    )
+        """)
 
     global_options, apps = parse_config(
         config_file,
@@ -427,8 +411,7 @@ def test_format_override_ordering():
 
 def test_requires():
     """Requirements can be specified."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         requires = ["base value"]
@@ -453,8 +436,7 @@ def test_requires():
         requires = ["appimage value"]
 
         [tool.briefcase.app.other_app]
-        """
-    )
+        """)
 
     # Request a macOS app
     global_options, apps = parse_config(
@@ -576,8 +558,7 @@ def test_requires():
 
 def test_document_types():
     """Document types can be specified."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         license.file = "LICENSE"
@@ -596,8 +577,7 @@ def test_document_types():
 
         [tool.briefcase.app.other_app]
 
-        """
-    )
+        """)
 
     # Request a macOS app
     _global_options, apps = parse_config(
@@ -634,8 +614,7 @@ def test_document_types():
 
 
 def test_pep621_defaults():
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [project]
         name = "awesome"
         version = "1.2.3"
@@ -671,8 +650,7 @@ def test_pep621_defaults():
             "toga-cocoa~=0.3.1",
             "std-nslog~=1.0.3"
         ]
-        """
-    )
+        """)
 
     _global_options, apps = parse_config(
         config_file,
@@ -703,16 +681,14 @@ def test_pep621_defaults():
 
 def test_license_is_string_project():
     """The project definition contains a string definition for 'license'."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         license = "Some license"
 
         [tool.briefcase.app.my_app]
         appvalue = "the app"
-        """
-    )
+        """)
 
     console = Mock()
     global_options, apps = parse_config(
@@ -729,8 +705,7 @@ def test_license_is_string_project():
         "appvalue": "the app",
         "license": {"file": "LICENSE"},
     }
-    console.warning.assert_called_once_with(
-        """
+    console.warning.assert_called_once_with("""
 *************************************************************************
 ** WARNING: License Definition for the Project is Deprecated           **
 *************************************************************************
@@ -753,14 +728,12 @@ def test_license_is_string_project():
         license.file = "LICENSE"
 
 *************************************************************************
-"""
-    )
+""")
 
 
 def test_license_is_string_project_and_app():
     """The project and app definition contain a string definition for 'license'."""
-    config_file = BytesIO(
-        b"""
+    config_file = BytesIO(b"""
         [tool.briefcase]
         value = 0
         license = "Some license"
@@ -768,8 +741,7 @@ def test_license_is_string_project_and_app():
         [tool.briefcase.app.my_app]
         appvalue = "the app"
         license = "Another license"
-        """
-    )
+        """)
 
     console = Mock()
     global_options, apps = parse_config(
@@ -788,8 +760,7 @@ def test_license_is_string_project_and_app():
     }
     console.warning.assert_has_calls(
         [
-            call(
-                """
+            call("""
 *************************************************************************
 ** WARNING: License Definition for the Project is Deprecated           **
 *************************************************************************
@@ -812,10 +783,8 @@ def test_license_is_string_project_and_app():
         license.file = "LICENSE"
 
 *************************************************************************
-"""
-            ),
-            call(
-                """
+"""),
+            call("""
 *************************************************************************
 ** WARNING: License Definition for 'my_app' is Deprecated              **
 *************************************************************************
@@ -838,7 +807,6 @@ def test_license_is_string_project_and_app():
         license.file = "LICENSE"
 
 *************************************************************************
-"""
-            ),
+"""),
         ]
     )

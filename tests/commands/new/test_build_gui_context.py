@@ -266,12 +266,14 @@ def test_console_bootstrap(new_command):
 
     assert context == {
         "console_app": True,
-        "app_source": """\
+        "app_source": (
+            """\
 
 def main():
     # Your app logic goes here
     print("Hello, World.")
-""",
+"""
+        ),
         "app_start_source": """\
 from {{ cookiecutter.module_name }}.app import main
 

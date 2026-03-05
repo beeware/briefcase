@@ -286,8 +286,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # E501: line too long, to be fixed in future changes
-"tests/*" = ["E501"]
-"src/briefcase/bootstraps/*" = ["E501"]
+"tests/integrations/*" = ["E501"]
+"tests/platforms/*" = ["E501"]
 
 
 [tool.rumdl]

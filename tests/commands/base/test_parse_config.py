@@ -32,7 +32,9 @@ def test_incomplete_global_config(base_command):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Global configuration is incomplete \(missing 'bundle', 'project_name'\)",
+        match=(
+            r"Global configuration is incomplete \(missing 'bundle', 'project_name'\)"
+        ),
     ):
         base_command.parse_config(filename, {})
 
