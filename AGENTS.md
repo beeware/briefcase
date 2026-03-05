@@ -1,8 +1,6 @@
 # Briefcase — Agent Development Guide
 
-Briefcase converts Python projects into standalone native applications
-for macOS, Windows, Linux, iOS, Android, and Web. This guide provides
-the context AI coding agents need to contribute effectively.
+Briefcase converts Python projects into standalone native applications for macOS, Windows, Linux, iOS, Android, and Web. This guide provides the context AI coding agents need to contribute effectively.
 
 ## Quick Reference
 
@@ -16,8 +14,7 @@ the context AI coding agents need to contribute effectively.
 
 ## Development Environment Setup
 
-All development must use a Python 3.13 virtual environment with the
-`dev` dependency group installed:
+All development must use a Python 3.13 virtual environment with the `dev` dependency group installed:
 
 ```bash
 python3.13 -m venv venv
@@ -25,8 +22,7 @@ source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -e . --group dev
 ```
 
-This installs tox, pre-commit, and other development tooling. All
-test execution and CI-equivalent checks run through tox.
+This installs tox, pre-commit, and other development tooling. All test execution and CI-equivalent checks run through tox.
 
 ## Project Layout
 
@@ -53,7 +49,7 @@ src/briefcase/
 └── debuggers/           # Debugger plugins (pdb, debugpy)
 
 tests/                   # Mirrors src/ structure exactly
-├── conftest.py          # Root fixtures (no_print, dummy_console, app configs)
+├── conftest.py          # Root fixtures (no_print, dummy_console, configs)
 ├── utils.py             # DummyConsole, PartialMatchString, file helpers
 ├── commands/
 ├── platforms/
@@ -63,26 +59,20 @@ tests/                   # Mirrors src/ structure exactly
 docs/en/                 # MkDocs documentation (English)
 changes/                 # Towncrier changelog fragments
 automation/              # Separate automation subpackage
-debugger/                # Separate debugger subpackage (own tests + pyproject.toml)
+debugger/                # Separate debugger subpackage (own pyproject.toml)
 ```
 
 ## Critical Rules
 
 ### No `print()` — ever
 
-All user-facing output MUST go through the `Console` object, never
-raw `print()`. The `T20` ruff rule bans print statements in source
-code, and the `no_print` autouse test fixture will **fail any test**
-where briefcase code calls `print()`.
+All user-facing output MUST go through the `Console` object, never raw `print()`. The `T20` ruff rule bans print statements in source code, and the `no_print` autouse test fixture will **fail any test** where briefcase code calls `print()`.
 
-Use `self.tools.console.info()`, `.verbose()`, `.debug()`,
-`.warning()`, or `.error()` instead.
+Use `self.tools.console.info()`, `.verbose()`, `.debug()`, `.warning()`, or `.error()` instead.
 
 ### 100% test coverage — no exceptions
 
-Coverage is enforced by `coverage report --fail-under=100` in CI.
-Every line of new code must be covered. Platform-specific code that
-is unreachable on certain OSes must use conditional coverage pragmas:
+Coverage is enforced by `coverage report --fail-under=100` in CI. Every line of new code must be covered. Platform-specific code that is unreachable on certain OSes must use conditional coverage pragmas:
 
 ```python
 # pragma: no-cover-if-not-macos
@@ -90,13 +80,11 @@ is unreachable on certain OSes must use conditional coverage pragmas:
 # pragma: no-cover-if-lt-py312
 ```
 
-Each pragma must have a corresponding rule in `pyproject.toml` under
-`[tool.coverage.coverage_conditional_plugin.rules]`.
+Each pragma must have a corresponding rule in `pyproject.toml` under `[tool.coverage.coverage_conditional_plugin.rules]`.
 
 ### Warnings are errors
 
-pytest is configured with `filterwarnings = ["error"]`. Do not
-suppress warnings — fix the cause.
+pytest is configured with `filterwarnings = ["error"]`. Do not suppress warnings — fix the cause.
 
 ## Architecture Patterns
 
@@ -119,8 +107,7 @@ class macOSAppBuildCommand(
 
 ### Platform module conventions
 
-Each format file (e.g., `platforms/macOS/app.py`) must export
-**module-level aliases** matching command names:
+Each format file (e.g., `platforms/macOS/app.py`) must export **module-level aliases** matching command names:
 
 ```python
 create = macOSAppCreateCommand
@@ -132,42 +119,33 @@ publish = macOSAppPublishCommand
 open = macOSAppOpenCommand
 ```
 
-New platforms/formats MUST register via entry points in
-`pyproject.toml`, never by hard-coding in core logic.
+New platforms/formats MUST register via entry points in `pyproject.toml`, never by hard-coding in core logic.
 
 ### Tool system
 
-- `Tool` ABC with `verify()` classmethod (calls `verify_host()` then
-  `verify_install()`)
-- `ManagedTool(Tool)` adds `exists()`, `install()`, `uninstall()`,
-  `upgrade()`
+- `Tool` ABC with `verify()` classmethod (calls `verify_host()` then `verify_install()`)
+- `ManagedTool(Tool)` adds `exists()`, `install()`, `uninstall()`, `upgrade()`
 - Tools register via `__init_subclass__` into `tool_registry`
-- Accessed through `ToolCache` on `command.tools` (e.g.,
-  `self.tools.subprocess`, `self.tools.java`)
-- `ToolCache` wraps stdlib modules (`os`, `platform`, `shutil`,
-  `sys`) to enable test mocking
+- Accessed through `ToolCache` on `command.tools` (e.g., `self.tools.subprocess`, `self.tools.java`)
+- `ToolCache` wraps stdlib modules (`os`, `platform`, `shutil`, `sys`) to enable test mocking
 
 ### Error handling
 
-All errors derive from `BriefcaseError(Exception)` with an
-`error_code` integer. Key subtypes:
+All errors derive from `BriefcaseError(Exception)` with an `error_code` integer. Key subtypes:
 
 - `BriefcaseCommandError` (200) — general operational errors
 - `BriefcaseConfigError` (100) — configuration problems
-- `NetworkFailure`, `MissingToolError`, `InvalidDeviceError` —
-  specific failure modes
+- `NetworkFailure`, `MissingToolError`, `InvalidDeviceError` — specific failure modes
 - `HelpText` — displays help, not an error
 - `BriefcaseWarning` — non-fatal (exit code 0)
 
 ## Testing Patterns
 
-All commands below assume the `dev` dependency group is installed
-in a Python 3.13 virtual environment (see setup above).
+All commands below assume the `dev` dependency group is installed in a Python 3.13 virtual environment (see setup above).
 
 ### Test organization
 
-Tests mirror the source tree. Within each area, tests are organized
-by method/behavior:
+Tests mirror the source tree. Within each area, tests are organized by method/behavior:
 
 ```text
 tests/commands/create/test_install_app_requirements.py
@@ -177,8 +155,7 @@ tests/platforms/macOS/app/test_build.py
 
 ### Dummy command pattern
 
-Tests create concrete subclasses of abstract commands that track
-method calls in an `actions` list:
+Tests create concrete subclasses of abstract commands that track method calls in an `actions` list:
 
 ```python
 class DummyBuildCommand(BuildCommand):
@@ -197,37 +174,28 @@ assert build_command.actions == [
 ### Mock conventions
 
 - Use `MagicMock(spec_set=...)` (not `spec=`) for strict mocking
-- External tools: mock via `mock.MagicMock(spec_set=Subprocess)` on
-  `command.tools.subprocess`
+- External tools: mock via `mock.MagicMock(spec_set=Subprocess)` on `command.tools.subprocess`
 - Filesystem layout: use `create_file()` from `tests/utils.py`
-- Downloads: use `mock_file_download()`, `mock_zip_download()`,
-  `mock_tgz_download()` side-effect factories from `tests/utils.py`
+- Downloads: use `mock_file_download()`, `mock_zip_download()`, `mock_tgz_download()` side-effect factories from `tests/utils.py`
 - `ToolCache` mocks wrap stdlib modules for test isolation
 
 ### Key fixtures (from `tests/conftest.py`)
 
-- `no_print` (autouse) — fails tests that call `print()` from
-  briefcase code
-- `dummy_console` — `DummyConsole` that records prompts and returns
-  programmed values
+- `no_print` (autouse) — fails tests that call `print()` from briefcase code
+- `dummy_console` — `DummyConsole` that records prompts and returns programmed values
 - `sleep_zero` — replaces `time.sleep` with instant returns
-- `first_app_config` / `first_app_unbuilt` / `first_app` — graduated
-  app fixtures (config only / bundle exists / binary exists)
+- `first_app_config` / `first_app_unbuilt` / `first_app` — graduated app fixtures (config only / bundle exists / binary exists)
 
 ### Key helpers (from `tests/utils.py`)
 
 - `DummyConsole` — captures user interaction
 - `PartialMatchString` / `NoMatchString` — flexible assertion matching
-- `create_file()`, `create_plist_file()`, `create_zip_file()`,
-  `create_tgz_file()` — filesystem helpers
-- `create_wheel()`, `create_installed_package()` — fake Python
-  package creation
+- `create_file()`, `create_plist_file()`, `create_zip_file()`, `create_tgz_file()` — filesystem helpers
+- `create_wheel()`, `create_installed_package()` — fake Python package creation
 
 ## Running Tests and Checks
 
-All commands below assume the `dev` dependency group is installed
-in a Python 3.13 virtual environment (see Development Environment
-Setup above).
+All commands below assume the `dev` dependency group is installed in a Python 3.13 virtual environment (see Development Environment Setup above).
 
 ```bash
 # Run full test suite with coverage
@@ -266,19 +234,21 @@ changes/{issue_number}.{type}.md
 
 Types: `feature`, `bugfix`, `removal`, `doc`, `misc`.
 
-Fragment text must describe user-facing impact, not implementation
-details. Use `misc` for housekeeping, minor changes, or changes to
-features not yet in a formal release.
+Fragment text must describe user-facing impact, not implementation details. Use `misc` for housekeeping, minor changes, or changes to features not yet in a formal release.
+
+## Documentation Style
+
+Markdown files in this project (including `AGENTS.md`, `docs/en/`, and `changes/` fragments) must **not** use hard line breaks to enforce an 80-character column limit. Each paragraph or list item must be written as a single unbroken line, regardless of its length. Let the reader's editor or renderer handle wrapping.
+
+This rule applies to all prose. Code blocks, directory trees, and other pre-formatted blocks are exempt — keep those readable within their own constraints.
+
+When writing or editing any `.md` file, do not insert newlines mid-sentence or mid-paragraph to stay within 80 columns.
 
 ## Code Style
 
-- **Class naming**: `{Platform}{Format}{Action}Command`
-  (e.g., `macOSAppBuildCommand`)
-- **Mixin naming**: `{Platform}{Feature}Mixin`
-  (e.g., `macOSSigningMixin`)
+- **Class naming**: `{Platform}{Format}{Action}Command` (e.g., `macOSAppBuildCommand`)
+- **Mixin naming**: `{Platform}{Feature}Mixin` (e.g., `macOSSigningMixin`)
 - **Platform casing**: Preserve original (macOS, iOS, not macos)
-- **Docstrings**: Google/Sphinx style with `:param:` / `:returns:` /
-  `:raises:` — formatted by docformatter
-- **Imports**: `from __future__ import annotations` used widely for
-  PEP 604 unions
+- **Docstrings**: Google/Sphinx style with `:param:` / `:returns:` / `:raises:` — formatted by docformatter
+- **Imports**: `from __future__ import annotations` used widely for PEP 604 unions
 - **Paths**: Always use `pathlib.Path` objects, never raw strings
