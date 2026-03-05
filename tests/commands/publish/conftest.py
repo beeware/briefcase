@@ -63,7 +63,8 @@ class DummyPublishCommand(PublishCommand):
         return full_options({"publish_state": app.app_name}, kwargs)
 
     # These commands override the default behavior, simply tracking that
-    # they were invoked, rather than instantiating a Create/Update/Build command.
+    # they were invoked, rather than instantiating a Create/Update/Build 
+    # command.
     # This is for testing purposes.
     def create_command(self, app, **kwargs):
         self.actions.append(("create", app.app_name, kwargs.copy()))
