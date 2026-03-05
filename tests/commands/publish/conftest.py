@@ -82,7 +82,7 @@ class DummyPublishCommand(PublishCommand):
         }
 
     # These commands override the default behavior, simply tracking that
-    # they were invoked, rather than instantiating a Create/Update/Build 
+    # they were invoked, rather than instantiating a Create/Update/Build
     # command.
     # This is for testing purposes.
     def package_command(self, app, **kwargs):
