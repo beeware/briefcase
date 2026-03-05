@@ -146,8 +146,10 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
                 " make sure you have the correct access rights\nand the repository"
                 " exists. \n'"
             ),
-            "Could not read from remote repository.\n\nPlease make sure "
-            "you have the correct access rights\nand the repository exists.",
+            (
+                "Could not read from remote repository.\n\nPlease make sure "
+                "you have the correct access rights\nand the repository exists."
+            ),
             id="tailing-whitespace-has-caps-has-period",
         ),
         pytest.param(
@@ -156,12 +158,14 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
                 "OpenSSL/3.2.2: error:0A000438:SSL routines::tlsv1 alert internal "
                 "error'"
             ),
-            "Unable to access 'https://example.com/': OpenSSL/3.2.2: "
-            "error:0A000438:SSL routines::tlsv1 alert internal error.",
+            (
+                "Unable to access 'https://example.com/': OpenSSL/3.2.2: "
+                "error:0A000438:SSL routines::tlsv1 alert internal error."
+            ),
             id="no-tailing-whitespace-no-caps-no-period",
         ),
         pytest.param(
-            ("\n stderr: 'Mysterious git clone edge case with no fatal error."),
+            "\n stderr: 'Mysterious git clone edge case with no fatal error.",
             "This may be because your computer is offline",
             id="fallback-hint",
         ),
