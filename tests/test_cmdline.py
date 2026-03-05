@@ -598,7 +598,7 @@ def test_command_options(capsys, macOS_console):
     assert isinstance(cmd, macOSAppPublishCommand)
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
-    assert options == {"channel": "s3"}
+    assert options == {"update": False, "packaging_format": "app", "channel": "s3"}
     assert overrides == {}
 
 
@@ -613,7 +613,7 @@ def test_command_overrides(capsys, macOS_console):
     assert isinstance(cmd, macOSAppPublishCommand)
     assert cmd.console.input_enabled
     assert cmd.console.verbosity == LogLevel.INFO
-    assert options == {"channel": "s3"}
+    assert options == {"update": False, "packaging_format": "app", "channel": None}
     assert overrides == {
         "version": "1.2.3",
         "extra": 42,
@@ -633,8 +633,9 @@ def test_unknown_command_options(capsys, macOS_console):
 
     assert output.startswith(
         "usage: briefcase publish macOS Xcode [-h] [-C KEY=VALUE] [-v] [-V]\n"
-        "                                     [--no-input] [--log] [-c {s3}]\n"
-        "briefcase publish macOS Xcode: error: unrecognized arguments: -x"
+        "                                     [--no-input] [--log] [-a APP_NAME] [-u]\n"
+        "                                     [-p {Xcode}] [-c CHANNEL]\n"
+        "briefcase publish macOS Xcode: error: unrecognized arguments: -x foobar"
     )
 
 

@@ -10,26 +10,26 @@ The Apple App Store makes frequent changes to the workflows and nomenclature ass
 
 To distribute an app on the macOS App Store, you'll need to [enroll in the Apple Developer Program][apple-dev-enroll]. You don't need to generate any of the certificates described on that page - you just need an Apple ID registered in the developer program.
 
-Once you've signed up for an Apple ID account, open the XCode Settings dialog, and add your account under the "Accounts" tab.
+Once you've signed up for an Apple ID account, open the Xcode Settings dialog, and add your account under the "Accounts" tab.
 
-Apps are submitted to the macOS App Store using XCode. This requires that you use Briefcase's [macOS XCode project packaging format][macos-xcode-project] to build your app. To specify this format, add `macOS XCode` to any Briefcase app command you want to invoke - for example:
-
-```console
-(venv) $ briefcase create macOS XCode
-(venv) $ briefcase run macOS XCode
-```
-
-## Open the app in XCode
-
-To submit your app to the App Store, use Briefcase to open the XCode project associated with your project.
+Apps are submitted to the macOS App Store using Xcode. This requires that you use Briefcase's [macOS Xcode project packaging format][macos-xcode-project] to build your app. To specify this format, add `macOS Xcode` to any Briefcase app command you want to invoke - for example:
 
 ```console
-(venv) $ briefcase open macOS XCode
+(venv) $ briefcase create macOS Xcode
+(venv) $ briefcase run macOS Xcode
 ```
 
-## Run the app via XCode
+## Open the app in Xcode
 
-Run the app in XCode to ensure it builds correctly and works as expected.
+To submit your app to the App Store, use Briefcase to open the Xcode project associated with your project.
+
+```console
+(venv) $ briefcase open macOS Xcode
+```
+
+## Run the app via Xcode
+
+Run the app in Xcode to ensure it builds correctly and works as expected.
 
 In order to submit your app to the App Store, you will need to provide at least one screenshot, in one of the following sizes:
 
@@ -42,9 +42,9 @@ To capture a screenshot of a specific application window on macOS, use the key c
 
 ## Produce an App archive
 
-Select the root node of the XCode project browser (it should be the formal name of your app), then select the **Signing & Capabilities** tab from configuration options that are displayed. The "Team" option under "Signing" will be listed as "None"; select the name of the development team that will sign the app. If there's no team listed, select "Add an Account", and choose one of the teams that is associated with your Apple ID.
+Select the root node of the Xcode project browser (it should be the formal name of your app), then select the **Signing & Capabilities** tab from configuration options that are displayed. The "Team" option under "Signing" will be listed as "None"; select the name of the development team that will sign the app. If there's no team listed, select "Add an Account", and choose one of the teams that is associated with your Apple ID.
 
-In the top bar of the XCode window, build an archive by selecting "Archive" from the Product menu.
+In the top bar of the Xcode window, build an archive by selecting "Archive" from the Product menu.
 
 This will perform a clean build of your application, build an archive, and open a new window, called the Organizer. It should list a freshly created archive of your app, with the current version number.
 
@@ -56,7 +56,7 @@ After a few minutes, you should receive an email notifying you that the binary h
 
 Log into [App Store Connect](https://appstoreconnect.apple.com), click on "My Apps", then on + to add an app.
 
-Fill out the form for a new app. If you've run the app in XCode, the Bundle ID for your app should be listed; select it from the list. You must also create an SKU for your app - we suggest `macos-<appname>`, substituting the short app name that you selected when you initially created your app. For example, if you've created an app with a formal name of "Hello World", with an app name of `helloworld`, and a bundle of `org.beeware`, you should have a Bundle ID of `org.beeware.helloworld`; we'd suggest an SKU of `macos-helloworld`.
+Fill out the form for a new app. If you've run the app in Xcode, the Bundle ID for your app should be listed; select it from the list. You must also create an SKU for your app - we suggest `macos-<appname>`, substituting the short app name that you selected when you initially created your app. For example, if you've created an app with a formal name of "Hello World", with an app name of `helloworld`, and a bundle of `org.beeware`, you should have a Bundle ID of `org.beeware.helloworld`; we'd suggest an SKU of `macos-helloworld`.
 
 You'll then be shown another page for app details, including:
 
@@ -71,7 +71,7 @@ You'll then be shown another page for app details, including:
 - Version number
 - The name of the copyright holder
 
-Under the "Build" section, you'll be able to select the archive that you uploaded through XCode.
+Under the "Build" section, you'll be able to select the archive that you uploaded through Xcode.
 
 The "App Review Information" section allows you to provide contact details in case Apple has questions during the review process. If your app requires a login, you *must* provide a set of credentials so that Apple can log in. You can also provide any additional notes to assist the reviewer.
 

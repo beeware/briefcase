@@ -421,6 +421,7 @@ def test_install_app_packages(
     create_command.find_binary_packages.assert_called_once_with(
         bundle_path / f"app_packages.{host_arch}",
         universal_suffix="_universal2",
+        other_suffix=f"_{other_arch}",
     )
 
     # A request was made to install requirements
@@ -553,6 +554,7 @@ def test_min_os_version(create_command, first_app_templated, old_config, tmp_pat
     create_command.find_binary_packages.assert_called_once_with(
         bundle_path / "app_packages.arm64",
         universal_suffix="_universal2",
+        other_suffix="_x86_64",
     )
 
     # A request was made to install requirements
@@ -700,6 +702,7 @@ def test_default_min_os_version(
     create_command.find_binary_packages.assert_called_once_with(
         bundle_path / "app_packages.arm64",
         universal_suffix="_universal2",
+        other_suffix="_x86_64",
     )
 
     # A request was made to install requirements
@@ -838,6 +841,7 @@ def test_install_app_packages_no_binary(
     create_command.find_binary_packages.assert_called_once_with(
         bundle_path / f"app_packages.{host_arch}",
         universal_suffix="_universal2",
+        other_suffix=f"_{other_arch}",
     )
 
     # A request was made to install requirements
@@ -938,6 +942,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
     create_command.find_binary_packages.assert_called_once_with(
         bundle_path / "app_packages.arm64",
         universal_suffix="_universal2",
+        other_suffix="_x86_64",
     )
 
     # A request was made to install requirements

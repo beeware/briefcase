@@ -102,7 +102,7 @@ Prevent the automated update and build of app code that is performed when specif
 
 Run the app in debug mode.
 
-Currently the following debuggers are supported:
+Briefcase provides a [plugin interface][debugger-interface] that allows third-party debugger integrations. Currently the following debuggers are supported:
 
 - `pdb`: This is used for debugging via console (see [Debug via PDB][debug-pdb])
 - `debugpy`: This is used for debugging via VS Code (see [Debug via VS Code][debug-vscode])

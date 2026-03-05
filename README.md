@@ -32,7 +32,7 @@ If you would like a full introduction to using Briefcase, try the [BeeWare tutor
 
 The BeeWare project would not be possible without the generous support of our financial members:
 
-[![Anaconda logo](https://beeware.org/community/members/anaconda/anaconda-large.png)](https://anaconda.com/)
+[![Anaconda logo](https://beeware.org/images/anaconda-dark.png)](https://anaconda.com/)
 
 Anaconda Inc. - Advancing AI through open source.
 

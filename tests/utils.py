@@ -193,13 +193,13 @@ def mock_tgz_download(filename, content, role=None, links=None):
 def distinfo_metadata(
     package: str = "dummy",
     version: str = "1.2.3",
-    tag: str = "py3-none-any",
+    tag: str | list[str] = "py3-none-any",
 ):
     """Generate the content for a distinfo folder.
 
     :param package: The name of the package.
     :param version: The version number of the package.
-    :param tag: The packaging tag for the package.
+    :param tag: The packaging tag (or tags) for the package.
     """
     content = []
 
@@ -221,7 +221,11 @@ def distinfo_metadata(
     wheel["Wheel-Version"] = "1.0"
     wheel["Generator"] = "test-case"
     wheel["Root-Is-Purelib"] = "true" if tag == "py3-none-any" else "false"
-    wheel["Tag"] = tag
+    if isinstance(tag, str):
+        wheel["Tag"] = tag
+    else:
+        for value in tag:
+            wheel["Tag"] = value
     content.append((f"{package}-{version}.dist-info/WHEEL", str(wheel)))
 
     # RECORD

@@ -138,17 +138,7 @@ class BuildCommand(BaseCommand):
                     "Cannot specify both --update-stub and --no-update"
                 )
 
-        if app_name:
-            try:
-                apps_to_build = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_build = {app.app_name: app}
-        else:
-            apps_to_build = self.apps
+        apps_to_build = self.resolve_apps(app=app, app_name=app_name)
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.

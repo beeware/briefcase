@@ -243,6 +243,8 @@ class CreateCommand(BaseCommand):
             {
                 # Ensure the output format is in the case we expect
                 "format": self.output_format.lower(),
+                # Ensure the version number is in string form
+                "version": str(app.version),
                 # Properties of the generating environment
                 # The full Python version string, including minor and dev/a/b/c suffixes
                 # (e.g., 3.11.0rc2)
@@ -1022,17 +1024,7 @@ class CreateCommand(BaseCommand):
         app_name: str | None = None,
         **options,
     ) -> dict | None:
-        if app_name:
-            try:
-                apps_to_create = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_create = {app.app_name: app}
-        else:
-            apps_to_create = self.apps
+        apps_to_create = self.resolve_apps(app=app, app_name=app_name)
 
         # Confirm host compatibility, that all required tools are available,
         # and finalize configurations for the apps that will be created.

@@ -53,13 +53,13 @@
 Briefcase supports two output formats for macOS apps:
 
 - An [.app bundle][app-bundle] with a pre-compiled binary; and
-- An [macOS XCode project][macos-xcode-project] which can be used to build an app with a customized binary.
+- An [macOS Xcode project][macos-xcode-project] which can be used to build an app with a customized binary.
 
 The default output format for macOS is an [.app bundle][app-bundle].
 
 Both output formats support packaging as a macOS DMG, PKG or as a standalone signed app bundle. By default, apps will be both signed and notarized when they are packaged.
 
-Configuration options between the [.app bundle][app-bundle] and [macOS XCode project][macos-xcode-project] formats are identical.
+Configuration options between the [.app bundle][app-bundle] and [macOS Xcode project][macos-xcode-project] formats are identical.
 
 ## Prerequisites  { #macos-prerequisites }
 

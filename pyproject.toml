@@ -80,6 +80,11 @@ dependencies = [
     # provides no basis for determining API stability.
     #
     "cookiecutter >= 2.6.0, < 3.0",
+    # See psf/requests#7219. Requests 2.32.5 (a transitive dependency of cookiecutter)
+    # has a runtime warning about the use of chardet 6+, which our test suite turns into
+    # a full error. Requests has already increased the pin; the next requests release
+    # should remove the need for this pin.
+    "chardet < 6.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
@@ -103,11 +108,15 @@ setuptools-scm = [
 ]
 
 towncrier = [
-    "towncrier==25.8.0",
+    "towncrier == 25.8.0",
 ]
 
 tox-uv = [
-    "tox-uv == 1.29.0",
+    "tox-uv == 1.33.0",
+]
+
+ty = [
+    "ty == 0.0.19",
 ]
 
 dev = [
@@ -119,7 +128,7 @@ dev = [
 test = [
     "coverage[toml] == 7.13.4",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.5",
+    "httpx-retries == 0.4.6",
     "pytest == 9.0.2",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
@@ -166,7 +175,7 @@ windows = "briefcase.platforms.windows"
 gradle = "briefcase.platforms.android.gradle"
 
 [project.entry-points."briefcase.formats.iOS"]
-xcode = "briefcase.platforms.iOS.xcode"
+Xcode = "briefcase.platforms.iOS.xcode"
 
 [project.entry-points."briefcase.formats.linux"]
 appimage = "briefcase.platforms.linux.appimage"
@@ -176,13 +185,13 @@ system = "briefcase.platforms.linux.system"
 
 [project.entry-points."briefcase.formats.macOS"]
 app = "briefcase.platforms.macOS.app"
-xcode = "briefcase.platforms.macOS.xcode"
+Xcode = "briefcase.platforms.macOS.xcode"
 
 # [project.entry-points."briefcase.formats.tvOS"]
-# xcode = "briefcase.platforms.tvOS.xcode"
+# Xcode = "briefcase.platforms.tvOS.xcode"
 
 # [project.entry-points."briefcase.formats.watchOS"]
-# xcode = "briefcase.platforms.watchOS.xcode"
+# Xcode = "briefcase.platforms.watchOS.xcode"
 
 # [project.entry-points."briefcase.formats.wearos"]
 # gradle = "briefcase.platforms.wearos.gradle"
@@ -193,6 +202,12 @@ static = "briefcase.platforms.web.static"
 [project.entry-points."briefcase.formats.windows"]
 app = "briefcase.platforms.windows.app"
 visualstudio = "briefcase.platforms.windows.visualstudio"
+
+[project.entry-points."briefcase.channels.iOS.Xcode"]
+appstore = "briefcase.channels.appstore:AppStorePublicationChannel"
+
+[project.entry-points."briefcase.channels.android.gradle"]
+playstore = "briefcase.channels.playstore:PlayStorePublicationChannel"
 
 [tool.coverage.run]
 plugins = ["coverage_conditional_plugin"]
@@ -215,6 +230,7 @@ precision = 1
 exclude_lines = [
     "pragma: no cover",
     "@(abc\\.)?abstractmethod",
+    "@runtime_checkable",
     "NotImplementedError\\(\\)",
     "if TYPE_CHECKING:",
 ]
@@ -323,6 +339,12 @@ type = [
     { directory = "doc", name = "Documentation", showcontent = true },
     { directory = "misc", name = "Misc", showcontent = false },
 ]
+
+[tool.ty.rules]
+unresolved-attribute = "warn"
+invalid-argument-type = "warn"
+invalid-return-type = "warn"
+unresolved-import = "ignore"
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'

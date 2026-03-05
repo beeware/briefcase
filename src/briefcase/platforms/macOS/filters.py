@@ -96,7 +96,7 @@ class XcodeBuildFilter:
         XCODEBUILD_PREFIX + r"Failed to start service \(com\.apple\.amfi\.lockdown\): "
     )
 
-    # XCode 15 generates dozens of copies of the following message:
+    # Xcode 15 generates dozens of copies of the following message:
     # ---------------------------------------------------------------------
     # 2023-09-26 14:35:45.775 xcodebuild[75877:23947967] [MT] DVTAssertions:
     #   Warning in /System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot11

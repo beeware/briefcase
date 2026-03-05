@@ -251,6 +251,21 @@ def test_install_app_requirements_no_docker(
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
 )
+@pytest.mark.parametrize(
+    "extras",
+    [
+        # No extras
+        {},
+        # Extras on a source directory
+        {"first": "[ex1]"},
+        # Extras on a tarball
+        {"second": "[ex2]"},
+        # Extras on a wheel
+        {"third": "[ex3]"},
+        # Multiple extras on everything
+        {"first": "[exa,exb]", "second": "[exc,exd]", "third": "[exe,exf]"},
+    ],
+)
 def test_install_app_requirements_with_locals(
     create_command,
     first_app_config,
@@ -259,31 +274,38 @@ def test_install_app_requirements_with_locals(
     second_package,  # A pre-built sdist
     third_package,  # A pre-built wheel
     other_package,  # A stale local requirement
+    extras,
 ):
-    """If the app has local requirements, they are compiled into sdists for
+    """If the app has local requirements, they are compiled into wheels for
     installation."""
     # Add local requirements
-    first_app_config.requires.extend([first_package, second_package, third_package])
+    first_app_config.requires.extend(
+        [
+            first_package + extras.get("first", ""),
+            second_package + extras.get("second", ""),
+            third_package + extras.get("third", ""),
+        ]
+    )
 
-    # Mock the side effect of building an sdist
-    def build_sdist(*args, **kwargs):
+    # Mock the side effect of building a wheel
+    def build_wheel(*args, **kwargs):
         # Extract the folder name; assume that's the name of the package
         name = Path(args[0][-1]).name
         create_tgz_file(
             create_command.local_requirements_path(first_app_config)
-            / f"{name}-1.2.3.tar.gz",
+            / f"{name}-1.2.3-py3-none-any.whl",
             content=[
                 ("setup.py", "Python config"),
                 ("local.py", "Python source"),
             ],
         )
 
-    create_command.tools.subprocess.check_output.side_effect = build_sdist
+    create_command.tools.subprocess.check_output.side_effect = build_wheel
 
     # Install requirements
     create_command.install_app_requirements(first_app_config)
 
-    # An sdist was built for the local package
+    # A wheel was built for the local package
     create_command.tools.subprocess.check_output.assert_called_once_with(
         [
             sys.executable,
@@ -291,10 +313,10 @@ def test_install_app_requirements_with_locals(
             "utf8",
             "-m",
             "build",
-            "--sdist",
+            "--wheel",
             "--outdir",
             tmp_path / "base_path/build/first-app/tester/dummy/_requirements",
-            str(tmp_path / "local/first"),
+            tmp_path / "local/first",
         ],
         encoding="UTF-8",
     )
@@ -335,22 +357,22 @@ def test_install_app_requirements_with_locals(
             "--target=/app/path/to/app_packages",
             "foo==1.2.3",
             "bar>=4.5",
-            "/app/_requirements/first-1.2.3.tar.gz",
-            "/app/_requirements/second-2.3.4.tar.gz",
-            "/app/_requirements/third-3.4.5-py3-none-any.whl",
+            "/app/_requirements/first-1.2.3-py3-none-any.whl" + extras.get("first", ""),
+            "/app/_requirements/second-2.3.4.tar.gz" + extras.get("second", ""),
+            "/app/_requirements/third-3.4.5-py3-none-any.whl" + extras.get("third", ""),
         ],
         check=True,
         encoding="UTF-8",
         env={"DOCKER_CLI_HINTS": "false"},
     )
 
-    # The local requirements path exists, and contains the compiled sdist, the
+    # The local requirements path exists, and contains the compiled wheel, the
     # pre-existing sdist, and the pre-existing wheel; the old requirement has
     # been purged.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert [f.name for f in sorted(local_requirements_path.iterdir())] == [
-        "first-1.2.3.tar.gz",
+        "first-1.2.3-py3-none-any.whl",
         "second-2.3.4.tar.gz",
         "third-3.4.5-py3-none-any.whl",
     ]
@@ -370,7 +392,7 @@ def test_install_app_requirements_with_bad_local(
     # Add a local requirement
     first_app_config.requires.append(first_package)
 
-    # Mock the building an sdist raising an error
+    # Mock the building an wheel raising an error
     create_command.tools.subprocess.check_output.side_effect = (
         subprocess.CalledProcessError(
             cmd=["python", "-m", "build", "..."], returncode=1
@@ -380,11 +402,11 @@ def test_install_app_requirements_with_bad_local(
     # Install requirements
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to build sdist for .*/local/first",
+        match=r"Unable to build wheel for .*/local/first",
     ):
         create_command.install_app_requirements(first_app_config)
 
-    # An attempt to build the sdist was made
+    # An attempt to build the wheel was made
     create_command.tools.subprocess.check_output.assert_called_once_with(
         [
             sys.executable,
@@ -392,10 +414,10 @@ def test_install_app_requirements_with_bad_local(
             "utf8",
             "-m",
             "build",
-            "--sdist",
+            "--wheel",
             "--outdir",
             tmp_path / "base_path/build/first-app/tester/dummy/_requirements",
-            str(tmp_path / "local/first"),
+            tmp_path / "local/first",
         ],
         encoding="UTF-8",
     )
@@ -429,7 +451,7 @@ def test_install_app_requirements_with_missing_local_build(
     ):
         create_command.install_app_requirements(first_app_config)
 
-    # No attempt to build the sdist was made
+    # No attempt to build the wheel was made
     create_command.tools.subprocess.check_output.assert_not_called()
 
     # pip was *not* invoked inside docker.
@@ -463,11 +485,11 @@ def test_install_app_requirements_with_bad_local_file(
 
     # An attempt was made to copy the package
     create_command.tools.shutil.copy.assert_called_once_with(
-        str(tmp_path / "local/missing-2.3.4.tar.gz"),
+        tmp_path / "local/missing-2.3.4.tar.gz",
         tmp_path / "base_path/build/first-app/tester/dummy/_requirements",
     )
 
-    # No attempt was made to build the sdist
+    # No attempt was made to build the wheel
     create_command.tools.subprocess.check_output.assert_not_called()
 
     # pip was *not* invoked inside docker.
