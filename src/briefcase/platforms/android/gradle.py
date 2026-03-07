@@ -771,7 +771,7 @@ A new keystore has been created at:
 Keep this file secure and backed up. If you lose it, you will not be able to
 publish updates to this app on the Play Store.
 
-In future, you can re-use this keystore by running:
+In future, you can reuse this keystore by running:
 
     $ briefcase package android --identity {keystore_path}
 
