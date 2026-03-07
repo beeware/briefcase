@@ -184,6 +184,29 @@ You may specify multiple `--reverse-port` arguments; each one specifies a single
 
 The following options can be added to the `tool.briefcase.app.<appname>.android` section of your `pyproject.toml` file.
 
+### `android_abis`
+
+A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. This controls the `abiFilters` parameter in the `ndk` block of the Android app's `defaultConfig` in `build.gradle`(depending on the project template). If not specified,
+the NDK block will be omitted, falling back to the default behavior.
+
+For example, specifying:
+
+```toml
+android_abis = ["arm64-v8a", "x86_64"]
+```
+
+would result in a `build.gradle` file that contains:
+
+```groovy
+...
+    defaultConfig {
+...
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+...
+```
+
 ### `android_manifest_attrs_extra_content`
 
 Additional attributes that will be added verbatim to the `<manifest>` declaration of the `AndroidManifest.xml` of your app.

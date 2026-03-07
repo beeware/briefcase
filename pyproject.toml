@@ -94,6 +94,8 @@ dependencies = [
     "rich >= 12.6, < 15.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
+    "binaryornot < 0.5.0",# transitive dependency (beeware/briefcase#1428) had to cap because was causing problems
+
 ]
 
 [dependency-groups]
