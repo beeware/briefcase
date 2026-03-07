@@ -94,6 +94,8 @@ dependencies = [
     "rich >= 12.6, < 15.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
+    "binraryornot < 0.5.0",
+
 ]
 
 [dependency-groups]
