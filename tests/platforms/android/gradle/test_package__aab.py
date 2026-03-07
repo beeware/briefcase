@@ -93,7 +93,7 @@ def test_execute_gradle(
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
 
-    package_command.package_app(first_app_aab)
+    package_command.package_app(first_app_aab, adhoc_sign=True)
 
     package_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     package_command.tools.subprocess.run.assert_called_once_with(
@@ -114,6 +114,74 @@ def test_execute_gradle(
     assert (tmp_path / "base_path/dist/First App-0.0.1.aab").exists()
 
 
+@pytest.mark.parametrize(
+    ("host_os", "gradlew_name"),
+    [
+        ("Windows", "gradlew.bat"),
+        ("NonWindows", "gradlew"),
+    ],
+)
+def test_execute_gradle_signed(
+    package_command,
+    first_app_aab,
+    host_os,
+    gradlew_name,
+    tmp_path,
+):
+    """Validate that package_app() passes signing properties to Gradle when a keystore
+    is provided."""
+    package_command.tools.host_os = host_os
+
+    keystore_path = tmp_path / "my.jks"
+    keystore_path.touch()
+
+    def create_bundle(*args, **kwargs):
+        create_file(
+            tmp_path
+            / "base_path"
+            / "build"
+            / "first-app"
+            / "android"
+            / "gradle"
+            / "app"
+            / "build"
+            / "outputs"
+            / "bundle"
+            / "release"
+            / "app-release.aab",
+            "Android release",
+        )
+
+    package_command.tools.subprocess.run.side_effect = create_bundle
+
+    package_command.package_app(
+        first_app_aab,
+        identity=str(keystore_path),
+        keystore_alias="mykey",
+        keystore_password="storepass",
+        key_password="keypass",
+    )
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            package_command.bundle_path(first_app_aab) / gradlew_name,
+            "--console",
+            "plain",
+            "bundleRelease",
+            f"-Pandroid.injected.signing.store.file={keystore_path}",
+            "-Pandroid.injected.signing.store.password=storepass",
+            "-Pandroid.injected.signing.key.alias=mykey",
+            "-Pandroid.injected.signing.key.password=keypass",
+        ],
+        cwd=package_command.bundle_path(first_app_aab),
+        env=package_command.tools.android_sdk.env,
+        check=True,
+        encoding="ISO-42",
+    )
+
+    assert (tmp_path / "base_path/dist/First App-0.0.1.aab").exists()
+
+
 def test_print_gradle_errors(package_command, first_app_aab):
     """Validate that package_app() will convert stderr/stdout from the process into
     exception text."""
@@ -123,4 +191,4 @@ def test_print_gradle_errors(package_command, first_app_aab):
         cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
-        package_command.package_app(first_app_aab)
+        package_command.package_app(first_app_aab, adhoc_sign=True)

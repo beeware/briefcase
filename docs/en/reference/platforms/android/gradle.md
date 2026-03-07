@@ -122,6 +122,28 @@ Android allows for some customization of the colors used by your app:
 
 The following options can be provided at the command line when producing Android projects:
 
+### package
+
+#### `--keystore-alias <alias>`
+
+The alias of the signing key within the keystore. If not provided, Briefcase will prompt for it (defaulting to the app name).
+
+#### `--keystore-password <password>`
+
+The password for the keystore. If not provided, Briefcase will prompt for it.
+
+#### `--key-password <password>`
+
+The password for the signing key itself. If not provided, it defaults to the keystore password.
+
+#### `-i <path>` / `--identity <path>`
+
+The path to a `.jks` keystore file to use for signing. If not provided, Briefcase will search for existing keystores in the project folder (`.android/`), and in `~/.android/`, and offer to create a new one if none are found.
+
+#### `--adhoc-sign`
+
+Create an unsigned release artefact, skipping the keystore signing step entirely. Useful for CI pipelines that handle signing separately, or for testing distribution.
+
 ### run
 
 #### `-d <device>` / `--device <device>`
@@ -358,4 +380,40 @@ For advice on how to deal with this situation, see the [Chaquopy FAQ](https://ch
 
 ### Signing of `briefcase package` artefacts
 
-While it is possible to use <span class="title-ref">briefcase package android</span> to produce an APK or AAB file for distribution, the file is *not* usable as-is. It must be signed regardless of whether you're distributing your app through the Play Store, or via loading the APK directly. For details on how to manually sign your code, see the instructions on [signing an Android App Bundle][sign-the-android-app-bundle].
+When building an AAB or a Release APK, Briefcase will automatically sign the artefact using a Java keystore (`.jks`) file.
+
+On the first run, Briefcase will search for existing keystores in the following locations:
+
+* The project root directory
+* The project's `.android/` subfolder
+* `~/.android/`
+
+If keystores are found, you will be presented with a list to choose from. If none are found — or if you choose to create a new one — Briefcase will generate a new keystore at `<project-root>/.android/<bundle-identifier>.jks` using `keytool` from your JDK installation.
+
+You can bypass the interactive selection by supplying the path to an existing keystore on the command line:
+
+```console
+$ briefcase package android --identity /path/to/my-release-key.jks
+```
+
+You can also supply the alias and passwords non-interactively:
+
+```console
+$ briefcase package android \
+    --identity /path/to/my-release-key.jks \
+    --keystore-alias my-key \
+    --keystore-password s3cr3t
+```
+
+To produce an *unsigned* artefact (for example, when signing is handled externally in a CI pipeline), use `--adhoc-sign`:
+
+```console
+$ briefcase package android --adhoc-sign
+```
+
+> [!IMPORTANT]
+> Keep your keystore file secure and backed up. If you lose it, you will not be able to publish updates to your app on the Play Store.
+
+Debug APKs (produced with `-p debug-apk`) are signed automatically by the Android SDK debug key and do not go through this signing flow.
+
+If you have an existing project that configures signing via `build_gradle_extra_content`, Briefcase will detect the `signingConfig` block and defer to that configuration. A migration warning will be printed suggesting you switch to the `--identity` flag instead.
