@@ -641,12 +641,6 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         super().add_options(parser)
 
         parser.add_argument(
-            "--identity",
-            dest="identity",
-            help=self.IDENTITY_HELP,
-            required=False,
-        )
-        parser.add_argument(
             "--keystore-alias",
             dest="keystore_alias",
             help="The alias of the signing key in the keystore",

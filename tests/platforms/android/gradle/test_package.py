@@ -1,4 +1,5 @@
 import argparse
+from unittest.mock import patch
 
 
 def test_packaging_formats(package_command):
@@ -22,15 +23,18 @@ def test_identity_help(package_command):
 
 
 def test_add_options(package_command):
-    """add_options registers --identity, --keystore-alias, --keystore-password, and
-    --key-password."""
+    """add_options registers --keystore-alias, --keystore-password, and --key-
+    password."""
     parser = argparse.ArgumentParser()
-    package_command.add_options(parser)
+    # Patch super() so it doesn't try to register flags that would conflict.
+    with patch(
+        "briefcase.commands.package.PackageCommand.add_options",
+        lambda self, p: None,
+    ):
+        package_command.add_options(parser)
 
     args = parser.parse_args(
         [
-            "--identity",
-            "/path/to/my.jks",
             "--keystore-alias",
             "mykey",
             "--keystore-password",
@@ -40,7 +44,6 @@ def test_add_options(package_command):
         ]
     )
 
-    assert args.identity == "/path/to/my.jks"
     assert args.keystore_alias == "mykey"
     assert args.keystore_password == "storepass"
     assert args.key_password == "keypass"
@@ -49,11 +52,14 @@ def test_add_options(package_command):
 def test_add_options_defaults(package_command):
     """All new signing options default to None when not supplied."""
     parser = argparse.ArgumentParser()
-    package_command.add_options(parser)
+    with patch(
+        "briefcase.commands.package.PackageCommand.add_options",
+        lambda self, p: None,
+    ):
+        package_command.add_options(parser)
 
     args = parser.parse_args([])
 
-    assert args.identity is None
     assert args.keystore_alias is None
     assert args.keystore_password is None
     assert args.key_password is None
