@@ -221,7 +221,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
             "build_gradle_dependencies": {"implementation": dependencies},
-            "android_abis": getattr(app, "android_abis", None),
+            "ndk": {"abi_filters": getattr(app, "android_abis", None)},
         }
 
     def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):

@@ -186,7 +186,8 @@ The following options can be added to the `tool.briefcase.app.<appname>.android`
 
 ### `android_abis`
 
-A list of strings that explicitly specifies the Android platforms the app will support. This controls the `abiFilters` parameter in the `ndk` block of the Android app's `defaultConfig` in `build.gradle` (depending on the project template). If not specified, the NDK block will be omitted, falling back to the default behavior.
+A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. This controls the `abiFilters` parameter in the `ndk` block of the Android app's `defaultConfig` in `build.gradle`(depending on the project template). If not specified,
+the NDK block will be omitted, falling back to the default behavior.
 
 For example, specifying:
 
