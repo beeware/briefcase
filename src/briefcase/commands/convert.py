@@ -672,9 +672,8 @@ class ConvertCommand(NewCommand):
         self.merge_or_copy_pyproject(project_dir / "pyproject.toml")
 
         # Copy license file if not already there
-        license_file = self.pep621_data.get("license", {}).get("file")
-
-        if license_file is None and not (self.base_path / "LICENSE").exists():
+        license = find_license_filename()
+        if license is None:
             self.console.warning(
                 f"\nLicense file not found in '{self.base_path}'. "
                 "Briefcase will create a template 'LICENSE' file."
@@ -828,4 +827,28 @@ def find_changelog_filename(base_path):
         changelog = base_path / format
         if changelog.is_file():
             return format
+    return None
+
+
+def find_license_filename(base_path):
+    """Find a valid license file in a given directory.
+
+    :param base_Path: The directory to search
+    :returns: The filename of a license if one is found. Else none if no such
+        license could be found.
+    """
+    # Collect all possible license file formats.
+    license_formats = [
+        f"{name}{extension}"
+        for name in ["LICENSE", "LICENCE", "COPYING"]
+        for extension in ["", ".md", ".rst", ".txt"]
+    ]
+
+    # If a particular format is found, it returns it as the license.
+    for file_format in license_formats:
+        license = base_path / file_format
+        if license.is_file():
+            return file_format
+
+    # Else, no such license exists and return None.
     return None
