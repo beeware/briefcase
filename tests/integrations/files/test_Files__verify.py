@@ -1,11 +1,11 @@
-from briefcase.integrations.files import Files
+from briefcase.integrations.files import File
 
 
 def test_short_circuit(mock_tools):
     """Tool is not created if already cached."""
-    mock_tools.files = "tool"
+    mock_tools.file = "tool"
 
-    tool = Files.verify(mock_tools)
+    tool = File.verify(mock_tools)
 
     assert tool == "tool"
-    assert tool == mock_tools.files
+    assert tool == mock_tools.file

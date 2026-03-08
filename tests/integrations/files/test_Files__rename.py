@@ -1,7 +1,8 @@
 import os
-import sys
 import threading
 import time
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 import tenacity
@@ -10,36 +11,33 @@ import tenacity
 def test_rename_path(mock_tools, tmp_path):
     def openclose(filepath):
         handler = filepath.open(encoding="UTF-8")
-        time.sleep(1)
-        handler.close()
+        try:
+            time.sleep(0.1)
+        finally:
+            handler.close()
 
     (tmp_path / "orig-dir-1").mkdir()
     tl = tmp_path / "orig-dir-1/orig-file"
     tl.touch()
     file_access_thread = threading.Thread(target=openclose, args=(tl,))
-    rename_thread = threading.Thread(
-        target=mock_tools.files.path_rename,
-        args=(tmp_path / "orig-dir-1", tmp_path / "new-dir-1"),
-    )
 
     file_access_thread.start()
-    rename_thread.start()
-
-    rename_thread.join()
+    mock_tools.file.path_rename(tmp_path / "orig-dir-1", tmp_path / "new-dir-1")
+    file_access_thread.join()
 
     assert "new-dir-1" in os.listdir(tmp_path)
 
 
-@pytest.mark.xfail(
-    sys.platform == "win32",
-    raises=tenacity.RetryError,
-    reason="Windows can't rename folder in filepath when the file is open",
-)
+def test_rename_path_file_not_found(mock_tools, tmp_path):
+    """A FileNotFoundError is raised immediately without retrying."""
+    with pytest.raises(FileNotFoundError):
+        mock_tools.file.path_rename(tmp_path / "does-not-exist", tmp_path / "new-name")
+
+
 def test_rename_path_fail(mock_tools, tmp_path, monkeypatch):
-    (tmp_path / "orig-dir-2").mkdir()
-    (tmp_path / "orig-dir-2/orig-file").touch()
+    """Retries are exhausted when rename repeatedly raises PermissionError."""
+    monkeypatch.setattr(tenacity.nap.time, "sleep", lambda x: True)
+    monkeypatch.setattr(Path, "rename", MagicMock(side_effect=PermissionError))
 
-    with (tmp_path / "orig-dir-2/orig-file").open(encoding="UTF-8"):
-
-        monkeypatch.setattr(tenacity.nap.time, "sleep", lambda x: True)
-        mock_tools.files.path_rename(tmp_path / "orig-dir-2", tmp_path / "new-dir-2")
+    with pytest.raises(tenacity.RetryError):
+        mock_tools.file.path_rename(tmp_path / "orig-dir-2", tmp_path / "new-dir-2")

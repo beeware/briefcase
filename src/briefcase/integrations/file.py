@@ -13,6 +13,7 @@ from pathlib import Path
 
 import httpx
 import truststore
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -337,3 +338,17 @@ class File(Tool):
             # exist if the download fails or the user sends CTRL+C.
             with suppress(FileNotFoundError):
                 self.tools.os.remove(temp_file.name)
+
+    @retry(
+        retry=retry_if_exception_type(PermissionError),
+        wait=wait_fixed(0.2),
+        stop=stop_after_attempt(25),
+    )
+    def path_rename(self, old_path: Path, new_path: object):
+        """Using tenacity for a retry policy on pathlib rename.
+
+        Windows does not like renaming a dir in a path with an opened file, raising a
+        PermissionError. Only that error is retried; other errors (e.g.
+        FileNotFoundError) are surfaced immediately.
+        """
+        old_path.rename(new_path)

@@ -45,7 +45,6 @@ from briefcase.exceptions import (
 )
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
-from briefcase.integrations.files import Files
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms import get_output_formats, get_platforms
@@ -184,7 +183,6 @@ class BaseCommand(ABC):
         Subprocess.verify(tools=self.tools)
         VirtualEnvironment.verify(tools=self.tools)
         File.verify(tools=self.tools)
-        Files.verify(tools=self.tools)
 
         if not is_clone:
             self.validate_locale()

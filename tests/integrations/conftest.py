@@ -9,7 +9,6 @@ import pytest
 from briefcase.config import AppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
-from briefcase.integrations.files import Files
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -36,7 +35,6 @@ def mock_tools(dummy_console, tmp_path) -> ToolCache:
 
     # Make File and Subprocess always available
     File.verify(tools=mock_tools)
-    Files.verify(tools=mock_tools)
     Subprocess.verify(tools=mock_tools)
 
     return mock_tools

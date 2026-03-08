@@ -310,7 +310,7 @@ Delete {jdk_zip_path} and run briefcase again.
             java_unpack_path = (
                 self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
             )
-            self.tools.files.path_rename(
+            self.tools.file.path_rename(
                 old_path=java_unpack_path,
                 new_path=self.tools.base_path / self.JDK_INSTALL_DIR_NAME,
             )
