@@ -186,8 +186,7 @@ The following options can be added to the `tool.briefcase.app.<appname>.android`
 
 ### `android_abis`
 
-A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. This controls the `abiFilters` parameter in the `ndk` block of the Android app's `defaultConfig` in `build.gradle`(depending on the project template). If not specified,
-the NDK block will be omitted, falling back to the default behavior.
+A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. This controls the `abiFilters` parameter in the `ndk` block of the Android app's `defaultConfig` in `build.gradle`(depending on the project template). If not specified, the NDK block will be omitted, falling back to the default ABIs supported by Briefcase (currently `arm64v8a` and `x86_64`, with `armeabi-v7a` also included on Python 3.11 and earlier).
 
 For example, specifying:
 
