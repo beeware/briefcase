@@ -5,6 +5,7 @@ allowlist
 AlmaLinux
 amongst
 APIs
+ABIs
 APK
 appimage
 AppImage
@@ -114,6 +115,7 @@ MSI
 Namespace
 Napari
 natively
+NDK
 NFS
 NSIS
 NumPy

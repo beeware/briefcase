@@ -156,6 +156,30 @@ def test_build_gradle_dependencies(
 
 
 @pytest.mark.parametrize(
+    ("input", "abi_filters"),
+    [
+        (None, None),
+        ([], []),
+        (["arm64-v8a"], ["arm64-v8a"]),
+        (["arm64-v8a", "x86_64"], ["arm64-v8a", "x86_64"]),
+    ],
+)
+def test_android_abis(
+    create_command,
+    first_app_config,
+    input,
+    abi_filters,
+):
+    """Validate that create adds android ABIs to the template context as
+    ndk.abi_filters."""
+    if input is not None:
+        first_app_config.android_abis = input
+
+    context = create_command.output_format_template_context(first_app_config)
+    assert context["ndk"] == {"abi_filters": abi_filters}
+
+
+@pytest.mark.parametrize(
     ("permissions", "features", "context"),
     [
         # No permissions
