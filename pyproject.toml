@@ -85,6 +85,12 @@ dependencies = [
     # a full error. Requests has already increased the pin; the next requests release
     # should remove the need for this pin.
     "chardet < 6.0",
+    # See binaryornot/binaryornot#642 and binaryornot/binaryornot#649. binaryornot is
+    # transitive dependency of cookiecutter; v0.5.0 introduced #642, preventing correct
+    # detection of PNG content (#642). v0.6.0 (released a few days later) fixes #642,
+    # but introduced #649, and the presence of warnings causes catastrophic failures
+    # when running under dev mode.
+    "binaryornot < 0.5.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
