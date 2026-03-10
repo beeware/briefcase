@@ -249,6 +249,38 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
 - **Class naming**: `{Platform}{Format}{Action}Command` (e.g., `macOSAppBuildCommand`)
 - **Mixin naming**: `{Platform}{Feature}Mixin` (e.g., `macOSSigningMixin`)
 - **Platform casing**: Preserve original (macOS, iOS, not macos)
-- **Docstrings**: Google/Sphinx style with `:param:` / `:returns:` / `:raises:` — formatted by docformatter
+- **Docstrings**: Google/Sphinx style with `:param:` / `:returns:` / `:raises:` — formatted by docformatter, using Markdown formatting
 - **Imports**: `from __future__ import annotations` used widely for PEP 604 unions
 - **Paths**: Always use `pathlib.Path` objects, never raw strings
+- **Function call formatting**: When a function call with more than one argument cannot fit on a single line, place each argument on its own line with a trailing comma on the last argument — do **not** use the "multiple arguments on one wrapped line" style that ruff also permits. Prefer:
+  ```python
+  my_function(
+      arg1,
+      arg2,
+      arg3,
+  )
+  ```
+  over:
+  ```python
+  my_function(
+      arg1, arg2, arg3
+  )
+  ```
+- **Long string arguments**: When a string argument must be split across lines to satisfy line length requirements, wrap the concatenated string literals in parentheses so it is clear the string is a single argument. Prefer:
+  ```python
+  my_function(
+      (
+          "this is a very long string "
+          "that is wrapped over two lines"
+      ),
+      second_argument,
+  )
+  ```
+  over:
+  ```python
+  my_function(
+      "this is a very long string "
+      "that is wrapped over two lines",
+      second_argument,
+  )
+  ```
