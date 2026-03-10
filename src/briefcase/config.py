@@ -164,7 +164,7 @@ def validate_document_type_config(document_type_id, document_type):
         if isinstance(content_types, list):
             if len(content_types) > 1:
                 raise BriefcaseConfigError(
-                    f"""
+                    f"""\
 Document type {document_type_id!r} has multiple content types. Specifying
 multiple values in a LSItemContentTypes key is only valid when multiple document
 types are manually grouped together in the Info.plist file. For Briefcase apps,
@@ -800,8 +800,7 @@ Update the `license` definition to a valid SPDX expression.
                 # SPDX identifiable.
                 console.warning(f"""
 *******************************************************************************
-** {"WARNING: License definition for '" + app_name + "'":75} **
-** uses deprecated PEP 621 `license.text` format                             **
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
 *******************************************************************************
 
     Briefcase now uses PEP 639 format for license definitions.
@@ -824,20 +823,19 @@ Update the `license` definition to a valid SPDX expression.
 *******************************************************************************
 """)
             else:
-                # Case 2, SPDX not identifiable.
+                # SPDX not identifiable.
                 spdx_id = "LicenseRef-UnknownLicense"
                 console.warning(f"""
 *******************************************************************************
-** {"WARNING: License definition for '" + app_name + "'":75} **
-** uses deprecated PEP 621 `license.text` format                             **
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
 *******************************************************************************
 
     Briefcase now uses PEP 639 format for license definitions.
 
     PEP 639 requires the definition of both `license` and `license-files`.
-    The `license.text` value for '{app_name}' ({license_text}) looks like
-    it might be a license declaration, but it is not a valid SPDX expression.
-    Briefcase will use a value of 'LicenseRef-UnknownLicense' for `license`.
+    Briefcase cannot determine the current license for '{app_name}' based
+    on the value of `license.text`. A value of 'LicenseRef-UnknownLicense'
+    will be used.
 
     The contents of `license.text` will be used as the contents of the
     license file. This is almost certainly incorrect.
@@ -872,8 +870,7 @@ Update the `license` definition to a valid SPDX expression.
                 # License is valid SPDX
                 console.warning(f"""
 *******************************************************************************
-** {"WARNING: License definition for '" + app_name + "'":75} **
-** uses deprecated PEP 621 `license.file` format                             **
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
 *******************************************************************************
 
     Briefcase now uses PEP 639 format for license definitions.
@@ -894,8 +891,7 @@ Update the `license` definition to a valid SPDX expression.
                 # Can't identify SPDX for license
                 console.warning(f"""
 *******************************************************************************
-** {"WARNING: License definition for '" + app_name + "'":75} **
-** uses deprecated PEP 621 `license.file` format                             **
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
 *******************************************************************************
 
     Briefcase now uses PEP 639 format for license definitions.
@@ -953,18 +949,17 @@ Update your configuration to provide a valid PEP 639 configuration:
         license_text_file.write_text(raw_license, encoding="utf-8")
 
         if spdx_id is not None:
-            # Case 1: SPDX identifiable.
+            # SPDX identifiable.
             console.warning(f"""
 *******************************************************************************
-** {"WARNING: License definition for '" + app_name + "'":75} **
-** uses deprecated pre-PEP 621 `license` format                              **
+** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
 *******************************************************************************
 
     Briefcase now uses PEP 639 format for license definitions.
 
     PEP 639 requires the definition of both `license` and `license-files`,
     and `license` must be a valid SPDX expression. The current value for
-    `license.text` seems to define a SPDX license of '{spdx_id}'.
+    `license` seems to define a SPDX license of '{spdx_id}'.
 
     The contents of `license.text` will be used as the contents of the
     license file. This is almost certainly incorrect.
@@ -980,20 +975,19 @@ Update your configuration to provide a valid PEP 639 configuration:
 *******************************************************************************
 """)
         else:
-            # Case 2: single-line, SPDX not identifiable.
+            # SPDX not identifiable.
             spdx_id = "LicenseRef-UnknownLicense"
             console.warning(f"""
 *******************************************************************************
-** {"WARNING: License definition for '" + app_name + "'":75} **
-** uses deprecated pre-PEP 621 `license` format                              **
+** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
 *******************************************************************************
 
     Briefcase now uses PEP 639 format for license definitions.
 
     PEP 639 requires the definition of both `license` and `license-files`.
-    The `license` value for '{app_name}' ({raw_license}) looks like
-    it might be a license declaration, but it is not a valid SPDX expression.
-    Briefcase will use a value of 'LicenseRef-UnknownLicense' for `license`.
+    Briefcase cannot determine the current license for '{app_name}' based
+    on the value of `license`. A value of 'LicenseRef-UnknownLicense' will
+    be used.
 
     The contents of `license.text` will be used as the contents of the
     license file. This is almost certainly incorrect.
@@ -1022,8 +1016,7 @@ Update your configuration to provide a valid PEP 639 configuration:
         )
         console.warning(f"""
 *******************************************************************************
-** {"WARNING: Project configuration for '" + app_name + "'":75} **
-** {"does not have a license definition":75} **
+** {"WARNING: '" + app_name + "' does not define a license":73} **
 *******************************************************************************
 
     {app_name!r} does not have a PEP 639 license definition.

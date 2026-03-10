@@ -100,8 +100,7 @@ def test_single_minimal_app(tmp_path):
     # Both apps have no license definition; a warning should be emitted for each.
     assert console.warning.call_count == 1
     first_warning = console.warning.call_args_list[0][0][0]
-    assert "WARNING: Project configuration for 'my_app'" in first_warning
-    assert "does not have a license definition" in first_warning
+    assert "WARNING: 'my_app' does not define a license" in first_warning
 
 
 def test_multiple_minimal_apps(tmp_path):
@@ -148,11 +147,9 @@ def test_multiple_minimal_apps(tmp_path):
     # Both apps have no license definition; a warning should be emitted for each.
     assert console.warning.call_count == 2
     first_warning = console.warning.call_args_list[0][0][0]
-    assert "WARNING: Project configuration for 'first'" in first_warning
-    assert "does not have a license definition" in first_warning
+    assert "WARNING: 'first' does not define a license" in first_warning
     second_warning = console.warning.call_args_list[1][0][0]
-    assert "WARNING: Project configuration for 'second'" in second_warning
-    assert "does not have a license definition" in second_warning
+    assert "WARNING: 'second' does not define a license" in second_warning
 
 
 def test_platform_override(tmp_path):
@@ -965,7 +962,7 @@ def test_license_pep621_text_spdx(tmp_path):
     # One warning hinting an identified license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "uses deprecated PEP 621 `license.text` format" in warning_text
+    assert "uses PEP 621 `license.text` format" in warning_text
     assert "almost certainly incorrect" in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
     assert 'license = "MIT"' in warning_text
@@ -1014,7 +1011,7 @@ def test_license_pep621_text_non_spdx(tmp_path):
     # One warning hinting an unknown license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "uses deprecated PEP 621 `license.text` format" in warning_text
+    assert "uses PEP 621 `license.text` format" in warning_text
     assert "almost certainly incorrect" in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
@@ -1079,7 +1076,7 @@ of this software and associated documentation files (the "Software"), ...
     # One warning hinting a known license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "uses deprecated PEP 621 `license.file` format" in warning_text
+    assert "uses PEP 621 `license.file` format" in warning_text
     assert "almost certainly incorrect" not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
     assert 'license = "MIT"' in warning_text
@@ -1116,7 +1113,7 @@ def test_license_pep621_file_unknown_spdx(tmp_path):
     # One warning hinting an unknown license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "uses deprecated PEP 621 `license.file` format" in warning_text
+    assert "uses PEP 621 `license.file` format" in warning_text
     assert "almost certainly incorrect" not in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
@@ -1209,7 +1206,7 @@ def test_license_text_spdx(tmp_path):
     # One warning hinting a known license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "uses deprecated pre-PEP 621 `license` format" in warning_text
+    assert "uses pre-PEP 621 `license` format" in warning_text
     assert "almost certainly incorrect" in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
     assert 'license = "MIT"' in warning_text
@@ -1258,7 +1255,7 @@ def test_license_text_non_spdx(tmp_path):
     # One warning hinting an unknown license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "uses deprecated pre-PEP 621 `license` format" in warning_text
+    assert "uses pre-PEP 621 `license` format" in warning_text
     assert "almost certainly incorrect" in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
@@ -1300,7 +1297,7 @@ def test_no_license_key(tmp_path):
     # One warning about the missing configuration
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
-    assert "does not have a license definition" in warning_text
+    assert "does not define a license" in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
     assert "should not release your project without resolving" in warning_text
