@@ -28,7 +28,7 @@ project_name = "Hello World"
 bundle = "com.example"
 version = "0.0.1"
 license = "MIT"
-license_files = ["LICENSE"]
+license-files = ["LICENSE"]
 
 [tool.briefcase.app.myapp]
 description = "My first application"

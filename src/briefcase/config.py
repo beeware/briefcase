@@ -700,65 +700,65 @@ def normalize_license_config(
     base_path: Path,
     console,
 ):
-    """Normalize the ``license`` and ``license_files`` entries in a merged config.
+    """Normalize the `license` and `license-files` entries in a merged config.
 
     This runs after all config layers (project, global, app, platform, format) have
     been merged.  It coerces legacy formats to the PEP 639 two-field representation,
     emits deprecation warnings for out-of-date configurations, and raises
-    ``BriefcaseConfigError`` for invalid or ambiguous configurations.
+    `BriefcaseConfigError` for invalid or ambiguous configurations.
 
     :param config: The fully-merged config dict (mutated in place).
     :param app_name: The app name.
-    :param base_path: The project base directory (parent of ``pyproject.toml``), used
+    :param base_path: The project base directory (parent of `pyproject.toml`), used
         to read license files and write temporary license text files.
-    :param console: The Briefcase ``Console`` object used for warning output.
+    :param console: The Briefcase `Console` object used for warning output.
     """
     raw_license = config.get("license")
-    raw_license_files = config.get("license_files")
+    raw_license_files = config.get("license-files")
 
-    # PEP 621 table + license_files is always an error
+    # PEP 621 table + license-files is always an error
     if isinstance(raw_license, dict) and raw_license_files is not None:
         raise BriefcaseConfigError(f"""\
 The license configuration for '{app_name}' mixes PEP 621 table format
-(`license.file`) with PEP 639 format (`license_files`).
+(`license.file`) with PEP 639 format (`license-files`).
 
 Update your configuration to use PEP 639 format:
 
     license = "<SPDX expression>"
-    license_files = ["LICENSE"]
+    license-files = ["LICENSE"]
 """) from None
 
     # license_files without a license expression is always an error
     if raw_license is None and raw_license_files is not None:
         raise BriefcaseConfigError(f"""\
-The license configuration for '{app_name}' defines `license_files` but no
+The license configuration for '{app_name}' defines `license-files` but no
 `license` SPDX expression.
 
 Add a `license` field with the SPDX expression for your project:
 
     license = "<SPDX expression>"
-    license_files = ["LICENSE"]
+    license-files = ["LICENSE"]
 """) from None
 
-    # Empty license_files list is always an error
+    # Empty license-files list is always an error
     if raw_license_files is not None and len(raw_license_files) == 0:
         raise BriefcaseConfigError(f"""\
-The license configuration for '{app_name}' has an empty `license_files` list.
+The license configuration for '{app_name}' has an empty `license-files` list.
 
 You must provide at least one license file path:
 
-    license_files = ["LICENSE"]
+    license-files = ["LICENSE"]
 """) from None
 
     if isinstance(raw_license, str) and raw_license_files is not None:
-        # A valid PEP 639 definition: license + license_files
+        # A valid PEP 639 definition: license + license-files
 
         # Validate SPDX value
         try:
             spdx_id = canonicalize_license_expression(raw_license)
         except InvalidLicenseExpression:
             raise BriefcaseConfigError(f"""\
-The license configuration for '{app_name}' specifies `license_files` but the
+The license configuration for '{app_name}' specifies `license-files` but the
 `license` value {raw_license!r} is not a valid SPDX expression.
 
 Update the `license` definition to a valid SPDX expression.
@@ -774,7 +774,7 @@ Update the `license` definition to a valid SPDX expression.
 
         # Finalize PEP 639 config
         config["license"] = spdx_id
-        config["license_files"] = raw_license_files
+        config["license-files"] = raw_license_files
 
     elif isinstance(raw_license, dict):
         # DEPRECATED: PEP 621 license.text and license.file tables
@@ -788,7 +788,7 @@ Update the `license` definition to a valid SPDX expression.
             spdx_id = get_license_from_text(license_text)
 
             # Write the license text to a file under the build directory so it can
-            # be referenced as a real path in license_files.  For the global config
+            # be referenced as a real path in license-files.  For the global config
             # (no app name) use a generic filename; for per-app configs include the
             # app name to avoid collisions between apps.
             license_text_rel = f"build/license_text.{app_name}.txt"
@@ -806,7 +806,7 @@ Update the `license` definition to a valid SPDX expression.
 
     Briefcase now uses PEP 639 format for license definitions.
 
-    PEP 639 requires the definition of both `license` and `license_files`,
+    PEP 639 requires the definition of both `license` and `license-files`,
     and `license` must be a valid SPDX expression. The current value for
     `license.text` seems to define a SPDX license of '{spdx_id}'.
 
@@ -817,7 +817,7 @@ Update the `license` definition to a valid SPDX expression.
     PEP 639 format:
 
         license = "{spdx_id}"
-        license_files = ["LICENSE"]
+        license-files = ["LICENSE"]
 
     You should not release your project without resolving this warning.
 
@@ -834,7 +834,7 @@ Update the `license` definition to a valid SPDX expression.
 
     Briefcase now uses PEP 639 format for license definitions.
 
-    PEP 639 requires the definition of both `license` and `license_files`.
+    PEP 639 requires the definition of both `license` and `license-files`.
     The `license.text` value for '{app_name}' ({license_text}) looks like
     it might be a license declaration, but it is not a valid SPDX expression.
     Briefcase will use a value of 'LicenseRef-UnknownLicense' for `license`.
@@ -846,7 +846,7 @@ Update the `license` definition to a valid SPDX expression.
     PEP 639 format with a valid SPDX expression:
 
         license = "<SPDX expression>"
-        license_files = ["LICENSE"]
+        license-files = ["LICENSE"]
 
     You should not release your project without resolving this warning.
 
@@ -854,7 +854,7 @@ Update the `license` definition to a valid SPDX expression.
 """)
             # Finalize PEP 621 license.text coercion.
             config["license"] = spdx_id
-            config["license_files"] = [license_text_rel]
+            config["license-files"] = [license_text_rel]
 
         elif list(raw_license.keys()) == ["file"]:
             # PEP 621 license.file — coerce to PEP 639 with deprecation warning.
@@ -886,7 +886,7 @@ Update the `license` definition to a valid SPDX expression.
     Update your configuration to use PEP 639 format:
 
         license = "{license}"
-        license_files = [{license_file!r}]
+        license-files = [{license_file!r}]
 
 *******************************************************************************
 """)
@@ -910,7 +910,7 @@ Update the `license` definition to a valid SPDX expression.
     expression:
 
         license = "<SPDX expression>"
-        license_files = [{license_file!r}]
+        license-files = [{license_file!r}]
 
     You should not release your project without resolving this warning.
 
@@ -920,7 +920,7 @@ Update the `license` definition to a valid SPDX expression.
 
             # Finalize PEP 621 license.text coercion.
             config["license"] = license
-            config["license_files"] = [license_file]
+            config["license-files"] = [license_file]
         else:
             # `license` table contains anything other than a single
             # 'text' or 'file' key.
@@ -931,20 +931,20 @@ The project configuration for '{app_name}' defines an invalid PEP 621
 Update your configuration to provide a valid PEP 639 configuration:
 
     license = "<SPDX expression>"
-    license_files = ["LICENSE"]
+    license-files = ["LICENSE"]
 """) from None
 
     elif isinstance(raw_license, str):
-        # DEPRECATED: Pre-PEP 621 free-form `license` text, with no license_files.
+        # DEPRECATED: Pre-PEP 621 free-form `license` text, with no license-files.
         # Treat like the PEP 621 license.text case: write the string value to a file,
-        # set license_files to point at it, and attempt to canonicalize the SPDX
+        # set license-files to point at it, and attempt to canonicalize the SPDX
         # expression.
 
         # Attempt to identify the SPDX expression from the text content.
         spdx_id = get_license_from_text(raw_license)
 
         # Write the license text to a file under the build directory so it can
-        # be referenced as a real path in license_files.  For the global config
+        # be referenced as a real path in license-files.  For the global config
         # (no app name) use a generic filename; for per-app configs include the
         # app name to avoid collisions between apps.
         license_text_rel = f"build/license_text.{app_name}.txt"
@@ -962,7 +962,7 @@ Update your configuration to provide a valid PEP 639 configuration:
 
     Briefcase now uses PEP 639 format for license definitions.
 
-    PEP 639 requires the definition of both `license` and `license_files`,
+    PEP 639 requires the definition of both `license` and `license-files`,
     and `license` must be a valid SPDX expression. The current value for
     `license.text` seems to define a SPDX license of '{spdx_id}'.
 
@@ -973,7 +973,7 @@ Update your configuration to provide a valid PEP 639 configuration:
     PEP 639 format:
 
         license = "{spdx_id}"
-        license_files = ["LICENSE"]
+        license-files = ["LICENSE"]
 
     You should not release your project without resolving this warning.
 
@@ -990,7 +990,7 @@ Update your configuration to provide a valid PEP 639 configuration:
 
     Briefcase now uses PEP 639 format for license definitions.
 
-    PEP 639 requires the definition of both `license` and `license_files`.
+    PEP 639 requires the definition of both `license` and `license-files`.
     The `license` value for '{app_name}' ({raw_license}) looks like
     it might be a license declaration, but it is not a valid SPDX expression.
     Briefcase will use a value of 'LicenseRef-UnknownLicense' for `license`.
@@ -1002,7 +1002,7 @@ Update your configuration to provide a valid PEP 639 configuration:
     PEP 639 format with the correct SPDX expression:
 
         license = "<SPDX expression>"
-        license_files = ["LICENSE"]
+        license-files = ["LICENSE"]
 
     You should not release your project without resolving this warning.
 
@@ -1011,7 +1011,7 @@ Update your configuration to provide a valid PEP 639 configuration:
 
         # Finalize PEP 621 license.text coercion.
         config["license"] = spdx_id
-        config["license_files"] = [license_text_rel]
+        config["license-files"] = [license_text_rel]
     else:
         # Legacy: No license definition — use dummy values and warn the user.
         dummy_license_file = Path(base_path) / f"build/license_text.{app_name}.txt"
@@ -1028,11 +1028,11 @@ Update your configuration to provide a valid PEP 639 configuration:
 
     {app_name!r} does not have a PEP 639 license definition.
 
-    Add a `license` field and a `license_files` field to your project
+    Add a `license` field and a `license-files` field to your project
     configuration to declare the license for your app:
 
         license = "<SPDX expression>"
-        license_files = ["LICENSE"]
+        license-files = ["LICENSE"]
 
     Briefcase will use a license of 'LicenseRef-UnknownLicense', and use
     a placeholder license file.
@@ -1042,7 +1042,7 @@ Update your configuration to provide a valid PEP 639 configuration:
 *******************************************************************************
 """)
         config["license"] = "LicenseRef-UnknownLicense"
-        config["license_files"] = [f"build/license_text.{app_name}.txt"]
+        config["license-files"] = [f"build/license_text.{app_name}.txt"]
 
 
 def merge_pep621_config(global_config, pep621_config):
@@ -1070,7 +1070,7 @@ def merge_pep621_config(global_config, pep621_config):
     # Keys that map directly
     maybe_update("description", "description")
     maybe_update("license", "license")
-    maybe_update("license_files", "license-files")
+    maybe_update("license-files", "license-files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
