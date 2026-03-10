@@ -10,6 +10,8 @@ from briefcase.config import AppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker, DockerAppContext
 
+from ...utils import create_file
+
 
 @pytest.fixture
 def mock_tools(mock_tools, tmp_path) -> ToolCache:
@@ -46,14 +48,16 @@ def mock_tools(mock_tools, tmp_path) -> ToolCache:
 
 
 @pytest.fixture
-def my_app() -> AppConfig:
+def my_app(tmp_path) -> AppConfig:
+    create_file(tmp_path / "base_path" / "LICENSE", "MIT License")
     return AppConfig(
         app_name="myapp",
         formal_name="My App",
         bundle="com.example",
         version="1.2.3",
         description="This is a simple app",
-        license={"file": "LICENSE"},
+        license="MIT",
+        license_files=["LICENSE"],
         sources=["path/to/src/myapp", "other/stuff"],
         system_requires=["things==1.2", "stuff>=3.4"],
         system_runtime_requires=["runtime_things==1.42", "stuff>=3.4"],

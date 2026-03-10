@@ -1,24 +1,12 @@
 import plistlib
 from unittest import mock
 
-import pytest
-
-from briefcase.exceptions import BriefcaseCommandError
-
 from .....utils import create_file
-
-
-@pytest.fixture
-def license_file(tmp_path):
-    path = tmp_path / "base_path/LICENSE"
-    create_file(path, "You can take license with this.")
-    return path
 
 
 def test_gui_app(
     package_command,
     first_app_with_binaries,
-    license_file,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
@@ -82,7 +70,7 @@ def test_gui_app(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -140,7 +128,6 @@ def test_gui_app(
 def test_gui_app_adhoc_identity(
     package_command,
     first_app_with_binaries,
-    license_file,
     adhoc_identity,
     tmp_path,
 ):
@@ -188,7 +175,7 @@ def test_gui_app_adhoc_identity(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -240,7 +227,6 @@ def test_gui_app_adhoc_identity(
 def test_console_app(
     package_command,
     first_app_with_binaries,
-    license_file,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
@@ -281,7 +267,7 @@ def test_console_app(
     # The license has been installed
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -341,7 +327,6 @@ def test_console_app(
 def test_console_app_adhoc_signed(
     package_command,
     first_app_with_binaries,
-    license_file,
     adhoc_identity,
     tmp_path,
 ):
@@ -372,7 +357,7 @@ def test_console_app_adhoc_signed(
     # The license has been installed
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -423,38 +408,9 @@ def test_console_app_adhoc_signed(
     package_command.notarize.assert_not_called()
 
 
-def test_no_license(package_command, first_app_with_binaries, adhoc_identity, tmp_path):
-    """If the project has no license file, an error is raised."""
-    first_app_with_binaries.packaging_format = "pkg"
-
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Your project does not contain a LICENSE file",
-    ):
-        package_command.package_app(
-            first_app_with_binaries,
-            adhoc_sign=True,
-        )
-
-    # The app will be signed
-    package_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries,
-        identity=adhoc_identity,
-    )
-
-    # Component manifest hasn't been written
-    assert not (
-        tmp_path / "base_path/build/first-app/macos/app/installer/components.plist"
-    ).exists()
-
-    # No calls made to pkgbuild/productbuild
-    package_command.tools.subprocess.run.assert_not_called()
-
-
 def test_package_pkg_previously_built(
     package_command,
     first_app_with_binaries,
-    license_file,
     adhoc_identity,
     tmp_path,
 ):
@@ -505,7 +461,7 @@ def test_package_pkg_previously_built(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -554,7 +510,6 @@ def test_package_pkg_previously_built(
 def test_external_app(
     package_command,
     external_first_app,
-    license_file,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
@@ -618,7 +573,7 @@ def test_external_app(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:

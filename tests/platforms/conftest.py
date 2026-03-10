@@ -6,9 +6,12 @@ from briefcase.debuggers.base import (
     DebuggerConnectionMode,
 )
 
+from ..utils import create_file
+
 
 @pytest.fixture
-def first_app_config():
+def first_app_config(tmp_path):
+    create_file(tmp_path / "base_path" / "LICENSE", "The Actual First App License")
     return AppConfig(
         app_name="first-app",
         project_name="First Project",
@@ -22,7 +25,8 @@ def first_app_config():
         sources=["src/first_app"],
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
-        license={"file": "LICENSE"},
+        license="LicenseRef-CustomLicense",
+        license_files=["LICENSE"],
     )
 
 
@@ -37,12 +41,11 @@ def uppercase_app_config():
         version="0.0.1",
         description="The first simple app",
         sources=["src/First_App"],
-        license={"file": "LICENSE"},
     )
 
 
 @pytest.fixture
-def underscore_app_config(first_app_config):
+def underscore_app_config():
     return AppConfig(
         app_name="first_app",
         project_name="First Project",
@@ -54,7 +57,6 @@ def underscore_app_config(first_app_config):
         version="0.0.1",
         description="The first simple app \\ demonstration",
         sources=["src/first_app"],
-        license={"file": "LICENSE"},
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
     )

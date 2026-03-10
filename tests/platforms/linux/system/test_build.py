@@ -50,7 +50,7 @@ def test_build_app(build_command, first_app, tmp_path):
     doc_path = bundle_path / "first-app-0.0.1/usr/share/doc/first-app"
     assert (doc_path / "copyright").exists()
     with (doc_path / "copyright").open(encoding="utf-8") as f:
-        assert f.read() == "First App License"
+        assert f.read() == "The Actual First App License"
 
     # The Changelog has been compressed and installed
     assert (doc_path / "changelog.gz").exists()
@@ -108,32 +108,8 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
     )
 
 
-def test_missing_license(build_command, first_app, tmp_path):
-    """If the license source file is missing, an error is raised."""
-    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
-
-    # Delete the license source
-    (tmp_path / "base_path/LICENSE").unlink()
-
-    # Build the app; it will fail
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Your `pyproject.toml` specifies a license file of 'LICENSE'",
-    ):
-        build_command.build_app(first_app)
-
-    # The bootstrap binary was compiled
-    build_command.tools[first_app].app_context.run.assert_called_with(
-        ["make", "-C", "bootstrap", "install"],
-        check=True,
-        cwd=bundle_path,
-    )
-
-
 def test_specified_license_file_is_copied(build_command, first_app, tmp_path):
     """The specified license file is copied if a license file is specified."""
-    create_file(tmp_path / "base_path/LICENSE.txt", "The Actual First App License")
-    first_app.license["file"] = "LICENSE.txt"
 
     # Build the app
     build_command.build_app(first_app)
@@ -152,14 +128,15 @@ def test_specified_license_file_is_copied(build_command, first_app, tmp_path):
     ) == "The Actual First App License"
 
 
-def test_license_text_is_saved(build_command, first_app):
-    """The license text is saved as a file in the bundle."""
-    first_app.license = {"text": "Some license text"}
+def test_multiple_license_files_concatenated(build_command, first_app, tmp_path):
+    """Multiple license files are concatenated with a separator."""
+    create_file(tmp_path / "base_path/LICENSE-A", "License A text")
+    create_file(tmp_path / "base_path/LICENSE-B", "License B text")
+    first_app.license_files = ["LICENSE-A", "LICENSE-B"]
 
     # Build the app
     build_command.build_app(first_app)
 
-    # The license text has been saved
     doc_folder = (
         build_command.bundle_path(first_app)
         / f"{first_app.app_name}-{first_app.version}"
@@ -168,52 +145,9 @@ def test_license_text_is_saved(build_command, first_app):
         / "doc"
         / first_app.app_name
     )
-
-    assert (doc_folder / "copyright").read_text(encoding="utf-8") == "Some license text"
-
-
-def test_license_text_warns_with_single_line_license(build_command, first_app):
-    """A warning is logged if the license text is a single line."""
-
-    first_app.license = {"text": "Some license text"}
-    build_command.console.warning = mock.MagicMock()
-
-    # Build the app
-    build_command.build_app(first_app)
-
-    build_command.console.warning.assert_called_once_with(
-        """
-Your app specifies a license using `license.text`, but the value doesn't appear to be a
-full license. Briefcase will generate a `copyright` file for your project; you should
-ensure that the contents of this file is adequate.
-"""
-    )
-
-
-def test_exception_with_no_license(build_command, first_app):
-    """An exception is raised if there is no license defined."""
-
-    first_app.license = {}
-    build_command.console.warning = mock.MagicMock()
-
-    # Build the app
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Your project does not contain a LICENSE definition\.",
-    ):
-        build_command.build_app(first_app)
-
-
-def test_license_text_doesnt_warn_with_multi_line_license(
-    build_command, first_app, tmp_path
-):
-    """No warning is logged if the license text is multi-line."""
-    first_app.license = {"text": "Some license text\nsome more text"}
-    build_command.console.warning = mock.MagicMock()
-
-    # Build the app
-    build_command.build_app(first_app)
-    build_command.console.warning.assert_not_called()
+    content = (doc_folder / "copyright").read_text(encoding="utf-8")
+    separator = "-" * 75
+    assert content == f"License A text\n{separator}\nLicense B text"
 
 
 def test_missing_changelog(build_command, first_app, tmp_path):
@@ -241,7 +175,7 @@ def test_missing_changelog(build_command, first_app, tmp_path):
     doc_path = bundle_path / "first-app-0.0.1/usr/share/doc/first-app"
     assert (doc_path / "copyright").exists()
     with (doc_path / "copyright").open(encoding="utf-8") as f:
-        assert f.read() == "First App License"
+        assert f.read() == "The Actual First App License"
 
 
 def test_missing_manpage(build_command, first_app, tmp_path):
@@ -269,7 +203,7 @@ def test_missing_manpage(build_command, first_app, tmp_path):
     doc_path = bundle_path / "first-app-0.0.1/usr/share/doc/first-app"
     assert (doc_path / "copyright").exists()
     with (doc_path / "copyright").open(encoding="utf-8") as f:
-        assert f.read() == "First App License"
+        assert f.read() == "The Actual First App License"
 
     # The Changelog has been compressed and installed
     assert (doc_path / "changelog.gz").exists()
