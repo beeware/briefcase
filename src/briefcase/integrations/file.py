@@ -344,7 +344,7 @@ class File(Tool):
         wait=wait_fixed(0.2),
         stop=stop_after_attempt(25),
     )
-    def path_rename(self, old_path: Path, new_path: object):
+    def rename(self, old_path: Path, new_path: object):
         """Using tenacity for a retry policy on pathlib rename.
 
         Windows does not like renaming a dir in a path with an opened file, raising a
