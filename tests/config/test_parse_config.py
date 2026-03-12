@@ -873,12 +873,10 @@ def test_license_pep639_valid(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
-        value = 0
         license = "MIT"
         license-files = ["LICENSE"]
 
         [tool.briefcase.app.my_app]
-        appvalue = "the app"
         """,
     )
 
@@ -923,25 +921,30 @@ def test_license_pep639_normalized(tmp_path):
     console.warning.assert_not_called()
 
 
-def test_license_pep621_text_spdx(tmp_path):
-    """PEP 621 license.text: recognizable SPDX text is coerced."""
-    config_path = create_file(
-        tmp_path / "pyproject.toml",
+@pytest.mark.parametrize(
+    "config",
+    [
+        # license in a project block
         """
         [project]
-        name = "awesome"
-        version = "1.2.3"
-        description = "awesome project"
         license.text = "MIT License text"
-
-        [tool.briefcase]
-        project_name = "Awesome app"
-        bundle = "com.example"
 
         [tool.briefcase.app.my_app]
         sources = ["src"]
         """,
-    )
+        # license in a tool.briefcase block
+        """
+        [tool.briefcase]
+        license.text = "MIT License text"
+
+        [tool.briefcase.app.my_app]
+        sources = ["src"]
+        """,
+    ],
+)
+def test_license_pep621_text_spdx(config, tmp_path):
+    """PEP 621 license.text: recognizable SPDX text is coerced."""
+    config_path = create_file(tmp_path / "pyproject.toml", config)
 
     console = Mock()
     _, apps = parse_config(
@@ -975,17 +978,9 @@ def test_license_pep621_text_non_spdx(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [project]
-        name = "awesome"
-        version = "1.2.3"
-        description = "awesome project"
         license = {text="You can use it while standing on one foot"}
 
-        [tool.briefcase]
-        project_name = "Awesome app"
-        bundle = "com.example"
-
         [tool.briefcase.app.my_app]
-        sources = ["src"]
         """,
     )
 
@@ -1024,11 +1019,9 @@ def test_license_pep621_file_missing_file(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
-        value = 0
         license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
-        appvalue = "the app"
         """,
     )
     # Do NOT create the LICENSE file.
@@ -1040,7 +1033,26 @@ def test_license_pep621_file_missing_file(tmp_path):
         parse_config(config_file, platform="macOS", output_format="app", console=Mock())
 
 
-def test_license_pep621_file_known_spdx(tmp_path):
+@pytest.mark.parametrize(
+    "config",
+    [
+        # license.file in a project block
+        """
+        [project]
+        license.file = "LICENSE"
+
+        [tool.briefcase.app.my_app]
+        """,
+        # license.file in a tool.briefcase block
+        """
+        [tool.briefcase]
+        license.file = "LICENSE"
+
+        [tool.briefcase.app.my_app]
+        """,
+    ],
+)
+def test_license_pep621_file_known_spdx(config, tmp_path):
     """PEP 621 license.file: SPDX is inferred and deprecation warning issued."""
     license_text = """\
 MIT License
@@ -1052,17 +1064,7 @@ of this software and associated documentation files (the "Software"), ...
 """
     (tmp_path / "LICENSE").write_text(license_text, encoding="utf-8")
 
-    config_file = create_file(
-        tmp_path / "pyproject.toml",
-        """
-        [tool.briefcase]
-        value = 0
-        license.file = "LICENSE"
-
-        [tool.briefcase.app.my_app]
-        appvalue = "the app"
-        """,
-    )
+    config_file = create_file(tmp_path / "pyproject.toml", config)
 
     console = Mock()
     _, apps = parse_config(
@@ -1093,11 +1095,9 @@ def test_license_pep621_file_unknown_spdx(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
-        value = 0
         license.file = "LICENSE"
 
         [tool.briefcase.app.my_app]
-        appvalue = "the app"
         """,
     )
 
@@ -1127,11 +1127,9 @@ def test_license_pep621_file_unknown_key(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
-        value = 0
         license.unknown = "something"
 
         [tool.briefcase.app.my_app]
-        appvalue = "the app"
         """,
     )
 
@@ -1152,11 +1150,7 @@ def test_license_pep621_table_multiple_keys(tmp_path):
         text = "MIT License"
         file = "LICENSE"
 
-        [tool.briefcase]
-        value = 0
-
         [tool.briefcase.app.my_app]
-        appvalue = "the app"
         """,
     )
 
@@ -1167,25 +1161,28 @@ def test_license_pep621_table_multiple_keys(tmp_path):
         parse_config(config_file, platform="macOS", output_format="app", console=Mock())
 
 
-def test_license_text_spdx(tmp_path):
-    """Pre-PEP 621 license: recognizable SPDX text is coerced."""
-    config_path = create_file(
-        tmp_path / "pyproject.toml",
+@pytest.mark.parametrize(
+    "config",
+    [
+        # license in a project block
         """
         [project]
-        name = "awesome"
-        version = "1.2.3"
-        description = "awesome project"
         license = "MIT License text"
 
+        [tool.briefcase.app.my_app]
+        """,
+        # license in a tool.briefcase block
+        """
         [tool.briefcase]
-        project_name = "Awesome app"
-        bundle = "com.example"
+        license = "MIT License text"
 
         [tool.briefcase.app.my_app]
-        sources = ["src"]
         """,
-    )
+    ],
+)
+def test_license_text_spdx(config, tmp_path):
+    """Pre-PEP 621 license: recognizable SPDX text is coerced."""
+    config_path = create_file(tmp_path / "pyproject.toml", config)
 
     console = Mock()
     _, apps = parse_config(
