@@ -66,6 +66,7 @@ def test_single_minimal_app(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
+        license = "MIT"
         value = 42
 
         [tool.briefcase.app.my_app]
@@ -80,9 +81,10 @@ def test_single_minimal_app(tmp_path):
         console=console,
     )
 
-    # There's a single global option
+    # There's a single global option, plus a license and empty license files.
     assert global_options == {
         "value": 42,
+        "license": "MIT",
     }
 
     # The app gets the name from its header line.
@@ -92,15 +94,13 @@ def test_single_minimal_app(tmp_path):
         "my_app": {
             "app_name": "my_app",
             "value": 42,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         }
     }
 
-    # Both apps have no license definition; a warning should be emitted for each.
-    assert console.warning.call_count == 1
-    first_warning = console.warning.call_args_list[0][0][0]
-    assert "WARNING: 'my_app' does not define a license" in first_warning
+    # No warnings
+    console.warning.assert_not_called()
 
 
 def test_multiple_minimal_apps(tmp_path):
@@ -110,9 +110,11 @@ def test_multiple_minimal_apps(tmp_path):
         """
         [tool.briefcase.app.first]
         number=37
+        license="MIT"
 
         [tool.briefcase.app.second]
         number=42
+        license="BSD-3-Clause"
         """,
     )
 
@@ -133,23 +135,19 @@ def test_multiple_minimal_apps(tmp_path):
         "first": {
             "app_name": "first",
             "number": 37,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.first.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "second": {
             "app_name": "second",
             "number": 42,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.second.txt"],
+            "license": "BSD-3-Clause",
+            "license-files": [],
         },
     }
 
-    # Both apps have no license definition; a warning should be emitted for each.
-    assert console.warning.call_count == 2
-    first_warning = console.warning.call_args_list[0][0][0]
-    assert "WARNING: 'first' does not define a license" in first_warning
-    second_warning = console.warning.call_args_list[1][0][0]
-    assert "WARNING: 'second' does not define a license" in second_warning
+    # No warnings
+    console.warning.assert_not_called()
 
 
 def test_platform_override(tmp_path):
@@ -160,10 +158,12 @@ def test_platform_override(tmp_path):
         [tool.briefcase]
         value = 0
         basevalue = "the base"
+        license = "MIT"
 
         [tool.briefcase.app.my_app]
         value = 1
         appvalue = "the app"
+        license = "BSD-3-Clause"
 
         [tool.briefcase.app.my_app.macOS]
         value = 2
@@ -190,6 +190,7 @@ def test_platform_override(tmp_path):
     assert global_options == {
         "value": 0,
         "basevalue": "the base",
+        "license": "MIT",
     }
 
     # Since a macOS app has been requested, the macOS platform values
@@ -205,16 +206,16 @@ def test_platform_override(tmp_path):
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "BSD-3-Clause",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -227,6 +228,7 @@ def test_platform_override_ordering(tmp_path):
         [tool.briefcase]
         value = 0
         basevalue = "the base"
+        license = "MIT"
 
         [tool.briefcase.app.my_app]
         value = 1
@@ -257,6 +259,7 @@ def test_platform_override_ordering(tmp_path):
     assert global_options == {
         "value": 0,
         "basevalue": "the base",
+        "license": "MIT",
     }
 
     # Since a macOS app has been requested, the macOS platform values
@@ -272,16 +275,16 @@ def test_platform_override_ordering(tmp_path):
             "basevalue": "the base",
             "appvalue": "the app",
             "platformvalue": "macos platform",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 4,
             "basevalue": "the base",
             "platformvalue": "other macos platform",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -292,6 +295,7 @@ def test_format_override(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
+        license = "MIT"
         value = 0
         basevalue = "the base"
 
@@ -340,6 +344,7 @@ def test_format_override(tmp_path):
     assert global_options == {
         "value": 0,
         "basevalue": "the base",
+        "license": "MIT",
     }
 
     # Since a macOS app has been requested, the macOS app format values
@@ -356,16 +361,16 @@ def test_format_override(tmp_path):
             "appvalue": "the app",
             "platformvalue": "macos platform",
             "formatvalue": "app format",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 41,
             "basevalue": "the base",
             "formatvalue": "other macos app format",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -376,6 +381,7 @@ def test_format_override_ordering(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
+        license = "MIT"
         value = 0
         basevalue = "the base"
 
@@ -424,6 +430,7 @@ def test_format_override_ordering(tmp_path):
     assert global_options == {
         "value": 0,
         "basevalue": "the base",
+        "license": "MIT",
     }
 
     # Since a macOS dmg has been requested, the macOS dmg format values
@@ -440,15 +447,15 @@ def test_format_override_ordering(tmp_path):
             "appvalue": "the app",
             "platformvalue": "macos platform",
             "formatvalue": "app format",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 0,
             "basevalue": "the base",
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -460,6 +467,7 @@ def test_requires(tmp_path):
         """
         [tool.briefcase]
         value = 0
+        license = "MIT"
         requires = ["base value"]
 
         [tool.briefcase.app.my_app]
@@ -496,6 +504,7 @@ def test_requires(tmp_path):
     assert global_options == {
         "value": 0,
         "requires": ["base value"],
+        "license": "MIT",
     }
 
     # The macOS my_app app specifies a full inherited chain.
@@ -510,8 +519,8 @@ def test_requires(tmp_path):
                 "app value",
             ],
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -519,8 +528,8 @@ def test_requires(tmp_path):
                 "base value",
             ],
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -536,6 +545,7 @@ def test_requires(tmp_path):
     assert global_options == {
         "value": 0,
         "requires": ["base value"],
+        "license": "MIT",
     }
 
     # The macOS my_app dmg specifies a full inherited chain.
@@ -550,8 +560,8 @@ def test_requires(tmp_path):
                 "xcode value",
             ],
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -559,8 +569,8 @@ def test_requires(tmp_path):
                 "base value",
             ],
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -575,6 +585,7 @@ def test_requires(tmp_path):
     assert global_options == {
         "value": 0,
         "requires": ["base value"],
+        "license": "MIT",
     }
 
     # The linux my_app appimage overrides the *base* value, but extends for linux.
@@ -588,8 +599,8 @@ def test_requires(tmp_path):
                 "appimage value",
             ],
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -597,8 +608,8 @@ def test_requires(tmp_path):
                 "base value",
             ],
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -610,6 +621,7 @@ def test_document_types(tmp_path):
         """
         [tool.briefcase]
         value = 0
+        license = "MIT"
 
         [tool.briefcase.app.my_app]
 
@@ -629,7 +641,7 @@ def test_document_types(tmp_path):
     )
 
     # Request a macOS app
-    _global_options, apps = parse_config(
+    _, apps = parse_config(
         config_file,
         platform="macOS",
         output_format="Xcode",
@@ -652,14 +664,14 @@ def test_document_types(tmp_path):
                 },
             },
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.my_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 0,
-            "license": "LicenseRef-UnknownLicense",
-            "license-files": ["build/license_text.other_app.txt"],
+            "license": "MIT",
+            "license-files": [],
         },
     }
 
@@ -789,8 +801,8 @@ def test_license_files_without_license_is_error(tmp_path):
         )
 
 
-def test_license_empty_list_is_error(tmp_path):
-    """An empty license files list raises an error."""
+def test_spdx_license_with_no_files(tmp_path):
+    """An empty license files list is valid in *parsing*."""
     config_file = create_file(
         tmp_path / "pyproject.toml",
         """
@@ -802,16 +814,43 @@ def test_license_empty_list_is_error(tmp_path):
         """,
     )
 
-    with pytest.raises(
-        BriefcaseConfigError,
-        match=r"empty `license-files` list",
-    ):
-        parse_config(
-            config_file,
-            platform="macOS",
-            output_format="app",
-            console=Mock(),
-        )
+    console = Mock()
+    _, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert apps["my_app"]["license"] == "MIT"
+    assert apps["my_app"]["license-files"] == []
+    console.warning.assert_not_called()
+
+
+def test_license_files_empty_list(tmp_path):
+    """An empty license files list is valid in *parsing*."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        license = "MIT"
+        license-files = []
+
+        [tool.briefcase.app.my_app]
+        """,
+    )
+
+    console = Mock()
+    _, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert apps["my_app"]["license"] == "MIT"
+    assert apps["my_app"]["license-files"] == []
+    console.warning.assert_not_called()
 
 
 def test_license_pep639_invalid_spdx_with_files(tmp_path):
@@ -837,6 +876,42 @@ def test_license_pep639_invalid_spdx_with_files(tmp_path):
             output_format="app",
             console=Mock(),
         )
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        # license in a project block
+        """
+        [project]
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        """,
+        # license in a tool.briefcase block
+        """
+        [tool.briefcase]
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        """,
+    ],
+)
+def test_license_spdx_without_files(config, tmp_path):
+    """PEP 639 license, with *no* license files defined."""
+    config_path = create_file(tmp_path / "pyproject.toml", config)
+
+    console = Mock()
+    _, apps = parse_config(
+        config_path,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert apps["my_app"]["license"] == "MIT"
+    assert apps["my_app"]["license-files"] == []
+    console.warning.assert_not_called()
 
 
 def test_license_pep639_missing_file(tmp_path):
@@ -955,21 +1030,19 @@ def test_license_pep621_text_spdx(config, tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
+    assert apps["my_app"]["license-files"] == []
 
-    # The license text was written to the expected location
+    # The license text was not written
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
-    assert license_text_file.exists()
-    assert license_text_file.read_text(encoding="utf-8") == "MIT License text"
+    assert not license_text_file.exists()
 
     # One warning hinting an identified license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
     assert "uses PEP 621 `license.text` format" in warning_text
-    assert "almost certainly incorrect" in warning_text
+    assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
     assert 'license = "MIT"' in warning_text
-    assert "should not release your project without resolving" in warning_text
 
 
 def test_license_pep621_text_non_spdx(tmp_path):
@@ -993,6 +1066,42 @@ def test_license_pep621_text_non_spdx(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
+    assert apps["my_app"]["license-files"] == []
+
+    # The license text was not written
+    license_text_file = tmp_path / "build" / "license_text.my_app.txt"
+    assert not license_text_file.exists()
+
+    # One warning hinting an unknown license
+    console.warning.assert_called_once()
+    warning_text = console.warning.call_args[0][0]
+    assert "uses PEP 621 `license.text` format" in warning_text
+    assert "may not be correct, and should be verified." not in warning_text
+    assert "LicenseRef-UnknownLicense" in warning_text
+    assert 'license = "<SPDX expression>"' in warning_text
+
+
+def test_license_pep621_text_non_spdx_multiline(tmp_path):
+    """PEP 621 license.text: non-SPDX multiline text is coerced."""
+    config_path = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        license = {text="You can use it\\nwhile standing on one foot"}
+
+        [tool.briefcase.app.my_app]
+        """,
+    )
+
+    console = Mock()
+    _, apps = parse_config(
+        config_path,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
     assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
 
     # The license text was written to the expected location
@@ -1000,17 +1109,16 @@ def test_license_pep621_text_non_spdx(tmp_path):
     assert license_text_file.exists()
     assert (
         license_text_file.read_text(encoding="utf-8")
-        == "You can use it while standing on one foot"
+        == "You can use it\nwhile standing on one foot"
     )
 
     # One warning hinting an unknown license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
     assert "uses PEP 621 `license.text` format" in warning_text
-    assert "almost certainly incorrect" in warning_text
+    assert "may not be correct, and should be verified." in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
-    assert "should not release your project without resolving" in warning_text
 
 
 def test_license_pep621_file_missing_file(tmp_path):
@@ -1079,10 +1187,10 @@ of this software and associated documentation files (the "Software"), ...
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
     assert "uses PEP 621 `license.file` format" in warning_text
-    assert "almost certainly incorrect" not in warning_text
+    assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
     assert 'license = "MIT"' in warning_text
-    assert "should not release your project without resolving" not in warning_text
+    assert "should not release your project without resolving" in warning_text
 
 
 def test_license_pep621_file_unknown_spdx(tmp_path):
@@ -1114,10 +1222,9 @@ def test_license_pep621_file_unknown_spdx(tmp_path):
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
     assert "uses PEP 621 `license.file` format" in warning_text
-    assert "almost certainly incorrect" not in warning_text
+    assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
-    assert "should not release your project without resolving" in warning_text
 
 
 def test_license_pep621_file_unknown_key(tmp_path):
@@ -1193,21 +1300,19 @@ def test_license_text_spdx(config, tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
+    assert apps["my_app"]["license-files"] == []
 
-    # The license text was written to the expected location
+    # The license text was not written
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
-    assert license_text_file.exists()
-    assert license_text_file.read_text(encoding="utf-8") == "MIT License text"
+    assert not license_text_file.exists()
 
     # One warning hinting a known license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
     assert "uses pre-PEP 621 `license` format" in warning_text
-    assert "almost certainly incorrect" in warning_text
+    assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
     assert 'license = "MIT"' in warning_text
-    assert "should not release your project without resolving" in warning_text
 
 
 def test_license_text_non_spdx(tmp_path):
@@ -1239,6 +1344,50 @@ def test_license_text_non_spdx(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
+    assert apps["my_app"]["license-files"] == []
+
+    # The license text was not written
+    license_text_file = tmp_path / "build" / "license_text.my_app.txt"
+    assert not license_text_file.exists()
+
+    # One warning hinting an unknown license
+    console.warning.assert_called_once()
+    warning_text = console.warning.call_args[0][0]
+    assert "uses pre-PEP 621 `license` format" in warning_text
+    assert "may not be correct, and should be verified." not in warning_text
+    assert "LicenseRef-UnknownLicense" in warning_text
+    assert 'license = "<SPDX expression>"' in warning_text
+
+
+def test_license_text_non_spdx_multiline(tmp_path):
+    """Pre-PEP 621 license: non-SPDX multiline text is coerced."""
+    config_path = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        name = "awesome"
+        version = "1.2.3"
+        description = "awesome project"
+        license = "You can use it\\nwhile standing on one foot"
+
+        [tool.briefcase]
+        project_name = "Awesome app"
+        bundle = "com.example"
+
+        [tool.briefcase.app.my_app]
+        sources = ["src"]
+        """,
+    )
+
+    console = Mock()
+    _, apps = parse_config(
+        config_path,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
     assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
 
     # The license text was written to the expected location
@@ -1246,17 +1395,16 @@ def test_license_text_non_spdx(tmp_path):
     assert license_text_file.exists()
     assert (
         license_text_file.read_text(encoding="utf-8")
-        == "You can use it while standing on one foot"
+        == "You can use it\nwhile standing on one foot"
     )
 
     # One warning hinting an unknown license
     console.warning.assert_called_once()
     warning_text = console.warning.call_args[0][0]
     assert "uses pre-PEP 621 `license` format" in warning_text
-    assert "almost certainly incorrect" in warning_text
+    assert "may not be correct, and should be verified." in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
     assert 'license = "<SPDX expression>"' in warning_text
-    assert "should not release your project without resolving" in warning_text
 
 
 def test_no_license_key(tmp_path):
@@ -1265,36 +1413,18 @@ def test_no_license_key(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
-        value = 0
 
         [tool.briefcase.app.my_app]
-        appvalue = "the app"
         """,
     )
 
-    console = Mock()
-    _, apps = parse_config(
-        config_file,
-        platform="macOS",
-        output_format="app",
-        console=console,
-    )
-
-    # Unidentified license falls back to LicenseRef-UnknownLicense
-    assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
-    assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
-
-    # The license text was written to the expected location (global, no app suffix)
-    license_text_file = tmp_path / "build" / "license_text.my_app.txt"
-    assert license_text_file.exists()
-    assert "Your project license should go here" in license_text_file.read_text(
-        encoding="utf-8"
-    )
-
-    # One warning about the missing configuration
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
-    assert "does not define a license" in warning_text
-    assert "LicenseRef-UnknownLicense" in warning_text
-    assert 'license = "<SPDX expression>"' in warning_text
-    assert "should not release your project without resolving" in warning_text
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"does not contain a valid PEP 639 license definition",
+    ):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="Xcode",
+            console=Mock(),
+        )

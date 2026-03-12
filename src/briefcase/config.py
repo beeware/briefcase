@@ -656,7 +656,7 @@ def get_license_from_text(license_text: str, default: str | None = None) -> str 
     :param license_text: Full text of the license file.
     :param default: The value to return if the license cannot be determined. Defaults
         to `None`.
-    :returns: One of the recognised SPDX identifiers, or `default` when the text
+    :returns: One of the recognised SPDX expressions, or `default` when the text
         cannot be matched to a known license.
     """
     hint_patterns = {
@@ -694,6 +694,317 @@ def get_license_from_text(license_text: str, default: str | None = None) -> str 
     return default
 
 
+def _write_temp_license(base_path: Path, app_name: str, text: str) -> str | None:
+    """Write a temporary license file based on license text if needed.
+
+    If the license text is more than one line, write a temporary file into the build
+    folder, and return that path. If the license text is a single line, no file
+    will be written, and `None` will be returned.
+
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param app_name: The app name
+    :param text: The license text to use in the file.
+    :returns: The path to the temporary file, as a string that can be used as part of a
+        `license_files` declaration; or `None` if no temporary license file is needed.
+    """
+    if "\n" in text:
+        tmp_license_file = f"build/license_text.{app_name}.txt"
+        license_text_file = Path(base_path) / tmp_license_file
+        license_text_file.parent.mkdir(parents=True, exist_ok=True)
+        license_text_file.write_text(text, encoding="utf-8")
+        return tmp_license_file
+    else:
+        return None
+
+
+def _normalize_pep639_license_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Finish normalizing a PEP 639 license config.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used
+        to read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    raw_license = config["license"]
+    raw_license_files = config.get("license-files")
+
+    # Ensure we license-files is a list.
+    if raw_license_files is None:
+        raw_license_files = []
+
+    # Ensure `licence` is an SPDX expression
+    try:
+        spdx_id = canonicalize_license_expression(raw_license)
+    except InvalidLicenseExpression:
+        raise BriefcaseConfigError(f"""\
+        The license configuration for '{app_name}' specifies `license-files` but the
+        `license` value {raw_license!r} is not a valid SPDX expression.
+
+        Update the `license` definition to a valid SPDX expression.
+        """) from None
+
+    # Validate each license-file exists.
+    for license_path_str in raw_license_files:
+        if not (Path(base_path) / license_path_str).is_file():
+            raise BriefcaseConfigError(
+                f"The license file {license_path_str!r} for '{app_name}' "
+                f"does not exist."
+            ) from None
+
+    # Finalize PEP 639 config
+    config["license"] = spdx_id
+    config["license-files"] = raw_license_files
+
+
+def _normalize_pep621_license_text_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize a PEP 621 license.text config into PEP 639 form.
+
+    Text could be a license identifier (which *might* even be valid SPDX), or full
+    license text. If the text is more than one line, write the value as a temporary
+    license file.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    license_text = config["license"]["text"]
+
+    # Attempt to identify the SPDX expression from the text content.
+    spdx_id = get_license_from_text(license_text)
+
+    warning = [
+        f"""
+*******************************************************************************
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
+*******************************************************************************
+
+    Briefcase now uses PEP 639 format for license definitions.
+"""
+    ]
+    if spdx_id is not None:
+        # SPDX identifiable.
+        license = spdx_id
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`,
+    and `license` must be a valid SPDX expression. The current value for
+    `license.text` seems to define a SPDX license of '{spdx_id}'.
+""")
+    else:
+        # SPDX not identifiable.
+        spdx_id = "<SPDX expression>"
+        license = "LicenseRef-UnknownLicense"
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`.
+    Briefcase cannot determine the current license for '{app_name}' based
+    on the value of `license.text`. A value of 'LicenseRef-UnknownLicense'
+    will be used.
+""")
+
+    # Write the license text to a file under the build directory so it can
+    # be referenced as a real path in license-files.
+    tmp_license_file = _write_temp_license(base_path, app_name, license_text)
+    if tmp_license_file:
+        license_files = [tmp_license_file]
+        warning.append("""
+    The contents of `license.text` will be used as the contents of the
+    license file. This may not be correct, and should be verified.
+""")
+    else:
+        license_files = []
+        warning.append("""
+    Your project will not have a value for `license-files`. This will
+    cause problems packaging for some platforms.
+""")
+
+    warning.append(f"""
+    Update your configuration to put the full license text in a file and use
+    PEP 639 format for the license definition:
+
+        license = "{spdx_id}"
+        license-files = ["LICENSE"]
+
+    You should not release your project without resolving this warning.
+
+*******************************************************************************
+""")
+
+    # Warn and finalize PEP 621 license.text coercion.
+    console.warning("".join(warning))
+    config["license"] = license
+    config["license-files"] = license_files
+
+
+def _normalize_pep621_license_file_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize a PEP 621 license.file config into PEP 639 form.
+
+    Read the file to infer the SPDX expression.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used
+        to read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    license_file = config["license"]["file"]
+    license_path = Path(base_path) / license_file
+    if not license_path.is_file():
+        raise BriefcaseConfigError(
+            f"The PEP 621 license.file {license_file!r} for '{app_name}' "
+            "does not exist."
+        ) from None
+    license_text = license_path.read_text(encoding="utf-8")
+    spdx_id = get_license_from_text(license_text)
+
+    warning = [
+        f"""
+*******************************************************************************
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
+*******************************************************************************
+
+    Briefcase now uses PEP 639 format for license definitions.
+
+    PEP 639 requires the definition of both `license` and `license-files`.
+    The value for `license.file` will be used to populate the PEP 639
+    `licence-files` setting.
+"""
+    ]
+    if spdx_id is not None:
+        license = spdx_id
+        # License is valid SPDX
+        warning.append(f"""
+    The license has been identified as '{spdx_id}'.
+""")
+    else:
+        # Can't identify SPDX for license
+        license = "<SPDX expression>"
+        spdx_id = "LicenseRef-UnknownLicense"
+        warning.append("""
+    A license SPDX expression could not be identified from the license file.
+    The license has been set to 'LicenseRef-UnknownLicense'
+    """)
+
+    warning.append(f"""
+    Update your configuration to use PEP 639 format:
+
+        license = "{license}"
+        license-files = ["{license_file}"]
+
+    You should not release your project without resolving this warning.
+
+*******************************************************************************
+""")
+    # Warn and finalize PEP 621 license.file coercion.
+    console.warning("".join(warning))
+    config["license"] = spdx_id
+    config["license-files"] = [license_file]
+
+
+def _normalize_pre_pep621_license_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize a pre-PEP 621 license config into PEP 639 form.
+
+    Pre-PEP 621 free-form `license` text, with no license-files. We also know that the
+    license text isn't a valid SPDX expression, because preprocessing caught that case.
+
+    Treat like the PEP 621 license.text case: write the string value to a file, set
+    license-files to point at it, and attempt to canonicalize the SPDX expression.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    license_text = config["license"]
+
+    # Attempt to identify the SPDX expression from the text content.
+    spdx_id = get_license_from_text(license_text)
+
+    warning = [
+        f"""
+*******************************************************************************
+** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
+*******************************************************************************
+
+    Briefcase now uses PEP 639 format for license definitions.
+"""
+    ]
+    if spdx_id is not None:
+        # SPDX identifiable.
+        license = spdx_id
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`,
+    and `license` must be a valid SPDX expression. The current value for
+    `license` seems to define a SPDX license of '{spdx_id}'.
+""")
+    else:
+        # SPDX not identifiable.
+        spdx_id = "<SPDX expression>"
+        license = "LicenseRef-UnknownLicense"
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`.
+    Briefcase cannot determine the current license for '{app_name}' based
+    on the value of `license`. A value of 'LicenseRef-UnknownLicense' will
+    be used.
+""")
+
+    # Write the license text to a file under the build directory so it can
+    # be referenced as a real path in license-files.
+    tmp_license_file = _write_temp_license(base_path, app_name, license_text)
+    if tmp_license_file:
+        license_files = [tmp_license_file]
+        warning.append("""
+    The contents of `license` will be used as the contents of the license
+    file. This may not be correct, and should be verified.
+""")
+    else:
+        license_files = []
+        warning.append("""
+    Your project will not have a value for `license-files`. This will
+    cause problems packaging for some platforms.
+""")
+
+    warning.append(f"""
+    Update your configuration to put the full license text in a file and use
+    PEP 639 format for the license definition:
+
+        license = "{spdx_id}"
+        license-files = ["LICENSE"]
+
+    You should not release your project without resolving this warning.
+
+*******************************************************************************
+""")
+
+    # Warn and finalize pre-PEP 621 license coercion.
+    console.warning("".join(warning))
+    config["license"] = license
+    config["license-files"] = license_files
+
+
 def normalize_license_config(
     config: AppConfig,
     app_name: str,
@@ -702,15 +1013,15 @@ def normalize_license_config(
 ):
     """Normalize the `license` and `license-files` entries in a merged config.
 
-    This runs after all config layers (project, global, app, platform, format) have
-    been merged.  It coerces legacy formats to the PEP 639 two-field representation,
-    emits deprecation warnings for out-of-date configurations, and raises
+    This runs after all config layers (project, global, app, platform, format) have been
+    merged.  It coerces legacy formats to the PEP 639 two-field representation, emits
+    deprecation warnings for out-of-date configurations, and raises
     `BriefcaseConfigError` for invalid or ambiguous configurations.
 
     :param config: The fully-merged config dict (mutated in place).
     :param app_name: The app name.
-    :param base_path: The project base directory (parent of `pyproject.toml`), used
-        to read license files and write temporary license text files.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
     :param console: The Briefcase `Console` object used for warning output.
     """
     raw_license = config.get("license")
@@ -718,7 +1029,7 @@ def normalize_license_config(
 
     # PEP 621 table + license-files is always an error
     if isinstance(raw_license, dict) and raw_license_files is not None:
-        raise BriefcaseConfigError(f"""\
+        raise BriefcaseConfigError(f"""
 The license configuration for '{app_name}' mixes PEP 621 table format
 (`license.file`) with PEP 639 format (`license-files`).
 
@@ -740,183 +1051,28 @@ Add a `license` field with the SPDX expression for your project:
     license-files = ["LICENSE"]
 """) from None
 
-    # Empty license-files list is always an error
-    if raw_license_files is not None and len(raw_license_files) == 0:
-        raise BriefcaseConfigError(f"""\
-The license configuration for '{app_name}' has an empty `license-files` list.
-
-You must provide at least one license file path:
-
-    license-files = ["LICENSE"]
-""") from None
-
-    if isinstance(raw_license, str) and raw_license_files is not None:
-        # A valid PEP 639 definition: license + license-files
-
-        # Validate SPDX value
+    # If license is a string, attempt to validate license as an SPDX value.
+    # If it is valid SPDX, and license-files is undefined, set the license
+    # list to be empty. This allows us to differentiate pre-PEP 621 format
+    # from PEP 639 format.
+    if isinstance(raw_license, str):
         try:
-            spdx_id = canonicalize_license_expression(raw_license)
+            canonicalize_license_expression(raw_license)
+            if raw_license_files is None:
+                raw_license_files = []
         except InvalidLicenseExpression:
-            raise BriefcaseConfigError(f"""\
-The license configuration for '{app_name}' specifies `license-files` but the
-`license` value {raw_license!r} is not a valid SPDX expression.
+            pass
 
-Update the `license` definition to a valid SPDX expression.
-""") from None
-
-        # Validate each file exists.
-        for license_path_str in raw_license_files:
-            if not (Path(base_path) / license_path_str).is_file():
-                raise BriefcaseConfigError(
-                    f"The license file {license_path_str!r} for '{app_name}' "
-                    f"does not exist."
-                ) from None
-
-        # Finalize PEP 639 config
-        config["license"] = spdx_id
-        config["license-files"] = raw_license_files
+    # Now finalize the license configuration
+    if isinstance(raw_license, str) and raw_license_files is not None:
+        _normalize_pep639_license_config(config, app_name, base_path, console)
 
     elif isinstance(raw_license, dict):
-        # DEPRECATED: PEP 621 license.text and license.file tables
-
         if list(raw_license.keys()) == ["text"]:
-            # PEP 621 license.text form. Text could be a license identifier (which
-            # *might* even be valid SPDX), or full license text.
-            license_text = raw_license["text"]
-
-            # Attempt to identify the SPDX expression from the text content.
-            spdx_id = get_license_from_text(license_text)
-
-            # Write the license text to a file under the build directory so it can
-            # be referenced as a real path in license-files.  For the global config
-            # (no app name) use a generic filename; for per-app configs include the
-            # app name to avoid collisions between apps.
-            license_text_rel = f"build/license_text.{app_name}.txt"
-            license_text_file = Path(base_path) / license_text_rel
-            license_text_file.parent.mkdir(parents=True, exist_ok=True)
-            license_text_file.write_text(license_text, encoding="utf-8")
-
-            if spdx_id is not None:
-                # SPDX identifiable.
-                console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    PEP 639 requires the definition of both `license` and `license-files`,
-    and `license` must be a valid SPDX expression. The current value for
-    `license.text` seems to define a SPDX license of '{spdx_id}'.
-
-    The contents of `license.text` will be used as the contents of the
-    license file. This is almost certainly incorrect.
-
-    Update your configuration to put the full license text in a file and use
-    PEP 639 format:
-
-        license = "{spdx_id}"
-        license-files = ["LICENSE"]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
-            else:
-                # SPDX not identifiable.
-                spdx_id = "LicenseRef-UnknownLicense"
-                console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    PEP 639 requires the definition of both `license` and `license-files`.
-    Briefcase cannot determine the current license for '{app_name}' based
-    on the value of `license.text`. A value of 'LicenseRef-UnknownLicense'
-    will be used.
-
-    The contents of `license.text` will be used as the contents of the
-    license file. This is almost certainly incorrect.
-
-    Update your configuration to put the full license text in a file and use
-    PEP 639 format with a valid SPDX expression:
-
-        license = "<SPDX expression>"
-        license-files = ["LICENSE"]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
-            # Finalize PEP 621 license.text coercion.
-            config["license"] = spdx_id
-            config["license-files"] = [license_text_rel]
+            _normalize_pep621_license_text_config(config, app_name, base_path, console)
 
         elif list(raw_license.keys()) == ["file"]:
-            # PEP 621 license.file — coerce to PEP 639 with deprecation warning.
-            # Read the file to infer the SPDX expression and emit the warning now.
-            license_file = raw_license["file"]
-            license_path = Path(base_path) / license_file
-            if not license_path.is_file():
-                raise BriefcaseConfigError(
-                    f"The PEP 621 license.file {license_file!r} for '{app_name}' "
-                    "does not exist."
-                ) from None
-            license_text = license_path.read_text(encoding="utf-8")
-            license = get_license_from_text(license_text)
-            if license is not None:
-                # License is valid SPDX
-                console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    Previously, the path to the license file was assigned to `license.file`
-    in pyproject.toml (PEP 621 format).
-
-    The license for '{app_name}' has been identified as `{license}`.
-
-    Update your configuration to use PEP 639 format:
-
-        license = "{license}"
-        license-files = [{license_file!r}]
-
-*******************************************************************************
-""")
-            else:
-                # Can't identify SPDX for license
-                console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    Previously, the path to the license file was assigned to `license.file`
-    in pyproject.toml (PEP 621 format).
-
-    A license SPDX expression could not be identified from the license file
-    for '{app_name}'. The license has been set to 'LicenseRef-UnknownLicense`'
-
-    Update your configuration to use PEP 639 format with the correct SPDX
-    expression:
-
-        license = "<SPDX expression>"
-        license-files = [{license_file!r}]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
-                license = "LicenseRef-UnknownLicense"
-
-            # Finalize PEP 621 license.text coercion.
-            config["license"] = license
-            config["license-files"] = [license_file]
+            _normalize_pep621_license_file_config(config, app_name, base_path, console)
         else:
             # `license` table contains anything other than a single
             # 'text' or 'file' key.
@@ -931,111 +1087,14 @@ Update your configuration to provide a valid PEP 639 configuration:
 """) from None
 
     elif isinstance(raw_license, str):
-        # DEPRECATED: Pre-PEP 621 free-form `license` text, with no license-files.
-        # Treat like the PEP 621 license.text case: write the string value to a file,
-        # set license-files to point at it, and attempt to canonicalize the SPDX
-        # expression.
-
-        # Attempt to identify the SPDX expression from the text content.
-        spdx_id = get_license_from_text(raw_license)
-
-        # Write the license text to a file under the build directory so it can
-        # be referenced as a real path in license-files.  For the global config
-        # (no app name) use a generic filename; for per-app configs include the
-        # app name to avoid collisions between apps.
-        license_text_rel = f"build/license_text.{app_name}.txt"
-        license_text_file = Path(base_path) / license_text_rel
-        license_text_file.parent.mkdir(parents=True, exist_ok=True)
-        license_text_file.write_text(raw_license, encoding="utf-8")
-
-        if spdx_id is not None:
-            # SPDX identifiable.
-            console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    PEP 639 requires the definition of both `license` and `license-files`,
-    and `license` must be a valid SPDX expression. The current value for
-    `license` seems to define a SPDX license of '{spdx_id}'.
-
-    The contents of `license.text` will be used as the contents of the
-    license file. This is almost certainly incorrect.
-
-    Update your configuration to put the full license text in a file and use
-    PEP 639 format:
-
-        license = "{spdx_id}"
-        license-files = ["LICENSE"]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
-        else:
-            # SPDX not identifiable.
-            spdx_id = "LicenseRef-UnknownLicense"
-            console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    PEP 639 requires the definition of both `license` and `license-files`.
-    Briefcase cannot determine the current license for '{app_name}' based
-    on the value of `license`. A value of 'LicenseRef-UnknownLicense' will
-    be used.
-
-    The contents of `license.text` will be used as the contents of the
-    license file. This is almost certainly incorrect.
-
-    Update your configuration to put the full license text in a file and use
-    PEP 639 format with the correct SPDX expression:
-
-        license = "<SPDX expression>"
-        license-files = ["LICENSE"]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
-
-        # Finalize PEP 621 license.text coercion.
-        config["license"] = spdx_id
-        config["license-files"] = [license_text_rel]
+        # Pre-PEP 621 format: Just a license string, but *not* an SPDX value.
+        _normalize_pre_pep621_license_config(config, app_name, base_path, console)
     else:
-        # Legacy: No license definition — use dummy values and warn the user.
-        dummy_license_file = Path(base_path) / f"build/license_text.{app_name}.txt"
-        dummy_license_file.parent.mkdir(parents=True, exist_ok=True)
-        dummy_license_file.write_text(
-            "Your project license should go here",
-            encoding="utf-8",
+        # No license definition — license of *some* form is a required value.
+        raise BriefcaseConfigError(
+            f"Configuration for {app_name!r} does not contain "
+            "a valid PEP 639 license definition."
         )
-        console.warning(f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' does not define a license":73} **
-*******************************************************************************
-
-    {app_name!r} does not have a PEP 639 license definition.
-
-    Add a `license` field and a `license-files` field to your project
-    configuration to declare the license for your app:
-
-        license = "<SPDX expression>"
-        license-files = ["LICENSE"]
-
-    Briefcase will use a license of 'LicenseRef-UnknownLicense', and use
-    a placeholder license file.
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
-        config["license"] = "LicenseRef-UnknownLicense"
-        config["license-files"] = [f"build/license_text.{app_name}.txt"]
 
 
 def merge_pep621_config(global_config, pep621_config):
