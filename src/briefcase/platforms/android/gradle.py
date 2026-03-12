@@ -7,6 +7,7 @@ import subprocess
 import time
 from collections.abc import Collection
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.commands import (
     BuildCommand,
@@ -26,6 +27,13 @@ from briefcase.debuggers.base import (
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 
 def safe_formal_name(name):
@@ -71,7 +79,7 @@ def android_log_clean_filter(line):
     return line, False
 
 
-class GradleMixin:
+class GradleMixin(_MixinBase):
     output_format = "gradle"
     platform = "android"
     platform_target_version = "0.3.27"

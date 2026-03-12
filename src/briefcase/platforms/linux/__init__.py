@@ -1,13 +1,23 @@
+from __future__ import annotations
+
 import ast
 import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.commands.create import _is_local_path
 from briefcase.commands.open import OpenCommand
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "system"
 
@@ -53,7 +63,7 @@ def parse_freedesktop_os_release(content):
     return values
 
 
-class LinuxMixin:
+class LinuxMixin(_MixinBase):
     platform = "linux"
 
     def support_package_url(self, support_revision):
@@ -122,7 +132,7 @@ class LinuxMixin:
         return vendor, codename, vendor_base
 
 
-class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
+class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
     # A mixin that captures the process of compiling requirements that are specified
     # as local file references into sdists, and then installing those requirements
     # from the sdist.

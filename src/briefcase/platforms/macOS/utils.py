@@ -8,8 +8,16 @@ import pathlib
 import plistlib
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
 
@@ -52,7 +60,7 @@ def sha256_file_digest(path: Path) -> str:
     return file_hash.hexdigest()
 
 
-class AppPackagesMergeMixin:
+class AppPackagesMergeMixin(_MixinBase):
     # A mixin containing the utilities to merge independent platform-specific
     # app_packages folders into a single "fat" app_packages folder.
     # This is currently only used by macOS, but it *could* be required on iOS
