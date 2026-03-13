@@ -10,6 +10,7 @@ from collections.abc import Collection
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
+from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
@@ -23,6 +24,13 @@ from briefcase.integrations.subprocess import (
 from briefcase.integrations.xcode import XcodeCliTools, get_identities
 from briefcase.platforms.macOS.filters import macOS_log_clean_filter
 from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_binary
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 try:
     import dmgbuild
@@ -76,7 +84,7 @@ class SigningIdentity:
         return isinstance(other, SigningIdentity) and self.id == other.id
 
 
-class macOSMixin:
+class macOSMixin(_MixinBase):
     platform = "macOS"
     supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
@@ -408,7 +416,7 @@ in the macOS configuration section of your pyproject.toml.
         }
 
 
-class macOSRunMixin:
+class macOSRunMixin(_MixinBase):
     def run_app(
         self,
         app: AppConfig,
@@ -579,7 +587,7 @@ class macOSRunMixin:
                     self.tools.os.kill(app_pid, SIGTERM)
 
 
-class macOSSigningMixin:
+class macOSSigningMixin(_MixinBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

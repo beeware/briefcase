@@ -5,6 +5,7 @@ import subprocess
 import uuid
 from collections.abc import Collection
 from pathlib import Path, PurePath
+from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
@@ -12,6 +13,13 @@ from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
@@ -43,7 +51,7 @@ def txt_to_rtf(txt):
     return "\n".join(rtf)
 
 
-class WindowsMixin:
+class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
