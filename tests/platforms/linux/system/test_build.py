@@ -108,6 +108,28 @@ def test_build_bootstrap_failed(build_command, first_app, tmp_path):
     )
 
 
+def test_no_license_files(build_command, first_app, tmp_path):
+    """If there are no license files, an error is raised."""
+    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+
+    # Delete the license source
+    first_app.license_files = []
+
+    # Build the app; it will fail
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Your project does not include any license files.",
+    ):
+        build_command.build_app(first_app)
+
+    # The bootstrap binary was compiled
+    build_command.tools[first_app].app_context.run.assert_called_with(
+        ["make", "-C", "bootstrap", "install"],
+        check=True,
+        cwd=bundle_path,
+    )
+
+
 def test_specified_license_file_is_copied(build_command, first_app, tmp_path):
     """The specified license file is copied if a license file is specified."""
 

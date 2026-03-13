@@ -408,6 +408,121 @@ def test_console_app_adhoc_signed(
     package_command.notarize.assert_not_called()
 
 
+def test_no_license(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    """If the project has no license file, an error is raised."""
+    # Reset license files list
+    first_app_with_binaries.license_files = []
+    first_app_with_binaries.packaging_format = "pkg"
+
+    # Select a codesigning identity
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
+
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    # Create a pre-existing app bundle.
+    create_file(
+        bundle_path / "installer/root/First App.app/original",
+        "Original app",
+    )
+
+    # Create a pre-existing package bundle.
+    create_file(
+        bundle_path / "installer/packages/first-app.pkg",
+        "Original package",
+    )
+
+    # Re-package the app
+    package_command.package_app(first_app_with_binaries)
+
+    # Two signing identities were selected; the second is an installer identity
+    assert package_command.select_identity.mock_calls == [
+        mock.call(identity=None),
+        mock.call(identity=None, app_identity=sekrit_identity),
+    ]
+
+    # The app has been signed
+    package_command.sign_app.assert_called_once_with(
+        app=first_app_with_binaries,
+        identity=sekrit_identity,
+    )
+
+    # App content has been copied into place.
+    assert (bundle_path / "installer/root/First App.app/Contents/Info.plist").is_file()
+
+    # When duplicating the app, symlinks have been preserved
+    assert (
+        bundle_path
+        / "installer/root/First App.app/Contents/Frameworks/Extras.framework/Extras"
+    ).is_symlink()
+
+    # There are no license files in the resources directory
+    assert list((bundle_path / "installer/resources").iterdir()) == []
+
+    # The component list has been updated.
+    with (bundle_path / "installer/components.plist").open("rb") as f:
+        components = plistlib.load(f)
+
+        assert components == [
+            {
+                "BundleHasStrictIdentifier": True,
+                "BundleIsRelocatable": False,
+                "BundleIsVersionChecked": True,
+                "BundleOverwriteAction": "upgrade",
+                "RootRelativeBundlePath": "First App.app",
+            }
+        ]
+
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/resources",
+                "--sign",
+                "CAFEFACE",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
+
+    # Notarization was performed with the installer identity
+    package_command.notarize.assert_called_once_with(
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        installer_identity=sekrit_installer_identity,
+    )
+
+
 def test_package_pkg_previously_built(
     package_command,
     first_app_with_binaries,

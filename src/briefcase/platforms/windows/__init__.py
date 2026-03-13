@@ -232,7 +232,14 @@ class WindowsCreateCommand(CreateCommand):
             p for p in app.license_files if (self.base_path / p).suffix == ".rtf"
         ]
 
-        if len(app.license_files) == 1:
+        if len(app.license_files) == 0:
+            raise BriefcaseCommandError("""\
+Your project does not include any license files.
+
+Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
+one file in the `license-files` setting.
+""")
+        elif len(app.license_files) == 1:
             license_file = self.base_path / app.license_files[0]
             if license_file.suffix == ".rtf":
                 # Single RTF file: copy directly.

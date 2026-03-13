@@ -828,16 +828,24 @@ class LinuxSystemBuildCommand(LinuxSystemDockerMixin, BuildCommand):
         )
         doc_folder.mkdir(parents=True, exist_ok=True)
 
-        with self.console.wait_bar("Installing license..."):
-            separator = "-" * 75
-            parts = []
-            for license_path_str in app.license_files:
-                parts.append(
-                    (self.base_path / license_path_str).read_text(encoding="utf-8")
+        if app.license_files:
+            with self.console.wait_bar("Installing license..."):
+                separator = "-" * 75
+                parts = []
+                for license_path_str in app.license_files:
+                    parts.append(
+                        (self.base_path / license_path_str).read_text(encoding="utf-8")
+                    )
+                (doc_folder / "copyright").write_text(
+                    f"\n{separator}\n".join(parts), encoding="utf-8"
                 )
-            (doc_folder / "copyright").write_text(
-                f"\n{separator}\n".join(parts), encoding="utf-8"
-            )
+        else:
+            raise BriefcaseCommandError("""\
+Your project does not include any license files.
+
+Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
+one file in the `license-files` setting.
+ """)
 
         with self.console.wait_bar("Installing changelog..."):
             changelog = find_changelog_filename(self.base_path)

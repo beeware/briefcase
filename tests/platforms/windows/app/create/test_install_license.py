@@ -1,8 +1,18 @@
 import pytest
 
-from briefcase.exceptions import BriefcaseConfigError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
 from .....utils import create_file
+
+
+def test_no_license_files(create_command, first_app_templated):
+    """If a project doesn't define any license-files, an error is raised."""
+    first_app_templated.license_files = []
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Your project does not include any license files.",
+    ):
+        create_command.install_license(first_app_templated)
 
 
 def test_license_file_txt(create_command, first_app_templated, tmp_path):
