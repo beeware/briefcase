@@ -733,7 +733,9 @@ def _normalize_pep639_license_config(
     :param console: The Briefcase `Console` object used for warning output.
     """
     raw_license = config["license"]
-    raw_license_files = config.get("license-files")
+    # Remove the `license-files` key because it needs to be converted into attribute
+    # form (`license_files`)
+    raw_license_files = config.pop("license-files", None)
 
     # Ensure we license-files is a list.
     if raw_license_files is None:
@@ -758,9 +760,10 @@ Update the `license` definition to a valid SPDX expression.
                 f"does not exist."
             ) from None
 
-    # Finalize PEP 639 config
+    # Finalize PEP 639 config. Use `license_files` rather than `license-files` so it's a
+    # valid attribute name.
     config["license"] = spdx_id
-    config["license-files"] = raw_license_files
+    config["license_files"] = raw_license_files
 
 
 def _normalize_pep621_license_text_config(
@@ -842,10 +845,11 @@ def _normalize_pep621_license_text_config(
 *******************************************************************************
 """)
 
-    # Warn and finalize PEP 621 license.text coercion.
+    # Warn and finalize PEP 621 license.text coercion. Use `license_files` rather than
+    # `license-files` so it's a valid attribute name.
     console.warning("".join(warning))
     config["license"] = license
-    config["license-files"] = license_files
+    config["license_files"] = license_files
 
 
 def _normalize_pep621_license_file_config(
@@ -912,10 +916,11 @@ def _normalize_pep621_license_file_config(
 
 *******************************************************************************
 """)
-    # Warn and finalize PEP 621 license.file coercion.
+    # Warn and finalize PEP 621 license.file coercion. Use `license_files` rather than
+    # `license-files` so it's a valid attribute name.
     console.warning("".join(warning))
     config["license"] = spdx_id
-    config["license-files"] = [license_file]
+    config["license_files"] = [license_file]
 
 
 def _normalize_pre_pep621_license_config(
@@ -999,10 +1004,11 @@ def _normalize_pre_pep621_license_config(
 *******************************************************************************
 """)
 
-    # Warn and finalize pre-PEP 621 license coercion.
+    # Warn and finalize pre-PEP 621 license coercion. Use `license_files` rather than
+    # `license-files` so it's a valid attribute name.
     console.warning("".join(warning))
     config["license"] = license
-    config["license-files"] = license_files
+    config["license_files"] = license_files
 
 
 def normalize_license_config(

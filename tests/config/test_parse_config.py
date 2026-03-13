@@ -95,7 +95,7 @@ def test_single_minimal_app(tmp_path):
             "app_name": "my_app",
             "value": 42,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         }
     }
 
@@ -136,13 +136,13 @@ def test_multiple_minimal_apps(tmp_path):
             "app_name": "first",
             "number": 37,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "second": {
             "app_name": "second",
             "number": 42,
             "license": "BSD-3-Clause",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -207,7 +207,7 @@ def test_platform_override(tmp_path):
             "appvalue": "the app",
             "platformvalue": "macos platform",
             "license": "BSD-3-Clause",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -215,7 +215,7 @@ def test_platform_override(tmp_path):
             "basevalue": "the base",
             "platformvalue": "other macos platform",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -276,7 +276,7 @@ def test_platform_override_ordering(tmp_path):
             "appvalue": "the app",
             "platformvalue": "macos platform",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -284,7 +284,7 @@ def test_platform_override_ordering(tmp_path):
             "basevalue": "the base",
             "platformvalue": "other macos platform",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -362,7 +362,7 @@ def test_format_override(tmp_path):
             "platformvalue": "macos platform",
             "formatvalue": "app format",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -370,7 +370,7 @@ def test_format_override(tmp_path):
             "basevalue": "the base",
             "formatvalue": "other macos app format",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -448,14 +448,14 @@ def test_format_override_ordering(tmp_path):
             "platformvalue": "macos platform",
             "formatvalue": "app format",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 0,
             "basevalue": "the base",
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -520,7 +520,7 @@ def test_requires(tmp_path):
             ],
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -529,7 +529,7 @@ def test_requires(tmp_path):
             ],
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -561,7 +561,7 @@ def test_requires(tmp_path):
             ],
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -570,7 +570,7 @@ def test_requires(tmp_path):
             ],
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -600,7 +600,7 @@ def test_requires(tmp_path):
             ],
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
@@ -609,7 +609,7 @@ def test_requires(tmp_path):
             ],
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -665,13 +665,13 @@ def test_document_types(tmp_path):
             },
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
         "other_app": {
             "app_name": "other_app",
             "value": 0,
             "license": "MIT",
-            "license-files": [],
+            "license_files": [],
         },
     }
 
@@ -735,7 +735,7 @@ def test_pep_621_merge(tmp_path):
         "bundle": "com.example",
         "version": "1.2.3",
         "license": "MIT",
-        "license-files": ["LICENSE"],
+        "license_files": ["LICENSE"],
         "author": "Kim Park",
         "author_email": "kim@example.com",
         "url": "https://example.com/awesome",
@@ -823,7 +823,7 @@ def test_spdx_license_with_no_files(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
     console.warning.assert_not_called()
 
 
@@ -849,7 +849,7 @@ def test_license_files_empty_list(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
     console.warning.assert_not_called()
 
 
@@ -910,7 +910,7 @@ def test_license_spdx_without_files(config, tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
     console.warning.assert_not_called()
 
 
@@ -964,7 +964,7 @@ def test_license_pep639_valid(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == ["LICENSE"]
+    assert apps["my_app"]["license_files"] == ["LICENSE"]
     console.warning.assert_not_called()
 
 
@@ -992,7 +992,7 @@ def test_license_pep639_normalized(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == ["LICENSE"]
+    assert apps["my_app"]["license_files"] == ["LICENSE"]
     console.warning.assert_not_called()
 
 
@@ -1030,7 +1030,7 @@ def test_license_pep621_text_spdx(config, tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
 
     # The license text was not written
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
@@ -1066,7 +1066,7 @@ def test_license_pep621_text_non_spdx(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
 
     # The license text was not written
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
@@ -1102,7 +1102,7 @@ def test_license_pep621_text_non_spdx_multiline(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
-    assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
+    assert apps["my_app"]["license_files"] == ["build/license_text.my_app.txt"]
 
     # The license text was written to the expected location
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
@@ -1181,7 +1181,7 @@ of this software and associated documentation files (the "Software"), ...
 
     # Unidentified license falls back to LicenseRef-UnknownLicense
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == ["LICENSE"]
+    assert apps["my_app"]["license_files"] == ["LICENSE"]
 
     # One warning hinting a known license
     console.warning.assert_called_once()
@@ -1216,7 +1216,7 @@ def test_license_pep621_file_unknown_spdx(tmp_path):
 
     # Unidentified license falls back to LicenseRef-UnknownLicense
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
-    assert apps["my_app"]["license-files"] == ["LICENSE"]
+    assert apps["my_app"]["license_files"] == ["LICENSE"]
 
     # One warning hinting an unknown license
     console.warning.assert_called_once()
@@ -1300,7 +1300,7 @@ def test_license_text_spdx(config, tmp_path):
     )
 
     assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
 
     # The license text was not written
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
@@ -1344,7 +1344,7 @@ def test_license_text_non_spdx(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
-    assert apps["my_app"]["license-files"] == []
+    assert apps["my_app"]["license_files"] == []
 
     # The license text was not written
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
@@ -1388,7 +1388,7 @@ def test_license_text_non_spdx_multiline(tmp_path):
     )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
-    assert apps["my_app"]["license-files"] == ["build/license_text.my_app.txt"]
+    assert apps["my_app"]["license_files"] == ["build/license_text.my_app.txt"]
 
     # The license text was written to the expected location
     license_text_file = tmp_path / "build" / "license_text.my_app.txt"
