@@ -744,10 +744,10 @@ def _normalize_pep639_license_config(
         spdx_id = canonicalize_license_expression(raw_license)
     except InvalidLicenseExpression:
         raise BriefcaseConfigError(f"""\
-        The license configuration for '{app_name}' specifies `license-files` but the
-        `license` value {raw_license!r} is not a valid SPDX expression.
+The license configuration for '{app_name}' is in PEP 639 format, but the
+`license` value {raw_license!r} is not a valid SPDX expression.
 
-        Update the `license` definition to a valid SPDX expression.
+Update the `license` definition to a valid SPDX expression.
         """) from None
 
     # Validate each license-file exists.
@@ -1065,17 +1065,20 @@ Add a `license` field with the SPDX expression for your project:
 
     # Now finalize the license configuration
     if isinstance(raw_license, str) and raw_license_files is not None:
+        # `license` and `license-files` - Valid PEP 639
         _normalize_pep639_license_config(config, app_name, base_path, console)
 
     elif isinstance(raw_license, dict):
+        # license is a TOML table
         if list(raw_license.keys()) == ["text"]:
+            # `license.text` - PEP 621 text format
             _normalize_pep621_license_text_config(config, app_name, base_path, console)
 
         elif list(raw_license.keys()) == ["file"]:
+            # `license.file` - PEP 621 file format
             _normalize_pep621_license_file_config(config, app_name, base_path, console)
         else:
-            # `license` table contains anything other than a single
-            # 'text' or 'file' key.
+            # PEP 621 `license` table contains anything else
             raise BriefcaseConfigError(f"""\
 The project configuration for '{app_name}' defines an invalid PEP 621
 `license` table.
@@ -1087,7 +1090,7 @@ Update your configuration to provide a valid PEP 639 configuration:
 """) from None
 
     elif isinstance(raw_license, str):
-        # Pre-PEP 621 format: Just a license string, but *not* an SPDX value.
+        # Pre-PEP 621 format: Just a `license` string, but *not* an SPDX value.
         _normalize_pre_pep621_license_config(config, app_name, base_path, console)
     else:
         # No license definition — license of *some* form is a required value.
