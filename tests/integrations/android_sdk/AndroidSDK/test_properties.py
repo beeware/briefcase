@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import AndroidSigning
 
 from ....utils import assert_url_resolvable
 from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
@@ -152,3 +153,12 @@ def test_adb_for_device(mock_tools, android_sdk):
 
     assert adb.tools == mock_tools
     assert adb.device == "some-device"
+
+
+def test_signing(mock_tools, android_sdk):
+    """An AndroidSigning instance can be obtained."""
+
+    signing = android_sdk.signing
+
+    assert isinstance(signing, AndroidSigning)
+    assert signing.tools == mock_tools

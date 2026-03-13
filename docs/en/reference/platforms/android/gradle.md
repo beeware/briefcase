@@ -122,7 +122,7 @@ Android allows for some customization of the colors used by your app:
 
 The following options can be provided at the command line when producing Android projects:
 
-### package
+### package { #android-package }
 
 #### `--keystore-alias <alias>`
 
@@ -146,7 +146,7 @@ If provided, these properties will be used to sign the artefact non-interactivel
 
 Create an unsigned release artefact, skipping the keystore signing step entirely. Useful for CI pipelines that handle signing separately, or for testing distribution.
 
-### run
+### run { #android-run }
 
 #### `-d <device>` / `--device <device>`
 
