@@ -632,26 +632,111 @@ class GradleRunCommand(GradleMixin, RunCommand):
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create a release artefact from an Android Gradle project."
 
-    def package_app(self, app: AppConfig, **kwargs):
+    ADHOC_SIGN_HELP = "Create an unsigned release artefact"
+    IDENTITY_HELP = "The path to a .jks keystore file to use for signing"
+
+    def add_options(self, parser):
+        super().add_options(parser)
+
+        parser.add_argument(
+            "--keystore-alias",
+            dest="keystore_alias",
+            help="The alias of the signing key in the keystore",
+            required=False,
+        )
+        parser.add_argument(
+            "--keystore-password",
+            dest="keystore_password",
+            help="The password for the keystore",
+            required=False,
+        )
+        parser.add_argument(
+            "--key-password",
+            dest="key_password",
+            help=(
+                "The password for the signing key "
+                "(defaults to the keystore password if not specified)"
+            ),
+            required=False,
+        )
+
+    def package_app(
+        self,
+        app: AppConfig,
+        adhoc_sign: bool = False,
+        identity: str | None = None,
+        keystore_alias: str | None = None,
+        keystore_password: str | None = None,
+        key_password: str | None = None,
+        **kwargs,
+    ):
         """Package the app for distribution.
 
         This involves building the release app bundle.
 
         :param app: The application to build
+        :param adhoc_sign: If True, produce an unsigned artefact
+        :param identity: Path to a .jks keystore file
+        :param keystore_alias: The alias of the signing key in the keystore
+        :param keystore_password: The keystore password
+        :param key_password: The key password (defaults to keystore_password)
         """
         self.console.info(
             "Building Android App Bundle and APK in release mode...",
             prefix=app.app_name,
         )
-        with self.console.wait_bar("Bundling..."):
-            build_type, build_artefact_path = {
-                "aab": ("bundleRelease", "bundle/release/app-release.aab"),
-                "apk": ("assembleRelease", "apk/release/app-release-unsigned.apk"),
-                "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
-            }[app.packaging_format]
 
+        build_type, build_artefact_path = {
+            "aab": ("bundleRelease", "bundle/release/app-release.aab"),
+            "apk": ("assembleRelease", "apk/release/app-release-unsigned.apk"),
+            "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
+        }[app.packaging_format]
+
+        gradle_args = [build_type]
+
+        extra_gradle = getattr(app, "build_gradle_extra_content", "") or ""
+        if "signingConfig" in extra_gradle:
+            if identity is not None:
+                raise BriefcaseCommandError(
+                    "Cannot use --identity when build_gradle_extra_content already "
+                    "configures signing.\n\n"
+                    "Remove the signingConfig block from build_gradle_extra_content "
+                    "and use --identity instead, or remove --identity to let the "
+                    "existing Gradle signing configuration be used."
+                )
+            if not adhoc_sign:
+                self.console.warning("""
+Signing is configured via build_gradle_extra_content in pyproject.toml.
+Briefcase will use that signing configuration.
+
+For better security, consider removing the signing block from
+build_gradle_extra_content and using briefcase's built-in signing instead:
+
+    $ briefcase package android --identity /path/to/keystore.jks
+
+""")
+                adhoc_sign = True
+
+        if app.packaging_format != "debug-apk" and not adhoc_sign:
+            with self.console.wait_bar("Selecting signing credentials..."):
+                signing_config = self.tools.android_sdk.signing.select_keystore(
+                    app,
+                    base_path=self.base_path,
+                    identity=identity,
+                    keystore_alias=keystore_alias,
+                    keystore_password=keystore_password,
+                    key_password=key_password,
+                )
+            gradle_args += [
+                f"-Pandroid.injected.signing.store.file={signing_config.keystore_path!s}",
+                f"-Pandroid.injected.signing.store.password={signing_config.store_password}",
+                f"-Pandroid.injected.signing.key.alias={signing_config.alias}",
+                f"-Pandroid.injected.signing.key.password={signing_config.key_password}",
+            ]
+
+        with self.console.wait_bar("Bundling..."):
             try:
-                self.run_gradle(app, [build_type])
+                self.run_gradle(app, gradle_args)
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Error while building project.") from e
 
