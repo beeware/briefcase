@@ -137,13 +137,18 @@ def test_create_keystore_prompts_for_alias(
 ):
     """When keystore_alias is None the user is prompted."""
     mock_tools.host_os = "Linux"
-    mock_tools.console.text_question = MagicMock(return_value="prompted-alias")
-    mock_tools.console.text_question = MagicMock(return_value="storepass")
+    mock_tools.console.text_question.side_effect = [
+        "prompted-alias",
+        "storepass",
+        "keypass",
+    ]
 
     config = signing.create_keystore(first_app_config, base_path=tmp_path)
 
-    mock_tools.console.text_question.assert_called_once()
+    assert mock_tools.console.text_question.call_count == 3
     assert config.alias == "prompted-alias"
+    assert config.store_password == "storepass"
+    assert config.key_password == "keypass"
 
 
 def test_create_keystore_prompts_for_password(
@@ -237,8 +242,7 @@ def test_select_keystore_identity_prompts_for_alias(
     """When identity is given but keystore_alias is not, the user is prompted."""
     ks = tmp_path / "release.jks"
     ks.touch()
-    mock_tools.console.text_question = MagicMock(return_value="prompted-alias")
-    mock_tools.console.text_question = MagicMock(return_value="storepass")
+    mock_tools.console.text_question.side_effect = ["prompted-alias", "storepass"]
 
     config = signing.select_keystore(
         first_app_config,
@@ -246,8 +250,9 @@ def test_select_keystore_identity_prompts_for_alias(
         identity=str(ks),
     )
 
-    mock_tools.console.text_question.assert_called_once()
+    assert mock_tools.console.text_question.call_count == 2
     assert config.alias == "prompted-alias"
+    assert config.store_password == "storepass"
 
 
 def test_select_keystore_identity_prompts_for_password(
@@ -316,9 +321,8 @@ def test_select_keystore_with_candidates_shown(
     ks.parent.mkdir(parents=True, exist_ok=True)
     ks.touch()
 
-    mock_tools.console.selection_question = MagicMock(return_value=str(ks))
-    mock_tools.console.text_question = MagicMock(return_value="mykey")
-    mock_tools.console.text_question = MagicMock(return_value="storepass")
+    mock_tools.console.selection_question.return_value = str(ks)
+    mock_tools.console.text_question.side_effect = ["mykey", "storepass"]
 
     config = signing.select_keystore(first_app_config, base_path=tmp_path)
 
@@ -346,8 +350,7 @@ def test_select_keystore_select_existing_prompts_alias_and_password(
 
     config = signing.select_keystore(first_app_config, base_path=tmp_path)
 
-    mock_tools.console.text_question.assert_called_once()
-    mock_tools.console.text_question.assert_called_once()
+    assert mock_tools.console.text_question.call_count == 2
     assert config.alias == "myalias"
     assert config.store_password == "mypassword"
     assert config.key_password == "mypassword"

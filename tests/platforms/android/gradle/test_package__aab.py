@@ -5,6 +5,7 @@ import pytest
 
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import AndroidSigningConfig
 
 from ....utils import create_file
 
@@ -153,6 +154,15 @@ def test_execute_gradle_signed(
         )
 
     package_command.tools.subprocess.run.side_effect = create_bundle
+
+    package_command.tools.android_sdk.signing.select_keystore.return_value = (
+        AndroidSigningConfig(
+            keystore_path=keystore_path,
+            alias="mykey",
+            store_password="storepass",
+            key_password="keypass",
+        )
+    )
 
     package_command.package_app(
         first_app_aab,
