@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
 
-from ..config import is_valid_app_name
+from ..config import get_license_from_text, is_valid_app_name
 from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
@@ -478,47 +478,6 @@ class ConvertCommand(NewCommand):
 
         return author_email
 
-    def get_license_from_text(self, license_text: str) -> str:
-        """Infer the license from the license file."""
-        # The order here is quite important. If we have GPLvX+ after GPLvX, then it will
-        # never be matched if the license text is GPLvX+, since it will already have
-        # matched GPLvX. We search for MIT last, because words like PERMITTED and
-        # LIMITED will generate a false match.
-
-        hint_patterns = {
-            "Apache-2.0": ["Apache"],
-            "BSD-3-Clause": [
-                "Redistribution and use in source and binary forms",
-                "BSD",
-            ],
-            "GPL-2.0+": [
-                "Free Software Foundation, either version 2 of the License",
-                "GPLv2+",
-            ],
-            "GPL-2.0": [
-                "version 2 of the GNU General Public License",
-                "GPLv2",
-            ],
-            "GPL-3.0+": [
-                "either version 3 of the License",
-                "GPLv3+",
-            ],
-            "GPL-3.0": [
-                "version 3 of the GNU General Public License",
-                "GPLv3",
-            ],
-            "MIT": [
-                "Permission is hereby granted, free of charge",
-                "MIT",
-            ],
-        }
-        for license_id, license_patterns in hint_patterns.items():
-            for license_pattern in license_patterns:
-                if license_pattern.lower() in license_text.lower():
-                    return license_id
-
-        return "Other"
-
     def get_license_hint(self) -> tuple[str | None, str]:
         """Get hint for project license, either by reading pyproject.toml or the license
         file.
@@ -532,21 +491,23 @@ class ConvertCommand(NewCommand):
         # If there is license information in the pyproject.toml file, use that,
         # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
-            default = self.get_license_from_text(self.pep621_data["license"]["text"])
+            default = get_license_from_text(
+                self.pep621_data["license"]["text"], default="Other"
+            )
             default_source = "the PEP621 formatted pyproject.toml"
         elif "file" in self.pep621_data.get("license", {}):
             license_text = (
                 self.base_path / self.pep621_data["license"]["file"]
             ).read_text(encoding="utf-8")
-            default = self.get_license_from_text(license_text)
+            default = get_license_from_text(license_text, default="Other")
             default_source = "the license file"
         elif (self.base_path / "LICENSE").exists():
             license_text = (self.base_path / "LICENSE").read_text(encoding="utf-8")
-            default = self.get_license_from_text(license_text)
+            default = get_license_from_text(license_text, default="Other")
             default_source = "the license file"
         elif (self.base_path / "LICENCE").exists():
             license_text = (self.base_path / "LICENCE").read_text(encoding="utf-8")
-            default = self.get_license_from_text(license_text)
+            default = get_license_from_text(license_text, default="Other")
             default_source = "the license file"
         else:
             return None, intro

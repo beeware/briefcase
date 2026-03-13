@@ -1,15 +1,25 @@
-from textwrap import dedent
-
 import pytest
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
 from .....utils import create_file
 
 
+def test_no_license_files(create_command, first_app_templated):
+    """If a project doesn't define any license-files, an error is raised."""
+    first_app_templated.license_files = []
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Your project does not include any license files.",
+    ):
+        create_command.install_license(first_app_templated)
+
+
 def test_license_file_txt(create_command, first_app_templated, tmp_path):
-    """A license can be specified as a TXT file."""
+    """A plain-text license file is converted to RTF."""
     create_file(tmp_path / "base_path/LICENSE", "This is a license file")
+    first_app_templated.license = "MIT"
+    first_app_templated.license_files = ["LICENSE"]
 
     create_command.install_license(first_app_templated)
 
@@ -24,85 +34,86 @@ def test_license_file_txt(create_command, first_app_templated, tmp_path):
 
 
 def test_license_file_rtf(create_command, first_app_templated, tmp_path):
-    """A license can be specified as an RTF file."""
-    first_app_templated.license["file"] = "LICENSE.rtf"
-    orig_license = tmp_path / "base_path/LICENSE.rtf"
-    create_file(
-        orig_license,
-        dedent(
-            """\
-            {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}
-            This is a document that contains bullet points:\x20
-            \\par\\line
-            \\bullet first, something short\x20
-            \\bullet then, something longer that needs to\x20
-            run onto multiple lines\x20
-            \\bullet last, something short again\x20
-            \\par\\line
-            Then a closing paragraph.\x20
-            \\par\\line
-            }"""
-        ),
+    """A native RTF license file is copied directly."""
+    orig_rtf = (
+        "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\n"
+        "This is a document that contains bullet points: \n"
+        "\\par\\line\n"
+        "\\bullet first, something short \n"
+        "\\par\\line\n"
+        "Then a closing paragraph. \n"
+        "\\par\\line\n"
+        "}"
     )
+    orig_license = tmp_path / "base_path/LICENSE.rtf"
+    create_file(orig_license, orig_rtf)
+    first_app_templated.license = "MIT"
+    first_app_templated.license_files = ["LICENSE.rtf"]
+
     create_command.install_license(first_app_templated)
 
-    # The license RTF file is the same as the original
+    # The output LICENSE.rtf should be an identical copy of the original.
+    dest_license = tmp_path / "base_path/build/first-app/windows/app/LICENSE.rtf"
+    assert dest_license.is_file()
+    result = dest_license.read_text(encoding="utf-8")
+    assert result == orig_rtf
+
+
+def test_license_file_multi(create_command, first_app_templated, tmp_path):
+    """Multiple plain-text license files are merged with an RTF separator."""
+    create_file(tmp_path / "base_path/LICENSE-A", "Apache License text")
+    create_file(tmp_path / "base_path/LICENSE-B", "MIT License text")
+    first_app_templated.license = "Apache-2.0 AND MIT"
+    first_app_templated.license_files = ["LICENSE-A", "LICENSE-B"]
+
+    create_command.install_license(first_app_templated)
+
     license = tmp_path / "base_path/build/first-app/windows/app/LICENSE.rtf"
     assert license.is_file()
-    assert license.read_text(encoding="utf-8") == orig_license.read_text(
-        encoding="utf-8"
+    result = license.read_text(encoding="utf-8")
+    assert result.startswith("{\\rtf1\\ansi")
+    assert "Apache License text" in result
+    assert "MIT License text" in result
+    assert "\\brdrb\\brdrs" in result  # RTF separator was inserted
+    assert result.endswith("\n}")
+
+
+def test_license_file_multi_with_rtf_raises(
+    create_command,
+    first_app_templated,
+    tmp_path,
+):
+    """When multiple license files include an RTF file, a BriefcaseConfigError is
+    raised."""
+    create_file(
+        tmp_path / "base_path/LICENSE-A.rtf",
+        "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}Apache License text.\\par\\line}",
     )
+    create_file(tmp_path / "base_path/LICENSE-B", "MIT License text")
+    first_app_templated.license = "Apache-2.0 AND MIT"
+    first_app_templated.license_files = ["LICENSE-A.rtf", "LICENSE-B"]
 
-
-def test_missing_license_file(create_command, first_app_templated):
-    """If a named license file is missing, an error is raised."""
     with pytest.raises(
-        BriefcaseCommandError,
-        match=r"However, this file does not exist.",
+        BriefcaseConfigError,
+        match=r"contains multiple\nlicense files, and at least one is an RTF file",
     ):
         create_command.install_license(first_app_templated)
 
 
-def test_license_text(create_command, first_app_templated, tmp_path):
-    """A license provided as text is converted into a file."""
-    del first_app_templated.license["file"]
-    first_app_templated.license["text"] = "This is a license\nDo what you want."
+def test_license_file_multi_all_rtf_raises(
+    create_command,
+    first_app_templated,
+    tmp_path,
+):
+    """When multiple RTF files are provided, a BriefcaseConfigError is raised."""
+    rtf = "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}Some text.\\par\\line}"
+    create_file(tmp_path / "base_path/LICENSE-A.rtf", rtf)
+    create_file(tmp_path / "base_path/LICENSE-B.rtf", rtf)
+    first_app_templated.license = "Apache-2.0 AND MIT"
+    first_app_templated.license_files = ["LICENSE-A.rtf", "LICENSE-B.rtf"]
 
-    create_command.install_license(first_app_templated)
-
-    # A license file was written, and contains the licence text
-    license = tmp_path / "base_path/build/first-app/windows/app/LICENSE.rtf"
-    license_text = license.read_text(encoding="utf-8")
-    assert license_text.startswith("{\\rtf1\\ansi")
-    assert "This is a license " in license_text
-    assert license_text.endswith("\n}")
-
-
-def test_license_text_suspicious(create_command, first_app_templated, tmp_path, capsys):
-    """A single line license text is flagged as suspicious, but converted."""
-    del first_app_templated.license["file"]
-    first_app_templated.license["text"] = "BSD 3 clause"
-
-    create_command.install_license(first_app_templated)
-
-    license = tmp_path / "base_path/build/first-app/windows/app/LICENSE.rtf"
-    assert license.is_file()
-
-    license_text = license.read_text(encoding="utf-8")
-    assert license_text.startswith("{\\rtf1\\ansi")
-    assert "BSD 3 clause" in license_text
-    assert license_text.endswith("\n}")
-
-    # The user was warned that the text probably isn't a full license
-    console = capsys.readouterr().out
-    assert "ensure that the contents of this file is adequate." in console
-
-
-def test_no_license(create_command, first_app_templated):
-    """If an app doesn't provide a known license definition, an error is raised."""
-    del first_app_templated.license["file"]
     with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Your project does not contain a `license` definition.",
+        BriefcaseConfigError,
+        match=r"contains multiple\nlicense files, and at least one is an RTF file",
     ):
         create_command.install_license(first_app_templated)

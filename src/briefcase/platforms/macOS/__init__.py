@@ -1471,20 +1471,12 @@ password:
         installer_path = self.bundle_path(app) / "installer"
 
         with self.console.wait_bar("Installing license..."):
-            license_file = self.base_path / "LICENSE"
-            if license_file.is_file():
-                (installer_path / "resources").mkdir(exist_ok=True)
+            (installer_path / "resources").mkdir(exist_ok=True)
+            for license_path_str in app.license_files:
                 self.tools.shutil.copy(
-                    license_file,
-                    installer_path / "resources/LICENSE",
+                    self.base_path / license_path_str,
+                    installer_path / "resources" / Path(license_path_str).name,
                 )
-            else:
-                raise BriefcaseCommandError("""\
-Your project does not contain a LICENSE file.
-
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms.
-""")
 
         # pkgbuild's default behavior is to make "relocatable" installs, which means
         # that if you've ever run the app, the installer will default to updating *that*
