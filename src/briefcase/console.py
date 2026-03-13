@@ -250,6 +250,102 @@ class Console:
         """Export the text of the entire log; the log is also cleared."""
         return self._log_impl.export_text()
 
+    @staticmethod
+    def _dedent_and_split(text):
+        """Dedent and split text into paragraphs by manual line breaks."""
+        # Remove common leading whitespace
+        text = textwrap.dedent(text).strip().strip("\n")
+        # replace line breaks with spaces
+        text = text.replace("\n", " ")
+        # split the message into paragraphs by manual line breaks
+        return text.split("\\n")
+
+    def warning_banner(
+        self,
+        title: str,
+        message: str,
+        width: int = 80,
+    ) -> str:
+        """Format warning banner message inside an asterisk border box. It is possible
+        to input title/message as multiline or single string. To manually split the
+        message into paragraphs, use the "\\n" character. If you need empty lines, use
+        the "\\n\\n" sequence.
+
+        :param title: The title of the box. If provided, appears centered at the top.
+        :param message: The message to format inside the box.
+        :param width: The total width of the box in characters. Defaults to 80.
+        :param border_char: Character to use for the box border. Defaults to "*".
+        :return: The formatted message enclosed in a bordered box.
+        """
+
+        border_char = "*"
+
+        # If message and title are both empty rase ValueError
+        if not any((message, title)):
+            raise ValueError("Message or title must be provided")
+        # If width is not an integer, raise TypeError
+        if not isinstance(width, int):
+            raise TypeError("Width must be an integer")
+
+        # Create border line
+        border_line = border_char * width
+        # create lines array with opening line of the box
+        lines = [border_line]
+
+        # if title exists, format title in the box
+        if title:
+            # title must be a string
+            if not isinstance(title, str):
+                raise TypeError("Title must be a string")
+
+            # width of title line inside the box
+            inner_width = width - 4
+
+            # spilt title into paragraphs
+            paragraphs = Console._dedent_and_split(title)
+
+            for paragraph in paragraphs:
+                paragraph = paragraph.strip()
+                if paragraph:  # Non-empty paragraph
+                    # Wrap paragraph to lines to fit the width of the box
+                    wrapped_title_lines = textwrap.wrap(paragraph, width=width - 6)
+
+                    for line in wrapped_title_lines:
+                        # Center each line within the available space
+                        padded_line = line.center(inner_width)
+                        # add line to the box
+                        lines.append(f"{border_char * 2}{padded_line}{border_char * 2}")
+                else:  # Empty paragraph (preserve blank lines)
+                    lines.append(
+                        f"{border_char * 2}{''.center(inner_width)}{border_char * 2}"
+                    )
+
+            # closing line of title in the box
+            lines.append(border_line)
+
+        # If message is not empty, add it to the box
+        if message:
+            # message must be a string
+            if not isinstance(message, str):
+                raise TypeError("Message must be a string")
+            # spilt message into paragraphs
+            paragraphs = Console._dedent_and_split(message)
+
+            for paragraph in paragraphs:
+                paragraph = paragraph.strip()
+                if paragraph:  # Non-empty paragraph
+                    # Wrap paragraph to lines to fit the width of the box
+                    wrapped_lines = textwrap.wrap(paragraph, width=width)
+                    lines.extend(wrapped_lines)
+                else:  # Empty paragraph (preserve blank lines)
+                    lines.append("")
+
+            # closing line of message
+            lines.append(border_line)
+
+        # merge lines into a single string and send warning to console
+        self.warning("\n".join(lines))
+
     #################################################################
     # Logging controls
     #################################################################
