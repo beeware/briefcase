@@ -138,7 +138,9 @@ The password for the signing key itself. If not provided, it defaults to the key
 
 #### `-i <path>` / `--identity <path>`
 
-The path to a `.jks` keystore file to use for signing. If not provided, Briefcase will search for existing keystores in the project folder (`.android/`), and in `~/.android/`, and offer to create a new one if none are found.
+The path to a `.jks` keystore file to use for signing. If not provided, Briefcase will search for existing keystores in the project folder (`.android/`), and in the `.android` folder in the user's home directory, and offer to create a new one if none are found.
+
+If provided, these properties will be used to sign the artefact non-interactively. If any required property is not provided, Briefcase will prompt for it in an interactive session, or fail if input is disabled.
 
 #### `--adhoc-sign`
 
@@ -386,7 +388,7 @@ On the first run, Briefcase will search for existing keystores in the following 
 
 * The project root directory
 * The project's `.android/` subfolder
-* `~/.android/`
+* The `.android/` folder in the user's home directory
 
 If keystores are found, you will be presented with a list to choose from. If none are found — or if you choose to create a new one — Briefcase will generate a new keystore at `<project-root>/.android/<bundle-identifier>.jks` using `keytool` from your JDK installation.
 
@@ -396,7 +398,7 @@ You can bypass the interactive selection by supplying the path to an existing ke
 $ briefcase package android --identity /path/to/my-release-key.jks
 ```
 
-You can also supply the alias and passwords non-interactively:
+If you are using a keystore that has been created with an alias or password, you can also supply those properties at the command line:
 
 ```console
 $ briefcase package android \
@@ -411,8 +413,11 @@ To produce an *unsigned* artefact (for example, when signing is handled external
 $ briefcase package android --adhoc-sign
 ```
 
-> [!IMPORTANT]
-> Keep your keystore file secure and backed up. If you lose it, you will not be able to publish updates to your app on the Play Store.
+/// note | Note
+
+Keep your keystore file secure and backed up. If you lose it, you will not be able to publish updates to your app on the Play Store.
+
+///
 
 Debug APKs (produced with `-p debug-apk`) are signed automatically by the Android SDK debug key and do not go through this signing flow.
 
