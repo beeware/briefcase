@@ -801,34 +801,8 @@ def test_license_files_without_license_is_error(tmp_path):
         )
 
 
-def test_spdx_license_with_no_files(tmp_path):
-    """An empty license files list is valid in *parsing*."""
-    config_file = create_file(
-        tmp_path / "pyproject.toml",
-        """
-        [tool.briefcase]
-        license = "MIT"
-        license-files = []
-
-        [tool.briefcase.app.my_app]
-        """,
-    )
-
-    console = Mock()
-    _, apps = parse_config(
-        config_file,
-        platform="macOS",
-        output_format="app",
-        console=console,
-    )
-
-    assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license_files"] == []
-    console.warning.assert_not_called()
-
-
-def test_license_files_empty_list(tmp_path):
-    """An empty license files list is valid in *parsing*."""
+def test_license_pep639_empty_list(tmp_path):
+    """An empty license files list is valid."""
     config_file = create_file(
         tmp_path / "pyproject.toml",
         """
@@ -897,7 +871,7 @@ def test_license_pep639_invalid_spdx_with_files(tmp_path):
         """,
     ],
 )
-def test_license_spdx_without_files(config, tmp_path):
+def test_license_pep639_spdx_without_files(config, tmp_path):
     """PEP 639 license, with *no* license files defined."""
     config_path = create_file(tmp_path / "pyproject.toml", config)
 
@@ -941,15 +915,16 @@ def test_license_pep639_missing_file(tmp_path):
 
 
 def test_license_pep639_valid(tmp_path):
-    """A valid PEP 639 license config (string + files) is accepted without warning."""
+    """A valid PEP 639 license config (complex SDPX + multiple files) is accepted."""
     (tmp_path / "LICENSE").write_text("MIT License text", encoding="utf-8")
+    (tmp_path / "LICENSE-other").write_text("BSD License text", encoding="utf-8")
 
     config_file = create_file(
         tmp_path / "pyproject.toml",
         """
         [tool.briefcase]
-        license = "MIT"
-        license-files = ["LICENSE"]
+        license = "MIT AND BSD-3-Clause"
+        license-files = ["LICENSE", "LICENSE-other"]
 
         [tool.briefcase.app.my_app]
         """,
@@ -963,8 +938,8 @@ def test_license_pep639_valid(tmp_path):
         console=console,
     )
 
-    assert apps["my_app"]["license"] == "MIT"
-    assert apps["my_app"]["license_files"] == ["LICENSE"]
+    assert apps["my_app"]["license"] == "MIT AND BSD-3-Clause"
+    assert apps["my_app"]["license_files"] == ["LICENSE", "LICENSE-other"]
     console.warning.assert_not_called()
 
 
