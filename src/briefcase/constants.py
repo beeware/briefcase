@@ -379,3 +379,19 @@ RESERVED_WORDS = set.union(
     PYTHON_RESERVED_WORDS,
     NON_PYTHON_RESERVED_WORDS,
 )
+
+# Valid MIME type registries
+# https://www.iana.org/assignments/media-types/media-types.xhtml
+MIME_TYPES = {
+    "application",
+    "audio",
+    "example",
+    "font",
+    "haptics",
+    "image",
+    "message",
+    "model",
+    "multipart",
+    "text",
+    "video",
+}

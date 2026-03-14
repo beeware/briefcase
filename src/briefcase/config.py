@@ -17,7 +17,7 @@ else:  # pragma: no-cover-if-gte-py311
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
-from .constants import RESERVED_WORDS
+from .constants import MIME_TYPES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
@@ -151,6 +151,29 @@ def validate_document_type_config(document_type_id, document_type):
             f"The URL associated with document type {document_type_id!r} "
             f"is invalid: {e}"
         ) from None
+
+    try:
+        mime_type = document_type["mime_type"]
+        if not isinstance(mime_type, str):
+            raise BriefcaseConfigError(
+                f"The MIME type associated with document type "
+                f"{document_type_id!r} is not a string."
+            )
+        try:
+            main_type, _ = mime_type.split("/")
+            if main_type not in MIME_TYPES:
+                raise BriefcaseConfigError(
+                    f"The MIME type {mime_type!r} for document type "
+                    f"{document_type_id!r} uses an invalid registry {main_type!r}."
+                )
+        except ValueError:
+            raise BriefcaseConfigError(
+                f"The MIME type {mime_type!r} for document type "
+                f"{document_type_id!r} is not in 'type/subtype' format."
+            ) from None
+    except KeyError:
+        # mime_type is optional
+        pass
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti

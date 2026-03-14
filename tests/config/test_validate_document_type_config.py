@@ -200,10 +200,11 @@ def test_document_type_macOS_config_with_mimetype_list(valid_document):
 def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     """Valid document types don't raise an exception when validated.
 
-    Here, a MIME type is provided that is not known to be valid for any file. That means
-    that LSItemContentTypes should _not_ be set.
+    Here, a MIME type is provided that is not known to be valid for any file, but is
+    still a valid MIME type format. That means that LSItemContentTypes should _not_ be
+    set.
     """
-    valid_document["mime_type"] = "custom/mytype"
+    valid_document["mime_type"] = "application/x-custom"
     validate_document_type_config("ext", valid_document)
     assert "LSItemContentTypes" not in valid_document["macOS"]
     assert valid_document["macOS"]["is_core_type"] is False
@@ -213,6 +214,35 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
         "public.data",
         "public.content",
     ]
+
+
+@pytest.mark.parametrize(
+    ("invalid_mime_type", "match"),
+    [
+        (1, r"The MIME type associated with document type 'ext' is not a string\."),
+        (
+            "not-a-mime-type",
+            r"The MIME type 'not-a-mime-type' for document type 'ext' "
+            r"is not in 'type/subtype' format\.",
+        ),
+        (
+            "invalid/registry/extra",
+            r"The MIME type 'invalid/registry/extra' for document type 'ext' "
+            r"is not in 'type/subtype' format\.",
+        ),
+        (
+            "custom/type",
+            r"The MIME type 'custom/type' for document type 'ext' "
+            r"uses an invalid registry 'custom'\.",
+        ),
+    ],
+)
+def test_validate_document_invalid_mime_type(invalid_mime_type, match, valid_document):
+    """Invalid MIME type values raise an error when validating document types."""
+    valid_document["mime_type"] = invalid_mime_type
+    # Failure raises an exception
+    with pytest.raises(BriefcaseConfigError, match=match):
+        validate_document_type_config("ext", valid_document)
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
