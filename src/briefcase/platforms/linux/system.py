@@ -6,6 +6,7 @@ import subprocess
 import tarfile
 from collections.abc import Collection
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.commands import (
     BuildCommand,
@@ -17,7 +18,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.commands.convert import find_changelog_filename
-from briefcase.config import AppConfig, merge_config
+from briefcase.config import AppConfig, as_platform_config, merge_config
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
@@ -33,6 +34,19 @@ from briefcase.platforms.linux import (
     parse_freedesktop_os_release,
 )
 
+if TYPE_CHECKING:
+
+    class LinuxSystemAppConfig(AppConfig):
+        target_vendor: str
+        target_codename: str
+        target_vendor_base: str
+        target_image: str
+        glibc_version: str
+        python_version_tag: str
+        packaging_format: str
+else:
+    LinuxSystemAppConfig = AppConfig
+
 
 class LinuxSystemMixin(LinuxMixin):
     # The base mixin for system packages. It only supports native Linux usage, not usage
@@ -44,11 +58,13 @@ class LinuxSystemMixin(LinuxMixin):
     def build_path(self, app):
         # Override the default build path to use the vendor name,
         # rather than "linux"
+        app = as_platform_config(LinuxSystemAppConfig, app)
         return self.base_path / "build" / app.app_name / app.target_vendor
 
     def bundle_path(self, app):
         # Override the default bundle path to use the codename,
         # rather than "system"
+        app = as_platform_config(LinuxSystemAppConfig, app)
         return self.build_path(app) / app.target_codename
 
     def project_path(self, app):
@@ -61,6 +77,7 @@ class LinuxSystemMixin(LinuxMixin):
         return self.project_path(app)
 
     def rpm_tag(self, app):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if app.target_vendor == "fedora":
             return f"fc{app.target_codename}"
         else:
@@ -72,6 +89,7 @@ class LinuxSystemMixin(LinuxMixin):
         Each packaging system uses different values to identify the exact ABI that
         describes the target environment...so just defer to the packaging system.
         """
+        app = as_platform_config(LinuxSystemAppConfig, app)
         command = {
             "deb": ["dpkg", "--print-architecture"],
             "rpm": ["rpm", "--eval", "%_target_cpu"],
@@ -111,6 +129,7 @@ class LinuxSystemMixin(LinuxMixin):
             return self._pkg_abi
 
     def distribution_filename(self, app: AppConfig) -> str:
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if app.packaging_format == "deb":
             return (
                 f"{app.bundle_name}"
@@ -173,6 +192,7 @@ class LinuxSystemMixin(LinuxMixin):
         return freedesktop_info
 
     def _finalize_target_image(self, app: AppConfig):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         app.target_image = f"{app.target_vendor}:{app.target_codename}"
 
     def finalize_app_config(self, app: AppConfig):
@@ -187,6 +207,7 @@ class LinuxSystemMixin(LinuxMixin):
 
         :param app: The app configuration to finalize.
         """
+        app = as_platform_config(LinuxSystemAppConfig, app)
         self.console.verbose(
             "Finalizing application configuration...", prefix=app.app_name
         )
@@ -302,6 +323,7 @@ class LinuxSystemMixin(LinuxMixin):
             the command used to install packages. All three values are `None`
             if the system cannot be identified.
         """
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if app.target_vendor_base == DEBIAN:
             base_system_packages = [
                 "python3-dev",
@@ -490,6 +512,7 @@ class LinuxSystemDockerMixin(LinuxSystemMixin):
         return python_version_tag
 
     def _finalize_target_image(self, app):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if self.use_docker:
             # If we're using Docker, the target image is set by the --target command
             # line argument
@@ -528,6 +551,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         If running in Docker, this is done by interrogating libc.so.6; outside docker,
         we can use os.confstr().
         """
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if self.use_docker:
             with self.console.wait_bar("Determining glibc version..."):
                 try:
@@ -567,6 +591,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         return target_glibc
 
     def platform_freedesktop_info(self, app: AppConfig):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if self.use_docker:
             # Preserve the target image on the command line as the app's target
             app.target_image = self.target_image
@@ -587,6 +612,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
 
     def docker_image_tag(self, app: AppConfig):
         """The Docker image tag for an app."""
+        app = as_platform_config(LinuxSystemAppConfig, app)
         return (
             f"briefcase/{app.bundle_identifier.lower()}:"
             f"{app.target_vendor}-{app.target_codename}"
@@ -625,6 +651,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
 
         :param app: The application being built
         """
+        app = as_platform_config(LinuxSystemAppConfig, app)
         output = self.tools[app].app_context.check_output(
             [
                 f"python{app.python_version_tag}",
@@ -702,6 +729,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
 
         :param app: The application being built
         """
+        app = as_platform_config(LinuxSystemAppConfig, app)
         # Verifying the App context is idempotent; but we have some
         # additional logic that we only want to run the first time through.
         # Check (and store) the pre-verify app tool state.
@@ -744,6 +772,7 @@ class LinuxSystemCreateCommand(
     description = "Create and populate a Linux system project."
 
     def output_format_template_context(self, app: AppConfig):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         context = super().output_format_template_context(app)
 
         # Linux system templates use the target codename, rather than
@@ -1018,6 +1047,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
 
     def _verify_packaging_tools(self, app: AppConfig):
         """Verify that the local environment contains the packaging tools."""
+        app = as_platform_config(LinuxSystemAppConfig, app)
         tool_name, executable_name, package_name = {
             "deb": ("dpkg", "dpkg-deb", "dpkg-dev"),
             "rpm": ("rpm-build", "rpmbuild", "rpm-build"),
@@ -1037,6 +1067,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
                 )
 
     def verify_app_tools(self, app):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
         if app.packaging_format == "system":
@@ -1058,6 +1089,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
             self._verify_packaging_tools(app)
 
     def package_app(self, app: AppConfig, **kwargs):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         if app.packaging_format == "deb":
             self._package_deb(app, **kwargs)
         elif app.packaging_format == "rpm":
@@ -1071,6 +1103,7 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
             )
 
     def _package_deb(self, app: AppConfig, **kwargs):
+        app = as_platform_config(LinuxSystemAppConfig, app)
         self.console.info("Building .deb package...", prefix=app.app_name)
 
         # The long description *must* exist.
@@ -1320,6 +1353,7 @@ no extension).
         )
 
     def _package_pkg(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
+        app = as_platform_config(LinuxSystemAppConfig, app)
         self.console.info("Building .pkg.tar.zst package...", prefix=app.app_name)
 
         # The description *must* exist.

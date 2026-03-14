@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 from briefcase.commands import (
     BuildCommand,
@@ -13,7 +14,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, as_platform_config
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -27,6 +28,14 @@ from briefcase.platforms.linux import (
     LinuxMixin,
     LocalRequirementsMixin,
 )
+
+if TYPE_CHECKING:
+
+    class LinuxAppImageAppConfig(AppConfig):
+        manylinux: str
+        linuxdeploy_plugins: list
+else:
+    LinuxAppImageAppConfig = AppConfig
 
 
 class LinuxAppImagePassiveMixin(LinuxMixin):
@@ -129,6 +138,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     # doesn't require that we're actually in a Linux environment.
     def docker_image_tag(self, app):
         """The Docker image tag for an app."""
+        app = as_platform_config(LinuxAppImageAppConfig, app)
         try:
             return f"briefcase/{app.bundle_identifier.lower()}:{app.manylinux}-appimage"
         except AttributeError:
@@ -183,6 +193,7 @@ class LinuxAppImageCreateCommand(
     description = "Create and populate a Linux AppImage."
 
     def output_format_template_context(self, app: AppConfig):
+        app = as_platform_config(LinuxAppImageAppConfig, app)
         context = super().output_format_template_context(app)
 
         try:
@@ -260,6 +271,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
 
         :param app: The application to build
         """
+        app = as_platform_config(LinuxAppImageAppConfig, app)
         # Build a dictionary of environment definitions that are required
         env = {}
 

@@ -11,9 +11,10 @@ import sys
 from collections.abc import Collection
 from datetime import date, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import briefcase
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, as_platform_config
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidStubBinary,
@@ -29,6 +30,17 @@ from briefcase.integrations.git import Git
 from briefcase.integrations.subprocess import NativeAppContext
 
 from .base import BaseCommand, full_options
+
+if TYPE_CHECKING:
+
+    class SupportPackageAppConfig(AppConfig):
+        support_package: str
+        support_revision: str
+        stub_binary: str
+        stub_binary_revision: str
+        cleanup_paths: list[str]
+else:
+    SupportPackageAppConfig = AppConfig
 
 
 def cookiecutter_cache_path(template):
@@ -334,6 +346,7 @@ class CreateCommand(BaseCommand):
             self._unpack_support_package(support_file_path, support_path)
 
     def _download_support_package(self, app: AppConfig):
+        app = as_platform_config(SupportPackageAppConfig, app)
         try:
             # Work out if the app defines a custom override for
             # the support package URL.
@@ -452,6 +465,7 @@ class CreateCommand(BaseCommand):
                 self.tools.os.chmod(unbuilt_executable_path, 0o755)
 
     def _download_stub_binary(self, app: AppConfig) -> Path:
+        app = as_platform_config(SupportPackageAppConfig, app)
         try:
             # Work out if the app defines a custom override for
             # the support package URL.
@@ -888,6 +902,7 @@ class CreateCommand(BaseCommand):
 
         :param app: The config object for the app
         """
+        app = as_platform_config(SupportPackageAppConfig, app)
         try:
             # Retrieve any cleanup paths defined by the app template
             paths_to_remove = self.cleanup_paths(app)

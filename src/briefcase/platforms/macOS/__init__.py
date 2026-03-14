@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, as_platform_config
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import (
     get_process_id_by_command,
@@ -28,8 +28,14 @@ from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_bin
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
 
+    class MacOSAppConfig(AppConfig):
+        packaging_format: str
+        installer_icon: str
+        installer_background: str
+
     _MixinBase = BaseCommand
 else:
+    MacOSAppConfig = AppConfig
     _MixinBase = object
 
 try:
@@ -850,6 +856,7 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def notarization_path(self, app: AppConfig) -> Path:
         """The file that is submitted for notarization."""
+        app = as_platform_config(MacOSAppConfig, app)
         if app.packaging_format == "zip":
             # Notarization for bare .app's is applied to the binary, not the
             # distribution artefact, with the distribution artefact being
@@ -860,6 +867,7 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def distribution_path(self, app: AppConfig) -> Path:
         """The path to the final distribution artefact."""
+        app = as_platform_config(MacOSAppConfig, app)
         if app.packaging_format == "zip":
             return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
         elif app.packaging_format == "pkg":
@@ -923,6 +931,7 @@ class macOSPackageMixin(macOSSigningMixin):
     def verify_app(self, app):
         super().verify_app(app)
 
+        app = as_platform_config(MacOSAppConfig, app)
         if app.console_app:
             if app.packaging_format is None:
                 app.packaging_format = "pkg"
@@ -943,6 +952,7 @@ class macOSPackageMixin(macOSSigningMixin):
         :param submission_id: The notarization submission being resumed.
         :param options: Any additional arguments passed to the package command.
         """
+        app = as_platform_config(MacOSAppConfig, app)
         if options.get("submission_id"):
             if not self.notarization_path(app).exists():
                 raise BriefcaseCommandError(
@@ -1007,6 +1017,7 @@ class macOSPackageMixin(macOSSigningMixin):
         :param installer_identity: The signing identity to use when signing the
             installer. Optional unless the packaging format is ``pkg``.
         """
+        app = as_platform_config(MacOSAppConfig, app)
         # Determine the arguments that would be needed to reproduce this notarization
         if installer_identity:
             identity_args = (
@@ -1047,6 +1058,7 @@ If notarization is interrupted, you can resume by running:
         :param identity: The code signing identity to use.
         :returns: The ID of the notarization task.
         """
+        app = as_platform_config(MacOSAppConfig, app)
         filename = self.notarization_path(app)
         try:
             if app.packaging_format == "zip":
@@ -1285,6 +1297,7 @@ password:
 
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.
+        app = as_platform_config(MacOSAppConfig, app)
         if app.packaging_format == "zip":
             self.finalize_package_zip(app)
 
@@ -1320,6 +1333,7 @@ password:
         # Confirm the project isn't currently on an iCloud synced drive.
         self.verify_not_on_icloud(app)
 
+        app = as_platform_config(MacOSAppConfig, app)
         if submission_id:
             # If we're resuming notarization, we *can't* use an adhoc identity,
             # so don't allow it to be selected.
@@ -1596,6 +1610,7 @@ with your app's licensing terms.
         identity: SigningIdentity,
     ):
         """Package an app as a DMG installer."""
+        app = as_platform_config(MacOSAppConfig, app)
         dist_path: Path = self.distribution_path(app)
         self.console.info("Building DMG...", prefix=app.app_name)
 

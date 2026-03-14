@@ -5,6 +5,7 @@ import keyword
 import re
 import sys
 import unicodedata
+from typing import TypeVar, cast
 from urllib.parse import urlparse
 
 from packaging.version import InvalidVersion, Version
@@ -855,3 +856,14 @@ def parse_config(config_file, platform, output_format, console):
         app_configs[app_name] = config
 
     return global_config, app_configs
+
+
+AppConfigT = TypeVar("AppConfigT", bound=BaseConfig)
+
+
+def as_platform_config(config_type: type[AppConfigT], app: AppConfig) -> AppConfigT:
+    """Narrow an AppConfig to a platform-specific type for type checking purposes.
+
+    At runtime this is a no-op.
+    """
+    return cast(AppConfigT, app)

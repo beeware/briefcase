@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, as_platform_config
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
@@ -17,8 +17,15 @@ from briefcase.integrations.wix import WiX
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
 
+    class WindowsAppConfig(AppConfig):
+        version_triple: str
+        guid: str
+        system_installer: str
+        packaging_format: str
+
     _MixinBase = BaseCommand
 else:
+    WindowsAppConfig = AppConfig
     _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "app"
@@ -70,6 +77,7 @@ class WindowsMixin(_MixinBase):
         return self.package_path(app) / self.package_executable_path(app)
 
     def distribution_path(self, app):
+        app = as_platform_config(WindowsAppConfig, app)
         suffix = "zip" if app.packaging_format == "zip" else "msi"
         return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
@@ -146,6 +154,7 @@ class WindowsCreateCommand(CreateCommand):
 
         :param app: The config object for the app
         """
+        app = as_platform_config(WindowsAppConfig, app)
         # WiX requires a 3-element, integer-only version number. If a version
         # triple isn't explicitly provided, generate one by stripping any
         # non-numeric portions from the version number.
@@ -545,6 +554,7 @@ class WindowsPackageCommand(PackageCommand):
 *************************************************************************
 """)
 
+        app = as_platform_config(WindowsAppConfig, app)
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)
             sign_options = {

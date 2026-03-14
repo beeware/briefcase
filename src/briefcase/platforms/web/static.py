@@ -6,7 +6,7 @@ import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from zipfile import ZipFile
 
 from briefcase.console import Console
@@ -33,7 +33,14 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, as_platform_config
+
+if TYPE_CHECKING:
+
+    class WebStaticAppConfig(AppConfig):
+        extra_pyscript_toml_content: str
+else:
+    WebStaticAppConfig = AppConfig
 
 # Banner templates (Constants used in write_inserts)
 HTML_BANNER = (
@@ -446,6 +453,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         :param app: The application to build
         """
+        app = as_platform_config(WebStaticAppConfig, app)
         self.console.info("Building web project...", prefix=app.app_name)
 
         if self.wheel_path(app).exists():

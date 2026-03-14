@@ -18,7 +18,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, as_platform_config
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
@@ -31,8 +31,14 @@ from briefcase.integrations.subprocess import SubprocessArgT
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
 
+    class AndroidAppConfig(AppConfig):
+        version_code: int
+        build_gradle_dependencies: str
+        packaging_format: str
+
     _MixinBase = BaseCommand
 else:
+    AndroidAppConfig = AppConfig
     _MixinBase = object
 
 
@@ -110,6 +116,7 @@ class GradleMixin(_MixinBase):
         )
 
     def distribution_path(self, app):
+        app = as_platform_config(AndroidAppConfig, app)
         extension = {
             "aab": "aab",
             "apk": "apk",
@@ -178,6 +185,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
         :param app: The config object for the app
         """
+        app = as_platform_config(AndroidAppConfig, app)
         # Android requires an integer "version code". If a version code
         # isn't explicitly provided, generate one from the version number.
         # The build number will also be appended, if provided.
@@ -639,6 +647,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         :param app: The application to build
         """
+        app = as_platform_config(AndroidAppConfig, app)
         self.console.info(
             "Building Android App Bundle and APK in release mode...",
             prefix=app.app_name,

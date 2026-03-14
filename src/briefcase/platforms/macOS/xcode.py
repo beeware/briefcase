@@ -12,7 +12,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.xcode import Xcode
 from briefcase.platforms.macOS import (
@@ -62,7 +62,7 @@ class macOSXcodeBuildCommand(macOSXcodeMixin, BuildCommand):
     description = "Build a macOS Xcode project."
     supports_debugger = True
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build

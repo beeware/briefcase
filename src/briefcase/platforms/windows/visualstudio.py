@@ -8,7 +8,7 @@ from briefcase.commands import (
     PublishCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.visualstudio import VisualStudio
 from briefcase.platforms.windows import (
@@ -48,7 +48,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
         super().verify_tools()
         VisualStudio.verify(tools=self.tools)
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: AppConfig, **kwargs):
         """Build the Visual Studio project.
 
         :param app: The config object for the app
