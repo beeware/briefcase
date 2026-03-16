@@ -31,7 +31,11 @@ else:  # pragma: no-cover-if-gte-py311
 
 import briefcase
 from briefcase import __version__
-from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.config import (
+    AppConfig,
+    GlobalConfig,
+    parse_config,
+)
 from briefcase.console import MAX_TEXT_WIDTH, Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -1088,34 +1092,33 @@ any compatibility problems, and then add the compatibility declaration.
 
     def parse_config(self, filename, overrides):
         try:
-            with open(filename, "rb") as config_file:
-                # Parse the content of the pyproject.toml file, extracting
-                # any platform and output format configuration for each app,
-                # creating a single set of configuration options.
-                global_config, app_configs = parse_config(
-                    config_file,
-                    platform=self.platform,
-                    output_format=self.output_format,
-                    console=self.console,
-                )
+            # Parse the content of the pyproject.toml file, extracting
+            # any platform and output format configuration for each app,
+            # creating a single set of configuration options.
+            global_config, app_configs = parse_config(
+                filename,
+                platform=self.platform,
+                output_format=self.output_format,
+                console=self.console,
+            )
 
-                # Create the global config
-                global_config.update(overrides)
-                self.global_config = create_config(
-                    klass=GlobalConfig,
-                    config=global_config,
-                    msg="Global configuration",
-                )
+            # Create the global config
+            global_config.update(overrides)
+            self.global_config = create_config(
+                klass=GlobalConfig,
+                config=global_config,
+                msg="Global configuration",
+            )
 
-                for app_name, app_config in app_configs.items():
-                    # Construct an AppConfig object with the final set of
-                    # configuration options for the app.
-                    app_config.update(overrides)
-                    self.apps[app_name] = create_config(
-                        klass=AppConfig,
-                        config=app_config,
-                        msg=f"Configuration for '{app_name}'",
-                    )
+            for app_name, app_config in app_configs.items():
+                # Construct an AppConfig object with the final set of
+                # configuration options for the app.
+                app_config.update(overrides)
+                self.apps[app_name] = create_config(
+                    klass=AppConfig,
+                    config=app_config,
+                    msg=f"Configuration for '{app_name}'",
+                )
 
         except OSError as e:
             raise BriefcaseConfigError(
