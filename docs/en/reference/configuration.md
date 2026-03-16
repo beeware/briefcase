@@ -503,13 +503,14 @@ A URL for help related to the document format.
 
 Some platforms have specific configuration options that are only relevant to that platform. In particular, Apple platforms (macOS, iOS) have a more elaborate system for document types, and require additional configuration to use document types. If you want to support document types on these platforms, you will need to read the macOS [document types][macOS-document-types] section for more information.
 
-## PEP 621 compatibility
+## Compatibility with Python project metadata
 
-Many of the keys that exist in Briefcase's configuration have analogous settings in [PEP 621 project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
+Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
 
-The following PEP 621 project metadata keys will be used by Briefcase if they are available:
+The following `[project]` metadata keys will be used by Briefcase if they are available:
 
 - `version` maps to the same key in Briefcase.
+- `license` and `license-files` map to the same key in Briefcase. Legacy formats for these keys will be [coerced into PEP 639 format][license-definitions].
 - `authors` The `email` and `name` keys of the first value in the `authors` setting map to [`author`][] and [`author_email`][].
 - `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages defined in the [`requires`][] setting at the `[tool.briefcase]` level will be appended to the packages defined with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
@@ -517,14 +518,14 @@ The following PEP 621 project metadata keys will be used by Briefcase if they ar
 - `homepage` in a `[project.urls]` section will be mapped to [`url`][].
 - `requires-python` will be used to validate the running Python interpreter's version against the requirement.
 
-## Non-PEP 639 license specifications
+### License definitions { #license-definitions }
 
-Briefcase requires that every project provide a license specification. If the license is in any format *other* that PEP 639, a warning will be raised; but Briefcase will coerce the license specification into PEP 639 format.
+License definitions in Python metadata will also be honored. PEP 639 requires a value for `license`, with a optional `license-files`. If the license is in any format *other* that PEP 639, a warning will be raised; but Briefcase will coerce the provided license specification into PEP 639 format.
 
-PEP 639 requires a SPDX specifier for the value for `license`. Briefcase will attempt to infer the SPDX specifier by looking at the provided value for the license. If it can't determine the license type, an SPDX value of `LicenseRef-UnknownLicense` will be used.
+PEP 639 requires an SPDX specifier for the value of `license`. If the provided value isn't an SPDX specifier, Briefcase will attempt to infer the SPDX specifier from the provided value. If it can't determine the license type, an SPDX value of `LicenseRef-UnknownLicense` will be used.
 
 The value for `license-files` will be a derived from the value in the license specification:
 
-- If your project is in PEP 621 `license.file` format, the value provided will be used to populate a single-item `license_files` definition.
-- If your `license` project is in PEP 621 `license.text` format or pre-PEP 621 format (i.e., a `license = "..."` definition where the value *isn't* an SPDX specifier), and the provided text is more than one line, the value of the field will be used as the contents of a temporary license file that will be written into the `build` directory. That file will be used to populate a single-item list for `license_files` as a license specifier.
-- Otherwise, `license_files` will be set to an empty list.
+- If your project is in PEP 621 `license.file` format, the value provided will be used to populate a single-item `license-files` definition.
+- If your `license` project is in PEP 621 `license.text` format or pre-PEP 621 format (i.e., a `license = "..."` definition where the value *isn't* an SPDX specifier), and the provided text is more than one line, the value of the field will be used as the contents of a temporary license file that will be written into the `build` directory. That file will be used to populate a single-item list for `license-files` as a license specifier.
+- Otherwise, `license-files` will be set to an empty list. Note that some platforms *require* a license file for packaging purposes; packaging apps for those platforms will raise an error when the app is built for those platforms.
