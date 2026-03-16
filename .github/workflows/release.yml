@@ -59,7 +59,7 @@ jobs:
           test $(briefcase --version) = $VERSION
 
       - name: Create release
-        uses: ncipollo/release-action@v1.20.0
+        uses: ncipollo/release-action@v1.21.0
         with:
           name: ${{ env.VERSION }}
           draft: true
