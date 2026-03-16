@@ -46,6 +46,7 @@ class DummyCommand(BaseCommand):
     def finalize_app_config(self, app):
         super().finalize_app_config(app=app)
         self.actions.append(("finalize-app-config", app.app_name))
+        return app
 
 
 @pytest.fixture

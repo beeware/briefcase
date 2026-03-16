@@ -187,10 +187,10 @@ class PackageCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(apps=apps_to_package.values())
+        finalized_apps = self.finalize(apps=apps_to_package.values())
 
         state = None
-        for _, app_obj in sorted(apps_to_package.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._package_app(
                 app_obj,
                 update=update,

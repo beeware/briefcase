@@ -677,7 +677,7 @@ a custom location for Briefcase's tools.
         """
         return
 
-    def finalize_app_config(self, app: AppConfig):
+    def finalize_app_config(self, app: AppConfig) -> AppConfig:
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
@@ -690,8 +690,9 @@ a custom location for Briefcase's tools.
         verification that is required as a result of command-line arguments.
 
         :param app: The app configuration to finalize.
+        :returns: The finalized app configuration.
         """
-        return
+        return app
 
     def resolve_apps(
         self,
@@ -722,7 +723,7 @@ a custom location for Briefcase's tools.
         debugger: str | None = None,
         debugger_host: str | None = None,
         debugger_port: int | None = None,
-    ):
+    ) -> dict[str, AppConfig]:
         """Finalize Briefcase configuration.
 
         This will:
@@ -739,10 +740,12 @@ a custom location for Briefcase's tools.
         :param debugger: The debugger that should be used
         :param debugger_host: The host to use for the debugger
         :param debugger_port: The port to use for the debugger
+        :returns: A dict mapping app name to finalized AppConfig.
         """
         self.verify_host()
         self.verify_tools()
 
+        finalized: dict[str, AppConfig] = {}
         for app in apps:
             if hasattr(app, "__draft__"):
                 if debugger and debugger != "":
@@ -751,7 +754,7 @@ a custom location for Briefcase's tools.
                     app.debugger_port = debugger_port
 
                 app.test_mode = test_mode
-                self.finalize_app_config(app)
+                app = self.finalize_app_config(app)
                 delattr(app, "__draft__")
 
                 if app.external_package_path:
@@ -778,6 +781,8 @@ a custom location for Briefcase's tools.
                             f"'external_package_executable_path', "
                             f"but not 'external_package_path'."
                         )
+            finalized[app.app_name] = app
+        return finalized
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.

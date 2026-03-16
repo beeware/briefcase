@@ -371,13 +371,14 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(
+        finalized = self.finalize(
             apps=[app],
             test_mode=test_mode,
             debugger=debugger,
             debugger_host=debugger_host,
             debugger_port=debugger_port,
         )
+        app = finalized[app.app_name]
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)

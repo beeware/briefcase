@@ -65,10 +65,10 @@ class OpenCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(apps=apps_to_open.values())
+        finalized_apps = self.finalize(apps=apps_to_open.values())
 
         state = None
-        for _, app_obj in sorted(apps_to_open.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self.open_app(app_obj, **full_options(state, options))
 
         return state

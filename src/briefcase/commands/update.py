@@ -110,14 +110,14 @@ class UpdateCommand(CreateCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(
+        finalized_apps = self.finalize(
             apps=apps_to_update.values(),
             test_mode=test_mode,
             debugger=debugger,
         )
 
         state = None
-        for _, app_obj in sorted(apps_to_update.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self.update_app(
                 app_obj,
                 update_requirements=update_requirements,

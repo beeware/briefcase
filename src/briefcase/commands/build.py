@@ -142,14 +142,14 @@ class BuildCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(
+        finalized_apps = self.finalize(
             apps=apps_to_build.values(),
             test_mode=test_mode,
             debugger=debugger,
         )
 
         state = None
-        for _, app_obj in sorted(apps_to_build.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._build_app(
                 app_obj,
                 update=update,
