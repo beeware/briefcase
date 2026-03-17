@@ -19,6 +19,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedHostError,
 )
+from briefcase.formats import get_packaging_format
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy
 from briefcase.integrations.subprocess import NativeAppContext
@@ -55,7 +56,12 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         return self.bundle_path(app) / self.binary_name(app)
 
     def distribution_path(self, app):
-        return self.dist_path / self.binary_name(app)
+        return get_packaging_format(
+            self.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+            command=self,
+        ).distribution_path(app)
 
     def verify_tools(self):
         """Verify the AppImage LinuxDeploy tool and its plugins exist."""
@@ -413,13 +419,6 @@ class LinuxAppImageDevCommand(LinuxAppImageMixin, DevCommand):
 
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
-
-    def package_app(self, app: AppConfig, **kwargs):
-        """Package an AppImage.
-
-        :param app: The application to package
-        """
-        self.tools.shutil.copy(self.binary_path(app), self.distribution_path(app))
 
 
 class LinuxAppImagePublishCommand(LinuxAppImageMixin, PublishCommand):
