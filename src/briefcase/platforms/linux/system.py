@@ -832,36 +832,24 @@ class LinuxSystemBuildCommand(LinuxSystemDockerMixin, BuildCommand):
         )
         doc_folder.mkdir(parents=True, exist_ok=True)
 
-        with self.console.wait_bar("Installing license..."):
-            if license_file := app.license.get("file"):
-                license_file = self.base_path / license_file
-                if license_file.is_file():
-                    self.tools.shutil.copy(license_file, doc_folder / "copyright")
-                else:
-                    _relative_license_path = license_file.relative_to(self.base_path)
-                    raise BriefcaseCommandError(f"""\
-Your `pyproject.toml` specifies a license file of {str(_relative_license_path)!r}.
-However, this file does not exist.
+        if app.license_files:
+            with self.console.wait_bar("Installing license..."):
+                separator = "-" * 75
+                parts = []
+                for license_path_str in app.license_files:
+                    parts.append(
+                        (self.base_path / license_path_str).read_text(encoding="utf-8")
+                    )
+                (doc_folder / "copyright").write_text(
+                    f"\n{separator}\n".join(parts), encoding="utf-8"
+                )
+        else:
+            raise BriefcaseCommandError("""\
+Your project does not include any license files.
 
-Ensure you have correctly spelled the filename in your `license.file` setting.
-
-""")
-            elif license_text := app.license.get("text"):
-                (doc_folder / "copyright").write_text(license_text, encoding="utf-8")
-                if len(license_text.splitlines()) <= 1:
-                    self.console.warning("""
-Your app specifies a license using `license.text`, but the value doesn't appear to be a
-full license. Briefcase will generate a `copyright` file for your project; you should
-ensure that the contents of this file is adequate.
-""")
-            else:
-                raise BriefcaseCommandError("""\
-Your project does not contain a LICENSE definition.
-
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms, and set `license.file = 'LICENSE'` in your
-app's configuration.
-""")
+Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
+one file in the `license-files` setting.
+ """)
 
         with self.console.wait_bar("Installing changelog..."):
             changelog = find_changelog_filename(self.base_path)

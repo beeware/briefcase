@@ -4,6 +4,9 @@ import pytest
 
 from briefcase.platforms.windows import txt_to_rtf
 
+RTF_HEADER = "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"
+RTF_SEPARATOR = "\\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line"
+
 
 @pytest.mark.parametrize(
     ("input", "expected"),
@@ -55,8 +58,27 @@ from briefcase.platforms.windows import txt_to_rtf
             }""",
             id="bullet-document",
         ),
+        pytest.param(
+            ["Hello World."],
+            """\
+            {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}
+            Hello World.\x20
+            }""",
+            id="single-element-list",
+        ),
+        pytest.param(
+            ["Apache License text", "MIT License text"],
+            """\
+            {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}
+            Apache License text\x20
+            \\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line
+            MIT License text\x20
+            }""",
+            id="multi-element-list",
+        ),
     ],
 )
 def test_txt_to_rtf(input, expected):
-    """Utility method can convert TXT to RTF format."""
-    assert txt_to_rtf(dedent(input)) == dedent(expected)
+    """Plain text (string or list of strings) is converted to a full RTF document."""
+    result = txt_to_rtf(dedent(input) if isinstance(input, str) else input)
+    assert result == dedent(expected)

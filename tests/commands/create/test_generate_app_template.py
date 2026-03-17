@@ -48,6 +48,7 @@ def full_context():
         "install_options": {},
         "uninstall_options": {},
         "license": {"file": "LICENSE"},
+        "license_files": [],
         "requirement_installer_args": [],
         "external_package_path": None,
         "external_package_executable_path": None,

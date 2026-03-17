@@ -27,7 +27,6 @@ def first_app(first_app_config, tmp_path):
     first_app_config.python_version_tag = "3"
 
     # Some project-level files.
-    create_file(tmp_path / "base_path/LICENSE", "First App License")
     create_file(tmp_path / "base_path/CHANGELOG", "First App Changelog")
 
     # Make it look like the template has been generated
@@ -76,9 +75,9 @@ def underscore_app(tmp_path):
         version="0.0.1",
         description="The first simple app \\ demonstration",
         sources=["src/underscore_app"],
-        license={"file": "LICENSE"},
+        license="MIT",
+        license_files=["LICENSE"],
     )
-
     # Specify a system python app for a dummy vendor
     app_config.target_vendor = "somevendor"
     app_config.target_codename = "surprising"

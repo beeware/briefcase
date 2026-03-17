@@ -91,14 +91,16 @@ def sub_stream_kw(sub_kw):
 
 
 @pytest.fixture
-def first_app_config():
+def first_app_config(tmp_path):
+    create_file(tmp_path / "base_path" / "LICENSE", "MIT License")
     return AppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
         description="The first simple app",
         sources=["src/first"],
-        license={"file": "LICENSE"},
+        license="MIT",
+        license_files=["LICENSE"],
     )
 
 
