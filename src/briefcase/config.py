@@ -103,7 +103,7 @@ def validate_url(candidate):
     return True
 
 
-def validate_document_type_config(document_type_id, document_type):
+def validate_document_type_config(app_name, document_type_id, document_type):
     try:
         if not (
             isinstance(document_type["extension"], str)
@@ -172,8 +172,8 @@ def validate_document_type_config(document_type_id, document_type):
                 f"{document_type_id!r} is not in 'type/subtype' format."
             ) from None
     except KeyError:
-        # mime_type is optional
-        pass
+        # mime_type is optional; if it's not provided, use a default.
+        document_type["mime_type"] = f"application/x-{app_name}-{document_type_id}"
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
@@ -511,7 +511,9 @@ class AppConfig(BaseConfig):
             )
 
         for document_type_id, document_type in self.document_types.items():
-            validate_document_type_config(document_type_id, document_type)
+            validate_document_type_config(
+                self.app_name, document_type_id, document_type
+            )
 
         self.install_options = validate_install_options_config(
             install_option, "install"

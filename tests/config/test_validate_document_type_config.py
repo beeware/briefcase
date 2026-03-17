@@ -36,7 +36,7 @@ def valid_document():
 )
 def test_document_type_config(valid_document):
     """Valid document types don't raise an exception when validated."""
-    validate_document_type_config("ext", valid_document)
+    validate_document_type_config("my-app", "ext", valid_document)
 
 
 def test_validate_document_missing_field(valid_document):
@@ -46,7 +46,7 @@ def test_validate_document_missing_field(valid_document):
     with pytest.raises(
         BriefcaseConfigError, match=r"Document type .* does not define an icon."
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_validate_document_invalid_icon(invalid_icon, valid_document):
         BriefcaseConfigError,
         match=r"The icon definition associated with document type .* is not a string.",
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 def test_validate_document_missing_description(valid_document):
@@ -76,7 +76,7 @@ def test_validate_document_missing_description(valid_document):
     with pytest.raises(
         BriefcaseConfigError, match=r"Document type .* does not provide a description."
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ def test_validate_document_invalid_description(invalid_description, valid_docume
         BriefcaseConfigError,
         match=r"The description associated with document type .* is not a string.",
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 def test_validate_document_missing_url(valid_document):
@@ -108,7 +108,7 @@ def test_validate_document_missing_url(valid_document):
     with pytest.raises(
         BriefcaseConfigError, match=r"Document type .* does not provide a URL."
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 @pytest.mark.parametrize(
@@ -129,7 +129,7 @@ def test_validate_document_invalid_url(invalid_url, valid_document):
         BriefcaseConfigError,
         match=r"The URL associated with document type .* is invalid: Not a valid URL!",
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 def test_validate_document_missing_extension(valid_document):
@@ -140,7 +140,7 @@ def test_validate_document_missing_extension(valid_document):
     with pytest.raises(
         BriefcaseConfigError, match=r"Document type .* does not provide an extension."
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 @pytest.mark.parametrize(
@@ -161,7 +161,7 @@ def test_validate_document_invalid_extension(invalid_extension, valid_document):
         BriefcaseConfigError,
         match=r"The extension provided for document type .* is not alphanumeric.",
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -171,7 +171,7 @@ def test_document_type_macOS_config_with_mimetype_single(valid_document):
     application/pdf is the only valid MIME type for PDF files.
     """
     valid_document["mime_type"] = "application/pdf"
-    validate_document_type_config("ext", valid_document)
+    validate_document_type_config("my-app", "ext", valid_document)
     assert "LSItemContentTypes" in valid_document["macOS"]
     assert valid_document["macOS"]["LSItemContentTypes"] == ["com.adobe.pdf"]
     assert valid_document["macOS"]["is_core_type"] is True
@@ -188,7 +188,7 @@ def test_document_type_macOS_config_with_mimetype_list(valid_document):
     should still resolve to public.vcard
     """
     valid_document["mime_type"] = "text/vcard"
-    validate_document_type_config("ext", valid_document)
+    validate_document_type_config("my-app", "ext", valid_document)
     assert "LSItemContentTypes" in valid_document["macOS"]
     assert valid_document["macOS"]["LSItemContentTypes"] == ["public.vcard"]
     assert valid_document["macOS"]["is_core_type"] is True
@@ -205,7 +205,7 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     set.
     """
     valid_document["mime_type"] = "application/x-custom"
-    validate_document_type_config("ext", valid_document)
+    validate_document_type_config("my-app", "ext", valid_document)
     assert "LSItemContentTypes" not in valid_document["macOS"]
     assert valid_document["macOS"]["is_core_type"] is False
     assert valid_document["macOS"]["LSHandlerRank"] == "Owner"
@@ -242,7 +242,13 @@ def test_validate_document_invalid_mime_type(invalid_mime_type, match, valid_doc
     valid_document["mime_type"] = invalid_mime_type
     # Failure raises an exception
     with pytest.raises(BriefcaseConfigError, match=match):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
+
+
+def test_document_type_config_default_mime_type(valid_document):
+    """If no MIME type is provided, a default is generated."""
+    validate_document_type_config("my-app", "ext", valid_document)
+    assert valid_document["mime_type"] == "application/x-my-app-ext"
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -259,7 +265,7 @@ def test_document_type_macOS_config_with_list_of_content_types(valid_document):
         BriefcaseConfigError,
         match=r"Document type 'ext' has multiple content types\.",
     ):
-        validate_document_type_config("ext", valid_document)
+        validate_document_type_config("my-app", "ext", valid_document)
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="Test runs only on macOS")
@@ -275,7 +281,7 @@ def test_document_type_macOS_config_with_list_of_single_content_type(
     If a document type has a single content type, it is converted to a string.
     """
     valid_document.setdefault("macOS", {})["LSItemContentTypes"] = ls_item_content_types
-    validate_document_type_config("ext", valid_document)
+    validate_document_type_config("my-app", "ext", valid_document)
     assert valid_document["macOS"]["LSItemContentTypes"] == ["com.adobe.pdf"]
     assert valid_document["macOS"]["is_core_type"] is True
     assert valid_document["macOS"]["LSHandlerRank"] == "Alternate"
