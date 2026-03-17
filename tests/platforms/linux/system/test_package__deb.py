@@ -7,11 +7,9 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.formats.linux import debian_multiline_description
 from briefcase.platforms.linux import system
-from briefcase.platforms.linux.system import (
-    LinuxSystemPackageCommand,
-    debian_multiline_description,
-)
+from briefcase.platforms.linux.system import LinuxSystemPackageCommand
 
 from ....utils import create_file
 

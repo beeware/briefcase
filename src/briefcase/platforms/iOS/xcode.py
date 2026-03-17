@@ -24,8 +24,8 @@ from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
     InvalidDeviceError,
-    NoDistributionArtefact,
 )
+from briefcase.formats import get_packaging_format
 from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
@@ -34,14 +34,6 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_
 
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = "Xcode"
-
-    @property
-    def packaging_formats(self):
-        return ["ipa"]
-
-    @property
-    def default_packaging_format(self):
-        return "ipa"
 
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
@@ -55,26 +47,11 @@ class iOSXcodePassiveMixin(iOSMixin):
         )
 
     def distribution_path(self, app):
-        # This path won't ever be *generated*, as distribution artefacts
-        # can't be generated on iOS.
-        raise NoDistributionArtefact("""
-*************************************************************************
-** WARNING: No distributable artefact has been generated               **
-*************************************************************************
-
-    Briefcase has not generated a standalone iOS artefact, as iOS apps
-    must be published through Xcode.
-
-    To open Xcode for your iOS project, run:
-
-        briefcase open iOS
-
-    and use Xcode's app distribution workflow described at:
-
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
-
-*************************************************************************
-""")
+        return get_packaging_format(
+            self.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+        )(self).distribution_path(app)
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):

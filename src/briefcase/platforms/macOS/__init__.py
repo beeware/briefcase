@@ -16,6 +16,7 @@ from packaging.version import Version
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
+from briefcase.formats import get_packaging_format
 from briefcase.integrations.subprocess import (
     get_process_id_by_command,
     is_process_dead,
@@ -839,15 +840,6 @@ class macOSPackageMixin(macOSSigningMixin):
         "checksum, or the full name of the identity"
     )
 
-    @property
-    def packaging_formats(self):
-        return ["zip", "dmg", "pkg"]
-
-    @property
-    def default_packaging_format(self):
-        # The default changes depending on whether the app is a console app or a GUI app
-        return None
-
     def notarization_path(self, app: AppConfig) -> Path:
         """The file that is submitted for notarization."""
         if app.packaging_format == "zip":
@@ -860,12 +852,7 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def distribution_path(self, app: AppConfig) -> Path:
         """The path to the final distribution artefact."""
-        if app.packaging_format == "zip":
-            return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
-        elif app.packaging_format == "pkg":
-            return self.dist_path / f"{app.formal_name}-{app.version}.pkg"
-        else:
-            return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
+        return super().distribution_path(app)
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -959,6 +946,14 @@ class macOSPackageMixin(macOSSigningMixin):
                 super().clean_dist_folder(app, **options)
         else:
             super().clean_dist_folder(app, **options)
+
+    def archive_app(self, app: AppConfig, path: Path):
+        """Create a zip archive of the app bundle using ditto.
+
+        :param app: The app to archive
+        :param path: The path to the archive file to create.
+        """
+        self.ditto_archive(self.bundle_path(app), path)
 
     def ditto_archive(
         self,
@@ -1286,381 +1281,9 @@ password:
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.
         if app.packaging_format == "zip":
-            self.finalize_package_zip(app)
-
-    def package_app(
-        self,
-        app: AppConfig,
-        notarize_app=None,
-        identity=None,
-        adhoc_sign=False,
-        sign_installer=True,
-        installer_identity=None,
-        submission_id=None,
-        **kwargs,
-    ):
-        """Package an app bundle.
-
-        :param app: The application to package
-        :param notarize_app: Should the app be notarized? Default: ``True`` if the app
-            has been signed with a real identity; ``False`` if the app is unsigned, or
-            an ad-hoc signing identity has been used.
-        :param identity: The signing identity to use to sign the app. This can be either
-            the 40-digit hex checksum, or the string name of the identity. If
-            unspecified, the user will be prompted for an app signing identity. Ignored
-            if ``adhoc_sign`` is ``True``.
-        :param adhoc_sign: If ``True``, code will be signed with ad-hoc identity of "-",
-            and the resulting app will not be re-distributable.
-        :param sign_installer: Should the installer be signed? Ignored unless the
-            packaging format is ``pkg``.
-        :param installer_identity: The signing identity to use when signing the
-            installer. Ignored unless the packaging format is ``pkg``.
-        :param submission_id: The submission ID of the notarization task to resume.
-        """
-        # Confirm the project isn't currently on an iCloud synced drive.
-        self.verify_not_on_icloud(app)
-
-        if submission_id:
-            # If we're resuming notarization, we *can't* use an adhoc identity,
-            # so don't allow it to be selected.
-            identity = self.select_identity(identity=identity, allow_adhoc=False)
-
-            if app.packaging_format == "pkg":
-                notarization_identity = self.select_identity(
-                    identity=installer_identity,
-                    app_identity=identity,
-                )
-            else:
-                notarization_identity = identity
-
-            self.console.info(
-                f"Resuming notarization for submission {submission_id}",
-                prefix=app.app_name,
-            )
-
-            self.console.info()
-            self.validate_submission_id(
-                app,
-                identity=notarization_identity,
-                submission_id=submission_id,
-            )
-
-            self.console.info()
-            self.finalize_notarization(
-                app,
-                identity=notarization_identity,
-                submission_id=submission_id,
-            )
-            return
-
-        # It's a normal packaging pass.
-        self.console.info("Signing app...", prefix=app.app_name)
-        if adhoc_sign:
-            identity = SigningIdentity()
-        else:
-            identity = self.select_identity(identity=identity)
-
-        if identity.is_adhoc:
-            if notarize_app:
-                raise BriefcaseCommandError(
-                    "Can't notarize an app with an ad-hoc signing identity"
-                )
-            self.console.warning("""
-*************************************************************************
-** WARNING: Signing with an ad-hoc identity                            **
-*************************************************************************
-
-    This app is being signed with an ad-hoc identity. The resulting
-    app will run on this computer, but will not run on anyone else's
-    computer.
-
-    To generate an app that can be distributed to others, you must
-    obtain an application distribution certificate from Apple, and
-    select the developer identity associated with that certificate
-    when running 'briefcase package'.
-
-*************************************************************************
-
-""")
-            self.console.info("Signing app with ad-hoc identity...")
-        else:
-            # If we're signing, and notarization isn't explicitly disabled,
-            # notarize by default.
-            if notarize_app is None:
-                notarize_app = True
-
-            self.console.info(f"Signing app with identity {identity.name}...")
-
-        self.sign_app(app=app, identity=identity)
-
-        if app.packaging_format == "zip":
-            self.package_zip(
-                app,
-                notarize_app=notarize_app,
-                identity=identity,
-            )
-
-        elif app.packaging_format == "pkg":
-            # If the user has indicated they want to sign the installer (the default),
-            # and the signing identity for the app *isn't* the adhoc identity, select an
-            # identity for signing the installer.
-            if sign_installer and not identity.is_adhoc:
-                installer_identity = self.select_identity(
-                    identity=installer_identity,
-                    app_identity=identity,
-                )
-            else:
-                installer_identity = None
-
-            self.package_pkg(
-                app,
-                notarize_app=notarize_app,
-                identity=identity,
-                installer_identity=installer_identity,
-            )
-
-        else:  # Default packaging format is DMG
-            self.package_dmg(
-                app,
-                notarize_app=notarize_app,
-                identity=identity,
-            )
-
-    def package_zip(
-        self,
-        app: AppConfig,
-        notarize_app: bool,
-        identity: SigningIdentity,
-    ):
-        """Package an .app bundle in a zip file.
-
-        If we're notarizing, this doesn't actually create the distribution artefact.
-        Notarization on a zip package is performed on the bare app, so we can't complete
-        packaging until notarization has completed. We call ``finalize_package_zip()``
-        as part of completing zip notarization.
-        """
-        if notarize_app:
-            self.console.info(
-                f"Notarizing app using team ID {identity.team_id}...",
-                prefix=app.app_name,
-            )
-            self.notarize(app, identity=identity)
-        else:
-            self.finalize_package_zip(app)
-
-    def finalize_package_zip(self, app: AppConfig):
-        """Finalize the zip packaging process."""
-        # Build the final archive for distribution
-        with self.console.wait_bar(
-            f"Building final distribution archive for {self.package_path(app).name}..."
-        ):
-            self.ditto_archive(self.package_path(app), self.distribution_path(app))
-
-    def package_pkg(
-        self,
-        app: AppConfig,
-        notarize_app: bool,
-        identity: SigningIdentity,
-        installer_identity: SigningIdentity | None,
-    ):
-        """Package the app as an installer."""
-        dist_path: Path = self.distribution_path(app)
-
-        self.console.info("Building PKG...", prefix=app.app_name)
-
-        installer_path = self.bundle_path(app) / "installer"
-
-        with self.console.wait_bar("Installing license..."):
-            license_file = self.base_path / "LICENSE"
-            if license_file.is_file():
-                (installer_path / "resources").mkdir(exist_ok=True)
-                self.tools.shutil.copy(
-                    license_file,
-                    installer_path / "resources/LICENSE",
-                )
-            else:
-                raise BriefcaseCommandError("""\
-Your project does not contain a LICENSE file.
-
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms.
-""")
-
-        # pkgbuild's default behavior is to make "relocatable" installs, which means
-        # that if you've ever run the app, the installer will default to updating *that*
-        # version, rather than putting it in the location that the installer specifies.
-        # This means if you've ever used `briefcase run`, that will be the install
-        # location of the "installed" app. To work around this, you have to provide a
-        # plist file - but that requires providing a "root" folder that *only* contains
-        # the products you want to install. So - we need to copy the built app to a
-        # "clean" packaging location.
-        with self.console.wait_bar("Copying app into products folder..."):
-            installed_app_path = installer_path / "root" / self.package_path(app).name
-            if installed_app_path.exists():
-                self.tools.shutil.rmtree(installed_app_path)
-            self.tools.shutil.copytree(
-                self.package_path(app),
-                installed_app_path,
-                # Ensure that symlinks are preserved in the duplication.
-                symlinks=True,
-            )
-
-        components_plist_path = self.bundle_path(app) / "installer/components.plist"
-
-        with (
-            self.console.wait_bar("Writing component manifest..."),
-            components_plist_path.open("wb") as components_plist,
-        ):
-            plistlib.dump(
-                [
-                    {
-                        "BundleHasStrictIdentifier": True,
-                        "BundleIsRelocatable": False,
-                        "BundleIsVersionChecked": True,
-                        "BundleOverwriteAction": "upgrade",
-                        "RootRelativeBundlePath": self.package_path(app).name,
-                    }
-                ],
-                components_plist,
-            )
-
-        # Console apps are installed in /Library/Formal Name, and include the
-        # post-install scripts. Normal apps are installed in /Applications, and don't
-        # include the scripts.
-        if app.console_app:
-            install_args = [
-                "--install-location",
-                f"/Library/{app.formal_name}",
-                "--scripts",
-                installer_path / "scripts",
-            ]
-        else:
-            install_args = ["--install-location", "/Applications"]
-
-        with self.console.wait_bar("Building app package..."):
-            installer_packages_path = installer_path / "packages"
-            if installer_packages_path.exists():
-                self.tools.shutil.rmtree(installer_packages_path)
-            installer_packages_path.mkdir()
-
-            self.tools.subprocess.run(
-                [
-                    "pkgbuild",
-                    "--root",
-                    installer_path / "root",
-                    "--component-plist",
-                    components_plist_path,
-                    *install_args,
-                    installer_packages_path / f"{app.app_name}.pkg",
-                ],
-                check=True,
-            )
-
-        # Build package
-        with self.console.wait_bar(f"Building {dist_path.name}..."):
-            if installer_identity:
-                signing_options = ["--sign", installer_identity.id]
-            else:
-                signing_options = []
-
-            self.tools.subprocess.run(
-                [
-                    "productbuild",
-                    "--distribution",
-                    installer_path / "Distribution.xml",
-                    "--package-path",
-                    installer_path / "packages",
-                    "--resources",
-                    installer_path / "resources",
-                    *signing_options,
-                    dist_path,
-                ],
-                check=True,
-            )
-
-        if notarize_app:
-            self.console.info(
-                f"Notarizing PKG with team ID {installer_identity.team_id}...",
-                prefix=app.app_name,
-            )
-            self.notarize(
-                app,
-                identity=identity,
-                installer_identity=installer_identity,
-            )
-
-    def package_dmg(
-        self,
-        app: AppConfig,
-        notarize_app: bool,
-        identity: SigningIdentity,
-    ):
-        """Package an app as a DMG installer."""
-        dist_path: Path = self.distribution_path(app)
-        self.console.info("Building DMG...", prefix=app.app_name)
-
-        with self.console.wait_bar(f"Building {dist_path.name}..."):
-            dmg_settings = {
-                "files": [os.fsdecode(self.package_path(app))],
-                "symlinks": {"Applications": "/Applications"},
-                "icon_locations": {
-                    self.package_path(app).name: (75, 75),
-                    "Applications": (225, 75),
-                },
-                "window_rect": ((600, 600), (350, 150)),
-                "icon_size": 64,
-                "text_size": 12,
-            }
-
-            try:
-                icon_filename = self.base_path / f"{app.installer_icon}.icns"
-                if not icon_filename.exists():
-                    self.console.warning(
-                        f"Can't find {app.installer_icon}.icns "
-                        "to use as DMG installer icon"
-                    )
-                    raise AttributeError()
-            except AttributeError:
-                # No installer icon specified. Fall back to the app icon
-                if app.icon:
-                    icon_filename = self.base_path / f"{app.icon}.icns"
-                    if not icon_filename.exists():
-                        self.console.warning(
-                            f"Can't find {app.icon}.icns "
-                            "to use as fallback DMG installer icon"
-                        )
-                        icon_filename = None
-                else:
-                    # No app icon specified either
-                    icon_filename = None
-
-            if icon_filename:
-                dmg_settings["icon"] = os.fsdecode(icon_filename)
-
-            try:
-                image_filename = self.base_path / f"{app.installer_background}.png"
-                if image_filename.exists():
-                    dmg_settings["background"] = os.fsdecode(image_filename)
-                else:
-                    self.console.warning(
-                        f"Can't find {app.installer_background}.png "
-                        "to use as DMG background"
-                    )
-            except AttributeError:
-                # No installer background image provided
-                pass
-
-            self.dmgbuild.build_dmg(
-                filename=os.fsdecode(dist_path),
-                volume_name=f"{app.formal_name} {app.version}",
-                settings=dmg_settings,
-            )
-
-        self.sign_file(dist_path, identity=identity)
-
-        if notarize_app:
-            self.console.info(
-                f"Notarizing DMG with team ID {identity.team_id}...",
-                prefix=app.app_name,
-            )
-            self.notarize(app, identity=identity)
+            get_packaging_format(
+                name="zip",
+                platform=self.platform,
+                output_format=self.output_format,
+                command=self,
+            ).finalize_package_zip(app)
