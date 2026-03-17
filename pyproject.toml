@@ -206,9 +206,40 @@ Xcode = "briefcase.platforms.macOS.xcode"
 [project.entry-points."briefcase.formats.web"]
 static = "briefcase.platforms.web.static"
 
+[project.entry-points."briefcase.formats.web.static"]
+zip = "briefcase.formats.web:WebZipPackagingFormat"
+
 [project.entry-points."briefcase.formats.windows"]
 app = "briefcase.platforms.windows.app"
 visualstudio = "briefcase.platforms.windows.visualstudio"
+
+[project.entry-points."briefcase.formats.macOS.app"]
+dmg = "briefcase.formats.macOS:macOSDMGPackagingFormat"
+pkg = "briefcase.formats.macOS:macOSPKGPackagingFormat"
+zip = "briefcase.formats.macOS:macOSZipPackagingFormat"
+
+[project.entry-points."briefcase.formats.windows.app"]
+msi = "briefcase.formats.windows:WindowsMSIPackagingFormat"
+zip = "briefcase.formats.zip:ZipPackagingFormat"
+
+[project.entry-points."briefcase.formats.android.gradle"]
+aab = "briefcase.formats.android:AndroidAABPackagingFormat"
+apk = "briefcase.formats.android:AndroidAPKPackagingFormat"
+debug-apk = "briefcase.formats.android:AndroidDebugAPKPackagingFormat"
+
+[project.entry-points."briefcase.formats.iOS.Xcode"]
+ipa = "briefcase.formats.iOS:iOSIPAPackagingFormat"
+
+[project.entry-points."briefcase.formats.linux.appimage"]
+appimage = "briefcase.formats.linux:LinuxAppImagePackagingFormat"
+
+[project.entry-points."briefcase.formats.linux.flatpak"]
+flatpak = "briefcase.formats.linux:LinuxFlatpakPackagingFormat"
+
+[project.entry-points."briefcase.formats.linux.system"]
+deb = "briefcase.formats.linux:LinuxDebPackagingFormat"
+rpm = "briefcase.formats.linux:LinuxRPMPackagingFormat"
+pkg = "briefcase.formats.linux:LinuxArchPackagingFormat"
 
 [project.entry-points."briefcase.channels.iOS.Xcode"]
 appstore = "briefcase.channels.appstore:AppStorePublicationChannel"

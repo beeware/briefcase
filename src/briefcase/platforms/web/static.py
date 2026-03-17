@@ -34,6 +34,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import AppConfig
+from briefcase.formats import get_packaging_format
 
 # Banner templates (Constants used in write_inserts)
 HTML_BANNER = (
@@ -59,6 +60,9 @@ class StaticWebMixin:
     def project_path(self, app):
         return self.bundle_path(app) / "www"
 
+    def bundle_package_path(self, app):
+        return self.project_path(app)
+
     def binary_path(self, app):
         return self.bundle_path(app) / "www/index.html"
 
@@ -69,7 +73,12 @@ class StaticWebMixin:
         return self.static_path(app) / "wheels"
 
     def distribution_path(self, app):
-        return self.dist_path / f"{app.formal_name}-{app.version}.web.zip"
+        return get_packaging_format(
+            self.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+            command=self,
+        ).distribution_path(app)
 
 
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
@@ -734,31 +743,6 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
 class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
     description = "Package a static web app."
-
-    @property
-    def packaging_formats(self):
-        return ["zip"]
-
-    @property
-    def default_packaging_format(self):
-        return "zip"
-
-    def package_app(self, app: AppConfig, **kwargs):
-        """Package an app for distribution.
-
-        :param app: The app to package.
-        """
-        self.console.info(
-            "Packaging web app for distribution...",
-            prefix=app.app_name,
-        )
-
-        with self.console.wait_bar("Building archive..."):
-            self.tools.shutil.make_archive(
-                self.distribution_path(app).with_suffix(""),
-                format="zip",
-                root_dir=self.project_path(app),
-            )
 
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
