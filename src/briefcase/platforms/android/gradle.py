@@ -84,14 +84,6 @@ class GradleMixin(_MixinBase):
     platform = "android"
     platform_target_version = "0.3.27"
 
-    @property
-    def packaging_formats(self):
-        return ["aab", "apk", "debug-apk"]
-
-    @property
-    def default_packaging_format(self):
-        return "aab"
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -108,14 +100,6 @@ class GradleMixin(_MixinBase):
             / "debug"
             / "app-debug.apk"
         )
-
-    def distribution_path(self, app):
-        extension = {
-            "aab": "aab",
-            "apk": "apk",
-            "debug-apk": "debug.apk",
-        }[app.packaging_format]
-        return self.dist_path / f"{app.formal_name}-{app.version}.{extension}"
 
     def run_gradle(self, app, args: list[SubprocessArgT]):
         # Gradle may install the emulator via the dependency chain build-tools > tools >
@@ -631,35 +615,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create a release artefact from an Android Gradle project."
-
-    def package_app(self, app: AppConfig, **kwargs):
-        """Package the app for distribution.
-
-        This involves building the release app bundle.
-
-        :param app: The application to build
-        """
-        self.console.info(
-            "Building Android App Bundle and APK in release mode...",
-            prefix=app.app_name,
-        )
-        with self.console.wait_bar("Bundling..."):
-            build_type, build_artefact_path = {
-                "aab": ("bundleRelease", "bundle/release/app-release.aab"),
-                "apk": ("assembleRelease", "apk/release/app-release-unsigned.apk"),
-                "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
-            }[app.packaging_format]
-
-            try:
-                self.run_gradle(app, [build_type])
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError("Error while building project.") from e
-
-        # Move artefact to final location.
-        self.tools.shutil.move(
-            self.bundle_path(app) / "app/build/outputs" / build_artefact_path,
-            self.distribution_path(app),
-        )
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):

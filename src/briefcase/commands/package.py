@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import argparse
-from abc import abstractmethod
+import shutil
+from pathlib import Path
 
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.formats import (
+    get_default_packaging_format,
+    get_packaging_format,
+    get_packaging_formats,
+)
 
 from .base import BaseCommand, full_options
 
@@ -19,25 +25,43 @@ class PackageCommand(BaseCommand):
 
     @property
     def packaging_formats(self):
-        return [self.output_format]
+        return sorted(get_packaging_formats(self.platform, self.output_format).keys())
 
     @property
     def default_packaging_format(self):
-        return self.output_format
+        # This is used for the help message and as a default value in add_options.
+        # Since the default can be app-specific, we return None here and resolve
+        # it per-app in _package_app.
+        return None
 
-    @abstractmethod
-    def distribution_path(self, app):
+    def distribution_path(self, app: AppConfig):
         """The path to the distributable artefact for the app.
 
         Requires that the packaging format has been annotated onto the application
-        definition
-
-        This is the single file that should be uploaded for distribution. This may be
-        the binary (if the binary is a self-contained executable); however, if the
-        output format produces an installer, it will be the path to the installer.
+        definition.
 
         :param app: The app config
         """
+        packaging_format = get_packaging_format(
+            name=app.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+            command=self,
+        )
+        return packaging_format.distribution_path(app)
+
+    def archive_app(self, app: AppConfig, path: Path):
+        """Create a zip archive of the app bundle.
+
+        :param app: The app to archive
+        :param path: The path to the archive file to create.
+        """
+        shutil.make_archive(
+            base_name=str(path.with_suffix("")),
+            format="zip",
+            root_dir=self.package_path(app).parent,
+            base_dir=self.package_path(app).name,
+        )
 
     def clean_dist_folder(self, app, **options):
         """Clean up any existing artefacts in the dist folder.
@@ -62,13 +86,19 @@ class PackageCommand(BaseCommand):
 
         :param app: The application to package
         """
-        # Default implementation; nothing to do.
+        packaging_format = get_packaging_format(
+            name=app.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+            command=self,
+        )
+        return packaging_format.package_app(app, **options)
 
     def _package_app(
         self,
         app: AppConfig,
         update: bool,
-        packaging_format: str,
+        packaging_format: str | None = None,
         **options,
     ) -> dict | None:
         """Internal method to invoke packaging on a single app. Ensures the app exists,
@@ -118,6 +148,15 @@ class PackageCommand(BaseCommand):
             state = self.build_command(app, **options)
         else:
             state = None
+
+        # If a packaging format hasn't been specified, negotiate a default.
+        if packaging_format is None:
+            packaging_format = get_default_packaging_format(
+                platform=self.platform,
+                output_format=self.output_format,
+                app=app,
+                command=self,
+            )
 
         # Annotate the packaging format onto the app
         app.packaging_format = packaging_format
