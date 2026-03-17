@@ -4,13 +4,13 @@ import re
 import subprocess
 import uuid
 from collections.abc import Collection
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import TYPE_CHECKING
-from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.formats import get_packaging_format
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 
@@ -70,8 +70,11 @@ class WindowsMixin(_MixinBase):
         return self.package_path(app) / self.package_executable_path(app)
 
     def distribution_path(self, app):
-        suffix = "zip" if app.packaging_format == "zip" else "msi"
-        return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
+        return get_packaging_format(
+            self.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+        )(self).distribution_path(app)
 
     def verify_host(self):
         super().verify_host()
@@ -122,7 +125,7 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def extras_path(self, app: AppConfig) -> Path:
+    def extras_path(self, app: AppConfig):
         """Obtain the path for extra installer content.
 
         Extra installer content is content that needs to be inserted into the installer,
@@ -382,14 +385,6 @@ class WindowsPackageCommand(PackageCommand):
 
     IDENTITY_HELP = "The 40-digit hex checksum of the code signing identity to use"
 
-    @property
-    def packaging_formats(self):
-        return ["msi", "zip"]
-
-    @property
-    def default_packaging_format(self):
-        return "msi"
-
     def verify_tools(self):
         super().verify_tools()
         WiX.verify(tools=self.tools)
@@ -497,115 +492,3 @@ class WindowsPackageCommand(PackageCommand):
             self.tools.subprocess.run(sign_command, check=True)
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(f"Unable to sign {filepath}") from e
-
-    def package_app(
-        self,
-        app: AppConfig,
-        identity: str | None = None,
-        adhoc_sign: bool = False,
-        file_digest: str | None = None,
-        use_local_machine: bool = False,
-        cert_store: str | None = None,
-        timestamp_url: str | None = None,
-        timestamp_digest: str | None = None,
-        **kwargs,
-    ):
-        """Package an application.
-
-        Code signing parameters are ignored if ``sign_app=False``. If a code signing
-        identity is not provided, then ``sign_app=False`` will be enforced.
-
-        :param app: The application to package
-        :param identity: SHA-1 thumbprint of the certificate to use for code signing.
-        :param adhoc_sign: Should the application be signed? Default: ``True``
-        :param file_digest: File hashing algorithm for code signing.
-        :param use_local_machine: True to use cert stores for the Local Machine instead
-            of the Current User; default to False for Current User.
-        :param cert_store: Certificate store within Current User or Local Machine to
-            search for the certificate within.
-        :param timestamp_url: Timestamp authority server to use in code signing.
-        :param timestamp_digest: Hashing algorithm to request from the timestamp server.
-        """
-
-        if adhoc_sign:
-            sign_app = False
-        elif identity:
-            sign_app = True
-        else:
-            sign_app = False
-            self.console.warning("""
-*************************************************************************
-** WARNING: No signing identity provided                               **
-*************************************************************************
-
-    Briefcase will not sign the app. To provide a signing identity,
-    use the `--identity` option; or, to explicitly disable signing,
-    use `--adhoc-sign`.
-
-*************************************************************************
-""")
-
-        if sign_app:
-            self.console.info("Signing App...", prefix=app.app_name)
-            sign_options = {
-                "identity": identity,
-                "file_digest": file_digest,
-                "use_local_machine": use_local_machine,
-                "cert_store": cert_store,
-                "timestamp_url": timestamp_url,
-                "timestamp_digest": timestamp_digest,
-            }
-            self.sign_file(app=app, filepath=self.binary_path(app), **sign_options)
-
-        if app.packaging_format == "zip":
-            self._package_zip(app)
-        else:
-            self._package_msi(app)
-
-            if sign_app:
-                self.console.info("Signing MSI...", prefix=app.app_name)
-                self.sign_file(
-                    app=app,
-                    filepath=self.distribution_path(app),
-                    **sign_options,
-                )
-
-    def _package_msi(self, app):
-        """Build the msi installer."""
-        try:
-            with self.console.wait_bar("Building MSI..."):
-                self.tools.subprocess.run(
-                    [
-                        self.tools.wix.wix_exe,
-                        "build",
-                        "-ext",
-                        self.tools.wix.ext_path("UI"),
-                        "-arch",
-                        "x64",  # Default is x86, regardless of the build machine.
-                        f"{app.app_name}.wxs",
-                        "-loc",
-                        "unicode.wxl",
-                        "-pdbtype",
-                        "none",
-                        "-o",
-                        self.distribution_path(app),
-                    ],
-                    check=True,
-                    cwd=self.bundle_path(app),
-                )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(f"Unable to package app {app.app_name}.") from e
-
-    def _package_zip(self, app):
-        """Package the app as simple zip file."""
-
-        self.console.info("Building zip file...", prefix=app.app_name)
-        with self.console.wait_bar("Packing..."):
-            source = self.package_path(app)
-            zip_root = f"{app.formal_name}-{app.version}"
-
-            with ZipFile(self.distribution_path(app), "w", ZIP_DEFLATED) as archive:
-                for file_path in source.glob("**/*"):
-                    archive.write(
-                        file_path, zip_root / PurePath(file_path).relative_to(source)
-                    )
