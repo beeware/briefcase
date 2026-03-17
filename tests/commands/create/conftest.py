@@ -155,7 +155,7 @@ class TrackingCreateCommand(DummyCreateCommand):
         self.actions.append(("verify-tools",))
 
     def finalize_app_config(self, app):
-        super().finalize_app_config(app=app)
+        app = super().finalize_app_config(app=app)
         self.actions.append(("finalize-app-config", app.app_name))
         return app
 
