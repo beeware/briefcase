@@ -14,6 +14,7 @@ from briefcase.commands import (
 )
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseConfigError
+from briefcase.formats import get_packaging_format
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux import LinuxMixin
 
@@ -35,11 +36,12 @@ class LinuxFlatpakMixin(LinuxMixin):
         return self.bundle_path(app)
 
     def distribution_path(self, app):
-        binary_name = app.formal_name.replace(" ", "_")
-        return (
-            self.dist_path
-            / f"{binary_name}-{app.version}-{self.tools.host_arch}.flatpak"
-        )
+        return get_packaging_format(
+            self.packaging_format,
+            platform=self.platform,
+            output_format=self.output_format,
+            command=self,
+        ).distribution_path(app)
 
     def verify_tools(self):
         """Verify that we're on Linux."""
@@ -243,23 +245,6 @@ class LinuxFlatpakDevCommand(LinuxFlatpakMixin, DevCommand):
 
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
     description = "Package a Linux Flatpak for distribution."
-
-    def package_app(self, app: AppConfig, **kwargs):
-        """Start the application.
-
-        :param app: The config object for the app
-        """
-        self.console.info("Building bundle...", prefix=app.app_name)
-        with self.console.wait_bar("Bundling..."):
-            _, flatpak_repo_url = self.flatpak_runtime_repo(app)
-            self.tools.flatpak.bundle(
-                repo_url=flatpak_repo_url,
-                bundle_identifier=app.bundle_identifier,
-                app_name=app.app_name,
-                version=app.version,
-                build_path=self.bundle_path(app),
-                output_path=self.distribution_path(app),
-            )
 
 
 class LinuxFlatpakPublishCommand(LinuxFlatpakMixin, PublishCommand):
