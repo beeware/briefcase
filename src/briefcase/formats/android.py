@@ -20,6 +20,19 @@ class AndroidPackagingFormat(BasePackagingFormat):
     def distribution_filename(self, app: AppConfig) -> str:
         raise NotImplementedError()
 
+    def _build_android(self, app: AppConfig, build_type: str, build_artefact_path: str):
+        with self.command.console.wait_bar("Bundling..."):
+            try:
+                self.command.run_gradle(app, [build_type])
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Error while building project.") from e
+
+        # Move artefact to final location.
+        self.command.tools.shutil.move(
+            self.command.bundle_path(app) / "app/build/outputs" / build_artefact_path,
+            self.distribution_path(app),
+        )
+
 
 class AndroidAABPackagingFormat(AndroidPackagingFormat):
     @property
@@ -35,19 +48,6 @@ class AndroidAABPackagingFormat(AndroidPackagingFormat):
             prefix=app.app_name,
         )
         self._build_android(app, "bundleRelease", "bundle/release/app-release.aab")
-
-    def _build_android(self, app: AppConfig, build_type: str, build_artefact_path: str):
-        with self.command.console.wait_bar("Bundling..."):
-            try:
-                self.command.run_gradle(app, [build_type])
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError("Error while building project.") from e
-
-        # Move artefact to final location.
-        self.command.tools.shutil.move(
-            self.command.bundle_path(app) / "app/build/outputs" / build_artefact_path,
-            self.distribution_path(app),
-        )
 
     def priority(self, app: AppConfig) -> int:
         return 10
@@ -88,16 +88,3 @@ class AndroidDebugAPKPackagingFormat(AndroidPackagingFormat):
             prefix=app.app_name,
         )
         self._build_android(app, "assembleDebug", "apk/debug/app-debug.apk")
-
-    def _build_android(self, app: AppConfig, build_type: str, build_artefact_path: str):
-        with self.command.console.wait_bar("Bundling..."):
-            try:
-                self.command.run_gradle(app, [build_type])
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError("Error while building project.") from e
-
-        # Move artefact to final location.
-        self.command.tools.shutil.move(
-            self.command.bundle_path(app) / "app/build/outputs" / build_artefact_path,
-            self.distribution_path(app),
-        )

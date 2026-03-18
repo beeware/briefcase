@@ -24,6 +24,23 @@ def get_packaging_formats(
     }
 
 
+def get_all_packaging_formats(
+    platform: str,
+) -> dict[str, type[BasePackagingFormat]]:
+    """Load all built-in and third-party packaging formats for a platform.
+
+    Discovered across all output formats for the platform.
+
+    :param platform: The target platform (e.g., "macOS")
+    :returns: A dict mapping format names to packaging format classes.
+    """
+    formats = {}
+    for ep in entry_points():
+        if ep.group.startswith(f"briefcase.formats.{platform}."):
+            formats[ep.name] = ep.load()
+    return formats
+
+
 def get_packaging_format(
     name: str,
     platform: str,
@@ -39,6 +56,11 @@ def get_packaging_format(
     :returns: An instantiated packaging format.
     """
     formats = get_packaging_formats(platform, output_format)
+    if name not in formats:
+        # Fallback to searching all formats for the platform if it's not
+        # in the current output format.
+        formats = get_all_packaging_formats(platform)
+
     try:
         return formats[name](command=command)
     except KeyError:

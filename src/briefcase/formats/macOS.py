@@ -286,6 +286,14 @@ class macOSZipPackagingFormat(BasePackagingFormat):
         with self.command.console.wait_bar("Packing..."):
             self.command.archive_app(app, self.distribution_path(app))
 
+    def finalize_package_zip(self, app: AppConfig):
+        """Finalize the zip packaging process."""
+        # Build the final archive for distribution
+        with self.command.console.wait_bar(
+            f"Building final distribution archive for {self.command.package_path(app).name}..."  # noqa: E501
+        ):
+            self.command.archive_app(app, self.distribution_path(app))
+
     def priority(self, app: AppConfig) -> int:
         # Zip is a supported format, but never the default
         return 1

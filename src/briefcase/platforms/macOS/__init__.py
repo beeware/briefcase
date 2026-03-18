@@ -1446,15 +1446,12 @@ password:
             )
             self.notarize(app, identity=identity)
         else:
-            self.finalize_package_zip(app)
-
-    def finalize_package_zip(self, app: AppConfig):
-        """Finalize the zip packaging process."""
-        # Build the final archive for distribution
-        with self.console.wait_bar(
-            f"Building final distribution archive for {self.package_path(app).name}..."
-        ):
-            self.ditto_archive(self.package_path(app), self.distribution_path(app))
+            get_packaging_format(
+                name="zip",
+                platform=self.platform,
+                output_format=self.output_format,
+                command=self,
+            ).finalize_package_zip(app)
 
     def package_pkg(
         self,

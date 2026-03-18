@@ -149,8 +149,16 @@ class LinuxSystemMixin(LinuxMixin):
             )
 
     def distribution_path(self, app: AppConfig):
+        # Use the app-specific packaging format if it's been set;
+        # otherwise, use the command-level packaging format.
+        # If neither is set (e.g., during a create command), default to "deb".
+        try:
+            packaging_format = app.packaging_format
+        except AttributeError:
+            packaging_format = getattr(self, "packaging_format", "deb")
+
         return get_packaging_format(
-            self.packaging_format,
+            packaging_format,
             platform=self.platform,
             output_format=self.output_format,
             command=self,

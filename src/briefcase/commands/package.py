@@ -7,9 +7,9 @@ from pathlib import Path
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.formats import (
+    get_all_packaging_formats,
     get_default_packaging_format,
     get_packaging_format,
-    get_packaging_formats,
 )
 
 from .base import BaseCommand, full_options
@@ -25,7 +25,7 @@ class PackageCommand(BaseCommand):
 
     @property
     def packaging_formats(self):
-        return sorted(get_packaging_formats(self.platform, self.output_format).keys())
+        return sorted(get_all_packaging_formats(self.platform).keys())
 
     @property
     def default_packaging_format(self):
