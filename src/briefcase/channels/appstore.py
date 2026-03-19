@@ -7,7 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 if TYPE_CHECKING:
     from briefcase.channels.base import PublishCommandAPI
-    from briefcase.config import AppConfig
+    from briefcase.config import FinalizedAppConfig
 
 
 class AppStorePublicationChannel(BasePublicationChannel):
@@ -17,7 +17,9 @@ class AppStorePublicationChannel(BasePublicationChannel):
     def name(self) -> str:
         return "appstore"
 
-    def publish_app(self, app: AppConfig, command: PublishCommandAPI, **options):
+    def publish_app(
+        self, app: FinalizedAppConfig, command: PublishCommandAPI, **options
+    ):
         raise BriefcaseCommandError(
             "Publishing to the iOS App Store is not yet implemented.\n"
             "\n"

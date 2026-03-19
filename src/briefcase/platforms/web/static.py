@@ -33,7 +33,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 
 # Banner templates (Constants used in write_inserts)
 HTML_BANNER = (
@@ -89,7 +89,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
     def write_inserts(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filename: Path,
         inserts: dict[str, dict[str, str]],
     ):
@@ -192,7 +192,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
     def _append_pyscript_insert(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filename: Path,
         pyscript_version: str,
         inserts: dict[str, dict[str, dict[str, str]]],
@@ -441,7 +441,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
         return pyscript_config, pyscript_version
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the static web deployment for the application.
 
         :param app: The application to build
@@ -627,7 +627,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         host,
         port,
@@ -743,7 +743,7 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
     def default_packaging_format(self):
         return "zip"
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Package an app for distribution.
 
         :param app: The app to package.
@@ -780,7 +780,7 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
         """
         return f"{DevCommand.venv_name.fget(self)}.web"
 
-    def run_dev_app(self, app: AppConfig, **options):
+    def run_dev_app(self, app: FinalizedAppConfig, **options):
         raise UnsupportedCommandError(
             platform="web",
             output_format="static",

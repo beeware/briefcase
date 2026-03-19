@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from briefcase.config import AppConfig
+    from briefcase.config import FinalizedAppConfig
     from briefcase.console import Console
     from briefcase.integrations.base import ToolCache
 
@@ -22,7 +22,7 @@ class PublishCommandAPI(Protocol):
     tools: ToolCache
     dist_path: Path
 
-    def distribution_path(self, app: AppConfig) -> Path: ...
+    def distribution_path(self, app: FinalizedAppConfig) -> Path: ...
 
 
 class BasePublicationChannel(ABC):
@@ -34,7 +34,9 @@ class BasePublicationChannel(ABC):
         """The name of the publication channel."""
 
     @abstractmethod
-    def publish_app(self, app: AppConfig, command: PublishCommandAPI, **options):
+    def publish_app(
+        self, app: FinalizedAppConfig, command: PublishCommandAPI, **options
+    ):
         """Publish an application to this channel.
 
         :param app: The application to publish

@@ -18,7 +18,7 @@ from typing import TypeVar
 
 import psutil
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.console import Console, LogLevel
 from briefcase.exceptions import CommandOutputParseError, ParseError
 from briefcase.integrations.base import Tool, ToolCache
@@ -268,7 +268,9 @@ class NativeAppContext(Tool):
     name = "app_context_subprocess"
 
     @classmethod
-    def verify_install(cls, tools: ToolCache, app: AppConfig, **kwargs) -> Subprocess:
+    def verify_install(
+        cls, tools: ToolCache, app: FinalizedAppConfig, **kwargs
+    ) -> Subprocess:
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available
         if hasattr(tools[app], "app_context"):
