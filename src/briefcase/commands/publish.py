@@ -129,11 +129,11 @@ class PublishCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that all app configurations are finalized.
-        self.finalize(apps=apps_to_publish.values())
+        finalized_apps = self.finalize(apps=apps_to_publish.values())
 
         # Publish all apps to the selected channel.
         state = None
-        for _, app_obj in sorted(apps_to_publish.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._publish_app(
                 app_obj,
                 update=update,

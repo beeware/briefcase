@@ -175,7 +175,7 @@ class LinuxSystemMixin(LinuxMixin):
     def _finalize_target_image(self, app: AppConfig):
         app.target_image = f"{app.target_vendor}:{app.target_codename}"
 
-    def finalize_app_config(self, app: AppConfig):
+    def finalize_app_config(self, app: AppConfig) -> AppConfig:
         """Finalize app configuration.
 
         Linux .deb app configurations are deeper than other platforms, because they need
@@ -240,6 +240,8 @@ class LinuxSystemMixin(LinuxMixin):
         app.python_version_tag = self.app_python_version_tag(app)
 
         self.console.verbose(f"Targeting Python{app.python_version_tag}")
+
+        return app
 
     def _deb_devirtualize(self, package: str) -> str:
         """Convert a debian virtual package into a "real" package.

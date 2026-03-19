@@ -92,7 +92,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         self.use_docker = command.use_docker
         self.extra_docker_build_args = command.extra_docker_build_args
 
-    def finalize_app_config(self, app: AppConfig):
+    def finalize_app_config(self, app: AppConfig) -> AppConfig:
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
             self.console.warning("""\
@@ -122,6 +122,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
 *************************************************************************
 """)
+        return app
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):

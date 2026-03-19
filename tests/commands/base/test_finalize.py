@@ -42,7 +42,7 @@ def base_command(dummy_console, tmp_path, first_app, second_app):
 
 def test_finalize_all(base_command, first_app, second_app):
     "A call to finalize verifies host, tools, and finalized all app configs"
-    base_command.finalize(apps=base_command.apps.values())
+    result = base_command.finalize(apps=base_command.apps.values())
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -60,10 +60,13 @@ def test_finalize_all(base_command, first_app, second_app):
     assert not hasattr(first_app, "__draft__")
     assert not hasattr(second_app, "__draft__")
 
+    # Returned dict maps app names to the finalized apps
+    assert result == {"first": first_app, "second": second_app}
+
 
 def test_finalize_single(base_command, first_app, second_app):
     "A call to finalize verifies host, tools, and finalizes a single app config"
-    base_command.finalize(apps=[first_app])
+    result = base_command.finalize(apps=[first_app])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -79,6 +82,9 @@ def test_finalize_single(base_command, first_app, second_app):
     assert not hasattr(first_app, "__draft__")
     assert hasattr(second_app, "__draft__")
 
+    # Returned dict contains only the finalized app
+    assert result == {"first": first_app}
+
 
 def test_finalize_all_repeat(base_command, first_app, second_app):
     """Multiple calls to finalize verifies host & tools multiple times, but only once on
@@ -87,8 +93,8 @@ def test_finalize_all_repeat(base_command, first_app, second_app):
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app configs, each command will
     # have it's own tools verified.
-    base_command.finalize(apps=base_command.apps.values())
-    base_command.finalize(apps=base_command.apps.values())
+    result1 = base_command.finalize(apps=base_command.apps.values())
+    result2 = base_command.finalize(apps=base_command.apps.values())
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -109,6 +115,10 @@ def test_finalize_all_repeat(base_command, first_app, second_app):
     # Apps are no longer in draft mode
     assert not hasattr(first_app, "__draft__")
     assert not hasattr(second_app, "__draft__")
+
+    # Both calls return the same apps
+    assert result1 == {"first": first_app, "second": second_app}
+    assert result2 == {"first": first_app, "second": second_app}
 
 
 def test_finalize_single_repeat(base_command, first_app, second_app):
@@ -119,8 +129,8 @@ def test_finalize_single_repeat(base_command, first_app, second_app):
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app config, each command will
     # have it's own tools verified.
-    base_command.finalize(apps=[first_app])
-    base_command.finalize(apps=[first_app])
+    result1 = base_command.finalize(apps=[first_app])
+    result2 = base_command.finalize(apps=[first_app])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -139,6 +149,10 @@ def test_finalize_single_repeat(base_command, first_app, second_app):
     # First app is no longer in draft mode; second is
     assert not hasattr(first_app, "__draft__")
     assert hasattr(second_app, "__draft__")
+
+    # Both calls return the same single app
+    assert result1 == {"first": first_app}
+    assert result2 == {"first": first_app}
 
 
 def test_external_and_internal(base_command, first_app):
