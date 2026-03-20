@@ -17,7 +17,7 @@ else:  # pragma: no-cover-if-gte-py311
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
-from .constants import MIME_TYPES, RESERVED_WORDS
+from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
@@ -160,11 +160,11 @@ def validate_document_type_config(app_name, document_type_id, document_type):
                 f"{document_type_id!r} is not a string."
             )
         try:
-            main_type, _ = mime_type.split("/")
-            if main_type not in MIME_TYPES:
+            registry, _ = mime_type.split("/")
+            if registry not in MIME_TYPE_REGISTRIES:
                 raise BriefcaseConfigError(
                     f"The MIME type {mime_type!r} for document type "
-                    f"{document_type_id!r} uses an invalid registry {main_type!r}."
+                    f"{document_type_id!r} uses an invalid registry {registry!r}."
                 )
         except ValueError:
             raise BriefcaseConfigError(

@@ -222,18 +222,24 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
         (1, r"The MIME type associated with document type 'ext' is not a string\."),
         (
             "not-a-mime-type",
-            r"The MIME type 'not-a-mime-type' for document type 'ext' "
-            r"is not in 'type/subtype' format\.",
+            (
+                r"The MIME type 'not-a-mime-type' for document type 'ext' "
+                r"is not in 'type/subtype' format\."
+            ),
         ),
         (
             "invalid/registry/extra",
-            r"The MIME type 'invalid/registry/extra' for document type 'ext' "
-            r"is not in 'type/subtype' format\.",
+            (
+                r"The MIME type 'invalid/registry/extra' for document type 'ext' "
+                r"is not in 'type/subtype' format\."
+            ),
         ),
         (
             "custom/type",
-            r"The MIME type 'custom/type' for document type 'ext' "
-            r"uses an invalid registry 'custom'\.",
+            (
+                r"The MIME type 'custom/type' for document type 'ext' "
+                r"uses an invalid registry 'custom'\."
+            ),
         ),
     ],
 )

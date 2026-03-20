@@ -382,7 +382,7 @@ RESERVED_WORDS = set.union(
 
 # Valid MIME type registries
 # https://www.iana.org/assignments/media-types/media-types.xhtml
-MIME_TYPES = {
+MIME_TYPE_REGISTRIES = {
     "application",
     "audio",
     "example",
