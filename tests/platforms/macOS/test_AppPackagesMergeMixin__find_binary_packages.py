@@ -85,6 +85,14 @@ def test_find_binary_packages(dummy_command, tmp_path):
         version="3.4.11",
         tag=["macOS_11_x86_64", "macOS_11_universal2"],
     )
+    # A package that is tagged binary, but marked Root-Is-Purelib (#2753)
+    create_installed_package(
+        tmp_path / "app-packages",
+        "binary-pure-package",
+        version="4.5.1",
+        tag=["macOS_11_arm64"],
+        pure=True,
+    )
 
     binary_packages = dummy_command.find_binary_packages(
         tmp_path / "app-packages",
@@ -98,6 +106,7 @@ def test_find_binary_packages(dummy_command, tmp_path):
         ("binary-package-1", "3.4.5"),
         ("binary-package-2", "3.4.6"),
         ("multi-tagged-binary-package-3", "3.4.9"),
+        ("binary-pure-package", "4.5.1"),
     }
 
 

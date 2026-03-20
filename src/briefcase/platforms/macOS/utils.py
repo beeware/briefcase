@@ -89,11 +89,14 @@ class AppPackagesMergeMixin(_MixinBase):
             # for the wheel.
             with (distinfo / "WHEEL").open("r", encoding="utf-8") as f:
                 wheel_data = email.message_from_string(f.read())
-                is_purelib = wheel_data.get("Root-Is-Purelib", "false") == "true"
                 tags = wheel_data.get_all("Tag")
 
-            # If the wheel is pure, it's not a binary package
-            if is_purelib:
+            # If the wheel is tagged `*-*-any`, it's not a binary package. We can't rely
+            # on Root-Is-Purelib in the wheel metadata. The flag isn't used correctly in
+            # some edge cases; and a library whose root is "pure" is allowed to contain
+            # `.data/platlib` content, which functionally renders it non-pure for our
+            # purposes.
+            if any(tag.endswith("-any") for tag in tags):
                 continue
 
             # If the tag ends with the universal tag, the binary package can be used on
