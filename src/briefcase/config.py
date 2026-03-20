@@ -432,9 +432,6 @@ class AppConfig(BaseConfig):
     ):
         super().__init__(**kwargs)
 
-        # All app configs are created in unfinalized draft form.
-        self.__draft__ = True
-
         self.app_name = app_name
         self.version = version
         self.bundle = bundle.lower()
@@ -470,8 +467,8 @@ class AppConfig(BaseConfig):
         self.test_mode: bool = False
 
         self.debugger: BaseDebugger | None = None
-        self.debugger_host: str | None = None  # only for run command
-        self.debugger_port: int | None = None  # only for run command
+        self.debugger_host: str | None = None
+        self.debugger_port: int | None = None
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -535,6 +532,14 @@ class AppConfig(BaseConfig):
 
     def __repr__(self):
         return f"<{self.bundle_identifier} v{self.version} AppConfig>"
+
+    def __eq__(self, other):
+        if isinstance(other, AppConfig):
+            return self.app_name == other.app_name
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.app_name)
 
     @property
     def module_name(self):
@@ -615,6 +620,30 @@ class AppConfig(BaseConfig):
             return f"tests.{self.module_name}"
         else:
             return self.module_name
+
+
+class FinalizedAppConfig(AppConfig):
+    """An AppConfig that has been through platform finalization.
+
+    Constructed by ``finalize_app_config()``; holds runtime attributes
+    (``test_mode``, ``debugger``, etc.) that are not part of the parsed
+    project configuration.
+    """
+
+    def __init__(
+        self,
+        app: AppConfig,
+        *,
+        test_mode: bool = False,
+        debugger: BaseDebugger | None = None,
+        debugger_host: str | None = None,
+        debugger_port: int | None = None,
+    ):
+        self.__dict__.update(app.__dict__)
+        self.test_mode = test_mode
+        self.debugger = debugger
+        self.debugger_host = debugger_host
+        self.debugger_port = debugger_port
 
 
 def merge_config(config, data):
