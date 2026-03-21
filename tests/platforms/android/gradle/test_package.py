@@ -16,10 +16,10 @@ def test_adhoc_sign_help(package_command):
     assert "unsigned" in package_command.ADHOC_SIGN_HELP.lower()
 
 
-def test_identity_help(package_command):
-    """IDENTITY_HELP is overridden from the base class placeholder."""
-    assert package_command.IDENTITY_HELP != "Ignored; signing is not supported"
-    assert "keystore" in package_command.IDENTITY_HELP.lower()
+def test_keystore_help(package_command):
+    """KEYSTORE_HELP is overridden from the base class placeholder."""
+    assert package_command.KEYSTORE_HELP != "Ignored; signing is not supported"
+    assert "keystore" in package_command.KEYSTORE_HELP.lower()
 
 
 def test_add_options(package_command):
@@ -35,7 +35,7 @@ def test_add_options(package_command):
 
     args = parser.parse_args(
         [
-            "--keystore-alias",
+            "--key-alias",
             "mykey",
             "--keystore-password",
             "storepass",
@@ -44,7 +44,7 @@ def test_add_options(package_command):
         ]
     )
 
-    assert args.keystore_alias == "mykey"
+    assert args.key_alias == "mykey"
     assert args.keystore_password == "storepass"
     assert args.key_password == "keypass"
 
@@ -60,6 +60,6 @@ def test_add_options_defaults(package_command):
 
     args = parser.parse_args([])
 
-    assert args.keystore_alias is None
+    assert args.key_alias is None
     assert args.keystore_password is None
     assert args.key_password is None

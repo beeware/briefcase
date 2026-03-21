@@ -158,7 +158,7 @@ def test_execute_gradle_signed(
     package_command.tools.android_sdk.signing.select_keystore.return_value = (
         AndroidSigningConfig(
             keystore_path=keystore_path,
-            alias="mykey",
+            key_alias="mykey",
             store_password="storepass",
             key_password="keypass",
         )
@@ -166,8 +166,8 @@ def test_execute_gradle_signed(
 
     package_command.package_app(
         first_app_aab,
-        identity=str(keystore_path),
-        keystore_alias="mykey",
+        keystore=str(keystore_path),
+        key_alias="mykey",
         keystore_password="storepass",
         key_password="keypass",
     )

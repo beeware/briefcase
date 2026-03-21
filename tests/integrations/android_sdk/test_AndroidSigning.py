@@ -25,22 +25,24 @@ def test_keytool_path_windows(signing, mock_tools):
 
 
 def test_keystore_candidates_none(signing, tmp_path):
-    """No candidates when there are no .jks files in the search paths."""
+    """No candidates when there are no .p12 or .jks files in the search paths."""
     candidates = signing._keystore_candidates(tmp_path)
     assert candidates == []
 
 
 def test_keystore_candidates_project_root(signing, tmp_path):
-    """Finds .jks files in the project root."""
-    ks = tmp_path / "my.jks"
-    ks.touch()
+    """Finds .p12 and .jks files in the project root."""
+    ks1 = tmp_path / "a.jks"
+    ks1.touch()
+    ks2 = tmp_path / "z.p12"
+    ks2.touch()
     candidates = signing._keystore_candidates(tmp_path)
-    assert candidates == [ks]
+    assert candidates == [ks1, ks2]
 
 
 def test_keystore_candidates_dot_android(signing, tmp_path):
-    """Finds .jks files in the .android subfolder of the project root."""
-    ks = tmp_path / ".android" / "release.jks"
+    """Finds .p12 and .jks files in the .android subfolder of the project root."""
+    ks = tmp_path / ".android" / "release.p12"
     ks.parent.mkdir(parents=True, exist_ok=True)
     ks.touch()
     candidates = signing._keystore_candidates(tmp_path)
@@ -48,10 +50,10 @@ def test_keystore_candidates_dot_android(signing, tmp_path):
 
 
 def test_keystore_candidates_home_android(signing, tmp_path, mock_tools):
-    """Finds .jks files in the home .android folder."""
+    """Finds .p12 and .jks files in the home .android folder."""
     home_android = tmp_path / "home" / ".android"
     home_android.mkdir(parents=True)
-    ks = home_android / "debug.jks"
+    ks = home_android / "debug.p12"
     ks.touch()
     mock_tools.home_path = tmp_path / "home"
     candidates = signing._keystore_candidates(tmp_path / "app")
@@ -62,10 +64,10 @@ def test_keystore_candidates_sorted_within_dir(signing, tmp_path):
     """Candidates within a directory are sorted alphabetically."""
     android_dir = tmp_path / ".android"
     android_dir.mkdir(parents=True)
-    (android_dir / "z.jks").touch()
-    (android_dir / "a.jks").touch()
+    (android_dir / "z.p12").touch()
+    (android_dir / "a.p12").touch()
     candidates = signing._keystore_candidates(tmp_path)
-    assert [p.name for p in candidates] == ["a.jks", "z.jks"]
+    assert [p.name for p in candidates] == ["a.p12", "z.p12"]
 
 
 def test_create_keystore(signing, first_app_config, tmp_path, mock_tools):
@@ -75,17 +77,16 @@ def test_create_keystore(signing, first_app_config, tmp_path, mock_tools):
     config = signing.create_keystore(
         first_app_config,
         base_path=tmp_path,
-        keystore_alias="mykey",
+        key_alias="mykey",
         store_password="storepass",
-        key_password="keypass",
     )
 
-    expected_path = tmp_path / ".android" / "com.example.first-app.jks"
+    expected_path = tmp_path / ".android" / "com.example.first-app.p12"
     assert config == AndroidSigningConfig(
         keystore_path=expected_path,
-        alias="mykey",
+        key_alias="mykey",
         store_password="storepass",
-        key_password="keypass",
+        key_password="storepass",
     )
     assert expected_path.parent.exists()
 
@@ -96,6 +97,8 @@ def test_create_keystore(signing, first_app_config, tmp_path, mock_tools):
             "-v",
             "-keystore",
             str(expected_path),
+            "-storetype",
+            "PKCS12",
             "-alias",
             "mykey",
             "-keyalg",
@@ -107,7 +110,7 @@ def test_create_keystore(signing, first_app_config, tmp_path, mock_tools):
             "-storepass",
             "storepass",
             "-keypass",
-            "keypass",
+            "storepass",
             "-dname",
             "CN=First App, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown",
         ],
@@ -125,7 +128,7 @@ def test_create_keystore_key_password_defaults_to_store_password(
     config = signing.create_keystore(
         first_app_config,
         base_path=tmp_path,
-        keystore_alias="mykey",
+        key_alias="mykey",
         store_password="storepass",
     )
 
@@ -135,22 +138,21 @@ def test_create_keystore_key_password_defaults_to_store_password(
 def test_create_keystore_prompts_for_alias(
     signing, first_app_config, tmp_path, mock_tools
 ):
-    """When keystore_alias is None the user is prompted."""
+    """When key_alias is None the user is prompted."""
     mock_tools.host_os = "Linux"
     mock_tools.console.text_question = MagicMock(
         side_effect=[
             "prompted-alias",
             "storepass",
-            "keypass",
         ]
     )
 
     config = signing.create_keystore(first_app_config, base_path=tmp_path)
 
-    assert mock_tools.console.text_question.call_count == 3
-    assert config.alias == "prompted-alias"
+    assert mock_tools.console.text_question.call_count == 2
+    assert config.key_alias == "prompted-alias"
     assert config.store_password == "storepass"
-    assert config.key_password == "keypass"
+    assert config.key_password == "storepass"
 
 
 def test_create_keystore_prompts_for_password(
@@ -163,7 +165,7 @@ def test_create_keystore_prompts_for_password(
     config = signing.create_keystore(
         first_app_config,
         base_path=tmp_path,
-        keystore_alias="mykey",
+        key_alias="mykey",
     )
 
     mock_tools.console.text_question.assert_called()
@@ -182,7 +184,7 @@ def test_create_keystore_keytool_error(signing, first_app_config, tmp_path, mock
         signing.create_keystore(
             first_app_config,
             base_path=tmp_path,
-            keystore_alias="mykey",
+            key_alias="mykey",
             store_password="storepass",
             key_password="keypass",
         )
@@ -196,15 +198,15 @@ def test_select_keystore_identity_provided(signing, first_app_config, tmp_path):
     config = signing.select_keystore(
         first_app_config,
         base_path=tmp_path,
-        identity=str(ks),
-        keystore_alias="mykey",
+        keystore=str(ks),
+        key_alias="mykey",
         keystore_password="storepass",
         key_password="keypass",
     )
 
     assert config == AndroidSigningConfig(
         keystore_path=ks,
-        alias="mykey",
+        key_alias="mykey",
         store_password="storepass",
         key_password="keypass",
     )
@@ -220,8 +222,8 @@ def test_select_keystore_identity_key_password_defaults(
     config = signing.select_keystore(
         first_app_config,
         base_path=tmp_path,
-        identity=str(ks),
-        keystore_alias="mykey",
+        keystore=str(ks),
+        key_alias="mykey",
         keystore_password="storepass",
     )
 
@@ -234,7 +236,7 @@ def test_select_keystore_identity_missing_file(signing, first_app_config, tmp_pa
         signing.select_keystore(
             first_app_config,
             base_path=tmp_path,
-            identity=str(tmp_path / "missing.jks"),
+            keystore=str(tmp_path / "missing.jks"),
         )
 
 
@@ -251,11 +253,11 @@ def test_select_keystore_identity_prompts_for_alias(
     config = signing.select_keystore(
         first_app_config,
         base_path=tmp_path,
-        identity=str(ks),
+        keystore=str(ks),
     )
 
     assert mock_tools.console.text_question.call_count == 2
-    assert config.alias == "prompted-alias"
+    assert config.key_alias == "prompted-alias"
     assert config.store_password == "storepass"
 
 
@@ -270,8 +272,8 @@ def test_select_keystore_identity_prompts_for_password(
     config = signing.select_keystore(
         first_app_config,
         base_path=tmp_path,
-        identity=str(ks),
-        keystore_alias="mykey",
+        keystore=str(ks),
+        key_alias="mykey",
     )
 
     mock_tools.console.text_question.assert_called_once()
@@ -288,7 +290,7 @@ def test_select_keystore_no_candidates_create_new(
     signing.create_keystore = MagicMock(
         return_value=AndroidSigningConfig(
             keystore_path=tmp_path / "new.jks",
-            alias="mykey",
+            key_alias="mykey",
             store_password="pass",
             key_password="pass",
         )
@@ -297,7 +299,7 @@ def test_select_keystore_no_candidates_create_new(
     config = signing.select_keystore(
         first_app_config,
         base_path=tmp_path,
-        keystore_alias="mykey",
+        key_alias="mykey",
         keystore_password="pass",
         key_password="pass",
     )
@@ -310,7 +312,7 @@ def test_select_keystore_no_candidates_create_new(
     signing.create_keystore.assert_called_once_with(
         first_app_config,
         base_path=tmp_path,
-        keystore_alias="mykey",
+        key_alias="mykey",
         store_password="pass",
         key_password="pass",
     )
@@ -336,7 +338,7 @@ def test_select_keystore_with_candidates_shown(
     assert str(ks) in options
 
     assert config.keystore_path == ks
-    assert config.alias == "mykey"
+    assert config.key_alias == "mykey"
     assert config.store_password == "storepass"
 
 
@@ -354,6 +356,6 @@ def test_select_keystore_select_existing_prompts_alias_and_password(
     config = signing.select_keystore(first_app_config, base_path=tmp_path)
 
     assert mock_tools.console.text_question.call_count == 2
-    assert config.alias == "myalias"
+    assert config.key_alias == "myalias"
     assert config.store_password == "mypassword"
     assert config.key_password == "mypassword"

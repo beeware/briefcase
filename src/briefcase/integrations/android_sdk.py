@@ -1425,7 +1425,7 @@ run Briefcase again. The running emulator can then be selected from the list.
 @dataclass
 class AndroidSigningConfig:
     keystore_path: Path
-    alias: str
+    key_alias: str
     store_password: str
     key_password: str
 
@@ -1455,6 +1455,7 @@ class AndroidSigning:
         candidates = []
         for search_path in search_paths:
             if search_path.is_dir():
+                candidates.extend(sorted(search_path.glob("*.p12")))
                 candidates.extend(sorted(search_path.glob("*.jks")))
         return sorted(set(candidates))
 
@@ -1462,7 +1463,7 @@ class AndroidSigning:
         self,
         app: Any,
         base_path: Path,
-        keystore_alias: str | None = None,
+        key_alias: str | None = None,
         store_password: str | None = None,
         key_password: str | None = None,
     ) -> AndroidSigningConfig:
@@ -1472,18 +1473,17 @@ class AndroidSigning:
 
         :param app: The app being packaged
         :param base_path: The project base path
-        :param keystore_alias: The key alias; prompted if not provided
+        :param key_alias: The key alias; prompted if not provided
         :param store_password: The keystore password; prompted if not provided
-        :param key_password: The key password; defaults to store_password
         :returns: An AndroidSigningConfig for the new keystore
         """
-        keystore_path = base_path / ".android" / f"{app.bundle_identifier}.jks"
+        keystore_path = base_path / ".android" / f"{app.bundle_identifier}.p12"
 
-        if keystore_alias is None:
-            keystore_alias = self.tools.console.text_question(
+        if key_alias is None:
+            key_alias = self.tools.console.text_question(
                 description="Key alias",
                 intro="Enter an alias for the signing key.",
-                default=app.app_name,
+                default="mykey",
             )
 
         if store_password is None:
@@ -1492,17 +1492,16 @@ class AndroidSigning:
                 intro="Enter a password for the keystore.",
             )
 
-        if key_password is None:
-            key_password = self.tools.console.text_question(
-                description="Key password",
-                intro="Enter a password for the signing key.",
-                default=store_password,
-            )
+        # PKCS12 keystores created by keytool must have the same password for
+        # the keystore and the key.
+        key_password = store_password
 
         keystore_path.parent.mkdir(parents=True, exist_ok=True)
 
         with self.tools.console.wait_bar("Creating keystore..."):
             try:
+                # Based on the documentation for signing at
+                # https://developer.android.com/build/building-cmdline#sign_cmdline
                 self.tools.subprocess.run(
                     [
                         self._keytool,
@@ -1510,8 +1509,10 @@ class AndroidSigning:
                         "-v",
                         "-keystore",
                         str(keystore_path),
+                        "-storetype",
+                        "PKCS12",
                         "-alias",
-                        keystore_alias,
+                        key_alias,
                         "-keyalg",
                         "RSA",
                         "-keysize",
@@ -1540,17 +1541,17 @@ A new keystore has been created at:
     {keystore_path}
 
 Keep this file secure and backed up. If you lose it, you will not be able to
-publish updates to this app on the Play Store.
+publish updates to this app.
 
 In future, you can reuse this keystore by running:
 
-    $ briefcase package android --identity {keystore_path}
+    $ briefcase package android --keystore {keystore_path}
 
 """
         )
         return AndroidSigningConfig(
             keystore_path=keystore_path,
-            alias=keystore_alias,
+            key_alias=key_alias,
             store_password=store_password,
             key_password=key_password,
         )
@@ -1559,30 +1560,30 @@ In future, you can reuse this keystore by running:
         self,
         app: Any,
         base_path: Path,
-        identity: str | None = None,
-        keystore_alias: str | None = None,
+        keystore: str | None = None,
+        key_alias: str | None = None,
         keystore_password: str | None = None,
         key_password: str | None = None,
     ) -> AndroidSigningConfig:
         """Select or create a keystore for signing.
 
-        If ``identity`` is provided it is treated as a path to a .jks keystore
+        If ``keystore`` is provided it is treated as a path to a .jks keystore
         file.  Otherwise keystores are discovered from standard locations and
         the user is prompted to select one or create a new one.
 
         :param app: The app being packaged
         :param base_path: The project base path
-        :param identity: Path to a keystore file, or None to discover/create
-        :param keystore_alias: The key alias; prompted if not provided
+        :param keystore: Path to a keystore file, or None to discover/create
+        :param key_alias: The key alias; prompted if not provided
         :param keystore_password: The keystore password; prompted if not provided
         :param key_password: The key password; defaults to keystore_password
         :returns: An AndroidSigningConfig for the selected keystore
         """
-        if identity is not None:
-            keystore_path = Path(identity)
+        if keystore is not None:
+            keystore_path = Path(keystore)
             if not keystore_path.exists():
                 raise BriefcaseCommandError(
-                    f"Keystore file {str(identity)!r} does not exist."
+                    f"Keystore file {str(keystore)!r} does not exist."
                 )
         else:
             candidates = self._keystore_candidates(base_path)
@@ -1602,18 +1603,18 @@ In future, you can reuse this keystore by running:
                 return self.create_keystore(
                     app,
                     base_path=base_path,
-                    keystore_alias=keystore_alias,
+                    key_alias=key_alias,
                     store_password=keystore_password,
                     key_password=key_password,
                 )
 
             keystore_path = Path(selection)
 
-        if keystore_alias is None:
-            keystore_alias = self.tools.console.text_question(
+        if key_alias is None:
+            key_alias = self.tools.console.text_question(
                 description="Key alias",
                 intro="Enter the alias of the signing key in the keystore.",
-                default=app.app_name,
+                default="mykey",
             )
 
         if keystore_password is None:
@@ -1627,7 +1628,7 @@ In future, you can reuse this keystore by running:
 
         return AndroidSigningConfig(
             keystore_path=keystore_path,
-            alias=keystore_alias,
+            key_alias=key_alias,
             store_password=keystore_password,
             key_password=key_password,
         )

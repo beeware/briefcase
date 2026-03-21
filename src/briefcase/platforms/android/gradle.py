@@ -624,14 +624,14 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create a release artefact from an Android Gradle project."
 
     ADHOC_SIGN_HELP = "Create an unsigned release artefact"
-    IDENTITY_HELP = "The path to a .jks keystore file to use for signing"
+    KEYSTORE_HELP = "The path to a .jks keystore file to use for signing"
 
     def add_options(self, parser):
         super().add_options(parser)
 
         parser.add_argument(
-            "--keystore-alias",
-            dest="keystore_alias",
+            "--key-alias",
+            dest="key_alias",
             help="The alias of the signing key in the keystore",
             required=False,
         )
@@ -655,8 +655,8 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
         self,
         app: AppConfig,
         adhoc_sign: bool = False,
-        identity: str | None = None,
-        keystore_alias: str | None = None,
+        keystore: str | None = None,
+        key_alias: str | None = None,
         keystore_password: str | None = None,
         key_password: str | None = None,
         **kwargs,
@@ -667,8 +667,8 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         :param app: The application to build
         :param adhoc_sign: If True, produce an unsigned artefact
-        :param identity: Path to a .jks keystore file
-        :param keystore_alias: The alias of the signing key in the keystore
+        :param keystore: Path to a keystore file
+        :param key_alias: The alias of the signing key in the keystore
         :param keystore_password: The keystore password
         :param key_password: The key password (defaults to keystore_password)
         """
@@ -679,7 +679,14 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         build_type, build_artefact_path = {
             "aab": ("bundleRelease", "bundle/release/app-release.aab"),
-            "apk": ("assembleRelease", "apk/release/app-release-unsigned.apk"),
+            "apk": (
+                "assembleRelease",
+                (
+                    "apk/release/app-release.apk"
+                    if keystore or not adhoc_sign
+                    else "apk/release/app-release-unsigned.apk"
+                ),
+            ),
             "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
         }[app.packaging_format]
 
@@ -687,13 +694,20 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
         extra_gradle = getattr(app, "build_gradle_extra_content", "") or ""
         if "signingConfig" in extra_gradle:
-            if identity is not None:
+            if any(
+                [
+                    keystore is not None,
+                    key_alias is not None,
+                    keystore_password is not None,
+                    key_password is not None,
+                ]
+            ):
                 raise BriefcaseCommandError(
-                    "Cannot use --identity when build_gradle_extra_content already "
-                    "configures signing.\n\n"
+                    "Cannot use signing options when build_gradle_extra_content "
+                    "already configures signing.\n\n"
                     "Remove the signingConfig block from build_gradle_extra_content "
-                    "and use --identity instead, or remove --identity to let the "
-                    "existing Gradle signing configuration be used."
+                    "and use command-line options instead, or remove the signing "
+                    "options to let the existing Gradle signing configuration be used."
                 )
             if not adhoc_sign:
                 self.console.warning("""
@@ -703,25 +717,41 @@ Briefcase will use that signing configuration.
 For better security, consider removing the signing block from
 build_gradle_extra_content and using briefcase's built-in signing instead:
 
-    $ briefcase package android --identity /path/to/keystore.jks
+    $ briefcase package android --keystore /path/to/keystore.p12
 
 """)
                 adhoc_sign = True
 
-        if app.packaging_format != "debug-apk" and not adhoc_sign:
-            with self.console.wait_bar("Selecting signing credentials..."):
+        if not adhoc_sign:
+            # If the app is being built as a debug APK, and no signing
+            # credentials have been provided, default to using the Android
+            # SDK's default debug signing key.
+            if app.packaging_format == "debug-apk" and not any(
+                [keystore, key_alias, keystore_password, key_password]
+            ):
+                signing_config = None
+            else:
                 signing_config = self.tools.android_sdk.signing.select_keystore(
                     app,
                     base_path=self.base_path,
-                    identity=identity,
-                    keystore_alias=keystore_alias,
+                    keystore=keystore,
+                    key_alias=key_alias,
                     keystore_password=keystore_password,
                     key_password=key_password,
                 )
+        else:
+            signing_config = None
+
+        if signing_config:
+            # These properties are the way in which Android Studio passes signing
+            # settings to Gradle when building from the GUI. While they are not
+            # officially documented, they have been stable for a long time.
+            # See https://developer.android.com/build/building-cmdline#sign_cmdline
+            # for more information.
             gradle_args += [
                 f"-Pandroid.injected.signing.store.file={signing_config.keystore_path!s}",
                 f"-Pandroid.injected.signing.store.password={signing_config.store_password}",
-                f"-Pandroid.injected.signing.key.alias={signing_config.alias}",
+                f"-Pandroid.injected.signing.key.alias={signing_config.key_alias}",
                 f"-Pandroid.injected.signing.key.password={signing_config.key_password}",
             ]
 

@@ -65,22 +65,30 @@ android {
     assert not any("-Pandroid.injected.signing" in str(a) for a in call_args)
 
 
-def test_package_app_extra_content_signing_with_identity_raises(
+def test_package_app_extra_content_signing_with_options_raises(
     package_command, first_app_aab, tmp_path
 ):
-    """Passing --identity alongside build_gradle_extra_content signing raises an
+    """Passing signing options alongside build_gradle_extra_content signing raises an
     error."""
     first_app_aab.build_gradle_extra_content = "signingConfig signingConfigs.release"
-    keystore = tmp_path / "my.jks"
+    keystore = tmp_path / "my.p12"
     keystore.touch()
 
-    with pytest.raises(BriefcaseCommandError, match="Cannot use --identity"):
-        package_command.package_app(first_app_aab, identity=str(keystore))
+    with pytest.raises(BriefcaseCommandError, match="Cannot use signing options"):
+        package_command.package_app(first_app_aab, keystore=str(keystore))
 
 
-def test_debug_apk_skips_signing(package_command, first_app_debug_apk, tmp_path):
-    """Debug-apk format never calls select_keystore, even without --adhoc-sign."""
-    package_command.tools.android_sdk.signing.select_keystore = MagicMock()
+def test_debug_apk_is_signable(package_command, first_app_debug_apk, tmp_path):
+    """Debug-apk format calls select_keystore if not adhoc."""
+    signing_config = AndroidSigningConfig(
+        keystore_path=tmp_path / "my.p12",
+        key_alias="mykey",
+        store_password="storepass",
+        key_password="storepass",
+    )
+    package_command.tools.android_sdk.signing.select_keystore = MagicMock(
+        return_value=signing_config
+    )
 
     def create_bundle(*args, **kwargs):
         create_file(
@@ -100,9 +108,19 @@ def test_debug_apk_skips_signing(package_command, first_app_debug_apk, tmp_path)
         )
 
     package_command.tools.subprocess.run.side_effect = create_bundle
-    package_command.package_app(first_app_debug_apk)
+    package_command.package_app(
+        first_app_debug_apk,
+        keystore=str(tmp_path / "my.p12"),
+    )
 
-    package_command.tools.android_sdk.signing.select_keystore.assert_not_called()
+    package_command.tools.android_sdk.signing.select_keystore.assert_called_once_with(
+        first_app_debug_apk,
+        base_path=package_command.base_path,
+        keystore=str(tmp_path / "my.p12"),
+        key_alias=None,
+        keystore_password=None,
+        key_password=None,
+    )
 
 
 def test_package_app_calls_select_keystore_for_release(
@@ -110,10 +128,10 @@ def test_package_app_calls_select_keystore_for_release(
 ):
     """package_app calls select_keystore for release formats when not adhoc."""
     signing_config = AndroidSigningConfig(
-        keystore_path=tmp_path / "my.jks",
-        alias="mykey",
+        keystore_path=tmp_path / "my.p12",
+        key_alias="mykey",
         store_password="storepass",
-        key_password="keypass",
+        key_password="storepass",
     )
     package_command.tools.android_sdk.signing.select_keystore = MagicMock(
         return_value=signing_config
@@ -142,8 +160,8 @@ def test_package_app_calls_select_keystore_for_release(
     package_command.tools.android_sdk.signing.select_keystore.assert_called_once_with(
         first_app_aab,
         base_path=package_command.base_path,
-        identity=None,
-        keystore_alias=None,
+        keystore=None,
+        key_alias=None,
         keystore_password=None,
         key_password=None,
     )
@@ -155,10 +173,10 @@ def test_package_app_extra_content_without_signingconfig_still_prompts(
     """build_gradle_extra_content without 'signingConfig' does not suppress signing."""
     first_app_aab.build_gradle_extra_content = "android { compileSdk 34 }"
     signing_config = AndroidSigningConfig(
-        keystore_path=tmp_path / "my.jks",
-        alias="mykey",
+        keystore_path=tmp_path / "my.p12",
+        key_alias="mykey",
         store_password="storepass",
-        key_password="keypass",
+        key_password="storepass",
     )
     package_command.tools.android_sdk.signing.select_keystore = MagicMock(
         return_value=signing_config
@@ -216,3 +234,35 @@ def test_package_app_extra_content_signing_adhoc_no_warning(
     package_command.package_app(first_app_aab, adhoc_sign=True)
 
     package_command.console.warning.assert_not_called()
+
+
+def test_package_app_extra_content_signing_warning(
+    package_command, first_app_aab, tmp_path
+):
+    """If build_gradle_extra_content has signingConfig, a warning is printed."""
+    first_app_aab.build_gradle_extra_content = "signingConfig signingConfigs.release"
+    package_command.console.warning = MagicMock()
+
+    def create_bundle(*args, **kwargs):
+        create_file(
+            tmp_path
+            / "base_path"
+            / "build"
+            / "first-app"
+            / "android"
+            / "gradle"
+            / "app"
+            / "build"
+            / "outputs"
+            / "bundle"
+            / "release"
+            / "app-release.aab",
+            "Android release",
+        )
+
+    package_command.tools.subprocess.run.side_effect = create_bundle
+    package_command.package_app(first_app_aab)
+
+    package_command.console.warning.assert_called_once()
+    warning_text = package_command.console.warning.call_args[0][0]
+    assert "briefcase package android --keystore /path/to/keystore.p12" in warning_text
