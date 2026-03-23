@@ -55,12 +55,12 @@ VALID_VERSIONS = [
 ]
 # Examples of invalid versions (input only)
 INVALID_VERSIONS = [
-    ("foobar",),
-    (42,),
-    ('{"file": "path/to/file"}',),
-    ({"file": "path/to/file"},),
-    ('{"attr": "myapp.module.__version__"}',),
-    ({"attr": "myapp.module.__version__"},),
+    "foobar",
+    42,
+    '{"file": "path/to/file"}',
+    {"file": "path/to/file"},
+    '{"attr": "myapp.module.__version__"}',
+    {"attr": "myapp.module.__version__"},
 ]
 
 
