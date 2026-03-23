@@ -53,6 +53,15 @@ VALID_VERSIONS = [
     ),  # all the options
     (Version("1.2.3"), "1.2.3"),  # Version object as input
 ]
+# Examples of invalid versions (input only)
+INVALID_VERSIONS = [
+    ("foobar",),
+    (42,),
+    ('{"file": "path/to/file"}',),
+    ({"file": "path/to/file"},),
+    ('{"attr": "myapp.module.__version__"}',),
+    ({"attr": "myapp.module.__version__"},),
+]
 
 
 def test_minimal_GlobalConfig():
@@ -123,13 +132,14 @@ def test_valid_app_version(input, expected):
     assert str(config.version) == expected
 
 
-def test_invalid_app_version():
+@pytest.mark.parametrize("input", INVALID_VERSIONS)
+def test_invalid_app_version(input):
     with pytest.raises(
-        BriefcaseConfigError, match=r"Version number \(foobar\) is not valid\."
+        BriefcaseConfigError, match=rf"Version number \({input}\) is not valid\."
     ):
         GlobalConfig(
             project_name="My Project",
-            version="foobar",
+            version=input,
             bundle="org.beeware",
             license="MIT",
             license_files=["LICENSE"],
