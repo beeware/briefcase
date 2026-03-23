@@ -388,7 +388,7 @@ class GlobalConfig(BaseConfig):
                 self.version = version
             else:
                 self.version = Version(version)
-        except InvalidVersion:
+        except (InvalidVersion, TypeError):
             raise InvalidVersionError(
                 f"Version number ({self.version}) is not valid."
             ) from None
