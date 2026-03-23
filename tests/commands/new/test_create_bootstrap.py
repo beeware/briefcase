@@ -317,7 +317,8 @@ def test_question_sequence_with_bad_bootstrap_override(
     """A bad override for the bootstrap uses user input instead."""
 
     class GuiBootstrap:
-        # If this custom bootstrap is chosen, the lack of requires() would cause an error
+        # If this custom bootstrap is chosen, the lack of requires()
+        # would cause an error
         fields: Collection[str] = ["requires"]
 
         def __init__(self, console, context):
