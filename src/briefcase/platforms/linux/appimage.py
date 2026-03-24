@@ -13,7 +13,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -92,7 +92,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         self.use_docker = command.use_docker
         self.extra_docker_build_args = command.extra_docker_build_args
 
-    def finalize_app_config(self, app: AppConfig) -> AppConfig:
+    def finalize_app_config(self, app: AppConfig, **kwargs) -> FinalizedAppConfig:
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
             self.console.warning("""\
@@ -122,7 +122,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
 *************************************************************************
 """)
-        return app
+        return super().finalize_app_config(app, **kwargs)
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):

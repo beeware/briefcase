@@ -33,6 +33,7 @@ import briefcase
 from briefcase import __version__
 from briefcase.config import (
     AppConfig,
+    FinalizedAppConfig,
     GlobalConfig,
     parse_config,
 )
@@ -677,7 +678,7 @@ a custom location for Briefcase's tools.
         """
         return
 
-    def finalize_app_config(self, app: AppConfig) -> AppConfig:
+    def finalize_app_config(self, app: AppConfig, **kwargs) -> FinalizedAppConfig:
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
@@ -689,10 +690,15 @@ a custom location for Briefcase's tools.
         configuration, and performs any other app-specific platform configuration and
         verification that is required as a result of command-line arguments.
 
+        Platform overrides should call ``super().finalize_app_config(app, **kwargs)``
+        to construct the ``FinalizedAppConfig``.
+
         :param app: The app configuration to finalize.
+        :param kwargs: Runtime attributes forwarded to the FinalizedAppConfig
+            constructor (``test_mode``, ``debugger``, etc.).
         :returns: The finalized app configuration.
         """
-        return app
+        return FinalizedAppConfig(app, **kwargs)
 
     def resolve_apps(
         self,
@@ -723,7 +729,7 @@ a custom location for Briefcase's tools.
         debugger: str | None = None,
         debugger_host: str | None = None,
         debugger_port: int | None = None,
-    ) -> dict[str, AppConfig]:
+    ) -> dict[str, FinalizedAppConfig]:
         """Finalize Briefcase configuration.
 
         This will:
@@ -731,7 +737,6 @@ a custom location for Briefcase's tools.
         1. Ensure that the host has been verified
         2. Ensure that the platform tools have been verified
         3. Ensure that app configurations have been finalized.
-        4. Ensure that the debugger is configured.
 
         App finalization will only occur once per invocation.
 
@@ -740,22 +745,21 @@ a custom location for Briefcase's tools.
         :param debugger: The debugger that should be used
         :param debugger_host: The host to use for the debugger
         :param debugger_port: The port to use for the debugger
-        :returns: A dict mapping app name to finalized AppConfig.
+        :returns: A dict mapping app name to finalized app configs.
         """
         self.verify_host()
         self.verify_tools()
 
-        finalized: dict[str, AppConfig] = {}
+        finalized: dict[str, FinalizedAppConfig] = {}
         for app in apps:
-            if hasattr(app, "__draft__"):
-                if debugger and debugger != "":
-                    app.debugger = get_debugger(debugger)
-                    app.debugger_host = debugger_host
-                    app.debugger_port = debugger_port
-
-                app.test_mode = test_mode
-                app = self.finalize_app_config(app)
-                delattr(app, "__draft__")
+            if not isinstance(app, FinalizedAppConfig):
+                app = self.finalize_app_config(
+                    app,
+                    test_mode=test_mode,
+                    debugger=get_debugger(debugger) if debugger else None,
+                    debugger_host=debugger_host,
+                    debugger_port=debugger_port,
+                )
 
                 if app.external_package_path:
                     # Package path is defined
@@ -782,6 +786,7 @@ a custom location for Briefcase's tools.
                             f"but not 'external_package_path'."
                         )
             finalized[app.app_name] = app
+        self.apps.update(finalized)
         return finalized
 
     def verify_app(self, app: AppConfig):

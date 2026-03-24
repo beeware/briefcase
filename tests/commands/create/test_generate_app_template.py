@@ -72,9 +72,6 @@ def full_context():
         "month": date.today().strftime("%B"),
         # Fields added by the output format.
         "output_format": "dummy",
-        # These tests don't do a full finalization, so the context will still be
-        # marked as draft.
-        "__draft__": True,
     }
 
 
