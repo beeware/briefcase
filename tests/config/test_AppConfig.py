@@ -6,7 +6,7 @@ from packaging.version import Version
 from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
-from .test_GlobalConfig import VALID_VERSIONS
+from .test_GlobalConfig import INVALID_VERSIONS, VALID_VERSIONS
 
 
 def test_minimal_AppConfig():
@@ -298,14 +298,15 @@ def test_valid_app_version(input, expected):
     assert str(config.version) == expected
 
 
-def test_invalid_app_version():
+@pytest.mark.parametrize("input", INVALID_VERSIONS)
+def test_invalid_app_version(input):
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Version number for 'myapp' \(foobar\) is not valid\.",
+        match=rf"Version number for 'myapp' \({input}\) is not valid\.",
     ):
         AppConfig(
             app_name="myapp",
-            version="foobar",
+            version=input,
             bundle="org.beeware",
             description="A simple app",
             sources=["src/invalid"],
