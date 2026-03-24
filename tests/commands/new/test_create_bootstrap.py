@@ -191,7 +191,8 @@ def test_other_frameworks_hides_installed_plugins(
             "toga-positron": {
                 "entry_point": "fake_positron",
                 "display_name": "Positron",
-                "description": "A Toga base for apps whose GUI is provided by a web view.",
+                "description": "A Toga base for apps whose GUI "
+                "is provided by a web view.",
             },
             "pygame-ce": {
                 "entry_point": "pygame_ce",
@@ -242,7 +243,8 @@ def test_other_frameworks_no_available_plugins(
             "toga-positron": {
                 "entry_point": "Toga Positron (Django server)",
                 "display_name": "Positron",
-                "description": "A Toga base for apps whose GUI is provided by a web view.",
+                "description": "A Toga base for apps whose GUI "
+                "is provided by a web view.",
             },
             "pygame-ce": {
                 "entry_point": "pygame_ce",
