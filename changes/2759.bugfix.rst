@@ -1,0 +1,1 @@
+(CVE-2026-33430) When a Windows MSI is installed for All Users, the installation folder no longer inherits the permissions of the parent folder. The fix for this issue has been backported to the templates for Briefcase v0.4.1, v0.4.0 and v0.3.26.
