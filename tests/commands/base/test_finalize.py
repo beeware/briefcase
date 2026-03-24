@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig, FinalizedAppConfig
+from briefcase.config import DraftAppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
 from .conftest import DummyCommand
@@ -8,7 +8,7 @@ from .conftest import DummyCommand
 
 @pytest.fixture
 def first_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
@@ -19,7 +19,7 @@ def first_app():
 
 @pytest.fixture
 def second_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",

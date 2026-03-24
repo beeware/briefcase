@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.commands import BuildCommand
 from briefcase.commands.base import full_options
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 from ...utils import create_file
 
@@ -114,7 +114,7 @@ def build_command(dummy_console, tmp_path):
 
 @pytest.fixture
 def second_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",

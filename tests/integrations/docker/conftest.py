@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 import briefcase
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, DraftAppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker, DockerAppContext
 
@@ -50,7 +50,7 @@ def mock_tools(mock_tools, tmp_path) -> ToolCache:
 @pytest.fixture
 def my_app(tmp_path) -> AppConfig:
     create_file(tmp_path / "base_path" / "LICENSE", "MIT License")
-    return AppConfig(
+    return DraftAppConfig(
         app_name="myapp",
         formal_name="My App",
         bundle="com.example",

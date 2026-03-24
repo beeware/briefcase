@@ -421,32 +421,171 @@ class GlobalConfig(BaseConfig):
 
 
 class AppConfig(BaseConfig):
+    """Base class for app configuration.
+
+    Not instantiated directly. Use ``DraftAppConfig`` for parsed project
+    configuration (pre-finalization) and ``FinalizedAppConfig`` for
+    finalized configuration (post-finalization).
+
+    Provides shared properties (``module_name``, ``bundle_name``, etc.)
+    and identity (``__eq__``/``__hash__`` based on ``app_name``).
+    """
+
+    app_name: str
+    version: Version
+    bundle: str
+    description: str
+    sources: list[str] | None
+    formal_name: str
+    url: str | None
+    author: str | None
+    author_email: str | None
+    requires: list[str] | None
+    icon: str | None
+    document_types: dict
+    permission: dict
+    template: str | None
+    template_branch: str | None
+    test_sources: list[str] | None
+    test_requires: list[str] | None
+    supported: bool
+    long_description: str | None
+    license: dict | None
+    license_files: list[str]
+    console_app: bool
+    requirement_installer_args: list[str]
+    external_package_path: str | None
+    external_package_executable_path: str | None
+    install_launcher: bool
+    install_options: dict
+    uninstall_options: dict
+
+    test_mode: bool
+    debugger: BaseDebugger | None
+    debugger_host: str | None
+    debugger_port: int | None
+
+    def __repr__(self):
+        return f"<{self.bundle_identifier} v{self.version} {type(self).__name__}>"
+
+    def __eq__(self, other):
+        if isinstance(other, AppConfig):
+            return self.app_name == other.app_name
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.app_name)
+
+    @property
+    def module_name(self):
+        """The module name for the app.
+
+        This is derived from the name, but:
+        * all `-` have been replaced with `_`.
+        """
+        return self.app_name.replace("-", "_")
+
+    @property
+    def bundle_name(self):
+        """The bundle name for the app.
+
+        This is derived from the app name, but:
+        * all `_` have been replaced with `-`.
+        """
+        return self.app_name.replace("_", "-").lower()
+
+    @property
+    def bundle_identifier(self):
+        """The bundle identifier for the app.
+
+        This is derived from the bundle and the bundle name, joined by a `.`.
+        """
+        return f"{self.bundle}.{self.bundle_name}"
+
+    @property
+    def class_name(self):
+        """The class name for the app.
+
+        This is derived from the formal name for the app.
+        """
+        return make_class_name(self.formal_name)
+
+    @property
+    def package_name(self):
+        """The bundle name of the app, with `-` replaced with `_` to create something
+        that can be used a namespace identifier on Python or Java, similar to
+        `module_name`."""
+        return self.bundle.replace("-", "_")
+
+    @property
+    def dist_info_name(self):
+        """The name of the .dist-info directory for the app."""
+        return f"{self.module_name}.dist-info"
+
+    def PYTHONPATH(self):
+        """The PYTHONPATH modifications needed to run this app."""
+        paths = []
+        sources = self.sources.copy() if self.sources else []
+        if self.test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+
+        for source in sources:
+            path = "/".join(source.rsplit("/", 1)[:-1])
+            if path not in paths:
+                paths.append(path)
+        return paths
+
+    def all_sources(self) -> list[str]:
+        """Get all sources of the application that should be copied to the app.
+
+        :returns: The Path to the dist-info folder.
+        """
+        sources = self.sources.copy() if self.sources else []
+        if self.test_mode and self.test_sources:
+            sources.extend(self.test_sources)
+        return sources
+
+    def main_module(self):
+        """The path to the main module for the app.
+
+        In normal operation, this is ``app.module_name``; however,
+        in test mode, it is prefixed with ``tests.``.
+        """
+        if self.test_mode:
+            return f"tests.{self.module_name}"
+        else:
+            return self.module_name
+
+
+class DraftAppConfig(AppConfig):
+    """An AppConfig as parsed from ``pyproject.toml``, before finalization."""
+
     def __init__(
         self,
-        app_name,
-        version,
-        bundle,
-        description,
-        license=None,
-        license_files=None,
-        sources=None,
-        formal_name=None,
-        url=None,
-        author=None,
-        author_email=None,
-        requires=None,
-        icon=None,
-        document_type=None,
-        install_option=None,
-        uninstall_option=None,
-        permission=None,
-        template=None,
-        template_branch=None,
-        test_sources=None,
-        test_requires=None,
-        supported=True,
-        long_description=None,
-        console_app=False,
+        app_name: str,
+        version: str | Version,
+        bundle: str,
+        description: str,
+        license: dict | None = None,
+        license_files: list[str] | None = None,
+        sources: list[str] | None = None,
+        formal_name: str | None = None,
+        url: str | None = None,
+        author: str | None = None,
+        author_email: str | None = None,
+        requires: list[str] | None = None,
+        icon: str | None = None,
+        document_type: dict | None = None,
+        install_option: dict | None = None,
+        uninstall_option: dict | None = None,
+        permission: dict | None = None,
+        template: str | None = None,
+        template_branch: str | None = None,
+        test_sources: list[str] | None = None,
+        test_requires: list[str] | None = None,
+        supported: bool = True,
+        long_description: str | None = None,
+        console_app: bool = False,
         requirement_installer_args: list[str] | None = None,
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
@@ -557,97 +696,6 @@ class AppConfig(BaseConfig):
                     f"package named {self.module_name!r}."
                 )
 
-    def __repr__(self):
-        return f"<{self.bundle_identifier} v{self.version} AppConfig>"
-
-    def __eq__(self, other):
-        if isinstance(other, AppConfig):
-            return self.app_name == other.app_name
-        return NotImplemented
-
-    def __hash__(self):
-        return hash(self.app_name)
-
-    @property
-    def module_name(self):
-        """The module name for the app.
-
-        This is derived from the name, but:
-        * all `-` have been replaced with `_`.
-        """
-        return self.app_name.replace("-", "_")
-
-    @property
-    def bundle_name(self):
-        """The bundle name for the app.
-
-        This is derived from the app name, but:
-        * all `_` have been replaced with `-`.
-        """
-        return self.app_name.replace("_", "-").lower()
-
-    @property
-    def bundle_identifier(self):
-        """The bundle identifier for the app.
-
-        This is derived from the bundle and the bundle name, joined by a `.`.
-        """
-        return f"{self.bundle}.{self.bundle_name}"
-
-    @property
-    def class_name(self):
-        """The class name for the app.
-
-        This is derived from the formal name for the app.
-        """
-        return make_class_name(self.formal_name)
-
-    @property
-    def package_name(self):
-        """The bundle name of the app, with `-` replaced with `_` to create something
-        that can be used a namespace identifier on Python or Java, similar to
-        `module_name`."""
-        return self.bundle.replace("-", "_")
-
-    @property
-    def dist_info_name(self):
-        """The name of the .dist-info directory for the app."""
-        return f"{self.module_name}.dist-info"
-
-    def PYTHONPATH(self):
-        """The PYTHONPATH modifications needed to run this app."""
-        paths = []
-        sources = self.sources.copy() if self.sources else []
-        if self.test_mode and self.test_sources:
-            sources.extend(self.test_sources)
-
-        for source in sources:
-            path = "/".join(source.rsplit("/", 1)[:-1])
-            if path not in paths:
-                paths.append(path)
-        return paths
-
-    def all_sources(self) -> list[str]:
-        """Get all sources of the application that should be copied to the app.
-
-        :returns: The Path to the dist-info folder.
-        """
-        sources = self.sources.copy() if self.sources else []
-        if self.test_mode and self.test_sources:
-            sources.extend(self.test_sources)
-        return sources
-
-    def main_module(self):
-        """The path to the main module for the app.
-
-        In normal operation, this is ``app.module_name``; however,
-        in test mode, it is prefixed with ``tests.``.
-        """
-        if self.test_mode:
-            return f"tests.{self.module_name}"
-        else:
-            return self.module_name
-
 
 class FinalizedAppConfig(AppConfig):
     """An AppConfig that has been through platform finalization.
@@ -659,7 +707,7 @@ class FinalizedAppConfig(AppConfig):
 
     def __init__(
         self,
-        app: AppConfig,
+        app: DraftAppConfig,
         *,
         test_mode: bool = False,
         debugger: BaseDebugger | None = None,
