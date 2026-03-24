@@ -8,6 +8,7 @@ import unicodedata
 from pathlib import Path
 from urllib.parse import urlparse
 
+from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
 
@@ -1312,7 +1313,16 @@ def parse_config(config_file: Path, platform, output_format, console):
 
     # Merge the PEP621 configuration (if it exists)
     try:
-        merge_pep621_config(global_config, pyproject["project"])
+        pep621_config = pyproject["project"]
+        if pep621_config and (dynamic := pep621_config.pop("dynamic", [])):
+            metadata = project_wheel_metadata(base_path, isolated=True)
+            # Set all fields declared as dynamic to the corresponding metadata
+            # value. Use .title() to translate from PEP621 field names to Core
+            # metadata field names
+            for key in dynamic:
+                pep621_config[key] = metadata[key.title()]
+
+        merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
 
