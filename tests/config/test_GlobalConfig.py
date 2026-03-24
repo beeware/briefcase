@@ -135,7 +135,8 @@ def test_valid_app_version(input, expected):
 @pytest.mark.parametrize("input", INVALID_VERSIONS)
 def test_invalid_app_version(input):
     with pytest.raises(
-        BriefcaseConfigError, match=rf"Version number \({input}\) is not valid\."
+        BriefcaseConfigError,
+        match=rf"Version number \({input}\) is not valid\.",
     ):
         GlobalConfig(
             project_name="My Project",
