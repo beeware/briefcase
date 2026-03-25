@@ -19,7 +19,7 @@ else:  # pragma: no-cover-if-gte-py311
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
-from .constants import RESERVED_WORDS
+from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
@@ -105,7 +105,7 @@ def validate_url(candidate):
     return True
 
 
-def validate_document_type_config(document_type_id, document_type):
+def validate_document_type_config(app_name, document_type_id, document_type):
     try:
         if not (
             isinstance(document_type["extension"], str)
@@ -153,6 +153,29 @@ def validate_document_type_config(document_type_id, document_type):
             f"The URL associated with document type {document_type_id!r} "
             f"is invalid: {e}"
         ) from None
+
+    try:
+        mime_type = document_type["mime_type"]
+        if not isinstance(mime_type, str):
+            raise BriefcaseConfigError(
+                f"The MIME type associated with document type "
+                f"{document_type_id!r} is not a string."
+            )
+        try:
+            registry, _ = mime_type.split("/")
+            if registry not in MIME_TYPE_REGISTRIES:
+                raise BriefcaseConfigError(
+                    f"The MIME type {mime_type!r} for document type "
+                    f"{document_type_id!r} uses an invalid registry {registry!r}."
+                )
+        except ValueError:
+            raise BriefcaseConfigError(
+                f"The MIME type {mime_type!r} for document type "
+                f"{document_type_id!r} is not in 'type/subtype' format."
+            ) from None
+    except KeyError:
+        # mime_type is optional; if it's not provided, use a default.
+        document_type["mime_type"] = f"application/x-{app_name}-{document_type_id}"
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
@@ -491,7 +514,11 @@ class AppConfig(BaseConfig):
             )
 
         for document_type_id, document_type in self.document_types.items():
-            validate_document_type_config(document_type_id, document_type)
+            validate_document_type_config(
+                self.app_name,
+                document_type_id,
+                document_type,
+            )
 
         self.install_options = validate_install_options_config(
             install_option, "install"
