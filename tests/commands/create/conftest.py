@@ -9,7 +9,7 @@ import tomli_w
 from cookiecutter.main import cookiecutter
 
 from briefcase.commands import CreateCommand
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, DraftAppConfig
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
@@ -225,7 +225,7 @@ def tracking_create_command(
         git=mock_git,
         base_path=tmp_path / "base_path",
         apps={
-            "first": AppConfig(
+            "first": DraftAppConfig(
                 app_name="first",
                 bundle="com.example",
                 version="0.0.1",
@@ -233,7 +233,7 @@ def tracking_create_command(
                 sources=["src/first"],
                 license={"file": "LICENSE"},
             ),
-            "second": AppConfig(
+            "second": DraftAppConfig(
                 app_name="second",
                 bundle="com.example",
                 version="0.0.2",
@@ -247,7 +247,7 @@ def tracking_create_command(
 
 @pytest.fixture
 def myapp():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",

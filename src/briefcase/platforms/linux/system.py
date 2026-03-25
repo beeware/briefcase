@@ -17,7 +17,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.commands.convert import find_changelog_filename
-from briefcase.config import AppConfig, FinalizedAppConfig, merge_config
+from briefcase.config import AppConfig, DraftAppConfig, FinalizedAppConfig, merge_config
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
@@ -175,7 +175,7 @@ class LinuxSystemMixin(LinuxMixin):
     def _finalize_target_image(self, app: AppConfig):
         app.target_image = f"{app.target_vendor}:{app.target_codename}"
 
-    def finalize_app_config(self, app: AppConfig, **kwargs) -> FinalizedAppConfig:
+    def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """Finalize app configuration.
 
         Linux .deb app configurations are deeper than other platforms, because they need

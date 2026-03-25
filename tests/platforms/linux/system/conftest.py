@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.platforms.linux.system import LinuxSystemCreateCommand
 
 from ....utils import create_file
@@ -64,7 +64,7 @@ def first_app(first_app_config, tmp_path):
 @pytest.fixture
 def underscore_app(tmp_path):
     """A fixture for an app with an underscore in the name, rolled out on disk."""
-    app_config = AppConfig(
+    app_config = DraftAppConfig(
         app_name="underscore_app",
         project_name="Underscore Project",
         formal_name="Underscore App",

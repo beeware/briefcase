@@ -99,7 +99,8 @@ def test_parse_config(base_command):
     # The first app will have all the base attributes required by an app,
     # defined in the config file.
     assert (
-        repr(base_command.apps["firstapp"]) == "<org.beeware.firstapp v1.2.3 AppConfig>"
+        repr(base_command.apps["firstapp"])
+        == "<org.beeware.firstapp v1.2.3 DraftAppConfig>"
     )
     assert base_command.apps["firstapp"].project_name == "Sample project"
     assert base_command.apps["firstapp"].app_name == "firstapp"
@@ -111,7 +112,7 @@ def test_parse_config(base_command):
     # value for `mystery`, and an `extra` value.
     assert (
         repr(base_command.apps["secondapp"])
-        == "<org.beeware.secondapp v1.2.3 AppConfig>"
+        == "<org.beeware.secondapp v1.2.3 DraftAppConfig>"
     )
     assert base_command.apps["secondapp"].project_name == "Sample project"
     assert base_command.apps["secondapp"].app_name == "secondapp"
@@ -165,7 +166,8 @@ def test_parse_config_with_overrides(base_command):
     # The first app will have all the base attributes required by an app,
     # defined in the config file, with the values from the overrides taking precedence.
     assert (
-        repr(base_command.apps["firstapp"]) == "<org.beeware.firstapp v2.3.4 AppConfig>"
+        repr(base_command.apps["firstapp"])
+        == "<org.beeware.firstapp v2.3.4 DraftAppConfig>"
     )
     assert base_command.apps["firstapp"].project_name == "Sample project"
     assert base_command.apps["firstapp"].app_name == "firstapp"
@@ -180,7 +182,7 @@ def test_parse_config_with_overrides(base_command):
     # is preserved.
     assert (
         repr(base_command.apps["secondapp"])
-        == "<org.beeware.secondapp v2.3.4 AppConfig>"
+        == "<org.beeware.secondapp v2.3.4 DraftAppConfig>"
     )
     assert base_command.apps["secondapp"].project_name == "Sample project"
     assert base_command.apps["secondapp"].app_name == "secondapp"

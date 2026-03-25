@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
@@ -45,7 +45,7 @@ def mock_tools(dummy_console, tmp_path) -> ToolCache:
 @pytest.fixture
 def first_app_config(tmp_path):
     create_file(tmp_path / "base_path" / "LICENSE", "MIT License")
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first-app",
         project_name="First Project",
         formal_name="First App",

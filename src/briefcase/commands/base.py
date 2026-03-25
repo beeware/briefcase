@@ -33,6 +33,7 @@ import briefcase
 from briefcase import __version__
 from briefcase.config import (
     AppConfig,
+    DraftAppConfig,
     FinalizedAppConfig,
     GlobalConfig,
     parse_config,
@@ -678,7 +679,7 @@ a custom location for Briefcase's tools.
         """
         return
 
-    def finalize_app_config(self, app: AppConfig, **kwargs) -> FinalizedAppConfig:
+    def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
@@ -1125,7 +1126,7 @@ any compatibility problems, and then add the compatibility declaration.
                 # configuration options for the app.
                 app_config.update(overrides)
                 self.apps[app_name] = create_config(
-                    klass=AppConfig,
+                    klass=DraftAppConfig,
                     config=app_config,
                     msg=f"Configuration for '{app_name}'",
                 )

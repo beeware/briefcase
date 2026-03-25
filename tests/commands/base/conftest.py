@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands.base import BaseCommand
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 
 class DummyCommand(BaseCommand):
@@ -118,7 +118,7 @@ def other_command(dummy_console, tmp_path):
 
 @pytest.fixture
 def my_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",
