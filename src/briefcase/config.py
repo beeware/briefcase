@@ -1222,6 +1222,8 @@ def _core_metadata_to_pep621(pep621_key, metadata):
                 {"name": name, "email": email}
                 for name, email in getaddresses(addresses)
             ]
+        case "dependencies":
+            return metadata.get_all("requires-dist")
         case "description":
             return metadata["summary"]
         case "license":
@@ -1229,9 +1231,8 @@ def _core_metadata_to_pep621(pep621_key, metadata):
         case "urls":
             urls = [url.partition(",") for url in metadata.get_all("project-url")]
             return {name.strip(): url.strip() for name, _, url in urls}
-        case "dependencies":
-            return metadata.get_all("requires-dist")
         case _:
+            # Let metadata's automatic normalization deal with selecting the right key
             return metadata[pep621_key]
 
 
