@@ -1620,3 +1620,44 @@ def test_pep621_dynamic_pdm_single(tmp_path):
         "formal_name": "Awesome Application",
         "description": "The application is very awesome",
     }
+
+
+def test_pep621_dynamic_nonexistent_build_backend(tmp_path):
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["pdm-backend"]
+        build-backend = "not_installed.backend"
+
+        [project]
+        dynamic = ["license"]
+        name = "awesome"
+        description = "The application is very awesome"
+
+        [tool.pdm.version]
+        source = "call"
+        getter = "awesome:version"
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    console = Mock()
+    with pytest.raises(BriefcaseConfigError, match="license"):
+        parse_config(
+            config_file,
+            platform="linux",
+            output_format="app",
+            console=console,
+        )
+
+    console.warning.assert_called_once()
+    warning_text = console.warning.call_args[0][0]
+    assert "dynamic project metadata" in warning_text
+    assert "not_installed.backend" in warning_text
+    assert "license" in warning_text
