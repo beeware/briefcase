@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import (
     get_process_id_by_command,
@@ -123,7 +123,7 @@ class macOSMixin(_MixinBase):
             # This includes the file not existing.
             return False
 
-    def verify_not_on_icloud(self, app: AppConfig, cleanup=False):
+    def verify_not_on_icloud(self, app: FinalizedAppConfig, cleanup=False):
         """Confirm that the app is *not* on an iCloud synchronized drive.
 
         When a `.app` folder is on an iCloud-synchronized drive, iCloud adds filesystem
@@ -158,7 +158,7 @@ that is not synchronized with iCloud, and re-run `briefcase {self.command}`.""")
 class macOSCreateMixin(AppPackagesMergeMixin):
     hidden_app_properties: Collection[str] = {"permission", "entitlement"}
 
-    def generate_app_template(self, app: AppConfig):
+    def generate_app_template(self, app: FinalizedAppConfig):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -184,7 +184,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -364,7 +364,11 @@ in the macOS configuration section of your pyproject.toml.
             # libraries down to just the host architecture.
             self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
 
-    def permissions_context(self, app: AppConfig, cross_platform: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        cross_platform: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -419,7 +423,7 @@ in the macOS configuration section of your pyproject.toml.
 class macOSRunMixin(_MixinBase):
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -446,7 +450,7 @@ class macOSRunMixin(_MixinBase):
 
     def run_console_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -493,7 +497,7 @@ class macOSRunMixin(_MixinBase):
 
     def run_gui_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -595,7 +599,10 @@ class macOSSigningMixin(_MixinBase):
         # These are abstracted to enable testing without patching.
         self.get_identities = get_identities
 
-    def entitlements_path(self, app: AppConfig):  # pragma: no-cover-if-is-windows
+    def entitlements_path(
+        self,
+        app: FinalizedAppConfig,
+    ):  # pragma: no-cover-if-is-windows
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 
     def select_identity(
@@ -754,7 +761,7 @@ or
 
     def sign_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: SigningIdentity,
     ):  # pragma: no-cover-if-is-windows
         """Sign an entire app with a specific identity.
@@ -848,7 +855,7 @@ class macOSPackageMixin(macOSSigningMixin):
         # The default changes depending on whether the app is a console app or a GUI app
         return None
 
-    def notarization_path(self, app: AppConfig) -> Path:
+    def notarization_path(self, app: FinalizedAppConfig) -> Path:
         """The file that is submitted for notarization."""
         if app.packaging_format == "zip":
             # Notarization for bare .app's is applied to the binary, not the
@@ -858,7 +865,7 @@ class macOSPackageMixin(macOSSigningMixin):
         else:
             return self.distribution_path(app)
 
-    def distribution_path(self, app: AppConfig) -> Path:
+    def distribution_path(self, app: FinalizedAppConfig) -> Path:
         """The path to the final distribution artefact."""
         if app.packaging_format == "zip":
             return self.dist_path / f"{app.formal_name}-{app.version}.app.zip"
@@ -995,7 +1002,7 @@ class macOSPackageMixin(macOSSigningMixin):
 
     def notarize(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
     ):
@@ -1150,7 +1157,7 @@ password:
 
     def validate_submission_id(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: SigningIdentity,
         submission_id: str,
     ):
@@ -1199,7 +1206,7 @@ password:
 
     def finalize_notarization(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: SigningIdentity,
         submission_id: str,
     ):
@@ -1290,7 +1297,7 @@ password:
 
     def package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         notarize_app=None,
         identity=None,
         adhoc_sign=False,
@@ -1428,7 +1435,7 @@ password:
 
     def package_zip(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
     ):
@@ -1448,7 +1455,7 @@ password:
         else:
             self.finalize_package_zip(app)
 
-    def finalize_package_zip(self, app: AppConfig):
+    def finalize_package_zip(self, app: FinalizedAppConfig):
         """Finalize the zip packaging process."""
         # Build the final archive for distribution
         with self.console.wait_bar(
@@ -1458,7 +1465,7 @@ password:
 
     def package_pkg(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None,
@@ -1583,7 +1590,7 @@ password:
 
     def package_dmg(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
     ):

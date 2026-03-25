@@ -18,7 +18,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
@@ -173,7 +173,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -232,7 +232,11 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "ndk": {"abi_filters": getattr(app, "android_abis", None)},
         }
 
-    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -328,13 +332,13 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
     supports_debugger = True
 
-    def metadata_resource_path(self, app: AppConfig):
+    def metadata_resource_path(self, app: FinalizedAppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
-    def extract_packages_path(self, app: AppConfig):
+    def extract_packages_path(self, app: FinalizedAppConfig):
         return self.bundle_path(app) / self.path_index(app, "extract_packages_path")
 
-    def update_app_metadata(self, app: AppConfig):
+    def update_app_metadata(self, app: FinalizedAppConfig):
         with (
             self.console.wait_bar("Setting main module..."),
             self.metadata_resource_path(app).open("w", encoding="utf-8") as f,
@@ -366,7 +370,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
             f.write("\n".join(extract_packages))
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
@@ -439,7 +443,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
         )
 
     def debugger_app_packages_path_mapping(
-        self, app: AppConfig
+        self,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 
@@ -454,7 +459,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
@@ -632,7 +637,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create a release artefact from an Android Gradle project."
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Package the app for distribution.
 
         This involves building the release app bundle.

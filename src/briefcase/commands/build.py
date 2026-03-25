@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -27,7 +27,7 @@ class BuildCommand(BaseCommand):
             default=argparse.SUPPRESS,
         )
 
-    def build_app(self, app: AppConfig, **options):
+    def build_app(self, app: FinalizedAppConfig, **options):
         """Build an application.
 
         :param app: The application to build
@@ -36,7 +36,7 @@ class BuildCommand(BaseCommand):
 
     def _build_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update: bool,
         update_requirements: bool,
         update_resources: bool,

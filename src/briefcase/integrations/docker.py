@@ -11,7 +11,7 @@ from pathlib import Path, PosixPath, PurePosixPath
 
 from packaging.version import InvalidVersion, Version
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
@@ -822,9 +822,9 @@ class DockerAppContext(Tool):
     name = "docker_app_context"
     full_name = "Docker"
 
-    def __init__(self, tools: ToolCache, app: AppConfig):
+    def __init__(self, tools: ToolCache, app: FinalizedAppConfig):
         super().__init__(tools=tools)
-        self.app: AppConfig = app
+        self.app: FinalizedAppConfig = app
         self.app_base_path: Path
         self.host_bundle_path: Path
         self.host_data_path: Path
@@ -840,7 +840,7 @@ class DockerAppContext(Tool):
     def verify_install(
         cls,
         tools: ToolCache,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,

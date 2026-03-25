@@ -4,7 +4,7 @@ import argparse
 
 from briefcase.channels import get_publication_channels
 from briefcase.channels.base import BasePublicationChannel
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -62,7 +62,7 @@ class PublishCommand(BaseCommand):
 
     def _publish_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update: bool,
         packaging_format: str,
         channel: BasePublicationChannel,

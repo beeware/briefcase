@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, TypeVar
 import httpx
 from cookiecutter.main import cookiecutter
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.console import Console
 from briefcase.exceptions import (
     MissingToolError,
@@ -71,7 +71,7 @@ class Tool(ABC):
     def verify(
         cls: type[ToolT],
         tools: ToolCache,
-        app: AppConfig | None = None,
+        app: FinalizedAppConfig | None = None,
         **kwargs,
     ) -> ToolT:
         """Confirm the tool is available and usable on the host platform."""
@@ -107,7 +107,7 @@ class ManagedTool(Tool):
     def verify(
         cls: type[ManagedToolT],
         tools: ToolCache,
-        app: AppConfig | None = None,
+        app: FinalizedAppConfig | None = None,
         install: bool = True,
         **kwargs,
     ) -> ManagedToolT:
@@ -231,7 +231,7 @@ class ToolCache(Mapping):
 
         return encoding.upper()
 
-    def __getitem__(self, app: AppConfig) -> ToolCache:
+    def __getitem__(self, app: FinalizedAppConfig) -> ToolCache:
         return self.app_tools[app]
 
     def __iter__(self):

@@ -18,7 +18,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -258,7 +258,11 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
-    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -305,7 +309,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
-    def _extra_pip_args(self, app: AppConfig):
+    def _extra_pip_args(self, app: FinalizedAppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
@@ -320,7 +324,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -448,7 +452,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
     supports_debugger = True
 
-    def info_plist_path(self, app: AppConfig):
+    def info_plist_path(self, app: FinalizedAppConfig):
         """Obtain the path to the application's plist file.
 
         :param app: The config object for the app
@@ -456,7 +460,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         """
         return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
-    def update_app_metadata(self, app: AppConfig):
+    def update_app_metadata(self, app: FinalizedAppConfig):
         with self.console.wait_bar("Setting main module..."):
             # Load the original plist
             with self.info_plist_path(app).open("rb") as f:
@@ -470,7 +474,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
             with self.info_plist_path(app).open("wb") as f:
                 plistlib.dump(info_plist, f)
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
@@ -518,7 +522,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
 
     def debugger_app_packages_path_mapping(
-        self, app: AppConfig
+        self,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 
@@ -534,7 +539,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         *,
         passthrough: list[str],
         udid=None,

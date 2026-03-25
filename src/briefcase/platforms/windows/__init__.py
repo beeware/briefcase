@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -137,7 +137,7 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def extras_path(self, app: AppConfig) -> Path:
+    def extras_path(self, app: FinalizedAppConfig) -> Path:
         """Obtain the path for extra installer content.
 
         Extra installer content is content that needs to be inserted into the installer,
@@ -156,7 +156,7 @@ class WindowsCreateCommand(CreateCommand):
 
         return self.bundle_path(app) / extras_path
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -220,7 +220,7 @@ class WindowsCreateCommand(CreateCommand):
 *************************************************************************
 """)
 
-    def install_license(self, app: AppConfig):
+    def install_license(self, app: FinalizedAppConfig):
         """Install the license for the project as a single RTF document.
 
         The following cases are handled:
@@ -278,7 +278,7 @@ files that Briefcase can convert and merge automatically.
         ]
         installed_license.write_text(txt_to_rtf(texts), encoding="utf-8")
 
-    def install_app_resources(self, app: AppConfig):
+    def install_app_resources(self, app: FinalizedAppConfig):
         """Install Windows-specific app resources.
 
         This includes any post-install or pre-uninstall scripts, plus converting the
@@ -342,7 +342,7 @@ class WindowsRunCommand(RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -463,7 +463,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def sign_file(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filepath: Path,
         identity: str,
         file_digest: str,
@@ -513,7 +513,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: str | None = None,
         adhoc_sign: bool = False,
         file_digest: str | None = None,
