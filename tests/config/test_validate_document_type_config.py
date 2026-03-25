@@ -172,6 +172,11 @@ def test_document_type_macOS_config_with_mimetype_single(valid_document):
     """
     valid_document["mime_type"] = "application/pdf"
     validate_document_type_config("my-app", "ext", valid_document)
+
+    # MIME type hasn't changed
+    assert valid_document["mime_type"] == "application/pdf"
+
+    # macOS mime configs have been added
     assert "LSItemContentTypes" in valid_document["macOS"]
     assert valid_document["macOS"]["LSItemContentTypes"] == ["com.adobe.pdf"]
     assert valid_document["macOS"]["is_core_type"] is True
@@ -189,6 +194,11 @@ def test_document_type_macOS_config_with_mimetype_list(valid_document):
     """
     valid_document["mime_type"] = "text/vcard"
     validate_document_type_config("my-app", "ext", valid_document)
+
+    # MIME type hasn't changed
+    assert valid_document["mime_type"] == "text/vcard"
+
+    # macOS mime configs have been added
     assert "LSItemContentTypes" in valid_document["macOS"]
     assert valid_document["macOS"]["LSItemContentTypes"] == ["public.vcard"]
     assert valid_document["macOS"]["is_core_type"] is True
@@ -206,6 +216,11 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
     """
     valid_document["mime_type"] = "application/x-custom"
     validate_document_type_config("my-app", "ext", valid_document)
+
+    # MIME type hasn't changed
+    assert valid_document["mime_type"] == "application/x-custom"
+
+    # macOS mime configs have been added
     assert "LSItemContentTypes" not in valid_document["macOS"]
     assert valid_document["macOS"]["is_core_type"] is False
     assert valid_document["macOS"]["LSHandlerRank"] == "Owner"
@@ -219,7 +234,10 @@ def test_document_type_macOS_config_with_unknown_mimetype(valid_document):
 @pytest.mark.parametrize(
     ("invalid_mime_type", "match"),
     [
-        (1, r"The MIME type associated with document type 'ext' is not a string\."),
+        (
+            1,
+            r"The MIME type associated with document type 'ext' is not a string\.",
+        ),
         (
             "not-a-mime-type",
             (
@@ -251,9 +269,41 @@ def test_validate_document_invalid_mime_type(invalid_mime_type, match, valid_doc
         validate_document_type_config("my-app", "ext", valid_document)
 
 
+@pytest.mark.parametrize(
+    "mime_type",
+    [
+        "application/example",
+        "audio/example",
+        "example/example",
+        "font/woff",
+        "haptics/ivs",
+        "image/gif",
+        "message/example",
+        "model/example",
+        "multipart/example",
+        "text/markdown",
+        "video/example",
+    ],
+)
+def test_document_type_config_valid_mime_type(valid_document, mime_type):
+    """If a valid MIME type is provided, it is retained."""
+    # Set the MIME type
+    valid_document["mime_type"] = mime_type
+
+    validate_document_type_config("my-app", "ext", valid_document)
+
+    # MIME type hasn't changed as a result of validation
+    assert valid_document["mime_type"] == mime_type
+
+
 def test_document_type_config_default_mime_type(valid_document):
     """If no MIME type is provided, a default is generated."""
+    # No mime type to start with
+    assert "mime_type" not in valid_document
+
     validate_document_type_config("my-app", "ext", valid_document)
+
+    # An custom extension mimetype has been generated
     assert valid_document["mime_type"] == "application/x-my-app-ext"
 
 
