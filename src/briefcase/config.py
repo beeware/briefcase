@@ -512,7 +512,9 @@ class AppConfig(BaseConfig):
 
         for document_type_id, document_type in self.document_types.items():
             validate_document_type_config(
-                self.app_name, document_type_id, document_type
+                self.app_name,
+                document_type_id,
+                document_type,
             )
 
         self.install_options = validate_install_options_config(
