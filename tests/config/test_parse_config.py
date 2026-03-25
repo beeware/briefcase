@@ -1,3 +1,4 @@
+from textwrap import dedent
 from unittest.mock import Mock
 
 import pytest
@@ -1403,3 +1404,219 @@ def test_no_license_key(tmp_path):
             output_format="Xcode",
             console=Mock(),
         )
+
+
+def test_pep621_empty_dynamic(tmp_path):
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        dynamic = []
+        name = "awesome"
+        version = "1.2.3"
+        license = "EUPL-1.2"
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        long_description = "The application is very awesome"
+        """,
+    )
+
+    _, apps = parse_config(
+        config_file,
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+    )
+
+    awesome = apps["awesome"]
+    assert awesome == {
+        "app_name": "awesome",
+        "bundle": "com.example",
+        "version": "1.2.3",
+        "license": "EUPL-1.2",
+        "license_files": [],
+        "formal_name": "Awesome Application",
+        "long_description": "The application is very awesome",
+    }
+
+
+def test_pep621_dynamic_setuptools_single(tmp_path):
+    create_file(tmp_path / "description.txt", "This description was read from file")
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["setuptools", "setuptools-scm"]
+        build-backend = "setuptools.build_meta"
+
+        [project]
+        dynamic = ["description"]
+        name = "awesome"
+        version = "1.2.3"
+        license = "EUPL-1.2"
+
+        [tool.setuptools.dynamic]
+        description = {file = "description.txt"}
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    _, apps = parse_config(
+        config_file,
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+    )
+
+    awesome = apps["awesome"]
+    assert awesome == {
+        "app_name": "awesome",
+        "bundle": "com.example",
+        "version": "1.2.3",
+        "license": "EUPL-1.2",
+        "license_files": [],
+        "formal_name": "Awesome Application",
+        "description": "This description was read from file",
+    }
+
+
+def test_pep621_dynamic_hatchling_multiple(tmp_path):
+    create_file(
+        tmp_path / "awesome.py",
+        dedent(
+            """
+            # this project is mostly empty, but still awesome!
+            print("awesome")
+            """
+        ),
+    )
+    create_file(
+        tmp_path / "hatch_build.py",
+        dedent(
+            """
+            from hatchling.metadata.plugin.interface import MetadataHookInterface
+
+            class JSONMetaDataHook(MetadataHookInterface):
+                def update(self, metadata):
+                    metadata["authors"] = [
+                        {"name": "Kim Park", "email": "kim@example.com"},
+                        {"name": "John Doe", "email": "john@example.org"},
+                    ]
+                    metadata["dependencies"] = ["toga>=0.5.3"]
+                    metadata["license"] = "GPL-3.0"
+                    metadata["urls"] = {
+                        "Homepage": "https://example.com/",
+                        "Docs": "https://example.com/docs",
+                    }
+            """
+        ),
+    )
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["hatchling"]
+        build-backend = "hatchling.build"
+
+        [project]
+        dynamic = ["authors", "dependencies", "license", "urls"]
+        name = "awesome"
+        version = "1.2.3"
+        description = "The application is very awesome"
+
+        [tool.hatch.metadata.hooks.custom]
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    _, apps = parse_config(
+        config_file,
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+    )
+
+    awesome = apps["awesome"]
+    assert awesome == {
+        "app_name": "awesome",
+        "author": "Kim Park",
+        "author_email": "kim@example.com",
+        "bundle": "com.example",
+        "description": "The application is very awesome",
+        "formal_name": "Awesome Application",
+        "license": "GPL-3.0",
+        "license_files": [],
+        "requires": ["toga>=0.5.3"],
+        "url": "https://example.com/",
+        "version": "1.2.3",
+    }
+
+
+def test_pep621_dynamic_pdm_single(tmp_path):
+    create_file(
+        tmp_path / "awesome.py",
+        dedent(
+            """
+            def version():
+                return "1.2.3"
+
+            __version__ = version()
+            """
+        ),
+    )
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["pdm-backend"]
+        build-backend = "pdm.backend"
+
+        [project]
+        dynamic = ["version"]
+        name = "awesome"
+        description = "The application is very awesome"
+        license = "MIT"
+
+        [tool.pdm.version]
+        source = "call"
+        getter = "awesome:version"
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    _, apps = parse_config(
+        config_file,
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+    )
+
+    awesome = apps["awesome"]
+    assert awesome == {
+        "app_name": "awesome",
+        "bundle": "com.example",
+        "version": "1.2.3",
+        "license": "MIT",
+        "license_files": [],
+        "formal_name": "Awesome Application",
+        "description": "The application is very awesome",
+    }

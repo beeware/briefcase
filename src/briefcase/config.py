@@ -1215,10 +1215,8 @@ def resolve_dynamic_pep621_config(base_path, dynamic):
     """Resolve dynamic PEP621 metadata using the project's configured build backend."""
 
     metadata = project_wheel_metadata(base_path, isolated=True)
-    # Set all fields declared as dynamic to the corresponding metadata
-    # value, use .title() to translate from PEP621 field names to Core
-    # metadata field names
-    return {key: metadata[key.title()] for key in dynamic}
+    # Set all fields declared as dynamic to the corresponding metadata value
+    return {key: metadata[key] for key in dynamic}
 
 
 def merge_pep621_config(global_config, pep621_config):
