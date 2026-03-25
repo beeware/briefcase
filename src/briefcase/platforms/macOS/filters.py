@@ -4,7 +4,8 @@ import re
 
 MACOS_LOG_PREFIX_REGEX = re.compile(
     r"\d{4}-\d{2}-\d{2} (?P<timestamp>\d{2}:\d{2}:\d{2}.\d{3}) Df (.*?)\[.*?:.*?\]"
-    r"(?P<subsystem>( \(libffi\.dylib\))|( \(_ctypes(\.cpython-3\d{1,2}-.*?\.(so|dylib))?\)))? (?P<content>.*)"
+    r"(?P<subsystem>( \(libffi\.dylib\))|("
+    r" \(_ctypes(\.cpython-3\d{1,2}-.*?\.(so|dylib))?\)))? (?P<content>.*)"
 )
 
 
@@ -95,7 +96,7 @@ class XcodeBuildFilter:
         XCODEBUILD_PREFIX + r"Failed to start service \(com\.apple\.amfi\.lockdown\): "
     )
 
-    # XCode 15 generates dozens of copies of the following message:
+    # Xcode 15 generates dozens of copies of the following message:
     # ---------------------------------------------------------------------
     # 2023-09-26 14:35:45.775 xcodebuild[75877:23947967] [MT] DVTAssertions:
     #   Warning in /System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot11

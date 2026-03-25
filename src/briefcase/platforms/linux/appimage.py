@@ -13,7 +13,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -92,11 +92,10 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         self.use_docker = command.use_docker
         self.extra_docker_build_args = command.extra_docker_build_args
 
-    def finalize_app_config(self, app: AppConfig):
+    def finalize_app_config(self, app: AppConfig, **kwargs) -> FinalizedAppConfig:
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
-            self.console.warning(
-                """\
+            self.console.warning("""\
 *************************************************************************
 ** WARNING: Building a Local AppImage!                                 **
 *************************************************************************
@@ -106,11 +105,9 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     Any `manylinux` setting will be ignored.
 
 *************************************************************************
-"""
-            )
+""")
 
-        self.console.warning(
-            """\
+        self.console.warning("""\
 *************************************************************************
 ** WARNING: Use of AppImage is not recommended!                        **
 *************************************************************************
@@ -124,8 +121,8 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     distribution.
 
 *************************************************************************
-"""
-        )
+""")
+        return super().finalize_app_config(app, **kwargs)
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
@@ -228,8 +225,7 @@ class LinuxAppImageCreateCommand(
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning(
-            """
+        self.console.warning("""
 *************************************************************************
 ** WARNING: Support package update may be imperfect                    **
 *************************************************************************
@@ -244,8 +240,7 @@ class LinuxAppImageCreateCommand(
     perform a clean app build before release.
 
 *************************************************************************
-"""
-        )
+""")
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
@@ -301,7 +296,7 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
             try:
                 # For some reason, the version has to be passed in as an
                 # environment variable, *not* in the configuration.
-                env["LINUXDEPLOY_OUTPUT_VERSION"] = app.version
+                env["LINUXDEPLOY_OUTPUT_VERSION"] = str(app.version)
                 # The internals of the binary aren't inherently visible, so
                 # there's no need to package copyright files. These files
                 # appear to be missing by default in the OS dev packages anyway,

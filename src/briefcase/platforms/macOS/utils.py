@@ -8,8 +8,16 @@ import pathlib
 import plistlib
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
 
@@ -52,7 +60,7 @@ def sha256_file_digest(path: Path) -> str:
     return file_hash.hexdigest()
 
 
-class AppPackagesMergeMixin:
+class AppPackagesMergeMixin(_MixinBase):
     # A mixin containing the utilities to merge independent platform-specific
     # app_packages folders into a single "fat" app_packages folder.
     # This is currently only used by macOS, but it *could* be required on iOS
@@ -62,11 +70,15 @@ class AppPackagesMergeMixin:
         self,
         install_path: Path,
         universal_suffix: str | None = None,
+        other_suffix: str | None = None,
     ) -> list[tuple[str, str]]:
         """Find the packages that have been installed that have binary components.
 
         :param install_path: The path into which packages have been installed.
         :param universal_suffix: The tag suffix that indicates a universal wheel.
+        :param other_suffix: The tag suffix for the *other* architecture. Presence of
+            this architecture implies a universal wheel, even if it isn't tagged as
+            such.
         :returns: A list of (package name, version) tuples, describing the packages that
             are in the install path that are non-universal and non-pure.
         """
@@ -77,16 +89,24 @@ class AppPackagesMergeMixin:
             # for the wheel.
             with (distinfo / "WHEEL").open("r", encoding="utf-8") as f:
                 wheel_data = email.message_from_string(f.read())
-                is_purelib = wheel_data.get("Root-Is-Purelib", "false") == "true"
-                tag = wheel_data["Tag"]
+                tags = wheel_data.get_all("Tag")
 
-            # If the wheel is pure, it's not a binary package
-            if is_purelib:
+            # If the wheel is tagged `*-*-any`, it's not a binary package. We can't rely
+            # on Root-Is-Purelib in the wheel metadata. The flag isn't used correctly in
+            # some edge cases; and a library whose root is "pure" is allowed to contain
+            # `.data/platlib` content, which functionally renders it non-pure for our
+            # purposes.
+            if any(tag.endswith("-any") for tag in tags):
                 continue
 
             # If the tag ends with the universal tag, the binary package can be used on
             # all targets and doesn't need additional processing.
-            if universal_suffix and tag.endswith(universal_suffix):
+            if universal_suffix and any(tag.endswith(universal_suffix) for tag in tags):
+                continue
+
+            # If the wheel is tagged with the *other* architecture, it's a universal
+            # wheel even though it isn't tagged as such
+            if other_suffix and any(tag.endswith(other_suffix) for tag in tags):
                 continue
 
             # The wheel is a single platform binary wheel.
@@ -270,13 +290,13 @@ class AppPackagesMergeMixin:
                                 or Path(relative_path.parts[0]).suffix == ".dist-info"
                             ):
                                 self.console.warning(
-                                    f"{relative_path} has different content "
-                                    f"between sources; ignoring "
-                                    f"{source_app_packages.suffix[1:]} version. "
-                                    f"This is usually safe if the file content is not "
-                                    f"used at runtime. See "
-                                    f"https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels "
-                                    f"for more details."
+                                    f"{relative_path} has different content between"
+                                    " sources; ignoring"
+                                    f" {source_app_packages.suffix[1:]} version. This"
+                                    " is usually safe if the file content is not used"
+                                    " at runtime. See"
+                                    " https://briefcase.readthedocs.io/en/stable/reference/platforms/macOS/index.html#inconsistent-content-in-non-universal-wheels"
+                                    " for more details."
                                 )
                         else:
                             # The file doesn't exist yet; copy it as is (including
@@ -337,8 +357,9 @@ def is_uti_core_type(uti: str) -> bool:  # pragma: no-cover-if-not-macos
     plist = plistlib.loads(plist_data)
     return uti in {
         type_declaration["UTTypeIdentifier"]
-        for type_declaration in plist["UTExportedTypeDeclarations"]
-        + plist["UTImportedTypeDeclarations"]
+        for type_declaration in (
+            plist["UTExportedTypeDeclarations"] + plist["UTImportedTypeDeclarations"]
+        )
     }
 
 

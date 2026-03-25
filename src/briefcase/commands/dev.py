@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.machinery
 import os
 import subprocess
 import sys
@@ -64,6 +65,15 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Update requirements for the app",
         )
         parser.add_argument(
+            "--no-isolation",
+            dest="isolated",
+            action="store_false",
+            help=(
+                "Run without creating an isolated environment "
+                "(not recommended for web)."
+            ),
+        )
+        parser.add_argument(
             "--no-run",
             dest="run_app",
             action="store_false",
@@ -88,7 +98,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             environment.
         """
 
-        requires = app.requires if app.requires else []
+        requires = app.requires or []
         if app.test_requires:
             requires.extend(app.test_requires)
         if not requires:
@@ -222,9 +232,15 @@ class DevCommand(RunAppMixin, BaseCommand):
     def venv_name(self) -> str:
         """Returns the name of the virtual environment directory.
 
+        The environment name is platform and Python version specific, so
+        that multiple OSes and Python versions can share a `.briefcase`
+        folder. The name is based on the extension module filename that the
+        platform uses (e.g., cpython-313-darwin).
+
         :returns: Name for virtual environment directory
         """
-        return "dev"
+        ext = importlib.machinery.EXTENSION_SUFFIXES[0].split(".")[1]
+        return f"dev.{ext}"
 
     def venv_path(self, appname: str) -> Path:
         """Return the path for the app's virtual environment.
@@ -240,6 +256,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         update_requirements: bool | None = False,
         run_app: bool | None = True,
         test_mode: bool | None = False,
+        isolated: bool | None = True,
         passthrough: list[str] | None = None,
         **options,
     ):
@@ -290,7 +307,11 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, test_mode)
+        finalized = self.finalize(
+            apps=[app],
+            test_mode=test_mode,
+        )
+        app = finalized[app.app_name]
 
         self.verify_app(app)
 
@@ -298,14 +319,24 @@ class DevCommand(RunAppMixin, BaseCommand):
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
 
+        if isolated:
+            self.console.info("Activating dev environment...", prefix=app.app_name)
+
         with self.tools.virtual_environment.create(
             venv_path=self.venv_path(app.app_name),
-            isolated=options.get("isolated", False),
+            isolated=isolated,
             recreate=update_requirements,
         ) as venv:
             if venv.created:
                 self.console.info("Installing requirements...", prefix=app.app_name)
-                self.install_dev_requirements(app, venv, **options)
+                try:
+                    self.install_dev_requirements(app, venv, **options)
+                except Exception:
+                    # If any problem occurs during installing requirements, remove the
+                    # venv; it will need to be re-created on the next run.
+                    venv.clean()
+                    raise
+
                 write_dist_info(
                     app,
                     self.app_module_path(app).parent / app.dist_info_name,

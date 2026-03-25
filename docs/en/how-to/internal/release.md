@@ -36,7 +36,7 @@ The procedure for cutting a new release is as follows:
 3. Build the documentation to ensure that the new release notes don't include any spelling errors or markup problems:
 
     ```console
-    $ tox -e docs-lint,docs
+    $ tox -e docs-lint,docs-all
     ```
 
 4. Ensure that there is a version branch for the new Briefcase version in every template that Briefcase will use at runtime:
@@ -44,13 +44,13 @@ The procedure for cutting a new release is as follows:
 
     - `briefcase-template`
     - `briefcase-macOS-app-template`
-    - `briefcase-macOS-XCode-template`
+    - `briefcase-macOS-Xcode-template`
     - `briefcase-windows-app-template`
     - `briefcase-windows-VisualStudio-template`
     - `briefcase-linux-appimage-template`
     - `briefcase-linux-flatpak-template`
     - `briefcase-linux-system-template`
-    - `briefcase-iOS-XCode-template`
+    - `briefcase-iOS-Xcode-template`
     - `briefcase-android-gradle-template`
     - `briefcase-web-static-template`
 

@@ -22,7 +22,7 @@ To run your application using a specific output format:
 $ briefcase dev <platform> <output format>
 ```
 
-The first time the application runs in developer mode, any requirements listed in a [`requires`][] configuration item in `pyproject.toml` will be installed into the current environment.
+Briefcase will create a clean virtual environment in which to run your app. The first time the application runs in developer mode, any requirements listed in a [`requires`][] configuration item in `pyproject.toml` will be installed into that environment.
 
 ## Options
 
@@ -35,6 +35,10 @@ Run a specific application target in your project. This argument is only require
 ### `-r` / `--update-requirements`
 
 Update application requirements.
+
+### `--no-isolation`
+
+Use the currently active virtual environment (i.e., the environment where Briefcase is installed), rather than an isolated virtual environment to run the app.
 
 ### `--no-run`
 

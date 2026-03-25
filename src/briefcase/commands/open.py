@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 from abc import abstractmethod
 
 from briefcase.config import AppConfig
@@ -10,6 +11,16 @@ from .base import BaseCommand, full_options
 class OpenCommand(BaseCommand):
     command = "open"
     description = "Open an app in the build tool for the target platform."
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="app_name",
+            help="Name of the app to open (if multiple apps exist in the project)",
+            default=argparse.SUPPRESS,
+        )
 
     @abstractmethod
     def project_path(self, app: AppConfig):
@@ -47,17 +58,17 @@ class OpenCommand(BaseCommand):
     def __call__(
         self,
         app: AppConfig | None = None,
+        app_name: str | None = None,
         **options,
     ):
+        apps_to_open = self.resolve_apps(app=app, app_name=app_name)
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
+        finalized_apps = self.finalize(apps=apps_to_open.values())
 
-        if app:
-            state = self.open_app(app, **options)
-        else:
-            state = None
-            for _, app in sorted(self.apps.items()):
-                state = self.open_app(app, **full_options(state, options))
+        state = None
+        for _, app_obj in sorted(finalized_apps.items()):
+            state = self.open_app(app_obj, **full_options(state, options))
 
         return state

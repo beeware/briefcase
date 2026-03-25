@@ -11,14 +11,14 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from cookiecutter import exceptions as cookiecutter_exceptions
 from cookiecutter.repository import is_repo_url
-from packaging.specifiers import InvalidSpecifier, Specifier
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
@@ -31,7 +31,12 @@ else:  # pragma: no-cover-if-gte-py311
 
 import briefcase
 from briefcase import __version__
-from briefcase.config import AppConfig, GlobalConfig, parse_config
+from briefcase.config import (
+    AppConfig,
+    FinalizedAppConfig,
+    GlobalConfig,
+    parse_config,
+)
 from briefcase.console import MAX_TEXT_WIDTH, Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -673,7 +678,7 @@ a custom location for Briefcase's tools.
         """
         return
 
-    def finalize_app_config(self, app: AppConfig):
+    def finalize_app_config(self, app: AppConfig, **kwargs) -> FinalizedAppConfig:
         """Finalize the application config.
 
         Some app configurations (notably, Linux system packages like .deb) have
@@ -685,18 +690,46 @@ a custom location for Briefcase's tools.
         configuration, and performs any other app-specific platform configuration and
         verification that is required as a result of command-line arguments.
 
+        Platform overrides should call ``super().finalize_app_config(app, **kwargs)``
+        to construct the ``FinalizedAppConfig``.
+
         :param app: The app configuration to finalize.
+        :param kwargs: Runtime attributes forwarded to the FinalizedAppConfig
+            constructor (``test_mode``, ``debugger``, etc.).
+        :returns: The finalized app configuration.
         """
-        return
+        return FinalizedAppConfig(app, **kwargs)
+
+    def resolve_apps(
+        self,
+        app: AppConfig | None = None,
+        app_name: str | None = None,
+    ) -> dict[str, AppConfig]:
+        """Resolve which apps to operate on.
+
+        :param app: An explicit app config to use.
+        :param app_name: The name of the app to look up in the project.
+        :returns: A dict of app name to AppConfig for the selected apps.
+        """
+        if app_name:
+            if not (app_obj := self.apps.get(app_name)):
+                raise BriefcaseCommandError(
+                    f"App '{app_name}' does not exist in this project."
+                )
+            return {app_name: app_obj}
+        elif app:
+            return {app.app_name: app}
+        else:
+            return self.apps
 
     def finalize(
         self,
-        app: AppConfig | None = None,
+        apps: Iterable[AppConfig],
         test_mode: bool = False,
         debugger: str | None = None,
         debugger_host: str | None = None,
         debugger_port: int | None = None,
-    ):
+    ) -> dict[str, FinalizedAppConfig]:
         """Finalize Briefcase configuration.
 
         This will:
@@ -704,31 +737,29 @@ a custom location for Briefcase's tools.
         1. Ensure that the host has been verified
         2. Ensure that the platform tools have been verified
         3. Ensure that app configurations have been finalized.
-        4. Ensure that the debugger is configured.
 
         App finalization will only occur once per invocation.
 
-        :param app: If provided, the specific app configuration
-            to finalize. By default, all apps will be finalized.
+        :param apps: The app configuration(s) to finalize.
         :param test_mode: Specify if the app is running in test mode
         :param debugger: The debugger that should be used
         :param debugger_host: The host to use for the debugger
         :param debugger_port: The port to use for the debugger
+        :returns: A dict mapping app name to finalized app configs.
         """
         self.verify_host()
         self.verify_tools()
 
-        apps = self.apps.values() if app is None else [app]
+        finalized: dict[str, FinalizedAppConfig] = {}
         for app in apps:
-            if hasattr(app, "__draft__"):
-                if debugger and debugger != "":
-                    app.debugger = get_debugger(debugger)
-                    app.debugger_host = debugger_host
-                    app.debugger_port = debugger_port
-
-                app.test_mode = test_mode
-                self.finalize_app_config(app)
-                delattr(app, "__draft__")
+            if not isinstance(app, FinalizedAppConfig):
+                app = self.finalize_app_config(
+                    app,
+                    test_mode=test_mode,
+                    debugger=get_debugger(debugger) if debugger else None,
+                    debugger_host=debugger_host,
+                    debugger_port=debugger_port,
+                )
 
                 if app.external_package_path:
                     # Package path is defined
@@ -754,6 +785,9 @@ a custom location for Briefcase's tools.
                             f"'external_package_executable_path', "
                             f"but not 'external_package_path'."
                         )
+            finalized[app.app_name] = app
+        self.apps.update(finalized)
+        return finalized
 
     def verify_app(self, app: AppConfig):
         """Verify the app is compatible and the app tools are available.
@@ -812,7 +846,7 @@ any compatibility problems, and then add the compatibility declaration.
             return
 
         try:
-            spec = Specifier(requires_python)
+            spec = SpecifierSet(requires_python)
         except InvalidSpecifier as e:
             raise BriefcaseConfigError(
                 f"Invalid requires-python in pyproject.toml: {e}"
@@ -1068,34 +1102,33 @@ any compatibility problems, and then add the compatibility declaration.
 
     def parse_config(self, filename, overrides):
         try:
-            with open(filename, "rb") as config_file:
-                # Parse the content of the pyproject.toml file, extracting
-                # any platform and output format configuration for each app,
-                # creating a single set of configuration options.
-                global_config, app_configs = parse_config(
-                    config_file,
-                    platform=self.platform,
-                    output_format=self.output_format,
-                    console=self.console,
-                )
+            # Parse the content of the pyproject.toml file, extracting
+            # any platform and output format configuration for each app,
+            # creating a single set of configuration options.
+            global_config, app_configs = parse_config(
+                filename,
+                platform=self.platform,
+                output_format=self.output_format,
+                console=self.console,
+            )
 
-                # Create the global config
-                global_config.update(overrides)
-                self.global_config = create_config(
-                    klass=GlobalConfig,
-                    config=global_config,
-                    msg="Global configuration",
-                )
+            # Create the global config
+            global_config.update(overrides)
+            self.global_config = create_config(
+                klass=GlobalConfig,
+                config=global_config,
+                msg="Global configuration",
+            )
 
-                for app_name, app_config in app_configs.items():
-                    # Construct an AppConfig object with the final set of
-                    # configuration options for the app.
-                    app_config.update(overrides)
-                    self.apps[app_name] = create_config(
-                        klass=AppConfig,
-                        config=app_config,
-                        msg=f"Configuration for '{app_name}'",
-                    )
+            for app_name, app_config in app_configs.items():
+                # Construct an AppConfig object with the final set of
+                # configuration options for the app.
+                app_config.update(overrides)
+                self.apps[app_name] = create_config(
+                    klass=AppConfig,
+                    config=app_config,
+                    msg=f"Configuration for '{app_name}'",
+                )
 
         except OSError as e:
             raise BriefcaseConfigError(
@@ -1287,7 +1320,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # Branch does not exist.
             raise InvalidTemplateBranch(template, branch) from e
         except cookiecutter_exceptions.UndefinedVariableInTemplate as e:
-            raise BriefcaseConfigError(e.message) from e
+            raise BriefcaseConfigError(f"{e.message}: {e.error}") from e
 
     def generate_template(
         self,
@@ -1298,9 +1331,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
-        version = Version(briefcase.__version__)
+        briefcase_version = Version(briefcase.__version__)
         if branch is None:
-            template_branch = f"v{version.base_version}"
+            template_branch = f"v{briefcase_version.base_version}"
         else:
             template_branch = branch
 
@@ -1312,7 +1345,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             {
                 "template_source": template,
                 "template_branch": template_branch,
-                "briefcase_version": str(version),
+                "briefcase_version": str(briefcase_version),
             }
         )
 
@@ -1330,7 +1363,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
             # and the user didn't explicitly specify which branch to use.
-            if version.dev is None or branch is not None:
+            if briefcase_version.dev is None or branch is not None:
                 raise
 
             # Development branches can use the main template.

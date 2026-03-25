@@ -34,19 +34,19 @@ jobs:
           echo "VERSION=${GITHUB_REF_NAME#v}" | tee -a $GITHUB_ENV
 
       - name: Set up Python
-        uses: actions/setup-python@v6.1.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.x"
 
       - name: Get packages
-        uses: actions/download-artifact@v6.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
-          pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
+          pattern: ${{ format('{0}*', needs.ci.outputs.artifact-basename) }}
           merge-multiple: true
           path: dist
 
       - name: Purge non-release packages
-        run: rm -rf dist/x-*
+        run: rm -rf dist/x_*
 
       - name: Install packages
         run: pip install dist/*.whl
@@ -59,7 +59,7 @@ jobs:
           test $(briefcase --version) = $VERSION
 
       - name: Create release
-        uses: ncipollo/release-action@v1.20.0
+        uses: ncipollo/release-action@v1.21.0
         with:
           name: ${{ env.VERSION }}
           draft: true

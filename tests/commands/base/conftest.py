@@ -43,9 +43,10 @@ class DummyCommand(BaseCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
-    def finalize_app_config(self, app):
-        super().finalize_app_config(app=app)
+    def finalize_app_config(self, app, **kwargs):
+        app = super().finalize_app_config(app=app, **kwargs)
         self.actions.append(("finalize-app-config", app.app_name))
+        return app
 
 
 @pytest.fixture

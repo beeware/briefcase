@@ -56,6 +56,18 @@ def first_app_deb(first_app):
 
 
 @pytest.fixture
+def underscore_app_deb(underscore_app):
+    # Mock a debian app
+    underscore_app.python_version_tag = "3.10"
+    underscore_app.target_vendor_base = "debian"
+    underscore_app.packaging_format = "deb"
+    underscore_app.glibc_version = "2.99"
+    underscore_app.long_description = "Long description\nfor the app"
+
+    return underscore_app
+
+
+@pytest.fixture
 def external_first_app_deb(first_app_deb, tmp_path):
     # Make the app external
     first_app_deb.sources = None
@@ -241,6 +253,62 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
     package_command.tools.shutil.move.assert_called_once_with(
         bundle_path / "first-app-0.0.1.deb",
         tmp_path / "base_path/dist/first-app_0.0.1-1~somevendor-surprising_wonky.deb",
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
+def test_deb_package_underscore(package_command, underscore_app_deb, tmp_path):
+    """A deb app can be packaged."""
+    package_command.tools.app_tools[underscore_app_deb].app_context = mock.MagicMock()
+
+    bundle_path = tmp_path / "base_path/build/underscore_app/somevendor/surprising"
+
+    # Package the app
+    package_command.package_app(underscore_app_deb)
+
+    # The control file is written
+    assert (bundle_path / "underscore_app-0.0.1/DEBIAN/control").exists()
+    with (bundle_path / "underscore_app-0.0.1/DEBIAN/control").open(
+        encoding="utf-8"
+    ) as f:
+        assert (
+            f.read()
+            == "\n".join(
+                [
+                    "Package: underscore-app",
+                    "Version: 0.0.1",
+                    "Architecture: wonky",
+                    "Maintainer: Megacorp <maintainer@example.com>",
+                    "Homepage: https://example.com/underscore_app",
+                    "Description: The first simple app \\ demonstration",
+                    " Long description",
+                    " for the app",
+                    "Depends: libc6 (>=2.99), libpython3.10",
+                    "Section: utils",
+                    "Priority: optional",
+                ]
+            )
+            + "\n"
+        )
+
+    package_command.tools.app_tools[
+        underscore_app_deb
+    ].app_context.run.assert_called_once_with(
+        [
+            "dpkg-deb",
+            "--build",
+            "--root-owner-group",
+            bundle_path / "underscore_app-0.0.1",
+        ],
+        check=True,
+        cwd=bundle_path,
+    )
+
+    # The deb was moved into the final location
+    package_command.tools.shutil.move.assert_called_once_with(
+        bundle_path / "underscore_app-0.0.1.deb",
+        tmp_path
+        / "base_path/dist/underscore-app_0.0.1-1~somevendor-surprising_wonky.deb",
     )
 
 

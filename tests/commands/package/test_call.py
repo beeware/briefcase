@@ -42,7 +42,7 @@ def test_no_args_package_one_app(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -86,7 +86,7 @@ def test_package_one_explicit_app(package_command, first_app, second_app, tmp_pa
     ]
 
     # Packaging format has been annotated on the first app, not the second.
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
     assert not hasattr(second_app, "packaging_format")
 
     # The dist folder has been created.
@@ -147,8 +147,8 @@ def test_no_args_package_two_app(package_command, first_app, second_app, tmp_pat
     ]
 
     # Packaging format has been annotated on both apps
-    assert first_app.packaging_format == "pkg"
-    assert second_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
+    assert package_command.apps["second"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -192,7 +192,7 @@ def test_identity_arg_package_one_app(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -236,7 +236,7 @@ def test_adhoc_sign_package_one_app(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -301,8 +301,8 @@ def test_adhoc_sign_args_package_two_app(
     ]
 
     # Packaging format has been annotated on both apps
-    assert first_app.packaging_format == "pkg"
-    assert second_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
+    assert package_command.apps["second"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -365,8 +365,8 @@ def test_identity_sign_args_package_two_app(
     ]
 
     # Packaging format has been annotated on both apps
-    assert first_app.packaging_format == "pkg"
-    assert second_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
+    assert package_command.apps["second"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -409,7 +409,7 @@ def test_package_alternate_format(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "box"
+    assert package_command.apps["first"].packaging_format == "box"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -472,7 +472,7 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app_config.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -538,7 +538,7 @@ def test_update_package_one_app(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -651,8 +651,8 @@ def test_update_package_two_app(package_command, first_app, second_app, tmp_path
     ]
 
     # Packaging format has been annotated on both apps
-    assert first_app.packaging_format == "pkg"
-    assert second_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
+    assert package_command.apps["second"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -705,7 +705,7 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app_unbuilt.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -752,7 +752,7 @@ def test_already_packaged(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the app
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder still exists
     assert (tmp_path / "base_path/dist").exists()
@@ -788,7 +788,6 @@ def test_package_app_single(package_command, first_app, second_app, app_flags):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # App template is verified
         ("verify-app-template", "first"),
         # App tools are verified
@@ -877,7 +876,6 @@ def test_package_app_all_flags(package_command, first_app, second_app):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # App is updated with all update options
         (
             "update",
@@ -1004,7 +1002,7 @@ def test_package_external_app(package_command, first_app, tmp_path):
     ]
 
     # Packaging format has been annotated on the first app, not the second.
-    assert first_app.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
@@ -1066,7 +1064,7 @@ def test_create_before_package_external_app(
     ]
 
     # Packaging format has been annotated on the first app, not the second.
-    assert first_app_config.packaging_format == "pkg"
+    assert package_command.apps["first"].packaging_format == "pkg"
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()

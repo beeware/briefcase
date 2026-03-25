@@ -5,8 +5,11 @@ import keyword
 import re
 import sys
 import unicodedata
-from types import SimpleNamespace
+from pathlib import Path
 from urllib.parse import urlparse
+
+from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
+from packaging.version import InvalidVersion, Version
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -17,7 +20,7 @@ from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import RESERVED_WORDS
-from .exceptions import BriefcaseConfigError
+from .exceptions import BriefcaseConfigError, InvalidVersionError
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
 # re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
@@ -72,7 +75,7 @@ def make_class_name(formal_name):
     class_name = "".join(
         ch
         for ch in unicodedata.normalize("NFKC", formal_name)
-        if unicodedata.category(ch) in xid_continue or ch in {"_"}
+        if unicodedata.category(ch) in xid_continue or ch == "_"
     )
 
     # If the first character isn't in the 'start' character set,
@@ -161,7 +164,7 @@ def validate_document_type_config(document_type_id, document_type):
         if isinstance(content_types, list):
             if len(content_types) > 1:
                 raise BriefcaseConfigError(
-                    f"""
+                    f"""\
 Document type {document_type_id!r} has multiple content types. Specifying
 multiple values in a LSItemContentTypes key is only valid when multiple document
 types are manually grouped together in the Info.plist file. For Briefcase apps,
@@ -197,13 +200,21 @@ a single value should be provided.
         pass
 
 
-def validate_install_options_config(config):
-    """Validate that a install options are valid and complete, and convert to a dict.
+def validate_install_options_config(config, opt_type, **others):
+    """Validate that install/uninstall options are valid and complete, and convert to a
+    dict.
 
     The dict format is required because Cookiecutter doesn't allow passing a list as a
     context value; you have to use the reliable iteration order of a dict instead.
+
+    :param config: The table form of options
+    :param opt_type: The label of the option type being parsed ("install" or
+        "uninstall")
+    :param others: A dictionary of other parsed option types. The keys are
+        the option types, and the values are the dictionary of parse options. Options
+        in `config` must be unique against these keys.
     """
-    install_options = {}
+    options = {}
     known_names = set()
     if config:
         for i, config_item in enumerate(config):
@@ -211,49 +222,57 @@ def validate_install_options_config(config):
                 name = config_item["name"]
                 if not isinstance(name, str):
                     raise BriefcaseConfigError(
-                        f"Name for install option {i} is not a string."
+                        f"Name for {opt_type} option {i} is not a string."
                     )
             except KeyError:
                 raise BriefcaseConfigError(
-                    f"Install option {i} does not define a `name`."
+                    f"{opt_type.title()} option {i} does not define a `name`."
                 ) from None
 
             # Options must be valid Python identifiers
             if not name.isidentifier():
                 raise BriefcaseConfigError(
-                    f"{name!r} cannot be used as an install option name, "
+                    f"{name!r} cannot be used as an {opt_type} option name, "
                     "as it is not a valid Python identifier."
                 )
 
             # Option names may be coerced into upper case; and there are
             # a small number of reserved identifiers.
-            if name.upper() in {"ALLUSERS"}:
+            if name.upper() == "ALLUSERS":
                 raise BriefcaseConfigError(
-                    f"{name!r} is a reserved install option identifier."
+                    f"{name!r} is a reserved {opt_type} option identifier."
                 )
 
             option = {}
             if name.upper() in known_names:
                 raise BriefcaseConfigError(
-                    f"Install option names must be unique. The name {name!r}, "
-                    f"used by install option {i}, has already been defined."
+                    f"{opt_type.title()} option names must be unique. The name "
+                    f"{name!r}, used by {opt_type} option {i}, has already "
+                    "been defined."
                 )
+            else:
+                for other_type, other_options in others.items():
+                    if name.upper() in {n.upper() for n in other_options}:
+                        raise BriefcaseConfigError(
+                            f"{opt_type.title()} option names must be unique. The name "
+                            f"{name!r} is already used as an {other_type} option."
+                        )
 
-            # install_options needs to retain the original name, but we need names to be
+            # options needs to retain the original name, but we need names to be
             # case-unique as well, so we track a separate set of known upper case names.
             known_names.add(name.upper())
-            install_options[name] = option
+            options[name] = option
 
             try:
                 # Options must have a string title.
                 option["title"] = config_item["title"]
                 if not isinstance(option["title"], str):
                     raise BriefcaseConfigError(
-                        f"Title for install option {name!r} is not a string."
+                        f"Title for {opt_type} option {name!r} is not a string."
                     )
             except KeyError:
                 raise BriefcaseConfigError(
-                    f"Install option {name!r} does not provide a title."
+                    f"{opt_type.title()} option {name!r} does not provide a title."
                 ) from None
 
             try:
@@ -261,17 +280,18 @@ def validate_install_options_config(config):
                 option["description"] = config_item["description"]
                 if not isinstance(option["description"], str):
                     raise BriefcaseConfigError(
-                        f"Description for install option {name!r} is not a string."
+                        f"Description for {opt_type} option {name!r} is not a string."
                     )
             except KeyError:
                 raise BriefcaseConfigError(
-                    f"Install option {name!r} does not provide a description."
+                    f"{opt_type.title()} option {name!r} does not provide "
+                    "a description."
                 ) from None
 
             # Options are booleans, and are False by default
             option["default"] = bool(config_item.get("default", False))
 
-    return install_options
+    return options
 
 
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
@@ -280,49 +300,6 @@ VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
 def is_valid_bundle_identifier(bundle):
     """Check if the bundle identifier follows the basic reversed domain name pattern."""
     return VALID_BUNDLE_RE.match(bundle) is not None
-
-
-# This is the canonical definition from PEP440, modified to include named groups
-PEP440_CANONICAL_VERSION_PATTERN_RE = re.compile(
-    r"^((?P<epoch>[1-9][0-9]*)!)?"
-    r"(?P<release>(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*)"
-    r"((?P<pre_tag>a|b|rc)(?P<pre_value>0|[1-9][0-9]*))?"
-    r"(\.post(?P<post>0|[1-9][0-9]*))?"
-    r"(\.dev(?P<dev>0|[1-9][0-9]*))?$"
-)
-
-
-def is_pep440_canonical_version(version):
-    """Determine if the string describes a valid PEP440 canonical version specifier.
-
-    This implementation comes directly from PEP440 itself.
-
-    :returns: True if the version string is valid; false otherwise.
-    """
-    return PEP440_CANONICAL_VERSION_PATTERN_RE.match(version) is not None
-
-
-def parsed_version(version):
-    """Return a parsed version string.
-
-    :param version: The parsed version string
-    """
-    groupdict = PEP440_CANONICAL_VERSION_PATTERN_RE.match(version).groupdict()
-
-    # Convert dot separated string of integers to tuple of integers
-    groupdict["release"] = tuple(int(p) for p in groupdict.pop("release").split("."))
-
-    # Convert strings to values
-    for key in ("epoch", "pre_value", "post", "dev"):
-        try:
-            groupdict[key] = int(groupdict[key])
-        except TypeError:
-            pass
-
-    tag = groupdict.pop("pre_tag")
-    value = groupdict.pop("pre_value")
-    groupdict["pre"] = (tag, value) if tag is not None else None
-    return SimpleNamespace(**groupdict)
 
 
 def parse_boolean(value: str) -> bool:
@@ -386,6 +363,7 @@ class GlobalConfig(BaseConfig):
         version,
         bundle,
         license=None,
+        license_files=None,
         url=None,
         author=None,
         author_email=None,
@@ -400,15 +378,20 @@ class GlobalConfig(BaseConfig):
         self.author = author
         self.author_email = author_email
         self.license = license
+        self.license_files = [] if license_files is None else license_files
         self.requires_python = requires_python
 
-        # Version number is PEP440 compliant:
-        if not is_pep440_canonical_version(self.version):
-            raise BriefcaseConfigError(
-                f"Version number ({self.version}) is not valid.\n\n"
-                "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details."
-            )
+        # Version number is compliant with PEP440 (and related updates):
+        try:
+            # If input is already a version object (can happen by copying), use as-is
+            if isinstance(version, Version):
+                self.version = version
+            else:
+                self.version = Version(version)
+        except (InvalidVersion, TypeError):
+            raise InvalidVersionError(
+                f"Version number ({self.version}) is not valid."
+            ) from None
 
     def __repr__(self):
         return f"<{self.project_name} v{self.version} GlobalConfig>"
@@ -421,7 +404,8 @@ class AppConfig(BaseConfig):
         version,
         bundle,
         description,
-        license,
+        license=None,
+        license_files=None,
         sources=None,
         formal_name=None,
         url=None,
@@ -431,6 +415,7 @@ class AppConfig(BaseConfig):
         icon=None,
         document_type=None,
         install_option=None,
+        uninstall_option=None,
         permission=None,
         template=None,
         template_branch=None,
@@ -447,12 +432,9 @@ class AppConfig(BaseConfig):
     ):
         super().__init__(**kwargs)
 
-        # All app configs are created in unfinalized draft form.
-        self.__draft__ = True
-
         self.app_name = app_name
         self.version = version
-        self.bundle = bundle
+        self.bundle = bundle.lower()
         # Description can only be a single line. Ignore everything else.
         self.description = description.split("\n")[0]
         self.sources = sources
@@ -471,6 +453,7 @@ class AppConfig(BaseConfig):
         self.supported = supported
         self.long_description = long_description
         self.license = license
+        self.license_files = [] if license_files is None else license_files
         self.console_app = console_app
         self.requirement_installer_args = (
             [] if requirement_installer_args is None else requirement_installer_args
@@ -484,8 +467,8 @@ class AppConfig(BaseConfig):
         self.test_mode: bool = False
 
         self.debugger: BaseDebugger | None = None
-        self.debugger_host: str | None = None  # only for run command
-        self.debugger_port: int | None = None  # only for run command
+        self.debugger_host: str | None = None
+        self.debugger_port: int | None = None
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
@@ -510,16 +493,26 @@ class AppConfig(BaseConfig):
         for document_type_id, document_type in self.document_types.items():
             validate_document_type_config(document_type_id, document_type)
 
-        self.install_options = validate_install_options_config(install_option)
+        self.install_options = validate_install_options_config(
+            install_option, "install"
+        )
+        self.uninstall_options = validate_install_options_config(
+            uninstall_option,
+            "uininstall",
+            install=self.install_options,
+        )
 
-        # Version number is PEP440 compliant:
-        if not is_pep440_canonical_version(self.version):
-            raise BriefcaseConfigError(
+        # Version number is compliant with PEP440 (and related updates):
+        try:
+            # If input is already a version object (can happen by copying), use as-is
+            if isinstance(version, Version):
+                self.version = version
+            else:
+                self.version = Version(version)
+        except (InvalidVersion, TypeError):
+            raise InvalidVersionError(
                 f"Version number for {self.app_name!r} ({self.version}) is not valid."
-                f"\n\n"
-                "Version numbers must be PEP440 compliant; "
-                "see https://www.python.org/dev/peps/pep-0440/ for details."
-            )
+            ) from None
 
         if self.sources:
             # Sources list doesn't include any duplicates
@@ -540,6 +533,14 @@ class AppConfig(BaseConfig):
     def __repr__(self):
         return f"<{self.bundle_identifier} v{self.version} AppConfig>"
 
+    def __eq__(self, other):
+        if isinstance(other, AppConfig):
+            return self.app_name == other.app_name
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.app_name)
+
     @property
     def module_name(self):
         """The module name for the app.
@@ -556,7 +557,7 @@ class AppConfig(BaseConfig):
         This is derived from the app name, but:
         * all `_` have been replaced with `-`.
         """
-        return self.app_name.replace("_", "-")
+        return self.app_name.replace("_", "-").lower()
 
     @property
     def bundle_identifier(self):
@@ -621,6 +622,30 @@ class AppConfig(BaseConfig):
             return self.module_name
 
 
+class FinalizedAppConfig(AppConfig):
+    """An AppConfig that has been through platform finalization.
+
+    Constructed by ``finalize_app_config()``; holds runtime attributes
+    (``test_mode``, ``debugger``, etc.) that are not part of the parsed
+    project configuration.
+    """
+
+    def __init__(
+        self,
+        app: AppConfig,
+        *,
+        test_mode: bool = False,
+        debugger: BaseDebugger | None = None,
+        debugger_host: str | None = None,
+        debugger_port: int | None = None,
+    ):
+        self.__dict__.update(app.__dict__)
+        self.test_mode = test_mode
+        self.debugger = debugger
+        self.debugger_host = debugger_host
+        self.debugger_port = debugger_port
+
+
 def merge_config(config, data):
     """Merge a new set of configuration requirements into a base configuration.
 
@@ -650,6 +675,466 @@ def merge_config(config, data):
     config.update(data)
 
 
+def get_license_from_text(license_text: str, default: str | None = None) -> str | None:
+    """Infer the SPDX license identifier from the text of a license file.
+
+    The order of pattern matching is important: more specific patterns must precede
+    overlapping broader ones (e.g. GPL-3.0+ before GPL-3.0).  MIT is checked last
+    because common words like "PERMITTED" produce false positives.
+
+    :param license_text: Full text of the license file.
+    :param default: The value to return if the license cannot be determined. Defaults
+        to `None`.
+    :returns: One of the recognised SPDX expressions, or `default` when the text
+        cannot be matched to a known license.
+    """
+    hint_patterns = {
+        "Apache-2.0": ["Apache"],
+        "BSD-3-Clause": [
+            "Redistribution and use in source and binary forms",
+            "BSD",
+        ],
+        "GPL-2.0+": [
+            "Free Software Foundation, either version 2 of the License",
+            "GPLv2+",
+        ],
+        "GPL-2.0": [
+            "version 2 of the GNU General Public License",
+            "GPLv2",
+        ],
+        "GPL-3.0+": [
+            "either version 3 of the License",
+            "GPLv3+",
+        ],
+        "GPL-3.0": [
+            "version 3 of the GNU General Public License",
+            "GPLv3",
+        ],
+        "MIT": [
+            "Permission is hereby granted, free of charge",
+            "MIT",
+        ],
+    }
+    for license_id, license_patterns in hint_patterns.items():
+        for license_pattern in license_patterns:
+            if license_pattern.lower() in license_text.lower():
+                return license_id
+
+    return default
+
+
+def _write_temp_license(base_path: Path, app_name: str, text: str) -> str | None:
+    """Write a temporary license file based on license text if needed.
+
+    If the license text is more than one line, write a temporary file into the build
+    folder, and return that path. If the license text is a single line, no file
+    will be written, and `None` will be returned.
+
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param app_name: The app name
+    :param text: The license text to use in the file.
+    :returns: The path to the temporary file, as a string that can be used as part of a
+        `license_files` declaration; or `None` if no temporary license file is needed.
+    """
+    if "\n" in text:
+        tmp_license_file = f"build/license_text.{app_name}.txt"
+        license_text_file = Path(base_path) / tmp_license_file
+        license_text_file.parent.mkdir(parents=True, exist_ok=True)
+        license_text_file.write_text(text, encoding="utf-8")
+        return tmp_license_file
+    else:
+        return None
+
+
+def _normalize_pep639_license_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Finish normalizing a PEP 639 license config.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used
+        to read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    raw_license = config["license"]
+    # Remove the `license-files` key because it needs to be converted into attribute
+    # form (`license_files`)
+    raw_license_files = config.pop("license-files", None)
+
+    # Ensure we license-files is a list.
+    if raw_license_files is None:
+        raw_license_files = []
+
+    # Ensure `licence` is an SPDX expression
+    try:
+        spdx_id = canonicalize_license_expression(raw_license)
+    except InvalidLicenseExpression:
+        raise BriefcaseConfigError(f"""\
+The license configuration for '{app_name}' is in PEP 639 format, but the
+`license` value {raw_license!r} is not a valid SPDX expression.
+
+Update the `license` definition to a valid SPDX expression.
+        """) from None
+
+    # Validate each license-file exists.
+    for license_path_str in raw_license_files:
+        if not (Path(base_path) / license_path_str).is_file():
+            raise BriefcaseConfigError(
+                f"The license file {license_path_str!r} for '{app_name}' "
+                f"does not exist."
+            ) from None
+
+    # Finalize PEP 639 config. Use `license_files` rather than `license-files` so it's a
+    # valid attribute name.
+    config["license"] = spdx_id
+    config["license_files"] = raw_license_files
+
+
+def _normalize_pep621_license_text_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize a PEP 621 license.text config into PEP 639 form.
+
+    Text could be a license identifier (which *might* even be valid SPDX), or full
+    license text. If the text is more than one line, write the value as a temporary
+    license file.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    license_text = config["license"]["text"]
+
+    # Attempt to identify the SPDX expression from the text content.
+    spdx_id = get_license_from_text(license_text)
+
+    warning = [
+        f"""
+*******************************************************************************
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
+*******************************************************************************
+
+    Briefcase now uses PEP 639 format for license definitions.
+"""
+    ]
+    if spdx_id is not None:
+        # SPDX identifiable.
+        license = spdx_id
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`,
+    and `license` must be a valid SPDX expression. The current value for
+    `license.text` seems to define a SPDX license of '{spdx_id}'.
+""")
+    else:
+        # SPDX not identifiable.
+        spdx_id = "<SPDX expression>"
+        license = "LicenseRef-UnknownLicense"
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`.
+    Briefcase cannot determine the current license for '{app_name}' based
+    on the value of `license.text`. A value of 'LicenseRef-UnknownLicense'
+    will be used.
+""")
+
+    # Write the license text to a file under the build directory so it can
+    # be referenced as a real path in license-files.
+    tmp_license_file = _write_temp_license(base_path, app_name, license_text)
+    if tmp_license_file:
+        license_files = [tmp_license_file]
+        warning.append("""
+    The contents of `license.text` will be used as the contents of the
+    license file. This may not be correct, and should be verified.
+""")
+    else:
+        license_files = []
+        warning.append("""
+    Your project will not have a value for `license-files`. This will
+    cause problems packaging for some platforms.
+""")
+
+    warning.append(f"""
+    Update your configuration to put the full license text in a file and use
+    PEP 639 format for the license definition:
+
+        license = "{spdx_id}"
+        license-files = ["LICENSE"]
+
+    You should not release your project without resolving this warning.
+
+*******************************************************************************
+""")
+
+    # Warn and finalize PEP 621 license.text coercion. Use `license_files` rather than
+    # `license-files` so it's a valid attribute name.
+    console.warning("".join(warning))
+    config["license"] = license
+    config["license_files"] = license_files
+
+
+def _normalize_pep621_license_file_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize a PEP 621 license.file config into PEP 639 form.
+
+    Read the file to infer the SPDX expression.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used
+        to read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    license_file = config["license"]["file"]
+    license_path = Path(base_path) / license_file
+    if not license_path.is_file():
+        raise BriefcaseConfigError(
+            f"The PEP 621 license.file {license_file!r} for '{app_name}' "
+            "does not exist."
+        ) from None
+    license_text = license_path.read_text(encoding="utf-8")
+    spdx_id = get_license_from_text(license_text)
+
+    warning = [
+        f"""
+*******************************************************************************
+** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
+*******************************************************************************
+
+    Briefcase now uses PEP 639 format for license definitions.
+
+    PEP 639 requires the definition of both `license` and `license-files`.
+    The value for `license.file` will be used to populate the PEP 639
+    `licence-files` setting.
+"""
+    ]
+    if spdx_id is not None:
+        license = spdx_id
+        # License is valid SPDX
+        warning.append(f"""
+    The license has been identified as '{spdx_id}'.
+""")
+    else:
+        # Can't identify SPDX for license
+        license = "<SPDX expression>"
+        spdx_id = "LicenseRef-UnknownLicense"
+        warning.append("""
+    A license SPDX expression could not be identified from the license file.
+    The license has been set to 'LicenseRef-UnknownLicense'
+    """)
+
+    warning.append(f"""
+    Update your configuration to use PEP 639 format:
+
+        license = "{license}"
+        license-files = ["{license_file}"]
+
+    You should not release your project without resolving this warning.
+
+*******************************************************************************
+""")
+    # Warn and finalize PEP 621 license.file coercion. Use `license_files` rather than
+    # `license-files` so it's a valid attribute name.
+    console.warning("".join(warning))
+    config["license"] = spdx_id
+    config["license_files"] = [license_file]
+
+
+def _normalize_pre_pep621_license_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize a pre-PEP 621 license config into PEP 639 form.
+
+    Pre-PEP 621 free-form `license` text, with no license-files. We also know that the
+    license text isn't a valid SPDX expression, because preprocessing caught that case.
+
+    Treat like the PEP 621 license.text case: write the string value to a file, set
+    license-files to point at it, and attempt to canonicalize the SPDX expression.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    license_text = config["license"]
+
+    # Attempt to identify the SPDX expression from the text content.
+    spdx_id = get_license_from_text(license_text)
+
+    warning = [
+        f"""
+*******************************************************************************
+** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
+*******************************************************************************
+
+    Briefcase now uses PEP 639 format for license definitions.
+"""
+    ]
+    if spdx_id is not None:
+        # SPDX identifiable.
+        license = spdx_id
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`,
+    and `license` must be a valid SPDX expression. The current value for
+    `license` seems to define a SPDX license of '{spdx_id}'.
+""")
+    else:
+        # SPDX not identifiable.
+        spdx_id = "<SPDX expression>"
+        license = "LicenseRef-UnknownLicense"
+        warning.append(f"""
+    PEP 639 requires the definition of both `license` and `license-files`.
+    Briefcase cannot determine the current license for '{app_name}' based
+    on the value of `license`. A value of 'LicenseRef-UnknownLicense' will
+    be used.
+""")
+
+    # Write the license text to a file under the build directory so it can
+    # be referenced as a real path in license-files.
+    tmp_license_file = _write_temp_license(base_path, app_name, license_text)
+    if tmp_license_file:
+        license_files = [tmp_license_file]
+        warning.append("""
+    The contents of `license` will be used as the contents of the license
+    file. This may not be correct, and should be verified.
+""")
+    else:
+        license_files = []
+        warning.append("""
+    Your project will not have a value for `license-files`. This will
+    cause problems packaging for some platforms.
+""")
+
+    warning.append(f"""
+    Update your configuration to put the full license text in a file and use
+    PEP 639 format for the license definition:
+
+        license = "{spdx_id}"
+        license-files = ["LICENSE"]
+
+    You should not release your project without resolving this warning.
+
+*******************************************************************************
+""")
+
+    # Warn and finalize pre-PEP 621 license coercion. Use `license_files` rather than
+    # `license-files` so it's a valid attribute name.
+    console.warning("".join(warning))
+    config["license"] = license
+    config["license_files"] = license_files
+
+
+def normalize_license_config(
+    config: AppConfig,
+    app_name: str,
+    base_path: Path,
+    console,
+):
+    """Normalize the `license` and `license-files` entries in a merged config.
+
+    This runs after all config layers (project, global, app, platform, format) have been
+    merged.  It coerces legacy formats to the PEP 639 two-field representation, emits
+    deprecation warnings for out-of-date configurations, and raises
+    `BriefcaseConfigError` for invalid or ambiguous configurations.
+
+    :param config: The fully-merged config dict (mutated in place).
+    :param app_name: The app name.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
+    :param console: The Briefcase `Console` object used for warning output.
+    """
+    raw_license = config.get("license")
+    raw_license_files = config.get("license-files")
+
+    # PEP 621 table + license-files is always an error
+    if isinstance(raw_license, dict) and raw_license_files is not None:
+        raise BriefcaseConfigError(f"""
+The license configuration for '{app_name}' mixes PEP 621 table format
+(`license.file`) with PEP 639 format (`license-files`).
+
+Update your configuration to use PEP 639 format:
+
+    license = "<SPDX expression>"
+    license-files = ["LICENSE"]
+""") from None
+
+    # license_files without a license expression is always an error
+    if raw_license is None and raw_license_files is not None:
+        raise BriefcaseConfigError(f"""\
+The license configuration for '{app_name}' defines `license-files` but no
+`license` SPDX expression.
+
+Add a `license` field with the SPDX expression for your project:
+
+    license = "<SPDX expression>"
+    license-files = ["LICENSE"]
+""") from None
+
+    # If license is a string, attempt to validate license as an SPDX value.
+    # If it is valid SPDX, and license-files is undefined, set the license
+    # list to be empty. This allows us to differentiate pre-PEP 621 format
+    # from PEP 639 format.
+    if isinstance(raw_license, str):
+        try:
+            canonicalize_license_expression(raw_license)
+            if raw_license_files is None:
+                raw_license_files = []
+        except InvalidLicenseExpression:
+            pass
+
+    # Now finalize the license configuration
+    if isinstance(raw_license, str) and raw_license_files is not None:
+        # `license` and `license-files` - Valid PEP 639
+        _normalize_pep639_license_config(config, app_name, base_path, console)
+
+    elif isinstance(raw_license, dict):
+        # license is a TOML table
+        if list(raw_license.keys()) == ["text"]:
+            # `license.text` - PEP 621 text format
+            _normalize_pep621_license_text_config(config, app_name, base_path, console)
+
+        elif list(raw_license.keys()) == ["file"]:
+            # `license.file` - PEP 621 file format
+            _normalize_pep621_license_file_config(config, app_name, base_path, console)
+        else:
+            # PEP 621 `license` table contains anything else
+            raise BriefcaseConfigError(f"""\
+The project configuration for '{app_name}' defines an invalid PEP 621
+`license` table.
+
+Update your configuration to provide a valid PEP 639 configuration:
+
+    license = "<SPDX expression>"
+    license-files = ["LICENSE"]
+""") from None
+
+    elif isinstance(raw_license, str):
+        # Pre-PEP 621 format: Just a `license` string, but *not* an SPDX value.
+        _normalize_pre_pep621_license_config(config, app_name, base_path, console)
+    else:
+        # No license definition — license of *some* form is a required value.
+        raise BriefcaseConfigError(
+            f"Configuration for {app_name!r} does not contain "
+            "a valid PEP 639 license definition."
+        )
+
+
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
@@ -675,6 +1160,7 @@ def merge_pep621_config(global_config, pep621_config):
     # Keys that map directly
     maybe_update("description", "description")
     maybe_update("license", "license")
+    maybe_update("license-files", "license-files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
@@ -707,19 +1193,18 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
-def parse_config(config_file, platform, output_format, console):
+def parse_config(config_file: Path, platform, output_format, console):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
     This method only does basic structural parsing of the TOML, looking for,
-    at a minimum, a ``[tool.briefcase.app.<appname>]`` section declaring the
+    at a minimum, a `[tool.briefcase.app.<appname>]` section declaring the
     existence of a single app. It will also search for:
 
-      * ``[tool.briefcase]`` - global briefcase settings
-      * ``[tool.briefcase.app.<appname>]`` - settings specific to the app
-      * ``[tool.briefcase.app.<appname>.<platform>]`` - settings specific to
-        the platform
-      * ``[tool.briefcase.app.<appname>.<platform>.<format>]`` - settings
-        specific to the output format
+    - `[tool.briefcase]` - global briefcase settings
+    - `[tool.briefcase.app.<appname>]` - settings specific to the app
+    - `[tool.briefcase.app.<appname>.<platform>]` - settings specific to the platform
+    - `[tool.briefcase.app.<appname>.<platform>.<format>]` - settings specific to the
+      output format
 
     A configuration can define multiple apps; the final output is the merged
     content of the global, app, platform and output format settings
@@ -727,7 +1212,9 @@ def parse_config(config_file, platform, output_format, console):
     platform, over app-level, over global. The final result is a single
     (mostly) flat dictionary for each app.
 
-    :param config_file: A file-like object containing TOML to be parsed.
+    :param config_file: A `Path` to the `pyproject.toml` file to be parsed.
+        The parent directory of this file is used as the project base path for
+        any on-disk operations (e.g., writing temporary license text files).
     :param platform: The platform being targeted
     :param output_format: The output format
     :param console: The console to use for any output or logging.
@@ -736,8 +1223,10 @@ def parse_config(config_file, platform, output_format, console):
         itself the configuration data merged from global, app, platform and
         format definitions.
     """
+    base_path = config_file.parent
     try:
-        pyproject = tomllib.load(config_file)
+        with config_file.open("rb") as f:
+            pyproject = tomllib.load(f)
     except tomllib.TOMLDecodeError as e:
         raise BriefcaseConfigError(f"Invalid pyproject.toml: {e}") from e
 
@@ -760,37 +1249,6 @@ def parse_config(config_file, platform, output_format, console):
         all_apps = global_config.pop("app")
     except KeyError as e:
         raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
-
-    for name, config in [("project", global_config), *all_apps.items()]:
-        if isinstance(config.get("license"), str):
-            section_name = "the Project" if name == "project" else f"{name!r}"
-            console.warning(
-                f"""
-*************************************************************************
-** {f"WARNING: License Definition for {section_name} is Deprecated":67} **
-*************************************************************************
-
-    Briefcase now uses PEP 621 format for license definitions.
-
-    Previously, the name of the license was assigned to the 'license'
-    field in pyproject.toml. For PEP 621, the name of the license is
-    assigned to 'license.text' or the name of the file containing the
-    license is assigned to 'license.file'.
-
-    The current configuration for {section_name} has a 'license' field
-    that is specified as a string:
-
-        license = "{config["license"]}"
-
-    To use the PEP 621 format (and to remove this warning), specify that
-    the LICENSE file contains the license for {section_name}:
-
-        license.file = "LICENSE"
-
-*************************************************************************
-"""
-            )
-            config["license"] = {"file": "LICENSE"}
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format
@@ -859,6 +1317,9 @@ def parse_config(config_file, platform, output_format, console):
         # This will already include any format-specific configuration.
         if platform_data:
             merge_config(config, platform_data)
+
+        # Normalize license fields to PEP 639 representation.
+        normalize_license_config(config, app_name, base_path, console)
 
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.

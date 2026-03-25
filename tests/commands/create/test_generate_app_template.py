@@ -46,7 +46,9 @@ def full_context():
         "requests": {},
         "document_types": {},
         "install_options": {},
+        "uninstall_options": {},
         "license": {"file": "LICENSE"},
+        "license_files": [],
         "requirement_installer_args": [],
         "external_package_path": None,
         "external_package_executable_path": None,
@@ -57,7 +59,9 @@ def full_context():
         "host_arch": "gothic",
         "briefcase_version": briefcase.__version__,
         # Properties of the template
-        "template_source": "https://github.com/beeware/briefcase-Tester-Dummy-template.git",
+        "template_source": (
+            "https://github.com/beeware/briefcase-Tester-Dummy-template.git"
+        ),
         "template_branch": f"v{briefcase.__version__}",
         # Fields generated from other properties
         "module_name": "my_app",
@@ -68,9 +72,6 @@ def full_context():
         "month": date.today().strftime("%B"),
         # Fields added by the output format.
         "output_format": "dummy",
-        # These tests don't do a full finalization, so the context will still be
-        # marked as draft.
-        "__draft__": True,
     }
 
 
@@ -752,5 +753,6 @@ def test_cookiecutter_undefined_variable_in_template(
         BriefcaseConfigError,
         match=f"Briefcase configuration error: {cookiecutter_exception_message}",
     ):
-        # Generating the template with an undefined cookiecutter variable generates an error
+        # Generating the template with an undefined cookiecutter variable generates
+        # an error
         create_command.generate_app_template(myapp)

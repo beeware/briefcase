@@ -112,7 +112,6 @@ def test_create_app_single(tracking_create_command, app_flags):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # Create the selected app
         ("generate", "first"),
         ("support", "first"),
@@ -177,7 +176,6 @@ def test_create_app_all_flags(tracking_create_command):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        ("finalize-app-config", "second"),
         # Create the selected app
         ("generate", "first"),
         ("support", "first"),

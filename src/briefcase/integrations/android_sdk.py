@@ -441,8 +441,9 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.cmdline_tools_path)
 
             # Rename the top level zip content to the final name
-            (self.cmdline_tools_path.parent / "cmdline-tools").rename(
-                self.cmdline_tools_path
+            self.tools.file.rename(
+                self.cmdline_tools_path.parent / "cmdline-tools",
+                self.cmdline_tools_path,
             )
 
             # Zip file no longer needed once unpacked.
@@ -1523,7 +1524,25 @@ class ADB:
                 f"Unable to force stop app {package} on {self.device}"
             ) from e
 
-    def start_app(self, package: str, activity: str, passthrough: list[str]):
+    def revoke_permission(self, package: str, permission: str) -> None:
+        """Revoke a runtime permission for an app, specified as a package name.
+
+        :param package: The name of the Android package, e.g., com.username.myapp.
+        :param permission: The name of the Android permission to revoke,
+            e.g., android.permission.BLUETOOTH_SCAN.
+        :returns: `None` on success; raises an exception on failure.
+        """
+        try:
+            self.run("shell", "pm", "revoke", package, permission)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to revoke permission {permission}"
+                f"for app {package} on {self.device}"
+            ) from e
+
+    def start_app(
+        self, package: str, activity: str, passthrough: list[str], env: dict[str, str]
+    ):
         """Start an app, specified as a package name & activity name.
 
         If you have an APK file, and you are not sure of the package or activity
@@ -1533,6 +1552,7 @@ class ADB:
         :param package: The name of the Android package, e.g., com.username.myapp.
         :param activity: The activity of the APK to start.
         :param passthrough: Arguments to pass to the app.
+        :param env: Environment variables to pass to the app.
         :returns: `None` on success; raises an exception on failure.
         """
         try:
@@ -1552,6 +1572,15 @@ class ADB:
                 "--es",
                 "org.beeware.ARGV",
                 shlex.quote(json.dumps(passthrough)),  # Protect from Android's shell
+                *(
+                    [
+                        "--es",
+                        "org.beeware.ENVIRON",
+                        shlex.quote(json.dumps(env)),  # Protect from Android's shell
+                    ]
+                    if env
+                    else []
+                ),
             )
 
             # `adb shell am start` always exits with status zero. We look for error

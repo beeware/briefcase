@@ -34,6 +34,25 @@ jobs:
     with:
       pre-commit-source: "--group pre-commit"
 
+  ty:
+    name: Type check
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6.0.2
+
+    - name: Set up Python
+      uses: actions/setup-python@v6.2.0
+      with:
+        python-version: "3.13"
+
+    - name: Install Tox
+      run: python -m pip install --group tox-uv
+
+    - name: Type check
+      run: tox -e ty
+
   towncrier:
     name: Check towncrier
     uses: beeware/.github/.github/workflows/towncrier-run.yml@main
@@ -56,6 +75,39 @@ jobs:
     with:
       build-subdirectory: ${{ matrix.subdir }}
       attest: ${{ inputs.attest-package }}
+
+  docs-lint:
+    name: Documentation linting
+    needs: [ pre-commit ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.X"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            .pre-commit-config.yaml
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get install aspell aspell-en
+
+      - name: Update pip
+        run: python -m pip install -U pip
+
+      - name: Install Tox
+        run: python -m pip install --group 'tox-uv'
+
+      - name: Perform lint checks
+        run: python -m tox -e docs-lint
 
   unit-tests:
     name: Unit tests
@@ -80,18 +132,18 @@ jobs:
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.0
+      uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6.1.0
+      uses: actions/setup-python@v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
 
     - name: Get Packages
-      uses: actions/download-artifact@v6.0.0
+      uses: actions/download-artifact@v8.0.1
       with:
         pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
         merge-multiple: true
@@ -110,7 +162,7 @@ jobs:
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v7.0.0
       with:
         name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
         path: ".coverage.*"
@@ -134,12 +186,12 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.0
+      uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v6.1.0
+      uses: actions/setup-python@v6.2.0
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
@@ -149,7 +201,7 @@ jobs:
       run: python -m pip install --group tox-uv
 
     - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v6.0.0
+      uses: actions/download-artifact@v8.0.1
       with:
         pattern: coverage-data-*
         merge-multiple: true
@@ -167,7 +219,7 @@ jobs:
 
     - name: Upload Project Coverage HTML Report
       if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v5.0.0
+      uses: actions/upload-artifact@v7.0.0
       with:
         name: html-coverage-report-project
         path: htmlcov

@@ -2,7 +2,7 @@
 
 How-to guides are recipes that take the user through steps in key subjects. They are more advanced than tutorials and assume a lot more about what the user already knows than tutorials do, and unlike documents in the tutorial they can stand alone.
 
-## Obtaining a Code Signing identity
+## Obtaining a Code Signing identity { #obtain-code-signing-identity }
 
 * [Android](code-signing/android.md) - One way to sign your app where the Google Play Store maintains the authoritative key for your app.
 * [macOS](code-signing/macOS.md) - How to generate a macOS code signing identity, which is required to distribute your application.
@@ -31,8 +31,7 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
 ## [Contributing to Briefcase](contribute/index.md)
 
-* [Contributing code to Briefcase](contribute/code.md) - The process to follow to contribute to Briefcase source code.
-* [Contributing to the documentation](contribute/docs.md) - The process to follow to contribute to Briefcase documentation.
+* [Contributing to Briefcase](contribute/index.md) - The many ways you can contribute to Briefcase, including what you can do and how to do it.
 
 ## Internal How-to guides
 

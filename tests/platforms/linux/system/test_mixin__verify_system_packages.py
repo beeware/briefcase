@@ -114,6 +114,7 @@ def test_missing_packages(build_command, first_app_config, capsys):
                 ("aliased-2", "alias"),
                 ("aliased-3", "alias"),
             ],
+            None,
             ["check"],
             ["system", "install_flag"],
         )
@@ -143,6 +144,18 @@ def test_missing_packages(build_command, first_app_config, capsys):
     ):
         build_command.verify_system_packages(first_app_config)
 
+    # All requirements are checked; base package names are checked for aliases
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["check", "compiler"], quiet=1),
+        call(["check", "compiler++"], quiet=1),
+        call(["check", "aliased-1"], quiet=1),
+        call(["check", "aliased-2"], quiet=1),
+        call(["check", "aliased-3"], quiet=1),
+        call(["check", "first"], quiet=1),
+        call(["check", "second"], quiet=1),
+        call(["check", "third"], quiet=1),
+    ]
+
 
 def test_missing_system_verify(build_command, first_app_config, capsys):
     """If the program to verify system packages doesn't exist, a warning is logged."""
@@ -167,6 +180,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
     build_command._system_requirement_tools = MagicMock(
         return_value=(
             ["compiler"],
+            None,
             ["check"],
             ["system", "install_flag"],
         )
@@ -174,6 +188,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
 
     # Add some system requirements.
     first_app_config.system_requires = ["first", "second", "third"]
+    first_app_config.system_runtime_requires = ["first", "other", "compiler"]
 
     # Mock the effect of checking requirements that are all present
     build_command.tools.subprocess.check_output.return_value = "installed"
@@ -181,9 +196,123 @@ def test_packages_installed(build_command, first_app_config, capsys):
     # Verify the requirements. This will raise an error.
     build_command.verify_system_packages(first_app_config)
 
+    # All requirements are checked, but `first` and `compiler` are only verified once
     assert build_command.tools.subprocess.check_output.mock_calls == [
         call(["check", "compiler"], quiet=1),
         call(["check", "first"], quiet=1),
         call(["check", "second"], quiet=1),
         call(["check", "third"], quiet=1),
+        call(["check", "other"], quiet=1),
+    ]
+
+
+def test_missing_virtual_packages(build_command, first_app_config, capsys):
+    """If there are missing virtual system packages, an error is raised."""
+    # Mock the system requirement tools; there's a base requirement of packages called
+    # "compiler" and "compiler++", plus 3 packages provided by an installation alias
+    # "alias". These packages are verified using "check <pkg>", and installed using
+    # "system install_flag <pkg>"
+
+    def devirtualize(package):
+        if package.endswith("-virtual"):
+            return package[:-8]
+        return None
+
+    build_command._system_requirement_tools = MagicMock(
+        return_value=(
+            ["compiler"],
+            devirtualize,
+            ["check"],
+            ["system", "install_flag"],
+        )
+    )
+
+    # Add some system requirements. `second` and `third` are virtual requirements
+    first_app_config.system_requires = ["first", "second-virtual", "third-virtual"]
+
+    # Mock the side effect of checking those requirements. third is available in it's
+    # devirtualized form. first isn't available, but isn't a virtual package.
+    build_command.tools.subprocess.check_output.side_effect = [
+        "installed",  # compiler
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # first
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # second-virtual
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # second
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # third-virtual
+        "installed",  # third
+    ]
+
+    # Verify the requirements. This will raise an error, but the error message will tell
+    # you how to install the system packages. This includes using an alias for the
+    # install of aliased-1, and the original non-virtualized name for `second-virtual`
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"    sudo system install_flag first second-virtual",
+    ):
+        build_command.verify_system_packages(first_app_config)
+
+    # All requirements are checked; base package names are checked for
+    # both aliases and virtual packages
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["check", "compiler"], quiet=1),
+        call(["check", "first"], quiet=1),
+        # Second is checked in both virtual and devirtualized form
+        call(["check", "second-virtual"], quiet=1),
+        call(["check", "second"], quiet=1),
+        # Third is checked in both virtual and devirtualized form
+        call(["check", "third-virtual"], quiet=1),
+        call(["check", "third"], quiet=1),
+    ]
+
+
+def test_virtual_packages_installed(build_command, first_app_config, capsys):
+    """If all required packages are installed, no error is raised."""
+    # Mock the system requirement tools; there's a base requirement of
+    # a packaged called "compiler", verified using "check <pkg>", and
+    # installed using "system <pkg>", and `devirtualize` is used as
+    # to devirtualize package names.
+
+    def devirtualize(package):
+        if package.endswith("-virtual"):
+            return package[:-8]
+        return None
+
+    build_command._system_requirement_tools = MagicMock(
+        return_value=(
+            ["compiler"],
+            devirtualize,
+            ["check"],
+            ["system", "install_flag"],
+        )
+    )
+
+    # Add some system requirements; two of them are virtual packages
+    first_app_config.system_requires = ["first", "second", "third-virtual"]
+    first_app_config.system_runtime_requires = ["first", "other-virtual"]
+
+    # Mock the effect of checking requirements that are all present,
+    # although the virtual packages are only found in devirtualized form.
+    build_command.tools.subprocess.check_output.side_effect = [
+        "installed",  # compiler
+        "installed",  # first
+        "installed",  # second
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # third-virtual
+        "installed",  # third-virtual
+        subprocess.CalledProcessError(cmd="check", returncode=1),  # other-virtual
+        "installed",  # other
+    ]
+
+    # Verify the requirements. This will raise an error.
+    build_command.verify_system_packages(first_app_config)
+
+    # All requirements are checked, but `first` is only verified once
+    assert build_command.tools.subprocess.check_output.mock_calls == [
+        call(["check", "compiler"], quiet=1),
+        call(["check", "first"], quiet=1),
+        call(["check", "second"], quiet=1),
+        # Third is checked in both virtual and devirtualized form
+        call(["check", "third-virtual"], quiet=1),
+        call(["check", "third"], quiet=1),
+        # Other is checked in both virtual and devirtualized form
+        call(["check", "other-virtual"], quiet=1),
+        call(["check", "other"], quiet=1),
     ]

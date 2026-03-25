@@ -102,14 +102,14 @@ Prevent the automated update and build of app code that is performed when specif
 
 Run the app in debug mode.
 
-Currently the following debuggers are supported:
+Briefcase provides a [plugin interface][debugger-interface] that allows third-party debugger integrations. Currently the following debuggers are supported:
 
 - `pdb`: This is used for debugging via console (see [Debug via PDB][debug-pdb])
 - `debugpy`: This is used for debugging via VS Code (see [Debug via VS Code][debug-vscode])
 
 If calling only `--debug` without selecting a debugger explicitly, `pdb` is used as default.
 
-This is an **experimental** new feature, that is currently only supported on Windows, macOS and iOS.
+This is an **experimental** new feature, that is currently only supported on Windows, macOS, iOS and Android.
 
 The selected debugger in `run --debug <debugger>` has to match the selected debugger in `build --debug <debugger>`.
 

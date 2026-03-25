@@ -1,4 +1,5 @@
 import pytest
+from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseConfigError
 
@@ -22,7 +23,7 @@ def test_incomplete_global_config(base_command):
         """
         [tool.briefcase]
         version = "1.2.3"
-        license.file = "LICENSE"
+        license = "MIT"
 
         [tool.briefcase.app.my-app]
         description = "A sample app"
@@ -31,7 +32,9 @@ def test_incomplete_global_config(base_command):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Global configuration is incomplete \(missing 'bundle', 'project_name'\)",
+        match=(
+            r"Global configuration is incomplete \(missing 'bundle', 'project_name'\)"
+        ),
     ):
         base_command.parse_config(filename, {})
 
@@ -47,7 +50,7 @@ def test_incomplete_config(base_command):
         project_name = "Sample project"
         version = "1.2.3"
         bundle = "com.example"
-        license.file = "LICENSE"
+        license = "MIT"
 
         [tool.briefcase.app.my-app]
     """,
@@ -71,8 +74,8 @@ def test_parse_config(base_command):
         version = "1.2.3"
         description = "A sample app"
         bundle = "org.beeware"
+        license = "MIT"
         mystery = 'default'
-        license.file = "LICENSE"
 
         [tool.briefcase.app.firstapp]
         sources = ['src/firstapp']
@@ -91,7 +94,7 @@ def test_parse_config(base_command):
     assert repr(base_command.global_config) == "<Sample project v1.2.3 GlobalConfig>"
     assert base_command.global_config.project_name == "Sample project"
     assert base_command.global_config.bundle == "org.beeware"
-    assert base_command.global_config.version == "1.2.3"
+    assert base_command.global_config.version == Version("1.2.3")
 
     # The first app will have all the base attributes required by an app,
     # defined in the config file.
@@ -128,8 +131,8 @@ def test_parse_config_with_overrides(base_command):
         version = "1.2.3"
         description = "A sample app"
         bundle = "org.beeware"
+        license = "MIT"
         mystery = 'default'
-        license.file = "LICENSE"
 
         [tool.briefcase.app.firstapp]
         sources = ['src/firstapp']
@@ -155,7 +158,7 @@ def test_parse_config_with_overrides(base_command):
     assert repr(base_command.global_config) == "<Sample project v2.3.4 GlobalConfig>"
     assert base_command.global_config.project_name == "Sample project"
     assert base_command.global_config.bundle == "org.beeware"
-    assert base_command.global_config.version == "2.3.4"
+    assert base_command.global_config.version == Version("2.3.4")
     assert base_command.global_config.custom == "something special"
     assert base_command.global_config.mystery == "overridden"
 
@@ -167,7 +170,7 @@ def test_parse_config_with_overrides(base_command):
     assert base_command.apps["firstapp"].project_name == "Sample project"
     assert base_command.apps["firstapp"].app_name == "firstapp"
     assert base_command.apps["firstapp"].bundle == "org.beeware"
-    assert base_command.apps["firstapp"].version == "2.3.4"
+    assert base_command.apps["firstapp"].version == Version("2.3.4")
     assert base_command.apps["firstapp"].custom == "something special"
     assert base_command.apps["firstapp"].mystery == "overridden"
     assert not hasattr(base_command.apps["firstapp"], "extra")
@@ -182,7 +185,7 @@ def test_parse_config_with_overrides(base_command):
     assert base_command.apps["secondapp"].project_name == "Sample project"
     assert base_command.apps["secondapp"].app_name == "secondapp"
     assert base_command.apps["secondapp"].bundle == "org.beeware"
-    assert base_command.apps["secondapp"].version == "2.3.4"
+    assert base_command.apps["secondapp"].version == Version("2.3.4")
     assert base_command.apps["secondapp"].custom == "something special"
     assert base_command.apps["secondapp"].mystery == "overridden"
     assert base_command.apps["secondapp"].extra == "something"
@@ -199,8 +202,8 @@ def test_parse_config_with_invalid_override(base_command):
         version = "1.2.3"
         description = "A sample app"
         bundle = "org.beeware"
+        license = "MIT"
         mystery = 'default'
-        license.file = "LICENSE"
 
         [tool.briefcase.app.firstapp]
         sources = ['src/firstapp']

@@ -193,13 +193,16 @@ def mock_tgz_download(filename, content, role=None, links=None):
 def distinfo_metadata(
     package: str = "dummy",
     version: str = "1.2.3",
-    tag: str = "py3-none-any",
+    tag: str | list[str] = "py3-none-any",
+    pure: bool | None = None,
 ):
     """Generate the content for a distinfo folder.
 
     :param package: The name of the package.
     :param version: The version number of the package.
-    :param tag: The packaging tag for the package.
+    :param tag: The packaging tag (or tags) for the package.
+    :param pure: Is the package explicitly pure? If None, defaults to the tag as an
+        indicator of purity.
     """
     content = []
 
@@ -220,8 +223,15 @@ def distinfo_metadata(
     wheel = EmailMessage()
     wheel["Wheel-Version"] = "1.0"
     wheel["Generator"] = "test-case"
-    wheel["Root-Is-Purelib"] = "true" if tag == "py3-none-any" else "false"
-    wheel["Tag"] = tag
+    if pure is None:
+        wheel["Root-Is-Purelib"] = "true" if tag == "py3-none-any" else "false"
+    else:
+        wheel["Root-Is-Purelib"] = str(pure).lower()
+    if isinstance(tag, str):
+        wheel["Tag"] = tag
+    else:
+        for value in tag:
+            wheel["Tag"] = value
     content.append((f"{package}-{version}.dist-info/WHEEL", str(wheel)))
 
     # RECORD
@@ -237,6 +247,7 @@ def installed_package_content(
     version="1.2.3",
     tag="py3-none-any",
     extra_content=None,
+    pure: bool | None = None,
 ):
     """Generate the content for an installed package.
 
@@ -246,14 +257,16 @@ def installed_package_content(
     :param tag: The installation tag for the package. Defaults to a pure python wheel.
     :param extra_content: Optional. A list of tuples of ``(path, content)`` that will be
         added to the wheel.
+    :param pure: Is the package explicitly pure? If None, defaults to
+        the tag as an indicator of purity.
     """
     return (
         [
             (f"{package}/__init__.py", ""),
             (f"{package}/app.py", "# This is the app"),
         ]
-        + (extra_content if extra_content else [])
-        + distinfo_metadata(package=package, version=version, tag=tag)
+        + (extra_content or [])
+        + distinfo_metadata(package=package, version=version, tag=tag, pure=pure)
     )
 
 
@@ -263,6 +276,7 @@ def create_installed_package(
     version="1.2.3",
     tag="py3-none-any",
     extra_content=None,
+    pure: bool | None = None,
 ):
     """Write an installed package into a 'site-packages' folder.
 
@@ -273,12 +287,15 @@ def create_installed_package(
     :param extra_content: Optional. A list of tuples of ``(path, content)`` or
         ``(path, content, chmod)`` that will be added to the wheel. If ``chmod`` is
         not specified, default filesystem permissions will be used.
+    :param pure: Is the package explicitly pure? If None, defaults to
+        the tag as an indicator of purity.
     """
     for entry in installed_package_content(
         package=package,
         version=version,
         tag=tag,
         extra_content=extra_content,
+        pure=pure,
     ):
         try:
             filename, content, chmod = entry

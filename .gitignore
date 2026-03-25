@@ -18,11 +18,12 @@ distribute-*
 .coverage
 .coverage.*
 coverage.xml
-*venv*
+venv*
 .vscode/
 .eggs/
 .tox/
 /local
+__pycache__/
 .ruff_cache/
 
 /pip-wheel-metadata

@@ -20,8 +20,34 @@
     - Publishing your app
         - ./how-to/publishing/*
     - [Contributing to Briefcase](how-to/contribute/index.md)
-        - [Contributing code to Briefcase](how-to/contribute/code.md)
-        - [Contributing to the documentation](how-to/contribute/docs.md)
+        - [First-time contributors](how-to/contribute/first-time-contributors.md)
+        - What can I do?
+            - [Fix an issue](how-to/contribute/what/fix-issue.md)
+            - [Implement a new feature](how-to/contribute/what/implement-feature.md)
+            - [Write documentation](how-to/contribute/what/write-docs.md)
+            - [Triage an issue](how-to/contribute/what/triage.md)
+            - [Review a pull request](how-to/contribute/what/review-pr.md)
+            - [Propose a new feature](how-to/contribute/what/propose-feature.md)
+            - [Use the tools](how-to/contribute/what/use-tools.md)
+        - How do I contribute?
+            - [Setting up a development environment](how-to/contribute/how/dev-environment.md)
+            - [Reproducing an issue](how-to/contribute/how/reproduce-issue.md)
+            - [Working from a branch](how-to/contribute/how/branches.md)
+            - [Avoiding scope creep](how-to/contribute/how/scope-creep.md)
+            - [Writing, running, and testing code](how-to/contribute/how/write-code.md)
+            - [Building documentation](how-to/contribute/how/build-docs.md)
+            - [Writing documentation](how-to/contribute/how/write-docs.md)
+            - [Adding a change note](how-to/contribute/how/change-note.md)
+            - [Submitting a pull request](how-to/contribute/how/submit-pr.md)
+            - [Providing a review](how-to/contribute/how/review-pr.md)
+            - [Submitting a new issue](how-to/contribute/how/new-issue.md)
+            - [Proposing a new feature](how-to/contribute/how/propose-feature.md)
+        - What happens next?
+            - [Pull request review process](how-to/contribute/next/pr-review.md)
+            - [Release process](how-to/contribute/next/release.md)
+        - Style guides
+            - [Code style guide](how-to/contribute/style/code-style-guide.md)
+            - [Documentation style guide](how-to/contribute/style/docs-style-guide.md)
     - Internal How-to guides
         - [How to cut a Briefcase release](how-to/internal/release.md)
     - Upgrading from previous versions
@@ -45,7 +71,7 @@
     - [Platform support](reference/platforms/index.md)
         - [macOS](reference/platforms/macOS/index.md)
             - [.app bundle](reference/platforms/macOS/app.md)
-            - [macOS XCode project](reference/platforms/macOS/xcode.md)
+            - [macOS Xcode project](reference/platforms/macOS/xcode.md)
         - [Windows](reference/platforms/windows/index.md)
             - [Windows App folder](reference/platforms/windows/app.md)
             - [Visual Studio project](reference/platforms/windows/visualstudio.md)
@@ -54,7 +80,7 @@
             - [Flatpak](reference/platforms/linux/flatpak.md)
             - [AppImage](reference/platforms/linux/appimage.md)
         - iOS
-            - [iOS XCode project](reference/platforms/iOS/xcode.md)
+            - [iOS Xcode project](reference/platforms/iOS/xcode.md)
         - Android
             - [Gradle project](reference/platforms/android/gradle.md)
         - Web
