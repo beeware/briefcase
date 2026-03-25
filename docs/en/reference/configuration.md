@@ -505,7 +505,7 @@ Some platforms have specific configuration options that are only relevant to tha
 
 ## Compatibility with Python project metadata
 
-Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
+Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section. If your `pyproject.toml` defines fields to be *dynamic*, Briefcase will attempt to resolve those fields by using the `[build-system]` defined in `pyproject.toml` in an isolated environment.
 
 The following `[project]` metadata keys will be used by Briefcase if they are available:
 
