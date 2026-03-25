@@ -975,7 +975,10 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
     supported_host_os_reason = "Linux system dev mode is only supported on Linux."
 
     def install_dev_requirements(
-        self, app: FinalizedAppConfig, venv: VenvContext, **options
+        self,
+        app: FinalizedAppConfig,
+        venv: VenvContext,
+        **options,
     ):
         """Install the requirements into the dev environment.
 
@@ -1138,7 +1141,9 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
             )
 
     def _package_rpm(
-        self, app: FinalizedAppConfig, **kwargs
+        self,
+        app: FinalizedAppConfig,
+        **kwargs,
     ):  # pragma: no-cover-if-is-windows
         self.console.info("Building .rpm package...", prefix=app.app_name)
 
@@ -1314,7 +1319,9 @@ no extension).
         )
 
     def _package_pkg(
-        self, app: FinalizedAppConfig, **kwargs
+        self,
+        app: FinalizedAppConfig,
+        **kwargs,
     ):  # pragma: no-cover-if-is-windows
         self.console.info("Building .pkg.tar.zst package...", prefix=app.app_name)
 

@@ -88,7 +88,10 @@ class DevCommand(RunAppMixin, BaseCommand):
         )
 
     def install_dev_requirements(
-        self, app: FinalizedAppConfig, venv: VenvContext, **options
+        self,
+        app: FinalizedAppConfig,
+        venv: VenvContext,
+        **options,
     ):
         """Install the requirements for the app dev.
 

@@ -259,7 +259,9 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
     def permissions_context(
-        self, app: FinalizedAppConfig, x_permissions: dict[str, str]
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
     ):
         """Additional template context for permissions.
 
@@ -520,7 +522,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
 
     def debugger_app_packages_path_mapping(
-        self, app: FinalizedAppConfig
+        self,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 

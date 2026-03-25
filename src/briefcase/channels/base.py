@@ -35,7 +35,10 @@ class BasePublicationChannel(ABC):
 
     @abstractmethod
     def publish_app(
-        self, app: FinalizedAppConfig, command: PublishCommandAPI, **options
+        self,
+        app: FinalizedAppConfig,
+        command: PublishCommandAPI,
+        **options,
     ):
         """Publish an application to this channel.
 

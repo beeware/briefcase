@@ -257,7 +257,9 @@ class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
     def build_app(
-        self, app: FinalizedAppConfig, **kwargs
+        self,
+        app: FinalizedAppConfig,
+        **kwargs,
     ):  # pragma: no-cover-if-is-windows
         """Build an application.
 

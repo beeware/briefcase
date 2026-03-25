@@ -269,7 +269,10 @@ class NativeAppContext(Tool):
 
     @classmethod
     def verify_install(
-        cls, tools: ToolCache, app: FinalizedAppConfig, **kwargs
+        cls,
+        tools: ToolCache,
+        app: FinalizedAppConfig,
+        **kwargs,
     ) -> Subprocess:
         """Make subprocess available as app-bound tool."""
         # short circuit since already verified and available

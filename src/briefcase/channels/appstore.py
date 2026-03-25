@@ -18,7 +18,10 @@ class AppStorePublicationChannel(BasePublicationChannel):
         return "appstore"
 
     def publish_app(
-        self, app: FinalizedAppConfig, command: PublishCommandAPI, **options
+        self,
+        app: FinalizedAppConfig,
+        command: PublishCommandAPI,
+        **options,
     ):
         raise BriefcaseCommandError(
             "Publishing to the iOS App Store is not yet implemented.\n"

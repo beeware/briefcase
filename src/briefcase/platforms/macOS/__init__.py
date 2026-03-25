@@ -365,7 +365,9 @@ in the macOS configuration section of your pyproject.toml.
             self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
 
     def permissions_context(
-        self, app: FinalizedAppConfig, cross_platform: dict[str, str]
+        self,
+        app: FinalizedAppConfig,
+        cross_platform: dict[str, str],
     ):
         """Additional template context for permissions.
 
@@ -598,7 +600,8 @@ class macOSSigningMixin(_MixinBase):
         self.get_identities = get_identities
 
     def entitlements_path(
-        self, app: FinalizedAppConfig
+        self,
+        app: FinalizedAppConfig,
     ):  # pragma: no-cover-if-is-windows
         return self.bundle_path(app) / self.path_index(app, "entitlements_path")
 

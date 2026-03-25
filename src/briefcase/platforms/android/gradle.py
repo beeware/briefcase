@@ -233,7 +233,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         }
 
     def permissions_context(
-        self, app: FinalizedAppConfig, x_permissions: dict[str, str]
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
     ):
         """Additional template context for permissions.
 
@@ -441,7 +443,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
         )
 
     def debugger_app_packages_path_mapping(
-        self, app: FinalizedAppConfig
+        self,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 

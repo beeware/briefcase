@@ -18,7 +18,10 @@ class PlayStorePublicationChannel(BasePublicationChannel):
         return "playstore"
 
     def publish_app(
-        self, app: FinalizedAppConfig, command: PublishCommandAPI, **options
+        self,
+        app: FinalizedAppConfig,
+        command: PublishCommandAPI,
+        **options,
     ):
         raise BriefcaseCommandError(
             "Publishing to the Google Play Store is not yet implemented.\n"

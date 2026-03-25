@@ -111,7 +111,9 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         }
 
     def permissions_context(
-        self, app: FinalizedAppConfig, x_permissions: dict[str, str]
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
     ):
         """Additional template context for permissions.
 
