@@ -13,6 +13,8 @@ from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
 
+from build import BuildBackendException
+
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
 else:  # pragma: no-cover-if-gte-py311
@@ -1236,12 +1238,22 @@ def _core_metadata_to_pep621(pep621_key, metadata):
             return metadata[pep621_key]
 
 
-def resolve_dynamic_pep621_config(base_path, dynamic):
+def resolve_dynamic_pep621_config(base_path, dynamic, console):
     """Resolve dynamic PEP621 metadata using the project's configured build backend."""
 
-    metadata = project_wheel_metadata(base_path, isolated=True)
-    # Provide fields declared as dynamic with corresponding metadata value
-    return {key: _core_metadata_to_pep621(key, metadata) for key in dynamic}
+    try:
+        metadata = project_wheel_metadata(base_path, isolated=True)
+        # Provide fields declared as dynamic with corresponding metadata value
+        return {key: _core_metadata_to_pep621(key, metadata) for key in dynamic}
+    except BuildBackendException as e:
+        dynamic_keys = "    \n".join(dynamic)
+        console.warning(
+            f'WARNING: Build backend failed ("{e!s}") while trying to resolve dynamic '
+            f"project metadata:\n\n"
+            f"    {dynamic_keys}"
+        )
+        # No values for dynamic fields, missing *required* fields might fail elsewhere
+        return {}
 
 
 def merge_pep621_config(global_config, pep621_config):
@@ -1348,7 +1360,9 @@ def parse_config(config_file: Path, platform, output_format, console):
     try:
         pep621_config = pyproject["project"]
         if dynamic := pep621_config.pop("dynamic", []):
-            pep621_config.update(resolve_dynamic_pep621_config(base_path, dynamic))
+            pep621_config.update(
+                resolve_dynamic_pep621_config(base_path, dynamic, console)
+            )
         merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
