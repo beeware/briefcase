@@ -5,6 +5,7 @@ import keyword
 import re
 import sys
 import unicodedata
+from email.utils import getaddresses
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -1211,12 +1212,35 @@ Update your configuration to provide a valid PEP 639 configuration:
         )
 
 
+def _core_metadata_to_pep621(pep621_key, metadata):
+    """Retrieve PEP621 metadata values from a Core metadata message."""
+
+    match pep621_key:
+        case "authors" | "maintainers":
+            addresses = metadata.get_all(f"{pep621_key.rstrip('s')}-email")
+            return [
+                {"name": name, "email": email}
+                for name, email in getaddresses(addresses)
+            ]
+        case "description":
+            return metadata["summary"]
+        case "license":
+            return metadata["license-expression"]
+        case "urls":
+            urls = [url.partition(",") for url in metadata.get_all("project-url")]
+            return {name.strip(): url.strip() for name, _, url in urls}
+        case "dependencies":
+            return metadata.get_all("requires-dist")
+        case _:
+            return metadata[pep621_key]
+
+
 def resolve_dynamic_pep621_config(base_path, dynamic):
     """Resolve dynamic PEP621 metadata using the project's configured build backend."""
 
     metadata = project_wheel_metadata(base_path, isolated=True)
-    # Set all fields declared as dynamic to the corresponding metadata value
-    return {key: metadata[key] for key in dynamic}
+    # Provide fields declared as dynamic with corresponding metadata value
+    return {key: _core_metadata_to_pep621(key, metadata) for key in dynamic}
 
 
 def merge_pep621_config(global_config, pep621_config):
