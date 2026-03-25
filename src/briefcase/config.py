@@ -1211,6 +1211,16 @@ Update your configuration to provide a valid PEP 639 configuration:
         )
 
 
+def resolve_dynamic_pep621_config(base_path, dynamic):
+    """Resolve dynamic PEP621 metadata using the project's configured build backend."""
+
+    metadata = project_wheel_metadata(base_path, isolated=True)
+    # Set all fields declared as dynamic to the corresponding metadata
+    # value, use .title() to translate from PEP621 field names to Core
+    # metadata field names
+    return {key: metadata[key.title()] for key in dynamic}
+
+
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
@@ -1314,14 +1324,8 @@ def parse_config(config_file: Path, platform, output_format, console):
     # Merge the PEP621 configuration (if it exists)
     try:
         pep621_config = pyproject["project"]
-        if pep621_config and (dynamic := pep621_config.pop("dynamic", [])):
-            metadata = project_wheel_metadata(base_path, isolated=True)
-            # Set all fields declared as dynamic to the corresponding metadata
-            # value. Use .title() to translate from PEP621 field names to Core
-            # metadata field names
-            for key in dynamic:
-                pep621_config[key] = metadata[key.title()]
-
+        if dynamic := pep621_config.pop("dynamic", []):
+            pep621_config.update(resolve_dynamic_pep621_config(base_path, dynamic))
         merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
