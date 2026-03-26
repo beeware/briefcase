@@ -707,7 +707,7 @@ class FinalizedAppConfig(AppConfig):
 
     def __init__(
         self,
-        app: DraftAppConfig,
+        app: AppConfig,
         *,
         test_mode: bool = False,
         debugger: BaseDebugger | None = None,
