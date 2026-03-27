@@ -190,24 +190,6 @@ def mock_tgz_download(filename, content, role=None, links=None):
     return _download_file
 
 
-def package_metadata(fields):
-    """Populate an ``importlib.metadata.PackageMetadata`` compatible message.
-
-    :param fields: A dictionary of fields and values build a ``PackageMetadata`` from.
-    """
-    metadata = EmailMessage()
-    for header, value in fields.items():
-        match value:
-            case [*_]:
-                # Sequences of values are created by repeated setitem
-                for item in value:
-                    metadata[header] = item
-            case _:
-                metadata[header] = value
-
-    return metadata
-
-
 def distinfo_metadata(
     package: str = "dummy",
     version: str = "1.2.3",

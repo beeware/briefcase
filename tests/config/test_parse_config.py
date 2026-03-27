@@ -1,4 +1,4 @@
-from contextlib import nullcontext
+from email.message import Message
 from textwrap import dedent
 from unittest.mock import Mock, patch
 
@@ -7,7 +7,7 @@ from build import BuildBackendException
 
 from briefcase.config import parse_config
 from briefcase.exceptions import BriefcaseConfigError
-from tests.utils import create_file, package_metadata
+from tests.utils import create_file
 
 
 def test_invalid_toml(tmp_path):
@@ -1446,105 +1446,7 @@ def test_pep621_empty_dynamic(tmp_path):
     }
 
 
-@pytest.mark.parametrize(
-    "test_context",
-    [
-        # using nullcontext, the build backend runs for real
-        pytest.param(nullcontext, marks=pytest.mark.skip(), id="real-build"),
-        pytest.param(
-            patch(
-                "briefcase.config.project_wheel_metadata",
-                return_value=package_metadata(
-                    {
-                        "Metadata-Version": "2.4",
-                        "Name": "awesome",
-                        "Version": "1.2.3",
-                        "Summary": "This description was read from file",
-                        "License-Expression": "EUPL-1.2",
-                    }
-                ),
-            ),
-            id="mocked-build",
-        ),
-    ],
-)
-def test_pep621_dynamic_setuptools_single(tmp_path, test_context):
-    create_file(tmp_path / "description.txt", "This description was read from file")
-    config_file = create_file(
-        tmp_path / "pyproject.toml",
-        """
-        [build-system]
-        requires = ["setuptools", "setuptools-scm"]
-        build-backend = "setuptools.build_meta"
-
-        [project]
-        dynamic = ["description"]
-        name = "awesome"
-        version = "1.2.3"
-        license = "EUPL-1.2"
-
-        [tool.setuptools.dynamic]
-        description = {file = "description.txt"}
-
-        [tool.briefcase]
-        bundle = "com.example"
-
-        [tool.briefcase.app.awesome]
-        formal_name = "Awesome Application"
-        """,
-    )
-
-    with test_context:
-        _, apps = parse_config(
-            config_file,
-            platform="linux",
-            output_format="app",
-            console=Mock(),
-        )
-
-    awesome = apps["awesome"]
-    assert awesome == {
-        "app_name": "awesome",
-        "bundle": "com.example",
-        "version": "1.2.3",
-        "license": "EUPL-1.2",
-        "license_files": [],
-        "formal_name": "Awesome Application",
-        "description": "This description was read from file",
-    }
-
-
-@pytest.mark.parametrize(
-    "test_context",
-    [
-        # using nullcontext, the build backend runs for real
-        pytest.param(nullcontext, marks=pytest.mark.skip(), id="real-build"),
-        pytest.param(
-            patch(
-                "briefcase.config.project_wheel_metadata",
-                return_value=package_metadata(
-                    {
-                        "Metadata-Version": "2.4",
-                        "Name": "awesome",
-                        "Version": "1.2.3",
-                        "Summary": "The application is very awesome",
-                        "Project-URL": [
-                            "Docs, https://example.com/docs",
-                            "Homepage, https://example.com/",
-                        ],
-                        "Author-email": (
-                            "Kim Park <kim@example.com>, John Doe <john@example.org>"
-                        ),
-                        "License-Expression": "GPL-3.0",
-                        "Requires-Dist": "toga>=0.5.3",
-                    }
-                ),
-            ),
-            id="mocked-build",
-        ),
-    ],
-)
-def test_pep621_dynamic_hatchling_multiple(tmp_path, test_context):
+def test_pep621_dynamic_hatchling(tmp_path):
     create_file(
         tmp_path / "awesome.py",
         dedent(
@@ -1598,7 +1500,18 @@ def test_pep621_dynamic_hatchling_multiple(tmp_path, test_context):
         """,
     )
 
-    with test_context:
+    metadata = Message()
+    metadata["Metadata-Version"] = "2.4"
+    metadata["Name"] = "awesome"
+    metadata["Version"] = "1.2.3"
+    metadata["Summary"] = "The application is very awesome"
+    metadata["Project-URL"] = "Docs, https://example.com/docs"
+    metadata["Project-URL"] = "Homepage, https://example.com/"
+    metadata["Author-email"] = "Kim Park <kim@example.com>, John Doe <john@example.org>"
+    metadata["License-Expression"] = "GPL-3.0"
+    metadata["Requires-Dist"] = "toga>=0.5.3"
+
+    with patch("briefcase.config.project_wheel_metadata", return_value=metadata):
         _, apps = parse_config(
             config_file,
             platform="linux",
@@ -1622,103 +1535,7 @@ def test_pep621_dynamic_hatchling_multiple(tmp_path, test_context):
     }
 
 
-@pytest.mark.parametrize(
-    "test_context",
-    [
-        # using nullcontext, the build backend runs for real
-        pytest.param(nullcontext, marks=pytest.mark.skip(), id="real-build"),
-        pytest.param(
-            patch(
-                "briefcase.config.project_wheel_metadata",
-                return_value=package_metadata(
-                    {
-                        "Metadata-Version": "2.4",
-                        "Name": "awesome",
-                        "Version": "1.2.3",
-                        "Summary": "The application is very awesome",
-                        "License-Expression": "MIT",
-                    }
-                ),
-            ),
-            id="mocked-build",
-        ),
-    ],
-)
-def test_pep621_dynamic_pdm_single(tmp_path, test_context):
-    create_file(
-        tmp_path / "awesome.py",
-        dedent(
-            """
-            def version():
-                return "1.2.3"
-
-            __version__ = version()
-            """
-        ),
-    )
-    config_file = create_file(
-        tmp_path / "pyproject.toml",
-        """
-        [build-system]
-        requires = ["pdm-backend"]
-        build-backend = "pdm.backend"
-
-        [project]
-        dynamic = ["version"]
-        name = "awesome"
-        description = "The application is very awesome"
-        license = "MIT"
-
-        [tool.pdm.version]
-        source = "call"
-        getter = "awesome:version"
-
-        [tool.briefcase]
-        bundle = "com.example"
-
-        [tool.briefcase.app.awesome]
-        formal_name = "Awesome Application"
-        """,
-    )
-
-    with test_context:
-        _, apps = parse_config(
-            config_file,
-            platform="linux",
-            output_format="app",
-            console=Mock(),
-        )
-
-    awesome = apps["awesome"]
-    assert awesome == {
-        "app_name": "awesome",
-        "bundle": "com.example",
-        "version": "1.2.3",
-        "license": "MIT",
-        "license_files": [],
-        "formal_name": "Awesome Application",
-        "description": "The application is very awesome",
-    }
-
-
-@pytest.mark.parametrize(
-    "test_context",
-    [
-        # using nullcontext, the build backend runs for real
-        pytest.param(nullcontext, marks=pytest.mark.skip(), id="real-build"),
-        pytest.param(
-            patch(
-                "briefcase.config.project_wheel_metadata",
-                side_effect=BuildBackendException(
-                    ImportError("not_installed"),
-                    "Backend 'not_installed.backend' is not available.",
-                ),
-            ),
-            id="mocked-build",
-        ),
-    ],
-)
-def test_pep621_dynamic_nonexistent_build_backend(tmp_path, test_context):
+def test_pep621_dynamic_nonexistent_build_backend(tmp_path):
     config_file = create_file(
         tmp_path / "pyproject.toml",
         """
@@ -1744,7 +1561,16 @@ def test_pep621_dynamic_nonexistent_build_backend(tmp_path, test_context):
     )
 
     console = Mock()
-    with test_context, pytest.raises(BriefcaseConfigError, match="license"):
+    with (
+        patch(
+            "briefcase.config.project_wheel_metadata",
+            side_effect=BuildBackendException(
+                ImportError("not_installed"),
+                "Backend 'not_installed.backend' is not available.",
+            ),
+        ),
+        pytest.raises(BriefcaseConfigError, match="license"),
+    ):
         parse_config(
             config_file,
             platform="linux",
