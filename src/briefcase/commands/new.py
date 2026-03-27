@@ -87,8 +87,10 @@ class NewCommand(BaseCommand):
                 "Toga Positron (Static server)",
             ],
             "display_name": "Positron",
-            "description": "A Toga base for apps whose GUI is provided by a web view "
-            "(i.e., Electron-like apps, but for Python).",
+            "description": (
+                "A Toga base for apps whose GUI is provided by a web view "
+                "(i.e., Electron-like apps, but for Python)."
+            ),
         },
         "pygame-ce": {
             "entry_point": "pygame_ce",
