@@ -1,10 +1,12 @@
+from email.message import EmailMessage
 from textwrap import dedent
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from briefcase.config import parse_config
 from briefcase.exceptions import BriefcaseConfigError
+from build import BuildBackendException
 from tests.utils import create_file
 
 
@@ -1469,13 +1471,20 @@ def test_pep621_dynamic_setuptools_single(tmp_path):
         formal_name = "Awesome Application"
         """,
     )
+    metadata = EmailMessage()
+    metadata["Metadata-Version"] = "2.4"
+    metadata["Name"] = "awesome"
+    metadata["Version"] = "1.2.3"
+    metadata["Summary"] = "This description was read from file"
+    metadata["License-Expression"] = "EUPL-1.2"
 
-    _, apps = parse_config(
-        config_file,
-        platform="linux",
-        output_format="app",
-        console=Mock(),
-    )
+    with patch("briefcase.config.project_wheel_metadata", return_value=metadata):
+        _, apps = parse_config(
+            config_file,
+            platform="linux",
+            output_format="app",
+            console=Mock(),
+        )
 
     awesome = apps["awesome"]
     assert awesome == {
@@ -1543,12 +1552,24 @@ def test_pep621_dynamic_hatchling_multiple(tmp_path):
         """,
     )
 
-    _, apps = parse_config(
-        config_file,
-        platform="linux",
-        output_format="app",
-        console=Mock(),
-    )
+    metadata = EmailMessage()
+    metadata["Metadata-Version"] = "2.4"
+    metadata["Name"] = "awesome"
+    metadata["Version"] = "1.2.3"
+    metadata["Summary"] = "The application is very awesome"
+    metadata["Project-URL"] = "Homepage, https://example.com/"
+    metadata["Project-URL"] = "Docs, https://example.com/docs"
+    metadata["Author-email"] = "Kim Park <kim@example.com>, John Doe <john@example.org>"
+    metadata["License-Expression"] = "GPL-3.0"
+    metadata["Requires-Dist"] = "toga>=0.5.3"
+
+    with patch("briefcase.config.project_wheel_metadata", return_value=metadata):
+        _, apps = parse_config(
+            config_file,
+            platform="linux",
+            output_format="app",
+            console=Mock(),
+        )
 
     awesome = apps["awesome"]
     assert awesome == {
@@ -1603,12 +1624,20 @@ def test_pep621_dynamic_pdm_single(tmp_path):
         """,
     )
 
-    _, apps = parse_config(
-        config_file,
-        platform="linux",
-        output_format="app",
-        console=Mock(),
-    )
+    metadata = EmailMessage()
+    metadata["Metadata-Version"] = "2.4"
+    metadata["Name"] = "awesome"
+    metadata["Version"] = "1.2.3"
+    metadata["Summary"] = "The application is very awesome"
+    metadata["License-Expression"] = "MIT"
+
+    with patch("briefcase.config.project_wheel_metadata", return_value=metadata):
+        _, apps = parse_config(
+            config_file,
+            platform="linux",
+            output_format="app",
+            console=Mock(),
+        )
 
     awesome = apps["awesome"]
     assert awesome == {
@@ -1648,7 +1677,16 @@ def test_pep621_dynamic_nonexistent_build_backend(tmp_path):
     )
 
     console = Mock()
-    with pytest.raises(BriefcaseConfigError, match="license"):
+    with (
+        patch(
+            "briefcase.config.project_wheel_metadata",
+            side_effect=BuildBackendException(
+                ImportError("not_installed"),
+                "Backend 'not_installed.backend' is not available.",
+            ),
+        ),
+        pytest.raises(BriefcaseConfigError, match="license"),
+    ):
         parse_config(
             config_file,
             platform="linux",
