@@ -1469,11 +1469,13 @@ def test_pep621_dynamic_hatchling(tmp_path):
                         {"name": "John Doe", "email": "john@example.org"},
                     ]
                     metadata["dependencies"] = ["toga>=0.5.3"]
+                    metadata["description"] = "The application is very awesome"
                     metadata["license"] = "GPL-3.0"
                     metadata["urls"] = {
                         "Docs": "https://example.com/docs",
                         "Homepage": "https://example.com/",
                     }
+                    metadata["version"] = "1.2.3"
             """
         ),
     )
@@ -1485,10 +1487,15 @@ def test_pep621_dynamic_hatchling(tmp_path):
         build-backend = "hatchling.build"
 
         [project]
-        dynamic = ["authors", "dependencies", "license", "urls"]
+        dynamic = [
+            "authors",
+            "dependencies",
+            "description",
+            "license",
+            "urls",
+            "version"
+        ]
         name = "awesome"
-        version = "1.2.3"
-        description = "The application is very awesome"
 
         [tool.hatch.metadata.hooks.custom]
 
