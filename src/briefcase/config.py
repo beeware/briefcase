@@ -1243,13 +1243,13 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
     try:
         metadata = project_wheel_metadata(base_path, isolated=True)
         # Provide fields declared as dynamic with corresponding metadata value
-        return {key: _core_metadata_to_pep621(key, metadata) for key in dynamic}
+        return {field: _core_metadata_to_pep621(field, metadata) for field in dynamic}
     except BuildBackendException as e:
-        dynamic_keys = "    \n".join(dynamic)
+        dynamic_fields = "    \n".join(dynamic)
         console.warning(
             f'WARNING: Build backend failed ("{e!s}") while trying to resolve dynamic '
             f"project metadata:\n\n"
-            f"    {dynamic_keys}"
+            f"    {dynamic_fields}"
         )
         # No values for dynamic fields, missing *required* fields might fail elsewhere
         return {}
