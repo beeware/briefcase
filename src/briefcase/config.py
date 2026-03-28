@@ -708,17 +708,10 @@ class FinalizedAppConfig(AppConfig):
     def __init__(
         self,
         app: AppConfig,
-        *,
-        test_mode: bool = False,
-        debugger: BaseDebugger | None = None,
-        debugger_host: str | None = None,
-        debugger_port: int | None = None,
+        **kwargs,
     ):
         self.__dict__.update(app.__dict__)
-        self.test_mode = test_mode
-        self.debugger = debugger
-        self.debugger_host = debugger_host
-        self.debugger_port = debugger_port
+        self.__dict__.update(**kwargs)
 
 
 def merge_config(config, data):
