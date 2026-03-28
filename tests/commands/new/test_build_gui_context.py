@@ -414,8 +414,8 @@ def main():
 """,
         "pyproject_table_briefcase_app_extra_content": """
 requires = [
-    "PySide6-Essentials~=6.8",
-    # "PySide6-Addons~=6.8",
+    "PySide6-Essentials~=6.10",
+    # "PySide6-Addons~=6.10",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -425,8 +425,8 @@ test_requires = [
 """,
         "pyproject_table_macOS": """\
 universal_build = true
-# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
-min_os_version = "12.0"
+# As of Pyside 6.10, PySide enforces a macOS 13 minimum on wheels.
+min_os_version = "13.0"
 requires = [
     "std-nslog~=1.0.3",
 ]

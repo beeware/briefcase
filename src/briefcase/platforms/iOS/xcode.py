@@ -409,7 +409,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             install_hint=f"""
 
 This may be because the `iphoneos` wheels that are available are not compatible
-with a minimum iOS version of {ios_min_version}.
+with Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
         )
 
@@ -433,8 +433,8 @@ with a minimum iOS version of {ios_min_version}.
 
 This may indicate that an `iphoneos` wheel could be found, but an
 `iphonesimulator` wheel could not be found; or that the `iphonesimulator`
-binary wheels that are available are not compatible with a minimum iOS
-version of {ios_min_version}.
+binary wheels that are available are not compatible with
+Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
         )
 

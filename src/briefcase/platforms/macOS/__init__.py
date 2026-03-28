@@ -266,8 +266,9 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 ],
                 install_hint=f"""
 
-This may be because an {self.tools.host_arch} wheel that is compatible with a minimum
-macOS version of {macOS_min_version} is not available.
+This may be because an {self.tools.host_arch} wheel that is compatible with
+Python {self.python_version_tag} and a minimum macOS version of {macOS_min_version}
+is not available.
 """,
             )
 
@@ -312,8 +313,9 @@ macOS version of {macOS_min_version} is not available.
                         ],
                         install_hint=f"""
 
-This may be because an {other_arch} wheel that is compatible with a minimum
-macOS version of {macOS_min_version} is not available.
+This may be because an {other_arch} wheel that is compatible with
+Python {self.python_version_tag} and a minimum macOS version of {macOS_min_version}
+is not available.
 
 You may need to build a non-universal app by setting:
 
