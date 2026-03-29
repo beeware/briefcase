@@ -135,6 +135,25 @@ def test_question_sequence_none(new_command):
     assert bootstrap.context == context
 
 
+def test_create_bootstrap(new_command, mock_builtin_bootstraps, monkeypatch):
+    """create_bootstrap selects and instantiates a bootstrap."""
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(return_value=mock_builtin_bootstraps),
+    )
+
+    context = {"app_name": "myapplication", "author": "Grace Hopper"}
+
+    bootstrap = new_command.create_bootstrap(
+        context=context,
+        project_overrides={"bootstrap": "Toga"},
+    )
+
+    assert isinstance(bootstrap, TogaGuiBootstrap)
+    assert bootstrap.context == context
+
+
 def test_question_sequence_other_frameworks_aborts(
     new_command,
     mock_builtin_bootstraps,
@@ -229,6 +248,48 @@ def test_other_frameworks_hides_installed_plugins(
     assert "Positron" not in out
 
 
+def test_other_frameworks_list_entry_points(
+    new_command,
+    mock_builtin_bootstraps,
+    capsys,
+    monkeypatch,
+):
+    """Community bootstraps with multiple entry points are handled correctly."""
+    monkeypatch.setattr(
+        type(new_command),
+        "KNOWN_COMMUNITY_BOOTSTRAPS",
+        {
+            "toga-positron": {
+                "entry_point": [
+                    "Toga Positron (Django server)",
+                    "Toga Positron (Site-specific browser)",
+                ],
+                "display_name": "Positron",
+                "description": "A Toga base for web view apps.",
+            },
+        },
+        raising=False,
+    )
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(return_value=mock_builtin_bootstraps),
+    )
+
+    choices = new_command._gui_bootstrap_choices(mock_builtin_bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
+    new_command.console.values = [str(other_index), "1"]
+
+    with pytest.raises(SystemExit) as excinfo:
+        new_command.select_bootstrap(project_overrides={})
+
+    assert excinfo.value.code == 0
+
+    out = capsys.readouterr().out
+    assert "Positron" in out
+
+
 def test_other_frameworks_no_available_plugins(
     new_command,
     mock_builtin_bootstraps,
@@ -288,6 +349,43 @@ def test_other_frameworks_no_available_plugins(
     )
     assert "Browse options at https://beeware.org/bee/briefcase-bootstraps" in out
     assert "Re-run `briefcase new`" in out
+
+
+def test_other_frameworks_none_selected(
+    new_command,
+    mock_builtin_bootstraps,
+    capsys,
+    monkeypatch,
+):
+    """Selecting None in the community submenu continues without a GUI framework."""
+    monkeypatch.setattr(
+        type(new_command),
+        "KNOWN_COMMUNITY_BOOTSTRAPS",
+        {
+            "fake-framework": {
+                "entry_point": "fake_framework",
+                "display_name": "Fake Framework",
+                "description": "A fake community framework.",
+            }
+        },
+        raising=False,
+    )
+    monkeypatch.setattr(
+        briefcase.commands.new,
+        "get_gui_bootstraps",
+        MagicMock(return_value=mock_builtin_bootstraps),
+    )
+
+    choices = new_command._gui_bootstrap_choices(mock_builtin_bootstraps)
+    other_index = list(choices.keys()).index(new_command.OTHER_FRAMEWORKS) + 1
+
+    # Select Other frameworks, then select None (option 2) in the community submenu
+    new_command.console.values = [str(other_index), "2"]
+
+    selected, bootstraps = new_command.select_bootstrap(project_overrides={})
+
+    assert selected == "None"
+    assert bootstraps == mock_builtin_bootstraps
 
 
 def test_question_sequence_with_overrides(

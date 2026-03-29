@@ -489,6 +489,7 @@ class NewCommand(BaseCommand):
 
         if selected_bootstrap == self.OTHER_FRAMEWORKS:
             self._show_other_frameworks_menu(bootstraps)
+            return "None", bootstraps
 
         return selected_bootstrap, bootstraps
 
