@@ -57,8 +57,7 @@ def main():
         # for details.
         return """\
 universal_build = true
-# PySide 6.10+ wheels target macOS 13; bumping the floor here lets pip
-# resolve to recent PySide releases that ship Python 3.14 support.
+# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
 min_os_version = "13.0"
 requires = [
     "PySide6-Addons~=6.8",
