@@ -3,11 +3,11 @@ from email.message import Message
 from unittest.mock import Mock
 
 import pytest
+from build import BuildBackendException
 
 from briefcase.config import parse_config
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseConfigError
-from build import BuildBackendException
 from tests.utils import create_file
 
 

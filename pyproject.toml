@@ -291,11 +291,15 @@ ignore = [
     "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
+[tool.ruff.lint.isort]
+# If you've built a wheel locally, you'll have a build directory.
+# This confuses ruff into thinking build is a first-party Python package.
+known-third-party = ["build"]
+
 [tool.ruff.lint.per-file-ignores]
 # E501: line too long, to be fixed in future changes
 "tests/integrations/*" = ["E501"]
 "tests/platforms/*" = ["E501"]
-
 
 [tool.rumdl]
 flavor = "mkdocs"

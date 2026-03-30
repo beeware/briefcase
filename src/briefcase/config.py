@@ -10,11 +10,10 @@ from email.utils import getaddresses
 from pathlib import Path
 from urllib.parse import urlparse
 
+from build import BuildBackendException
 from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
-
-from build import BuildBackendException
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
