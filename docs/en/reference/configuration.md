@@ -505,7 +505,7 @@ Some platforms have specific configuration options that are only relevant to tha
 
 ## Compatibility with Python project metadata
 
-Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section. If your `pyproject.toml` defines fields to be *dynamic*, Briefcase will attempt to resolve those fields by using the `[build-system]` defined in `pyproject.toml` in an isolated environment.
+Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
 
 The following `[project]` metadata keys will be used by Briefcase if they are available:
 
@@ -529,3 +529,28 @@ The value for `license-files` will be a derived from the value in the license sp
 - If your project is in PEP 621 `license.file` format, the value provided will be used to populate a single-item `license-files` definition.
 - If your `license` project is in PEP 621 `license.text` format or pre-PEP 621 format (i.e., a `license = "..."` definition where the value *isn't* an SPDX specifier), and the provided text is more than one line, the value of the field will be used as the contents of a temporary license file that will be written into the `build` directory. That file will be used to populate a single-item list for `license-files` as a license specifier.
 - Otherwise, `license-files` will be set to an empty list. Note that some platforms *require* a license file for packaging purposes; packaging apps for those platforms will raise an error when the app is built for those platforms.
+
+### Dynamic metadata { #dynamic-metadata }
+
+If your `pyproject.toml` defines `dynamic` PEP 612 metadata fields, Briefcase will resolve those fields by using the PEP 517 `[build-system]` definition for your project.
+
+For example, to use `setuptools_scm` to evaluate your project's version number based on Git (or other source control tool) tags, you could add the following to your Briefcase project configuration:
+```
+[build-system]
+# Set up a PEP 517 build configuration using setuptools
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+# Declare `version` to be dynamically defined
+# The "name" field must also be defined as a PEP 621 key to satisfy setuptools
+[project]
+dynamic = ["version"]
+name = "myproject"
+
+# An empty table definition is required to enable setuptools-scm
+[tool.setuptools_scm]
+
+# Provide the rest of your project configuration as usual
+[tool.briefcase]
+...
+```
