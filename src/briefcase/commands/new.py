@@ -93,7 +93,7 @@ class NewCommand(BaseCommand):
             ),
         },
         "pygame-ce": {
-            "entry_point": "pygame_ce",
+            "entry_point": ["pygame_ce"],
             "display_name": "Pygame-ce",
             "description": "Community edition fork of pygame.",
         },
@@ -495,28 +495,6 @@ class NewCommand(BaseCommand):
 
         return selected_bootstrap, bootstraps
 
-    def _instantiate_bootstrap(
-        self,
-        selected_bootstrap: str,
-        bootstraps: dict[str, type[BaseGuiBootstrap]],
-        context: dict[str, str],
-    ) -> BaseGuiBootstrap:
-        """Instantiate the selected GUI bootstrap."""
-        bootstrap_class = bootstraps[selected_bootstrap]
-        return bootstrap_class(console=self.console, context=context)
-
-    def create_bootstrap(
-        self,
-        context: dict[str, str],
-        project_overrides: dict[str, str],
-    ) -> BaseGuiBootstrap:
-        """Select and instantiate a bootstrap for the new project.
-
-        :returns: An instance of the GUI bootstrap that the user has selected.
-        """
-        selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
-        return self._instantiate_bootstrap(selected_bootstrap, bootstraps, context)
-
     def build_gui_context(
         self,
         bootstrap: BaseGuiBootstrap,
@@ -574,21 +552,15 @@ class NewCommand(BaseCommand):
         instructions."""
         installed = set(bootstraps.keys())
 
-        def entry_point_names(plugin: dict[str, object]) -> list[str]:
-            entry_point = plugin["entry_point"]
-            if isinstance(entry_point, str):
-                return [entry_point]
-            return list(entry_point)
-
         available = {
             package: plugin
             for package, plugin in self.KNOWN_COMMUNITY_BOOTSTRAPS.items()
-            if not any(name in installed for name in entry_point_names(plugin))
+            if not any(name in installed for name in plugin["entry_point"])
         }
 
         if not available:
             self.console.warning(
-                "All known community GUI bootstraps are currently installed."
+                "\nAll known community GUI bootstraps are currently installed."
             )
 
         options = {
@@ -660,7 +632,12 @@ class NewCommand(BaseCommand):
 
         selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
         context = self.build_app_context(project_overrides)
-        bootstrap = self._instantiate_bootstrap(selected_bootstrap, bootstraps, context)
+
+        # Instantiate the bootstrap and add the bootstrap context.
+        bootstrap = bootstraps[selected_bootstrap](
+            console=self.console,
+            context=context,
+        )
         context.update(self.build_gui_context(bootstrap, project_overrides))
 
         self.console.divider()  # close the prompting section of output
