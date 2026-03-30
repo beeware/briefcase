@@ -74,7 +74,7 @@ class NewCommand(BaseCommand):
     output_format = ""
     description = "Create a new Briefcase project."
 
-    OTHER_FRAMEWORKS = "Other frameworks (select to see options)"
+    OTHER_FRAMEWORKS = "Other frameworks"
 
     # Community GUI bootstraps that are known to Briefcase.
     # A bootstrap is only considered "installed" if it exposes a
@@ -315,7 +315,7 @@ class NewCommand(BaseCommand):
         """
         formal_name = self.console.text_question(
             intro=(
-                "Now we need a formal name for your application.\n"
+                "Next, we need a formal name for your application.\n"
                 "\n"
                 "This is the name that will be displayed to humans whenever the name "
                 "of the application is displayed. It can have spaces and punctuation "
@@ -475,11 +475,13 @@ class NewCommand(BaseCommand):
 
         selected_bootstrap = self.console.selection_question(
             intro=(
-                "What GUI toolkit do you want to use for this project?\n"
+                "First, we need to select a GUI toolkit to use for your app.\n"
                 "\n"
-                "Additional GUI bootstraps are available from the community.\n"
+                "Briefcase has built-in support for some common GUI frameworks. "
+                "Additional GUI toolkits are supported through plugins provided "
+                "by the community.\n"
                 "\n"
-                "Check them out at https://beeware.org/bee/briefcase-bootstraps"
+                "What GUI toolkit do you want to use for this project?"
             ),
             description="GUI Framework",
             default=next(iter(bootstrap_options.keys())),
@@ -543,16 +545,13 @@ class NewCommand(BaseCommand):
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Insert the Other Frameworks sentinel before ordering
-        ordered[self.OTHER_FRAMEWORKS] = None
-
         # Ensure the first 3 options are: Toga, PySide6, Pygame
         ordered.move_to_end("Pygame", last=False)
         ordered.move_to_end("PySide6", last=False)
         ordered.move_to_end("Toga", last=False)
-        ordered.move_to_end(self.OTHER_FRAMEWORKS)
 
-        # Option None should always be last
+        # Last two options should be "Other" and "None"
+        ordered[self.OTHER_FRAMEWORKS] = None
         ordered.move_to_end("None")
 
         # Construct the bootstrap options as they should be presented to users.
@@ -587,24 +586,10 @@ class NewCommand(BaseCommand):
             if not any(name in installed for name in entry_point_names(plugin))
         }
 
-        intro = (
-            "GUI frameworks listed here are "
-            "provided by third-party plugins and are "
-            "not maintained by Briefcase."
-        )
-
         if not available:
             self.console.warning(
-                self.console.textwrap(
-                    "\n" + intro + "\n\n" + "No additional community GUI bootstraps "
-                    "are currently available to install.\n"
-                    + "Browse options at https://beeware.org/bee/briefcase-bootstraps\n\n"
-                    + "Re-run `briefcase new` and select an installed GUI framework."
-                )
+                "All known community GUI bootstraps are currently installed."
             )
-            raise SystemExit(0)
-
-        self.console.warning(self.console.textwrap("\n" + intro + "\n"))
 
         options = {
             package: f"{plugin['display_name']} — {plugin['description']}"
@@ -614,8 +599,11 @@ class NewCommand(BaseCommand):
 
         chosen = self.console.selection_question(
             intro=(
-                "Select a community GUI bootstrap to see installation instructions.\n\n"
-                "Installed bootstraps are not shown."
+                "Support for following GUI frameworks can be added by installing "
+                "a plugin that is maintained by the community.\n"
+                "\n"
+                "Select a GUI framework to see installation instructions, "
+                "or select 'No GUI framework' to generate an empty app."
             ),
             description="Community GUI Framework",
             default="None",
@@ -632,10 +620,13 @@ class NewCommand(BaseCommand):
         self.console.warning(
             self.console.textwrap(
                 "\n"
-                f"{display_name} is provided by a community plugin.\n"
-                "To use this, run:\n\n"
+                f"Support for {display_name} is provided by a community plugin.\n"
+                "\n"
+                "To use this plugin, run:\n"
+                "\n"
                 f"    python -m pip install {package}\n\n"
-                "then re-run `briefcase new`."
+                f"then re-run `briefcase new` and select {display_name} as your "
+                "GUI framework.\n"
             )
         )
         raise SystemExit(0)
