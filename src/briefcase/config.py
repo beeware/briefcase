@@ -3,16 +3,18 @@ from __future__ import annotations
 import copy
 import keyword
 import re
+import subprocess
 import sys
 import unicodedata
 from email.utils import getaddresses
 from pathlib import Path
 from urllib.parse import urlparse
 
-from build import BuildBackendException
 from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
+
+from build import BuildBackendException
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
     import tomllib
@@ -1241,18 +1243,28 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
     """Resolve dynamic PEP621 metadata using the project's configured build backend."""
 
     try:
-        metadata = project_wheel_metadata(base_path, isolated=True)
+        with console.wait_bar("Evaluating dynamic project metadata..."):
+            metadata = project_wheel_metadata(base_path, isolated=True)
         # Provide fields declared as dynamic with corresponding metadata value
         return {field: _core_metadata_to_pep621(field, metadata) for field in dynamic}
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseConfigError(
+            "Briefcase was unable to run the PEP 517 build interface for your "
+            "project.\n"
+            "Ensure that the `[build-system]` configuration in your pyproject.toml "
+            "is correct.\n"
+            "\n"
+            "Running `python -m build` may be helpful in diagnosing this problem."
+        ) from e
     except BuildBackendException as e:
-        dynamic_fields = "    \n".join(dynamic)
-        console.warning(
-            f'WARNING: Build backend failed ("{e!s}") while trying to resolve dynamic '
-            f"project metadata:\n\n"
-            f"    {dynamic_fields}"
-        )
-        # No values for dynamic fields, missing *required* fields might fail elsewhere
-        return {}
+        raise BriefcaseConfigError(
+            "Briefcase was unable to resolve dynamic PEP 621 metadata for your "
+            "project.\n"
+            "Ensure that the `[build-system]` configuration in your pyproject.toml "
+            "is correct.\n"
+            "\n"
+            "Running `python -m build` may be helpful in diagnosing this problem."
+        ) from e
 
 
 def merge_pep621_config(global_config, pep621_config):
