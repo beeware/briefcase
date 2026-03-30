@@ -3,11 +3,15 @@ from __future__ import annotations
 import copy
 import keyword
 import re
+import subprocess
 import sys
 import unicodedata
+from email.utils import getaddresses
 from pathlib import Path
 from urllib.parse import urlparse
 
+from build import BuildBackendException
+from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
 
@@ -1203,6 +1207,58 @@ Update your configuration to provide a valid PEP 639 configuration:
         )
 
 
+def _core_metadata_to_pep621(pep621_key, metadata):
+    """Retrieve PEP621 metadata values from a Core metadata message."""
+
+    match pep621_key:
+        case "authors" | "maintainers":
+            addresses = metadata.get_all(f"{pep621_key.rstrip('s')}-email")
+            return [
+                {"name": name, "email": email}
+                for name, email in getaddresses(addresses)
+            ]
+        case "dependencies":
+            return metadata.get_all("requires-dist")
+        case "description":
+            return metadata["summary"]
+        case "license":
+            return metadata["license-expression"]
+        case "urls":
+            urls = [url.partition(",") for url in metadata.get_all("project-url")]
+            return {name.strip(): url.strip() for name, _, url in urls}
+        case _:
+            # Let metadata's automatic normalization deal with selecting the right key
+            return metadata[pep621_key]
+
+
+def resolve_dynamic_pep621_config(base_path, dynamic, console):
+    """Resolve dynamic PEP621 metadata using the project's configured build backend."""
+
+    try:
+        with console.wait_bar("Evaluating dynamic project metadata..."):
+            metadata = project_wheel_metadata(base_path, isolated=True)
+        # Provide fields declared as dynamic with corresponding metadata value
+        return {field: _core_metadata_to_pep621(field, metadata) for field in dynamic}
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseConfigError(
+            "Briefcase was unable to run the PEP 517 build interface for your "
+            "project.\n"
+            "Ensure that the `[build-system]` configuration in your pyproject.toml "
+            "is correct.\n"
+            "\n"
+            "Running `python -m build` may be helpful in diagnosing this problem."
+        ) from e
+    except BuildBackendException as e:
+        raise BriefcaseConfigError(
+            "Briefcase was unable to resolve dynamic PEP 621 metadata for your "
+            "project.\n"
+            "Ensure that the `[build-system]` configuration in your pyproject.toml "
+            "is correct.\n"
+            "\n"
+            "Running `python -m build` may be helpful in diagnosing this problem."
+        ) from e
+
+
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
@@ -1305,7 +1361,12 @@ def parse_config(config_file: Path, platform, output_format, console):
 
     # Merge the PEP621 configuration (if it exists)
     try:
-        merge_pep621_config(global_config, pyproject["project"])
+        pep621_config = pyproject["project"]
+        if dynamic := pep621_config.pop("dynamic", []):
+            pep621_config.update(
+                resolve_dynamic_pep621_config(base_path, dynamic, console)
+            )
+        merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
 
