@@ -110,6 +110,7 @@ class macOSMixin(_MixinBase):
                 "compiled for Apple Silicon, or is a Universal binary."
             )
 
+        super().verify_tools()
         return
 
     def is_icloud_synced(self, path: Path) -> bool:
