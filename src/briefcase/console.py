@@ -251,14 +251,26 @@ class Console:
         return self._log_impl.export_text()
 
     @staticmethod
-    def _dedent_and_split(text):
-        """Dedent and split text into paragraphs by manual line breaks."""
-        # Remove common leading whitespace
-        text = textwrap.dedent(text).strip().strip("\n")
-        # replace line breaks with spaces
-        text = text.replace("\n", " ")
-        # split the message into paragraphs by manual line breaks
-        return text.split("\\n")
+    def _dedent_and_wrap(text, wrap_width):
+        """Dedent text, split text into paragraphs and wrap each paragraph to lines of
+        the specified width."""
+        # Remove common leading empty paragraphs
+        text = textwrap.dedent(text).strip("\n")
+
+        # Split text into paragraphs
+        paragraphs = text.split("\n")
+
+        # Wrap each paragraph to lines
+        text_lines = []
+        for p in paragraphs:
+            # If the paragraph is not empty, wrap it to the specified width
+            if p:
+                text_lines.extend(textwrap.wrap(p, width=wrap_width))
+            # Otherwise, add an empty line
+            else:
+                text_lines.append("")
+        # Return the list of lines
+        return text_lines
 
     def warning_banner(
         self,
@@ -266,18 +278,20 @@ class Console:
         message: str,
         width: int = 80,
     ) -> str:
-        """Format warning banner message inside an asterisk border box. It is possible
-        to input title/message as multiline or single string. To manually split the
-        message into paragraphs, use the "\\n" character. If you need empty lines, use
-        the "\\n\\n" sequence.
+        """The title or message can be provided as a single or as multiline string. Any
+        common leading whitespace from each line is removed, but relative indentation is
+        preserved. To separate text into paragraphs, use blank lines in your code or the
+        "\n" character. If a paragraph is very long, you can break the line in your code
+        using a space with backslash (" \"). In the final output, lines within the same
+        paragraph will be merged.
 
         :param title: The title of the box. If provided, appears centered at the top.
         :param message: The message to format inside the box.
         :param width: The total width of the box in characters. Defaults to 80.
-        :param border_char: Character to use for the box border. Defaults to "*".
         :return: The formatted message enclosed in a bordered box.
         """
 
+        # character to use for the box border
         border_char = "*"
 
         # If message and title are both empty rase ValueError
@@ -290,7 +304,7 @@ class Console:
         # Create border line
         border_line = border_char * width
         # create lines array with opening line of the box
-        lines = [border_line]
+        lines_array = [border_line]
 
         # if title exists, format title in the box
         if title:
@@ -298,53 +312,33 @@ class Console:
             if not isinstance(title, str):
                 raise TypeError("Title must be a string")
 
-            # width of title line inside the box
-            inner_width = width - 4
+            # get title wrapped to lines
+            title_lines = self._dedent_and_wrap(title, width - 6)
 
-            # spilt title into paragraphs
-            paragraphs = Console._dedent_and_split(title)
-
-            for paragraph in paragraphs:
-                paragraph = paragraph.strip()
-                if paragraph:  # Non-empty paragraph
-                    # Wrap paragraph to lines to fit the width of the box
-                    wrapped_title_lines = textwrap.wrap(paragraph, width=width - 6)
-
-                    for line in wrapped_title_lines:
-                        # Center each line within the available space
-                        padded_line = line.center(inner_width)
-                        # add line to the box
-                        lines.append(f"{border_char * 2}{padded_line}{border_char * 2}")
-                else:  # Empty paragraph (preserve blank lines)
-                    lines.append(
-                        f"{border_char * 2}{''.center(inner_width)}{border_char * 2}"
-                    )
+            # center each line of the title and add to the box
+            for line in title_lines:
+                line = line.center(width - 4)
+                lines_array.append(f"{border_char * 2}{line}{border_char * 2}")
 
             # closing line of title in the box
-            lines.append(border_line)
+            lines_array.append(border_line)
 
         # If message is not empty, add it to the box
         if message:
             # message must be a string
             if not isinstance(message, str):
                 raise TypeError("Message must be a string")
-            # spilt message into paragraphs
-            paragraphs = Console._dedent_and_split(message)
+            # get message wrapped to lines
+            msg_lines = self._dedent_and_wrap(message, width)
 
-            for paragraph in paragraphs:
-                paragraph = paragraph.strip()
-                if paragraph:  # Non-empty paragraph
-                    # Wrap paragraph to lines to fit the width of the box
-                    wrapped_lines = textwrap.wrap(paragraph, width=width)
-                    lines.extend(wrapped_lines)
-                else:  # Empty paragraph (preserve blank lines)
-                    lines.append("")
+            # add message lines to the box
+            lines_array.extend(msg_lines)
 
             # closing line of message
-            lines.append(border_line)
+            lines_array.append(border_line)
 
         # merge lines into a single string and send warning to console
-        self.warning("\n".join(lines))
+        self.warning("\n".join(lines_array))
 
     #################################################################
     # Logging controls

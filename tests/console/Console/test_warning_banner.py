@@ -1,17 +1,20 @@
 import pytest
 
-source_msg = """\
-            Hi there! My name is Anton, and I'm a Python developer.\\n\\n
-            This is my very first
-            experience in open source
-            development.
-            I like your project, and I'm excited to contribute to it.\
+source_msg = """
+            Hi there! My name is Anton, and I'm a Python developer.\n
+                This is my very first \
+experience in open source \
+development.
+
+            I like your project, and I'm excited to contribute to it.
 """
 
-source_title = """\
-                INFO: I TRIED TO SOLVE THIS ISSUE #2559.\\n\\n
-                IT SEEMED TO ME RATHER SIMPLE,
-                BUT I GOT VERY GOOD EXPERIENCE\
+source_title = """
+                INFO: I TRIED TO SOLVE THIS ISSUE #2559.
+
+                IT SEEMED TO ME RATHER SIMPLE, \
+BUT I GOT VERY GOOD EXPERIENCE
+
 """
 
 
@@ -31,8 +34,9 @@ source_title = """\
 ********************************************************************************
 Hi there! My name is Anton, and I'm a Python developer.
 
-This is my very first experience in open source development. I like your
-project, and I'm excited to contribute to it.
+    This is my very first experience in open source development.
+
+I like your project, and I'm excited to contribute to it.
 ********************************************************************************\
 """,
         ),
@@ -52,9 +56,11 @@ project, and I'm excited to contribute to it.
 Hi there! My name is Anton, and I'm a
 Python developer.
 
-This is my very first experience in open
-source development. I like your project,
-and I'm excited to contribute to it.
+    This is my very first experience in
+open source development.
+
+I like your project, and I'm excited to
+contribute to it.
 ****************************************\
 """,
         ),
@@ -67,8 +73,9 @@ and I'm excited to contribute to it.
 ********************************************************************************
 Hi there! My name is Anton, and I'm a Python developer.
 
-This is my very first experience in open source development. I like your
-project, and I'm excited to contribute to it.
+    This is my very first experience in open source development.
+
+I like your project, and I'm excited to contribute to it.
 ********************************************************************************\
 """,
         ),
@@ -86,7 +93,9 @@ project, and I'm excited to contribute to it.
 ************************************************************
 Hi there! My name is Anton, and I'm a Python developer.
 
-This is my very first experience in open source development.
+    This is my very first experience in open source
+development.
+
 I like your project, and I'm excited to contribute to it.
 ************************************************************\
 """,
@@ -108,11 +117,12 @@ I like your project, and I'm excited to contribute to it.
 Hi there! My name is Anton,
 and I'm a Python developer.
 
-This is my very first
+    This is my very first
 experience in open source
-development. I like your
-project, and I'm excited to
-contribute to it.
+development.
+
+I like your project, and I'm
+excited to contribute to it.
 ******************************\
 """,
         ),
