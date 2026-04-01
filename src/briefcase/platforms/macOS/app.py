@@ -12,7 +12,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.platforms.macOS import (
     SigningIdentity,
     macOSCreateMixin,
@@ -43,19 +43,19 @@ class macOSAppMixin(macOSMixin):
 class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
     description = "Create and populate a macOS app."
 
-    def support_path(self, app: AppConfig, runtime=False) -> Path:
+    def support_path(self, app: FinalizedAppConfig, runtime=False) -> Path:
         if runtime:
             return super().support_path(app)
         else:
             return self.bundle_path(app) / "support"
 
-    def runtime_path(self, app: AppConfig) -> Path:
+    def runtime_path(self, app: FinalizedAppConfig) -> Path:
         try:
             return self.path_index(app, "runtime_path")
         except KeyError:
             return "python-stdlib"
 
-    def install_app_support_package(self, app: AppConfig):
+    def install_app_support_package(self, app: FinalizedAppConfig):
         """Install the application support package.
 
         :param app: The config object for the app
@@ -80,7 +80,7 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
                 symlinks=True,
             )
 
-    def install_app_resources(self, app: AppConfig):
+    def install_app_resources(self, app: FinalizedAppConfig):
         super().install_app_resources(app)
 
         # macOS will cache application icons. Touching the .app folder flushes the icon
@@ -90,6 +90,7 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
     description = "Update an existing macOS app."
+    supports_debugger = True
 
 
 class macOSAppOpenCommand(macOSAppMixin, OpenCommand):
@@ -103,8 +104,9 @@ class macOSAppBuildCommand(
     BuildCommand,
 ):
     description = "Build a macOS app."
+    supports_debugger = True
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the macOS app.
 
         :param app: The application to build
@@ -144,6 +146,7 @@ class macOSAppBuildCommand(
 
 class macOSAppRunCommand(macOSRunMixin, macOSAppMixin, RunCommand):
     description = "Run a macOS app."
+    supports_debugger = True
 
 
 class macOSAppDevCommand(macOSAppMixin, DevCommand):

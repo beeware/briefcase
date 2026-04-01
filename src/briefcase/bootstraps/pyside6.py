@@ -60,8 +60,8 @@ test_requires = [
     def pyproject_table_macOS(self):
         return """\
 universal_build = true
-# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
-min_os_version = "12.0"
+# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
+min_os_version = "13.0"
 requires = [
     "std-nslog~=1.0.3",
 ]
@@ -79,26 +79,16 @@ system_requires = [
 ]
 
 system_runtime_requires = [
-    # Derived from https://doc.qt.io/qt-6/linux-requirements.html
-    "libxext6",
-    "libxrender1",
-    "libx11-xcb1",
-    "libxkbcommon-x11-0",
-    "libxcb-image0",
+    "libgl1",
+    "libqt6dbus6",
+    "libqt6gui6",
     "libxcb-cursor0",
-    "libxcb-shape0",
-    "libxcb-randr0",
-    "libxcb-xfixes0",
-    "libxcb-sync1",
+    # The following packages are explicit dependencies on recent Debian-based
+    # distros, but not on Ubuntu 22.04.
     "libxcb-icccm4",
     "libxcb-keysyms1",
-    "libfontconfig1",
-    "libsm6",
-    "libice6",
-    "libglib2.0-0",
-    "libgl1",
-    "libegl1",
-    "libdbus-1-3",
+    "libxcb-shape0",
+    "libxkbcommon-x11-0",
 ]
 """
 

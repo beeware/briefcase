@@ -1,47 +1,72 @@
+from __future__ import annotations
+
 import re
 import subprocess
 import uuid
 from collections.abc import Collection
 from pathlib import Path, PurePath
+from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import AppConfig, parsed_version
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.config import FinalizedAppConfig
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
 
-def txt_to_rtf(txt):
-    """A very simple TXT to RTF converter.
+def txt_to_rtf(txt: str | list[str]) -> str:
+    """Convert plain text to a full RTF document.
 
     The entire document is rendered in Courier. Any blank line is interpreted as a
     paragraph marker; any line starting with a * is rendered as a bullet. Everything
     else is rendered verbatim in the RTF document.
 
-    :param text: The original text.
-    :returns: The text in RTF format.
+    If a list of strings is provided, each string is converted to an RTF body section
+    and the sections are joined with an RTF horizontal-rule separator.
+
+    :param txt: The original plain text, either as a single string or a list of strings.
+    :returns: A complete RTF document string.
     """
-    rtf = ["{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"]
-    for line in txt.split("\n"):
-        if line.lstrip().startswith("*"):
-            rtf.append(f"\\bullet{line[line.index('*') + 1 :]} ")
-        elif line:
-            # Add a space at the end to ensure multi-line paragraphs
-            # have a word break. Strip whitespace to ensure that
-            # indented bullet paragraphs don't have extra space.
-            rtf.append(line.strip() + " ")
-        else:
-            # A blank line is a paragraph+line break.
-            rtf.append("\\par\\line")
-    rtf.append("}")
+    RTF_HEADER = "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"
+    RTF_SEPARATOR = "\\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line"
 
-    return "\n".join(rtf)
+    texts = [txt] if isinstance(txt, str) else txt
+
+    bodies = []
+    for text in texts:
+        rtf = []
+        for line in text.split("\n"):
+            if line.lstrip().startswith("*"):
+                rtf.append(f"\\bullet{line[line.index('*') + 1 :]} ")
+            elif line:
+                # Add a space at the end to ensure multi-line paragraphs
+                # have a word break. Strip whitespace to ensure that
+                # indented bullet paragraphs don't have extra space.
+                rtf.append(line.strip() + " ")
+            else:
+                # A blank line is a paragraph+line break.
+                rtf.append("\\par\\line")
+        bodies.append("\n".join(rtf))
+
+    separator = f"\n{RTF_SEPARATOR}\n"
+    return f"{RTF_HEADER}\n{separator.join(bodies)}\n}}"
 
 
-class WindowsMixin:
+class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
@@ -71,8 +96,7 @@ class WindowsMixin:
         if self.tools.host_arch != "AMD64":
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:
-                    self.console.warning(
-                        f"""
+                    self.console.warning(f"""
 *************************************************************************
 ** WARNING: Possible architecture mismatch                             **
 *************************************************************************
@@ -84,24 +108,21 @@ You are responsible for ensuring that the content of external_package_path
 is compatible with x86-64.
 
 *************************************************************************
-"""
-                    )
+""")
             else:
                 raise UnsupportedHostError(
-                    f"Windows applications cannot be built on an "
+                    "Windows applications cannot be built on an "
                     f"{self.tools.host_arch} machine."
                 )
 
         # 64bit Python is required to ensure 64bit wheels are installed/created
         # for the app
         if self.tools.is_32bit_python:
-            raise UnsupportedHostError(
-                """\
+            raise UnsupportedHostError("""\
 Windows applications cannot be built using a 32bit version of Python.
 
 Install a 64bit version of Python and run Briefcase again.
-"""
-            )
+""")
 
 
 class WindowsCreateCommand(CreateCommand):
@@ -111,12 +132,12 @@ class WindowsCreateCommand(CreateCommand):
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)
         return (
-            f"https://www.python.org/ftp/python/"
+            "https://www.python.org/ftp/python/"
             f"{self.python_version_tag}.{micro}/"
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def extras_path(self, app: AppConfig) -> Path:
+    def extras_path(self, app: FinalizedAppConfig) -> Path:
         """Obtain the path for extra installer content.
 
         Extra installer content is content that needs to be inserted into the installer,
@@ -135,7 +156,7 @@ class WindowsCreateCommand(CreateCommand):
 
         return self.bundle_path(app) / extras_path
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -147,9 +168,8 @@ class WindowsCreateCommand(CreateCommand):
         try:
             version_triple = app.version_triple
         except AttributeError:
-            parsed = parsed_version(app.version)
             version_triple = ".".join(
-                ([str(v) for v in parsed.release] + ["0", "0"])[:3]
+                ([str(v) for v in app.version.release] + ["0", "0"])[:3]
             )
 
         # The application needs a unique GUID.
@@ -183,8 +203,7 @@ class WindowsCreateCommand(CreateCommand):
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning(
-            """
+        self.console.warning("""
 *************************************************************************
 ** WARNING: Support package update may be imperfect                    **
 *************************************************************************
@@ -199,74 +218,67 @@ class WindowsCreateCommand(CreateCommand):
     perform a clean app build before release.
 
 *************************************************************************
-"""
-        )
+""")
 
-    def install_license(self, app: AppConfig):
-        """Install the license for the project as RTF content.
+    def install_license(self, app: FinalizedAppConfig):
+        """Install the license for the project as a single RTF document.
 
-        Currently assumes PEP621 format for `license`:
-        * If `license.file` is an RTF file, it is used verbatim
-        * If `license.file` is any other file, it is converted to RTF
-          using a simple text->RTF conversion.
-        * If `license.text` is provided, that text is converted to
-          RTF; with a warning for the case where `license.text` is
-          a one-line license name/description.
+        The following cases are handled:
 
-        If no `license` field is defined, or it points at a file that
-        doesn't exist an error is raised.
-
-        When PEP639 support is added, we will need to adapt this method.
+        - Single ``.rtf`` file: copied directly without any transformation.
+        - Single non-``.rtf`` file: converted to RTF via ``txt_to_rtf()``.
+        - Multiple files, all non-``.rtf``: converted and merged with a
+          separator via ``txt_to_rtf()``.
+        - Multiple files where any is ``.rtf``, or a mix of ``.rtf`` and
+          non-``.rtf``: raises ``BriefcaseConfigError``.
 
         :param app: The config object for the app
         """
         installed_license = self.bundle_path(app) / "LICENSE.rtf"
 
-        if license_file := app.license.get("file"):
-            license_file = self.base_path / license_file
-            if license_file.is_file():
-                if license_file.suffix == ".rtf":
-                    self.tools.shutil.copy(license_file, installed_license)
-                    license_text = None
-                else:
-                    license_text = license_file.read_text(encoding="utf-8")
-                    installed_license.write_text(
-                        txt_to_rtf(license_text), encoding="utf-8"
-                    )
+        rtf_files = [
+            p for p in app.license_files if (self.base_path / p).suffix == ".rtf"
+        ]
+
+        if len(app.license_files) == 0:
+            raise BriefcaseCommandError("""\
+Your project does not include any license files.
+
+Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
+one file in the `license-files` setting.
+""")
+        elif len(app.license_files) == 1:
+            license_file = self.base_path / app.license_files[0]
+            if license_file.suffix == ".rtf":
+                # Single RTF file: copy directly.
+                self.tools.shutil.copy(license_file, installed_license)
+                return
             else:
-                raise BriefcaseCommandError(
-                    f"Your `pyproject.toml` specifies a license file of "
-                    f"{str(license_file.relative_to(self.base_path))!r}.\n"
-                    f"However, this file does not exist."
-                    f"\n\n"
-                    "Ensure you have correctly spelled the filename in your "
-                    "`license.file` setting."
+                # Single text file: convert to full RTF document.
+                installed_license.write_text(
+                    txt_to_rtf(license_file.read_text(encoding="utf-8")),
+                    encoding="utf-8",
                 )
-        elif license_text := app.license.get("text"):
-            if len(license_text.splitlines()) <= 1:
-                self.console.warning(
-                    """
-Your app specifies a license using `license.text`, but the value doesn't appear
-to be a full license. Briefcase will generate a `LICENSE.rtf` file for your
-project; you should ensure that the contents of this file is adequate.
-"""
-                )
-            installed_license.write_text(
-                txt_to_rtf(license_text),
-                encoding="utf-8",
-            )
-        else:
-            raise BriefcaseCommandError(
-                """\
-Your project does not contain a `license` definition.
+                return
 
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms, and set `license.file = 'LICENSE'` in your
-app's configuration.
-"""
-            )
+        # Multiple files.
+        if rtf_files:
+            raise BriefcaseConfigError(f"""\
+The license configuration for {app.app_name!r} contains multiple
+license files, and at least one is an RTF file. Briefcase cannot
+automatically merge RTF license files.
 
-    def install_app_resources(self, app: AppConfig):
+Either provide a single RTF file, or provide only plain-text license
+files that Briefcase can convert and merge automatically.
+""")
+
+        # Multiple non-RTF files: convert each and merge via txt_to_rtf().
+        texts = [
+            (self.base_path / p).read_text(encoding="utf-8") for p in app.license_files
+        ]
+        installed_license.write_text(txt_to_rtf(texts), encoding="utf-8")
+
+    def install_app_resources(self, app: FinalizedAppConfig):
         """Install Windows-specific app resources.
 
         This includes any post-install or pre-uninstall scripts, plus converting the
@@ -326,9 +338,11 @@ app's configuration.
 
 
 class WindowsRunCommand(RunCommand):
+    supports_debugger = True
+
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -449,7 +463,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def sign_file(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filepath: Path,
         identity: str,
         file_digest: str,
@@ -463,7 +477,7 @@ class WindowsPackageCommand(PackageCommand):
         if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
             raise BriefcaseCommandError(
                 f"Codesigning identify {identity!r} must be a "
-                f"certificate SHA-1 thumbprint."
+                "certificate SHA-1 thumbprint."
             )
 
         sign_command = [
@@ -499,7 +513,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: str | None = None,
         adhoc_sign: bool = False,
         file_digest: str | None = None,
@@ -532,8 +546,7 @@ class WindowsPackageCommand(PackageCommand):
             sign_app = True
         else:
             sign_app = False
-            self.console.warning(
-                """
+            self.console.warning("""
 *************************************************************************
 ** WARNING: No signing identity provided                               **
 *************************************************************************
@@ -543,8 +556,7 @@ class WindowsPackageCommand(PackageCommand):
     use `--adhoc-sign`.
 
 *************************************************************************
-"""
-            )
+""")
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)

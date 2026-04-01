@@ -1,11 +1,18 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
+from briefcase.debuggers.base import (
+    BaseDebugger,
+    DebuggerConnectionMode,
+)
+
+from ..utils import create_file
 
 
 @pytest.fixture
-def first_app_config():
-    return AppConfig(
+def first_app_config(tmp_path):
+    create_file(tmp_path / "base_path" / "LICENSE", "The Actual First App License")
+    return DraftAppConfig(
         app_name="first-app",
         project_name="First Project",
         formal_name="First App",
@@ -18,13 +25,14 @@ def first_app_config():
         sources=["src/first_app"],
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
-        license={"file": "LICENSE"},
+        license="LicenseRef-CustomLicense",
+        license_files=["LICENSE"],
     )
 
 
 @pytest.fixture
 def uppercase_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="First-App",
         project_name="First Project",
         formal_name="First App",
@@ -33,13 +41,12 @@ def uppercase_app_config():
         version="0.0.1",
         description="The first simple app",
         sources=["src/First_App"],
-        license={"file": "LICENSE"},
     )
 
 
 @pytest.fixture
-def underscore_app_config(first_app_config):
-    return AppConfig(
+def underscore_app_config():
+    return DraftAppConfig(
         app_name="first_app",
         project_name="First Project",
         formal_name="First App",
@@ -50,7 +57,26 @@ def underscore_app_config(first_app_config):
         version="0.0.1",
         description="The first simple app \\ demonstration",
         sources=["src/first_app"],
-        license={"file": "LICENSE"},
         requires=["foo==1.2.3", "bar>=4.5"],
         test_requires=["pytest"],
     )
+
+
+class DummyDebugger(BaseDebugger):
+    @property
+    def name(self) -> str:
+        return "dummy"
+
+    @property
+    def connection_mode(self) -> DebuggerConnectionMode:
+        raise NotImplementedError
+
+    @property
+    def debugger_support_pkg(self) -> str:
+        raise NotImplementedError
+
+
+@pytest.fixture
+def dummy_debugger():
+    """A dummy debugger for testing purposes."""
+    return DummyDebugger()

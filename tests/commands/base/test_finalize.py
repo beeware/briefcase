@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
 from .conftest import DummyCommand
@@ -8,25 +8,23 @@ from .conftest import DummyCommand
 
 @pytest.fixture
 def first_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
         description="The first simple app",
         sources=["src/first"],
-        license={"file": "LICENSE"},
     )
 
 
 @pytest.fixture
 def second_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",
         description="The second simple app",
         sources=["src/second"],
-        license={"file": "LICENSE"},
     )
 
 
@@ -44,7 +42,7 @@ def base_command(dummy_console, tmp_path, first_app, second_app):
 
 def test_finalize_all(base_command, first_app, second_app):
     "A call to finalize verifies host, tools, and finalized all app configs"
-    base_command.finalize()
+    result = base_command.finalize(apps=base_command.apps.values())
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -59,13 +57,16 @@ def test_finalize_all(base_command, first_app, second_app):
     ]
 
     # Apps are no longer in draft mode
-    assert not hasattr(first_app, "__draft__")
-    assert not hasattr(second_app, "__draft__")
+    assert isinstance(result["first"], FinalizedAppConfig)
+    assert isinstance(result["second"], FinalizedAppConfig)
+
+    # Returned dict maps app names to the finalized apps
+    assert result == {"first": first_app, "second": second_app}
 
 
 def test_finalize_single(base_command, first_app, second_app):
-    "A call to finalize verifies host, tools, and finalized all app configs"
-    base_command.finalize(first_app)
+    "A call to finalize verifies host, tools, and finalizes a single app config"
+    result = base_command.finalize(apps=[first_app])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -78,18 +79,22 @@ def test_finalize_single(base_command, first_app, second_app):
     ]
 
     # First app is no longer in draft mode; second is
-    assert not hasattr(first_app, "__draft__")
-    assert hasattr(second_app, "__draft__")
+    assert isinstance(result["first"], FinalizedAppConfig)
+    assert not isinstance(second_app, FinalizedAppConfig)
+
+    # Returned dict contains only the finalized app
+    assert result == {"first": first_app}
 
 
 def test_finalize_all_repeat(base_command, first_app, second_app):
-    "Multiple calls to finalize verifies host & tools multiple times, but only once on config"
+    """Multiple calls to finalize verifies host & tools multiple times, but only once on
+    "config."""
     # Finalize apps twice. This is an approximation of what happens
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app configs, each command will
     # have it's own tools verified.
-    base_command.finalize()
-    base_command.finalize()
+    result1 = base_command.finalize(apps=base_command.apps.values())
+    result2 = base_command.finalize(apps=base_command.apps.values())
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -107,20 +112,25 @@ def test_finalize_all_repeat(base_command, first_app, second_app):
         ("verify-tools",),
     ]
 
-    # Apps are no longer in draft mode
-    assert not hasattr(first_app, "__draft__")
-    assert not hasattr(second_app, "__draft__")
+    # Returned apps are FinalizedAppConfig instances
+    assert isinstance(result1["first"], FinalizedAppConfig)
+    assert isinstance(result1["second"], FinalizedAppConfig)
+
+    # Both calls return the same apps
+    assert result1 == {"first": first_app, "second": second_app}
+    assert result2 == {"first": first_app, "second": second_app}
 
 
 def test_finalize_single_repeat(base_command, first_app, second_app):
-    "Multiple calls to finalize verifies host & tools multiple times, but finalizes app config once"
+    """Multiple calls to finalize verifies host & tools multiple times, but finalizes
+    app "config once."""
 
     # Finalize app twice. This is an approximation of what happens
     # when a command chain is executed; create, update, build and run will
     # all finalize; create will finalize the app config, each command will
     # have it's own tools verified.
-    base_command.finalize(first_app)
-    base_command.finalize(first_app)
+    result1 = base_command.finalize(apps=[first_app])
+    result2 = base_command.finalize(apps=[base_command.apps["first"]])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -136,9 +146,13 @@ def test_finalize_single_repeat(base_command, first_app, second_app):
         ("verify-tools",),
     ]
 
-    # First app is no longer in draft mode; second is
-    assert not hasattr(first_app, "__draft__")
-    assert hasattr(second_app, "__draft__")
+    # First app is finalized; second is not
+    assert isinstance(result1["first"], FinalizedAppConfig)
+    assert not isinstance(second_app, FinalizedAppConfig)
+
+    # Both calls return the same single app
+    assert result1 == {"first": first_app}
+    assert result2 == {"first": first_app}
 
 
 def test_external_and_internal(base_command, first_app):
@@ -149,7 +163,7 @@ def test_external_and_internal(base_command, first_app):
         BriefcaseConfigError,
         match=r"'first' is declared as an external app, but also defines 'sources'",
     ):
-        base_command.finalize(first_app)
+        base_command.finalize(apps=[first_app])
 
 
 def test_not_external_or_internal(base_command, first_app):
@@ -161,7 +175,7 @@ def test_not_external_or_internal(base_command, first_app):
         BriefcaseConfigError,
         match=r"'first' does not define either 'sources' or 'external_package_path'.",
     ):
-        base_command.finalize(first_app)
+        base_command.finalize(apps=[first_app])
 
 
 def test_binary_path_internal_app(base_command, first_app):
@@ -176,4 +190,9 @@ def test_binary_path_internal_app(base_command, first_app):
             r"but not 'external_package_path'"
         ),
     ):
-        base_command.finalize(first_app)
+        base_command.finalize(apps=[first_app])
+
+
+def test_app_config_eq_non_app(first_app):
+    """AppConfig compared to a non-AppConfig returns NotImplemented."""
+    assert first_app != "not an app"

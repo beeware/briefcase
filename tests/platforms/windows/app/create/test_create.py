@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+from packaging.version import Version
 
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
@@ -109,7 +110,7 @@ def test_context(create_command, first_app_config):
 def test_version_triple(
     create_command, first_app_config, tmp_path, version, version_triple
 ):
-    first_app_config.version = version
+    first_app_config.version = Version(version)
     context = create_command.output_format_template_context(first_app_config)
 
     assert context["version_triple"] == version_triple

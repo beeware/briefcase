@@ -1,5 +1,89 @@
 # Release History
 
+<!-- towncrier release notes start -->
+
+## 0.4.1 (2026-03-09)
+
+### Bugfixes
+
+* Briefcase now imposes a version pin on `binaryornot < 0.5.0`. Recent `binaryornot` releases introduced a series of bugs that cause catastrophic errors in PNG detection and file encoding. ([#2712](https://github.com/beeware/briefcase/issues/2712))
+
+### Misc
+
+* [#2726](https://github.com/beeware/briefcase/issues/2726), [#2727](https://github.com/beeware/briefcase/issues/2727), [#2729](https://github.com/beeware/briefcase/issues/2729), [#2730](https://github.com/beeware/briefcase/issues/2730)
+
+## 0.4.0 (2026-03-05)
+
+### Features
+
+* When running `briefcase dev` on Linux, system requirements are now checked before attempting to install Python requirements. ([#1137](https://github.com/beeware/briefcase/issues/1137))
+* Development mode now runs apps in an isolated virtual environment, rather than the environment running Briefcase. ([#1735](https://github.com/beeware/briefcase/issues/1735))
+* Android apps can now be built and run in debug mode. ([#2351](https://github.com/beeware/briefcase/issues/2351))
+* CachyOS is now detected as an "Arch-like" Linux distribution when creating a system package. ([#2591](https://github.com/beeware/briefcase/issues/2591))
+* If content in `sources` and `test_sources` has duplicated structure, Briefcase will now merge those structures rather than raise an error. ([#2636](https://github.com/beeware/briefcase/issues/2636))
+* Post-install scripts for MSI installers now expose an `INSTALLER_PATH` environment variable. ([#2637](https://github.com/beeware/briefcase/issues/2637))
+* The `open` command now accepts a `-a`/`--app` option to allow opening a single app in a multi-app project. ([#2651](https://github.com/beeware/briefcase/issues/2651))
+* Android apps can now revoke permissions before startup via `--revoke-permission`. ([#2664](https://github.com/beeware/briefcase/issues/2664))
+* Publication channels are now discovered via entry points, allowing third-party plugins to provide custom `briefcase publish` channels. ([#2687](https://github.com/beeware/briefcase/issues/2687))
+
+### Bugfixes
+
+* Briefcase now accepts PEP 440 `requires-python` version ranges (e.g., `>=3.14,<4.0`). ([#2604](https://github.com/beeware/briefcase/issues/2604))
+* When using `-a`/`--app`, Briefcase now only finalizes the selected app instead of finalizing all apps in the project. ([#2654](https://github.com/beeware/briefcase/issues/2654))
+* macOS wheels that are tagged with *both* `universal2` and individual architecture tags are now correctly processed as part of the architecture merging process. ([#2690](https://github.com/beeware/briefcase/issues/2690))
+* Briefcase now accepts more version numbers as valid, including leading zeros in version components (e.g., `25.09.2`), and accepting all forms of capitalization in number suffixes (e.g., accepting both `1.2RC3` and `1.2rc3`). ([#2693](https://github.com/beeware/briefcase/issues/2693))
+* Debian packages can now be built for projects that contain an underscore in the app name. Previously, this would raise an error as underscores are not allowed in Debian package names. The Debian package name will be based on the bundle name - that is, the app name, but with underscores replaced with hyphens. ([#2699](https://github.com/beeware/briefcase/issues/2699))
+* Linux projects can now install extras on requirements that are specified as a reference to a local source directory. ([#2700](https://github.com/beeware/briefcase/issues/2700))
+
+### Backward Incompatible Changes
+
+* Runtime requirements for Debian apps using PySide6 have been simplified. If you have an existing project, it may be possible to simplify your runtime requirements to only include `libgl1`, `libqt6dbus6`, `libqt6gui6`, and `libxcb-cursor0`. To support Ubuntu 22.04, you will also need to include `libxcb-icccm4`, `libxcb-keysyms1`, `libxcb-shape0` and `libxkbcommon-x11-0`. ([#2592](https://github.com/beeware/briefcase/issues/2592))
+* Bundle names and identifiers are now normalized to lower case. Bundle identifiers are derived from domain names, so they *should* always be lower case; Briefcase now enforces this. If you have historically used upper case letters in your bundle identifier or app name, your bundle name will change as a result of this update. ([#2699](https://github.com/beeware/briefcase/issues/2699))
+
+### Documentation
+
+* The documentation now contains a comprehensive contribution guide. ([#2605](https://github.com/beeware/briefcase/issues/2605))
+
+### Misc
+
+* [#2525](https://github.com/beeware/briefcase/issues/2525), [#2596](https://github.com/beeware/briefcase/issues/2596), [#2597](https://github.com/beeware/briefcase/issues/2597), [#2598](https://github.com/beeware/briefcase/issues/2598), [#2599](https://github.com/beeware/briefcase/issues/2599), [#2600](https://github.com/beeware/briefcase/issues/2600), [#2609](https://github.com/beeware/briefcase/issues/2609), [#2610](https://github.com/beeware/briefcase/issues/2610), [#2611](https://github.com/beeware/briefcase/issues/2611), [#2612](https://github.com/beeware/briefcase/issues/2612), [#2613](https://github.com/beeware/briefcase/issues/2613), [#2615](https://github.com/beeware/briefcase/issues/2615), [#2616](https://github.com/beeware/briefcase/issues/2616), [#2617](https://github.com/beeware/briefcase/issues/2617), [#2618](https://github.com/beeware/briefcase/issues/2618), [#2619](https://github.com/beeware/briefcase/issues/2619), [#2622](https://github.com/beeware/briefcase/issues/2622), [#2623](https://github.com/beeware/briefcase/issues/2623), [#2625](https://github.com/beeware/briefcase/issues/2625), [#2627](https://github.com/beeware/briefcase/issues/2627), [#2629](https://github.com/beeware/briefcase/issues/2629), [#2631](https://github.com/beeware/briefcase/issues/2631), [#2633](https://github.com/beeware/briefcase/issues/2633), [#2641](https://github.com/beeware/briefcase/issues/2641), [#2643](https://github.com/beeware/briefcase/issues/2643), [#2644](https://github.com/beeware/briefcase/issues/2644), [#2645](https://github.com/beeware/briefcase/issues/2645), [#2646](https://github.com/beeware/briefcase/issues/2646), [#2647](https://github.com/beeware/briefcase/issues/2647), [#2648](https://github.com/beeware/briefcase/issues/2648), [#2649](https://github.com/beeware/briefcase/issues/2649), [#2650](https://github.com/beeware/briefcase/issues/2650), [#2652](https://github.com/beeware/briefcase/issues/2652), [#2655](https://github.com/beeware/briefcase/issues/2655), [#2657](https://github.com/beeware/briefcase/issues/2657), [#2660](https://github.com/beeware/briefcase/issues/2660), [#2661](https://github.com/beeware/briefcase/issues/2661), [#2662](https://github.com/beeware/briefcase/issues/2662), [#2663](https://github.com/beeware/briefcase/issues/2663), [#2665](https://github.com/beeware/briefcase/issues/2665), [#2666](https://github.com/beeware/briefcase/issues/2666), [#2670](https://github.com/beeware/briefcase/issues/2670), [#2671](https://github.com/beeware/briefcase/issues/2671), [#2672](https://github.com/beeware/briefcase/issues/2672), [#2673](https://github.com/beeware/briefcase/issues/2673), [#2674](https://github.com/beeware/briefcase/issues/2674), [#2675](https://github.com/beeware/briefcase/issues/2675), [#2676](https://github.com/beeware/briefcase/issues/2676), [#2677](https://github.com/beeware/briefcase/issues/2677), [#2679](https://github.com/beeware/briefcase/issues/2679), [#2681](https://github.com/beeware/briefcase/issues/2681), [#2682](https://github.com/beeware/briefcase/issues/2682), [#2683](https://github.com/beeware/briefcase/issues/2683), [#2684](https://github.com/beeware/briefcase/issues/2684), [#2685](https://github.com/beeware/briefcase/issues/2685), [#2686](https://github.com/beeware/briefcase/issues/2686), [#2687](https://github.com/beeware/briefcase/issues/2687), [#2688](https://github.com/beeware/briefcase/issues/2688), [#2704](https://github.com/beeware/briefcase/issues/2704), [#2705](https://github.com/beeware/briefcase/issues/2705), [#2708](https://github.com/beeware/briefcase/issues/2708), [#2710](https://github.com/beeware/briefcase/issues/2710), [#2713](https://github.com/beeware/briefcase/issues/2713), [#2715](https://github.com/beeware/briefcase/issues/2715), [#2716](https://github.com/beeware/briefcase/issues/2716), [#2717](https://github.com/beeware/briefcase/issues/2717), [#2718](https://github.com/beeware/briefcase/issues/2718), [#2719](https://github.com/beeware/briefcase/issues/2719)
+
+## 0.3.26 (2025-12-04)
+
+### Features
+
+* When a project specifies a dependency using a local file path, `briefcase dev` now installs that dependency in editable mode. This means changes in the local project will be immediately reflected in the development environment, without needing to reinstall the package. ([#2334](https://github.com/beeware/briefcase/issues/2334))
+* The `build` and `run` commands for Windows, macOS and iOS now have a `--debug` option for integration with PDB and Visual Studio Code. ([#2147](https://github.com/beeware/briefcase/issues/2147), [#2352](https://github.com/beeware/briefcase/issues/2352))
+* Windows MSI installers can now include post-install and pre-uninstall scripts, including selection of optional features as part of the install and uninstall process. ([#2191](https://github.com/beeware/briefcase/issues/2191), [#2573](https://github.com/beeware/briefcase/issues/2573))
+* Windows MSI installers now display and ask for acceptance of the project's license as part of the install process. ([#2191](https://github.com/beeware/briefcase/issues/2191))
+* Briefcase's web backend now gives full control of the PyScript and GUI toolkit configuration to the Python packages that are installed in the app. ([#2337](https://github.com/beeware/briefcase/issues/2337))
+* `briefcase dev` no longer overwrites explicitly set environment variables. ([#2497](https://github.com/beeware/briefcase/issues/2497))
+* Briefcase now has a cross-platform representation of Bluetooth permissions. ([#2522](https://github.com/beeware/briefcase/issues/2522))
+* When packaging an app in MSI format, creation of Start menu shortcuts can now be disabled with the `install_launcher` setting. ([#2534](https://github.com/beeware/briefcase/issues/2534))
+* Windows MSI installers now provide the option for users to configure the install directory for apps. ([#2553](https://github.com/beeware/briefcase/issues/2553))
+* When a project defines multiple applications, `briefcase dev`and `briefcase run` now display an interactive menu allowing the user to select which application to start. ([#2574](https://github.com/beeware/briefcase/issues/2574))
+* Briefcase now has the ability to manage virtual environments as part of a development environment. This feature is only used as part of the in-progress dev command for the web environment, but opens up opportunities for better environment isolation in the future. ([#2334](https://github.com/beeware/briefcase/issues/2334))
+
+### Bugfixes
+
+* The docs checks in `tox` now work if there are spaces in the path. ([#2477](https://github.com/beeware/briefcase/issues/2477))
+* The system Python version check now works on Gentoo Linux. ([#2490](https://github.com/beeware/briefcase/issues/2490))
+* Developer mode is now able to track the need to install requirements on a per-environment basis. ([#2495](https://github.com/beeware/briefcase/issues/2495))
+* Permission disabling is now handled correctly ([#2522](https://github.com/beeware/briefcase/issues/2522))
+
+### Backward Incompatible Changes
+
+* Java JDK 17.0.17+10 is now used to package Android apps. Use `briefcase upgrade java` to update your Briefcase-installed JDK instance to this version. ([#2529](https://github.com/beeware/briefcase/issues/2529))
+
+### Documentation
+
+* Briefcase's documentation was migrated to Markdown format. ([#2502](https://github.com/beeware/briefcase/issues/2502))
+* The obligations of a "well behaved" MSI-packaged application in ensuring a clean registry have been documented. ([#2554](https://github.com/beeware/briefcase/issues/2554))
+
+### Misc
+
+* [#2381](https://github.com/beeware/briefcase/issues/2381), [#2384](https://github.com/beeware/briefcase/issues/2384), [#2457](https://github.com/beeware/briefcase/issues/2457), [#2459](https://github.com/beeware/briefcase/issues/2459), [#2460](https://github.com/beeware/briefcase/issues/2460), [#2461](https://github.com/beeware/briefcase/issues/2461), [#2462](https://github.com/beeware/briefcase/issues/2462), [#2466](https://github.com/beeware/briefcase/issues/2466), [#2467](https://github.com/beeware/briefcase/issues/2467), [#2468](https://github.com/beeware/briefcase/issues/2468), [#2469](https://github.com/beeware/briefcase/issues/2469), [#2470](https://github.com/beeware/briefcase/issues/2470), [#2471](https://github.com/beeware/briefcase/issues/2471), [#2478](https://github.com/beeware/briefcase/issues/2478), [#2479](https://github.com/beeware/briefcase/issues/2479), [#2481](https://github.com/beeware/briefcase/issues/2481), [#2482](https://github.com/beeware/briefcase/issues/2482), [#2484](https://github.com/beeware/briefcase/issues/2484), [#2485](https://github.com/beeware/briefcase/issues/2485), [#2487](https://github.com/beeware/briefcase/issues/2487), [#2492](https://github.com/beeware/briefcase/issues/2492), [#2493](https://github.com/beeware/briefcase/issues/2493), [#2499](https://github.com/beeware/briefcase/issues/2499), [#2500](https://github.com/beeware/briefcase/issues/2500), [#2504](https://github.com/beeware/briefcase/issues/2504), [#2505](https://github.com/beeware/briefcase/issues/2505), [#2506](https://github.com/beeware/briefcase/issues/2506), [#2507](https://github.com/beeware/briefcase/issues/2507), [#2508](https://github.com/beeware/briefcase/issues/2508), [#2509](https://github.com/beeware/briefcase/issues/2509), [#2511](https://github.com/beeware/briefcase/issues/2511), [#2512](https://github.com/beeware/briefcase/issues/2512), [#2517](https://github.com/beeware/briefcase/issues/2517), [#2518](https://github.com/beeware/briefcase/issues/2518), [#2519](https://github.com/beeware/briefcase/issues/2519), [#2520](https://github.com/beeware/briefcase/issues/2520), [#2520](https://github.com/beeware/briefcase/issues/2520), [#2521](https://github.com/beeware/briefcase/issues/2521), [#2523](https://github.com/beeware/briefcase/issues/2523), [#2524](https://github.com/beeware/briefcase/issues/2524), [#2526](https://github.com/beeware/briefcase/issues/2526), [#2528](https://github.com/beeware/briefcase/issues/2528), [#2533](https://github.com/beeware/briefcase/issues/2533), [#2535](https://github.com/beeware/briefcase/issues/2535), [#2536](https://github.com/beeware/briefcase/issues/2536), [#2537](https://github.com/beeware/briefcase/issues/2537), [#2538](https://github.com/beeware/briefcase/issues/2538), [#2539](https://github.com/beeware/briefcase/issues/2539), [#2540](https://github.com/beeware/briefcase/issues/2540), [#2541](https://github.com/beeware/briefcase/issues/2541), [#2542](https://github.com/beeware/briefcase/issues/2542), [#2544](https://github.com/beeware/briefcase/issues/2544), [#2548](https://github.com/beeware/briefcase/issues/2548), [#2549](https://github.com/beeware/briefcase/issues/2549), [#2550](https://github.com/beeware/briefcase/issues/2550), [#2551](https://github.com/beeware/briefcase/issues/2551), [#2552](https://github.com/beeware/briefcase/issues/2552), [#2555](https://github.com/beeware/briefcase/issues/2555), [#2556](https://github.com/beeware/briefcase/issues/2556), [#2557](https://github.com/beeware/briefcase/issues/2557), [#2558](https://github.com/beeware/briefcase/issues/2558), [#2564](https://github.com/beeware/briefcase/issues/2564), [#2565](https://github.com/beeware/briefcase/issues/2565), [#2566](https://github.com/beeware/briefcase/issues/2566), [#2568](https://github.com/beeware/briefcase/issues/2568), [#2568](https://github.com/beeware/briefcase/issues/2568), [#2569](https://github.com/beeware/briefcase/issues/2569), [#2570](https://github.com/beeware/briefcase/issues/2570), [#2571](https://github.com/beeware/briefcase/issues/2571), [#2572](https://github.com/beeware/briefcase/issues/2572), [#2576](https://github.com/beeware/briefcase/issues/2576), [#2577](https://github.com/beeware/briefcase/issues/2577), [#2585](https://github.com/beeware/briefcase/issues/2585), [#2586](https://github.com/beeware/briefcase/issues/2586), [#2589](https://github.com/beeware/briefcase/issues/2589), [#2590](https://github.com/beeware/briefcase/issues/2590)
+
 ## 0.3.25 (2025-08-26)
 
 ### Features
@@ -315,7 +399,7 @@
 ### Bugfixes
 
 - When a custom Briefcase template from a git repository is used to create an app, Briefcase now ensures that git repository is always used. ([#1158](https://github.com/beeware/briefcase/issues/1158))
-- The filter for iOS build warnings was improved to catch messages from XCode 15.0.1. ([#1507](https://github.com/beeware/briefcase/issues/1507))
+- The filter for iOS build warnings was improved to catch messages from Xcode 15.0.1. ([#1507](https://github.com/beeware/briefcase/issues/1507))
 - When merging dependencies on macOS, file permissions are now preserved. ([#1510](https://github.com/beeware/briefcase/issues/1510))
 - `flatpak-builder` 1.3+ can now be correctly identified. ([#1513](https://github.com/beeware/briefcase/issues/1513))
 - The BeeWare icon of Brutus is now used as the runtime icon for new projects created with PyGame. ([#1532](https://github.com/beeware/briefcase/issues/1532))
@@ -354,7 +438,7 @@
 
 ### Bugfixes
 
-- Build warnings caused by bugs in XCode that can be safely ignored are now filtered out of visible output. ([#377](https://github.com/beeware/briefcase/issues/377))
+- Build warnings caused by bugs in Xcode that can be safely ignored are now filtered out of visible output. ([#377](https://github.com/beeware/briefcase/issues/377))
 - The run command now ensures Android logging is shown when the datetime on the device is different from the host machine. ([#1146](https://github.com/beeware/briefcase/issues/1146))
 - Briefcase will detect if you attempt to launch an Android app on a device whose OS doesn't meet minimum version requirements. ([#1157](https://github.com/beeware/briefcase/issues/1157))
 - macOS apps are now guaranteed to be universal binaries, even when dependencies only provide single-architecture binary wheels. ([#1217](https://github.com/beeware/briefcase/issues/1217))
@@ -496,7 +580,7 @@
 - When using the Windows Store version of Python, Briefcase now ensures the cache directory is created in `%LOCALAPPDATA%` instead of the sandboxed location enforced for Windows Store apps. ([#922](https://github.com/beeware/briefcase/issues/922))
 - An Android application that successfully starts, but fails quickly, no longer stalls the launch process. ([#936](https://github.com/beeware/briefcase/issues/936))
 - The required Visual Studio Code components are now included in verification errors for Visual Studio Apps. ([#939](https://github.com/beeware/briefcase/issues/939))
-- It is now possible to specify app configurations for macOS XCode and Windows VisualStudio projects. Previously, these sections of configuration files would be ignored due to a case discrepancy. ([#952](https://github.com/beeware/briefcase/pull/952))
+- It is now possible to specify app configurations for macOS Xcode and Windows Visual Studio projects. Previously, these sections of configuration files would be ignored due to a case discrepancy. ([#952](https://github.com/beeware/briefcase/pull/952))
 - Development mode now starts apps in PEP540 UTF-8 mode, for consistency with the stub apps. ([#985](https://github.com/beeware/briefcase/pull/985))
 - Local file references in requirements no longer break AppImage builds. ([#992](https://github.com/beeware/briefcase/issues/992))
 - On macOS, Rosetta is now installed automatically if needed. ([#1000](https://github.com/beeware/briefcase/issues/1000))
@@ -598,7 +682,7 @@
 - The iOS simulator is now able to correctly detect the iOS version when only a device name is provided. (#528)
 - Windows MSI projects are now able to support files with non-ASCII filenames. (#749)
 - The existence of an appropriate Android system image is now verified independently to the existence of the emulator. (#762)
-- The error message presented when the XCode Command Line Tools are installed, but XCode is not, has been clarified. (#763)
+- The error message presented when the Xcode Command Line Tools are installed, but Xcode is not, has been clarified. (#763)
 - The METADATA file generated by Briefcase is now UTF-8 encoded, so it can handle non-Latin-1 characters. (#767)
 - Output from subprocesses is correctly encoded, avoiding errors (especially on Windows) when tool output includes non-ASCII content. (#770)
 
@@ -629,7 +713,7 @@
 - When the formal name uses non-Latin characters, the suggested Class and App names are now valid. (#612)
 - The code signing process for macOS apps has been made more robust. (#652)
 - macOS app binaries are now adhoc signed by default, ensuring they can run on Apple Silicon hardware. (#664)
-- XCode version checks are now more robust. (#668)
+- Xcode version checks are now more robust. (#668)
 - Android projects that have punctuation in their formal names can now build without error. (#696)
 - Bundle name validation no longer excludes valid country identifiers (like `in.example`). (#709)
 - Application code and dist-info is now fully replaced during an update. (#720)
@@ -646,7 +730,7 @@
 ### Features
 
 - On macOS, iOS, and Android, `briefcase run` now displays the application logs once the application has started. (#591)
-- XCode detection code now allows for XCode to be installed in locations other than `/Applications/XCode.app`. (#622)
+- Xcode detection code now allows for Xcode to be installed in locations other than `/Applications/Xcode.app`. (#622)
 - Deprecated support for Python 3.6. (#653)
 
 ### Bugfixes
@@ -666,7 +750,7 @@
 
 ### Features
 
-- macOS projects can now be generated as an XCode project. (#523)
+- macOS projects can now be generated as an Xcode project. (#523)
 
 ### Bugfixes
 
@@ -727,7 +811,7 @@
 
 ### Bugfixes
 
-- iOS builds will now warn if the XCode command line tools are the active. (#397)
+- iOS builds will now warn if the Xcode command line tools are the active. (#397)
 - Linux Docker builds no longer use interactive mode, allowing builds to run on CI (or other TTY-less devices). (#439)
 
 ### Improved Documentation
@@ -774,7 +858,7 @@
 
 ## 0.2.10  { id="section-26" }
 
-- Improved pre-detection of XCode and related tools
+- Improved pre-detection of Xcode and related tools
 - Improved error handling when starting external tools
 - Fixed iOS simulator integration
 

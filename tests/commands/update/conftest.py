@@ -1,7 +1,7 @@
 import pytest
 
 from briefcase.commands import UpdateCommand
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 from ...utils import create_file
 
@@ -37,9 +37,10 @@ class DummyUpdateCommand(UpdateCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
-    def finalize_app_config(self, app):
-        super().finalize_app_config(app=app)
+    def finalize_app_config(self, app, **kwargs):
+        app = super().finalize_app_config(app=app, **kwargs)
         self.actions.append(("finalize-app-config", app.app_name))
+        return app
 
     def verify_app_template(self, app):
         super().verify_app_template(app=app)
@@ -52,7 +53,9 @@ class DummyUpdateCommand(UpdateCommand):
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.
     def install_app_requirements(self, app):
-        self.actions.append(("requirements", app.app_name, app.test_mode))
+        self.actions.append(
+            ("requirements", app.app_name, app.test_mode, app.debugger is not None)
+        )
         create_file(self.bundle_path(app) / "requirements", "app requirements")
 
     def install_app_code(self, app):
@@ -84,7 +87,7 @@ class DummyUpdateCommand(UpdateCommand):
 @pytest.fixture
 def first_app_config():
     """Populate skeleton app content for the first app."""
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
@@ -112,7 +115,7 @@ def first_app(tmp_path, first_app_config):
 @pytest.fixture
 def second_app_config():
     """Populate skeleton app content for the second app."""
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",

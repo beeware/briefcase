@@ -68,6 +68,15 @@ This section can contain additional layers. for example, an app targeting the Li
 
 A reverse-domain name that can be used to identify resources for the application e.g., `com.example`. The bundle identifier will be combined with the app name to produce a unique application identifier - e.g., if the bundle identifier is `com.example` and the app name is `myapp`, the application will be identified as `com.example.myapp`.
 
+#### `license`
+
+A [PEP 639](https://peps.python.org/pep-0639/) license specification for the project. The `license` must be an SPDX license classifier:
+```toml
+license = "BSD-3-Clause"
+```
+
+Many platforms will also require a [`license_files`][] definition.
+
 #### `project_name`
 
 The project is the collection of all applications that are described by the briefcase configuration. For projects with a single app, this may be the same as the formal name of the solitary packaged app.
@@ -96,6 +105,17 @@ The person or organization responsible for the project.
 
 The contact email address for the person or organization responsible for the project.
 
+#### `license_files`
+
+A [PEP 639](https://peps.python.org/pep-0639/) specification for the files in the project that define licenses that should be included with the packaged app. `license_files` must be a list of strings, each of which references a filename in the project (relative to the location of the `pyproject.toml`):
+```toml
+license_files = ["LICENSE"]
+```
+
+This list *can* be empty. However, many platforms require at least one license file for distribution, so it is generally advisable to provide at least one license file.
+
+License files should be plain text files. On Windows, a reference to a *single* RTF file is also permitted.
+
 #### `url`
 
 A URL where more details about the project can be found.
@@ -112,7 +132,11 @@ A short, one-line description of the purpose of the application.
 
 A list of paths, relative to the `pyproject.toml` file, where source code for the application can be found. The contents of any named files or folders will be copied into the application bundle. Parent directories in any named path will not be included. For example, if you specify `src/myapp` as a source, the contents of the `myapp` folder will be copied into the application bundle; the `src` directory will not be reproduced.
 
+App startup invokes the module `<app_name>`. Therefore the sources must include at least one Python file (or one folder containing a `__main__.py`) with the same name as the app.
+
 Unlike most other keys in a configuration file, [`sources`][] is a *cumulative* setting. If an application defines sources at the global level, application level, *and* platform level, the final set of sources will be the *concatenation* of sources from all levels, starting from least to most specific.
+
+If directories with the same name are present, their contents are merged. If files with the same name are present, those from later entries in the concatenated list will take priority over earlier ones.
 
 The only time `sources` is *not* required is if you are is [packaging an external application][packaging-external-apps]. If you are packaging an external application, `external_package_path` must be defined, and `sources` *must not* be defined.
 
@@ -219,6 +243,8 @@ A path, relative to the directory where the `pyproject.toml` file is located, to
 #### `long_description`
 
 A longer description of the purpose of the application. This description can be multiple paragraphs, if necessary. The long description *must not* be a copy of the [`description`][], or include the [`description`][] as the first line of the [`long_description`][].
+
+#### `min_os_version`
 
 A string describing the minimum OS version that the generated app will support. This value is only used on platforms that have a clear mechanism for specifying OS version compatibility; on the platforms where it *is* used, the interpretation of the value is platform specific. Refer to individual platform guides for details on how the provided value is interpreted.
 
@@ -371,13 +397,21 @@ See [`requires`][] for examples.
 
 A list of paths, relative to the `pyproject.toml` file, where test code for the application can be found. The contents of any named files or folders will be copied into the application bundle. Parent directories in any named path will not be included. For example, if you specify `src/myapp` as a source, the contents of the `myapp` folder will be copied into the application bundle; the `src` directory will not be reproduced.
 
+Test startup invokes the module `tests.<app_name>`. Therefore the tests sources must include at least one `tests` directory containing a Python file (or a folder containing a `__main__.py`) with the same name as the app.
+
 As with [`sources`][], [`test_sources`][] is a *cumulative* setting. If an application defines sources at the global level, application level, *and* platform level, the final set of sources will be the *concatenation* of test sources from all levels, starting from least to most specific.
+
+If directories with the same name are present, their contents are merged. If files with the same name are present, those from later entries in the concatenated list will take priority over earlier ones.
 
 ## Permissions
 
 Applications may also need to declare the permissions they require. Permissions are specified as sub-attributes of a `permission` property, defined at the level of an project, app, or platform. Permission declarations are *cumulative*; if an application defines permissions at the global level, application level, *and* platform level, the final set of permissions will be the *merged* set of all permissions from all levels, starting from least to most specific, with the most specific taking priority.
 
 Briefcase maintains a set of cross-platform permissions:
+
+#### `permission.bluetooth`
+
+Permission to connect to an external device via Bluetooth.
 
 #### `permission.camera`
 
@@ -469,17 +503,54 @@ A URL for help related to the document format.
 
 Some platforms have specific configuration options that are only relevant to that platform. In particular, Apple platforms (macOS, iOS) have a more elaborate system for document types, and require additional configuration to use document types. If you want to support document types on these platforms, you will need to read the macOS [document types][macOS-document-types] section for more information.
 
-## PEP621 compatibility
+## Compatibility with Python project metadata
 
-Many of the keys that exist in Briefcase's configuration have analogous settings in [PEP621 project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
+Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
 
-The following PEP621 project metadata keys will be used by Briefcase if they are available:
+The following `[project]` metadata keys will be used by Briefcase if they are available:
 
 - `version` maps to the same key in Briefcase.
+- `license` and `license-files` map to the same key in Briefcase. Legacy formats for these keys will be [coerced into PEP 639 format][license-definitions].
 - `authors` The `email` and `name` keys of the first value in the `authors` setting map to [`author`][] and [`author_email`][].
 - `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages defined in the [`requires`][] setting at the `[tool.briefcase]` level will be appended to the packages defined with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to [`test_requires`][]., As with `dependencies`/[`requires`][], this is a cumulative setting.
-- `text` in a `[project.license]` section will be mapped to [`license`][].
 - `homepage` in a `[project.urls]` section will be mapped to [`url`][].
 - `requires-python` will be used to validate the running Python interpreter's version against the requirement.
+
+### License definitions { #license-definitions }
+
+License definitions in Python metadata will also be honored. PEP 639 requires a value for `license`, with a optional `license-files`. If the license is in any format *other* that PEP 639, a warning will be raised; but Briefcase will coerce the provided license specification into PEP 639 format.
+
+PEP 639 requires an SPDX specifier for the value of `license`. If the provided value isn't an SPDX specifier, Briefcase will attempt to infer the SPDX specifier from the provided value. If it can't determine the license type, an SPDX value of `LicenseRef-UnknownLicense` will be used.
+
+The value for `license-files` will be a derived from the value in the license specification:
+
+- If your project is in PEP 621 `license.file` format, the value provided will be used to populate a single-item `license-files` definition.
+- If your `license` project is in PEP 621 `license.text` format or pre-PEP 621 format (i.e., a `license = "..."` definition where the value *isn't* an SPDX specifier), and the provided text is more than one line, the value of the field will be used as the contents of a temporary license file that will be written into the `build` directory. That file will be used to populate a single-item list for `license-files` as a license specifier.
+- Otherwise, `license-files` will be set to an empty list. Note that some platforms *require* a license file for packaging purposes; packaging apps for those platforms will raise an error when the app is built for those platforms.
+
+### Dynamic metadata { #dynamic-metadata }
+
+If your `pyproject.toml` defines `dynamic` PEP 612 metadata fields, Briefcase will resolve those fields by using the PEP 517 `[build-system]` definition for your project.
+
+For example, to use `setuptools_scm` to evaluate your project's version number based on Git (or other source control tool) tags, you could add the following to your Briefcase project configuration:
+```
+[build-system]
+# Set up a PEP 517 build configuration using setuptools
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+# Declare `version` to be dynamically defined
+# The "name" field must also be defined as a PEP 621 key to satisfy setuptools
+[project]
+dynamic = ["version"]
+name = "myproject"
+
+# An empty table definition is required to enable setuptools-scm
+[tool.setuptools_scm]
+
+# Provide the rest of your project configuration as usual
+[tool.briefcase]
+...
+```

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -16,6 +16,9 @@ class BuildCommand(BaseCommand):
         self._add_update_options(parser, context_label=" before building")
         self._add_test_options(parser, context_label="Build")
 
+        if self.supports_debugger:
+            self._add_debug_options(parser, context_label="Build")
+
         parser.add_argument(
             "-a",
             "--app",
@@ -24,7 +27,7 @@ class BuildCommand(BaseCommand):
             default=argparse.SUPPRESS,
         )
 
-    def build_app(self, app: AppConfig, **options):
+    def build_app(self, app: FinalizedAppConfig, **options):
         """Build an application.
 
         :param app: The application to build
@@ -33,7 +36,7 @@ class BuildCommand(BaseCommand):
 
     def _build_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update: bool,
         update_requirements: bool,
         update_resources: bool,
@@ -71,6 +74,7 @@ class BuildCommand(BaseCommand):
             or update_support  # An explicit app support update has been requested
             or update_stub  # An explicit stub binary update has been requested
             or (app.test_mode and not no_update)  # Test mode, but updates are enabled
+            or (app.debugger and not no_update)  # Debug mode, but updates are enabled
         ):
             state = self.update_command(
                 app,
@@ -88,6 +92,7 @@ class BuildCommand(BaseCommand):
         state = self.build_app(app, **full_options(state, options))
 
         qualifier = " (test mode)" if app.test_mode else ""
+        qualifier += " (debug mode)" if app.debugger else ""
         self.console.info(
             f"Built {self.binary_path(app).relative_to(self.base_path)}{qualifier}",
             prefix=app.app_name,
@@ -105,6 +110,7 @@ class BuildCommand(BaseCommand):
         update_stub: bool = False,
         no_update: bool = False,
         test_mode: bool = False,
+        debugger: str | None = None,
         **options,
     ) -> dict | None:
         # Has the user requested an invalid set of options?
@@ -132,24 +138,18 @@ class BuildCommand(BaseCommand):
                     "Cannot specify both --update-stub and --no-update"
                 )
 
+        apps_to_build = self.resolve_apps(app=app, app_name=app_name)
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, test_mode)
-
-        if app_name:
-            try:
-                apps_to_build = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_build = {app.app_name: app}
-        else:
-            apps_to_build = self.apps
+        finalized_apps = self.finalize(
+            apps=apps_to_build.values(),
+            test_mode=test_mode,
+            debugger=debugger,
+        )
 
         state = None
-        for _, app_obj in sorted(apps_to_build.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._build_app(
                 app_obj,
                 update=update,

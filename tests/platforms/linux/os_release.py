@@ -225,4 +225,20 @@ BUG_REPORT_URL="https://docs.manjaro.org/reporting-bugs/"
 PRIVACY_POLICY_URL="https://manjaro.org/privacy-policy/"
 LOGO=manjarolinux
 """,
+    #######################################################
+    # CachyOS Linux
+    #######################################################
+    "cachyos:rolling": """\
+NAME="CachyOS Linux"
+PRETTY_NAME="CachyOS"
+ID=cachyos
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://cachyos.org/"
+DOCUMENTATION_URL="https://wiki.cachyos.org/"
+SUPPORT_URL="https://discuss.cachyos.org/"
+BUG_REPORT_URL="https://github.com/cachyos"
+PRIVACY_POLICY_URL="https://terms.archlinux.org/docs/privacy-policy/"
+LOGO=cachyos
+""",
 }

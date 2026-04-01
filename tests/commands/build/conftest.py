@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.commands import BuildCommand
 from briefcase.commands.base import full_options
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 from ...utils import create_file
 
@@ -38,9 +38,10 @@ class DummyBuildCommand(BuildCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
-    def finalize_app_config(self, app):
-        super().finalize_app_config(app=app)
+    def finalize_app_config(self, app, **kwargs):
+        app = super().finalize_app_config(app=app, **kwargs)
         self.actions.append(("finalize-app-config", app.app_name))
+        return app
 
     def verify_app_template(self, app):
         super().verify_app_template(app=app)
@@ -51,7 +52,15 @@ class DummyBuildCommand(BuildCommand):
         self.actions.append(("verify-app-tools", app.app_name))
 
     def build_app(self, app, **kwargs):
-        self.actions.append(("build", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "build",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to build_app()
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
@@ -65,12 +74,28 @@ class DummyBuildCommand(BuildCommand):
     # they were invoked, rather than instantiating a Create/Update command.
     # This is for testing purposes.
     def create_command(self, app, **kwargs):
-        self.actions.append(("create", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "create",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to create_app()
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
-        self.actions.append(("update", app.app_name, app.test_mode, kwargs.copy()))
+        self.actions.append(
+            (
+                "update",
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+                kwargs.copy(),
+            )
+        )
         # Remove arguments consumed by the underlying call to update_app()
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
@@ -89,7 +114,7 @@ def build_command(dummy_console, tmp_path):
 
 @pytest.fixture
 def second_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",

@@ -220,7 +220,7 @@ requires = [
     "std-nslog~=1.0.3",
 ]
 """,
-        "pyproject_table_android": """\
+        "pyproject_table_android": '''\
 requires = [
     "toga-android~=0.5.0",
 ]
@@ -233,8 +233,15 @@ build_gradle_dependencies = [
     # "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
     # Needed for MapView
     # "org.osmdroid:osmdroid-android:6.1.20",
+    # Needed for WebView
+    # "androidx.webkit:webkit:1.15.0",
 ]
-""",
+
+# Needed for WebView
+# build_gradle_extra_content="""
+# chaquopy.defaultConfig.staticProxy("toga_android.widgets.internal.webview")
+# """
+''',
         "pyproject_table_web": """\
 requires = [
     "toga-web~=0.5.0",
@@ -259,12 +266,14 @@ def test_console_bootstrap(new_command):
 
     assert context == {
         "console_app": True,
-        "app_source": """\
+        "app_source": (
+            """\
 
 def main():
     # Your app logic goes here
     print("Hello, World.")
-""",
+"""
+        ),
         "app_start_source": """\
 from {{ cookiecutter.module_name }}.app import main
 
@@ -416,8 +425,8 @@ test_requires = [
 """,
         "pyproject_table_macOS": """\
 universal_build = true
-# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
-min_os_version = "12.0"
+# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
+min_os_version = "13.0"
 requires = [
     "std-nslog~=1.0.3",
 ]
@@ -431,26 +440,16 @@ system_requires = [
 ]
 
 system_runtime_requires = [
-    # Derived from https://doc.qt.io/qt-6/linux-requirements.html
-    "libxext6",
-    "libxrender1",
-    "libx11-xcb1",
-    "libxkbcommon-x11-0",
-    "libxcb-image0",
+    "libgl1",
+    "libqt6dbus6",
+    "libqt6gui6",
     "libxcb-cursor0",
-    "libxcb-shape0",
-    "libxcb-randr0",
-    "libxcb-xfixes0",
-    "libxcb-sync1",
+    # The following packages are explicit dependencies on recent Debian-based
+    # distros, but not on Ubuntu 22.04.
     "libxcb-icccm4",
     "libxcb-keysyms1",
-    "libfontconfig1",
-    "libsm6",
-    "libice6",
-    "libglib2.0-0",
-    "libgl1",
-    "libegl1",
-    "libdbus-1-3",
+    "libxcb-shape0",
+    "libxkbcommon-x11-0",
 ]
 """,
         "pyproject_table_linux_system_rhel": """\
@@ -531,7 +530,6 @@ import sys
 from pathlib import Path
 
 import pygame
-
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 WHITE = (255, 255, 255)

@@ -408,6 +408,18 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
                 }
             },
         ),
+        # Bluetooth permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device.",
+            },
+            {},
+            {
+                "info": {
+                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                },
+            },
+        ),
         # Camera permissions
         (
             {
@@ -595,7 +607,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel
         RequirementsInstallError,
         match=(
             r"This may be because the `iphoneos` wheels that are available are not compatible\n"
-            r"with a minimum iOS version of 15.4."
+            r"with Python 3\.\d+ and a minimum iOS version of 15\.4\."
         ),
     ):
         create_command._install_app_requirements(
@@ -631,8 +643,8 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulato
         match=(
             r"This may indicate that an `iphoneos` wheel could be found, but an\n"
             r"`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
-            r"binary wheels that are available are not compatible with a minimum iOS\n"
-            r"version of 15.4.\n"
+            r"binary wheels that are available are not compatible with\n"
+            r"Python 3\.\d+ and a minimum iOS version of 15\.4\.\n"
         ),
     ):
         create_command._install_app_requirements(

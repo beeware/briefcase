@@ -2,7 +2,7 @@
 
 How-to guides are recipes that take the user through steps in key subjects. They are more advanced than tutorials and assume a lot more about what the user already knows than tutorials do, and unlike documents in the tutorial they can stand alone.
 
-## Obtaining a Code Signing identity
+## Obtaining a Code Signing identity { #obtain-code-signing-identity }
 
 * [Android](code-signing/android.md) - One way to sign your app where the Google Play Store maintains the authoritative key for your app.
 * [macOS](code-signing/macOS.md) - How to generate a macOS code signing identity, which is required to distribute your application.
@@ -10,11 +10,16 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
 ## Building different types of apps
 
-* [Building your App in CI with GitHub Action](building/ci.md) - This GitHub Actions workflow provides the basic framework necessary to test, build, and package a Briefcase project in CI for Windows, Linux, macOS, iOS, and Android.
-* [Building your Console App with Briefcase](building/cli-apps.md) - The key differences when creating a console application using Briefcase, as opposed to a GUI-based app.
+* [Building your app in CI with GitHub Action](building/ci.md) - This GitHub Actions workflow provides the basic framework necessary to test, build, and package a Briefcase project in CI for Windows, Linux, macOS, iOS, and Android.
+* [Building your Console app with Briefcase](building/cli-apps.md) - The key differences when creating a console application using Briefcase, as opposed to a GUI-based app.
 * [Packaging external apps](building/external-apps.md) - Learn how Briefcase can be used to package an application that has been constructed using another tool.
 
-## Testing Apps
+## Debugging apps
+
+* [Debugging apps with PDB](debugging/pdb.md) - How to debug an app using Python's built-in `pdb` debugger.
+* [Debugging apps with Visual Studio Code](debugging/vscode.md) - How to debug an app using the debugger built into Visual Studio Code.
+
+## Testing apps
 
 * [Testing Linux Apps with Docker](testing/x11passthrough.md) - Configure your system to use Docker to build apps for Linux distributions other than the distribution you're currently using.
 
@@ -26,8 +31,7 @@ How-to guides are recipes that take the user through steps in key subjects. They
 
 ## [Contributing to Briefcase](contribute/index.md)
 
-* [Contributing code to Briefcase](contribute/code.md) - The process to follow to contribute to Briefcase source code.
-* [Contributing to the documentation](contribute/docs.md) - The process to follow to contribute to Briefcase documentation.
+* [Contributing to Briefcase](contribute/index.md) - The many ways you can contribute to Briefcase, including what you can do and how to do it.
 
 ## Internal How-to guides
 

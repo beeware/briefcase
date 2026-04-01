@@ -2,6 +2,7 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
+from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.android.gradle import GradleCreateCommand
@@ -38,7 +39,7 @@ def test_unsupported_template_version(create_command, first_app_config):
     create_command.verify_app = MagicMock(wraps=create_command.verify_app)
 
     create_command._briefcase_toml.update(
-        {first_app_config: {"briefcase": {"target_epoch": "0.3.16"}}}
+        {first_app_config: {"briefcase": {"target_version": "0.3.16"}}}
     )
 
     with pytest.raises(
@@ -88,7 +89,7 @@ def test_support_package_filename(create_command):
 )
 def test_version_code(create_command, first_app_config, version, build, version_code):
     """Validate that create adds version_code to the template context."""
-    first_app_config.version = version
+    first_app_config.version = Version(version)
     if build:
         first_app_config.build = build
     context = create_command.output_format_template_context(first_app_config)
@@ -154,50 +155,28 @@ def test_build_gradle_dependencies(
     ) == has_warning
 
 
-extract_packages_params = [
-    ([], ""),
-    ([""], ""),
-    (["one"], '"one"'),
-    (["one/two"], '"two"'),
-    (["one//two"], '"two"'),
-    (["one/two/three"], '"three"'),
-    (["one", "two"], '"one", "two"'),
-    (["one", "two", "three"], '"one", "two", "three"'),
-    (["one/two", "three/four"], '"two", "four"'),
-    (["/leading"], '"leading"'),
-    (["/leading/two"], '"two"'),
-    (["/leading/two/three"], '"three"'),
-    (["trailing/"], '"trailing"'),
-    (["trailing//"], '"trailing"'),
-    (["trailing/two/"], '"two"'),
-]
+@pytest.mark.parametrize(
+    ("input", "abi_filters"),
+    [
+        (None, None),
+        ([], []),
+        (["arm64-v8a"], ["arm64-v8a"]),
+        (["arm64-v8a", "x86_64"], ["arm64-v8a", "x86_64"]),
+    ],
+)
+def test_android_abis(
+    create_command,
+    first_app_config,
+    input,
+    abi_filters,
+):
+    """Validate that create adds android ABIs to the template context as
+    ndk.abi_filters."""
+    if input is not None:
+        first_app_config.android_abis = input
 
-# Handle differences in UNC path parsing (https://github.com/python/cpython/pull/100351).
-extract_packages_params += [
-    (
-        ["//leading"],
-        "" if sys.platform == "win32" and sys.version_info >= (3, 12) else '"leading"',
-    ),
-    (
-        ["//leading/two"],
-        "" if sys.platform == "win32" else '"two"',
-    ),
-    (["//leading/two/three"], '"three"'),
-    (["//leading/two/three/four"], '"four"'),
-]
-
-if sys.platform == "win32":
-    extract_packages_params += [
-        ([path.replace("/", "\\") for path in test_sources], expected)
-        for test_sources, expected in extract_packages_params
-    ]
-
-
-@pytest.mark.parametrize(("test_sources", "expected"), extract_packages_params)
-def test_extract_packages(create_command, first_app_config, test_sources, expected):
-    first_app_config.test_sources = test_sources
     context = create_command.output_format_template_context(first_app_config)
-    assert context["extract_packages"] == expected
+    assert context["ndk"] == {"abi_filters": abi_filters}
 
 
 @pytest.mark.parametrize(
@@ -209,8 +188,8 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
                 },
                 "features": {},
             },
@@ -218,16 +197,16 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
         # Only custom permissions
         (
             {
-                "android.permission.READ_CONTACTS": True,
+                "android.permission.READ_CONTACTS": {},
             },
             {
                 "android.hardware.bluetooth": True,
             },
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.READ_CONTACTS": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.READ_CONTACTS": {},
                 },
                 "features": {
                     "android.hardware.bluetooth": True,
@@ -242,9 +221,9 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.CAMERA": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.CAMERA": {},
                 },
                 "features": {
                     "android.hardware.camera": False,
@@ -263,9 +242,9 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.RECORD_AUDIO": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.RECORD_AUDIO": {},
                 },
                 "features": {},
             },
@@ -278,9 +257,9 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -296,9 +275,9 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -314,9 +293,9 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -333,10 +312,10 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -353,10 +332,10 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -373,10 +352,10 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -394,11 +373,11 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.ACCESS_COARSE_LOCATION": True,
-                    "android.permission.ACCESS_FINE_LOCATION": True,
-                    "android.permission.ACCESS_BACKGROUND_LOCATION": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_BACKGROUND_LOCATION": {},
                 },
                 "features": {
                     "android.hardware.location.gps": False,
@@ -414,11 +393,95 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {},
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
-                    "android.permission.READ_MEDIA_VISUAL_USER_SELECTED": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
+                    "android.permission.READ_MEDIA_VISUAL_USER_SELECTED": {},
                 },
                 "features": {},
+            },
+        ),
+        # Bluetooth permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_FINE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {
+                        "android:usesPermissionFlags": "neverForLocation"
+                    },
+                    "android.permission.INTERNET": {},
+                },
+                "features": {},
+            },
+        ),
+        # Bluetooth permissions WITH coarse location permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+                "coarse_location": "I need to know roughly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {},
+                    "android.permission.ACCESS_FINE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {},
+                    "android.permission.INTERNET": {},
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
+            },
+        ),
+        # Bluetooth permissions WITH fine location permissions
+        (
+            {
+                "bluetooth": "I need to connect to bluetooth device",
+                "fine_location": "I need to know exactly where you are",
+            },
+            {},
+            {
+                "permissions": {
+                    "android.permission.ACCESS_COARSE_LOCATION": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.ACCESS_FINE_LOCATION": {},
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.BLUETOOTH": {"android:maxSdkVersion": "30"},
+                    "android.permission.BLUETOOTH_ADMIN": {
+                        "android:maxSdkVersion": "30"
+                    },
+                    "android.permission.BLUETOOTH_CONNECT": {},
+                    "android.permission.BLUETOOTH_SCAN": {},
+                    "android.permission.INTERNET": {},
+                },
+                "features": {
+                    "android.hardware.location.gps": False,
+                    "android.hardware.location.network": False,
+                },
             },
         ),
         # Override and augment by cross-platform definitions
@@ -426,7 +489,7 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             {
                 "camera": "I need to see you",
                 "android.permission.CAMERA": False,
-                "android.permission.READ_CONTACTS": True,
+                "android.permission.READ_CONTACTS": {},
             },
             {
                 "android.hardware.camera.external": True,
@@ -434,10 +497,10 @@ def test_extract_packages(create_command, first_app_config, test_sources, expect
             },
             {
                 "permissions": {
-                    "android.permission.ACCESS_NETWORK_STATE": True,
-                    "android.permission.INTERNET": True,
+                    "android.permission.ACCESS_NETWORK_STATE": {},
+                    "android.permission.INTERNET": {},
                     "android.permission.CAMERA": False,
-                    "android.permission.READ_CONTACTS": True,
+                    "android.permission.READ_CONTACTS": {},
                 },
                 "features": {
                     "android.hardware.camera": False,

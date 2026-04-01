@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.exceptions import UnsupportedPlatform
 
 
@@ -18,7 +18,7 @@ def test_create_app(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -49,7 +49,10 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
+        (
+            f"The directory {bundle_path.relative_to(base_path)} already exists;"
+            " overwrite [y/N]? "
+        ),
     ]
 
     # The right sequence of things will be done
@@ -59,7 +62,7 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -85,7 +88,10 @@ def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
+        (
+            f"The directory {bundle_path.relative_to(base_path)} already exists;"
+            " overwrite [y/N]? "
+        ),
     ]
 
     # No app creation actions will be performed
@@ -113,7 +119,10 @@ def test_create_existing_app_no_overwrite_default(tracking_create_command, tmp_p
 
     # Input was required by the user
     assert tracking_create_command.console.prompts == [
-        f"The directory {bundle_path.relative_to(base_path)} already exists; overwrite [y/N]? "
+        (
+            f"The directory {bundle_path.relative_to(base_path)} already exists;"
+            " overwrite [y/N]? "
+        ),
     ]
 
     # And no actions were necessary
@@ -157,7 +166,7 @@ def test_create_app_not_supported(tracking_create_command, tmp_path):
 
     with pytest.raises(UnsupportedPlatform):
         tracking_create_command.create_app(
-            AppConfig(
+            DraftAppConfig(
                 app_name="third",
                 bundle="com.example",
                 version="0.0.3",
@@ -194,7 +203,7 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False),
+        ("requirements", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]

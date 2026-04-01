@@ -51,8 +51,8 @@ def test_no_cleanup(create_command, myapp_unrolled, support_path, debug, capsys)
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (5 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (4 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -78,8 +78,8 @@ def test_dir_cleanup(create_command, myapp_unrolled, support_path, debug, capsys
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (5 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (4 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -108,8 +108,8 @@ def test_file_cleanup(create_command, myapp_unrolled, support_path, debug, capsy
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (6 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (5 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -142,8 +142,8 @@ def test_all_files_in_dir_cleanup(
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (9 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (8 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -169,8 +169,8 @@ def test_dir_glob_cleanup(create_command, myapp_unrolled, support_path, debug, c
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (6 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (5 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -199,8 +199,8 @@ def test_file_glob_cleanup(create_command, myapp_unrolled, support_path, debug, 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (8 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (7 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -230,8 +230,8 @@ def test_deep_glob_cleanup(create_command, myapp_unrolled, support_path, debug, 
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (8 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (7 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -263,8 +263,8 @@ def test_symlink_cleanup(create_command, myapp_unrolled, support_path, debug, ca
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (7 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (6 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -302,8 +302,8 @@ def test_template_glob_cleanup(
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (8 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (7 if debug else 3)
 
 
 @pytest.mark.parametrize("debug", [True, False])
@@ -346,5 +346,5 @@ def test_non_existent_cleanup(
     # Console output ends with the done message; the number of other messages depends on
     # whether debug is enabled.
     output = capsys.readouterr().out.split("\n")
-    assert output[-3] == "Removing unneeded app bundle content... done"
-    assert len(output) == (6 if debug else 4)
+    assert output[-2] == "Removing unneeded app bundle content... done"
+    assert len(output) == (5 if debug else 3)

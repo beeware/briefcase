@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import full_options
@@ -17,6 +17,9 @@ class UpdateCommand(CreateCommand):
         self._add_update_options(parser, update=False)
         self._add_test_options(parser, context_label="Update")
 
+        if self.supports_debugger:
+            self._add_debug_options(parser, context_label="Update")
+
         parser.add_argument(
             "-a",
             "--app",
@@ -27,7 +30,7 @@ class UpdateCommand(CreateCommand):
 
     def update_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update_requirements: bool,
         update_resources: bool,
         update_support: bool,
@@ -100,26 +103,21 @@ class UpdateCommand(CreateCommand):
         update_support: bool = False,
         update_stub: bool = False,
         test_mode: bool = False,
+        debugger: str | None = None,
         **options,
     ) -> dict | None:
+        apps_to_update = self.resolve_apps(app=app, app_name=app_name)
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app, test_mode)
-
-        if app_name:
-            try:
-                apps_to_update = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_update = {app.app_name: app}
-        else:
-            apps_to_update = self.apps
+        finalized_apps = self.finalize(
+            apps=apps_to_update.values(),
+            test_mode=test_mode,
+            debugger=debugger,
+        )
 
         state = None
-        for _, app_obj in sorted(apps_to_update.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self.update_app(
                 app_obj,
                 update_requirements=update_requirements,

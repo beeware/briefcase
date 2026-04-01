@@ -19,8 +19,8 @@ class JDK(ManagedTool):
 
     # Latest OpenJDK as of January 2025: https://adoptium.net/temurin/releases/
     JDK_MAJOR_VER = "17"
-    JDK_RELEASE = "17.0.15"
-    JDK_BUILD = "6"
+    JDK_RELEASE = "17.0.17"
+    JDK_BUILD = "10"
     JDK_INSTALL_DIR_NAME = f"java{JDK_MAJOR_VER}"
 
     def __init__(self, tools: ToolCache, java_home: Path):
@@ -310,7 +310,10 @@ Delete {jdk_zip_path} and run briefcase again.
             java_unpack_path = (
                 self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
             )
-            java_unpack_path.rename(self.tools.base_path / self.JDK_INSTALL_DIR_NAME)
+            self.tools.file.rename(
+                java_unpack_path,
+                self.tools.base_path / self.JDK_INSTALL_DIR_NAME,
+            )
 
     def uninstall(self):
         """Uninstall a JDK."""

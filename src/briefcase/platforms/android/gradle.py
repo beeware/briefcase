@@ -7,6 +7,7 @@ import subprocess
 import time
 from collections.abc import Collection
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.commands import (
     BuildCommand,
@@ -17,11 +18,22 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig, parsed_version
+from briefcase.config import FinalizedAppConfig
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
+from briefcase.debuggers.base import (
+    AppPackagesPathMappings,
+    DebuggerConnectionMode,
+)
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 
 def safe_formal_name(name):
@@ -41,7 +53,8 @@ def safe_formal_name(name):
 # Matches zero or more ANSI control chars wrapping the message for when
 # the Android emulator is printing in color.
 ANDROID_LOG_PREFIX_REGEX = re.compile(
-    rf"(?:{ANSI_ESC_SEQ_RE_DEF})*[A-Z]/(?P<tag>.*?): (?P<content>.*?(?=\x1B|$))(?:{ANSI_ESC_SEQ_RE_DEF})*"
+    rf"(?:{ANSI_ESC_SEQ_RE_DEF})*[A-Z]/(?P<tag>.*?):"
+    rf" (?P<content>.*?(?=\x1B|$))(?:{ANSI_ESC_SEQ_RE_DEF})*"
 )
 
 
@@ -66,10 +79,10 @@ def android_log_clean_filter(line):
     return line, False
 
 
-class GradleMixin:
+class GradleMixin(_MixinBase):
     output_format = "gradle"
     platform = "android"
-    platform_target_version = "0.3.15"
+    platform_target_version = "0.3.27"
 
     @property
     def packaging_formats(self):
@@ -160,7 +173,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
         )
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -171,9 +184,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         try:
             version_code = app.version_code
         except AttributeError:
-            parsed = parsed_version(app.version)
-
-            v = ([*parsed.release, 0, 0])[:3]  # version triple
+            v = ([*app.version.release, 0, 0])[:3]  # version triple
             build = int(getattr(app, "build", "0"))
             version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
 
@@ -183,8 +194,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         try:
             dependencies = app.build_gradle_dependencies
         except AttributeError:
-            self.console.warning(
-                """
+            self.console.warning("""
 *************************************************************************
 ** WARNING: App does not define build_gradle_dependencies              **
 *************************************************************************
@@ -208,8 +218,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
 *************************************************************************
 
-"""
-            )
+""")
             dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",
                 "androidx.constraintlayout:constraintlayout:1.1.3",
@@ -219,17 +228,15 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
-            # Extract test packages to enable features like test discovery and assertion
-            # rewriting.
-            "extract_packages": ", ".join(
-                f'"{name}"'
-                for path in (app.test_sources or [])
-                if (name := Path(path).name)
-            ),
             "build_gradle_dependencies": {"implementation": dependencies},
+            "ndk": {"abi_filters": getattr(app, "android_abis", None)},
         }
 
-    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -239,15 +246,33 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         """
         # Default permissions for all Android apps
         permissions = {
-            "android.permission.INTERNET": True,
-            "android.permission.ACCESS_NETWORK_STATE": True,
+            "android.permission.INTERNET": {},
+            "android.permission.ACCESS_NETWORK_STATE": {},
         }
 
         # Default feature usage for all Android apps
         features = {}
 
+        if x_permissions["bluetooth"]:
+            permissions["android.permission.ACCESS_COARSE_LOCATION"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.ACCESS_FINE_LOCATION"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.BLUETOOTH"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.BLUETOOTH_ADMIN"] = {
+                "android:maxSdkVersion": "30"
+            }
+            permissions["android.permission.BLUETOOTH_CONNECT"] = {}
+            permissions["android.permission.BLUETOOTH_SCAN"] = {
+                "android:usesPermissionFlags": "neverForLocation"
+            }
+
         if x_permissions["camera"]:
-            permissions["android.permission.CAMERA"] = True
+            permissions["android.permission.CAMERA"] = {}
             features["android.hardware.camera"] = False
             features["android.hardware.camera.any"] = False
             features["android.hardware.camera.front"] = False
@@ -255,25 +280,33 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             features["android.hardware.camera.autofocus"] = False
 
         if x_permissions["microphone"]:
-            permissions["android.permission.RECORD_AUDIO"] = True
+            permissions["android.permission.RECORD_AUDIO"] = {}
 
         if x_permissions["fine_location"]:
-            permissions["android.permission.ACCESS_FINE_LOCATION"] = True
+            permissions["android.permission.ACCESS_FINE_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
+            # We're good with the location. So we can also use BLUETOOTH_SCAN.
+            bt_scan_perm = permissions.get("android.permission.BLUETOOTH_SCAN")
+            if bt_scan_perm:
+                bt_scan_perm.pop("android:usesPermissionFlags", None)
 
         if x_permissions["coarse_location"]:
-            permissions["android.permission.ACCESS_COARSE_LOCATION"] = True
+            permissions["android.permission.ACCESS_COARSE_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
+            # We're good with the location. So we can also use BLUETOOTH_SCAN.
+            bt_scan_perm = permissions.get("android.permission.BLUETOOTH_SCAN")
+            if bt_scan_perm:
+                bt_scan_perm.pop("android:usesPermissionFlags", None)
 
         if x_permissions["background_location"]:
-            permissions["android.permission.ACCESS_BACKGROUND_LOCATION"] = True
+            permissions["android.permission.ACCESS_BACKGROUND_LOCATION"] = {}
             features["android.hardware.location.network"] = False
             features["android.hardware.location.gps"] = False
 
         if x_permissions["photo_library"]:
-            permissions["android.permission.READ_MEDIA_VISUAL_USER_SELECTED"] = True
+            permissions["android.permission.READ_MEDIA_VISUAL_USER_SELECTED"] = {}
 
         # Override any permission and entitlement definitions
         # with the platform-specific definitions
@@ -288,6 +321,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):
     description = "Update an existing Android Gradle project."
+    supports_debugger = True
 
 
 class GradleOpenCommand(GradleMixin, OpenCommand):
@@ -296,26 +330,47 @@ class GradleOpenCommand(GradleMixin, OpenCommand):
 
 class GradleBuildCommand(GradleMixin, BuildCommand):
     description = "Build an Android debug APK."
+    supports_debugger = True
 
-    def metadata_resource_path(self, app: AppConfig):
+    def metadata_resource_path(self, app: FinalizedAppConfig):
         return self.bundle_path(app) / self.path_index(app, "metadata_resource_path")
 
-    def update_app_metadata(self, app: AppConfig):
+    def extract_packages_path(self, app: FinalizedAppConfig):
+        return self.bundle_path(app) / self.path_index(app, "extract_packages_path")
+
+    def update_app_metadata(self, app: FinalizedAppConfig):
         with (
             self.console.wait_bar("Setting main module..."),
             self.metadata_resource_path(app).open("w", encoding="utf-8") as f,
         ):
             # Set the name of the app's main module; this will depend
             # on whether we're in test mode.
-            f.write(
-                f"""\
+            f.write(f"""\
 <resources>
     <string name="main_module">{app.main_module()}</string>
 </resources>
-"""
-            )
+""")
 
-    def build_app(self, app: AppConfig, **kwargs):
+        with (
+            self.console.wait_bar("Setting packages to extract..."),
+            self.extract_packages_path(app).open("w", encoding="utf-8") as f,
+        ):
+            if app.debugger:
+                # In debug mode include the .py files and extract all of them so
+                # that the debugger can get the source code at runtime. This is
+                # e.g. necessary for setting breakpoints in VS Code.
+                extract_packages = ["*"]
+            else:
+                # Extract test packages, to enable features like test discovery and
+                # assertion rewriting.
+                extract_sources = app.test_sources or []
+                extract_packages = [
+                    name for path in extract_sources if (name := Path(path).name)
+                ]
+
+            f.write("\n".join(extract_packages))
+
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
@@ -333,6 +388,7 @@ class GradleBuildCommand(GradleMixin, BuildCommand):
 
 class GradleRunCommand(GradleMixin, RunCommand):
     description = "Run an Android debug APK on a device (physical or virtual)."
+    supports_debugger = True
 
     def verify_tools(self):
         super().verify_tools()
@@ -364,6 +420,14 @@ class GradleRunCommand(GradleMixin, RunCommand):
             required=False,
         )
         parser.add_argument(
+            "--revoke-permission",
+            metavar="PERMISSION",
+            action="append",
+            dest="revoke_permissions",
+            help="Revoke specified permission before launching the app",
+            required=False,
+        )
+        parser.add_argument(
             "--forward-port",
             action="append",
             dest="forward_ports",
@@ -378,13 +442,29 @@ class GradleRunCommand(GradleMixin, RunCommand):
             help="Reverse the specified port from device to host.",
         )
 
+    def debugger_app_packages_path_mapping(
+        self,
+        app: FinalizedAppConfig,
+    ) -> AppPackagesPathMappings:
+        """Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
+        return AppPackagesPathMappings(
+            sys_path_regex="requirements$",
+            host_folder=f"{app_packages_path}",
+        )
+
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         device_or_avd=None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
+        revoke_permissions: list[str] | None = None,
         forward_ports: list[int] | None = None,
         reverse_ports: list[int] | None = None,
         **kwargs,
@@ -397,6 +477,8 @@ class GradleRunCommand(GradleMixin, RunCommand):
             be asked to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
+        :param revoke_permissions: A list of permissions to revoke before launching
+            the app.
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """
@@ -447,8 +529,29 @@ class GradleRunCommand(GradleMixin, RunCommand):
             with self.console.wait_bar("Installing new app version..."):
                 adb.install_apk(self.binary_path(app))
 
+            if revoke_permissions:
+                # Revoke specified app permissions to ensure a reproducible
+                # starting state.
+                with self.console.wait_bar("Revoking app permissions..."):
+                    for permission in revoke_permissions:
+                        self.console.info(
+                            f"Revoking permission: {permission}", prefix=app.app_name
+                        )
+                        adb.revoke_permission(package, permission)
+
             forward_ports = forward_ports or []
             reverse_ports = reverse_ports or []
+
+            env = {}
+            if self.console.is_debug:
+                env["BRIEFCASE_DEBUG"] = "1"
+
+            if app.debugger:
+                env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
+                if app.debugger.connection_mode == DebuggerConnectionMode.SERVER:
+                    forward_ports.append(app.debugger_port)
+                else:
+                    reverse_ports.append(app.debugger_port)
 
             # Forward/Reverse requested ports
             with self.forward_ports(adb, forward_ports, reverse_ports):
@@ -458,7 +561,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
                     device_start_time = adb.datetime()
 
                     adb.start_app(
-                        package, "org.beeware.android.MainActivity", passthrough
+                        package, "org.beeware.android.MainActivity", passthrough, env
                     )
 
                     # Try to get the PID for 5 seconds.
@@ -532,9 +635,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
 
 class GradlePackageCommand(GradleMixin, PackageCommand):
-    description = "Create an Android App Bundle and APK in release mode."
+    description = "Create a release artefact from an Android Gradle project."
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Package the app for distribution.
 
         This involves building the release app bundle.
@@ -565,7 +668,7 @@ class GradlePackageCommand(GradleMixin, PackageCommand):
 
 
 class GradlePublishCommand(GradleMixin, PublishCommand):
-    description = "Publish an Android APK."
+    description = "Publish an Android Gradle project."
 
 
 # Declare the briefcase command bindings

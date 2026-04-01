@@ -5,6 +5,7 @@ allowlist
 AlmaLinux
 amongst
 APIs
+ABIs
 APK
 appimage
 AppImage
@@ -24,8 +25,10 @@ beeware
 BeeWare
 BeeWare's
 blobless
+breakpoint
 Bugfix
 Bugfixes
+CachyOS
 ce
 CentOS
 CFBundleExecutable
@@ -44,6 +47,7 @@ CTRL
 customizations
 datetime
 DBus
+debugpy
 dev
 dialogs
 Diataxis
@@ -111,6 +115,7 @@ MSI
 Namespace
 Napari
 natively
+NDK
 NFS
 NSIS
 NumPy
@@ -121,6 +126,7 @@ OSX
 passthrough
 Passthrough
 pbb
+PDB
 PFX
 phablet
 PID
@@ -133,6 +139,7 @@ precompiled
 proxied
 Proxied
 proxying
+programmatically
 PRs
 PursuedPyBear
 px
@@ -150,15 +157,18 @@ PyScript
 PyScript's
 PySide
 pytest
+PythonAnywhere
 RCEdit
 README
 RedHat
+REPL
 ReST
 reStructuredText
 RGB
 RHEL
 rpmbuild
 rst
+RTF
 rumdl
 runtime
 Runtime
@@ -215,7 +225,6 @@ UTTypeConformsTo
 vendored
 verbing
 visionOS
-VisualStudio
 VM
 VOC
 watchOS
@@ -225,6 +234,6 @@ WebKit
 WiX
 Wunjo
 Xauth
-XCode
+Xcode
 Xr
 Xs

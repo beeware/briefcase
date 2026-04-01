@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pygame
 
-
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 WHITE = (255, 255, 255)
 

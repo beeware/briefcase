@@ -29,7 +29,14 @@ def test_no_args_one_app(run_command, first_app):
         # App tools are verified
         ("verify-app-tools", "first"),
         # Run the first app
-        ("run", "first", False, {"passthrough": []}),
+        (
+            "run",
+            "first",
+            False,
+            False,
+            (None, None),
+            {"passthrough": []},
+        ),
     ]
 
 
@@ -60,26 +67,67 @@ def test_no_args_one_app_with_passthrough(run_command, first_app):
         # App tools have been verified
         ("verify-app-tools", "first"),
         # Run the first app
-        ("run", "first", False, {"passthrough": ["foo", "--bar"]}),
+        (
+            "run",
+            "first",
+            False,
+            False,
+            (None, None),
+            {"passthrough": ["foo", "--bar"]},
+        ),
     ]
 
 
-def test_no_args_two_apps(run_command, first_app, second_app):
-    """If there are two apps and no explicit app is started, an error is raised."""
+def test_no_args_two_apps(run_command, first_app, second_app, monkeypatch):
+    """If there are two apps and input is enabled, the user is prompted to pick one."""
     # Add two apps
     run_command.apps = {
         "first": first_app,
         "second": second_app,
     }
 
-    # Configure no command line options
+    # Interactive mode
+    run_command.console.input_enabled = True
+
+    # Fake the user selecting "second"
+    def fake_selection_question(**kwargs):
+        return "second"
+
+    monkeypatch.setattr(
+        run_command.console,
+        "selection_question",
+        fake_selection_question,
+    )
+
+    # No flags on the command line
     options, _ = run_command.parse_options([])
 
-    # Invoking the run command raises an error
-    with pytest.raises(BriefcaseCommandError):
+    # This should follow the multi-app selection path and run without error.
+    run_command(**options)
+
+    # The command should perform some actions in interactive mode.
+    assert run_command.actions != []
+
+
+def test_no_args_two_apps_non_interactive(run_command, first_app, second_app):
+    """If there are two apps and --no-input is provided, an error is raised."""
+    # Add two apps
+    run_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+
+    # Simulate --no-input on the command line
+    options, _ = run_command.parse_options(["--no-input"])
+
+    # In non-interactive mode, invoking the run command raises an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Project specifies more than one application",
+    ):
         run_command(**options)
 
-    # No verification actions will be performed
+    # Finalization will not occur.
     assert run_command.actions == []
 
 
@@ -109,7 +157,14 @@ def test_with_arg_one_app(run_command, first_app):
         # App tools are verified
         ("verify-app-tools", "first"),
         # Run the first app
-        ("run", "first", False, {"passthrough": []}),
+        (
+            "run",
+            "first",
+            False,
+            False,
+            (None, None),
+            {"passthrough": []},
+        ),
     ]
 
 
@@ -140,7 +195,14 @@ def test_with_arg_two_apps(run_command, first_app, second_app):
         # App tools have been verified
         ("verify-app-tools", "second"),
         # Run the second app
-        ("run", "second", False, {"passthrough": []}),
+        (
+            "run",
+            "second",
+            False,
+            False,
+            (None, None),
+            {"passthrough": []},
+        ),
     ]
 
 
@@ -191,6 +253,7 @@ def test_create_app_before_start(run_command, first_app_config):
             "build",
             "first",
             False,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -209,7 +272,12 @@ def test_create_app_before_start(run_command, first_app_config):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -240,6 +308,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
             "build",
             "first",
             False,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -258,7 +327,12 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -289,6 +363,7 @@ def test_update_app(run_command, first_app):
             "build",
             "first",
             False,
+            False,
             {
                 "update": True,
                 "update_requirements": False,
@@ -307,7 +382,12 @@ def test_update_app(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -338,6 +418,7 @@ def test_update_app_requirements(run_command, first_app):
             "build",
             "first",
             False,
+            False,
             {
                 "update": False,
                 "update_requirements": True,
@@ -356,7 +437,12 @@ def test_update_app_requirements(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -387,6 +473,7 @@ def test_update_app_resources(run_command, first_app):
             "build",
             "first",
             False,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -405,7 +492,12 @@ def test_update_app_resources(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -436,6 +528,7 @@ def test_update_app_support(run_command, first_app):
             "build",
             "first",
             False,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -454,7 +547,12 @@ def test_update_app_support(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -485,6 +583,7 @@ def test_update_app_stub(run_command, first_app):
             "build",
             "first",
             False,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -503,7 +602,12 @@ def test_update_app_stub(run_command, first_app):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -535,6 +639,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
             "build",
             "first",
             False,
+            False,
             {
                 "update": True,
                 "update_requirements": False,
@@ -553,7 +658,12 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -585,6 +695,7 @@ def test_update_non_existent(run_command, first_app_config):
             "build",
             "first",
             False,
+            False,
             {
                 "update": True,
                 "update_requirements": False,
@@ -603,7 +714,12 @@ def test_update_non_existent(run_command, first_app_config):
             "run",
             "first",
             False,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -634,6 +750,7 @@ def test_test_mode_existing_app(run_command, first_app):
             "build",
             "first",
             True,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -652,7 +769,12 @@ def test_test_mode_existing_app(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -683,6 +805,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
             "build",
             "first",
             True,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -701,6 +824,8 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
             "run",
             "first",
             True,
+            False,
+            (None, None),
             {
                 "build_state": "first",
                 "passthrough": ["foo", "--bar"],
@@ -740,6 +865,8 @@ def test_test_mode_existing_app_no_update(run_command, first_app):
             "run",
             "first",
             True,
+            False,
+            (None, None),
             {"passthrough": []},
         ),
     ]
@@ -771,6 +898,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
             "build",
             "first",
             True,
+            False,
             {
                 "update": False,
                 "update_requirements": True,
@@ -789,7 +917,12 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -820,6 +953,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
             "build",
             "first",
             True,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -838,7 +972,12 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -869,6 +1008,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
             "build",
             "first",
             True,
+            False,
             {
                 "update": True,
                 "update_requirements": False,
@@ -887,7 +1027,12 @@ def test_test_mode_update_existing_app(run_command, first_app):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 
@@ -918,6 +1063,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
             "build",
             "first",
             True,
+            False,
             {
                 "update": False,
                 "update_requirements": False,
@@ -936,7 +1082,69 @@ def test_test_mode_non_existent(run_command, first_app_config):
             "run",
             "first",
             True,
-            {"build_state": "first", "passthrough": []},
+            False,
+            (None, None),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
+        ),
+    ]
+
+
+def test_debug(run_command, first_app_config):
+    """Requesting a debugger."""
+    # Add a single app, using the 'config only' fixture
+    run_command.apps = {
+        "first": first_app_config,
+    }
+
+    run_command.supports_debugger = True
+
+    # Configure a test option
+    options, _ = run_command.parse_options(["--debug=pdb"])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App will be built with debugger
+        (
+            "build",
+            "first",
+            False,
+            True,
+            {
+                "update": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+                "no_update": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Then, it will be started
+        (
+            "run",
+            "first",
+            False,
+            True,
+            ("localhost", 5678),
+            {
+                "build_state": "first",
+                "passthrough": [],
+            },
         ),
     ]
 

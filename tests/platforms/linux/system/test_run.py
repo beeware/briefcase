@@ -12,7 +12,7 @@ from briefcase.integrations.docker import Docker
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux import parse_freedesktop_os_release, system
 from briefcase.platforms.linux.system import (
-    LinuxSystemMostlyPassiveMixin,
+    LinuxSystemDockerMixin,
     LinuxSystemRunCommand,
 )
 
@@ -35,7 +35,7 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
 
     # Mock the existence of a valid system Python
     monkeypatch.setattr(
-        LinuxSystemMostlyPassiveMixin, "verify_system_python", mock.MagicMock()
+        LinuxSystemDockerMixin, "verify_system_python", mock.MagicMock()
     )
 
     # Provide Docker

@@ -4,6 +4,8 @@ Compile/build an application installer. By default, targets the current platform
 
 This will produce an installable artefact.
 
+You should not package an application that was built using `build --test` or `build --debug <debugger>`.
+
 ## Usage
 
 To build an installer of the default output format for the current platform:
@@ -30,6 +32,8 @@ Building installers for some platforms depends on the build tools for the platfo
 
 ///
 
+Once packaging is complete, the artefact can be distributed to a store or channel. See the [publish][publish] command and the platform-specific publishing guides for [Android](../../how-to/publishing/android.md), [iOS](../../how-to/publishing/iOS.md), and [macOS](../../how-to/publishing/macOS.md).
+
 ## Options
 
 The following options can be provided at the command line.
@@ -40,7 +44,7 @@ Run a specific application target in your project. This argument is only require
 
 ### `-u` / `--update`
 
-Update and recompile the application's code before running. Equivalent to running:
+Update and recompile the application's code before packaging. Equivalent to running:
 
 ```console
 $ briefcase update
@@ -57,4 +61,10 @@ Perform the bare minimum signing that will result in a app that can run on your 
 
 ### `-i <identity>` / `--identity <identity>`
 
-The [code signing identity][how-to] to use when signing the app.
+The [code signing identity][obtain-code-signing-identity] to use when signing the app.
+
+The format for the code signing identity is platform specific:
+
+* **On macOS:** The 40-character hex thumbprint of the signing identity; the full name of the certificate (e.g., `Developer ID Application: Jane Smith (ABC12345DE)`); or `-` to use an ad-hoc signature. See the [documentation on macOS code signing for more details](../../how-to/code-signing/macOS.md).
+
+* **On Windows:** The 40-character hex thumbprint of the signing identity; or the subject name of a certificate in the user's certificate store. See the [documentation on Windows code signing for more details](../../how-to/code-signing/windows.md).

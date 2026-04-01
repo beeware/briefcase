@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from abc import abstractmethod
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -57,7 +57,7 @@ class PackageCommand(BaseCommand):
             # Ensure the dist folder exists.
             self.dist_path.mkdir(exist_ok=True)
 
-    def package_app(self, app: AppConfig, **options):
+    def package_app(self, app: FinalizedAppConfig, **options):
         """Package an application.
 
         :param app: The application to package
@@ -66,7 +66,7 @@ class PackageCommand(BaseCommand):
 
     def _package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update: bool,
         packaging_format: str,
         **options,
@@ -150,7 +150,7 @@ class PackageCommand(BaseCommand):
             "-u",
             "--update",
             action="store_true",
-            help="Update the app before building",
+            help="Update the app before packaging",
         )
         parser.add_argument(
             "-p",
@@ -183,24 +183,14 @@ class PackageCommand(BaseCommand):
         update: bool = False,
         **options,
     ) -> dict | None:
+        apps_to_package = self.resolve_apps(app=app, app_name=app_name)
+
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(app)
-
-        if app_name:
-            try:
-                apps_to_package = {app_name: self.apps[app_name]}
-            except KeyError:
-                raise BriefcaseCommandError(
-                    f"App '{app_name}' does not exist in this project."
-                ) from None
-        elif app:
-            apps_to_package = {app.app_name: app}
-        else:
-            apps_to_package = self.apps
+        finalized_apps = self.finalize(apps=apps_to_package.values())
 
         state = None
-        for _, app_obj in sorted(apps_to_package.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._package_app(
                 app_obj,
                 update=update,

@@ -3,7 +3,6 @@ import re
 import subprocess
 import sys
 import webbrowser
-from collections.abc import Collection
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
@@ -34,7 +33,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 
 # Banner templates (Constants used in write_inserts)
 HTML_BANNER = (
@@ -90,7 +89,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
     def write_inserts(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filename: Path,
         inserts: dict[str, dict[str, str]],
     ):
@@ -193,7 +192,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
     def _append_pyscript_insert(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filename: Path,
         pyscript_version: str,
         inserts: dict[str, dict[str, dict[str, str]]],
@@ -213,8 +212,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         body_insert = "body-python"
 
         # PyScript definitions for insertion:
-        head_content = dedent(
-            f"""\
+        head_content = dedent(f"""\
             <script type="module">
                 // Hide the splash screen when the page is ready.
                 import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
@@ -225,18 +223,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
-            """
-        )
-        body_content = dedent(
-            f"""\
+            """)
+        body_content = dedent(f"""\
             <script type="py" async="false" config="pyscript.toml">
                 import runpy
                 result = runpy.run_module(
                     "{app.app_name}", run_name="__main__", alter_sys=True
                 )
             </script>
-            """
-        )
+            """)
 
         pkg_map_head = inserts.setdefault(target, {}).setdefault(head_insert, {})
         pkg_map_head[package_key] = head_content
@@ -264,7 +259,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         # Warn on every legacy usage
         self.console.warning(
             f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} "
-            f"detected.\n"
+            "detected.\n"
             "     Static file handling has been deprecated; this file should be "
             "converted into an insert."
         )
@@ -304,7 +299,7 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         if not rel_inside or rel_inside.endswith("/"):
             self.console.warning(
                 f"    {path}: skipping; "
-                f"not a valid insert file (empty path or directory)."
+                "not a valid insert file (empty path or directory)."
             )
             return
 
@@ -439,14 +434,14 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     ) from e
                 except (KeyError, FileNotFoundError):
                     self.console.info(
-                        f"Pyscript configuration file not found in "
+                        "Pyscript configuration file not found in "
                         f"{config_package_list[0]}. Using default configuration."
                     )
                     pyscript_config = {}
 
         return pyscript_config, pyscript_version
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the static web deployment for the application.
 
         :param app: The application to build
@@ -632,7 +627,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         host,
         port,
@@ -670,7 +665,7 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                 if e.errno in (errno.EADDRINUSE, errno.ENOSR):
                     self.console.warning(
                         f"Using a system-allocated port since port {port} is already "
-                        f"in use. Use -p/--port to manually specify a port."
+                        "in use. Use -p/--port to manually specify a port."
                     )
                     httpd = LocalHTTPServer(
                         self.project_path(app),
@@ -748,7 +743,7 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
     def default_packaging_format(self):
         return "zip"
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Package an app for distribution.
 
         :param app: The app to package.
@@ -768,8 +763,6 @@ class StaticWebPackageCommand(StaticWebMixin, PackageCommand):
 
 class StaticWebPublishCommand(StaticWebMixin, PublishCommand):
     description = "Publish a static web app."
-    publication_channels: Collection[str] = ["s3"]
-    default_publication_channel = "s3"
 
 
 class StaticWebDevCommand(StaticWebMixin, DevCommand):
@@ -779,24 +772,15 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
     def venv_name(self) -> str:
         """Returns the name of the virtual environment directory.
 
+        The web environment uses a different venv because a web deployment has
+        different requirements to a desktop deployment. The name is the same as the
+        desktop deployment, but with `.web` appended.
+
         :returns: Name for virtual environment directory
         """
-        return "dev-web"
+        return f"{DevCommand.venv_name.fget(self)}.web"
 
-    def add_options(self, parser):
-        super().add_options(parser)
-        parser.add_argument(
-            "--no-isolation",
-            dest="isolated",
-            action="store_false",
-            default=True,
-            help=(
-                "Run without creating an isolated environment "
-                "(not recommended for web)."
-            ),
-        )
-
-    def run_dev_app(self, app: AppConfig, **options):
+    def run_dev_app(self, app: FinalizedAppConfig, **options):
         raise UnsupportedCommandError(
             platform="web",
             output_format="static",

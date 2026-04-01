@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import contextlib
 import plistlib
 import subprocess
 import time
-from collections.abc import Collection
 from pathlib import Path
 from uuid import UUID
 
@@ -18,7 +18,8 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
+from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InputDisabled,
@@ -56,8 +57,7 @@ class iOSXcodePassiveMixin(iOSMixin):
     def distribution_path(self, app):
         # This path won't ever be *generated*, as distribution artefacts
         # can't be generated on iOS.
-        raise NoDistributionArtefact(
-            """
+        raise NoDistributionArtefact("""
 *************************************************************************
 ** WARNING: No distributable artefact has been generated               **
 *************************************************************************
@@ -74,8 +74,7 @@ class iOSXcodePassiveMixin(iOSMixin):
         https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
 
 *************************************************************************
-"""
-        )
+""")
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
@@ -92,9 +91,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             "-d",
             "--device",
             dest="udid",
-            help="The device to target; either a UDID, "
-            'a device name ("iPhone 11"), '
-            'or a device name and OS version ("iPhone 11::iOS 13.3")',
+            help=(
+                "The device to target; either a UDID, "
+                'a device name ("iPhone 11"), '
+                'or a device name and OS version ("iPhone 11::iOS 13.3")'
+            ),
             required=False,
         )
 
@@ -237,8 +238,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         device = devices[udid]
 
-        self.console.info(
-            f"""
+        self.console.info(f"""
 In the future, you could specify this device by running:
 
     $ briefcase {self.command} iOS -d "{device}::{iOS_tag}"
@@ -246,8 +246,7 @@ In the future, you could specify this device by running:
 or:
 
     $ briefcase {self.command} iOS -d {udid}
-"""
-        )
+""")
 
         # iOS_tag will be of the form "iOS 15.5"
         # Drop the "iOS" prefix when reporting the version.
@@ -259,7 +258,11 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
-    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -270,6 +273,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         # The collection of info.plist entries
         info = {}
 
+        if x_permissions["bluetooth"]:
+            info["NSBluetoothAlwaysUsageDescription"] = x_permissions["bluetooth"]
         if x_permissions["camera"]:
             info["NSCameraUsageDescription"] = x_permissions["camera"]
         if x_permissions["microphone"]:
@@ -304,7 +309,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
-    def _extra_pip_args(self, app: AppConfig):
+    def _extra_pip_args(self, app: FinalizedAppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
@@ -319,7 +324,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -404,7 +409,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             install_hint=f"""
 
 This may be because the `iphoneos` wheels that are available are not compatible
-with a minimum iOS version of {ios_min_version}.
+with Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
         )
 
@@ -428,14 +433,15 @@ with a minimum iOS version of {ios_min_version}.
 
 This may indicate that an `iphoneos` wheel could be found, but an
 `iphonesimulator` wheel could not be found; or that the `iphonesimulator`
-binary wheels that are available are not compatible with a minimum iOS
-version of {ios_min_version}.
+binary wheels that are available are not compatible with
+Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
         )
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
     description = "Update an existing iOS Xcode project."
+    supports_debugger = True
 
 
 class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
@@ -444,8 +450,9 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
 
 class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
+    supports_debugger = True
 
-    def info_plist_path(self, app: AppConfig):
+    def info_plist_path(self, app: FinalizedAppConfig):
         """Obtain the path to the application's plist file.
 
         :param app: The config object for the app
@@ -453,7 +460,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         """
         return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
-    def update_app_metadata(self, app: AppConfig):
+    def update_app_metadata(self, app: FinalizedAppConfig):
         with self.console.wait_bar("Setting main module..."):
             # Load the original plist
             with self.info_plist_path(app).open("rb") as f:
@@ -467,7 +474,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
             with self.info_plist_path(app).open("wb") as f:
                 plistlib.dump(info_plist, f)
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
@@ -505,6 +512,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
 
 class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     description = "Run an iOS Xcode project."
+    supports_debugger = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -513,9 +521,25 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # This is abstracted to enable testing without patching.
         self.get_device_state = get_device_state
 
+    def debugger_app_packages_path_mapping(
+        self,
+        app: FinalizedAppConfig,
+    ) -> AppPackagesPathMappings:
+        """Get the path mappings for the app packages.
+
+        :param app: The config object for the app
+        :returns: The path mappings for the app packages
+        """
+        return AppPackagesPathMappings(
+            sys_path_regex="app_packages$",
+            host_folder=str(
+                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
+            ),
+        )
+
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         *,
         passthrough: list[str],
         udid=None,
@@ -653,11 +677,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--style",
                 "compact",
                 "--predicate",
-                f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))',
+                (
+                    f'senderImagePath ENDSWITH "/{app.formal_name}"'
+                    f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                    ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                    ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                    ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))'
+                ),
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -667,48 +693,99 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Wait for the log stream start up
         time.sleep(0.25)
 
-        try:
-            self.console.info(f"Starting {label}...", prefix=app.app_name)
-            with self.console.wait_bar(f"Launching {label}..."):
-                output = self.tools.subprocess.check_output(
-                    [
-                        "xcrun",
-                        "simctl",
-                        "launch",
-                        udid,
-                        app.bundle_identifier,
-                        *passthrough,
-                    ]
+        # Add additional environment variables
+        env = {}
+        if app.debugger:
+            env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
+
+        # Set additional environment variables while the app is running
+        # (no-op if no environment variables are set).
+        with self.setup_env(env, udid):
+            try:
+                self.console.info(f"Starting {label}...", prefix=app.app_name)
+                with self.console.wait_bar(f"Launching {label}..."):
+                    output = self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "launch",
+                            udid,
+                            app.bundle_identifier,
+                            *passthrough,
+                        ]
+                    )
+                    try:
+                        app_pid = int(output.split(":")[1].strip())
+                    except (IndexError, ValueError) as e:
+                        raise BriefcaseCommandError(
+                            f"Unable to determine PID of {label} {app.app_name}."
+                        ) from e
+
+                # Start streaming logs for the app.
+                self.console.info(
+                    "Following simulator log output (type CTRL-C to stop log)...",
+                    prefix=app.app_name,
                 )
-                try:
-                    app_pid = int(output.split(":")[1].strip())
-                except (IndexError, ValueError) as e:
-                    raise BriefcaseCommandError(
-                        f"Unable to determine PID of {label} {app.app_name}."
-                    ) from e
 
-            # Start streaming logs for the app.
-            self.console.info(
-                "Following simulator log output (type CTRL-C to stop log)...",
-                prefix=app.app_name,
-            )
-
-            # Stream the app logs,
-            self._stream_app_logs(
-                app,
-                popen=simulator_log_popen,
-                clean_filter=macOS_log_clean_filter,
-                clean_output=True,
-                stop_func=lambda: is_process_dead(app_pid),
-                log_stream=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to launch {label} {app.app_name}."
-            ) from e
+                # Stream the app logs,
+                self._stream_app_logs(
+                    app,
+                    popen=simulator_log_popen,
+                    clean_filter=macOS_log_clean_filter,
+                    clean_output=True,
+                    stop_func=lambda: is_process_dead(app_pid),
+                    log_stream=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    f"Unable to launch {label} {app.app_name}."
+                ) from e
 
         # Preserve the device selection as state.
         return {"udid": udid}
+
+    @contextlib.contextmanager
+    def setup_env(
+        self,
+        env: dict[str, str] | None,
+        udid: str,
+    ):
+        """Context manager to set up the environment for the command."""
+        if env:
+            with self.console.wait_bar("Setting environment variables in simulator..."):
+                for env_key, env_value in env.items():
+                    self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "setenv",
+                            f"{env_key}",
+                            f"{env_value}",
+                        ]
+                    )
+
+            yield
+
+            with self.console.wait_bar(
+                "Removing environment variables from simulator..."
+            ):
+                for env_key in env:
+                    self.tools.subprocess.check_output(
+                        [
+                            "xcrun",
+                            "simctl",
+                            "spawn",
+                            udid,
+                            "launchctl",
+                            "unsetenv",
+                            f"{env_key}",
+                        ]
+                    )
+        else:
+            yield  # no-op if no environment variables are set
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
@@ -717,8 +794,6 @@ class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
 
 class iOSXcodePublishCommand(iOSXcodeMixin, PublishCommand):
     description = "Publish an iOS app."
-    publication_channels: Collection[str] = ["ios_appstore"]
-    default_publication_channel = "ios_appstore"
 
 
 # Declare the briefcase command bindings

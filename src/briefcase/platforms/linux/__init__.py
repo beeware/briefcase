@@ -1,13 +1,23 @@
+from __future__ import annotations
+
 import ast
 import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.commands.create import _is_local_path
 from briefcase.commands.open import OpenCommand
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "system"
 
@@ -53,7 +63,7 @@ def parse_freedesktop_os_release(content):
     return values
 
 
-class LinuxMixin:
+class LinuxMixin(_MixinBase):
     platform = "linux"
 
     def support_package_url(self, support_revision):
@@ -112,7 +122,7 @@ class LinuxMixin:
             vendor_base = DEBIAN
         elif vendor == RHEL or vendor == "fedora" or RHEL in id_like:
             vendor_base = RHEL
-        elif vendor == ARCH or ARCH in id_like:
+        elif vendor == ARCH or vendor == "cachyos" or ARCH in id_like:
             vendor_base = ARCH
         elif vendor == SUSE or SUSE in id_like:
             vendor_base = SUSE
@@ -122,7 +132,7 @@ class LinuxMixin:
         return vendor, codename, vendor_base
 
 
-class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
+class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
     # A mixin that captures the process of compiling requirements that are specified
     # as local file references into sdists, and then installing those requirements
     # from the sdist.
@@ -132,7 +142,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -156,12 +166,21 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
         self.tools.os.mkdir(local_requirements_path)
 
         # Iterate over every requirement, looking for local references
+        localized_requires = []
         for requirement in requires:
             if _is_local_path(requirement):
-                if Path(requirement).is_dir():
+                parts = requirement.rsplit("[", 1)
+                req_name = parts[0]
+                try:
+                    extras = f"[{parts[1]}"
+                except IndexError:
+                    extras = ""
+
+                local_req = (self.base_path / req_name).resolve()
+                if local_req.is_dir():
                     # Requirement is a filesystem reference
-                    # Build an sdist for the local requirement
-                    with self.console.wait_bar(f"Building sdist for {requirement}..."):
+                    # Build a wheel for the local requirement
+                    with self.console.wait_bar(f"Building wheels for {req_name}..."):
                         try:
                             self.tools.subprocess.check_output(
                                 [
@@ -170,56 +189,56 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
                                     "utf8",
                                     "-m",
                                     "build",
-                                    "--sdist",
+                                    "--wheel",
                                     "--outdir",
                                     local_requirements_path,
-                                    requirement,
+                                    local_req,
                                 ],
                                 encoding="UTF-8",
                             )
+
+                            # The newest file in the directory will be the wheel that
+                            # was just created.
+                            newest_file = max(
+                                (
+                                    f
+                                    for f in self.local_requirements_path(app).iterdir()
+                                    if f.is_file()
+                                ),
+                                key=lambda f: f.stat().st_mtime,
+                            )
+
+                            localized_requires.append(str(newest_file) + extras)
+
                         except subprocess.CalledProcessError as e:
                             raise BriefcaseCommandError(
-                                f"Unable to build sdist for {requirement}"
+                                f"Unable to build wheel for {requirement}"
                             ) from e
                 else:
                     try:
                         # Requirement is an existing sdist or wheel file.
-                        self.tools.shutil.copy(requirement, local_requirements_path)
+                        self.tools.shutil.copy(local_req, local_requirements_path)
+
+                        # The requirement must be re-written as a local file reference
+                        localized_requires.append(
+                            str(self.local_requirements_path(app) / local_req.name)
+                            + extras
+                        )
+
                     except OSError as e:
                         raise BriefcaseCommandError(
                             f"Unable to find local requirement {requirement}"
                         ) from e
+            else:
+                # The requirement can be used as-is
+                localized_requires.append(requirement)
 
         # Continue with the default app requirement handling.
         return super()._install_app_requirements(
             app,
-            requires=requires,
+            requires=localized_requires,
             app_packages_path=app_packages_path,
         )
-
-    def _pip_requires(self, app: AppConfig, requires: list[str]):
-        """Convert the requirements list to an .deb project compatible format.
-
-        Any local file requirements are converted into a reference to the file generated
-        by _install_app_requirements().
-
-        :param app: The app configuration
-        :param requires: The user-specified list of app requirements
-        :returns: The final list of requirement arguments to pass to pip
-        """
-        # Copy all the requirements that are non-local
-        final = [
-            requirement
-            for requirement in super()._pip_requires(app, requires)
-            if not _is_local_path(requirement)
-        ]
-
-        # Add in any local packages.
-        # The sort is needed to ensure testing consistency
-        for filename in sorted(self.local_requirements_path(app).iterdir()):
-            final.append(filename)
-
-        return final
 
 
 class DockerOpenCommand(OpenCommand):  # pragma: no-cover-if-is-windows
@@ -227,7 +246,7 @@ class DockerOpenCommand(OpenCommand):  # pragma: no-cover-if-is-windows
     # if Docker is being used. Relies on the final command to provide
     # verification that Docker is available, and verify the app context.
 
-    def _open_app(self, app: AppConfig):
+    def _open_app(self, app: FinalizedAppConfig):
         # If we're using Docker, open an interactive shell in the container.
         # Rely on the default CMD statement in the image's Dockerfile to
         # define a default shell.
