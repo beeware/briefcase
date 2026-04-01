@@ -16,6 +16,9 @@ def test_verify_tools_on_macos(dummy_command):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The Python interpreter that is being used to run Briefcase has been compiled for x86_64, and is running in emulation mode on Apple Silicon hardware. You must use a Python interpreter that has been compiled for Apple Silicon, or is a Universal binary.",
+        match=r"The Python interpreter that is being used to run Briefcase has been "
+        "compiled for x86_64, and is running in emulation mode on Apple "
+        "Silicon hardware. You must use a Python interpreter that has been "
+        "compiled for Apple Silicon, or is a Universal binary.",
     ):
         dummy_command.verify_tools()
