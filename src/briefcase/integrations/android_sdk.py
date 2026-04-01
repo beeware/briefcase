@@ -205,16 +205,16 @@ class AndroidSDK(ManagedTool):
         if android_home:
             if android_sdk_root and android_sdk_root != android_home:
                 tools.console.warning_banner(
-                    title="""
-    WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent
-""",
+                    title="WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent",
                     message=f"""
     The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set
-    to different paths:\\n\\n
-        ANDROID_HOME:     {android_home}\\n
-        ANDROID_SDK_ROOT: {android_sdk_root}\\n\\n
+    to different paths:
+
+        ANDROID_HOME:     {android_home}
+        ANDROID_SDK_ROOT: {android_sdk_root}
+
     Briefcase will ignore ANDROID_SDK_ROOT and only use the path
-    specified by ANDROID_HOME.\\n\\n
+    specified by ANDROID_HOME.
 
     You should update your environment configuration to either not set
     ANDROID_SDK_ROOT, or set both environment variables to the same
@@ -270,18 +270,17 @@ class AndroidSDK(ManagedTool):
             if sdk.exists():
                 if sdk_source_env == "ANDROID_SDK_ROOT":
                     tools.console.warning_banner(
+                        "WARNING: Using Android SDK from ANDROID_SDK_ROOT",
                         """
-    WARNING: Using Android SDK from ANDROID_SDK_ROOT""",
-                        """
-    Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
-    environment variable.\\n\\n
+Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
+environment variable.
 
-    Android has deprecated ANDROID_SDK_ROOT in favor of the
-    ANDROID_HOME environment variable.\\n\\n
+Android has deprecated ANDROID_SDK_ROOT in favor of the
+ANDROID_HOME environment variable.
 
-    Update your environment configuration to set ANDROID_HOME instead of
-    ANDROID_SDK_ROOT to ensure future compatibility.
-""",
+Update your environment configuration to set ANDROID_HOME instead of
+ANDROID_SDK_ROOT to ensure future compatibility.
+                        """,
                     )
             elif sdk.cmdline_tools_path.parent.exists():
                 # a cmdline-tools directory exists,
@@ -290,19 +289,18 @@ class AndroidSDK(ManagedTool):
                 if not sdk.install_cmdline_tools():
                     sdk = None
                     tools.console.warning_banner(
-                        """
-    WARNING: Incompatible Command-Line Tools Version""",
+                        "WARNING: Incompatible Command-Line Tools Version",
                         f"""
-    The Android SDK specified by {sdk_source_env} at:\\n\\n
+    The Android SDK specified by {sdk_source_env} at:
 
-    {sdk_root_env}\\n\\n
+    {sdk_root_env}
 
     does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. Briefcase
     requires this version to be installed to use an external Android SDK.
-    Use Android Studio's SDK Manager to install it.\\n\\n
+    Use Android Studio's SDK Manager to install it.
 
     Briefcase will proceed using its own SDK instance.
-""",
+                        """,
                     )
             else:
                 tools.console.warning_banner(
@@ -311,19 +309,18 @@ class AndroidSDK(ManagedTool):
                     f"""
 
     The location pointed to by the {sdk_source_env} environment
-    variable:\\n\\n
+    variable:
 
-    {sdk_root_env}\\n\\n
+    {sdk_root_env}
 
     doesn't appear to contain an Android SDK with the Command-line Tools installed.
-    \\n\\n
 
     If {sdk_source_env} is an Android SDK, ensure it is the root directory
-    of the Android SDK instance such that\\n\\n
+    of the Android SDK instance such that
 
     ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
-    \\n\\n
-    is a valid filepath.\\n\\n
+
+    is a valid filepath.
 
     Briefcase will proceed using its own SDK instance.
 """,
@@ -524,7 +521,7 @@ its output for errors.
     Briefcase needs to replace the older Android SDK Tools with the
     newer Android SDK Command-Line Tools. This will involve some large
     downloads, as well as re-accepting the licenses for the Android
-    SDKs.\\n\\n
+    SDKs.
 
     Any emulators created with the older Android SDK Tools will not be
     compatible with the new tools. You will need to create new
@@ -670,7 +667,7 @@ connection.
                 "WARNING: Unable to determine AVD system image",
                 f"""
     Briefcase was unable to determine the system image of the Android
-    emulator AVD {avd!r} from it's configuration file.\\n\\n
+    emulator AVD {avd!r} from it's configuration file.
 
     Briefcase will proceed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
@@ -688,7 +685,7 @@ connection.
                     "WARNING: Unrecognized device skin",
                     f"""
     Briefcase does not recognize the skin {skin!r} used by the
-    Android emulator AVD {avd!r}.\\n\\n
+    Android emulator AVD {avd!r}.
 
     Briefcase will proceed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
@@ -722,7 +719,7 @@ connection.
                 "WARNING: Unexpected emulator ABI",
                 f"""
     The system image {system_image!r}
-    does not match the architecture of this computer ({self.emulator_abi}).\\n\\n
+    does not match the architecture of this computer ({self.emulator_abi}).
 
     Briefcase will proceed assuming the emulator is correctly
     configured. If you experience any problems running the emulator,
