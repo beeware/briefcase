@@ -2,18 +2,15 @@ import pytest
 
 source_msg = """
             Hi there! My name is Anton, and I'm a Python developer.\n
-                This is my very first \
-experience in open source \
-development.
+                This is my very first experience in open source development.
 
             I like your project, and I'm excited to contribute to it.
 """
 
 source_title = """
-                INFO: I TRIED TO SOLVE THIS ISSUE #2559.
+                I TRIED TO SOLVE THIS ISSUE #2559.
 
-                IT SEEMED TO ME RATHER SIMPLE, \
-BUT I GOT VERY GOOD EXPERIENCE
+                IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE
 
 """
 
@@ -28,7 +25,7 @@ BUT I GOT VERY GOOD EXPERIENCE
             80,
             """\
 ********************************************************************************
-**                  INFO: I TRIED TO SOLVE THIS ISSUE #2559.                  **
+**                WARNING: I TRIED TO SOLVE THIS ISSUE #2559.                 **
 **                                                                            **
 **       IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE        **
 ********************************************************************************
@@ -47,8 +44,8 @@ I like your project, and I'm excited to contribute to it.
             40,
             """\
 ****************************************
-** INFO: I TRIED TO SOLVE THIS ISSUE  **
-**               #2559.               **
+**   WARNING: I TRIED TO SOLVE THIS   **
+**            ISSUE #2559.            **
 **                                    **
 ** IT SEEMED TO ME RATHER SIMPLE, BUT **
 **     I GOT VERY GOOD EXPERIENCE     **
@@ -86,7 +83,7 @@ I like your project, and I'm excited to contribute to it.
             60,
             """\
 ************************************************************
-**        INFO: I TRIED TO SOLVE THIS ISSUE #2559.        **
+**      WARNING: I TRIED TO SOLVE THIS ISSUE #2559.       **
 **                                                        **
 **   IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD   **
 **                       EXPERIENCE                       **
@@ -107,8 +104,8 @@ I like your project, and I'm excited to contribute to it.
             30,
             """\
 ******************************
-**  INFO: I TRIED TO SOLVE  **
-**    THIS ISSUE #2559.     **
+**   WARNING: I TRIED TO    **
+** SOLVE THIS ISSUE #2559.  **
 **                          **
 **  IT SEEMED TO ME RATHER  **
 **  SIMPLE, BUT I GOT VERY  **
@@ -133,7 +130,7 @@ excited to contribute to it.
             80,
             """\
 ********************************************************************************
-**                  INFO: I TRIED TO SOLVE THIS ISSUE #2559.                  **
+**                WARNING: I TRIED TO SOLVE THIS ISSUE #2559.                 **
 **                                                                            **
 **       IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE        **
 ********************************************************************************\
@@ -146,7 +143,7 @@ excited to contribute to it.
             80,
             """\
 ********************************************************************************
-**                                Short title                                 **
+**                            WARNING: Short title                            **
 ********************************************************************************
 Short message
 ********************************************************************************\
@@ -155,7 +152,7 @@ Short message
         # Message and title lengths equal to box width
         (
             "Length of message is equal to box _width",
-            "Length of title is e-l to box w-th",
+            "Length of ......... width",
             40,
             """\
 ****************************************
@@ -167,16 +164,16 @@ Length of message is equal to box _width
         ),
         # Message and title lengths longer +1 symbol to box width
         (
-            "Length of message is equal to box __width",
-            "Length of title is e-l to box _w-th",
+            "Length of message +is equal to box _width",
+            "Length of ......+... width",
             40,
             """\
 ****************************************
-** Length of title is e-l to box _w-  **
-**                 th                 **
+**   WARNING: Length of ......+...    **
+**               width                **
 ****************************************
-Length of message is equal to box
-__width
+Length of message +is equal to box
+_width
 ****************************************\
 """,
         ),

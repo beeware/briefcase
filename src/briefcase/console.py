@@ -251,11 +251,15 @@ class Console:
         return self._log_impl.export_text()
 
     @staticmethod
-    def _dedent_and_wrap(text, wrap_width):
+    def _dedent_and_wrap(text, wrap_width, warning_prefix=False):
         """Dedent text, split text into paragraphs and wrap each paragraph to lines of
         the specified width."""
         # Remove common leading empty paragraphs
         text = textwrap.dedent(text).strip("\n")
+
+        # Add a warning prefix for title
+        if warning_prefix:
+            text = "WARNING: " + text
 
         # Split text into paragraphs
         paragraphs = text.split("\n")
@@ -313,7 +317,7 @@ class Console:
                 raise TypeError("Title must be a string")
 
             # get title wrapped to lines
-            title_lines = self._dedent_and_wrap(title, width - 6)
+            title_lines = self._dedent_and_wrap(title, width - 6, True)
 
             # center each line of the title and add to the box
             for line in title_lines:
