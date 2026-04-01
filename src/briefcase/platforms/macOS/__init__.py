@@ -94,10 +94,6 @@ class macOSMixin(_MixinBase):
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
 
-    # currently commenting out the check below because the "platform" class
-    # defined in the Python interpreter clashes with the platform variable in line 89
-    # of this file (platform variable defined right underneath the
-    # "class maxOSMixin(_MixinBase)" declaration line
     def verify_tools(self):
         if (
             self.tools.platform.machine() == "x86_64"
