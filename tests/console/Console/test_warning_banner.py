@@ -156,7 +156,7 @@ Short message
             40,
             """\
 ****************************************
-** Length of title is e-l to box w-th **
+** WARNING: Length of ......... width **
 ****************************************
 Length of message is equal to box _width
 ****************************************\
