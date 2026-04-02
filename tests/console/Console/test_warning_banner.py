@@ -1,17 +1,20 @@
 import pytest
 
-source_msg = """
-            Hi there! My name is Anton, and I'm a Python developer.\n
-                This is my very first experience in open source development.
+test_title = "ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent"
+test_message = """
+    The ANDROID_HOME and ANDROID_SDK_ROOT environment variables
+    are set to different paths:
 
-            I like your project, and I'm excited to contribute to it.
-"""
+        ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+        ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/\
+test_warning_banner.py
 
-source_title = """
-                I TRIED TO SOLVE THIS ISSUE #2559.
+     Briefcase will ignore ANDROID_SDK_ROOT and only use the path
+    specified by ANDROID_HOME.
 
-                IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE
-
+    You should update your environment configuration to either
+    not set ANDROID_SDK_ROOT, or set both environment variables
+    to the samepath.
 """
 
 
@@ -20,120 +23,157 @@ source_title = """
     [
         # Default width (80) with title and message
         (
-            source_msg,
-            source_title,
+            test_message,
+            test_title,
             80,
             """\
 ********************************************************************************
-**                WARNING: I TRIED TO SOLVE THIS ISSUE #2559.                 **
-**                                                                            **
-**       IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE        **
+**        WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
 ********************************************************************************
-Hi there! My name is Anton, and I'm a Python developer.
+The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to different
+paths:
 
-    This is my very first experience in open source development.
+    ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+    ANDROID_SDK_ROOT:
+    /home/anton/briefcase/tests/console/Console/test_warning_banner.py
 
-I like your project, and I'm excited to contribute to it.
-********************************************************************************\
+ Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by
+ ANDROID_HOME.
+
+You should update your environment configuration to either not set
+ANDROID_SDK_ROOT, or set both environment variables to the samepath.
+********************************************************************************
 """,
         ),
         # Narrow width (40) with title and message
         (
-            source_msg,
-            source_title,
+            test_message,
+            test_title,
             40,
             """\
 ****************************************
-**   WARNING: I TRIED TO SOLVE THIS   **
-**            ISSUE #2559.            **
-**                                    **
-** IT SEEMED TO ME RATHER SIMPLE, BUT **
-**     I GOT VERY GOOD EXPERIENCE     **
+**     WARNING: ANDROID_HOME and      **
+** ANDROID_SDK_ROOT are inconsistent  **
 ****************************************
-Hi there! My name is Anton, and I'm a
-Python developer.
+The ANDROID_HOME and ANDROID_SDK_ROOT
+environment variables are set to
+different paths:
 
-    This is my very first experience in
-open source development.
+    ANDROID_HOME:     /briefcase/tests/c
+    onsole/Console/test_warning_banner.p
+    y
+    ANDROID_SDK_ROOT: /home/anton/briefc
+    ase/tests/console/Console/test_warni
+    ng_banner.py
 
-I like your project, and I'm excited to
-contribute to it.
-****************************************\
+ Briefcase will ignore ANDROID_SDK_ROOT
+ and only use the path specified by
+ ANDROID_HOME.
+
+You should update your environment
+configuration to either not set
+ANDROID_SDK_ROOT, or set both
+environment variables to the samepath.
+****************************************
 """,
         ),
         # Default width (80) without title
         (
-            source_msg,
+            test_message,
             None,
             80,
             """\
 ********************************************************************************
-Hi there! My name is Anton, and I'm a Python developer.
+The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to different
+paths:
 
-    This is my very first experience in open source development.
+    ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+    ANDROID_SDK_ROOT:
+    /home/anton/briefcase/tests/console/Console/test_warning_banner.py
 
-I like your project, and I'm excited to contribute to it.
-********************************************************************************\
+ Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by
+ ANDROID_HOME.
+
+You should update your environment configuration to either not set
+ANDROID_SDK_ROOT, or set both environment variables to the samepath.
+********************************************************************************
 """,
         ),
         # Custom width (60) with title and message
         (
-            source_msg,
-            source_title,
+            test_message,
+            test_title,
             60,
             """\
 ************************************************************
-**      WARNING: I TRIED TO SOLVE THIS ISSUE #2559.       **
-**                                                        **
-**   IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD   **
-**                       EXPERIENCE                       **
+**     WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are     **
+**                      inconsistent                      **
 ************************************************************
-Hi there! My name is Anton, and I'm a Python developer.
+The ANDROID_HOME and ANDROID_SDK_ROOT environment variables
+are set to different paths:
 
-    This is my very first experience in open source
-development.
+    ANDROID_HOME:
+    /briefcase/tests/console/Console/test_warning_banner.py
+    ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Co
+    nsole/test_warning_banner.py
 
-I like your project, and I'm excited to contribute to it.
-************************************************************\
+ Briefcase will ignore ANDROID_SDK_ROOT and only use the
+ path specified by ANDROID_HOME.
+
+You should update your environment configuration to either
+not set ANDROID_SDK_ROOT, or set both environment variables
+to the samepath.
+************************************************************
 """,
         ),
         # Very narrow width (30) with title and message
         (
-            source_msg,
-            source_title,
-            30,
+            test_message,
+            test_title,
+            31,
+            # codespell: ignore
             """\
-******************************
-**   WARNING: I TRIED TO    **
-** SOLVE THIS ISSUE #2559.  **
-**                          **
-**  IT SEEMED TO ME RATHER  **
-**  SIMPLE, BUT I GOT VERY  **
-**     GOOD EXPERIENCE      **
-******************************
-Hi there! My name is Anton,
-and I'm a Python developer.
+*******************************
+** WARNING: ANDROID_HOME and **
+**    ANDROID_SDK_ROOT are   **
+**        inconsistent       **
+*******************************
+The ANDROID_HOME and
+ANDROID_SDK_ROOT environment
+variables are set to different
+paths:
 
-    This is my very first
-experience in open source
-development.
+    ANDROID_HOME:     /briefcas
+    e/tests/console/Console/tes
+    t_warning_banner.py
+    ANDROID_SDK_ROOT: /home/ant
+    on/briefcase/tests/console/
+    Console/test_warning_banner
+    .py
 
-I like your project, and I'm
-excited to contribute to it.
-******************************\
+ Briefcase will ignore
+ ANDROID_SDK_ROOT and only use
+ the path specified by
+ ANDROID_HOME.
+
+You should update your
+environment configuration to
+either not set
+ANDROID_SDK_ROOT, or set both
+environment variables to the
+samepath.
+*******************************
 """,
         ),
         # Message with only title (empty message)
         (
             "",
-            source_title,
+            test_title,
             80,
             """\
 ********************************************************************************
-**                WARNING: I TRIED TO SOLVE THIS ISSUE #2559.                 **
-**                                                                            **
-**       IT SEEMED TO ME RATHER SIMPLE, BUT I GOT VERY GOOD EXPERIENCE        **
-********************************************************************************\
+**        WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
+********************************************************************************
 """,
         ),
         # Very short message with title
@@ -146,7 +186,7 @@ excited to contribute to it.
 **                            WARNING: Short title                            **
 ********************************************************************************
 Short message
-********************************************************************************\
+********************************************************************************
 """,
         ),
         # Message and title lengths equal to box width
@@ -159,7 +199,7 @@ Short message
 ** WARNING: Length of ......... width **
 ****************************************
 Length of message is equal to box _width
-****************************************\
+****************************************
 """,
         ),
         # Message and title lengths longer +1 symbol to box width
@@ -174,7 +214,7 @@ Length of message is equal to box _width
 ****************************************
 Length of message +is equal to box
 _width
-****************************************\
+****************************************
 """,
         ),
     ],
@@ -187,7 +227,7 @@ def test_warning_banner(console, message, title, width, expected, capsys):
     # capture console output
     output = capsys.readouterr().out
 
-    assert expected + "\n" == output
+    assert expected == output
 
 
 @pytest.mark.parametrize(

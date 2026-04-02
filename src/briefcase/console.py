@@ -251,30 +251,59 @@ class Console:
         return self._log_impl.export_text()
 
     @staticmethod
-    def _dedent_and_wrap(text, wrap_width, warning_prefix=False):
+    def _dedent_and_wrap(text, wrap_width, is_title=False):
         """Dedent text, split text into paragraphs and wrap each paragraph to lines of
         the specified width."""
-        # Remove common leading empty paragraphs
+
+        # Dedent and remove common leading empty lines
         text = textwrap.dedent(text).strip("\n")
 
         # Add a warning prefix for title
-        if warning_prefix:
-            text = "WARNING: " + text
+        if is_title:
+            text = f"WARNING: {text.strip()}"
 
-        # Split text into paragraphs
-        paragraphs = text.split("\n")
+        # Split text into text lines
+        input_lines = text.split("\n")
+
+        # create paragraphs from lines
+        paragraphs = []
+        for line in input_lines:
+            # add empty paragraph
+            if not line:
+                paragraphs.append(None)
+                continue
+
+            # calc relative indentation; always zero for title
+            rel_indent = 0 if is_title else len(line) - len(line.lstrip())
+
+            # add new paragraph
+            # if it first, if last empty or have relative indentation
+            if any((not paragraphs, rel_indent)) or not paragraphs[-1]:
+                # add new paragraph
+                paragraphs.append([line.strip(), rel_indent])
+
+            # append line to last paragraph
+            else:
+                paragraphs[-1][0] += f" {line.strip()}"
 
         # Wrap each paragraph to lines
-        text_lines = []
+        output_lines = []
         for p in paragraphs:
             # If the paragraph is not empty, wrap it to the specified width
             if p:
-                text_lines.extend(textwrap.wrap(p, width=wrap_width))
+                output_lines.extend(
+                    # add indent to each line in wrapping
+                    f"{' ' * p[-1]}{line}"
+                    for line in
+                    # wrapping paragraph to width minus rel indent
+                    textwrap.wrap(p[0], width=wrap_width - p[1])
+                )
+
             # Otherwise, add an empty line
             else:
-                text_lines.append("")
+                output_lines.append("")
         # Return the list of lines
-        return text_lines
+        return output_lines
 
     def warning_banner(
         self,
@@ -283,11 +312,12 @@ class Console:
         width: int = 80,
     ) -> str:
         """The title or message can be provided as a single or as multiline string. Any
-        common leading whitespace from each line is removed, but relative indentation is
-        preserved. To separate text into paragraphs, use blank lines in your code or the
-        "\n" character. If a paragraph is very long, you can break the line in your code
-        using a space with backslash (" \"). In the final output, lines within the same
-        paragraph will be merged.
+        common leading whitespace from each line will be removed.
+
+        To separate text into paragraphs you can use:
+        - blank line;
+        - relative indentation.
+        Lines with zero relative indentation will be merged to upper paragraph.
 
         :param title: The title of the box. If provided, appears centered at the top.
         :param message: The message to format inside the box.
