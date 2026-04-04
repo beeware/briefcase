@@ -2,6 +2,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.bootstraps import (
+    ConsoleBootstrap,
+    EmptyBootstrap,
+    PygameGuiBootstrap,
+    PySide6GuiBootstrap,
+    TogaGuiBootstrap,
+)
 from briefcase.commands import NewCommand
 from briefcase.commands.base import full_options
 
@@ -48,3 +55,14 @@ def new_command(dummy_console, tmp_path):
     )
     command.get_git_config_value = MagicMock(return_value=None)
     return command
+
+
+@pytest.fixture
+def mock_builtin_bootstraps():
+    return {
+        "None": EmptyBootstrap,
+        "Toga": TogaGuiBootstrap,
+        "Console": ConsoleBootstrap,
+        "PySide6": PySide6GuiBootstrap,
+        "Pygame": PygameGuiBootstrap,
+    }
