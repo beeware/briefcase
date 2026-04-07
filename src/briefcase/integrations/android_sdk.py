@@ -1175,13 +1175,15 @@ In future, you can specify this device by running:
         """
         if device_type is None:
             device_type = self.DEFAULT_DEVICE_TYPE
-        if skin is None:
             skin = self.DEFAULT_DEVICE_SKIN
         if system_image is None:
             system_image = self.DEFAULT_SYSTEM_IMAGE
 
         # Ensure the required skin is available.
-        self.verify_emulator_skin(skin)
+        if skin:
+            self.verify_emulator_skin(skin)
+        else:
+            self.tools.console.info("Creating an emulator with no skin")
 
         # Ensure the required system image is available.
         self.verify_system_image(system_image)
@@ -1215,19 +1217,23 @@ In future, you can specify this device by running:
                 raise BriefcaseCommandError("Unable to create Android emulator") from e
 
         with self.tools.console.wait_bar("Adding extra device configuration..."):
-            self.update_emulator_config(
-                avd,
-                {
-                    "avd.id": avd,
-                    "avd.name": avd,
-                    "disk.dataPartition.size": "4096M",
-                    "hw.keyboard": "yes",
-                    "skin.dynamic": "yes",
-                    "skin.name": skin,
-                    "skin.path": f"skins/{skin}",
-                    "showDeviceFrame": "yes",
-                },
-            )
+            avd_config = {
+                "avd.id": avd,
+                "avd.name": avd,
+                "disk.dataPartition.size": "4096M",
+                "hw.keyboard": "yes",
+                "showDeviceFrame": "yes",
+            }
+            if skin:
+                avd_config.update(
+                    {
+                        "skin.dynamic": "yes",
+                        "skin.name": skin,
+                        "skin.path": f"skins/{skin}",
+                    }
+                )
+
+            self.update_emulator_config(avd, avd_config)
 
     def avd_config(self, avd: str) -> dict[str, str]:
         """Obtain the AVD configuration as key-value pairs.
