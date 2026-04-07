@@ -140,15 +140,11 @@ The device or emulator to target. Can be specified as:
 
   You may also specify:
 
+  * `device_type` (e.g., `pixel`) the type of device to emulate.
+  * `skin` (e.g., `pixel_3a`) - the skin to apply to the emulator.
+  * `system_image` (e.g., `system-images;android-31;default;arm64-v8a`) - the Android system image to use in the emulator.
 
-  * `device_type` (e.g., `pixel`) * the type of device to emulate
-  * `skin` (e.g., `pixel_3a`) * the skin to apply to the emulator
-  * `system_image` (e.g.,
-
-  `system-images;android-31;default;arm64-v8a`) * the Android system image to use in the emulator.
-
-  If any of these attributes are *not* specified, they will fall back to reasonable defaults.
-
+  If no device type is specified, a default device with a default skin will be used. If no system image is specified, a default system image will be used. If a device type is specified, but no *skin* is specified, a "skinless" device will be created.
 
 #### `--Xemulator=<value>`
 
