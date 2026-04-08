@@ -107,7 +107,6 @@ class macOSMixin(_MixinBase):
             )
 
         super().verify_tools()
-        return
 
     def is_icloud_synced(self, path: Path) -> bool:
         """Determine if a path is on an iCloud drive.
