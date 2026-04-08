@@ -2,6 +2,16 @@
 
 <!-- towncrier release notes start -->
 
+## 0.4.1 (2026-03-09)
+
+### Bugfixes
+
+* Briefcase now imposes a version pin on `binaryornot < 0.5.0`. Recent `binaryornot` releases introduced a series of bugs that cause catastrophic errors in PNG detection and file encoding. ([#2712](https://github.com/beeware/briefcase/issues/2712))
+
+### Misc
+
+* [#2726](https://github.com/beeware/briefcase/issues/2726), [#2727](https://github.com/beeware/briefcase/issues/2727), [#2729](https://github.com/beeware/briefcase/issues/2729), [#2730](https://github.com/beeware/briefcase/issues/2730)
+
 ## 0.4.0 (2026-03-05)
 
 ### Features

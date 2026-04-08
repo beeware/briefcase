@@ -82,7 +82,7 @@ Publication channel entry points are scoped by platform and output format. To ad
 A `BasePublicationChannel` subclass must implement:
 
 - `name` - an abstract `str` property returning the human-readable name of the channel.
-- `publish_app(app, command, **options)` - an abstract method that performs the actual publication. `app` is the `AppConfig` for the application being published; `command` satisfies the `PublishCommandAPI` protocol (see below).
+- `publish_app(app, command, **options)` - an abstract method that performs the actual publication. `app` is the `FinalizedAppConfig` for the application being published; `command` satisfies the `PublishCommandAPI` protocol (see below).
 
 The `PublishCommandAPI` protocol (`briefcase.channels.base.PublishCommandAPI`) defines the stable API surface that plugins can rely on from the `command` parameter:
 

@@ -70,15 +70,12 @@ A reverse-domain name that can be used to identify resources for the application
 
 #### `license`
 
-A [PEP 621](https://peps.python.org/pep-0621/) license specification for the project. The `license` must be specified by referring to a file:
+A [PEP 639](https://peps.python.org/pep-0639/) license specification for the project. The `license` must be an SPDX license classifier:
 ```toml
-license.file = "LICENSE"
+license = "BSD-3-Clause"
 ```
 
-or by providing text that describes the license (either as an SPDX specifier, or the literal text of the license):
-```toml
-license.text = "BSD-3-Clause"
-```
+Many platforms will also require a [`license_files`][] definition.
 
 #### `project_name`
 
@@ -107,6 +104,17 @@ The person or organization responsible for the project.
 #### `author_email`
 
 The contact email address for the person or organization responsible for the project.
+
+#### `license_files`
+
+A [PEP 639](https://peps.python.org/pep-0639/) specification for the files in the project that define licenses that should be included with the packaged app. `license_files` must be a list of strings, each of which references a filename in the project (relative to the location of the `pyproject.toml`):
+```toml
+license_files = ["LICENSE"]
+```
+
+This list *can* be empty. However, many platforms require at least one license file for distribution, so it is generally advisable to provide at least one license file.
+
+License files should be plain text files. On Windows, a reference to a *single* RTF file is also permitted.
 
 #### `url`
 
@@ -495,17 +503,54 @@ A URL for help related to the document format.
 
 Some platforms have specific configuration options that are only relevant to that platform. In particular, Apple platforms (macOS, iOS) have a more elaborate system for document types, and require additional configuration to use document types. If you want to support document types on these platforms, you will need to read the macOS [document types][macOS-document-types] section for more information.
 
-## PEP621 compatibility
+## Compatibility with Python project metadata
 
-Many of the keys that exist in Briefcase's configuration have analogous settings in [PEP621 project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
+Many of the keys that exist in Briefcase's configuration have analogous settings in standard [Python project metadata](https://packaging.python.org/en/latest/specifications/pyproject-toml/). This metadata was originally standardized by [PEP 621](https://peps.python.org/pep-0621/), with license definitions refined in [PEP 639](https://peps.python.org/pep-0621/). If your `pyproject.toml` defines a `[project]` section, Briefcase will honor those settings as a top level definition. Any `[tool.briefcase]` definitions will override those in the `[project]` section.
 
-The following PEP621 project metadata keys will be used by Briefcase if they are available:
+The following `[project]` metadata keys will be used by Briefcase if they are available:
 
 - `version` maps to the same key in Briefcase.
+- `license` and `license-files` map to the same key in Briefcase. Legacy formats for these keys will be [coerced into PEP 639 format][license-definitions].
 - `authors` The `email` and `name` keys of the first value in the `authors` setting map to [`author`][] and [`author_email`][].
 - `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages defined in the [`requires`][] setting at the `[tool.briefcase]` level will be appended to the packages defined with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to [`test_requires`][]., As with `dependencies`/[`requires`][], this is a cumulative setting.
-- `text` in a `[project.license]` section will be mapped to [`license`][].
 - `homepage` in a `[project.urls]` section will be mapped to [`url`][].
 - `requires-python` will be used to validate the running Python interpreter's version against the requirement.
+
+### License definitions { #license-definitions }
+
+License definitions in Python metadata will also be honored. PEP 639 requires a value for `license`, with a optional `license-files`. If the license is in any format *other* that PEP 639, a warning will be raised; but Briefcase will coerce the provided license specification into PEP 639 format.
+
+PEP 639 requires an SPDX specifier for the value of `license`. If the provided value isn't an SPDX specifier, Briefcase will attempt to infer the SPDX specifier from the provided value. If it can't determine the license type, an SPDX value of `LicenseRef-UnknownLicense` will be used.
+
+The value for `license-files` will be a derived from the value in the license specification:
+
+- If your project is in PEP 621 `license.file` format, the value provided will be used to populate a single-item `license-files` definition.
+- If your `license` project is in PEP 621 `license.text` format or pre-PEP 621 format (i.e., a `license = "..."` definition where the value *isn't* an SPDX specifier), and the provided text is more than one line, the value of the field will be used as the contents of a temporary license file that will be written into the `build` directory. That file will be used to populate a single-item list for `license-files` as a license specifier.
+- Otherwise, `license-files` will be set to an empty list. Note that some platforms *require* a license file for packaging purposes; packaging apps for those platforms will raise an error when the app is built for those platforms.
+
+### Dynamic metadata { #dynamic-metadata }
+
+If your `pyproject.toml` defines `dynamic` PEP 612 metadata fields, Briefcase will resolve those fields by using the PEP 517 `[build-system]` definition for your project.
+
+For example, to use `setuptools_scm` to evaluate your project's version number based on Git (or other source control tool) tags, you could add the following to your Briefcase project configuration:
+```
+[build-system]
+# Set up a PEP 517 build configuration using setuptools
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+# Declare `version` to be dynamically defined
+# The "name" field must also be defined as a PEP 621 key to satisfy setuptools
+[project]
+dynamic = ["version"]
+name = "myproject"
+
+# An empty table definition is required to enable setuptools-scm
+[tool.setuptools_scm]
+
+# Provide the rest of your project configuration as usual
+[tool.briefcase]
+...
+```

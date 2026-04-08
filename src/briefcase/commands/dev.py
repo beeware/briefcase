@@ -9,7 +9,7 @@ from pathlib import Path
 
 from briefcase.commands.create import _is_local_path
 from briefcase.commands.run import RunAppMixin
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.virtual_environment import VenvContext
 
@@ -87,7 +87,12 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
-    def install_dev_requirements(self, app: AppConfig, venv: VenvContext, **options):
+    def install_dev_requirements(
+        self,
+        app: FinalizedAppConfig,
+        venv: VenvContext,
+        **options,
+    ):
         """Install the requirements for the app dev.
 
         This will always include test requirements, if specified. Local dependencies are
@@ -139,7 +144,7 @@ class DevCommand(RunAppMixin, BaseCommand):
 
     def run_dev_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         env: dict,
         venv: VenvContext,
         passthrough: list[str],
@@ -203,7 +208,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 clean_output=False,
             )
 
-    def get_environment(self, app: AppConfig):
+    def get_environment(self, app: FinalizedAppConfig):
         """Create a shell environment where PYTHONPATH points to the source directories
         described by the app config.
 
@@ -307,10 +312,11 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(
+        finalized = self.finalize(
             apps=[app],
             test_mode=test_mode,
         )
+        app = finalized[app.app_name]
 
         self.verify_app(app)
 

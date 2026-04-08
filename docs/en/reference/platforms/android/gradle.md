@@ -166,15 +166,11 @@ The device or emulator to target. Can be specified as:
 
   You may also specify:
 
+  * `device_type` (e.g., `pixel`) the type of device to emulate.
+  * `skin` (e.g., `pixel_3a`) - the skin to apply to the emulator.
+  * `system_image` (e.g., `system-images;android-31;default;arm64-v8a`) - the Android system image to use in the emulator.
 
-  * `device_type` (e.g., `pixel`) * the type of device to emulate
-  * `skin` (e.g., `pixel_3a`) * the skin to apply to the emulator
-  * `system_image` (e.g.,
-
-  `system-images;android-31;default;arm64-v8a`) * the Android system image to use in the emulator.
-
-  If any of these attributes are *not* specified, they will fall back to reasonable defaults.
-
+  If no device type is specified, a default device with a default skin will be used. If no system image is specified, a default system image will be used. If a device type is specified, but no *skin* is specified, a "skinless" device will be created.
 
 #### `--Xemulator=<value>`
 
@@ -209,6 +205,28 @@ You may specify multiple `--reverse-port` arguments; each one specifies a single
 ## Application configuration
 
 The following options can be added to the `tool.briefcase.app.<appname>.android` section of your `pyproject.toml` file.
+
+### `android_abis`
+
+A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. This controls the `abiFilters` parameter in the `ndk` block of the Android app's `defaultConfig` in `build.gradle`(depending on the project template). If not specified, the NDK block will be omitted, falling back to the default ABIs supported by Briefcase (currently `arm64v8a` and `x86_64`, with `armeabi-v7a` also included on Python 3.11 and earlier).
+
+For example, specifying:
+
+```toml
+android_abis = ["arm64-v8a", "x86_64"]
+```
+
+would result in a `build.gradle` file that contains:
+
+```groovy
+...
+    defaultConfig {
+...
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+...
+```
 
 ### `android_manifest_attrs_extra_content`
 

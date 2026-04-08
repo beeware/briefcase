@@ -56,7 +56,6 @@ def run_command(dummy_console, tmp_path, first_app_config, jdk):
 
     command._stream_app_logs = mock.MagicMock()
 
-    command.base_path.mkdir(parents=True)
     return command
 
 

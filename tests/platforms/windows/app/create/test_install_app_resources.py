@@ -7,9 +7,6 @@ from .....utils import create_file
 
 def test_minimal_app_resources(create_command, first_app_templated, tmp_path):
     """Windows apps include, at a minimum, a license as extra resources."""
-    # Create a license file
-    create_file(tmp_path / "base_path/LICENSE", "This is a license file")
-
     create_command.install_app_resources(first_app_templated)
 
     # The extras path exists
@@ -21,8 +18,6 @@ def test_minimal_app_resources(create_command, first_app_templated, tmp_path):
 
 def test_post_install_script(create_command, first_app_templated, tmp_path):
     """A post_install script can be provided as extra resources."""
-    # Create a license file
-    create_file(tmp_path / "base_path/LICENSE", "This is a license file")
 
     # Create a post-install script
     first_app_templated.post_install_script = "scripts/post_install.bat"
@@ -63,8 +58,6 @@ def test_missing_post_install_script(create_command, first_app_templated):
 
 def test_pre_uninstall_script(create_command, first_app_templated, tmp_path):
     """A pre_uninstall script can be provided as extra resources."""
-    # Create a license file
-    create_file(tmp_path / "base_path/LICENSE", "This is a license file")
 
     # Create a post-install script
     first_app_templated.pre_uninstall_script = "scripts/pre_uninstall.bat"
@@ -108,9 +101,6 @@ def test_alternate_installer_path(create_command, first_app_templated, tmp_path)
     # Define a custom installer path.
     first_app_templated.installer_path = "install_scripts"
 
-    # Create a license file
-    create_file(tmp_path / "base_path/LICENSE", "This is a license file")
-
     # Create a post-install script
     first_app_templated.post_install_script = "scripts/post_install.bat"
     create_file(tmp_path / "base_path/scripts/post_install.bat", "echo Hello world")
@@ -136,9 +126,6 @@ def test_legacy_template_support(create_command, first_app_templated, tmp_path):
     """If briefcase.toml doesn't define extras_path; fall back to "extras"."""
     # Create an empty briefcase.toml
     create_file(tmp_path / "base_path/build/first-app/windows/app/briefcase.toml", "")
-
-    # Create a license file
-    create_file(tmp_path / "base_path/LICENSE", "This is a license file")
 
     create_command.install_app_resources(first_app_templated)
 

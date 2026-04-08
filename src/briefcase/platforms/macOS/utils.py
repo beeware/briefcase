@@ -8,8 +8,16 @@ import pathlib
 import plistlib
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from briefcase.exceptions import BriefcaseCommandError
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 CORETYPES_PATH = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist"
 
@@ -52,7 +60,7 @@ def sha256_file_digest(path: Path) -> str:
     return file_hash.hexdigest()
 
 
-class AppPackagesMergeMixin:
+class AppPackagesMergeMixin(_MixinBase):
     # A mixin containing the utilities to merge independent platform-specific
     # app_packages folders into a single "fat" app_packages folder.
     # This is currently only used by macOS, but it *could* be required on iOS
@@ -81,11 +89,14 @@ class AppPackagesMergeMixin:
             # for the wheel.
             with (distinfo / "WHEEL").open("r", encoding="utf-8") as f:
                 wheel_data = email.message_from_string(f.read())
-                is_purelib = wheel_data.get("Root-Is-Purelib", "false") == "true"
                 tags = wheel_data.get_all("Tag")
 
-            # If the wheel is pure, it's not a binary package
-            if is_purelib:
+            # If the wheel is tagged `*-*-any`, it's not a binary package. We can't rely
+            # on Root-Is-Purelib in the wheel metadata. The flag isn't used correctly in
+            # some edge cases; and a library whose root is "pure" is allowed to contain
+            # `.data/platlib` content, which functionally renders it non-pure for our
+            # purposes.
+            if any(tag.endswith("-any") for tag in tags):
                 continue
 
             # If the tag ends with the universal tag, the binary package can be used on

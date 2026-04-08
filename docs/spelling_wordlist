@@ -5,6 +5,7 @@ allowlist
 AlmaLinux
 amongst
 APIs
+ABIs
 APK
 APKs
 appimage
@@ -115,6 +116,7 @@ MSI
 Namespace
 Napari
 natively
+NDK
 NFS
 NSIS
 NumPy
@@ -168,6 +170,7 @@ RGB
 RHEL
 rpmbuild
 rst
+RTF
 rumdl
 runtime
 Runtime

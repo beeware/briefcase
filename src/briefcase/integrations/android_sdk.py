@@ -448,8 +448,9 @@ Delete {cmdline_tools_zip_path} and run briefcase again.
                 self.tools.shutil.rmtree(self.cmdline_tools_path)
 
             # Rename the top level zip content to the final name
-            (self.cmdline_tools_path.parent / "cmdline-tools").rename(
-                self.cmdline_tools_path
+            self.tools.file.rename(
+                self.cmdline_tools_path.parent / "cmdline-tools",
+                self.cmdline_tools_path,
             )
 
             # Zip file no longer needed once unpacked.
@@ -1181,13 +1182,15 @@ In future, you can specify this device by running:
         """
         if device_type is None:
             device_type = self.DEFAULT_DEVICE_TYPE
-        if skin is None:
             skin = self.DEFAULT_DEVICE_SKIN
         if system_image is None:
             system_image = self.DEFAULT_SYSTEM_IMAGE
 
         # Ensure the required skin is available.
-        self.verify_emulator_skin(skin)
+        if skin:
+            self.verify_emulator_skin(skin)
+        else:
+            self.tools.console.info("Creating an emulator with no skin")
 
         # Ensure the required system image is available.
         self.verify_system_image(system_image)
@@ -1221,19 +1224,23 @@ In future, you can specify this device by running:
                 raise BriefcaseCommandError("Unable to create Android emulator") from e
 
         with self.tools.console.wait_bar("Adding extra device configuration..."):
-            self.update_emulator_config(
-                avd,
-                {
-                    "avd.id": avd,
-                    "avd.name": avd,
-                    "disk.dataPartition.size": "4096M",
-                    "hw.keyboard": "yes",
-                    "skin.dynamic": "yes",
-                    "skin.name": skin,
-                    "skin.path": f"skins/{skin}",
-                    "showDeviceFrame": "yes",
-                },
-            )
+            avd_config = {
+                "avd.id": avd,
+                "avd.name": avd,
+                "disk.dataPartition.size": "4096M",
+                "hw.keyboard": "yes",
+                "showDeviceFrame": "yes",
+            }
+            if skin:
+                avd_config.update(
+                    {
+                        "skin.dynamic": "yes",
+                        "skin.name": skin,
+                        "skin.path": f"skins/{skin}",
+                    }
+                )
+
+            self.update_emulator_config(avd, avd_config)
 
     def avd_config(self, avd: str) -> dict[str, str]:
         """Obtain the AVD configuration as key-value pairs.

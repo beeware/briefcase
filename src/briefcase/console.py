@@ -880,7 +880,7 @@ class Console:
         :param validator: (optional) A validator function; accepts a single input (the
             candidate response), returns True if the answer is valid, or raises
             ValueError() with a debugging message if the candidate value isn't valid.
-        :param override_value: A pre-selected answer for the question. This can be used
+        :param override_value: A preselected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
             intro paragraph and option list will not.
@@ -933,7 +933,7 @@ class Console:
         :param default: The default option for empty user input. The options for the
             user start numbering at 1; so, to default to the first item, this should be
             "1".
-        :param override_value: A pre-selected answer for the question. This can be used
+        :param override_value: A preselected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
             intro paragraph and option list will not.
@@ -995,7 +995,7 @@ class Console:
             is used in prompts and a header bar prefacing the question.
         :param intro: An introductory paragraph explaining the question being asked.
         :param default: The default option for empty user input.
-        :param override_value: A pre-selected answer for the question. This can be used
+        :param override_value: A preselected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
             intro paragraph and option list will not. Will take the provided string and
