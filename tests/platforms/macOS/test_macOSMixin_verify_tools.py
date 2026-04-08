@@ -1,3 +1,4 @@
+import platform
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,7 +11,10 @@ from briefcase.exceptions import BriefcaseCommandError
 # with an x86_64 Python interpreter
 def test_verify_tools_on_macos(dummy_command):
     """If you're on macOS, you can verify tools."""
-    # Simulate running on Apple Silicon with an x86_64 Python interpreter
+    # Create a Mock object for the platform module
+    dummy_command.tools.platform = MagicMock(spec_set=platform)
+
+    # Simulate that Mock platform is running on Apple Silicon with an x86_64 Python interpreter
     dummy_command.tools.platform.machine = MagicMock(return_value="x86_64")
     dummy_command.tools.platform.version = MagicMock(return_value="ARM64")
 
