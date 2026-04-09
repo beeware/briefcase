@@ -94,6 +94,20 @@ class macOSMixin(_MixinBase):
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
 
+    def verify_tools(self):
+        if (
+            self.tools.platform.machine() == "x86_64"
+            and "ARM64" in self.tools.platform.version()
+        ):
+            raise BriefcaseCommandError(
+                "The Python interpreter that is being used to run Briefcase has been "
+                "compiled for x86_64, and is running in emulation mode on Apple "
+                "Silicon hardware. You must use a Python interpreter that has been "
+                "compiled for Apple Silicon, or is a Universal binary."
+            )
+
+        super().verify_tools()
+
     def is_icloud_synced(self, path: Path) -> bool:
         """Determine if a path is on an iCloud drive.
 
