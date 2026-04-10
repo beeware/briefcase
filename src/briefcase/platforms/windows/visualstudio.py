@@ -60,6 +60,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
 
         with self.console.wait_bar("Building solution..."):
             try:
+                arch = "ARM64" if self.tools.host_arch == "ARM64" else "x64"
                 self.tools.subprocess.run(
                     [
                         self.tools.visualstudio.msbuild_path,
@@ -68,6 +69,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
                         "-property:RestorePackagesConfig=true",
                         f"-target:{app.formal_name}",
                         "-property:Configuration=Release",
+                        f"-property:Platform={arch}",
                         (
                             "-verbosity:detailed"
                             if self.console.is_deep_debug
