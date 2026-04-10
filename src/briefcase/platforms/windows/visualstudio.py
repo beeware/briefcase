@@ -23,7 +23,7 @@ class WindowsVisualStudioMixin(WindowsMixin):
     output_format = "VisualStudio"
 
     def packaging_root(self):
-        arch = "ARM" if self.tools.host_arch == "ARM64" else "x64"
+        arch = "ARM64" if self.tools.host_arch == "ARM64" else "x64"
         return Path(f"{arch}/Release")
 
     def project_path(self, app):
