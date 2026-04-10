@@ -252,12 +252,14 @@ def test_console_bootstrap(new_command):
 
     assert context == {
         "console_app": True,
-        "app_source": """\
+        "app_source": (
+            """\
 
 def main():
     # Your app logic goes here
     print("Hello, World.")
-""",
+"""
+        ),
         "app_start_source": """\
 from {{ cookiecutter.module_name }}.app import main
 
@@ -409,8 +411,8 @@ test_requires = [
 """,
         "pyproject_table_macOS": """\
 universal_build = true
-# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
-min_os_version = "12.0"
+# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
+min_os_version = "13.0"
 requires = [
     "std-nslog~=1.0.3",
 ]

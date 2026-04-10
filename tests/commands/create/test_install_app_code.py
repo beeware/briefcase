@@ -717,7 +717,8 @@ def test_source_dir_merge_and_file_overwrite(
         "# test_top from testdir\n",
     )
 
-    # Set the app definition with two sources and two test sources, and two top-level files with the same name
+    # Set the app definition with two sources and two test sources, and two top-level
+    # files with the same name
     myapp.sources = ["lib", "srcdir/lib", "top.py", "srcdir/top.py"]
     myapp.test_sources = [
         "tests",

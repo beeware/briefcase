@@ -3,7 +3,7 @@ import pytest
 from briefcase.channels.base import BasePublicationChannel
 from briefcase.commands import PublishCommand
 from briefcase.commands.base import full_options
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 from ...utils import create_file
 
@@ -63,9 +63,10 @@ class DummyPublishCommand(PublishCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
-    def finalize_app_config(self, app):
-        super().finalize_app_config(app=app)
+    def finalize_app_config(self, app, **kwargs):
+        app = super().finalize_app_config(app=app, **kwargs)
         self.actions.append(("finalize-app-config", app.app_name))
+        return app
 
     def verify_app_template(self, app):
         super().verify_app_template(app=app)
@@ -82,7 +83,8 @@ class DummyPublishCommand(PublishCommand):
         }
 
     # These commands override the default behavior, simply tracking that
-    # they were invoked, rather than instantiating a Create/Update/Build/Package command.
+    # they were invoked, rather than instantiating a Create/Update/Build
+    # command.
     # This is for testing purposes.
     def package_command(self, app, **kwargs):
         self.actions.append(("package", app.app_name, kwargs.copy()))
@@ -121,7 +123,7 @@ def publish_command(dummy_console, tmp_path):
 
 @pytest.fixture
 def first_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
@@ -176,7 +178,7 @@ def first_app(first_app_unpackaged, tmp_path):
 
 @pytest.fixture
 def second_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",

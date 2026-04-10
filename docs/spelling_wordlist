@@ -5,6 +5,7 @@ allowlist
 AlmaLinux
 amongst
 APIs
+ABIs
 APK
 appimage
 AppImage
@@ -27,6 +28,7 @@ blobless
 breakpoint
 Bugfix
 Bugfixes
+CachyOS
 ce
 CentOS
 CFBundleExecutable
@@ -113,6 +115,7 @@ MSI
 Namespace
 Napari
 natively
+NDK
 NFS
 NSIS
 NumPy
@@ -154,6 +157,7 @@ PyScript
 PyScript's
 PySide
 pytest
+PythonAnywhere
 RCEdit
 README
 RedHat
@@ -164,6 +168,7 @@ RGB
 RHEL
 rpmbuild
 rst
+RTF
 rumdl
 runtime
 Runtime

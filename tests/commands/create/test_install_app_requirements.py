@@ -79,7 +79,10 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
     # Install requirements
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Application path index file does not define `app_requirements_path` or `app_packages_path`",
+        match=(
+            r"Application path index file does not define `app_requirements_path` or"
+            r" `app_packages_path`"
+        ),
     ):
         create_command.install_app_requirements(myapp)
 
@@ -358,7 +361,8 @@ def test_app_packages_valid_requires_no_support_package(
     specified."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
-    # Override the cache of paths to specify an app packages path, but no support package path
+    # Override the cache of paths to specify an app packages path, but no support
+    # package path
     create_command._briefcase_toml[myapp] = {
         "paths": {"app_packages_path": "path/to/app_packages"}
     }
@@ -738,7 +742,7 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     assert myapp.test_requires is None
 
 
-def test_app_requirements_requirement_installer_args_without_requires_no_template_support(
+def test_app_requirements_requirement_installer_args_without_requires_no_template_support(  # noqa: E501
     create_command,
     myapp,
     app_path,
@@ -768,7 +772,7 @@ def test_app_requirements_requirement_installer_args_without_requires_no_templat
     assert myapp.test_requires is None
 
 
-def test_app_requirements_requirement_installer_args_without_requires_with_template_support(
+def test_app_requirements_requirement_installer_args_without_requires_with_template_support(  # noqa: E501
     create_command,
     myapp,
     app_path,

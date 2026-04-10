@@ -310,7 +310,10 @@ Delete {jdk_zip_path} and run briefcase again.
             java_unpack_path = (
                 self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
             )
-            java_unpack_path.rename(self.tools.base_path / self.JDK_INSTALL_DIR_NAME)
+            self.tools.file.rename(
+                java_unpack_path,
+                self.tools.base_path / self.JDK_INSTALL_DIR_NAME,
+            )
 
     def uninstall(self):
         """Uninstall a JDK."""

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from abc import abstractmethod
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -57,7 +57,7 @@ class PackageCommand(BaseCommand):
             # Ensure the dist folder exists.
             self.dist_path.mkdir(exist_ok=True)
 
-    def package_app(self, app: AppConfig, **options):
+    def package_app(self, app: FinalizedAppConfig, **options):
         """Package an application.
 
         :param app: The application to package
@@ -66,7 +66,7 @@ class PackageCommand(BaseCommand):
 
     def _package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update: bool,
         packaging_format: str,
         **options,
@@ -187,10 +187,10 @@ class PackageCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(apps=apps_to_package.values())
+        finalized_apps = self.finalize(apps=apps_to_package.values())
 
         state = None
-        for _, app_obj in sorted(apps_to_package.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._package_app(
                 app_obj,
                 update=update,

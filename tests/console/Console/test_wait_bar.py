@@ -18,8 +18,8 @@ def test_wait_bar_done_message_non_interactive(non_interactive_console, capsys):
     with non_interactive_console.wait_bar("Wait message...", done_message="finished"):
         pass
 
-    assert capsys.readouterr().out == (
-        "Wait message... started\nWait message... finished\n"
+    assert (
+        capsys.readouterr().out == "Wait message... started\nWait message... finished\n"
     )
 
 

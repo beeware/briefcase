@@ -6,7 +6,7 @@ from abc import abstractmethod
 from contextlib import suppress
 from pathlib import Path
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
     AppPathMappings,
@@ -134,7 +134,7 @@ class RunAppMixin:
 
     def _stream_app_logs(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         popen,
         clean_filter=None,
         clean_output=False,
@@ -227,7 +227,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         if self.supports_debugger:
             self._add_debug_options(parser, context_label="Run", run_cmd=True)
 
-    def debugger_app_path_mappings(self, app: AppConfig) -> AppPathMappings:
+    def debugger_app_path_mappings(self, app: FinalizedAppConfig) -> AppPathMappings:
         """Get the path mappings for the app code.
 
         :param app: The config object for the app
@@ -247,7 +247,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
     def debugger_app_packages_path_mapping(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 
@@ -260,7 +260,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
     def _prepare_app_kwargs(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
     ):
         """Prepare the kwargs for running an app as a log stream.
 
@@ -298,7 +298,7 @@ class RunCommand(RunAppMixin, BaseCommand):
     @abstractmethod
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         *,
         passthrough: list[str],
         **options,
@@ -371,13 +371,14 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(
+        finalized = self.finalize(
             apps=[app],
             test_mode=test_mode,
             debugger=debugger,
             debugger_host=debugger_host,
             debugger_port=debugger_port,
         )
+        app = finalized[app.app_name]
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)

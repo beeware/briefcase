@@ -189,11 +189,11 @@ def test_warning_without_changelog_file(
     )
 
     convert_command.console.warning.assert_called_once_with(
-        f"\nChangelog file not found in {convert_command.base_path!r}. You should either "
-        f"create a new changelog file in {convert_command.base_path!r}, or rename an "
-        "existing file to a known changelog file name (one of 'CHANGELOG', "
-        "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
-        "'.md', '.rst', '.txt', or have no extension)"
+        f"\nChangelog file not found in {convert_command.base_path!r}. You should"
+        f" either create a new changelog file in {convert_command.base_path!r}, or"
+        " rename an existing file to a known changelog file name (one of 'CHANGELOG',"
+        " 'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of '.md',"
+        " '.rst', '.txt', or have no extension)"
     )
 
 
@@ -247,11 +247,11 @@ def test_two_warnings_without_license_and_changelog_file(
         "Briefcase will create a template 'LICENSE' file."
     )
     changelog_warning = (
-        f"\nChangelog file not found in {convert_command.base_path!r}. You should either "
-        f"create a new changelog file in {convert_command.base_path!r}, or rename an "
-        "existing file to a known changelog file name (one of 'CHANGELOG', "
-        "'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of "
-        "'.md', '.rst', '.txt', or have no extension)"
+        f"\nChangelog file not found in {convert_command.base_path!r}. You should"
+        f" either create a new changelog file in {convert_command.base_path!r}, or"
+        " rename an existing file to a known changelog file name (one of 'CHANGELOG',"
+        " 'HISTORY', 'NEWS' or 'RELEASES'; the file may have an extension of '.md',"
+        " '.rst', '.txt', or have no extension)"
     )
     assert convert_command.console.warning.mock_calls == [
         mock.call(license_warning),
